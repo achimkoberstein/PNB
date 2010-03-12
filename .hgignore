@@ -1,0 +1,11 @@
+syntax: glob
+branches
+releases
+stable
+.svn
+Debug\
+Release\
+
+*.*.*
+*.ncb
+*.suo

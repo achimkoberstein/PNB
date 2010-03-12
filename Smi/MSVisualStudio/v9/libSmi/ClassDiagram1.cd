@@ -1,0 +1,186 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="SmiCoreCombineRule" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAgAAAACAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiCoreCombineRule.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiCoreCombineReplace" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAACAAAgAAAAAAAAAAAAAAwAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiCoreCombineRule.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiCoreCombineAdd" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEBAAAAAAAACAAAgAAAAAAAAAAAAAAQAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiCoreCombineRule.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiDiscreteDistribution" Collapsed="true">
+    <Position X="8.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAEBAAIAAAAQAAIAAgEAAAAAAAAGAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiDiscreteDistribution.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiDiscreteEvent" Collapsed="true">
+    <Position X="0.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAgAAAAAAAAAAAAUAAAAAAAAAAAQ=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiDiscreteDistribution.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiDiscreteRV" Collapsed="true">
+    <Position X="10.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAABAAEAAAAAAAAggAQCIAAAJgAAAARAAAAAgBIAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiDiscreteDistribution.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiLinearData" Collapsed="true">
+    <Position X="0.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAEEIIAAIAACAAIACAAAAAAAgQACBBAABAkAIAUAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiLinearData.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiMessage" Collapsed="true">
+    <Position X="12.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiMessage.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiTreeNode&lt;T&gt;" Collapsed="true">
+    <Position X="7" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BIAAgIAAAAAAAAAgIlzAAAAC4AAAAAAAAEEDIgoAAAQ=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScenarioTree.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiScenarioTree&lt;T&gt;" Collapsed="true">
+    <Position X="8.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABACCAAQAAJAAQAACggAIAAAABEBAASAAAgAAEIAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScenarioTree.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiNodeData" Collapsed="true">
+    <Position X="7" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>SZAcEQAACChFYAAQEIBoMAQ7vAAQMCgBBasAIgCCMAQ=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnData.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiCoreData" Collapsed="true">
+    <Position X="7" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>hWBBEAABRACgAACAEApsGMAIABAQAZACEQAAAAKAMgA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnData.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiScnModel" Collapsed="true">
+    <Position X="10.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAKFCAEAQAAIGACCAARAIUQFAQAAFQhCAk0gIBUAAE=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnModel.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiScnNode" Collapsed="true">
+    <Position X="8.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BBgAwEQGAAAAUBAoAgoAAAAoABAAEhAABCEAAABEIgA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnModel.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiScnModelAddNode" Collapsed="true">
+    <Position X="12.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAQAAAAAAAAAABAAAAAEAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnModel.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiScnModelDeleteNode" Collapsed="true">
+    <Position X="7" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQAAAAAAAAAAAAAAAAAAABAAAAAEAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnModel.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiSmpsCardReader" Collapsed="true">
+    <Position X="10.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIYAAAAEQAAgAAAgAgAAAABYAASAAgAAAIAAAQACBAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiSmpsIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SmiSmpsIO" Collapsed="true">
+    <Position X="12.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EIAggAAAAAAAEACAAAAACEAIEAAAABQBCAAAAQAKABE=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiSmpsIO.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="__unnamed_005a_1" Collapsed="true">
+    <Position X="4.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAABAEAAAAAAAAAAAAAAAAAAAAAIAAAAACA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiMessage.cpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="Smi_message" Collapsed="true">
+    <Position X="4.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiMessage.cpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="SmiCoreIndex" Collapsed="true">
+    <Position X="7" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnData.hpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="SmiScenarioIndex" Collapsed="true">
+    <Position X="8.75" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnData.hpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="SmiStageIndex" Collapsed="true">
+    <Position X="10.5" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiScnData.hpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="SMI_Message" Collapsed="true">
+    <Position X="7" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiMessage.hpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SmiSectionType" Collapsed="true">
+    <Position X="8.75" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAEAAAogAAAQAAAAAAAAAAAIAAAAAEAAg=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiSmpsIO.hpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SmiSmpsType" Collapsed="true">
+    <Position X="10.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAKAAAACAAAAFAAAAAAAAAgAAAAEAACAAAAEgAAAA=</HashCode>
+      <FileName>d:\Uni\FlopC++\trunk\Smi\src\SmiSmpsIO.hpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>
