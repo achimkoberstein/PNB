@@ -18,6 +18,7 @@ class OsiSolverInterface;
 
 namespace flopc {
 
+  // forward declarations
   class MP_variable;
   class MP_index;
   class MP_set;
@@ -187,6 +188,7 @@ namespace flopc {
         or as late as the call to attach()
     */
     void attach(OsiSolverInterface *solver = 0);
+
     /** @brief detaches an OsiSolverInterface object from the model.  
         In essence, this will clean up any intermediate storage. A model 
         may then be attached to another solverInterface.
@@ -194,6 +196,7 @@ namespace flopc {
         @todo verify that on "attach", old solver is detached.
     */
     void detach();
+
     /** calls the appropriate solving methods in the OsiSolverInterface.
         @note this is called as a part of minimize(), maximize(), and 
         minimize_max()
@@ -235,15 +238,9 @@ namespace flopc {
     }
 
 	
-
-	MP_scenario_set getScenarioSet() const { return ScenarioSet; } //TODO: Object or reference, what is needed?
-	void setScenarioSet(const MP_scenario_set& val){ ScenarioSet = val; }
-
 	MP_stage getStage() const { return Stage; }
 	void setStage(const MP_stage& val) { Stage = val; }
 
-	MP_set getProbabilities() const { return Probabilities; }
-	void setProbabilities(const MP_set& val) { Probabilities = val; }
 
   private:
     typedef std::set<MP_variable* >::iterator varIt;
@@ -259,9 +256,7 @@ namespace flopc {
     static void assemble(vector<MP::Coef>& v, vector<MP::Coef>& av);
     void add(MP_constraint* constraint);
     MP_expression Objective;
-	MP_scenario_set ScenarioSet;
 	MP_stage Stage;
-	MP_set Probabilities;
     set<MP_constraint *> Constraints;
     set<MP_variable *> Variables;
   public:

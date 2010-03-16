@@ -29,8 +29,9 @@ namespace flopc {
   protected:
     Functor() {}
     virtual ~Functor() {}
-    Functor(const Functor&);
+    Functor(const Functor&); //copy constructor
   private:
+    //disable assignment operator
     Functor& operator=(const Functor&);
   };    
 
@@ -96,6 +97,7 @@ namespace flopc {
   public:
     string getName() const { return name; }
     void setName(const string& n) { name = n; }
+
   private:
     string name;
   };

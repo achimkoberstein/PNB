@@ -55,7 +55,7 @@ MP_constraint::MP_constraint(
   S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),
   I1(0),I2(0),I3(0),I4(0),I5(0)
 {
-  MP_model::current_model->add(*this);
+  M->add(*this);
 }
 
 void MP_constraint::coefficients(vector<MP::Coef>& cfs) {
