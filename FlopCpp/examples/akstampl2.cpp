@@ -25,14 +25,8 @@ int main() {
 
   MP_set INSTR(numINSTR);
   MP_stage T(numStages);
-  MP_scenario_set ScenSet(numScenarios);
-  MP_data probData(ScenSet);
+
   MP_index i;
-
-  probData(i) = (1.0/numScenarios);
-  probData.display("probData1");
-
-  cout << probData(0) <<endl;
 
   MP_stochastic_data Return(T,INSTR);
 

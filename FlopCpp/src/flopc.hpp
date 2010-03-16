@@ -56,6 +56,7 @@ namespace flopc {
       to operate on.
       @ingroup PublicInterface
       @todo This turns into a no-op? 
+	  @todo Why is this necessary? 
   */
   inline void forall(const Functor& f) {
     forall(MP_domain::getEmpty(), f);

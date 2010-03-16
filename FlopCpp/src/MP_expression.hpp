@@ -48,6 +48,7 @@ namespace flopc {
     };
 
   protected:
+	  //This class 
     class GenerateFunctor : public Functor {
     public:
       GenerateFunctor(MP_constraint* r, vector<Coef>& cfs): R(r), Coefs(cfs) {}
@@ -62,7 +63,7 @@ namespace flopc {
       
       void operator()() const;
     private:
-      //Disable copy costructor and assignment
+      //Disable copy contructor and assignment operator
       GenerateFunctor(const GenerateFunctor&);
       GenerateFunctor& operator=(const GenerateFunctor&);
       
@@ -131,6 +132,8 @@ namespace flopc {
   */
   class TerminalExpression : public MP_expression_base {
   public:
+	virtual ~TerminalExpression() {};
+
     virtual double getValue() const = 0; 
     virtual int getColumn() const = 0;
     virtual int getStage() const = 0;
@@ -151,6 +154,8 @@ namespace flopc {
                 const MP_index_exp& i3,
                 const MP_index_exp& i4,
                 const MP_index_exp& i5);
+
+	//VariableRef& operator=(const &VariableRef); Why is there a compiler warning about assignment operator can not be generated? due to the private constructor?
 
     double level() const;
 

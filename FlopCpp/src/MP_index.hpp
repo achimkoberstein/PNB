@@ -52,15 +52,18 @@ namespace flopc {
   public:
     /// Default constructor. 
     MP_index() : index(0), instantiated(false) {}
-    int evaluate() const { 
+	virtual ~MP_index() {}
+    
+	virtual int evaluate() const { 
       return index; 
     }
     /// returns a reference to the distinct "empty" index.
     static MP_index &getEmpty();
     /// returns a reference to the distinct "wildcard" index.
     static MP_index &Any();
+
   private:
-    /** interrogate state of instatiation of data.
+    /** interrogate state of instantiation of data.
      */
     bool isInstantiated() const { 
       return instantiated; 
@@ -82,12 +85,12 @@ namespace flopc {
       instantiated = true; 
     }
     /** getter for MP_index * data type.  
-        @todo should this be virtual?
     */
-    MP_index* getIndex() const {
+    virtual MP_index* getIndex() const {
       return const_cast<MP_index*>(this);
     }
     /// Getter for domain over which this index is applied.
+	// return new MP_domain_set over s and this
     virtual MP_domain getDomain(MP_set* s) const;
 
     int index;

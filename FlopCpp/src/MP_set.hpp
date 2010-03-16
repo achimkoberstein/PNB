@@ -123,14 +123,7 @@ namespace flopc {
     }
   };
 
-  class MP_scenario_set : public MP_set { //set that stores the number of scenarios
-  public:
-	  MP_scenario_set(int nScen = 0): MP_set(nScen) {}
-	  virtual int isStage() const {
-		  return 1;
-		  }
-	  };
-
+  //forward declaration
   template <int nbr> class MP_subset;
 
 /** @brief Internal representation of a "set" 
