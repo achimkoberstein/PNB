@@ -320,7 +320,7 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   //     cout<<j<<" "<<colStage[j]<<endl;
   //   }
 
-// Compute Column Length Array
+// Compute Column Length Array to easily compute start array from there
   for (int j=0; j<=n; j++) {
     Clg[j] = 0;
   }
@@ -341,13 +341,13 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   for (int j=0; j<=n; j++) {
     Cst[j+1]=Cst[j]+Clg[j]; 
   }
-  for (int i=0; i<=n; i++) { //Reset column occurence counter
+  for (int i=0; i<=n; i++) { //Reset column length array, to compute Elm and Rnr 
     Clg[i]=0;
   }
   //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
   for (int i=0; i<nz; i++) {
     int col = coefs[i].col;
-    if (col==-1) {
+    if (col==-1) { //Right Hand Side?
       col = n;
     }
     int row = coefs[i].row;
@@ -421,6 +421,8 @@ void MP_model::attach(OsiSolverInterface *_solver) {
 
   Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
 
+  //Clean Up
+  //TODO: What is whith colStage and rowStage?!
   if (nz>0) {    
     delete [] Elm; 
     delete [] Rnr;    
@@ -508,14 +510,17 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
       Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
   } else if (Solver->isProvenPrimalInfeasible() == true) {
+	cout<<"FlopCpp: Problem is primal infeasible."<<endl;
     return mSolverState=MP_model::PRIMAL_INFEASIBLE;
-    cout<<"FlopCpp: Problem is primal infeasible."<<endl;
+
   } else if (Solver->isProvenDualInfeasible() == true) {
+	  cout<<"FlopCpp: Problem is dual infeasible."<<endl;
     return mSolverState=MP_model::DUAL_INFEASIBLE;
-    cout<<"FlopCpp: Problem is dual infeasible."<<endl;
+    
   } else {
+	  cout<<"FlopCpp: Solution process abandoned."<<endl;
     return mSolverState=MP_model::ABANDONED;
-    cout<<"FlopCpp: Solution process abandoned."<<endl;
+    
   }
   return mSolverState=MP_model::OPTIMAL;
 }
