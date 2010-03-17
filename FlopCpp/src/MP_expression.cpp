@@ -278,6 +278,7 @@ bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
   }
 }
 
+//This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
   assert(M==-1 || M==1);
   double multiplicator = M;

@@ -27,6 +27,8 @@ namespace flopc {
   public:
     MP_set_base() : Cyclic(false) {}
 
+	virtual ~MP_set_base() {} //TODO: This destructor needed? Base Class Destructor is virtual, so i suppose no..?
+
     virtual int size() const = 0;
     virtual operator MP_domain() const = 0;
     virtual MP_domain operator()(const MP_index_exp& i) const = 0;
@@ -81,13 +83,13 @@ namespace flopc {
         @todo is the internal use?
     */
 
-//	virtual ~MP_set(); TODO: Is this destructor needed?
+	//virtual ~MP_set(); //TODO: Is this destructor needed? If public, clients complain (maybe because baseclass destructor is protected?
 
-    MP_domain operator()(const MP_index_exp& i) const {
+    virtual MP_domain operator()(const MP_index_exp& i) const {
       return i->getDomain(const_cast<MP_set*>(this));
     }
     /// @brief constructs an MP_domain from the MP_set.
-    operator MP_domain() const {
+    virtual operator MP_domain() const {
       return new MP_domain_set(this,const_cast<MP_set*>(this));
     }
     /** @brief constructs  a domain by subsetting this MP_set where
@@ -125,6 +127,7 @@ namespace flopc {
 
   //forward declaration
   template <int nbr> class MP_subset;
+  template <int nbr> class SubsetRef;
 
 /** @brief Internal representation of a "set" 
     @ingroup INTERNAL_USE
@@ -147,7 +150,7 @@ namespace flopc {
     vector<MP_index_exp> I;
   };
 
-  template <int nbr> class SubsetRef;
+
 
 /** @brief Internal representation of a "set" 
     @ingroup INTERNAL_USE
@@ -156,7 +159,6 @@ namespace flopc {
     @note this is often implicitly created with many expressions which may
     subset a set.
 */
-
   template <int nbr>
   class MP_subset : public MP_set {
     friend class MP_domain_subset<nbr>;
@@ -183,7 +185,7 @@ namespace flopc {
 
     MP_subset(vector<const MP_set*> s) : S(s) {}
 
-    ~MP_subset() {}
+    virtual ~MP_subset() {}
 
     int operator()(int i1, int i2=0, int i3=0, int i4=0, int i5=0) {
       std::map<vector<int>, int>::const_iterator pos;
@@ -265,6 +267,7 @@ const InsertFunctor<nbr>& insert(MP_index_exp i1,
     calling code.
     @note this is often implicitly created with many expressions which may
     subset a set.
+	//TODO: What is SUBSETREF used for? It is plain empty..
 */
 
   class SUBSETREF : public MP_index_base {
@@ -275,7 +278,7 @@ const InsertFunctor<nbr>& insert(MP_index_exp i1,
     virtual MP_domain getDomain(MP_set* s) const {
       return MP_domain::getEmpty();
     }
-    int evaluate() const {
+    virtual int evaluate() const {
       return 0;
     }
   };
@@ -298,7 +301,7 @@ const InsertFunctor<nbr>& insert(MP_index_exp i1,
               const MP_index_exp& i5) : 
       S(s),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5) {} 
     
-    operator MP_domain() const {
+    virtual operator MP_domain() const {
 // 	    MP_domain_base* base;
 // 	    base = new MP_domain_subset<nbr>(S,
 // 		makeVector<nbr>(I1->getIndex(), I2->getIndex(), 
@@ -328,7 +331,7 @@ const InsertFunctor<nbr>& insert(MP_index_exp i1,
       return *this;
     }
 
-    int evaluate() const {
+    virtual int evaluate() const {
       vector<MP_index_exp> I = makeVector<nbr>(I1,I2,I3,I4,I5);
       vector<int> vi;
       for (int k=0; k<nbr; k++) {
@@ -344,7 +347,7 @@ const InsertFunctor<nbr>& insert(MP_index_exp i1,
       }
 
     }
-    MP_index* getIndex() const {
+    virtual MP_index* getIndex() const {
       return S;
     }
     MP_boolean B;

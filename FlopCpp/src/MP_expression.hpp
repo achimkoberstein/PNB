@@ -48,7 +48,7 @@ namespace flopc {
     };
 
   protected:
-	  //This class 
+	  //This class is used to set all coefficients of an constraint to 
     class GenerateFunctor : public Functor {
     public:
       GenerateFunctor(MP_constraint* r, vector<Coef>& cfs): R(r), Coefs(cfs) {}
@@ -89,6 +89,7 @@ namespace flopc {
   public:
     MP_expression_base() : count(0) {}
 
+	//TODO: Comments needed. What do these methods do?
     virtual double level() const = 0;
     virtual void generate(const MP_domain& domain,
                           vector<Constant> multiplicators,

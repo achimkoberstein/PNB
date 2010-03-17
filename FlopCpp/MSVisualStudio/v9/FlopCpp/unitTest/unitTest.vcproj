@@ -68,6 +68,7 @@
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
+				Profile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"

@@ -254,6 +254,7 @@ namespace flopc {
     //Disabling copy constructor and assignment
     MP_constraint(const MP_constraint&);
     MP_constraint& operator=(const MP_constraint&);
+
     MP_boolean B;
     const MP_set_base &S1, &S2, &S3, &S4, &S5; 
     MP_index_exp I1, I2, I3, I4, I5;
