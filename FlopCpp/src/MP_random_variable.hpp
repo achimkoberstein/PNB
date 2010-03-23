@@ -1,27 +1,32 @@
 #ifndef _MP_random_variable_hpp_
 #define _MP_random_variable_hpp_
 
+#include <boost/shared_ptr.hpp>
+#include <boost/array.hpp>
+
 #include "MP_data.hpp"
 #include "MP_index.hpp"
-
 #include "MP_set.hpp"
-#include <boost/shared_ptr.hpp>
+
 
 namespace flopc{
 
 	class MP_random_variable_impl;
 	class RandomVariableRef;
 
-	
+
 	//Class that defines a concrete RandomVariable for one coefficient
 	class RandomVariable {
 	public:
-		typedef enum { BINOMIAL, NORMAL } DistributionType;
-		
+		typedef enum { BINOMIAL, NORMAL } DistributionType; //TODO: Class hierarchy will make this superfluous
+
 		RandomVariable();
 		RandomVariable(const DistributionType &distrType);
-		~RandomVariable();
+		virtual ~RandomVariable();
 
+		//Samples a random variate according to distribution of RandomVariable.
+		virtual double sample() const = 0;
+		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const = 0;
 
 		const RandomVariable& operator=(const RandomVariable& rhs);
 
@@ -40,14 +45,48 @@ namespace flopc{
 		DistributionType distrType;
 		int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
 		int colIndex;
-
 		int rowIndex;
+		int defaultSampleSize;
+
+		};
+
+	class DiscreteRandomVariable : public RandomVariable {
+	public:
+
+		~DiscreteRandomVariable();
+		virtual double sample() const;
+		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const;
+
+
+		};
+
+	class ContinuousRandomVariable : public RandomVariable {
+	public:
+
+		~ContinuousRandomVariable();
+
+		virtual double sample() const;
+		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const;
+
+		};
+
+	class ScenarioRandomVariable : public DiscreteRandomVariable{
+
+	public:
+		ScenarioRandomVariable(double* scenValues, int length);
+
+		~ScenarioRandomVariable();
+		virtual double sample() const;
+		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const;
+
+	private:
+		const std::vector<double> scenarioValues;
 
 		};
 
 
 
-	
+
 	//Class that defines indexable random_variables. Contains concrete RandomVariables.
 	class MP_random_variable : public Functor, public Named //, public boost::enable_shared_from_this //We want to allow names, computation of flattened arrays and functors
 		{
@@ -60,6 +99,12 @@ namespace flopc{
 				const MP_set_base &s5 = MP_set::getEmpty());
 
 			MP_random_variable(RandomVariable* array, const MP_set_base &s1 = MP_set::getEmpty(), 
+				const MP_set_base &s2 = MP_set::getEmpty(), 
+				const MP_set_base &s3 = MP_set::getEmpty(),
+				const MP_set_base &s4 = MP_set::getEmpty(), 
+				const MP_set_base &s5 = MP_set::getEmpty());
+
+			MP_random_variable(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
 				const MP_set_base &s2 = MP_set::getEmpty(), 
 				const MP_set_base &s3 = MP_set::getEmpty(),
 				const MP_set_base &s4 = MP_set::getEmpty(), 
@@ -127,7 +172,6 @@ namespace flopc{
 		Constant C;
 		MP_boolean B;
 		};
-
 
 	//non-member non-friend functions
 	std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;

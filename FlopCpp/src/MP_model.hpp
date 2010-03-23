@@ -238,8 +238,10 @@ namespace flopc {
     }
 
 	
-	MP_stage getStage() const { return stage; }
-	void setStage(const MP_stage& val) { stage = val; }
+	MP_stage Stage() const { return stage; }
+	void Stage(const MP_stage& val) { stage = val; }
+	flopc::MP_scenario_set ScenSet() const { return scenSet; }
+	void ScenSet(flopc::MP_scenario_set val) { scenSet = val; }
 
 	OsiSolverInterface* Solver; 
 
@@ -261,7 +263,8 @@ namespace flopc {
 	Messenger* messenger;
     MP_expression Objective;
 	MP_stage stage;
-    set<MP_constraint *> Constraints;
+	MP_scenario_set scenSet;
+	set<MP_constraint *> Constraints;
     set<MP_variable *> Variables;
 
   private:

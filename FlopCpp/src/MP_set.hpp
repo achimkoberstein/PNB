@@ -32,6 +32,9 @@ namespace flopc {
     virtual int size() const = 0;
     virtual operator MP_domain() const = 0;
     virtual MP_domain operator()(const MP_index_exp& i) const = 0;
+
+
+
  
 	//Check if given integer is falid. If not return outOfBound. In Case of cyclic return i mod size.
     int check(int i) const {
@@ -63,6 +66,7 @@ namespace flopc {
 
     bool Cyclic;
   };
+
 
     
 /** @brief Representation of a set for indexing into some other construct.
@@ -114,9 +118,12 @@ namespace flopc {
     }
     /// gets the distinct 'empty' MP_set.
     static MP_set &getEmpty();
+
+	
   private:
     int cardinality;
   };
+  static MP_set Empty(1);
     
   class MP_stage : public MP_set {
   public:
@@ -125,6 +132,14 @@ namespace flopc {
       return 1;
     }
   };
+
+  class MP_scenario_set : public MP_set {
+  public:
+	  MP_scenario_set(int i = 0);
+	  virtual int isStage() const {
+		  return 0;
+		  }
+	  };
 
   //forward declaration
   template <int nbr> class MP_subset;

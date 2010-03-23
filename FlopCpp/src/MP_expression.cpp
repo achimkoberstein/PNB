@@ -348,19 +348,19 @@ void MP::GenerateFunctor::operator()() const {
 	  //TODO: Set stage
       int varStage = C->getStage();
 	  //Now comes the fun part: If varStage > stage this means one of two things:
-	  //1: Something is plain wrong
+	  //1: VariableRef with fixed Coefficient
 	  //2: We added a RandomVariable without a variable, so that the RandomVariable is treted 
 	  //as a terminalExpression
+	  // What is not allowed? varStage > stage && stage > 0 . 
 	  if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
 		  ptrRV =  C->getRandomVariable();
-		  //If ptr is empty we are actually in the first case..
-		  assert(ptrRV != 0);
-		  ptrRV->Stage(varStage);
+		  if (ptrRV != 0)
+			ptrRV->Stage(varStage);
 
 		  }
 	 
       //store col and row index in random variable, if there is any
-	  if (stage > 0 || (stage==0 && varStage > 0)){
+	  if (ptrRV != 0){
 		ptrRV->ColIndex(colNumber);
 		ptrRV->RowIndex(rowNumber);
 		  }
