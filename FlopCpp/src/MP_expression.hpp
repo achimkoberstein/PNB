@@ -13,6 +13,9 @@ using std::set;
 #include "MP_domain.hpp"
 #include "MP_constant.hpp"
 #include "MP_utilities.hpp"
+#include "MP_random_variable.hpp"
+
+
 
 namespace flopc {
 
@@ -20,6 +23,7 @@ namespace flopc {
   class TerminalExpression; 
   class MP_variable;
   class VariableRef;
+  class RandomVariableRef;
 
   class MP {
     friend class MP_expression;
@@ -30,12 +34,15 @@ namespace flopc {
     friend class CoefLess;
     friend class MP_expression_base;
     friend class VariableRef;
+	friend class RandomVariableRef;
+
 
     struct Coef {
-      Coef(int c, int r, double v, int s = 0) : 
-        col(c), row(r), stage(s), val(v)  {}
+      Coef(int c, int r, double v, int s = 0,RandomVariable* ptr = 0) : 
+        col(c), row(r), stage(s), val(v), ptrVar(ptr)  {}
       int col, row, stage;
       double val;
+	  RandomVariable* ptrVar;
 	  //TODO: Christian: enhance this
 	  //int scenario = 0;
 	  //double* val = {v} and int valLength = 1(or vector)
@@ -67,11 +74,14 @@ namespace flopc {
       GenerateFunctor(const GenerateFunctor&);
       GenerateFunctor& operator=(const GenerateFunctor&);
       
-      vector<Constant> multiplicators;
+      
       MP_constraint* R;
+	  //Temporary values
+	  vector<Constant> multiplicators; //Coefficients?
       double M; // sign (1=lhs, -1=rhs)
-      const TerminalExpression* C;
-      vector<MP::Coef>& Coefs;
+      const TerminalExpression* C; //Current 
+      //End Temporary values
+	  vector<MP::Coef>& Coefs;
     };
   };
 
@@ -90,13 +100,13 @@ namespace flopc {
     MP_expression_base() : count(0) {}
 
 	//TODO: Comments needed. What do these methods do?
-    virtual double level() const = 0;
+    virtual double level() const = 0; 
     virtual void generate(const MP_domain& domain,
                           vector<Constant> multiplicators,
                           MP::GenerateFunctor &f,
                           double m) const = 0;
 
-    virtual void insertVariables(set<MP_variable*>& v) const = 0;
+    virtual void insertVariables(set<MP_variable *>& v) const = 0; //Insert given Variables to the Model?!
 
     virtual ~MP_expression_base() {}
   };
@@ -121,6 +131,8 @@ namespace flopc {
     MP_expression(const Constant& c);
     /// Constructor which (silently) converts a VariableRef to a MP_expression
     MP_expression(const VariableRef& v);
+	////Constructor which silently converts a RandomVariable to a MP_expression
+	//MP_expression(const RandomVariableRef& rv);
     MP_expression(MP_expression_base* r) : Handle<MP_expression_base*>(r) {}
   };
 
@@ -163,20 +175,28 @@ namespace flopc {
     void insertVariables(set<MP_variable*>& v) const {
       v.insert(V);
     }
-    double getValue() const { 
+    virtual double getValue() const { 
       return 1.0;
     }
-    int getStage() const { 
-      return 0;
-    }
+    virtual int getStage() const;
+
     void generate(const MP_domain& domain,
                   vector<Constant> multiplicators,
                   MP::GenerateFunctor& f,
                   double m) const;
+
     MP_variable* V;
     int offset;
     const MP_index_exp I1,I2,I3,I4,I5;
   };
+
+ 
+
+   /** Semantic representation of a random variable in a Math Program
+      @ingroup INTERNAL_USE
+      @see MP_variable for a public interface.
+  */
+
 
   /// @ingroup PublicInterface
   MP_expression operator+(const MP_expression& e1, const MP_expression& e2);

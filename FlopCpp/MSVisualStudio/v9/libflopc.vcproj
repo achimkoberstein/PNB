@@ -41,13 +41,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\FlopCpp\include&quot;;..\..\..\Cbc\src\;..\..\..\Cgl\src\CglTwomir;..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\Cgl\src\CglFlowCover;..\..\..\Cgl\src\CglClique;..\..\..\Cgl\src\CglOddHole;..\..\..\Cgl\src\CglKnapsackCover;..\..\..\Cgl\src\CglGomory;..\..\..\Cgl\src\CglPreProcess;..\..\..\Cgl\src\CglProbing;..\..\..\Cgl\src;..\..\..\Clp\src;..\..\..\Osi\src\OsiClp;..\..\..\Osi\src;..\..\..\CoinUtils\src;..\..\..\BuildTools\headers"
+				AdditionalIncludeDirectories="..\..\..\boost\boost_1_42_0;..\..\..\FlopCpp\include;..\..\..\Cbc\src\;..\..\..\Cgl\src\CglTwomir;..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\Cgl\src\CglFlowCover;..\..\..\Cgl\src\CglClique;..\..\..\Cgl\src\CglOddHole;..\..\..\Cgl\src\CglKnapsackCover;..\..\..\Cgl\src\CglGomory;..\..\..\Cgl\src\CglPreProcess;..\..\..\Cgl\src\CglProbing;..\..\..\Cgl\src;..\..\..\Clp\src;..\..\..\Osi\src\OsiClp;..\..\..\Osi\src;..\..\..\CoinUtils\src;..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
+				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 			/>
@@ -209,6 +209,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\MP_random_variable.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\FlopCpp\src\MP_set.cpp"
 				>
 			</File>
@@ -260,6 +264,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\FlopCpp\src\MP_model.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\MP_random_variable.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\MP_random_variable_impl.hpp"
 				>
 			</File>
 			<File

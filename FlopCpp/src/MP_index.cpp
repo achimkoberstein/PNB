@@ -81,7 +81,7 @@ using namespace flopc;
 
 
 MP_domain MP_index::getDomain(MP_set* s) const{
-  return new MP_domain_set(s,const_cast<MP_index*>(this)) ;
+  return new MP_domain_set(s,const_cast<MP_index*>(this)) ; //TODO: possible memory leak
 }
 
 MP_domain MP_index_mult::getDomain(MP_set* s) const{

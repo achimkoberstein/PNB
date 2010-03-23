@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\..\Flopcpp\test;..\..\..\..\..\Flopcpp\src;..\..\..\..\..\BuildTools\headers;..\..\..\..\..\Clp\src;..\..\..\..\..\Osi\src\OsiClp;..\..\..\..\..\Osi\src\OsiCbc;..\..\..\..\..\..\FlopCpp\src;..\..\..\..\..\CoinUtils\src;..\..\..\..\..\Cbc\src;..\..\..\..\..\Osi\src"
+				AdditionalIncludeDirectories="..\..\..\..\..\Flopcpp\test;..\..\..\..\..\Flopcpp\src;..\..\..\..\..\BuildTools\headers;..\..\..\..\..\Clp\src;..\..\..\..\..\Osi\src\OsiClp;..\..\..\..\..\Osi\src\OsiCbc;..\..\..\..\..\..\FlopCpp\src;..\..\..\..\..\CoinUtils\src;..\..\..\..\..\Cbc\src;..\..\..\..\..\Osi\src;..\..\..\..\..\boost\boost_1_42_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

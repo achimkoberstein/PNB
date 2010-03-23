@@ -238,30 +238,32 @@ namespace flopc {
     }
 
 	
-	MP_stage getStage() const { return Stage; }
-	void setStage(const MP_stage& val) { Stage = val; }
+	MP_stage getStage() const { return stage; }
+	void setStage(const MP_stage& val) { stage = val; }
 
+	OsiSolverInterface* Solver; 
 
   private:
     typedef std::set<MP_variable* >::iterator varIt;
     typedef std::set<MP_constraint* >::iterator conIt;
+	typedef std::set<RandomVariable* >::iterator randomVarIt;
     static MP_model& default_model;
     static MP_model* current_model;
     MP_model(const MP_model&);
     MP_model& operator=(const MP_model&);
 
-    Messenger* messenger;
+
    
-    
+    //Sort Coefficient Vectors with CoefLess
     static void assemble(vector<MP::Coef>& v, vector<MP::Coef>& av);
     void add(MP_constraint* constraint);
+
+	Messenger* messenger;
     MP_expression Objective;
-	MP_stage Stage;
+	MP_stage stage;
     set<MP_constraint *> Constraints;
     set<MP_variable *> Variables;
-  public:
-    /// @todo should this be private?
-    OsiSolverInterface* Solver; 
+
   private:
     int m;
     int n;

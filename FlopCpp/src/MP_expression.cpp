@@ -10,6 +10,7 @@
 #include "MP_set.hpp"
 #include "MP_variable.hpp"
 #include "MP_model.hpp"
+#include "MP_random_variable_impl.hpp"
 #include <OsiSolverInterface.hpp>
 
 namespace flopc {
@@ -53,10 +54,35 @@ namespace flopc {
                              vector<Constant > multiplicators,
                              MP::GenerateFunctor& f,
                              double m)  const {
+	//Set temporary values of Functor to previously computed ones and apply functor with these
+	// values for every element in the domain
+	//Set vector of constants of f to current values and set current TerminalExpression
     f.setMultiplicator(multiplicators,m);
     f.setTerminalExpression(this);
+	//for current domain, apply functor
     domain.forall(&f);
   }
+
+  int VariableRef::getStage() const
+	  {
+	  //We do not know which of these sets is the stage set, so we have to check all (but could abort after we found one)
+	  //TODO: We can shorten the check if isStage is checked in advance?!
+	  int i1 = V->S1->checkStage(I1->evaluate());
+	  int i2 = V->S2->checkStage(I2->evaluate());
+	  int i3 = V->S3->checkStage(I3->evaluate());
+	  int i4 = V->S4->checkStage(I4->evaluate());
+	  int i5 = V->S5->checkStage(I5->evaluate());
+
+	  int stage = 0; //Set stage to the correct value. Only one int should be larger than 0.
+	  if (i1>stage) stage = i1;
+	  else if (i2>stage) stage = i2;
+	  else if (i3>stage) stage = i3;
+	  else if (i4>stage) stage = i4;
+	  else if (i5>stage) stage = i5;
+	  return stage;
+	  }
+
+ 
 
   class Expression_constant : public TerminalExpression, public MP {
     friend class MP_expression;
@@ -69,7 +95,7 @@ namespace flopc {
       return C->evaluate();
     }
     int getColumn() const {
-      return -1;
+      return -1; //indicates right hand side column
     }
     int getStage() const {
       return C->getStage(); //NB to be changed
@@ -249,8 +275,8 @@ namespace flopc {
   }
 
   MP_expression operator/(const MP_expression& e1, const Constant& e2) {
-    return new Expression_div(e1, e2);
-  }
+	  return new Expression_div(e1, e2);
+	  }
 
   MP_expression sum(const MP_domain& d, const MP_expression& e) {
     return new Expression_sum(d, e);  
@@ -266,7 +292,7 @@ MP_expression::MP_expression(const Constant &c) :
 
 MP_expression::MP_expression(const VariableRef &v) : 
   Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) {} 
-
+  
 
 bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
   if (a.col < b.col) {
@@ -281,30 +307,50 @@ bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
 //This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
   assert(M==-1 || M==1);
-  double multiplicator = M;
+  double sideOfConstraint = M; //LHS (=1) or RHS (=-1)?
   int stage = 0;
+  //TODO: Remove this, debugging only
+  if (multiplicators.size() > 1){
+	cout << multiplicators.size() << endl;
+	 cout << "test" <<endl;
+	}
+  RandomVariable* ptrRV = 0;
   for (unsigned int i=0; i<multiplicators.size(); i++) {
-    multiplicator *= multiplicators[i]->evaluate();
-    if (multiplicators[i]->getStage() > stage) {
+	  //When is more than 1 element in the vector??
+    sideOfConstraint *= multiplicators[i]->evaluate();
+    if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
       stage = multiplicators[i]->getStage();
+	  ptrRV = multiplicators[i]->getRandomVariable();
+	  ptrRV->Stage(stage);
     }
   }
+  //If stage is > 0, we have a RandomVariable and not a double coefficient
+  //I still need to find out why multiplicators can be of size > 0? Maybe for rhs?
+  //We should store a double value inside of a RandomVariable to indicate for a multiplication/addition
+  //TODO: Do that..
+	
+
+  // If objective, rowNumber is -1
   int rowNumber = -1;
-  if (R != 0) {
+  if (R != 0) { //If we are at a normal constraint get correct rowNumber
     rowNumber = R->row_number();
   }
   if (rowNumber != outOfBound) {
     assert(C != 0);
-    int colNumber = C->getColumn();
+    int colNumber = C->getColumn(); //Get Column number.
     if ( colNumber != outOfBound  ) {
-      double val = multiplicator*C->getValue();
-      int tstage = C->getStage();
-      if (tstage > stage) {
-        stage = tstage;
-      }
-      // if (val != 0) {
-      Coefs.push_back(MP::Coef(colNumber, rowNumber, val, stage));
-      //}
+      double val = sideOfConstraint*C->getValue(); //Get Value of Coefficient
+	  //TODO: Set stage
+      int varStage = C->getStage();
+	  assert(stage>=varStage); //Everything else would be plain wrong..
+      //store col and row index in random variable
+	  if (stage > 0){
+		ptrRV->ColIndex(colNumber);
+		ptrRV->RowIndex(rowNumber);
+		  }
+      Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage, ptrRV));
+     
     }
   }
 }
+

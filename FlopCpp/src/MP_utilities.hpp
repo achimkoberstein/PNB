@@ -12,7 +12,15 @@ using std::string;
 #include <vector>
 using std::vector;
 
+#include <boost/exception/all.hpp>
+
 namespace flopc {
+
+	//Define Exception hierarchy
+	//TODO: Remove eventually..
+	struct exception_base: virtual std::exception, virtual boost::exception { };
+	struct io_error: virtual exception_base { };
+	struct not_implemented_error: virtual exception_base { };
 
   /** @file This file contains several different useful utilities which are
       used to simplify use of FlopC++.

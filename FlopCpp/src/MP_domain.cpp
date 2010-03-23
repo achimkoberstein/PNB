@@ -8,6 +8,11 @@
 #include "MP_model.hpp"
 
 namespace flopc {
+
+
+
+
+
   MP_domain_set::MP_domain_set(const MP_set* s, MP_index* i) 
     : S(s), I(i)  {} 
   MP_domain_set::~MP_domain_set() {}
@@ -83,6 +88,7 @@ void MP_domain::forall(const Functor* op) const {
   } else {
     last->donext = op;
   }
+  //Iterate over all elements of the domain and call op on them.
   operator->()->operator()();
 }
 
@@ -98,6 +104,12 @@ int MP_domain_set::evaluate() const {
   return I->evaluate();
 }
 
+// Function call get's invoked by MP_domain::forall.
+// donext Structure is created during Domain creation from Sets.
+// If element of domain is reached, donext pointer points to Functor.
+// This method iterates through all the elements of the domain and performs
+// a function call at every element.
+// Element of a domain is: Sets |S1| = 3, |S2| = 2. We have six elements.
 void MP_domain_set::operator()() const {
   if (I->isInstantiated() == true) {
     (*donext)(); 
@@ -116,18 +128,29 @@ MP_index* MP_domain_set::getIndex() const {
   return I;
 }
 
-
+//This operator creates a new domain from two already existing domains
+//What happens is this
+// 1: Check if the first or second MP_domain is empty. If that is the case, return the other one. If both are empty, an empty domain is returned.
+// Question: When are domains empty? Usually "empty" domains with size 1 get created..
+// 2: Do the linking stuff: Set donext of current last pointer to set b, Set last pointer to the latest added set b.
+// Following this, we get the following b = d1 * d2 * d3 * d4 * d5. Operator is left-asoziativ, so in the end b's last pointer points to d5->root, but b's donext points to d2.operator->(),
+// whose donext points to d3.operator(), up to till d5.operator(). The clue is: donext of d5 can be replaced via the last pointer from anyone getting b.
 flopc::MP_domain flopc::operator*(const flopc::MP_domain& a, const flopc::MP_domain& b) {
   if (a.operator->() == MP_domain::getEmpty().operator->()) {
     return b;
   } else if (b.operator->() == MP_domain::getEmpty().operator->()) {
     return a;
-  } else {
+  } else { //Both Domains are nonempty
+	//Create new Domain by copying a
     MP_domain retval = a;
+	// Set functor of what a's last pointer currently points to, to MP_domain_base of a to b's MP_domain_base
     retval.last->donext = b.operator->();
+	//Memory Management: increment both counters
     const_cast<MP_domain&>(b).increment();
     const_cast<MP_domain&>(a).increment();
+	//Set last pointer of new MP_domain to what b currently points to
     retval.last = b.last;
+	//Subsets only: If there are any conditions on b, transfer them to new MP_domain
     retval.condition.insert(retval.condition.end(),b.condition.begin(),
                             b.condition.end());
     return retval;

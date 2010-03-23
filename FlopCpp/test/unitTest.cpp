@@ -5,6 +5,7 @@ using namespace flopc;
 #include "CoinFloatEqual.hpp"
 
 
+
 namespace Aircraft {
     enum {a, b, c, d, numA};
 } 

@@ -33,10 +33,14 @@ namespace flopc {
 
     ~DataRef() {} 
     DataRef& such_that(const MP_boolean& b);
+
+	//Get Value via current settings for MP_index_exp
     double evaluate() const;
     int getStage() const;
     const DataRef& operator=(const DataRef& r); 
     const DataRef& operator=(const Constant& c);
+
+	//Set value in D via current MP_index_exp
     void evaluate_lhs(double v) const;
     void operator()() const;
     DataRef& probability(double p) { return *this; }
@@ -170,7 +174,7 @@ namespace flopc {
 
     static double outOfBoundData;
 
-    MP_index i1,i2,i3,i4,i5;
+    MP_index i1,i2,i3,i4,i5; 
     const MP_set_base &S1,&S2,&S3,&S4,&S5;
     double* v;
     bool manageData;
