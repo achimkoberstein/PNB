@@ -218,7 +218,7 @@ void MP_model::minimize(const MP_expression &obj) {
   }
 }
 
-void MP_model::attach(OsiSolverInterface *_solver) {
+void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to sample-function?!
   if (_solver == 0) {
     if (Solver == 0) {
       mSolverState = MP_model::DETACHED;
@@ -262,8 +262,8 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   }
   nz = coefs.size();
   //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
-  //Ensure that Model has a Stage set..
  vector< vector<RandomVariable*> > randomVars(this->getStage().size()+1);//we store nStages, but without first place, so nStages+1 places are needed
+ //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
  for ( int i = 0; i != coefs.size(); i++){
 	 if (coefs[i].ptrVar != 0) {
 		 //We have a random variable associated with this column/row index
@@ -271,8 +271,7 @@ void MP_model::attach(OsiSolverInterface *_solver) {
 		 }
 	 }
 
-
-  messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
+ messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
 
   if (nz>0) {    
     Elm = new double[nz]; 
@@ -292,7 +291,6 @@ void MP_model::attach(OsiSolverInterface *_solver) {
 	rowStage = new int[m];
   }
   const double inf = Solver->getInfinity();
-
   // Set correct Row Stage for every row by iterating over all elements
   // Row Stage is equal to the highest stage of a belonging variable
   for (int i=0; i<m; i++) {
@@ -335,7 +333,6 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   for (int j=0; j<=n; j++) {
     Clg[j] = 0;
   }
-    
   // Treat right hand side as n'th column
   for (int j=0; j<=n; j++) {
     Clg[j] = 0;
@@ -400,6 +397,20 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     }
   }
 
+  // Compute column bounds. 
+  //Initialize all Variables with standard bounds.
+  for (int j=0; j<n; j++) {
+	  l[j] = 0.0;
+	  u[j] = inf;
+	  }
+  //Set Bounds obtained via MP_variable
+  for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+	  for (int k=0; k<(*i)->size(); k++) {
+		  l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
+		  u[(*i)->offset+k] = (*i)->upperLimit.v[k];
+		  }
+	  }
+
   // Generate objective function coefficients
   vector<Constant> v;
   MP::GenerateFunctor f(0,cfs);
@@ -408,6 +419,13 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   
   messenger->objectiveDebug(cfs);
   assemble(cfs,coefs);
+  //add random variables (if any)
+  for ( int i = 0; i != coefs.size(); i++){
+	  if (coefs[i].ptrVar != 0) {
+		  //We have a random variable associated with this column/row index
+		  randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
+		  }
+	  }
   
   for (int j=0; j<n; j++) {
     c[j] = 0.0;
@@ -418,19 +436,22 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     c[col] = elm;
   } 
 
-  // Compute column bounds 
-  for (int j=0; j<n; j++) {
-    l[j] = 0.0;
-    u[j] = inf;
-  }
-  for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-    for (int k=0; k<(*i)->size(); k++) {
-      l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
-      u[(*i)->offset+k] = (*i)->upperLimit.v[k];
-    }
-  }
+
+
+
 
   Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
+
+  for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+	  int begin = (*i)->offset;
+	  int end = (*i)->offset+(*i)->size();
+	  if ((*i)->type == discrete) {
+		  for (int k=begin; k<end; k++) {
+			  Solver->setInteger(k);
+			  }
+		  }
+	  }
+    mSolverState = MP_model::ATTACHED;
 
   //Clean Up
   //TODO: What is whith colStage and rowStage?!
@@ -450,16 +471,8 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     delete [] bu;
   }  
 
-  for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-    int begin = (*i)->offset;
-    int end = (*i)->offset+(*i)->size();
-    if ((*i)->type == discrete) {
-      for (int k=begin; k<end; k++) {
-        Solver->setInteger(k);
-      }
-    }
-  }
-  mSolverState = MP_model::ATTACHED;
+
+
   messenger->generationTime(CoinCpuTime()-time);
 }
 
