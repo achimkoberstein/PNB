@@ -23,6 +23,7 @@ namespace {
 						
 			}
 		virtual void TearDown(){
+			testModel.detach();
 
 			}
 		MP_model testModel;
@@ -56,28 +57,30 @@ namespace {
 
 	//	}
 
-	//TEST_F(MP_modelTest,MPRandomVariableConstructionTest){
-	//	MP_set autos(4); //We have a set with elements 0 to 3
-	//	MP_random_variable rvar1;
-	//	MP_random_variable rvar2(autos);
-	//	}
+	TEST_F(MP_modelTest,MPRandomVariableConstructionTest){
+		MP_set autos(4); //We have a set with elements 0 to 3
+		MP_set scen(3);
+		double rvArr[4][3] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
+		MP_random_variable rvar1;
+		MP_random_variable rvar2(&rvArr,autos,scen);
+		}
 
 
-	//TEST_F(MP_modelTest,SimpleRandomVariableExpressionParsingTest){
+	TEST_F(MP_modelTest,SimpleRandomVariableExpressionParsingTest){
 
-	//	MP_random_variable rVar1;
-	//	MP_variable x1;
-	//	MP_variable y1;
-	//	MP_variable x2;
-	//	MP_variable y2;
-	//	MP_constraint exp1;
-	//	//Test some combinations of left and right hand side
-	//	exp1() = 3*x1() + rVar1()*y1() <= 7;
-	//	exp1() = 4*x1()+5*x2() <= 10;
-	//	exp1() = rVar1()*4 + y2()*rVar1() <= 8; //How can this work? constant get implicitly converted to expression..
-	//	//Somehow we have to check if the rhs is properly evaluated in the end
-	//	//TODO:
-	//	}
+		MP_random_variable rVar1;
+		MP_variable x1;
+		MP_variable y1;
+		MP_variable x2;
+		MP_variable y2;
+		MP_constraint exp1;
+		//Test some combinations of left and right hand side
+		exp1() = 3*x1() + rVar1()*y1() <= 7;
+		exp1() = 4*x1()+5*x2() <= 10;
+		exp1() = rVar1()*4 + y2()*rVar1() <= 8; //How can this work? constant get implicitly converted to expression..
+		//Somehow we have to check if the rhs is properly evaluated in the end
+		//TODO:
+		}
 
 	//TEST_F(MP_modelTest,RandomVariableExpressionParsingTest){
 	//	//Now we test RandomVariables with sets
@@ -96,43 +99,43 @@ namespace {
 	//	//TODO: Test if the parsed expressions are correct
 	//	}
 
-	TEST_F(MP_modelTest,SimpleRandomVariableSolverTest){
-		testModel.detach();
-		testModel.verbose();
-		MP_stage T(2);
-		MP_variable x;
-		MP_variable y(T);
-		MP_random_variable rVar(T);
-		MP_random_variable rVar2(T);
-		MP_random_variable rVar3(T);
-		MP_constraint constraint1(T);
-		MP_index j;
-		//I would expect that such things would work, i.e. assign to different indices of one constraint.
-		//constraint1(0) = 3*x() <= 10;
-		constraint1(T+1) = 4*x()+rVar(T+1)*y(T+1)+2*y(T) <= rVar3(T+1)*20;
-		//TODO: This is counterintuitive
-		testModel.setObjective( 3*x() );
-		testModel.attach(new OsiClpSolverInterface());
-		//We need to do some tests here..
-		testModel.solve(MP_model::MAXIMIZE);
-		//Print some results..
-		EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-		EXPECT_EQ(15,testModel->getObjValue());
+	//TEST_F(MP_modelTest,SimpleRandomVariableSolverTest){
+	//	testModel.detach();
+	//	testModel.verbose();
+	//	MP_stage T(2);
+	//	MP_variable x;
+	//	MP_variable y(T);
+	//	MP_random_variable rVar(T);
+	//	MP_random_variable rVar2(T);
+	//	MP_random_variable rVar3(T);
+	//	MP_constraint constraint1(T);
+	//	MP_index j;
+	//	//I would expect that such things would work, i.e. assign to different indices of one constraint.
+	//	//constraint1(0) = 3*x() <= 10;
+	//	constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20;
+	//	//TODO: This is counterintuitive
+	//	testModel.setObjective( 3*x() );
+	//	testModel.attach(new OsiClpSolverInterface());
+	//	//We need to do some tests here..
+	//	testModel.solve(MP_model::MAXIMIZE);
+	//	//Print some results..
+	//	EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+	//	EXPECT_EQ(15,testModel->getObjValue());
 
-		vector<int> colStage(testModel->getNumCols());
-		vector<int> rowStage(testModel->getNumRows());
+	//	vector<int> colStage(testModel->getNumCols());
+	//	vector<int> rowStage(testModel->getNumRows());
 
 
-		for (int j=0; j!=testModel->getNumCols(); ++j) {
-			colStage[j] = testModel.getColStage()[j];
-			cout<<"Col stage  "<<j<<"  "<<colStage[j]<<endl;
-			}
+	//	for (int j=0; j!=testModel->getNumCols(); ++j) {
+	//		colStage[j] = testModel.getColStage()[j];
+	//		cout<<"Col stage  "<<j<<"  "<<colStage[j]<<endl;
+	//		}
 
-		for (int i=0; i!=testModel->getNumRows(); ++i) {
-			rowStage[i] = testModel.getRowStage()[i];
-			cout<<"Row stage  "<<i<<"  "<<rowStage[i]<<endl;
-			}
-		}
+	//	for (int i=0; i!=testModel->getNumRows(); ++i) {
+	//		rowStage[i] = testModel.getRowStage()[i];
+	//		cout<<"Row stage  "<<i<<"  "<<rowStage[i]<<endl;
+	//		}
+	//	}
 
 	//TEST_F(MP_modelTest,RandomVariableInitializationTest){
 

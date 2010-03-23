@@ -1,7 +1,10 @@
 #include "MP_random_variable.hpp"
 #include <exception>
 #include <stdexcept>
+#include <vector>
+
 #include "MP_expression.hpp"
+#include "MP_model.hpp"
 
 
 namespace flopc{
@@ -15,6 +18,7 @@ namespace flopc{
 	//TODO: Do that
 class MP_random_variable_impl : public RowMajor, public Functor , public Named {
 	friend class RandomVariableRef;
+
 public:
 	//If we use this constructor, we need to delete values in the end
 	MP_random_variable_impl(const MP_set_base &s1 = MP_set::getEmpty(), 
@@ -23,7 +27,7 @@ public:
 		const MP_set_base &s4 = MP_set::getEmpty(), 
 		const MP_set_base &s5 = MP_set::getEmpty()):
 	RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-		S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable[size()]),manageData(true) { 
+		S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(0),manageData(true) { 
 		initialize();
 		}; 
 
@@ -36,6 +40,52 @@ public:
 	RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 		S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(array),manageData(false) {  //Consistency check?
 		}; 
+
+	//Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
+	MP_random_variable_impl(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
+		const MP_set_base &s2 = MP_set::getEmpty(), 
+		const MP_set_base &s3 = MP_set::getEmpty(),
+		const MP_set_base &s4 = MP_set::getEmpty(), 
+		const MP_set_base &s5 = MP_set::getEmpty()):
+	RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
+		S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new DiscreteRandomVariable[size()]),manageData(true) {  //Consistency check?
+
+			//What is with absurd cases? Sets containing of 1 element specified before sets with more?
+			//Create Random Variables according to specifications..
+			int scen = MP_model::getCurrentModel()->ScenSet().size(); 
+			for (int j1 = 0; j1 < S1.size();j1++){
+				if (S2 != MP_set::getEmpty()){
+					for (int j2 = 0; j2 < S2.size(); j2++) {
+						if (S3 != MP_set::getEmpty()){
+							for (int j3 = 0; j3 < S3.size(); j3++){
+								if (S4 != MP_set::getEmpty()){
+									for (int j4 = 0; j4 < S4.size();j4++){
+										if (S5 != MP_set::getEmpty()){
+											for (int j5 = 0; j5 < S5.size();j5++){
+												createRandomVariableFromIndices(array,(j1+j2+j3+j4+j5)*scen,scen);
+												}
+											}
+										else
+											createRandomVariableFromIndices(array,(j1+j2+j3+j4)*scen,scen);
+										}
+
+									}
+								else
+									createRandomVariableFromIndices(array,(j1+j2+j3)*scen,scen);
+								}
+
+							}
+						else 
+							createRandomVariableFromIndices(array,(j1+j2)*scen,scen);
+						}
+
+					}
+				else
+					createRandomVariableFromIndices(array,(j1)*scen,scen);
+				}
+			
+		};
+
 
 	~MP_random_variable_impl(){
 		if(manageData)
@@ -64,10 +114,23 @@ public:
 
 
 private:
+	void createRandomVariableFromIndices(double* arr,int indexFrom, int scen){
+		double *tempArray;
+		tempArray = new double[scen]; //new/delete
+		for (int i = 0; i < scen; i++){
+			tempArray[i] = arr[indexFrom+i];
+			}
+		values[indexFrom] = ScenarioRandomVariable(tempArray,scen);
+		}
+		
+
+
 	const MP_set_base &S1,&S2,&S3,&S4,&S5;
 	MP_index i1,i2,i3,i4,i5;
 	RandomVariable* values; //Array of RandomVariables (shared_ptr?)
 	bool manageData;
+
+	
 
 	};
 
@@ -80,6 +143,10 @@ MP_random_variable::MP_random_variable( const MP_set_base &s1 /*= MP_set::getEmp
 MP_random_variable::MP_random_variable( RandomVariable* array, const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
 : ptrImpl(new MP_random_variable_impl(array,s1,s2,s3,s4,s5)) {}
 
+MP_random_variable::MP_random_variable( double* array, const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
+: ptrImpl(new MP_random_variable_impl(array,s1,s2,s3,s4,s5))	{
+
+	}
 RandomVariable& MP_random_variable::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
 	return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
 	}
@@ -90,10 +157,6 @@ const boost::shared_ptr<RandomVariableRef> MP_random_variable::operator()( /*TOD
 		return temp; //TODO: Who calls corresponding delete?!
 	}
 
-void MP_random_variable::operator()() const
-	{
-
-	}
 //Implementation for MP_random_variable_impl
 void MP_random_variable_impl::operator ()() const {
 		if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
@@ -108,16 +171,17 @@ void MP_random_variable_impl::operator ()() const {
 
 void MP_random_variable_impl::initialize()
 	{
+	values = new DiscreteRandomVariable();
 	for(int i = 0; i < size(); i++){
-		values[i] = RandomVariable(); 
+		values[i] = DiscreteRandomVariable(); 
 		}
 	}
 
-//Implementation for RandomVariable
-RandomVariable::RandomVariable() : distrType(DistributionType::NORMAL) {} //TODO: Set standard values for all fields
+//Implementation for RandomVariable: Think about these constructors.. are they necessary?
+RandomVariable::RandomVariable() : distrType(DistributionType::NORMAL),stage(0),colIndex(0),rowIndex(0),defaultSampleSize(0) {} //TODO: Set standard values for all fields
 
 RandomVariable::RandomVariable(const flopc::RandomVariable::DistributionType &distrType)
-: distrType(distrType)
+: distrType(distrType),stage(0),colIndex(0),rowIndex(0),defaultSampleSize(0)
 	{}
 
 
@@ -251,4 +315,62 @@ std::ostream & operator<<( std::ostream &out, const RandomVariable& rhs )
 	{
 		return out << rhs.DistrType();
 	}
+
+ScenarioRandomVariable::ScenarioRandomVariable( double* scenValues,int length)
+: DiscreteRandomVariable(),scenarioValues(scenValues, scenValues + length )
+	{
+
+	}
+
+std::vector< std::pair<double,double> > ScenarioRandomVariable::sampleValues( int elements ) const
+	{
+		double prob = 1.0/scenarioValues.size();
+		std::vector< std::pair< double,double> > samples;
+		for (std::size_t i = 0; i < scenarioValues.size(); i++){
+			samples[i] = std::pair<double,double>(scenarioValues[i],prob);
+			}
+		return samples;
+	}
+
+double ScenarioRandomVariable::sample() const
+	{
+		//Chose an element at random from given scenario values?!
+	//TODO
+		return scenarioValues[0];
+	}
+
+ScenarioRandomVariable::~ScenarioRandomVariable()
+	{
+
+	}
+std::vector< std::pair<double,double> > ContinuousRandomVariable::sampleValues( int elements ) const
+	{
+return std::vector< std::pair<double,double> >();
+	}
+
+double ContinuousRandomVariable::sample() const
+	{
+		return 0;
+	}
+
+ContinuousRandomVariable::~ContinuousRandomVariable()
+	{
+
+	}
+double DiscreteRandomVariable::sample() const
+	{
+		return 0;
+	}
+
+std::vector< std::pair<double,double> > DiscreteRandomVariable::sampleValues( int elements ) const
+	{
+	return std::vector< std::pair<double,double> >();
+	}
+
+DiscreteRandomVariable::~DiscreteRandomVariable()
+	{
+
+	}
+
+
 	}

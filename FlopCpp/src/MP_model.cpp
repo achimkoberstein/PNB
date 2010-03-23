@@ -9,12 +9,15 @@ using std::endl;
 #include <algorithm>
 #include <limits>
 
+#include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
 #include <OsiSolverInterface.hpp>
+#include <SmiScnModel.hpp>
+
 #include "MP_model.hpp"
 #include "MP_variable.hpp"
 #include "MP_constraint.hpp"
-#include <CoinTime.hpp>
+
 
 using namespace flopc;
 
@@ -170,6 +173,7 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
     while (i!=v.end() && c==i->col && r==i->row) {
       val += i->val;
       if (i->stage>0) {//If Coefficient was added with a random variable..
+		  //This is for right-hand-side addition
         s = i->stage;
 		//We do not add random variables, so we better do not have a valid pointer yet
 		assert(ptr == 0);
@@ -265,7 +269,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   }
   nz = coefs.size();
   //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
- vector< vector<RandomVariable*> > randomVars(this->getStage().size()+1);//we store nStages, but without first place, so nStages+1 places are needed
+ vector< vector<RandomVariable*> > randomVars(this->Stage().size()+1);//we store nStages, but without first place, so nStages+1 places are needed
  //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
  for ( int i = 0; i != coefs.size(); i++){
 	 if (coefs[i].ptrVar != 0) {
@@ -276,6 +280,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
 
  messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
 
+ ////
+ // Generate Core Model
+ ////
+
+ //nz should only count number of elements in the matrix and not the RHS also..
+ int realnz = nz;
   if (nz>0) {    
     Elm = new double[nz]; 
     Rnr = new int[nz];    
@@ -286,7 +296,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
     l =   new double[n];  
     u =   new double[n];  
     c =  new double[n]; 
-	colStage = new int[n];
+	colStage = new int[n+1]; //Also store colStage of RHS (in column n)
   }
   if (m>0) {
     bl  = new double[m];  
@@ -299,9 +309,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   for (int i=0; i<m; i++) {
 	  rowStage[i] = 0;
 	  }
+  for (int i=0; i<n+1; i++) {
+	  colStage[i] = 0;
+	  }
   for (int i=0; i<nz; i++) {
 	  int s = coefs[i].stage; //Stage of Variable that belongs to current coefficient
-	  colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
+	  if (coefs[i].col == -1){
+		  colStage[n] = s;
+		  }
+	  else
+		  {
+		  colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
+		  }
 	  int row = coefs[i].row; 
 	  if ( s > rowStage[row] )  {
 		  rowStage[row] = s;
@@ -344,6 +363,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
     int col = coefs[i].col;
     if (col == -1)  { //If col is -1 it is the right hand side, and inserted to column
       col = n;
+	  realnz--;
     }
     Clg[col]++;
   }
@@ -431,19 +451,55 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
 	  }
   
   for (int j=0; j<n; j++) {
-    c[j] = 0.0;
-  }
+	  c[j] = 0.0;
+	  }
   for (size_t i=0; i<coefs.size(); i++) {
-    int col = coefs[i].col;
-    double elm = coefs[i].val;
-    c[col] = elm;
-  } 
+	  int col = coefs[i].col;
+	  double elm = coefs[i].val;
+	  c[col] = elm;
+	  } 
+
+  ////
+  //Core Model generated..
+  ////
+
+  //Check for stochasticity: If so, we have a stage set with size greater than 0.
+  if (this->
+	  Stage().size() > 0){
+	  ////
+	  // Feed Core Model to SmiScnModel
+	  ////
+	  // Generate Core ModelMatrix: Need Only the matrix, no rhs, so we need realnz (Elm,Rnr and Cst are too big..)	
+	  CoinPackedMatrix matrix(true,m,n,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
+	  matrix.reverseOrdering(); //Smi needs matrix in row ordered form
+	  Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data
+	  SmiCoreData *osiCore = new
+		  SmiCoreData(Solver,this->
+		  Stage().size() ,colStage,rowStage); //Create CoreData Node
+	  
+	  // initialize SmiScnModel to store the stochastic elements
+	  SmiScnModel *smiModel = new SmiScnModel();
+
+	  //TODO: Call appropriate sampling method to create scenario tree
+
+	  // Add Scenarios
+	  //int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+	  // rlo0,NULL,iBranchStage[0],
+	  // iAncestorScn[0],dProbScn[0]);
+
+	  //is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+	  // rlo1,NULL,iBranchStage[1],
+	  // iAncestorScn[1],dProbScn[1]);
+
+
+	  }
+  else {
+	  Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
+	  }
 
 
 
 
-
-  Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
 
   for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
 	  int begin = (*i)->offset;
