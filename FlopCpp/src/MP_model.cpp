@@ -57,8 +57,8 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-  messenger(m), Objective(0), Solver(s), 
-  m(0), n(0), nz(0), bl(0),
+  Solver(s),messenger(m), Objective(0), stage(0), 
+  m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),
   mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))) {
   MP_model::current_model = this;
 }
@@ -156,23 +156,27 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
   std::sort(v.begin(),v.end(),MP::CoefLess());
   int c,r,s;
   double val;
+  RandomVariable* ptr;
   std::vector<MP::Coef>::const_iterator i = v.begin();
   while (i!=v.end()) {
     c = i->col;
     r = i->row;
     val = i->val;
     s = i->stage;
+	ptr = i->ptrVar;
     i++;
-	//TODO: If coefficient belongs also to higher stage, return coefficient for highest stage?!
-	//What is this good for?
+	//In case of RHS with a constant term consisting of more than one constant
+	//These values were added one after another, otherwise this does not make sense.
     while (i!=v.end() && c==i->col && r==i->row) {
       val += i->val;
-      if (i->stage>s) {
+      if (i->stage>s) {//If Coefficient was added with a random variable..
         s = i->stage;
+		//TODO: Coefficient will get replaced by value of RV. Maybe addd constant term to RV?
       }
       i++;
     }
-    av.push_back(MP::Coef(c,r,val,s));
+	//FIXME: Add constant term to RV (can be multiplied or added..)
+    av.push_back(MP::Coef(c,r,val,s,ptr));
   }
 }
 
@@ -245,16 +249,28 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   }
   for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
     add(*j);
-  }
+  }// We have number of rows and number of columns at this point
 
-  // Generate coefficient matrix and right hand side
+  // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
+  //At first, generate coefficients for every constraint and store them in coefs vector
   for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
     (*i)->coefficients(cfs);
     messenger->constraintDebug((*i)->getName(),cfs);
+	//Sort and Store Coefficients of current
     assemble(cfs,coefs);
     cfs.erase(cfs.begin(),cfs.end());
   }
   nz = coefs.size();
+  //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
+  //Ensure that Model has a Stage set..
+ vector< vector<RandomVariable*> > randomVars(this->getStage().size()+1);//we store nStages, but without first place, so nStages+1 places are needed
+ for ( int i = 0; i != coefs.size(); i++){
+	 if (coefs[i].ptrVar != 0) {
+		 //We have a random variable associated with this column/row index
+		 randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
+		 }
+	 }
+
 
   messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
 
@@ -279,6 +295,7 @@ void MP_model::attach(OsiSolverInterface *_solver) {
 
   // Set correct Row Stage for every row by iterating over all elements
   // Row Stage is equal to the highest stage of a belonging coefficient
+  // We should get this from the variable or from the coefficient? Or Maybe set 
   for (int i=0; i<m; i++) {
 	  rowStage[i] = 0;
 	  }

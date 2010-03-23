@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\boost\boost_1_42_0;..\..\..\gtest\include\;..\..\..\BuildTools\headers;..\..\..\Clp\src;..\..\..\CoinUtils\src;..\..\..\Smi\src;..\..\..\Osi\src\OsiClp;..\..\..\Osi\src"
+				AdditionalIncludeDirectories="..\..\..\boost\boost_1_42_0;..\..\..\gtest\include\;..\..\..\BuildTools\headers;..\..\..\Clp\src;..\..\..\CoinUtils\src;..\..\..\Smi\src;..\..\..\Osi\src\OsiClp;..\..\..\Osi\src;..\..\..\FlopCpp\src"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -58,6 +58,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="kernel32.lib $(NoInherit)"
 				LinkIncremental="0"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"

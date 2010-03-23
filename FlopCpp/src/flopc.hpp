@@ -14,6 +14,7 @@
 #include "MP_expression.hpp"
 #include "MP_boolean.hpp"
 #include "MP_model.hpp"
+#include "MP_random_variable.hpp"
 
 /** @defgroup PublicInterface Public interface
     @brief Classes in this group are for normal modeling purposes.

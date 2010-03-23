@@ -18,8 +18,8 @@ double MP_data::outOfBoundData = 0;
 
 const DataRef& DataRef::operator=(const Constant& c) {
   C = c;
-  ((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this);
-  return *this;;
+  ((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
+  return *this;
 }
 
 const DataRef& DataRef::operator=(const DataRef& r) { 
@@ -37,13 +37,15 @@ DataRef& DataRef::such_that(const MP_boolean& b) {
 
 
 double DataRef::evaluate() const {
+	//Check for sanity of indices
   int i1 = D->S1.check(I1->evaluate());
   int i2 = D->S2.check(I2->evaluate());
   int i3 = D->S3.check(I3->evaluate());
   int i4 = D->S4.check(I4->evaluate());
-  int i5 = D->S5.check(I5->evaluate());
-
+  int i5 = D->S5.check(I5->evaluate());	
+  // Compute index in flattened multidimensional array
   int i = D->f(i1,i2,i3,i4,i5);
+  // Return value
   if ( i ==  outOfBound ) {
     return 0;
   } else {
@@ -73,13 +75,15 @@ int DataRef::getStage() const {
 
 
 void DataRef::evaluate_lhs(double v) const {
+	//Check sanity of indices
   int i1 = D->S1.check(I1->evaluate());
   int i2 = D->S2.check(I2->evaluate());
   int i3 = D->S3.check(I3->evaluate());
   int i4 = D->S4.check(I4->evaluate());
   int i5 = D->S5.check(I5->evaluate());
-
+	//Compute index in flattened multidimensional array
   int i = D->f(i1,i2,i3,i4,i5);
+  // Set Value at computed index to v
   if (i != outOfBound) {
     D->v[i] = v;
   }

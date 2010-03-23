@@ -93,7 +93,7 @@ namespace flopc {
 	// return new MP_domain_set over s and this
     virtual MP_domain getDomain(MP_set* s) const;
 
-    int index;
+    int index; //current index
     bool instantiated;
   };
 

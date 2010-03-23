@@ -33,6 +33,7 @@ namespace flopc {
     virtual operator MP_domain() const = 0;
     virtual MP_domain operator()(const MP_index_exp& i) const = 0;
  
+	//Check if given integer is falid. If not return outOfBound. In Case of cyclic return i mod size.
     int check(int i) const {
       if ((i>=0) && (i<size())) {
         return i;
@@ -88,7 +89,7 @@ namespace flopc {
     virtual MP_domain operator()(const MP_index_exp& i) const {
       return i->getDomain(const_cast<MP_set*>(this));
     }
-    /// @brief constructs an MP_domain from the MP_set.
+    /// @brief constructs an MP_domain from the MP_set. Cast-Operator, casts a set into a MP_domain.
     virtual operator MP_domain() const {
       return new MP_domain_set(this,const_cast<MP_set*>(this));
     }
@@ -119,7 +120,7 @@ namespace flopc {
     
   class MP_stage : public MP_set {
   public:
-    MP_stage(int i = 0): MP_set(i) {}
+    MP_stage(int i = 0);
     virtual int isStage() const {
       return 1;
     }

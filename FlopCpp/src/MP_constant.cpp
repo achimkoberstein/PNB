@@ -9,6 +9,8 @@
 #include "MP_data.hpp"
 #include "MP_domain.hpp"
 #include "MP_index.hpp"
+#include "MP_random_variable.hpp"
+#include "MP_utilities.hpp"
 
 namespace flopc {
 
@@ -16,11 +18,35 @@ namespace flopc {
     friend class Constant;
   private:
     Constant_index(const MP_index_exp& i) : I(i) {}
-    double evaluate() const {
+    virtual double evaluate() const {
       return I->evaluate(); 
     }
     const MP_index_exp I;
   };
+
+  class Constant_random_variable : public Constant_base{
+	  friend class Constant;
+  private:
+	  Constant_random_variable(const boost::shared_ptr<RandomVariableRef> r): r(r){}
+
+	  virtual double evaluate() const {
+		  //TODO: What should this method return? Expected Value?
+		  // We handle Random-Variables (and scenario generation) after creation of the core model.
+		  return 0;
+		  throw not_implemented_error(); //
+		  }
+
+	  virtual int getStage() const{
+		  return r->getStage();
+		  }
+
+	  virtual RandomVariable* getRandomVariable() const {
+		  return r->getRandomVariable();
+		  }
+
+
+	  const boost::shared_ptr<RandomVariableRef> r;
+		  };
 
   class Constant_double : public Constant_base {
     friend class Constant;
@@ -318,11 +344,14 @@ namespace flopc {
   Constant::Constant(const MP_index_exp& i) :
     Handle<Constant_base*>(new Constant_index(i)){}
 
-  Constant::Constant(double d) :
-    Handle<Constant_base*>(new Constant_double(d)) {}
+	Constant::Constant(double d) :
+	Handle<Constant_base*>(new Constant_double(d)) {}
 
-  Constant::Constant(int d) :
-    Handle<Constant_base*>(new Constant_double(d)) {}
- 
+	Constant::Constant(int d) :
+	Handle<Constant_base*>(new Constant_double(d)) {}
+
+	Constant::Constant( const boost::shared_ptr<RandomVariableRef> ptrRVR ) :
+	Handle<Constant_base*>(new Constant_random_variable(ptrRVR)) {}
+
 } // End of namespace flopc
 

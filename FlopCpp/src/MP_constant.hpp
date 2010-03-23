@@ -7,7 +7,12 @@
 
 #include "MP_utilities.hpp"
 
+
 namespace flopc {
+
+	//Forward Declaration for Constant Class
+  class RandomVariable;
+
   /** @brief Base class for all "constant" types of data.
       @ingroup INTERNAL_USE
       @note FOR INTERNAL USE: This is not normally used directly by the
@@ -17,13 +22,14 @@ namespace flopc {
     friend class Constant;
     friend class Handle<Constant_base*>;
   public:
-    virtual double evaluate() const = 0;
-    virtual int getStage() const {
+    virtual double evaluate() const = 0; //get value of constant (must be double)
+    virtual int getStage() const { //get Stage. If no stochastic variable are present, i.e. no MP_stage defined and assigned, return 0.
       return 0;
     }
-    virtual int stage() const {
-      return 0;
-    }
+	virtual RandomVariable* getRandomVariable() const {
+		return 0;	
+	}
+
   protected:
     Constant_base() : count(0) {}
     virtual ~Constant_base() {}
@@ -33,7 +39,9 @@ namespace flopc {
     
   class MP_index_exp;
   class DataRef;
+  class RandomVariableRef;
   class MP_domain;
+
 
   /** @brief Reference counted class for all "constant" types of data.
       @ingroup INTERNAL_USE
@@ -45,6 +53,7 @@ namespace flopc {
   class Constant : public Handle<Constant_base*> {
   public:
     Constant(const MP_index_exp& i);
+	Constant(const boost::shared_ptr<RandomVariableRef> ptrRVR);
     Constant(const DataRef& d);
     Constant(double d);
     Constant(int d);

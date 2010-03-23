@@ -48,7 +48,7 @@ namespace flopc {
     /// Returns the value of the variable given the specific index values.
     double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
 
-    /// Interal use only.
+    /// Convert a MP_variable into a VariableRef
     const VariableRef& operator()(
       const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
       const MP_index_exp& d2 = MP_index_exp::getEmpty(), 

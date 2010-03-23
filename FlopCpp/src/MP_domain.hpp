@@ -10,6 +10,7 @@
 #include "MP_utilities.hpp"
 #include "MP_boolean.hpp" 
 #include "MP_index.hpp" 
+#include <memory>
 
 namespace flopc {
 
@@ -19,34 +20,9 @@ namespace flopc {
 
   template<int nbr> class MP_subset;
 
-  /** @brief Reference to a set of index values.
-      @ingroup INTERNAL_USE
-      @note FOR INTERNAL USE: This is not normally used directly by the
-      calling code.
-  */
-  class MP_domain_base : public Functor, public MP_index_base {
-    friend class MP_domain;
-    friend class Handle<MP_domain_base*>;
-    friend MP_domain operator*(const MP_domain& a, const MP_domain& b);
-  public:
-    MP_domain_base();
-    virtual ~MP_domain_base();
+  class MP_domain_base; //Forward declaration of implementation class
 
-    virtual Functor* makeInsertFunctor() const;
-    virtual MP_index* getIndex() const = 0;
-    virtual const MP_set_base* getSet() const = 0;
-    void display()const;
-    virtual size_t size() const ;
-    //   const Functor* donext;
-  private:
-    MP_domain_base(const MP_domain_base&);
-    MP_domain_base& operator=(const MP_domain_base&);
-    int count;
-  protected:
-    const Functor* donext;
-  };
-
-  /** @brief Range over which some other constuct is defined.
+ /** @brief Range over which some other constuct is defined.
       @ingroup PublicInterface
       This is one of the main public interface classes.  One uses this in
       the context of a constraint, objective, variable, or data.  It is
@@ -98,6 +74,33 @@ namespace flopc {
     Handle<MP_domain_base*> last;
   };
 
+    /** @brief Reference to a set of index values.
+      @ingroup INTERNAL_USE
+      @note FOR INTERNAL USE: This is not normally used directly by the
+      calling code.
+  */
+  class MP_domain_base : public Functor, public MP_index_base {
+    friend class MP_domain;
+    friend class Handle<MP_domain_base*>;
+    friend MP_domain operator*(const MP_domain& a, const MP_domain& b);
+  public:
+    MP_domain_base();
+    virtual ~MP_domain_base();
+
+    virtual Functor* makeInsertFunctor() const;
+    virtual MP_index* getIndex() const = 0;
+    virtual const MP_set_base* getSet() const = 0;
+    void display()const;
+    virtual size_t size() const ;
+    //   const Functor* donext;
+  private:
+    MP_domain_base(const MP_domain_base&);
+    MP_domain_base& operator=(const MP_domain_base&);
+    int count;
+  protected:
+    const Functor* donext;
+  };
+
   /** @brief Range over which some other constuct is defined.
       @ingroup PublicInterface
       This is one of the main public interface classes.  One uses this in
@@ -136,7 +139,7 @@ namespace flopc {
     MP_index* I;
   };
 
-  template<int nbr> class MP_domain_subset;
+  template<int nbr> class MP_domain_subset; //forward declaration
 
   /** @brief Inserter for construction of a subset.
       @ingroup INTERNAL_USE
@@ -195,6 +198,7 @@ namespace flopc {
       return MP_domain(const_cast<MP_domain_subset<nbr>*>(this));
     }
     /// @todo should this be public?  Should it be called?  If so, needs doc.
+	// operator()() for Subsets, slightly more complicated than MP_domain_set ;)
     void operator()() const {
       bool isBound[nbr];
       bool allBound = true;
