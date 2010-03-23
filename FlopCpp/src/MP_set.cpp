@@ -13,4 +13,12 @@ namespace flopc {
     return Empty;
   }
   
-}
+
+  MP_stage::MP_stage( int i /*= 0*/ ) : MP_set(i)
+	  {
+	  //During first initialization, currentModel pointer is zero. Under this circumstances,
+	  //stage gets initalized with 0 by MP_model constructor
+	  if (MP_model::getCurrentModel() != 0)
+		MP_model::getCurrentModel()->setStage(*this);
+	  }
+	}
