@@ -94,10 +94,11 @@ namespace flopc {
     double getValue() const {
       return C->evaluate();
     }
-    int getColumn() const {
+    virtual int getColumn() const { //All Values that get transformed to Expression_constant have no
+		//associated variable. Therefore: RHS.
       return -1; //indicates right hand side column
     }
-    int getStage() const {
+    virtual int getStage() const {
       return C->getStage(); //NB to be changed
     }
     void generate(const MP_domain& domain,
@@ -109,6 +110,10 @@ namespace flopc {
       domain.forall(&f);
     }
     void insertVariables(set<MP_variable*>& v) const {}
+
+	virtual RandomVariable* getRandomVariable() const {
+		return C->getRandomVariable();
+		}
 
     Constant C;
   };
@@ -317,7 +322,7 @@ void MP::GenerateFunctor::operator()() const {
   RandomVariable* ptrRV = 0;
   for (unsigned int i=0; i<multiplicators.size(); i++) {
 	  //When is more than 1 element in the vector??
-    sideOfConstraint *= multiplicators[i]->evaluate();
+    sideOfConstraint *= multiplicators[i]->evaluateMultiplicative();
     if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
       stage = multiplicators[i]->getStage();
 	  ptrRV = multiplicators[i]->getRandomVariable();
@@ -342,9 +347,20 @@ void MP::GenerateFunctor::operator()() const {
       double val = sideOfConstraint*C->getValue(); //Get Value of Coefficient
 	  //TODO: Set stage
       int varStage = C->getStage();
-	  assert(stage>=varStage); //Everything else would be plain wrong..
-      //store col and row index in random variable
-	  if (stage > 0){
+	  //Now comes the fun part: If varStage > stage this means one of two things:
+	  //1: Something is plain wrong
+	  //2: We added a RandomVariable without a variable, so that the RandomVariable is treted 
+	  //as a terminalExpression
+	  if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
+		  ptrRV =  C->getRandomVariable();
+		  //If ptr is empty we are actually in the first case..
+		  assert(ptrRV != 0);
+		  ptrRV->Stage(varStage);
+
+		  }
+	 
+      //store col and row index in random variable, if there is any
+	  if (stage > 0 || (stage==0 && varStage > 0)){
 		ptrRV->ColIndex(colNumber);
 		ptrRV->RowIndex(rowNumber);
 		  }
