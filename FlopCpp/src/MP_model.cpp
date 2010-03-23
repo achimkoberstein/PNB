@@ -294,38 +294,32 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   const double inf = Solver->getInfinity();
 
   // Set correct Row Stage for every row by iterating over all elements
-  // Row Stage is equal to the highest stage of a belonging coefficient
-  // We should get this from the variable or from the coefficient? Or Maybe set 
+  // Row Stage is equal to the highest stage of a belonging variable
   for (int i=0; i<m; i++) {
 	  rowStage[i] = 0;
 	  }
   for (int i=0; i<nz; i++) {
-	  int s = coefs[i].stage;
-	  int row = coefs[i].row;
+	  int s = coefs[i].stage; //Stage of Variable that belongs to current coefficient
+	  colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
+	  int row = coefs[i].row; 
 	  if ( s > rowStage[row] )  {
 		  rowStage[row] = s;
 		  }
 	  }
 
-  int maxStage = 0; // change to get from the actual model
-  for (int i=0; i<nz; i++) {
-	  int s = coefs[i].stage;
-	  if (s > maxStage) maxStage = s;
-	  }
-
 
   // Set correct Column stage for every column by iterating over all elements
   // Column Stage is equal to the lowest stage of a belonging coefficient
-  for (int j=0; j<n; j++) {
-	  colStage[j] = maxStage;
-	  }
-  for (int i=0; i<nz; i++) {
-	  int col = coefs[i].col;
-	  int s = coefs[i].stage;
-	  if ( s > 0 && s-1 < colStage[col] )  { //TODO: Why is this done? I do not quite get it, see eMail Hultberg-King
-		  colStage[col] = s-1;
-		  }
-	  }
+  //for (int j=0; j<n; j++) {
+	 // colStage[j] = maxStage;
+	 // }
+  //for (int i=0; i<nz; i++) {
+	 // int col = coefs[i].col;
+	 // int s = coefs[i].stage;
+	 // if ( s > 0 && s-1 < colStage[col] )  { //TODO: Why is this done? I do not quite get it, see eMail Hultberg-King
+		//  colStage[col] = s-1;
+		//  }
+	 // }
 
   //   cout<<"RowStages"<<endl;
   //   for (int i=0; i<m; i++) {
