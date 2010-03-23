@@ -103,11 +103,12 @@ namespace {
 		MP_variable x;
 		MP_variable y(T);
 		MP_random_variable rVar(T);
+		MP_random_variable rVar2(T);
 		MP_constraint constraint1(T);
 		MP_index j;
 		//I would expect that such things would work, i.e. assign to different indices of one constraint.
 		//constraint1(0) = 3*x() <= 10;
-		constraint1(T+1) = 4*x()+rVar(T+1)*y(T+1)+2*y(T) <= 20;
+		constraint1(T+1) = 4*x()+rVar(T+1)*y(T+1)+2*y(T) +rVar2(T+1) <= 20;
 		//TODO: This is counterintuitive
 		testModel.setObjective( 3*x() );
 		testModel.attach(new OsiClpSolverInterface());
