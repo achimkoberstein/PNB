@@ -36,6 +36,13 @@ namespace flopc {
 		  throw not_implemented_error(); //
 		  }
 
+	  virtual double evaluateAdditive() const {
+		  return 0;
+		  }
+	  virtual double evaluateMultiplicative() const {
+		  return 1;
+		  }
+
 	  virtual int getStage() const{
 		  return r->getStage();
 		  }
@@ -153,7 +160,7 @@ namespace flopc {
   private:
     Constant_plus(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
     double evaluate() const {
-      return left->evaluate()+right->evaluate();
+      return left->evaluateAdditive()+right->evaluateAdditive();
     }
   };
 
@@ -170,7 +177,7 @@ namespace flopc {
   private:
     Constant_minus(const Constant& i, const Constant& j): Constant_exp(i,j) {}
     double evaluate() const {
-      return left->evaluate()-right->evaluate(); 
+      return left->evaluateAdditive()-right->evaluateAdditive(); 
     }
   };
 
@@ -188,7 +195,7 @@ namespace flopc {
   private:
     Constant_unary_minus(const Constant& i) : left(i) {}
     double evaluate() const {
-      return -left->evaluate(); 
+      return -left->evaluateAdditive(); 
     }
     Constant left;
   };
@@ -201,7 +208,7 @@ namespace flopc {
   private:
     Constant_mult(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
     double evaluate() const {
-      return left->evaluate()*right->evaluate(); 
+      return left->evaluateMultiplicative()*right->evaluateMultiplicative(); 
     }
   };
 
@@ -214,7 +221,7 @@ namespace flopc {
   private:
     Constant_div(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
     double evaluate() const {
-      return left->evaluate()/right->evaluate(); 
+      return left->evaluateMultiplicative()/right->evaluateMultiplicative(); 
     }
   };
 
@@ -294,7 +301,7 @@ namespace flopc {
   private:
     Constant_sum(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
     void operator()() const {
-      the_sum += exp->evaluate();
+      the_sum += exp->evaluateAdditive();
     }
     double evaluate() const {  
       the_sum = 0;
@@ -312,7 +319,7 @@ namespace flopc {
   private:
     Constant_product(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
     void operator()() const {
-      the_product *= exp->evaluate();
+      the_product *= exp->evaluateMultiplicative();
     }
     double evaluate() const {  
       the_product = 1;

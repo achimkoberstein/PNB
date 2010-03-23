@@ -150,6 +150,7 @@ namespace flopc {
     virtual double getValue() const = 0; 
     virtual int getColumn() const = 0;
     virtual int getStage() const = 0;
+	virtual RandomVariable* getRandomVariable() const = 0;
   };
 
   /** Semantic representation of a variable in a Math Program
@@ -159,7 +160,7 @@ namespace flopc {
   class VariableRef : public TerminalExpression {
     friend class MP_variable;
   public:
-    int getColumn() const;
+    virtual int getColumn() const;
   private:
     VariableRef(MP_variable* v, 
                 const MP_index_exp& i1,
@@ -179,6 +180,10 @@ namespace flopc {
       return 1.0;
     }
     virtual int getStage() const;
+
+	virtual RandomVariable* getRandomVariable() const {
+		return 0;
+		}
 
     void generate(const MP_domain& domain,
                   vector<Constant> multiplicators,

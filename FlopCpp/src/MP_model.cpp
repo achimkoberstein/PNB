@@ -169,8 +169,11 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
 	//These values were added one after another, otherwise this does not make sense.
     while (i!=v.end() && c==i->col && r==i->row) {
       val += i->val;
-      if (i->stage>s) {//If Coefficient was added with a random variable..
+      if (i->stage>0) {//If Coefficient was added with a random variable..
         s = i->stage;
+		//We do not add random variables, so we better do not have a valid pointer yet
+		assert(ptr == 0);
+		ptr = i->ptrVar;
 		//TODO: Coefficient will get replaced by value of RV. Maybe addd constant term to RV?
       }
       i++;
