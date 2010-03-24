@@ -29,7 +29,7 @@ namespace flopc {
 		MP_model::getCurrentModel()->Stage(*this);
 	  }
 
-  MP_scenario_set::MP_scenario_set( int i /*= 0*/ )
+  MP_scenario_set::MP_scenario_set( int i /*= 0*/ ):MP_set(i)
 	  {
 	  //During first initialization, currentModel pointer is zero. Under this circumstances,
 	  //stage gets initalized with 0 by MP_model constructor and belongs to the current model

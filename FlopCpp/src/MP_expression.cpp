@@ -10,7 +10,6 @@
 #include "MP_set.hpp"
 #include "MP_variable.hpp"
 #include "MP_model.hpp"
-#include "MP_random_variable_impl.hpp"
 #include <OsiSolverInterface.hpp>
 
 namespace flopc {
