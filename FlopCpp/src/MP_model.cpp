@@ -60,7 +60,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-  Solver(s),messenger(m), Objective(0), stage(0), 
+  Solver(s),messenger(m), Objective(0), stage(0),scenSet(0), 
   m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),
   mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))) {
   MP_model::current_model = this;
@@ -71,6 +71,10 @@ MP_model::~MP_model() {
   if (Solver!=0) {
     delete Solver;
   }
+  //Reset currentModel Pointer to default model IF it points to this model to prevent from dangling pointer
+  if (MP_model::current_model == this)
+	  MP_model::current_model = &MP_model::default_model;
+  
 }
 
 

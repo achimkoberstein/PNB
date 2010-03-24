@@ -50,45 +50,21 @@ public:
 	RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 		S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new DiscreteRandomVariable[size()]),manageData(true) {  //Consistency check?
 
-			//What is with absurd cases? Sets containing of 1 element specified before sets with more?
-			//Create Random Variables according to specifications..
-			int scen = MP_model::getCurrentModel()->ScenSet().size(); 
-			for (int j1 = 0; j1 < S1.size();j1++){
-				if (S2 != MP_set::getEmpty()){
-					for (int j2 = 0; j2 < S2.size(); j2++) {
-						if (S3 != MP_set::getEmpty()){
-							for (int j3 = 0; j3 < S3.size(); j3++){
-								if (S4 != MP_set::getEmpty()){
-									for (int j4 = 0; j4 < S4.size();j4++){
-										if (S5 != MP_set::getEmpty()){
-											for (int j5 = 0; j5 < S5.size();j5++){
-												createRandomVariableFromIndices(array,(j1+j2+j3+j4+j5)*scen,scen);
-												}
-											}
-										else
-											createRandomVariableFromIndices(array,(j1+j2+j3+j4)*scen,scen);
-										}
-
-									}
-								else
-									createRandomVariableFromIndices(array,(j1+j2+j3)*scen,scen);
-								}
-
-							}
-						else 
-							createRandomVariableFromIndices(array,(j1+j2)*scen,scen);
-						}
-
-					}
-				else
-					createRandomVariableFromIndices(array,(j1)*scen,scen);
-				}
 			
+			////Create Random Variables according to specifications..
+			int scen = MP_model::getCurrentModel()->ScenSet().size(); 
+			for (int j1 = 0; j1 < S1.size();j1++)
+				for (int j2 = 0; j2 < S2.size(); j2++)
+					for (int j3 = 0; j3 < S3.size(); j3++)
+						for (int j4 = 0; j4 < S4.size();j4++)
+							for (int j5 = 0; j5 < S5.size();j5++){
+								createRandomVariableFromIndices(array,(j1+j2+j3+j4+j5)*scen,scen);
+							}
 		};
 
 
 	~MP_random_variable_impl(){
-		if(manageData)
+		if(manageData)//Iterate through array and delete pointer
 			delete[] values;
 		};
 
@@ -157,6 +133,10 @@ const boost::shared_ptr<RandomVariableRef> MP_random_variable::operator()( /*TOD
 		return temp; //TODO: Who calls corresponding delete?!
 	}
 
+void MP_random_variable::operator()() const
+	{
+
+	}
 //Implementation for MP_random_variable_impl
 void MP_random_variable_impl::operator ()() const {
 		if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
@@ -171,7 +151,7 @@ void MP_random_variable_impl::operator ()() const {
 
 void MP_random_variable_impl::initialize()
 	{
-	values = new DiscreteRandomVariable();
+	values = new DiscreteRandomVariable[size()];
 	for(int i = 0; i < size(); i++){
 		values[i] = DiscreteRandomVariable(); 
 		}
