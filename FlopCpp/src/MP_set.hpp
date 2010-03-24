@@ -122,7 +122,6 @@ namespace flopc {
 	
   private:
     int cardinality;
-	static MP_set& Empty;
   };
   
     

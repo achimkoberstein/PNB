@@ -9,13 +9,12 @@ using namespace flopc;
 
 namespace flopc {
 
-	MP_set& MP_set::Empty = *new MP_set(1);
-	MP_set& MP_set::getEmpty(){ return Empty; };
-  //MP_set &MP_set::getEmpty() {
-	 // //Make it real static and const (Singleton)
-	 // static MP_set Empty(1);
-	 // return Empty; // Does this work?
-  //}
+	//See item 26 More Effective C++
+	MP_set &MP_set::getEmpty() {
+	  //Make it real static and const (Singleton)
+	  static MP_set Empty(1);
+	  return Empty; // Does this work?
+	 }
   
 
   MP_stage::MP_stage( int i /*= 0*/ ) : MP_set(i)
