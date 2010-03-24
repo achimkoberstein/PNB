@@ -137,9 +137,6 @@ namespace flopc {
   class MP_scenario_set : public MP_set {
   public:
 	  MP_scenario_set(int i = 0);
-	  virtual int isStage() const {
-		  return 0;
-		  }
 	  };
 
   //forward declaration

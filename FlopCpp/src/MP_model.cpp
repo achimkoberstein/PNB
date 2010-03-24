@@ -648,4 +648,10 @@ namespace flopc {
     };
     return os;
   }
+
+  //Put ScenarioTree GenerationFunctions here:
+  SmiScenarioTree* generateScenarioTree(std::vector< std::vector<RandomVariable*> > randomVariableVector,  const SmiCoreData*){
+		//This function generates a scenario tree given random variables that are all of type ScenarioRandomVariable.
+
+	  }
 }

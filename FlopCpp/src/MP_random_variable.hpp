@@ -17,6 +17,7 @@ namespace flopc{
 
 	//Class that defines a concrete RandomVariable for one coefficient
 	class RandomVariable {
+		friend RandomVariableRef;
 	public:
 		typedef enum { BINOMIAL, NORMAL } DistributionType; //TODO: Class hierarchy will make this superfluous
 
@@ -28,7 +29,7 @@ namespace flopc{
 		virtual double sample() const = 0;
 		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const = 0;
 
-		const RandomVariable& operator=(const RandomVariable& rhs);
+		
 
 
 		//get of DistributionType..
@@ -39,6 +40,9 @@ namespace flopc{
 		void ColIndex(int val) { colIndex = val; }
 		int RowIndex() const { return rowIndex; }
 		void RowIndex(int val) { rowIndex = val; }
+
+	protected:
+		const RandomVariable& operator=(const RandomVariable& rhs);
 
 	private:
 
@@ -51,11 +55,15 @@ namespace flopc{
 		};
 
 	class DiscreteRandomVariable : public RandomVariable {
+		typedef std::vector< std::pair< double, double > > sampleVector;
 	public:
 
 		~DiscreteRandomVariable();
+
+		const DiscreteRandomVariable& operator=(const DiscreteRandomVariable& rhs);
+
 		virtual double sample() const;
-		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const;
+		virtual sampleVector sampleValues(int elementsToSample) const;
 
 
 		};
@@ -74,13 +82,20 @@ namespace flopc{
 
 	public:
 		ScenarioRandomVariable(double* scenValues, int length);
+		ScenarioRandomVariable();
 
 		~ScenarioRandomVariable();
 		virtual double sample() const;
 		virtual std::vector< std::pair<double,double> > sampleValues(int elements) const;
+		
+		//Length of Scenario values should be stored in ScenSet of MP_model..
+		const double* getScenarioValues() const;
 
+		//Assignment operator
+		const ScenarioRandomVariable& operator=(const ScenarioRandomVariable& rhs);
 	private:
-		const std::vector<double> scenarioValues;
+		ScenarioRandomVariable (const ScenarioRandomVariable&); //forbid copy operator
+		std::vector<double> scenarioValues;
 
 		};
 
@@ -98,7 +113,7 @@ namespace flopc{
 				const MP_set_base &s4 = MP_set::getEmpty(), 
 				const MP_set_base &s5 = MP_set::getEmpty());
 
-			MP_random_variable(RandomVariable* array, const MP_set_base &s1 = MP_set::getEmpty(), 
+			MP_random_variable(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
 				const MP_set_base &s2 = MP_set::getEmpty(), 
 				const MP_set_base &s3 = MP_set::getEmpty(),
 				const MP_set_base &s4 = MP_set::getEmpty(), 
@@ -112,7 +127,8 @@ namespace flopc{
 
 			virtual void operator()() const;
 
-			//TODO: I do not know why this operator was needed in the beginning?
+			//TODO: Assignment of random variables via this operator is not yet possible
+			//Needs virtual assignment operators hierarchy that might look ugly
 			RandomVariable& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
 
 			const boost::shared_ptr<RandomVariableRef> operator()( 
@@ -122,9 +138,6 @@ namespace flopc{
 				const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
 				const MP_index_exp& d5 = MP_index_exp::getEmpty()
 				);
-
-
-
 
 		protected:
 

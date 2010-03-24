@@ -6,6 +6,8 @@
 #include <iostream>
 
 
+
+
 using namespace flopc;
 namespace {
 
@@ -57,12 +59,19 @@ namespace {
 
 	//	}
 
-	TEST_F(MP_modelTest,MPRandomVariableConstructionTest){
+	TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
 		MP_set autos(4); //We have a set with elements 0 to 3
-		MP_scenario_set scen(3);
-		double rvArr[4][3] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
+		enum {numScen = 3};
+		MP_scenario_set scen(numScen);
+		double rvArr[4][numScen] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
 		MP_random_variable rvar1;
-		MP_random_variable rvar2(&rvArr[0][0],autos,scen);
+		MP_random_variable rvar2(&rvArr[0][0],autos);
+		EXPECT_DOUBLE_EQ(rvArr[0][0], *( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getScenarioValues() );
+		EXPECT_DOUBLE_EQ(rvArr[0][1], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getScenarioValues()+1) );
+		EXPECT_DOUBLE_EQ(rvArr[0][2], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getScenarioValues()+2) );
+		EXPECT_DOUBLE_EQ(rvArr[3][0], *( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getScenarioValues() );
+		EXPECT_DOUBLE_EQ(rvArr[3][1], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getScenarioValues()+1) );
+		EXPECT_DOUBLE_EQ(rvArr[3][2], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getScenarioValues()+2) );
 		}
 
 
@@ -144,13 +153,20 @@ namespace {
 		enum {Audi, BMW, Ford, numCars};
 		MP_set cars(numCars);
 		MP_random_variable vars(cars);
-		DiscreteRandomVariable x;
-		vars(BMW) = x;
-		RandomVariable varsArr[3] = { DiscreteRandomVariable(),DiscreteRandomVariable(),DiscreteRandomVariable() };
+		//TODO: Uncomment if functionality is implemented..
+		//DiscreteRandomVariable x;
+		//vars(BMW) = x; //Not yet allowed
+		RandomVariable* varsArr[3] = { new DiscreteRandomVariable(),new DiscreteRandomVariable(),new DiscreteRandomVariable() };
 		MP_random_variable vars2(&varsArr[0],cars);
+		//Check if vars2 contains these random variables
+		EXPECT_EQ(varsArr[0],&vars2(0));
+		EXPECT_EQ(varsArr[1],&vars2(1));
+		EXPECT_EQ(varsArr[2],&vars2(2));
+
+		//Delete pointers
+		for (int i = 0; i <3; i++)
+			delete varsArr[i];
 		}
-
-
 
 	} //end namespace
 
