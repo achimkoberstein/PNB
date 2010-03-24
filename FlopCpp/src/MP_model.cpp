@@ -13,6 +13,7 @@ using std::endl;
 #include <CoinPackedMatrix.hpp>
 #include <OsiSolverInterface.hpp>
 #include <SmiScnModel.hpp>
+#include <SmiScnData.hpp>
 
 #include "MP_model.hpp"
 #include "MP_variable.hpp"
@@ -468,8 +469,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   ////
 
   //Check for stochasticity: If so, we have a stage set with size greater than 0.
-  if (this->
-	  Stage().size() > 0){
+  if (this->Stage().size() > 0){
 	  ////
 	  // Feed Core Model to SmiScnModel
 	  ////
@@ -478,8 +478,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
 	  matrix.reverseOrdering(); //Smi needs matrix in row ordered form
 	  Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data
 	  SmiCoreData *osiCore = new
-		  SmiCoreData(Solver,this->
-		  Stage().size() ,colStage,rowStage); //Create CoreData Node
+		  SmiCoreData(Solver,this->Stage().size() ,colStage,rowStage); //Create CoreData Node
 	  
 	  // initialize SmiScnModel to store the stochastic elements
 	  SmiScnModel *smiModel = new SmiScnModel();
@@ -649,9 +648,5 @@ namespace flopc {
     return os;
   }
 
-  //Put ScenarioTree GenerationFunctions here:
-  SmiScenarioTree* generateScenarioTree(std::vector< std::vector<RandomVariable*> > randomVariableVector,  const SmiCoreData*){
-		//This function generates a scenario tree given random variables that are all of type ScenarioRandomVariable.
 
-	  }
 }

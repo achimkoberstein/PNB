@@ -8,12 +8,20 @@
 #include <ostream>
 #include <vector>
 #include <set>
-using std::vector;
-using std::set;
+
+
+#include <CoinPackedVector.hpp>
+#include "SmiScnData.hpp"
+#include "SmiScenarioTree.hpp"
+#include "SmiScnModel.hpp"
 
 #include "MP_expression.hpp"
 #include "MP_constraint.hpp"
-#include <CoinPackedVector.hpp>
+
+
+using std::vector;
+using std::set;
+
 class OsiSolverInterface;
 
 namespace flopc {
@@ -292,6 +300,14 @@ namespace flopc {
   /// allows print of direction used when calling solve. (MIN/MAX)
   std::ostream &operator<<(std::ostream &os, 
                            const MP_model::MP_direction &direction);
+
+
+  SmiScenarioTree<SmiScnNode *>* generateScenarioTree(std::vector< std::vector<RandomVariable*> > randomVariableVector, const SmiCoreData*){
+	  std::vector< std::vector< ScenarioRandomVariable*> > scenarioVariables;
+
+
+	  return 0;
+	  }
 
 } // End of namespace flopc
 #endif

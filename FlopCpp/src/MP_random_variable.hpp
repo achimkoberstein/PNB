@@ -189,6 +189,7 @@ namespace flopc{
 	//non-member non-friend functions
 	std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;
 
+
 	}
 
 
