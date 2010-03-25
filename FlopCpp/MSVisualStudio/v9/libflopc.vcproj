@@ -151,10 +151,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ExampleTest.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\FlopCpp\src\flopc.cpp"
 				>
 				<FileConfiguration
@@ -268,10 +264,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\MP_random_variable.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\MP_random_variable_impl.hpp"
 				>
 			</File>
 			<File
