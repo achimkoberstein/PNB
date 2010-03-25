@@ -11,6 +11,7 @@ using std::endl;
 
 #include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
+#include <CoinPackedVector.hpp>
 #include <OsiSolverInterface.hpp>
 
 #include "SmiScnData.hpp"
@@ -705,14 +706,42 @@ namespace flopc {
             }
         }
 
-        //
-        //
+        int m = smiCore->getNumRows();
+        int n = smiCore->getNumCols();
+        //This can be done in an generic way. How many samples should one take of a RV? It is saved in there via defaultSampleSize.
         for (int i = 0; i < nScen; i++){
+            CoinPackedMatrix matrix; //Empty Column Ordered Matrix
+            matrix.reverseOrdering(); //Make it row ordered
+            matrix.setDimensions(m,n); //Set Dimensions
+            //TODO: Coin-Packed-Vector funktioniert nicht so wie gedacht. vermutlich auch CoinPackedMatrix nicht..
+            CoinPackedVector obj; //Empty Vector for objective function
+
             //Go through all the random variables at every stage
             for (int i = 0; i <= nStages; i++){
                 //Create Temporary variables to store matrix, bounds, ranges, objective
-                for(scenVarIterator it = scenarioVariableVector[i].begin(); it != scenarioVariableVector[i].end(); ++it )
+                for(scenVarIterator it = scenarioVariableVector[i].begin(); it != scenarioVariableVector[i].end(); ++it ){
                     double coefficient = *((*it)->getScenarioValues()+nScen); //get Coefficient for this random variable via double array and pointer arithmetic
+                    //Depending on row or colIndex add Coefficient to the appropriate vector or matrix.
+                    int colIndex = (*it)->ColIndex();
+                    int rowIndex = (*it)->RowIndex();
+                    if (colIndex < n) {//Matrix-Element 
+                        if (rowIndex >= 0){ //Matrix-Element
+                            assert(rowIndex < m ); //row index needs to be inside bounds
+                            assert(colIndex >= 0); //col index needs to be inside bounds
+                            matrix.modifyCoefficient(rowIndex,colIndex,coefficient);
+                        }
+                        else{ //Objective Function
+                            assert(rowIndex == -1);
+                            obj.insert(colIndex,coefficient);
+                        
+                        }
+                    }
+                    else{ //RHS
+                        assert(colIndex == n);
+                        //We need the row sense to justify insertion in right vector..
+                    }
+
+                }
                 //add coefficient in the right place in the matrix,bound,range,objective as needed
                 //TODO: Bounds not yet done
             }
