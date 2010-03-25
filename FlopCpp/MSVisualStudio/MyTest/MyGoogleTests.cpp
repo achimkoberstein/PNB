@@ -31,33 +31,49 @@ namespace {
 		MP_model testModel;
 		};
 
-	//TEST_F(MP_modelTest,InvestmentExampleTest){
+	TEST_F(MP_modelTest,InvestmentExampleTest){
 
-	//	MP_model investmentModel(new OsiClpSolverInterface);
-	//	MP_data initialWealth;
-	//	initialWealth() = 55; //set data
+		MP_model investmentModel(new OsiClpSolverInterface);
+		MP_data initialWealth;
+		initialWealth() = 55; //set data
 
-	//	MP_stage T(3); //Time Stages
-	//	enum {asset1,asset2,numAssets};
-	//	MP_set assets(numAssets);
-	//	MP_random_variable returns(T,assets); //TODO: This is stochastic data 
+		enum {numStage=3};
+		MP_stage T(numStage); //Time Stages
+		enum {numScen=4};
+		MP_scenario_set scen(numScen);
+		enum {asset1,asset2,numAssets=2};
+		MP_set assets(numAssets);
+		double scenarios[numStage][numAssets][numScen]=
+			{//T
+				{//assets
+					{1,2,3,4},{5,6,7,8} //scen
+				},
+				{//assets
+					{2,4,6,8},{10,12,14,16} //scen
+				},
+				{//assets
+					{3,6,9,12},{15,18,21,24} //scen
+				}
+			};
+		MP_random_variable returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
 
-	//	MP_variable x(T,assets);
-	//	MP_variable wealth(T);
 
-	//	MP_constraint 
-	//		initialWealthConstr,
-	//		returnConstr(T),
-	//		allocationConstr(T);
+		MP_variable x(T,assets);
+		MP_variable wealth(T);
 
-	//	MP_index i;
-	//	initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-	//	allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
-	//	returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-	//	//If returns would be a MP_random_variable this would no longer work..
-	//	//At least that is what i thougth..
+		MP_constraint 
+			initialWealthConstr,
+			returnConstr(T),
+			allocationConstr(T);
 
-	//	}
+		MP_index i;
+		initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+		allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+		returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+		investmentModel.setObjective(wealth(T));
+		investmentModel.attach(investmentModel.Solver);
+
+		}
 
 	TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
 		MP_set autos(4); //We have a set with elements 0 to 3

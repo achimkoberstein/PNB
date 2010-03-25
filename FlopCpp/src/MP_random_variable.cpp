@@ -56,7 +56,7 @@ public:
 					for (int j3 = 0; j3 < S3.size(); j3++)
 						for (int j4 = 0; j4 < S4.size();j4++)
 							for (int j5 = 0; j5 < S5.size();j5++){
-								createRandomVariableFromIndices(array,f(j1+j2+j3+j4+j5),scen);
+								createRandomVariableFromIndices(array,f(j1,j2,j3,j4,j5),scen);
 							}
 		};
 
@@ -95,7 +95,8 @@ private:
 			tempArray[i] = arr[indexForValues*scen+i];
 			}
 		values[indexForValues] = new ScenarioRandomVariable(tempArray,scen);
-		cout << values[indexForValues]->sample() << endl;
+		cout << values[indexForValues]->sample() << endl; //Debug Statement
+		//TODO: Remove this statement
 		}
 		
 

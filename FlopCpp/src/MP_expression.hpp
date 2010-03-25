@@ -43,16 +43,23 @@ namespace flopc {
       int col, row, stage;
       double val;
 	  RandomVariable* ptrVar;
-	  //TODO: Christian: enhance this
-	  //int scenario = 0;
-	  //double* val = {v} and int valLength = 1(or vector)
-	  //If StochasticData should get inserted, the val array needs to be set accordingly
-	  //Use Properties to handle implementation of get/set transparent from the user..
+	  //Col = Column Number of Coef
+	  //Row = Row Number of Coef
+	  //Stage = Stage of belonging Variable (Column)
+	  //Val = Coefficient value
+	  //ptrVar = ptr to a RandomVariable, if data is not stochastic, set to 0.
+	  
     };
     
-    struct CoefLess {
-      bool operator() (const MP::Coef& a, const MP::Coef& b) const;
+	static bool CoefLess (const MP::Coef& a, const MP::Coef& b);
+	static bool CoefLessWithStage  (const MP::Coef& a, const MP::Coef& b);
+    /*struct CoefLess {
+      bool operator()  const;
     };
+
+	struct CoefLessWithStage {
+		bool operator() (const MP::Coef& a, const MP::Coef& b) const;
+		};*/
 
   protected:
 	  //This class is used to set all coefficients of an constraint to 
