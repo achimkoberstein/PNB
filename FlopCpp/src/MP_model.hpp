@@ -11,9 +11,8 @@
 
 
 #include <CoinPackedVector.hpp>
-#include "SmiScnData.hpp"
-#include "SmiScenarioTree.hpp"
-#include "SmiScnModel.hpp"
+#include <CoinPackedMatrix.hpp>
+
 
 #include "MP_expression.hpp"
 #include "MP_constraint.hpp"
@@ -268,6 +267,8 @@ namespace flopc {
     static void assemble(vector<MP::Coef>& v, vector<MP::Coef>& av);
     void add(MP_constraint* constraint);
 
+
+
 	Messenger* messenger;
     MP_expression Objective;
 	MP_stage stage;
@@ -302,12 +303,18 @@ namespace flopc {
                            const MP_model::MP_direction &direction);
 
 
-  SmiScenarioTree<SmiScnNode *>* generateScenarioTree(std::vector< std::vector<RandomVariable*> > randomVariableVector, const SmiCoreData*){
-	  std::vector< std::vector< ScenarioRandomVariable*> > scenarioVariables;
-
-
-	  return 0;
-	  }
+  
+ void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
 
 } // End of namespace flopc
+
+//Forward declarations for generateScenarioTree
+class SmiCoreData;
+class SmiScnNode;
+template <class T>
+class SmiScenarioTree;
+
+namespace flopc{
+	SmiScenarioTree<SmiScnNode *>* generateScenarioTree(const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore, int nScen);
+	}
 #endif

@@ -286,6 +286,7 @@ namespace flopc {
     return new Expression_sum(d, e);  
   }
     
+
 } // End of namespace flopc
 
 using namespace flopc;
@@ -298,7 +299,8 @@ MP_expression::MP_expression(const VariableRef &v) :
   Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) {} 
   
 
-bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
+//bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
+  bool MP::CoefLess (const MP::Coef& a, const MP::Coef& b) {
   if (a.col < b.col) {
     return true;
   } else if (a.col == b.col && a.row < b.row) {
@@ -308,6 +310,19 @@ bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
   }
 }
 
+
+//bool MP::CoefLessWithStage::operator()( const MP::Coef& a, const MP::Coef& b ) const {
+bool MP::CoefLessWithStage( const MP::Coef& a, const MP::Coef& b ) {
+	if (a.stage < b.stage){
+		return true;
+		}
+	else if (a.stage == b.stage && a.col < b.col){
+		return MP::CoefLess(a,b);
+	}
+	else {
+		return false;
+		}
+	}
 //This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
   assert(M==-1 || M==1);

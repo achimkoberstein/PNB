@@ -12,8 +12,10 @@ using std::endl;
 #include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
 #include <OsiSolverInterface.hpp>
-#include <SmiScnModel.hpp>
-#include <SmiScnData.hpp>
+
+#include "SmiScnData.hpp"
+#include "SmiScenarioTree.hpp"
+#include "SmiScnModel.hpp"
 
 #include "MP_model.hpp"
 #include "MP_variable.hpp"
@@ -161,7 +163,7 @@ void MP_model::minimize_max(MP_set &s, const MP_expression  &obj) {
 
 
 void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
-  std::sort(v.begin(),v.end(),MP::CoefLess());
+  std::sort(v.begin(),v.end(),&MP::CoefLess);
   int c,r,s;
   double val;
   RandomVariable* ptr;
@@ -264,31 +266,57 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   }// We have number of rows and number of columns at this point
 
   // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
-  //At first, generate coefficients for every constraint and store them in coefs vector
+  //At first, generate coefficients for every constraint and store them in coefs vector: Assigns column and row number
   for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
     (*i)->coefficients(cfs);
     messenger->constraintDebug((*i)->getName(),cfs);
-	//Sort and Store Coefficients of current
+	//Sort and Store Coefficients of current constraint and add them to constraint set coefs.
     assemble(cfs,coefs);
     cfs.erase(cfs.begin(),cfs.end());
   }
   nz = coefs.size();
-  //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
- vector< vector<RandomVariable*> > randomVars(this->Stage().size()+1);//we store nStages, but without first place, so nStages+1 places are needed
- //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
- for ( int i = 0; i != coefs.size(); i++){
-	 if (coefs[i].ptrVar != 0) {
-		 //We have a random variable associated with this column/row index
-		 randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
-		 }
-	 }
+	//At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
+  std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStage);
 
+
+  //Iterate over set to set correct indices in the coefficients and store the old indices in indirection array. This way we get correct column indices. Rows are not sorted by then
+  int* colIndirection = new int[n+1]; //also store rhs value?
+  //Initialize all values with -2 to prevent misuse
+  for (int i = 0; i < n+1; i++){
+	  colIndirection[i] = -2;
+	  }
+  int j = 0; //index counter
+  for (int i = 0; i < nz; i++){
+	  int oldCol = coefs[i].col;
+	  if (oldCol == -1)//Handle RHS
+		  oldCol = n;
+	  if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, do that now
+		  if (oldCol == n){//Handle RHS
+			  coefs[i].col = colIndirection[oldCol] = n;
+			  }
+		  else {
+			  coefs[i].col = colIndirection[oldCol] = j++;
+			  if (coefs[i].ptrVar != 0) //Change coefficient in RV
+				  coefs[i].ptrVar->ColIndex(coefs[i].col);
+			  }
+		  }//if already assigned, change coefficient
+	  else{
+		  coefs[i].col = colIndirection[oldCol];
+		  if (coefs[i].ptrVar != 0) //Change coefficient in RV
+			  coefs[i].ptrVar->ColIndex(coefs[i].col);
+		  }
+	  }
+  //Now we can access the new column ordering via colIndirection from FlopC++.
+  //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
+  std::sort(coefs.begin(),coefs.end(),&MP::CoefLess);
+  
  messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
 
- ////
+ #pragma region coreModelGeneration
+////
  // Generate Core Model
  ////
-
+ 
  //nz should only count number of elements in the matrix and not the RHS also..
  int realnz = nz;
   if (nz>0) {    
@@ -317,44 +345,83 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   for (int i=0; i<n+1; i++) {
 	  colStage[i] = 0;
 	  }
-  for (int i=0; i<nz; i++) {
+  for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
 	  int s = coefs[i].stage; //Stage of Variable that belongs to current coefficient
-	  if (coefs[i].col == -1){
-		  colStage[n] = s;
-		  }
-	  else
-		  {
-		  colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
-		  }
+	  colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
 	  int row = coefs[i].row; 
 	  if ( s > rowStage[row] )  {
 		  rowStage[row] = s;
 		  }
 	  }
+  //Now we need to sort the rows by stage
+  std::vector<int> rowCounter(stage.size()); //Store overall number of rows of a stage
+  std::vector<int> rowOffset(m); //store offset of current row in a stage
+  std::vector<int> tempRowStage(m);
+  for (int i = 0; i < m; i++){
+		rowOffset[i] = rowCounter[rowStage[i]]++; //In the end, rowCounter gives the number of rows in a stage.
+		tempRowStage[i] = rowStage[i];
+	  }
+  for (int i = 0; i < m; i++)//Reset rowStage. Empty rows are now rows with stage 0
+	  rowStage[i] = 0;
+  //Now reset the rowIndex in the coefficient set (and RandomVars..)
+  //Iterate over every coefficient. Set old coefficient to new coefficient
+  for (int i = 0; i < nz; i++){
+	  int oldRow = coefs[i].row;
+	  int curRowStage = tempRowStage[oldRow];
+	  int rowCount = 0;
+	  for (int j = 0; j < curRowStage;j++){
+			rowCount += rowCounter[j];
+		  }
+	  coefs[i].row = rowCount + rowOffset[oldRow];
+	  rowStage[coefs[i].row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
+	  if (coefs[i].ptrVar != 0)
+		  coefs[i].ptrVar->RowIndex(coefs[i].row);
+	  }
 
+  
 
-  // Set correct Column stage for every column by iterating over all elements
-  // Column Stage is equal to the lowest stage of a belonging coefficient
-  //for (int j=0; j<n; j++) {
-	 // colStage[j] = maxStage;
+  //int* rowIndirection = new int[m+1]; //also store rhs value?
+  ////Initialize all values with -2 to prevent misuse
+  //for (int i = 0; i < n+1; i++){
+	 // rowIndirection[i] = -2;
 	 // }
-  //for (int i=0; i<nz; i++) {
-	 // int col = coefs[i].col;
-	 // int s = coefs[i].stage;
-	 // if ( s > 0 && s-1 < colStage[col] )  { //TODO: Why is this done? I do not quite get it, see eMail Hultberg-King
-		//  colStage[col] = s-1;
+  //j = 0; //index counter
+  //for (int i = 0; i < nz; i++){
+	 // int oldRow = coefs[i].row;
+	 // if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, do that now
+		//  coefs[i].col = colIndirection[oldCol] = j++;
+		//  if (coefs[i].ptrVar != 0) //Change coefficient in RV
+		//	  coefs[i].ptrVar->ColIndex(coefs[i].col);
+		//  }//if already assigned, change coefficient
+	 // else{
+		//  coefs[i].col = colIndirection[oldCol];
+		//  if (coefs[i].ptrVar != 0) //Change coefficient in RV
+		//	  coefs[i].ptrVar->ColIndex(coefs[i].col);
 		//  }
 	 // }
+  //Now we can access the new column ordering via colIndirection from FlopC++.
 
-  //   cout<<"RowStages"<<endl;
-  //   for (int i=0; i<m; i++) {
-  //     cout<<i<<" "<<rowStage[i]<<endl;
-  //   }
+  //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
+  vector< vector<RandomVariable*> > randomVars(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
+  //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
+  for ( int i = 0; i != coefs.size(); i++){
+	  if (coefs[i].ptrVar != 0) {
+		  //We have a random variable associated with this column/row index
+		  randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
+		  }
+	  }
 
-  //   cout<<"ColStages"<<endl;
-  //   for (int j=0; j<n; j++) {
-  //     cout<<j<<" "<<colStage[j]<<endl;
-  //   }
+
+
+     cout<<"RowStages"<<endl;
+     for (int i=0; i<m; i++) {
+       cout<<i<<" "<<rowStage[i]<<endl;
+     }
+
+     cout<<"ColStages"<<endl;
+     for (int j=0; j<n; j++) {
+       cout<<j<<" "<<colStage[j]<<endl;
+     }
 
 // Compute Column Length Array to easily compute start array from there
   for (int j=0; j<=n; j++) {
@@ -366,8 +433,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   }
   for (int i=0; i<nz; i++) { //count occurence of a variable (in how many rows is a variable present?
     int col = coefs[i].col;
-    if (col == -1)  { //If col is -1 it is the right hand side, and inserted to column
-      col = n;
+    if (col == n)  { //If col is -1 it is the right hand side, and inserted to column
 	  realnz--;
     }
     Clg[col]++;
@@ -467,23 +533,34 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
   ////
   //Core Model generated..
   ////
+  #pragma endregion coreModelGeneration
+  //TODO: Do we have to sort cols and rows by stages?
+  //All arrays we give to SMI needs to be sorted by stage..
 
   //Check for stochasticity: If so, we have a stage set with size greater than 0.
-  if (this->Stage().size() > 0){
+  if (stage.size() > 0){
 	  ////
 	  // Feed Core Model to SmiScnModel
 	  ////
 	  // Generate Core ModelMatrix: Need Only the matrix, no rhs, so we need realnz (Elm,Rnr and Cst are too big..)	
 	  CoinPackedMatrix matrix(true,m,n,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
 	  matrix.reverseOrdering(); //Smi needs matrix in row ordered form
-	  Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data
+	  printMatrix(&matrix,n,m,l,u,c,bl,bu,colStage,rowStage);
+	  matrix.removeGaps();
+	  matrix.dumpMatrix();
+	
+
+	  Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
 	  SmiCoreData *osiCore = new
-		  SmiCoreData(Solver,this->Stage().size() ,colStage,rowStage); //Create CoreData Node
+		  SmiCoreData(Solver,stage.size() ,colStage,rowStage); //Create CoreData Node
+
+	  
 	  
 	  // initialize SmiScnModel to store the stochastic elements
 	  SmiScnModel *smiModel = new SmiScnModel();
 
 	  //TODO: Call appropriate sampling method to create scenario tree
+	  SmiScenarioTree<SmiScnNode*>* scenTree = flopc::generateScenarioTree(randomVars,osiCore,stage.size() );
 
 	  // Add Scenarios
 	  //int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
@@ -609,6 +686,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     
   }
   return mSolverState=MP_model::OPTIMAL;
+
 }
 
 namespace flopc {
@@ -647,6 +725,89 @@ namespace flopc {
     };
     return os;
   }
+
+  SmiScenarioTree<SmiScnNode * >* generateScenarioTree(const std::vector< std::vector<RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore, int nScen){
+	  typedef std::vector<RandomVariable*>::const_iterator randVarIterator;
+	  typedef std::vector<ScenarioRandomVariable*>::iterator scenVarIterator;
+		//TODO: Use sampleElements method to get std::vector< std::pair<double, double> > and this casting is no longer necessary.. 
+	  std::vector< std::vector< ScenarioRandomVariable*> > scenarioVariableVector;
+	  int nStages = smiCore->getNumStages();
+	  for (int i = 1; i <= nStages; i++){ //iterate over all stages
+		  for (randVarIterator it = randomVariableVector[i].begin(); it != randomVariableVector[i].end(); ++it){
+			  scenarioVariableVector[i].push_back(dynamic_cast<ScenarioRandomVariable*> (*it));
+			  }
+		  }
+
+	  //TODO: For Debugging reasons: Print out SmiCoreMatrix
+	  //std::vector<CoinPackedMatrix*> matrices;
+	  //for (int i = 0; i < smiCore->getNumStages();i++){
+		 // SmiNodeData* curNode = smiCore->getNode(i);
+		 // matrices[i] = new CoinPackedMatrix( false,smiCore->getNumCols(i),smiCore->getNumRows(i),curNode->getNumMatrixElements(), curNode->getRowElements(0),curNode->getRowIndices(0), curNode->getRowStarts(0),NULL);
+		 // CoinPackedMatrix* matrix_ = matrices[i];
+		 // }
+
+
+
+	  //TODO: How to initalize an empty tree?
+		//For every scenario:
+	  //output core Data matrix..
+	  for (int i = 0; i < nScen; i++){
+			//Go through all the random variables at every stage
+		  for (int i = 0; i <= nStages; i++){
+			  //Create Temporary variables to store matrix, bounds, ranges, objective
+			for(scenVarIterator it = scenarioVariableVector[i].begin(); it != scenarioVariableVector[i].end(); ++it )
+				double coefficient = *((*it)->getScenarioValues()+nScen); //get Coefficient for this random variable via double array and pointer arithmetic
+			//add coefficient in the right place in the matrix,bound,range,objective as needed
+				//TODO: Bounds not yet done
+			  }
+			//Compare Coefficients to create branching from scenario/branching from stage information
+			//Needed: array of std::pair<double, double> that stores the following for scenario i: Stage it branches from (See into SMI-Syntax to get that right) and Scenario it branches from
+
+		  }
+	  //For every scenario: Call generateScenario Function
+
+	  //Delete temporary variables
+
+
+	  //Pseudocode for more general scenario generation For every stage
+	  //for (int i = 1; i <= nStages;i++){
+			////Generate elements as needed for: Matrix, Bounds, Ranges, Objective (in this stage)
+			//
+			////call generateScenario method? No, I don't think so.. generate Scenario needs the whole scenario (for all stages)
+
+		 // }
+
+
+	  return 0;
+	  }
+
+  void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){
+	  printf("Print Problem\n");
+	  printf("Objective: ");
+	  for (int i = 0; i < n;i++){
+		  cout << " " << obj[i] << "*x" << i; 
+		  }
+	  cout << endl;
+	  for (int mi = 0; mi < matrix_->getMajorDim(); mi++){
+		  printf("%g<= ",rlo[mi]);
+		  for (int mj = 0; mj < matrix_->getMinorDim(); mj++){
+			  printf("%g ",matrix_->getCoefficient(mi,mj));
+			  }
+		  printf("<= %g",rup[mi]);
+		  if (rowStage != 0)
+			  cout << " # stage " << rowStage[mi];
+		  cout << endl;
+		  }
+	  cout << "\n";
+	  for (int i = 0; i < n; i++){
+		  cout << clo[i] << " <= x" << i << " <= " << cup[i];
+		  if (colStage != 0)
+			  cout << " in stage " << colStage[i];
+		  cout << endl;
+		  }
+	  printf("\nMatrix printed \n");
+	  }
+		
 
 
 }
