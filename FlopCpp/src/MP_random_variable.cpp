@@ -72,7 +72,7 @@ namespace flopc{
 
         virtual void operator()() const;
 
-        RandomVariable& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0) throw(std::out_of_range) { 
+        RandomVariable& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0)  { 
             lcli1 = S1.check(lcli1); 
             lcli2 = S2.check(lcli2); 
             lcli3 = S3.check(lcli3); 
@@ -95,8 +95,6 @@ namespace flopc{
                 tempArray[i] = arr[indexForValues*scen+i];
             }
             values[indexForValues] = new ScenarioRandomVariable(tempArray,scen);
-            cout << values[indexForValues]->sample() << endl; //Debug Statement
-            //TODO: Remove this statement
         }
 
 
@@ -155,11 +153,9 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : distrType(DistributionType::NORMAL),stage(0),colIndex(0),rowIndex(0),defaultSampleSize(0) {} //TODO: Set standard values for all fields
+    RandomVariable::RandomVariable() : stage(0),colIndex(0),rowIndex(0),defaultSampleSize(0),values(),valuesMap() {} //TODO: Set standard values for all fields
 
-    RandomVariable::RandomVariable(const flopc::RandomVariable::DistributionType &distrType)
-        : distrType(distrType),stage(0),colIndex(0),rowIndex(0),defaultSampleSize(0)
-    {}
+
 
 
     const RandomVariable& RandomVariable::operator=( const RandomVariable& rhs )
@@ -170,11 +166,12 @@ namespace flopc{
         //RandomVariable temp(rhs);
         //swap(rhs);
         //TODO: Delete values from *this and copy values from rhs to this. Return *this.
-        distrType = rhs.distrType;
         stage = rhs.stage;
         defaultSampleSize = rhs.defaultSampleSize;
         colIndex = rhs.colIndex;
         rowIndex = rhs.rowIndex;
+        values = rhs.values;
+        valuesMap = rhs.valuesMap;
         return *this; //No data values so far in RandomVariable, so we do not have anything to copy..
     }
 
@@ -183,6 +180,17 @@ namespace flopc{
 
     }
 
+    std::vector<double> RandomVariable::getSampledValues() const
+    {
+        return values;
+    }
+
+    RandomVariable::sampleVector RandomVariable::getSampledValuesWithProb() const
+    {
+        //Create vector that stores pairs of value with number of occurences. HashSet is ideal to store that..
+        sampleVector temp;
+        return temp;
+    }
     //Implementation for RandomVariableRef.
 
     RandomVariableRef::RandomVariableRef(boost::shared_ptr<MP_random_variable_impl> rv, 
@@ -294,7 +302,7 @@ namespace flopc{
     }
     std::ostream & operator<<( std::ostream &out, const RandomVariable& rhs )
     {
-        return out << rhs.DistrType();
+        return out;
     }
     //Implementation for ScenarioRandomVariable
     ScenarioRandomVariable::ScenarioRandomVariable( double* scenValues,int length)
@@ -308,21 +316,10 @@ namespace flopc{
     {
 
     }
-    std::vector< std::pair<double,double> > ScenarioRandomVariable::sampleValues( int elements ) const
-    {
-        double prob = 1.0/scenarioValues.size();
-        std::vector< std::pair< double,double> > samples;
-        for (std::size_t i = 0; i < scenarioValues.size(); i++){
-            samples[i] = std::pair<double,double>(scenarioValues[i],prob);
-        }
-        return samples;
-    }
 
-    double ScenarioRandomVariable::sample() const
+    void ScenarioRandomVariable::sample(int howMany) const
     {
-        //Chose an element at random from given scenario values?!
-        //TODO
-        return scenarioValues[0];
+        //We have fixed number of scenarios. Sample command does nothing. 
     }
 
     ScenarioRandomVariable::~ScenarioRandomVariable()
@@ -346,15 +343,9 @@ namespace flopc{
         return &scenarioValues[0];
     }
     //Implementation for ContinuousRandomVariable
-    std::vector< std::pair<double,double> > ContinuousRandomVariable::sampleValues( int elements ) const
+    void ContinuousRandomVariable::sample(int howMany) const
     {
-        return std::vector< std::pair<double,double> >();
-    }
 
-
-    double ContinuousRandomVariable::sample() const
-    {
-        return 0;
     }
 
     ContinuousRandomVariable::~ContinuousRandomVariable()
@@ -362,14 +353,9 @@ namespace flopc{
 
     }
     //Implementation for DiscreteRandomVariable
-    double DiscreteRandomVariable::sample() const
+    void DiscreteRandomVariable::sample(int howMany) const
     {
-        return 0;
-    }
 
-    std::vector< std::pair<double,double> > DiscreteRandomVariable::sampleValues( int elements ) const
-    {
-        return std::vector< std::pair<double,double> >();
     }
 
     DiscreteRandomVariable::~DiscreteRandomVariable()
