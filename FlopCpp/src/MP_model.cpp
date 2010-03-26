@@ -747,13 +747,15 @@ namespace flopc {
                     //Define bookkeeping stuff for scenario tree generation: Ancestor of scenario and branchStage
                     if (i == 1){ //In the first stage, every ancestor is set to scenario 0 (also if this is not exactly true
                         ancScenVec[curScen]=0;
+                        branchStageVec[curScen]=i;
                     }
                     else{ 
                         if (ancScenVec[curScen] == -1){ //If we are in the other stages AND ancScen not defined, define it now (last case of if clause above)
                             ancScenVec[curScen]=curScen-1;
+                            branchStageVec[curScen]=i;
                         }
                     }
-                    branchStageVec[curScen]=i;
+                    
                     //Add all random coefficients to corresponding places
                     for (int j = 0; j < randVarsPerStage[i];j++){  //Values differ 
                         RandomVariable* it = randomVariableVector[i][j];
@@ -791,6 +793,7 @@ namespace flopc {
        SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
         //Generate scenarios
        for (int i = 0; i < nScen; i++){
+           //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             smiModel->generateScenario(smiCore,matrixVec[i],NULL,NULL,objVec[i],rloVec[i],rupVec[i],branchStageVec[i],ancScenVec[i],1/nScen);
        }
 
