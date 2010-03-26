@@ -82,12 +82,12 @@ namespace {
         double rvArr[4][numScen] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
         MP_random_variable rvar1;
         MP_random_variable rvar2(&rvArr[0][0],autos);
-        EXPECT_DOUBLE_EQ(rvArr[0][0], *( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getScenarioValues() );
-        EXPECT_DOUBLE_EQ(rvArr[0][1], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getScenarioValues()+1) );
-        EXPECT_DOUBLE_EQ(rvArr[0][2], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getScenarioValues()+2) );
-        EXPECT_DOUBLE_EQ(rvArr[3][0], *( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getScenarioValues() );
-        EXPECT_DOUBLE_EQ(rvArr[3][1], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getScenarioValues()+1) );
-        EXPECT_DOUBLE_EQ(rvArr[3][2], *(( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getScenarioValues()+2) );
+        EXPECT_DOUBLE_EQ(rvArr[0][0], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getSampledValue(0) );
+        EXPECT_DOUBLE_EQ(rvArr[0][1], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getSampledValue(1) );
+        EXPECT_DOUBLE_EQ(rvArr[0][2], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getSampledValue(2) );
+        EXPECT_DOUBLE_EQ(rvArr[3][0], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getSampledValue(0) );
+        EXPECT_DOUBLE_EQ(rvArr[3][1], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getSampledValue(1) );
+        EXPECT_DOUBLE_EQ(rvArr[3][2], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getSampledValue(2) );
     }
 
 
