@@ -276,40 +276,45 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
         cfs.erase(cfs.begin(),cfs.end());
     }
     nz = coefs.size();
-    //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
-    std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStage);
 
 
-    //Iterate over set to set correct indices in the coefficients and store the old indices in indirection array. This way we get correct column indices. Rows are not sorted by then
+
+    
     int* colIndirection = new int[n+1]; //also store rhs value?
-    //Initialize all values with -2 to prevent misuse
-    for (int i = 0; i < n+1; i++){
-        colIndirection[i] = -2;
-    }
-    int j = 0; //index counter
-    for (int i = 0; i < nz; i++){
-        int oldCol = coefs[i].col;
-        if (oldCol == -1)//Handle RHS
-            oldCol = n;
-        if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, do that now
-            if (oldCol == n){//Handle RHS
-                coefs[i].col = colIndirection[oldCol] = n;
-            }
-            else {
-                coefs[i].col = colIndirection[oldCol] = j++;
+    if (stage.size()){
+        //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
+
+        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStage);
+        //Initialize all values with -2 to prevent misuse
+        for (int i = 0; i < n+1; i++){
+            colIndirection[i] = -2;
+        }
+        //Iterate over set to set correct indices in the coefficients and store the old indices in indirection array. This way we get correct column indices. Rows are not sorted by then
+        int j = 0; //index counter
+        for (int i = 0; i < nz; i++){
+            int oldCol = coefs[i].col;
+            if (oldCol == -1)//Handle RHS
+                oldCol = n;
+            if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, do that now
+                if (oldCol == n){//Handle RHS
+                    coefs[i].col = colIndirection[oldCol] = n;
+                }
+                else {
+                    coefs[i].col = colIndirection[oldCol] = j++;
+                    if (coefs[i].ptrVar != 0) //Change coefficient in RV
+                        coefs[i].ptrVar->ColIndex(coefs[i].col);
+                }
+            }//if already assigned, change coefficient
+            else{
+                coefs[i].col = colIndirection[oldCol];
                 if (coefs[i].ptrVar != 0) //Change coefficient in RV
                     coefs[i].ptrVar->ColIndex(coefs[i].col);
             }
-        }//if already assigned, change coefficient
-        else{
-            coefs[i].col = colIndirection[oldCol];
-            if (coefs[i].ptrVar != 0) //Change coefficient in RV
-                coefs[i].ptrVar->ColIndex(coefs[i].col);
         }
+        //Now we can access the new column ordering via colIndirection from FlopC++.
+        //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
+        std::sort(coefs.begin(),coefs.end(),&MP::CoefLess);
     }
-    //Now we can access the new column ordering via colIndirection from FlopC++.
-    //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
-    std::sort(coefs.begin(),coefs.end(),&MP::CoefLess);
 
     messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
 
@@ -472,8 +477,14 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
         //Set Bounds obtained via MP_variable
         for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
             for (int k=0; k<(*i)->size(); k++) {
-                l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
-                u[(*i)->offset+k] = (*i)->upperLimit.v[k];
+                if (stage.size()){
+                    l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit.v[k];
+                    u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit.v[k];
+                }
+                else {
+                    l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
+                    u[(*i)->offset+k] = (*i)->upperLimit.v[k];
+                }
             }
         }
 
@@ -523,38 +534,22 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
 
 
             Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
-            SmiCoreData *osiCore = new
-                SmiCoreData(Solver,stage.size() ,colStage,rowStage); //Create CoreData Node
+            SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node
 
-
-
-            // initialize SmiScnModel to store the stochastic elements
-            SmiScnModel *smiModel = new SmiScnModel();
-
-            //TODO: Call appropriate sampling method to create scenario tree
-            smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
-
-            // Add Scenarios
-            //int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-            // rlo0,NULL,iBranchStage[0],
-            // iAncestorScn[0],dProbScn[0]);
-
-            //is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-            // rlo1,NULL,iBranchStage[1],
-            // iAncestorScn[1],dProbScn[1]);
-
-
+            // Get SmiScnModel that holds a generated ScenarioTree.
+            //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
+            SmiScnModel* smiModel = smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
         }
         else {
             Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
         }
-
+        //We need indirection here to set the correct variables..
         for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
             int begin = (*i)->offset;
             int end = (*i)->offset+(*i)->size();
             if ((*i)->type == discrete) {
                 for (int k=begin; k<end; k++) {
-                    Solver->setInteger(k);
+                    Solver->setInteger(colIndirection[k]);
                 }
             }
         }
@@ -572,10 +567,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             delete [] l;  
             delete [] u;  
             delete [] c;
+            delete [] colIndirection;
+            delete [] colStage;
         }
         if (m>0) {
             delete [] bl;  
             delete [] bu;
+            delete [] rowStage;
         }  
 
 
@@ -755,7 +753,7 @@ namespace flopc {
                             branchStageVec[curScen]=i;
                         }
                     }
-                    
+
                     //Add all random coefficients to corresponding places
                     for (int j = 0; j < randVarsPerStage[i];j++){  //Values differ 
                         RandomVariable* it = randomVariableVector[i][j];
@@ -790,14 +788,22 @@ namespace flopc {
             }
         }
 
-       SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
+        SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
         //Generate scenarios
-       for (int i = 0; i < nScen; i++){
-           //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
-            smiModel->generateScenario(smiCore,matrixVec[i],NULL,NULL,objVec[i],rloVec[i],rupVec[i],branchStageVec[i],ancScenVec[i],1/nScen);
-       }
+        for (int i = 0; i < nScen; i++){
+            //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
+            if (ancScenVec[i]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
+                smiModel->generateScenario(smiCore,matrixVec[i],NULL,NULL,objVec[i],rloVec[i],rupVec[i],branchStageVec[i],ancScenVec[i],1/nScen);
+            }
+        }
 
-       //Delete temporary variables
+        //Delete temporary variables
+        for (int i = 0; i < nScen; i++){
+            delete matrixVec[i];
+            delete objVec[i];
+            delete rloVec[i];
+            delete rupVec[i];
+        }
         return smiModel;
     }
 
@@ -810,7 +816,7 @@ namespace flopc {
                 break; //break loop and return
             }
         }
-        return identical;
+        return !identical;
     }
 
     SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage){
