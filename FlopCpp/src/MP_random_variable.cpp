@@ -153,7 +153,7 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : stage(0),colIndex(0),rowIndex(0),defaultSampleSize(0),values(),valuesMap() {} //TODO: Set standard values for all fields
+    RandomVariable::RandomVariable() : values(),valuesMap(),defaultSampleSize(0),stage(0),colIndex(0),rowIndex(0) {} 
 
 
 
@@ -190,6 +190,11 @@ namespace flopc{
         //Create vector that stores pairs of value with number of occurences. HashSet is ideal to store that..
         sampleVector temp;
         return temp;
+    }
+
+    double RandomVariable::getSampledValue(int index) const
+    {
+        return values[index];
     }
     //Implementation for RandomVariableRef.
 
@@ -306,13 +311,13 @@ namespace flopc{
     }
     //Implementation for ScenarioRandomVariable
     ScenarioRandomVariable::ScenarioRandomVariable( double* scenValues,int length)
-        : DiscreteRandomVariable(),scenarioValues(scenValues, scenValues + length )
+        : DiscreteRandomVariable()
     {
-
+        this->values = std::vector<double>(scenValues,scenValues+length);
     }
 
     ScenarioRandomVariable::ScenarioRandomVariable() :
-    DiscreteRandomVariable(),scenarioValues()
+    DiscreteRandomVariable()
     {
 
     }
@@ -334,14 +339,9 @@ namespace flopc{
         //Copy all values
         //Copy base class
         DiscreteRandomVariable::operator=(rhs);
-        scenarioValues = rhs.scenarioValues;
         return *this;
     }
 
-    const double* ScenarioRandomVariable::getScenarioValues() const
-    {
-        return &scenarioValues[0];
-    }
     //Implementation for ContinuousRandomVariable
     void ContinuousRandomVariable::sample(int howMany) const
     {
@@ -372,5 +372,6 @@ namespace flopc{
         return *this;
 
     }
+
 
 }
