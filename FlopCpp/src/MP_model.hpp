@@ -311,10 +311,12 @@ namespace flopc {
 //Forward declarations for generateScenarioTree
 class SmiCoreData;
 class SmiScnNode;
+class SmiScnModel;
 template <class T>
 class SmiScenarioTree;
 
 namespace flopc{
-    SmiScenarioTree<SmiScnNode *>* generateScenarioTree(const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore, int nScen);
+    SmiScenarioTree<SmiScnNode *>* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
+    SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
 }
 #endif

@@ -532,7 +532,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             SmiScnModel *smiModel = new SmiScnModel();
 
             //TODO: Call appropriate sampling method to create scenario tree
-            SmiScenarioTree<SmiScnNode*>* scenTree = flopc::generateScenarioTree(randomVars,osiCore,stage.size() );
+            SmiScenarioTree<SmiScnNode*>* scenTree = flopc::generateScenarioTree(this,randomVars,osiCore);
 
             // Add Scenarios
             //int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
@@ -694,7 +694,8 @@ namespace flopc {
             return os;
     }
 
-    SmiScenarioTree<SmiScnNode * >* generateScenarioTree(const std::vector< std::vector<RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore, int nScen){
+    //Make this a member function, so we can look at the arrays we need (row sense for example)
+    SmiScenarioTree<SmiScnNode * >* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore){
         typedef std::vector<RandomVariable*>::const_iterator randVarIterator;
         typedef std::vector<ScenarioRandomVariable*>::iterator scenVarIterator;
         //TODO: Use sampleElements method to get std::vector< std::pair<double, double> > and this casting is no longer necessary.. 
@@ -708,6 +709,8 @@ namespace flopc {
 
         int m = smiCore->getNumRows();
         int n = smiCore->getNumCols();
+        SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
+        int nScen = flopModel->Stage().size();
         //This can be done in an generic way. How many samples should one take of a RV? It is saved in there via defaultSampleSize.
         for (int i = 0; i < nScen; i++){
             CoinPackedMatrix matrix; //Empty Column Ordered Matrix
@@ -715,13 +718,19 @@ namespace flopc {
             matrix.setDimensions(m,n); //Set Dimensions
             //TODO: Coin-Packed-Vector funktioniert nicht so wie gedacht. vermutlich auch CoinPackedMatrix nicht..
             CoinPackedVector obj; //Empty Vector for objective function
+            CoinPackedVector rlo;
+            CoinPackedVector rup;
+            //CoinPackedVector clo;
+            //CoinPackedVector cup;
 
+            generateScenario(flopModel,randomVariableVector,smiCore,0,0);
             //Go through all the random variables at every stage
             for (int i = 0; i <= nStages; i++){
-                //Create Temporary variables to store matrix, bounds, ranges, objective
+
+                 //add coefficient in the right place in the matrix,bound,range,objective as needed
                 for(scenVarIterator it = scenarioVariableVector[i].begin(); it != scenarioVariableVector[i].end(); ++it ){
                     double coefficient = *((*it)->getScenarioValues()+nScen); //get Coefficient for this random variable via double array and pointer arithmetic
-                    //Depending on row or colIndex add Coefficient to the appropriate vector or matrix.
+                    
                     int colIndex = (*it)->ColIndex();
                     int rowIndex = (*it)->RowIndex();
                     if (colIndex < n) {//Matrix-Element 
@@ -738,12 +747,22 @@ namespace flopc {
                     }
                     else{ //RHS
                         assert(colIndex == n);
-                        //We need the row sense to justify insertion in right vector..
-                    }
-
+                        //We need the row sense to insert in the right vector..
+                        switch (flopModel->Solver->getRowSense()[rowIndex])
+                        {
+                        case 'E' : rlo.insert(rowIndex,coefficient); rup.insert(rowIndex,coefficient); break;
+                        case 'G' : rlo.insert(rowIndex,coefficient); break;
+                        case 'L' : rup.insert(rowIndex,coefficient); break;
+                        case 'N' : break;
+                        default : throw not_implemented_error(); 
+                        }
+                   }
+                                    //TODO: Bounds not yet done
                 }
-                //add coefficient in the right place in the matrix,bound,range,objective as needed
-                //TODO: Bounds not yet done
+                // Call SMI-Generate Scenario Function
+                //smiModel->generateScenario(smiCore,matrix,NULL,NULL,obj,rlo,rup,,,);
+               
+
             }
             //Compare Coefficients to create branching from scenario/branching from stage information
             //Needed: array of std::pair<double, double> that stores the following for scenario i: Stage it branches from (See into SMI-Syntax to get that right) and Scenario it branches from
@@ -764,6 +783,12 @@ namespace flopc {
 
 
         return 0;
+    }
+
+    SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage){
+        // Sample values for all variables at this stage
+        return 0;
+
     }
 
     void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){
