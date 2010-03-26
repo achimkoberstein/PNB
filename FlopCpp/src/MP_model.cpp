@@ -532,7 +532,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             SmiScnModel *smiModel = new SmiScnModel();
 
             //TODO: Call appropriate sampling method to create scenario tree
-            SmiScenarioTree<SmiScnNode*>* scenTree = flopc::generateScenarioTree(this,randomVars,osiCore);
+            smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
 
             // Add Scenarios
             //int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
@@ -695,94 +695,119 @@ namespace flopc {
     }
 
     //Make this a member function, so we can look at the arrays we need (row sense for example)
-    SmiScenarioTree<SmiScnNode * >* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore){
+    SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore){
         typedef std::vector<RandomVariable*>::const_iterator randVarIterator;
-        typedef std::vector<ScenarioRandomVariable*>::iterator scenVarIterator;
-        //TODO: Use sampleElements method to get std::vector< std::pair<double, double> > and this casting is no longer necessary.. 
+        //Get basic important values
         int nStages = smiCore->getNumStages();
-        std::vector< std::vector< ScenarioRandomVariable*> > scenarioVariableVector(nStages+1);
-        for (int i = 1; i <= nStages; i++){ //iterate over all stages
-            for (randVarIterator it = randomVariableVector[i].begin(); it != randomVariableVector[i].end(); ++it){
-                scenarioVariableVector[i].push_back(dynamic_cast<ScenarioRandomVariable*> (*it));
+        int nScen = flopModel->ScenSet().size(); //If nScen is not set, i.e. equal to 0, we need to count number of Scenarios 
+        std::vector<int> randVarsPerStage(nStages);
+        bool count = false;
+        if (nScen==0)
+            count = true;
+        for (int i = 1; i < nStages; i++){
+            for (randVarIterator it = randomVariableVector[i].begin(); it != randomVariableVector[i].end();++it){
+                //Sample Values for all variables. If no scenario set was specified, we rely on previously set sample sizes.
+                if (!count)
+                    (*it)->sample(nScen);
+                else{
+                    (*it)->sample(0);
+                    nScen += (*it)->SampleSize();
+                }
+                randVarsPerStage[i]++;
             }
         }
-
+        //At this point we have a fan of values, represented by values inside each RV
+        //Now we want to make a tree out of it
         int m = smiCore->getNumRows();
-        int n = smiCore->getNumCols();
-        SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
-        int nScen = flopModel->Stage().size();
-        //This can be done in an generic way. How many samples should one take of a RV? It is saved in there via defaultSampleSize.
-        for (int i = 0; i < nScen; i++){
-            CoinPackedMatrix matrix; //Empty Column Ordered Matrix
-            matrix.reverseOrdering(); //Make it row ordered
-            matrix.setDimensions(m,n); //Set Dimensions
-            //TODO: Coin-Packed-Vector funktioniert nicht so wie gedacht. vermutlich auch CoinPackedMatrix nicht..
-            CoinPackedVector obj; //Empty Vector for objective function
-            CoinPackedVector rlo;
-            CoinPackedVector rup;
-            //CoinPackedVector clo;
-            //CoinPackedVector cup;
+        int n = smiCore->getNumCols(); 
+        // Initialize data structures needed later on
+        std::vector<CoinPackedMatrix*> matrixVec(nScen); // Column Ordered Matrices
+        for (int i = 0; i < nScen;i++){
+            matrixVec[i] = new CoinPackedMatrix();
+            matrixVec[i]->reverseOrdering();
+            matrixVec[i]->setDimensions(m,n);
+        }
+        std::vector<CoinPackedVector*> objVec(nScen); //Empty Vector for objective function
+        std::vector<CoinPackedVector*> rloVec(nScen);
+        std::vector<CoinPackedVector*> rupVec(nScen);
+        //CoinPackedVector clo;
+        //CoinPackedVector cup;
+        std::vector<int> ancScenVec(nScen,-1); //Initalized Vector with -1
+        std::vector<int> branchStageVec(nScen); //Initialized Vector with 0
+        for (int i = 1; i < nStages; i++){ //First stage has no RV
+            // Check values of all rand vars per stage and create nodes on this stage for each different combined outcome
 
-            generateScenario(flopModel,randomVariableVector,smiCore,0,0);
-            //Go through all the random variables at every stage
-            for (int i = 0; i <= nStages; i++){
-
-                 //add coefficient in the right place in the matrix,bound,range,objective as needed
-                for(scenVarIterator it = scenarioVariableVector[i].begin(); it != scenarioVariableVector[i].end(); ++it ){
-                    double coefficient = *((*it)->getScenarioValues()+nScen); //get Coefficient for this random variable via double array and pointer arithmetic
-                    
-                    int colIndex = (*it)->ColIndex();
-                    int rowIndex = (*it)->RowIndex();
-                    if (colIndex < n) {//Matrix-Element 
-                        if (rowIndex >= 0){ //Matrix-Element
-                            assert(rowIndex < m ); //row index needs to be inside bounds
-                            assert(colIndex >= 0); //col index needs to be inside bounds
-                            matrix.modifyCoefficient(rowIndex,colIndex,coefficient);
-                        }
-                        else{ //Objective Function
-                            assert(rowIndex == -1);
-                            obj.insert(colIndex,coefficient);
-                        
+            //Iterate over all scenarios
+            for (int curScen = 0; curScen < nScen; curScen++){
+                //Check if we have a new scenario to add: Check if values differ from previous round.
+                //If we are at the first scenario we add the values. 
+                // Or: ancestor is already defined. this means we start a new node with respect to last stage
+                // Or: Our values differ from previous round: We start a new node
+                if (curScen == 0 || ancScenVec[curScen] != -1 || differFromPrevious(randomVariableVector,i,curScen)){ //We need to look not only at the first but at the first scenario with respect to the current "node"                   
+                    //Define bookkeeping stuff for scenario tree generation: Ancestor of scenario and branchStage
+                    if (i == 1){ //In the first stage, every ancestor is set to scenario 0 (also if this is not exactly true
+                        ancScenVec[curScen]=0;
+                    }
+                    else{ 
+                        if (ancScenVec[curScen] == -1){ //If we are in the other stages AND ancScen not defined, define it now (last case of if clause above)
+                            ancScenVec[curScen]=curScen-1;
                         }
                     }
-                    else{ //RHS
-                        assert(colIndex == n);
-                        //We need the row sense to insert in the right vector..
-                        switch (flopModel->Solver->getRowSense()[rowIndex])
-                        {
-                        case 'E' : rlo.insert(rowIndex,coefficient); rup.insert(rowIndex,coefficient); break;
-                        case 'G' : rlo.insert(rowIndex,coefficient); break;
-                        case 'L' : rup.insert(rowIndex,coefficient); break;
-                        case 'N' : break;
-                        default : throw not_implemented_error(); 
+                    branchStageVec[curScen]=i;
+                    //Add all random coefficients to corresponding places
+                    for (int j = 0; j < randVarsPerStage[i];j++){  //Values differ 
+                        RandomVariable* it = randomVariableVector[i][j];
+                        double coefficient = it->getSampledValue(curScen);
+                        int colIndex = it->ColIndex();
+                        int rowIndex = it->RowIndex();
+                        if (colIndex < n) {//Matrix-Element 
+                            if (rowIndex >= 0){ //Matrix-Element
+                                assert(rowIndex < m ); //row index needs to be inside bounds
+                                assert(colIndex >= 0); //col index needs to be inside bounds
+                                matrixVec[curScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
+                            }
+                            else{ //Objective Function
+                                assert(rowIndex == -1);
+                                objVec[curScen]->insert(colIndex,coefficient);
+                            }
                         }
-                   }
-                                    //TODO: Bounds not yet done
+                        else{ //RHS
+                            assert(colIndex == n);
+                            //We need the row sense to insert in the right vector..
+                            switch (flopModel->Solver->getRowSense()[rowIndex])
+                            {
+                            case 'E' : rloVec[curScen]->insert(rowIndex,coefficient); rupVec[curScen]->insert(rowIndex,coefficient); break;
+                            case 'G' : rloVec[curScen]->insert(rowIndex,coefficient); break;
+                            case 'L' : rloVec[curScen]->insert(rowIndex,coefficient); break;
+                            case 'N' : break;
+                            default : throw not_implemented_error(); 
+                            }
+                        }
+                    }
                 }
-                // Call SMI-Generate Scenario Function
-                //smiModel->generateScenario(smiCore,matrix,NULL,NULL,obj,rlo,rup,,,);
-               
-
             }
-            //Compare Coefficients to create branching from scenario/branching from stage information
-            //Needed: array of std::pair<double, double> that stores the following for scenario i: Stage it branches from (See into SMI-Syntax to get that right) and Scenario it branches from
-
         }
-        //For every scenario: Call generateScenario Function
 
-        //Delete temporary variables
+       SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
+        //Generate scenarios
+       for (int i = 0; i < nScen; i++){
+            smiModel->generateScenario(smiCore,matrixVec[i],NULL,NULL,objVec[i],rloVec[i],rupVec[i],branchStageVec[i],ancScenVec[i],1/nScen);
+       }
 
+       //Delete temporary variables
+        return smiModel;
+    }
 
-        //Pseudocode for more general scenario generation For every stage
-        //for (int i = 1; i <= nStages;i++){
-        ////Generate elements as needed for: Matrix, Bounds, Ranges, Objective (in this stage)
-        //
-        ////call generateScenario method? No, I don't think so.. generate Scenario needs the whole scenario (for all stages)
-
-        // }
-
-
-        return 0;
+    bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen){
+        assert(curScen >0); //Otherwise function should not be called
+        bool identical = true;
+        for (RandomVariable::randVarVector::size_type i = 0; i < randomVariableVector[curStage].size();i++){
+            if (randomVariableVector[curStage][i]->getSampledValue(curScen) != randomVariableVector[curStage][i]->getSampledValue(curScen-1)){
+                identical = false;
+                break; //break loop and return
+            }
+        }
+        return identical;
     }
 
     SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage){

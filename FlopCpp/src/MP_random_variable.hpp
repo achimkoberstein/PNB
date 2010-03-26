@@ -20,14 +20,17 @@ namespace flopc{
         friend RandomVariableRef;
     public:
         typedef std::vector< std::pair< double, double > > sampleVector;
+        typedef std::vector< std::vector< RandomVariable* > > randVarVector;
 
         RandomVariable();
         virtual ~RandomVariable();
 
-        //Samples a random variate according to distribution of RandomVariable.
+        //Samples a number of random variates according to the distribution of the RandomVariable
+        // It also sorts the variates in ascending order
         virtual void sample(int howMany) const = 0;
         std::vector< std::pair<double,double> > getSampledValuesWithProb() const;
         std::vector<double> getSampledValues() const;
+        double getSampledValue(int index) const;
 
         int Stage() const { return stage; }
         void Stage(int val) { stage = val; }
@@ -35,20 +38,24 @@ namespace flopc{
         void ColIndex(int val) { colIndex = val; }
         int RowIndex() const { return rowIndex; }
         void RowIndex(int val) { rowIndex = val; }
+        int SampleSize() const { return defaultSampleSize; }
+        void SampleSize(int val) { defaultSampleSize = val; }
 
     protected:
         const RandomVariable& operator=(const RandomVariable& rhs);
 
-    private:
+        std::vector<double> values; //All values are equally probable
+        std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
+        int defaultSampleSize;
 
+    private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
         int colIndex;
         int rowIndex;
-        int defaultSampleSize;
+
         //We only need one way to store the values. Speed vs. Storage and what methods are called should determine which way is better.
         //We start with the simple solution: vector of values
-        std::vector<double> values; //All values are equally probable
-        std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
+
 
     };
 
@@ -85,14 +92,11 @@ namespace flopc{
         virtual void sample(int howMany) const;
 
 
-        //Length of Scenario values should be stored in ScenSet of MP_model..
-        const double* getScenarioValues() const;
 
         //Assignment operator
         const ScenarioRandomVariable& operator=(const ScenarioRandomVariable& rhs);
     private:
         ScenarioRandomVariable (const ScenarioRandomVariable&); //forbid copy operator
-        std::vector<double> scenarioValues;
 
     };
 
@@ -185,7 +189,7 @@ namespace flopc{
 
     //non-member non-friend functions
     std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;
-
+   
 
 }
 

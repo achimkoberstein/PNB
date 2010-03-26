@@ -316,7 +316,8 @@ template <class T>
 class SmiScenarioTree;
 
 namespace flopc{
-    SmiScenarioTree<SmiScnNode *>* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
+    SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
     SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
+    bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen);
 }
 #endif
