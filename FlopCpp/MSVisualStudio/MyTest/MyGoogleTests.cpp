@@ -27,7 +27,7 @@ namespace {
 
         }
         virtual void TearDown(){
-            testModel.detach();
+
 
         }
         MP_model testModel;
@@ -72,9 +72,11 @@ namespace {
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-        investmentModel.setObjective(sum(T,wealth(T)));
+        //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
+        investmentModel.setObjective(wealth(T.last()));
         investmentModel.attach(investmentModel.Solver);
         investmentModel.solve(MP_model::MAXIMIZE);
+        const double* colArray = investmentModel.Solver->getColSolution();
 
     }
 
@@ -85,12 +87,13 @@ namespace {
         double rvArr[4][numScen] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
         MP_random_variable rvar1;
         MP_random_variable rvar2(&rvArr[0][0],autos);
-        EXPECT_DOUBLE_EQ(rvArr[0][0], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getSampledValue(0) );
-        EXPECT_DOUBLE_EQ(rvArr[0][1], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getSampledValue(1) );
-        EXPECT_DOUBLE_EQ(rvArr[0][2], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(0)) )->getSampledValue(2) );
-        EXPECT_DOUBLE_EQ(rvArr[3][0], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getSampledValue(0) );
-        EXPECT_DOUBLE_EQ(rvArr[3][1], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getSampledValue(1) );
-        EXPECT_DOUBLE_EQ(rvArr[3][2], ( dynamic_cast<ScenarioRandomVariable* > (&rvar2(3)) )->getSampledValue(2) );
+        EXPECT_DOUBLE_EQ(rvArr[0][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(0) );
+        EXPECT_DOUBLE_EQ(rvArr[0][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(1) );
+        EXPECT_DOUBLE_EQ(rvArr[0][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(2) );
+        EXPECT_DOUBLE_EQ(rvArr[3][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(0) );
+        EXPECT_DOUBLE_EQ(rvArr[3][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(1) );
+        EXPECT_DOUBLE_EQ(rvArr[3][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(2) );
+
     }
 
 
@@ -135,6 +138,7 @@ namespace {
         MP_variable x;
         MP_variable y(T);
         MP_random_variable rVar(T);
+        //rVar(0) = new DiscreteRandomVariable();
         MP_random_variable rVar2(T);
         MP_random_variable rVar3(T);
         MP_constraint constraint1(T);
@@ -144,12 +148,12 @@ namespace {
         constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20;
         //TODO: This is counterintuitive
         testModel.setObjective( 3*x() );
-        testModel.attach(new OsiClpSolverInterface());
+        testModel.attach(testModel.Solver);
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(15,testModel->getObjValue());
+        EXPECT_EQ(0,testModel->getObjValue()); //Model is empty, as no scenarios were specified..
 
     }
 
@@ -164,9 +168,9 @@ namespace {
         RandomVariable* varsArr[3] = { new DiscreteRandomVariable(),new DiscreteRandomVariable(),new DiscreteRandomVariable() };
         MP_random_variable vars2(&varsArr[0],cars);
         //Check if vars2 contains these random variables
-        EXPECT_EQ(varsArr[0],&vars2(0));
-        EXPECT_EQ(varsArr[1],&vars2(1));
-        EXPECT_EQ(varsArr[2],&vars2(2));
+        EXPECT_EQ(varsArr[0],vars2(0)); //only checks pointer
+        EXPECT_EQ(varsArr[1],vars2(1));
+        EXPECT_EQ(varsArr[2],vars2(2));
 
         //Delete pointers
         for (int i = 0; i <3; i++)

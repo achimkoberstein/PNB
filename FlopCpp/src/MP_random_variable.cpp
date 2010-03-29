@@ -19,7 +19,8 @@ namespace flopc{
         friend class RandomVariableRef;
 
     public:
-        //If we use this constructor, we need to delete values in the end
+        //If we use this constructor, we need to delete values in the end.
+        // This is only necessary if we actually add random_variables to this MP_random_variable
         MP_random_variable_impl(const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
@@ -27,6 +28,7 @@ namespace flopc{
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) { 
+                initialize();//TODO: Rethink about that, if done correctly..
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
@@ -39,7 +41,7 @@ namespace flopc{
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(array),manageData(false) {  //Consistency check?
         }; 
 
-        //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
+        //Do a shallow copy (leave values in original arrays). This means we do want to delete the created RandomVariables
         MP_random_variable_impl(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
@@ -47,9 +49,6 @@ namespace flopc{
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) {  //Consistency check?
-
-
-                ////Create Random Variables according to specifications..
                 int scen = MP_model::getCurrentModel()->ScenSet().size(); 
                 for (int j1 = 0; j1 < S1.size();j1++)
                     for (int j2 = 0; j2 < S2.size(); j2++)
@@ -62,8 +61,12 @@ namespace flopc{
 
 
         ~MP_random_variable_impl(){
-            if(manageData)//Iterate through array and delete pointer
-                delete[] values;
+            if(manageData){//Iterate through array and delete pointer one-by-one.
+                for (int i = 0; i < size(); i++)
+                        delete values[i];
+                delete [] values;
+            }
+
         };
 
         //initialize data members 
@@ -72,7 +75,7 @@ namespace flopc{
 
         virtual void operator()() const;
 
-        RandomVariable& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0)  { 
+        RandomVariable* operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0)  { 
             lcli1 = S1.check(lcli1); 
             lcli2 = S2.check(lcli2); 
             lcli3 = S3.check(lcli3); 
@@ -82,7 +85,7 @@ namespace flopc{
             if (i == outOfBound) {
                 throw std::out_of_range("Index is not valid"); //Nothrow guarantee?
             } else {
-                return *values[i];
+                return values[i];
             }
         }
 
@@ -95,6 +98,7 @@ namespace flopc{
                 tempArray[i] = arr[indexForValues*scen+i];
             }
             values[indexForValues] = new ScenarioRandomVariable(tempArray,scen);
+            delete [] tempArray;
         }
 
 
@@ -119,7 +123,7 @@ namespace flopc{
         : ptrImpl(new MP_random_variable_impl(array,s1,s2,s3,s4,s5))	{
 
     }
-    RandomVariable& MP_random_variable::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
+    RandomVariable* MP_random_variable::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
@@ -145,10 +149,10 @@ namespace flopc{
 
     }
 
-    void MP_random_variable_impl::initialize()
+    void MP_random_variable_impl::initialize() //TODO: How to do that in abetter way? Think about that..
     {
-        //for (int i = 0; i < size(); i++)
-        //	values[i] = new RandomVariable();
+        for (int i = 0; i < size(); i++)
+        	values[i] = new DiscreteRandomVariable();
     }
 
 
