@@ -341,13 +341,12 @@ void MP::GenerateFunctor::operator()() const {
             stage = multiplicators[i]->getStage();
             ptrRV = multiplicators[i]->getRandomVariable();
             ptrRV->Stage(stage);
+            ptrRV->AdditiveConstant(multiplicators[i]->evaluateAdditive());
+            ptrRV->MultiplicativeConstant(multiplicators[i]->evaluateMultiplicative());
         }
     }
     //If stage is > 0, we have a RandomVariable and not a double coefficient
     //I still need to find out why multiplicators can be of size > 0? Maybe for rhs?
-    //We should store a double value inside of a RandomVariable to indicate for a multiplication/addition
-    //TODO: Do that..
-
 
     // If objective, rowNumber is -1
     int rowNumber = -1;
@@ -364,7 +363,7 @@ void MP::GenerateFunctor::operator()() const {
             //Now comes the fun part: If varStage > stage this means one of two things:
             //1: VariableRef with fixed Coefficient
             //2: We added a RandomVariable without a variable, so that the RandomVariable is treted 
-            //as a terminalExpression
+            //as a terminalExpression: => No Multiplicative constant whatsoever..
             // What is not allowed? varStage > stage && stage > 0 . 
             if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
                 ptrRV =  C->getRandomVariable();
@@ -372,11 +371,11 @@ void MP::GenerateFunctor::operator()() const {
                     ptrRV->Stage(varStage);
 
             }
-
             //store col and row index in random variable, if there is any
             if (ptrRV != 0){
                 ptrRV->ColIndex(colNumber);
                 ptrRV->RowIndex(rowNumber);
+
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage, ptrRV));
 

@@ -12,6 +12,7 @@ namespace flopc {
 
     //Forward Declaration for Constant Class
     class RandomVariable;
+    class Constant_random_variable;
 
     /** @brief Base class for all "constant" types of data.
     @ingroup INTERNAL_USE
@@ -30,10 +31,10 @@ namespace flopc {
             return evaluate();
         }
         virtual int getStage() const { //get Stage. If no stochastic variable are present, i.e. no MP_stage defined and assigned, return 0.
-            return 0;
+            throw not_implemented_error();
         }
         virtual RandomVariable* getRandomVariable() const {
-            return 0;	
+            throw not_implemented_error();
         }
 
     protected:
@@ -146,6 +147,9 @@ namespace flopc {
     @param b second constant
     @return the result of multiplying the constants.
     */
+    //Constant operator*(const Constant& a, const Constant_random_variable& b);
+    Constant operator*(const boost::shared_ptr<RandomVariableRef> a, const Constant& b);
+    Constant operator*(const Constant& b,const boost::shared_ptr<RandomVariableRef> a);
     Constant operator*(const Constant& a, const Constant& b);
     /** @brief Returns the quotient of two constants.
     @ingroup PublicInterface

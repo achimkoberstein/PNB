@@ -5,7 +5,7 @@
 #include "CoinFloatEqual.hpp"
 #include <iostream>
 
-#include <vld.h> //Visual Leak Detector
+//#include <vld.h> //Visual Leak Detector
 
 
 
