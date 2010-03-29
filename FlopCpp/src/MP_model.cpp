@@ -66,13 +66,13 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
 Solver(s),messenger(m), Objective(0), stage(0),scenSet(0), 
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
-mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))) {
+mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) {
     MP_model::current_model = this;
 }
 
 MP_model::~MP_model() {
     delete messenger;
-    if (Solver!=0) { //If solver was not delete, call detach
+    if (Solver!=0) { //If solver was not deleted, call detach.
         this->detach();
     }
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
@@ -553,16 +553,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             CoinPackedMatrix matrix(true,m,n,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
             matrix.reverseOrdering(); //Smi needs matrix in row ordered form
             printMatrix(&matrix,n,m,l,u,c,bl,bu,colStage,rowStage);
-            matrix.removeGaps();
-            matrix.dumpMatrix();
-
-
+            //matrix.removeGaps(); //What is this for?
             Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
-            SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node
+            SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
 
             // Get SmiScnModel that holds a generated ScenarioTree.
             //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
-            SmiScnModel* smiModel = smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
+            smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
         }
         else {
             Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
@@ -641,6 +638,19 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         if ((*i)->type == discrete) {
             isMIP = true;
             break;
+        }
+    }
+    if (stage.size() > 0) { // We have a time structure. This means we already have an attached solver with smiModel
+        assert(smiModel != 0);
+        //OsiClpSolverInterface osiClp;
+        //smiModel->setOsiSolverHandle(osiClp);
+        smiModel->setOsiSolverHandle(Solver);
+        //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
+        smiModel->loadOsiSolverData();
+        try {
+            Solver->initialSolve();
+        }  catch (CoinError e) {
+            cout<<e.message()<<endl;
         }
     }
     if (isMIP == true) {
@@ -819,12 +829,18 @@ namespace flopc {
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
         //Generate scenarios
+        int scenCounter = 0;
         for (int i = 0; i < nScen; i++){
+            
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[i]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
-                smiModel->generateScenario(smiCore,matrixVec[i],NULL,NULL,objVec[i],rloVec[i],rupVec[i],branchStageVec[i],ancScenVec[i],1/nScen);
+                smiModel->generateScenario(smiCore,matrixVec[i],NULL,NULL,objVec[i],rloVec[i],rupVec[i],branchStageVec[i],ancScenVec[i],1.0/nScen);
+                scenCounter++;
+                
             }
+            
         }
+        std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
         //Delete temporary variables
         for (int i = 0; i < nScen; i++){

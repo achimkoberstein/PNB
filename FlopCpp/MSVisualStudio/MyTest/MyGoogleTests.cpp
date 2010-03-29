@@ -49,7 +49,7 @@ namespace {
                 {1,2,3,4},{5,6,7,8} //scen
             },
             {//assets
-                {2,4,6,8},{10,12,14,16} //scen
+                {2,2,4,4},{10,10,14,14} //scen
             },
             {//assets
                 {3,6,9,12},{15,18,21,24} //scen
@@ -70,8 +70,9 @@ namespace {
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-        investmentModel.setObjective(wealth(T));
+        investmentModel.setObjective(sum(T,wealth(T)));
         investmentModel.attach(investmentModel.Solver);
+        investmentModel.solve(MP_model::MAXIMIZE);
 
     }
 
