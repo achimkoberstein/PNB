@@ -291,6 +291,8 @@ namespace flopc {
         double *u;
         int *colStage;
         int *rowStage;
+        int *colIndirection; //Redirect from FlopC++ Variable Index to Index used by Solver (in case of stochastic variables only..)
+        int *rowIndirection;
         MP_status mSolverState;
 
     };

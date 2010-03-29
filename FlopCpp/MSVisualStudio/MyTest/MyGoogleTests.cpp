@@ -127,7 +127,6 @@ namespace {
     }
 
     TEST_F(MP_modelTest,SimpleRandomVariableSolverTest){
-        testModel.detach();
         testModel.verbose();
         MP_stage T(2);
         MP_variable x;
@@ -149,19 +148,6 @@ namespace {
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(15,testModel->getObjValue());
 
-        vector<int> colStage(testModel->getNumCols());
-        vector<int> rowStage(testModel->getNumRows());
-
-
-        for (int j=0; j!=testModel->getNumCols(); ++j) {
-            colStage[j] = testModel.getColStage()[j];
-            cout<<"Col stage  "<<j<<"  "<<colStage[j]<<endl;
-        }
-
-        for (int i=0; i!=testModel->getNumRows(); ++i) {
-            rowStage[i] = testModel.getRowStage()[i];
-            cout<<"Row stage  "<<i<<"  "<<rowStage[i]<<endl;
-        }
     }
 
     TEST_F(MP_modelTest,RandomVariableInitializationTest){
