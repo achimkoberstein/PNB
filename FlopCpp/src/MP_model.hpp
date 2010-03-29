@@ -22,6 +22,9 @@ using std::vector;
 using std::set;
 
 class OsiSolverInterface;
+//Forward declarations for generateScenarioTree and private variable declaration
+class SmiCoreData;
+class SmiScnModel;
 
 namespace flopc {
 
@@ -29,6 +32,8 @@ namespace flopc {
     class MP_variable;
     class MP_index;
     class MP_set;
+
+
 
     /** @brief Inteface for hooking up to internal flopc++ message handling.
     @ingroup PublicInterface
@@ -294,6 +299,7 @@ namespace flopc {
         int *colIndirection; //Redirect from FlopC++ Variable Index to Index used by Solver (in case of stochastic variables only..)
         int *rowIndirection;
         MP_status mSolverState;
+        SmiScnModel *smiModel;
 
     };
 
@@ -310,12 +316,8 @@ namespace flopc {
 
 } // End of namespace flopc
 
-//Forward declarations for generateScenarioTree
-class SmiCoreData;
-class SmiScnNode;
-class SmiScnModel;
-template <class T>
-class SmiScenarioTree;
+
+
 
 namespace flopc{
     SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
