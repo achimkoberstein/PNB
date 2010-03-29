@@ -556,10 +556,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             //matrix.removeGaps(); //What is this for?
             Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
             SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
-
+            
             // Get SmiScnModel that holds a generated ScenarioTree.
             //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
             smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
+            smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
         }
         else {
             Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
@@ -609,13 +610,17 @@ void MP_model::detach() {
     mSolverState = MP_model::DETACHED;
     delete Solver;
     Solver = 0;
-    if (n > 0){
-        delete [] colStage;
-        delete [] colIndirection;
-    }
-    if (m > 0){
-        delete [] rowStage;
-        delete [] rowIndirection;
+    //Delete stochastic information
+    if (stage.size() > 0){
+        delete smiModel;
+        if (n > 0){
+            delete [] colStage;
+            delete [] colIndirection;
+        }
+        if (m > 0){
+            delete [] rowStage;
+            delete [] rowIndirection;
+        }
     }
  
 }
