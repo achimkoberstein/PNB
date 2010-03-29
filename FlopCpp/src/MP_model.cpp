@@ -65,17 +65,17 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
 Solver(s),messenger(m), Objective(0), stage(0),scenSet(0), 
-m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),
+m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))) {
     MP_model::current_model = this;
 }
 
 MP_model::~MP_model() {
     delete messenger;
-    if (Solver!=0) {
-        delete Solver;
+    if (Solver!=0) { //If solver was not delete, call detach
+        this->detach();
     }
-    //Reset currentModel Pointer to default model IF it points to this model to prevent from dangling pointer
+    //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
 
@@ -87,7 +87,7 @@ MP_model& MP_model::add(MP_constraint& constraint) {
     return *this;
 }
 
-void MP_model::add(MP_constraint* constraint) {
+void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in this model
     constraint->M = this;
     if (constraint->left.isDefined() && constraint->right.isDefined()) {
         constraint->offset = m;
@@ -103,7 +103,7 @@ double MP_model::getInfinity() const {
     }
 }
 
-void MP_model::add(MP_variable* v) {
+void MP_model::add(MP_variable* v) { //Counts total number of variables in this model
     assert(v != 0);
     v->M = this;
     v->offset = n;
@@ -257,13 +257,15 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
     //Insert decision variables into list of variables
     Objective->insertVariables(Variables);
     //Count number of columns and rows in the add methods. 
-    //Insert the remaining variables not in the objective to the list of variables
+    //Insert the remaining variables not in the objective to the list of variables stored in container Variables.
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
         add(*i);
         (*i)->insertVariables(Variables);
     }
+    //Count the number of real variables in the model with the add Method. Variables defined but not used in the model are also counted. 
+    //TODO: How to deal with variables that are only defined but have no coefficient, special bounds, objective function coefficient??
     for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
-        add(*j);
+        add(*j); 
     }// We have number of rows and number of columns at this point
 
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
@@ -278,14 +280,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
     nz = coefs.size();
 
 
-
-    
-    int* colIndirection = new int[n+1]; //also store rhs value?
+#pragma region colIndirection;
     if (stage.size()){
         //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
 
         std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStage);
         //Initialize all values with -2 to prevent misuse
+        colIndirection = new int[n+1]; //store all variables (n) starting from index 0 and rhs as value n => n+1 size needed to store all these values
         for (int i = 0; i < n+1; i++){
             colIndirection[i] = -2;
         }
@@ -295,26 +296,37 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             int oldCol = coefs[i].col;
             if (oldCol == -1)//Handle RHS
                 oldCol = n;
-            if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, do that now
+            if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, store new index
                 if (oldCol == n){//Handle RHS
-                    coefs[i].col = colIndirection[oldCol] = n;
+                    colIndirection[oldCol] = n;
                 }
                 else {
-                    coefs[i].col = colIndirection[oldCol] = j++;
-                    if (coefs[i].ptrVar != 0) //Change coefficient in RV
-                        coefs[i].ptrVar->ColIndex(coefs[i].col);
+                    colIndirection[oldCol] = j++;
                 }
-            }//if already assigned, change coefficient
-            else{
-                coefs[i].col = colIndirection[oldCol];
-                if (coefs[i].ptrVar != 0) //Change coefficient in RV
-                    coefs[i].ptrVar->ColIndex(coefs[i].col);
-            }
+            }// Assign correct values 
+            coefs[i].col = colIndirection[oldCol];
+            if (coefs[i].ptrVar != 0) //Change coefficient in RV
+                coefs[i].ptrVar->ColIndex(coefs[i].col);
         }
+        //Check for empty variables, i.e. variables not assigned in the problem. Maybe we can report that as an error??
+        // Empty Variables have no coefficients assigned, but they increase the variable counter
+        //TODO: How to handle this?
+        if (j != n){
+            assert(j <n);
+            std::cout << "We have empty variables in this formulation" << std::endl;
+            //We need to assign all empty variables to an index which is not used. This is fairly easy: Index j and above are not used..
+            for (int count = 0; count < n; count++){
+                if (colIndirection[count] == -2) //We have found an empty variable index
+                    colIndirection[count] = j++;
+            }
+            assert(j == n);
+        }
+
         //Now we can access the new column ordering via colIndirection from FlopC++.
         //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
         std::sort(coefs.begin(),coefs.end(),&MP::CoefLess);
     }
+#pragma endregion colIndirection;
 
     messenger->statistics(Constraints.size(),m,Variables.size(),n,nz);
 
@@ -363,9 +375,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
     std::vector<int> rowCounter(stage.size()); //Store overall number of rows of a stage
     std::vector<int> rowOffset(m); //store offset of current row in a stage
     std::vector<int> tempRowStage(m);
+    rowIndirection = new int[m];
     for (int i = 0; i < m; i++){
         rowOffset[i] = rowCounter[rowStage[i]]++; //In the end, rowCounter gives the number of rows in a stage.
         tempRowStage[i] = rowStage[i];
+        rowIndirection[i] = -2;
     }
     for (int i = 0; i < m; i++)//Reset rowStage. Empty rows are now rows with stage 0
         rowStage[i] = 0;
@@ -380,9 +394,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
         }
         coefs[i].row = rowCount + rowOffset[oldRow];
         rowStage[coefs[i].row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
+        rowIndirection[oldRow] = coefs[i].row;
         if (coefs[i].ptrVar != 0)
             coefs[i].ptrVar->RowIndex(coefs[i].row);
     }
+    //Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
+    //TODO: Check that
 
 
 
@@ -498,7 +515,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
         assemble(cfs,coefs);
         //add random variables (if any)
         for ( int i = 0; i != coefs.size(); i++){
+            //Set correct rowIndex and colIndex via colIndirection
+            coefs[i].col = colIndirection[coefs[i].col];
+            coefs[i].row = m;
             if (coefs[i].ptrVar != 0) {
+                coefs[i].ptrVar->ColIndex(coefs[i].col);
+                coefs[i].ptrVar->ColIndex(coefs[i].row);
                 //We have a random variable associated with this column/row index
                 randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
             }
@@ -514,11 +536,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
         } 
 
         ////
-        //Core Model generated..
+        // Core Model generated..
+        // All rows and cols are sorted by stage.
+        // RHS = n, Objective = m (indices)
+        // Old indices are stored in colIndirection and rowIndirection
         ////
 #pragma endregion coreModelGeneration
-        //TODO: Do we have to sort cols and rows by stages?
-        //All arrays we give to SMI needs to be sorted by stage..
+
 
         //Check for stochasticity: If so, we have a stage set with size greater than 0.
         if (stage.size() > 0){
@@ -549,14 +573,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             int end = (*i)->offset+(*i)->size();
             if ((*i)->type == discrete) {
                 for (int k=begin; k<end; k++) {
-                    Solver->setInteger(colIndirection[k]);
+                    if (stage.size())
+                        Solver->setInteger(colIndirection[k]);
+                    else
+                        Solver->setInteger(k);
                 }
             }
         }
         mSolverState = MP_model::ATTACHED;
 
+#pragma region cleanUp;
         //Clean Up
-        //TODO: What is whith colStage and rowStage?!
+        //ColIndirection and rowIndirection arrays may be needed later on
         if (nz>0) {    
             delete [] Elm; 
             delete [] Rnr;    
@@ -567,14 +595,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             delete [] l;  
             delete [] u;  
             delete [] c;
-            delete [] colIndirection;
-            delete [] colStage;
         }
         if (m>0) {
             delete [] bl;  
             delete [] bu;
-            delete [] rowStage;
         }  
+#pragma endregion cleanUp;
 
 
 
@@ -586,12 +612,15 @@ void MP_model::detach() {
     mSolverState = MP_model::DETACHED;
     delete Solver;
     Solver = 0;
-    if (n>0) {
-        delete [] colStage;   
+    if (n > 0){
+        delete [] colStage;
+        delete [] colIndirection;
     }
-    if (m>0) {
-        delete [] rowStage;  
-    }  
+    if (m > 0){
+        delete [] rowStage;
+        delete [] rowIndirection;
+    }
+ 
 }
 
 int * MP_model::getRowStage() {
@@ -761,13 +790,13 @@ namespace flopc {
                         int colIndex = it->ColIndex();
                         int rowIndex = it->RowIndex();
                         if (colIndex < n) {//Matrix-Element 
-                            if (rowIndex >= 0){ //Matrix-Element
-                                assert(rowIndex < m ); //row index needs to be inside bounds
+                            if (rowIndex < m){ //Matrix-Element
+                                assert(rowIndex >= 0 ); //row index needs to be inside bounds
                                 assert(colIndex >= 0); //col index needs to be inside bounds
                                 matrixVec[curScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
                             }
                             else{ //Objective Function
-                                assert(rowIndex == -1);
+                                assert(rowIndex == m);
                                 objVec[curScen]->insert(colIndex,coefficient);
                             }
                         }
@@ -843,6 +872,7 @@ namespace flopc {
             cout << endl;
         }
         cout << "\n";
+        //Print variables with bounds
         for (int i = 0; i < n; i++){
             cout << clo[i] << " <= x" << i << " <= " << cup[i];
             if (colStage != 0)
