@@ -1974,7 +1974,7 @@ void ModelBug()
 	myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
 
 	delete smiModel;
-	delete osiCore;
+	//delete osiCore;
 
 	delete rlo0;
 	delete rlo1;

@@ -71,7 +71,7 @@
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
-				Profile="true"
+				Profile="false"
 			/>
 			<Tool
 				Name="VCALinkTool"

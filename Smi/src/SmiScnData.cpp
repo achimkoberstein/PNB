@@ -8,7 +8,7 @@
 using namespace std;
 
 SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag)
-{
+{	//Copies all values already stored in the Solver..
 	int nrow = osi->getNumRows();
 	int ncol = osi->getNumCols();
 	CoinPackedVector *drlo = new CoinPackedVector(nrow,osi->getRowLower());
@@ -356,15 +356,6 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
 		const int    *matrix_len = localMatrix->getVectorLengths();
 		const int    *matrix_str = localMatrix->getVectorStarts();
 
-		//Print out Matrix..
-		for (int mi = 0; mi < localMatrix->getMajorDim();mi++){
-			printf("\n");
-			for (int mj = 0; mj < localMatrix->getMinorDim(); mj++){
-				printf(" %g",localMatrix->getCoefficient(mi,mj));
-			}
-		}
-		printf("\nMatrix printed \n");
-		
 
 		// check all rows in the stage of this node
 		for (int i=0; i<this->nrow_; ++i)

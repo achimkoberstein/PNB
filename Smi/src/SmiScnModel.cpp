@@ -58,6 +58,9 @@ SmiScnModel::~SmiScnModel()
 }
 
 //Generates Tree Nodes with Data for given scenario
+// branch: Stage where the new scenario differs from previous scenario
+// anc: the ancestor of this scenario, this is the one it branches from
+// prob: unconditional probability of this scenario (leaf node probability)
 SmiScenarioIndex
 SmiScnModel::generateScenario(SmiCoreData *core,
 				CoinPackedMatrix *matrix,
@@ -75,12 +78,18 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 
 	node_vec.reserve(core->getNumStages());
 
-	// first scenario
+	// If we add the first scenario..
 	if (this->getNumScenarios()==0)
 	{
 		// TODO: warnings if branch and anc are not 0
+        assert(anc == 0);
+        assert(branch == 0);
 		anc = 0;
 		branch = 0;
+        //Add core node pointer to SmiScnModel for proper cleanup. Kind of unnice to do it in this way.
+        //if (core_ == 0)
+        //    core_ = core;
+
 
 		// generate root node
 		SmiNodeData *node = core->getNode(0);
@@ -126,7 +135,7 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 	//Christian: What is this method doing? Connects the newly created nodes above
 	SmiScenarioIndex scen = smiTree_.addPathtoLeaf(anc,branch,node_vec);
 
-	// add probability to all scenario nodes in path: TODO: Outsource to owhn method
+	// add probability to all scenario nodes in path: TODO: Outsource to own method
 	SmiTreeNode<SmiScnNode *> *child = smiTree_.getLeaf(scen);
 	SmiTreeNode<SmiScnNode *> *parent = child->getParent();
 	SmiTreeNode<SmiScnNode *> *root = smiTree_.getRoot();
@@ -249,6 +258,8 @@ SmiScnModel::loadOsiSolverData()
 	// loop to addNodes
 	for_each(smiTree_.treeBegin(),smiTree_.treeEnd(),SmiScnModelAddNode(this));
 
+    //What happens if no ScenarioTree is present, but a core model is?
+
 	matrix_ = new CoinPackedMatrix(false,0,0);
 	int *len=NULL;
 	matrix_->assignMatrix(false,ncol_,nrow_,nels_,
@@ -259,6 +270,11 @@ SmiScnModel::loadOsiSolverData()
 
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..
+    //TODO: Printout obj-functions
+    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+    }
+    std::cout << std::endl;
 	for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
 		printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
 		for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
@@ -270,9 +286,6 @@ SmiScnModel::loadOsiSolverData()
 	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
 		printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
 	}
-
-
-
 	return osiStoch_;
 }
 

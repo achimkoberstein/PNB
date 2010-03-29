@@ -94,6 +94,13 @@ public:
 		 else
 			 return NULL;
 	 }
+
+	 const int *getRowStarts(int irow){
+		if (this->has_matrix_)
+			return &strt_[this->getMatStart()+irow-this->rowbeg_];
+		else
+			return NULL;
+		 }
 	 double *getMutableRowElements(int irow){
 		 // using const_cast to stop warnings about cast-away constness
 		 return const_cast<double *>(getRowElements(irow));
@@ -150,6 +157,7 @@ protected:
 	 const double *getElements(int istart){
 		return this->dels_+this->strt_[istart];
 	}
+
 
 private:
 
