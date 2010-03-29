@@ -156,7 +156,8 @@ public:
 	OsiSolverInterface * loadOsiSolverData();
 	OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
-//@}
+    //Let SmiScnModel own core data
+    void Core(SmiCoreData * val) { core_ = val; }
 
 	// get scenario problem data
 	SmiScenarioIndex getNumScenarios(){ return smiTree_.getNumScenarios();}
@@ -227,7 +228,7 @@ private:
 	double totalProb_;
 	//core model --- used for discrete distributions
 	SmiCoreData * core_;
-	// scenario tree pointer
+    // scenario tree pointer
 	SmiScenarioTree<SmiScnNode *> smiTree_;
 };
 
@@ -244,6 +245,7 @@ public:
 	inline int  getRowStart() {return roffset_;}
 	inline int getNumCols(){ return node_->getCore()->getNumCols(node_->getStage());}
 	inline int getNumRows(){ return node_->getCore()->getNumRows(node_->getStage());}
+	//inline int getNumElements() { return node_->getCore()->getNumElements(node_>getStage());}
 	inline double getModelProb(){return mdl_prob_;}
 	inline SmiStageIndex getStage() { return node_->getStage(); }
 	inline SmiScnNode * getParent(){ return parent_;}
