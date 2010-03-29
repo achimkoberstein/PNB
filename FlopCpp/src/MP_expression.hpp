@@ -23,7 +23,6 @@ namespace flopc {
     class TerminalExpression; 
     class MP_variable;
     class VariableRef;
-    class RandomVariableRef;
 
     class MP {
         friend class MP_expression;
@@ -34,8 +33,6 @@ namespace flopc {
         friend class CoefLess;
         friend class MP_expression_base;
         friend class VariableRef;
-        friend class RandomVariableRef;
-
 
         struct Coef {
             Coef(int c, int r, double v, int s = 0,RandomVariable* ptr = 0) : 
@@ -138,8 +135,6 @@ namespace flopc {
         MP_expression(const Constant& c);
         /// Constructor which (silently) converts a VariableRef to a MP_expression
         MP_expression(const VariableRef& v);
-        ////Constructor which silently converts a RandomVariable to a MP_expression
-        //MP_expression(const RandomVariableRef& rv);
         MP_expression(MP_expression_base* r) : Handle<MP_expression_base*>(r) {}
     };
 

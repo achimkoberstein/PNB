@@ -27,7 +27,7 @@ namespace flopc{
 
         //Samples a number of random variates according to the distribution of the RandomVariable
         // It also sorts the variates in ascending order
-        virtual void sample(int howMany) const = 0;
+        virtual void sample(int howMany) = 0;
         std::vector< std::pair<double,double> > getSampledValuesWithProb() const;
         std::vector<double> getSampledValues() const;
         double getSampledValue(int index) const;
@@ -40,19 +40,25 @@ namespace flopc{
         void RowIndex(int val) { rowIndex = val; }
         int SampleSize() const { return defaultSampleSize; }
         void SampleSize(int val) { defaultSampleSize = val; }
-
+        double AdditiveConstant() const { return additiveConstant; }
+        void AdditiveConstant(double val) { additiveConstant = val; }
+        double MultiplicativeConstant() const { return multiplicativeConstant; }
+        void MultiplicativeConstant(double val) { multiplicativeConstant = val; }
     protected:
         const RandomVariable& operator=(const RandomVariable& rhs);
 
         std::vector<double> values; //All values are equally probable
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
+        double additiveConstant;
+        double multiplicativeConstant;
 
     private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
         int colIndex;
         int rowIndex;
 
+      
         //We only need one way to store the values. Speed vs. Storage and what methods are called should determine which way is better.
         //We start with the simple solution: vector of values
 
@@ -67,7 +73,7 @@ namespace flopc{
 
         const DiscreteRandomVariable& operator=(const DiscreteRandomVariable& rhs);
 
-        virtual void sample(int howMany) const;
+        virtual void sample(int howMany);
 
 
 
@@ -78,7 +84,7 @@ namespace flopc{
 
         ~ContinuousRandomVariable();
 
-        virtual void sample(int howMany) const;
+        virtual void sample(int howMany) ;
 
     };
 
@@ -89,7 +95,7 @@ namespace flopc{
         ScenarioRandomVariable();
 
         ~ScenarioRandomVariable();
-        virtual void sample(int howMany) const;
+        virtual void sample(int howMany) ;
 
 
 

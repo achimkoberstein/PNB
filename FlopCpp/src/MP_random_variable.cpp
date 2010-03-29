@@ -157,7 +157,7 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : values(),valuesMap(),defaultSampleSize(0),stage(0),colIndex(0),rowIndex(0) {} 
+    RandomVariable::RandomVariable() : values(),valuesMap(),defaultSampleSize(0),additiveConstant(0),multiplicativeConstant(1),stage(0),colIndex(0),rowIndex(0) {} 
 
 
 
@@ -326,9 +326,17 @@ namespace flopc{
 
     }
 
-    void ScenarioRandomVariable::sample(int howMany) const
+    void ScenarioRandomVariable::sample(int howMany) 
     {
-        //We have fixed number of scenarios. Sample command does nothing. 
+        //We have fixed number of scenarios. Sample command does nothing except from adding constant terms to values.
+        if( additiveConstant != 0){
+            for (std::vector<double>::size_type i = 0; i < values.size(); i++)
+                values[i] += additiveConstant;
+        }
+        if (multiplicativeConstant != 1){
+            for (std::vector<double>::size_type i = 0; i < values.size(); i++)
+                values[i] *= multiplicativeConstant;
+        }
     }
 
     ScenarioRandomVariable::~ScenarioRandomVariable()
@@ -347,7 +355,7 @@ namespace flopc{
     }
 
     //Implementation for ContinuousRandomVariable
-    void ContinuousRandomVariable::sample(int howMany) const
+    void ContinuousRandomVariable::sample(int howMany) 
     {
 
     }
@@ -357,7 +365,7 @@ namespace flopc{
 
     }
     //Implementation for DiscreteRandomVariable
-    void DiscreteRandomVariable::sample(int howMany) const
+    void DiscreteRandomVariable::sample(int howMany)
     {
 
     }
