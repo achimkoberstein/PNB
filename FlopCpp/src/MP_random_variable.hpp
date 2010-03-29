@@ -130,7 +130,7 @@ namespace flopc{
 
         //TODO: Assignment of random variables via this operator is not yet possible
         //Needs virtual assignment operators hierarchy that might look ugly
-        RandomVariable& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
+        RandomVariable* operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
 
         const boost::shared_ptr<RandomVariableRef> operator()( 
             const MP_index_exp& d1 = MP_index_exp::getEmpty(), 

@@ -72,7 +72,7 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) 
 
 MP_model::~MP_model() {
     delete messenger;
-    if (Solver!=0) { //If solver was not deleted, call detach.
+    if (Solver!=0) { //If solver was not deleted, call detach and therefore delete the Solver
         this->detach();
     }
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
@@ -241,7 +241,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
         }  
     } else {  // use pre-attached solver.
         if(Solver && Solver!=_solver) {
-            detach();
+            detach(); //If old solver is not new solver, go delete the old solver
         }
         Solver=_solver;
     }
@@ -610,8 +610,9 @@ void MP_model::detach() {
     mSolverState = MP_model::DETACHED;
     delete Solver;
     Solver = 0;
-    //Delete stochastic information
-    if (stage.size() > 0){
+    //Delete stochastic information. We have this, if we have a time structure AND we have attached a solver.
+    if (stage.size() > 0 && smiModel != 0){ 
+        smiModel->releaseSolver(); //TODO: This can be deleted, if stochasticSolverInterface is ready.
         delete smiModel;
         if (n > 0){
             delete [] colStage;
@@ -622,6 +623,7 @@ void MP_model::detach() {
             delete [] rowIndirection;
         }
     }
+
  
 }
 
@@ -651,30 +653,32 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         //smiModel->setOsiSolverHandle(osiClp);
         smiModel->setOsiSolverHandle(Solver);
         //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
-        smiModel->loadOsiSolverData();
+        Solver = smiModel->loadOsiSolverData();
         try {
             Solver->initialSolve();
         }  catch (CoinError e) {
             cout<<e.message()<<endl;
         }
     }
-    if (isMIP == true) {
-        try {
-            Solver->branchAndBound();
-        } catch  (CoinError e) {
-            cout<<e.message()<<endl;
-            cout<<"Solving the LP relaxation instead."<<endl;
+    else {
+        if (isMIP == true) {
+            try {
+                Solver->branchAndBound();
+            } catch  (CoinError e) {
+                cout<<e.message()<<endl;
+                cout<<"Solving the LP relaxation instead."<<endl;
+                try {
+                    Solver->initialSolve();
+                } catch (CoinError e) {
+                    cout<<e.message()<<endl;
+                }
+            }
+        } else {
             try {
                 Solver->initialSolve();
-            } catch (CoinError e) {
+            }  catch (CoinError e) {
                 cout<<e.message()<<endl;
             }
-        }
-    } else {
-        try {
-            Solver->initialSolve();
-        }  catch (CoinError e) {
-            cout<<e.message()<<endl;
         }
     }
 
