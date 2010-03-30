@@ -2,8 +2,10 @@
 #include <exception>
 #include <stdexcept>
 #include <vector>
+//#include <cmath>
 
 #include <boost/ptr_container/ptr_array.hpp>
+#include <boost/random.hpp>
 
 #include "MP_expression.hpp"
 #include "MP_model.hpp"
@@ -12,6 +14,9 @@
 namespace flopc{
 
 
+    typedef boost::mt19937 base_generator_type; //Set RNG
+    typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
+    
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
@@ -75,7 +80,7 @@ namespace flopc{
 
         virtual void operator()() const;
 
-        RandomVariable* operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0)  { 
+        RandomVariable*& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0)  { 
             lcli1 = S1.check(lcli1); 
             lcli2 = S2.check(lcli2); 
             lcli3 = S3.check(lcli3); 
@@ -123,7 +128,7 @@ namespace flopc{
         : ptrImpl(new MP_random_variable_impl(array,s1,s2,s3,s4,s5))	{
 
     }
-    RandomVariable* MP_random_variable::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
+    RandomVariable*& MP_random_variable::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
@@ -157,27 +162,29 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : values(),valuesMap(),defaultSampleSize(0),additiveConstant(0),multiplicativeConstant(1),stage(0),colIndex(0),rowIndex(0) {} 
+    RandomVariable::RandomVariable() : seed(0),values(),valuesMap(),defaultSampleSize(0),additiveConstant(0),multiplicativeConstant(1),stage(0),colIndex(0),rowIndex(0) {
+        
+    } 
 
 
 
 
-    const RandomVariable& RandomVariable::operator=( const RandomVariable& rhs )
-    {
-        if( this == &rhs) //handle assignment to self //item 12
-            return *this;
-        //another way: item 12 and item 29 : swap method needs to be implemented
-        //RandomVariable temp(rhs);
-        //swap(rhs);
-        //TODO: Delete values from *this and copy values from rhs to this. Return *this.
-        stage = rhs.stage;
-        defaultSampleSize = rhs.defaultSampleSize;
-        colIndex = rhs.colIndex;
-        rowIndex = rhs.rowIndex;
-        values = rhs.values;
-        valuesMap = rhs.valuesMap;
-        return *this; //No data values so far in RandomVariable, so we do not have anything to copy..
-    }
+    //const RandomVariable& RandomVariable::operator=( const RandomVariable& rhs )
+    //{
+    //    if( this == &rhs) //handle assignment to self //item 12
+    //        return *this;
+    //    //another way: item 12 and item 29 : swap method needs to be implemented
+    //    //RandomVariable temp(rhs);
+    //    //swap(rhs);
+    //    //TODO: Delete values from *this and copy values from rhs to this. Return *this.
+    //    stage = rhs.stage;
+    //    defaultSampleSize = rhs.defaultSampleSize;
+    //    colIndex = rhs.colIndex;
+    //    rowIndex = rhs.rowIndex;
+    //    values = rhs.values;
+    //    valuesMap = rhs.valuesMap;
+    //    return *this; //No data values so far in RandomVariable, so we do not have anything to copy..
+    //}
 
     RandomVariable::~RandomVariable()
     {
@@ -200,6 +207,19 @@ namespace flopc{
     {
         return values[index];
     }
+
+    void RandomVariable::sample( int howMany /*= 0*/ )
+    {
+        //Initialization stuff common to all methods..
+        if (howMany == 0) // If method was called with argument = 0, sample from defaultSampleSize.
+            howMany = defaultSampleSize;
+        values.clear();
+        values.reserve(howMany);
+    }
+    //flopc::RandomVariable& RandomVariable::operator=( const flopc::RandomVariable & )
+    //{
+    //    return *this;
+    //}
     //Implementation for RandomVariableRef.
 
     RandomVariableRef::RandomVariableRef(boost::shared_ptr<MP_random_variable_impl> rv, 
@@ -223,21 +243,21 @@ namespace flopc{
         B(ref.B)
     {}
 
-    void RandomVariableRef::evaluate_lhs( const RandomVariable &rv ) const
-    {
-        //Check sanity of indices
-        int i1 = RV->S1.check(I1->evaluate());
-        int i2 = RV->S2.check(I2->evaluate());
-        int i3 = RV->S3.check(I3->evaluate());
-        int i4 = RV->S4.check(I4->evaluate());
-        int i5 = RV->S5.check(I5->evaluate());
-        //Compute index in flattened multidimensional array
-        int i = RV->f(i1,i2,i3,i4,i5);
-        // Set Value at computed index to v
-        if (i != outOfBound) {
-            *RV->values[i] = rv;
-        }
-    }
+    //void RandomVariableRef::evaluate_lhs( const RandomVariable &rv ) const
+    //{
+    //    //Check sanity of indices
+    //    int i1 = RV->S1.check(I1->evaluate());
+    //    int i2 = RV->S2.check(I2->evaluate());
+    //    int i3 = RV->S3.check(I3->evaluate());
+    //    int i4 = RV->S4.check(I4->evaluate());
+    //    int i5 = RV->S5.check(I5->evaluate());
+    //    //Compute index in flattened multidimensional array
+    //    int i = RV->f(i1,i2,i3,i4,i5);
+    //    // Set Value at computed index to v
+    //    if (i != outOfBound) { //evaluate_lhs: When is this function actually called?
+    //        *RV->values[i] = rv;
+    //    }
+    //}
 
     double RandomVariableRef::evaluate() const
     {
@@ -344,15 +364,15 @@ namespace flopc{
 
     }
 
-    const ScenarioRandomVariable& ScenarioRandomVariable::operator=( const ScenarioRandomVariable& rhs )
-    {
-        if( this == &rhs)
-            return *this;
-        //Copy all values
-        //Copy base class
-        DiscreteRandomVariable::operator=(rhs);
-        return *this;
-    }
+    //const ScenarioRandomVariable& ScenarioRandomVariable::operator=( const ScenarioRandomVariable& rhs )
+    //{
+    //    if( this == &rhs)
+    //        return *this;
+    //    //Copy all values
+    //    //Copy base class
+    //    DiscreteRandomVariable::operator=(rhs);
+    //    return *this;
+    //}
 
     //Implementation for ContinuousRandomVariable
     void ContinuousRandomVariable::sample(int howMany) 
@@ -375,15 +395,105 @@ namespace flopc{
 
     }
 
-    const DiscreteRandomVariable& DiscreteRandomVariable::operator=( const DiscreteRandomVariable& rhs )
-    {
-        if (this == &rhs)
-            return *this;
+    //const DiscreteRandomVariable& DiscreteRandomVariable::operator=( const DiscreteRandomVariable& rhs )
+    //{
+    //    if (this == &rhs)
+    //        return *this;
 
-        RandomVariable::operator=(rhs);
-        return *this;
+    //    RandomVariable::operator=(rhs);
+    //    return *this;
+
+    //}
+
+
+
+    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth)
+    { // Ensure correct functionality
+        //TODO: Include test for stepWidth
+        if (end < start){
+            int temp = start;
+            start = end;
+            end = temp;
+        }
+        if (step < 0){
+            step = std::fabs(step);
+        }
+        else if (step == 0.0){
+            throw invalid_argument_exception();
+        }
+    }
+
+    DiscreteUniformRandomVariable::~DiscreteUniformRandomVariable()
+    {
 
     }
 
+    void DiscreteUniformRandomVariable::sample( int howMany )
+    {
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+        
+        // We want to compute values from start to end with a stepWidth of step (double)
+        // So we first compute size of domain : (end-start)*stepWidth
+        int domainSize = round((end-start)/step);
+        // Then generate the variates: start+step*random_variate
+        typedef boost::uniform_int<> distr_type;
+        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
+        for (int i = 0; i < howMany; i++){
+            values.push_back(step*variateGen());
+        }
 
+    }
+
+    int round(double x){
+        double temp;
+        if (std::modf(x,&temp)>=0.5){
+            if (x>=0){
+                return int(std::ceil(x));
+            }
+            else{
+                return int(std::floor(x));
+            }
+        }
+        else{
+            if (x<0){
+                return int(std::ceil(x));
+            }
+            else{
+                return int(std::floor(x));
+            }
+        }
+    }
+
+    ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to ) : ContinuousRandomVariable(),start(from),end(to)
+    {
+        if (end < start){
+            int temp = start;
+            start = end;
+            end = start;
+        }
+
+    }
+
+    ContinuousUniformRandomVariable::~ContinuousUniformRandomVariable()
+    {
+
+    }
+
+    void ContinuousUniformRandomVariable::sample( int howMany )
+    {
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::uniform_real<> distr_type;
+        double domainSize = end-start;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(0,domainSize));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(start+variateGen());
+        }
+    }
 }

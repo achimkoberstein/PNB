@@ -2,7 +2,7 @@
 #define _MP_random_variable_hpp_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/array.hpp>
+#include <boost/utility.hpp>
 
 #include "MP_data.hpp"
 #include "MP_index.hpp"
@@ -14,9 +14,11 @@ namespace flopc{
     class MP_random_variable_impl;
     class RandomVariableRef;
 
+    int round(double x);
+
 
     //Class that defines a concrete RandomVariable for one coefficient
-    class RandomVariable {
+    class RandomVariable : boost::noncopyable{
         friend RandomVariableRef;
     public:
         typedef std::vector< std::pair< double, double > > sampleVector;
@@ -27,7 +29,7 @@ namespace flopc{
 
         //Samples a number of random variates according to the distribution of the RandomVariable
         // It also sorts the variates in ascending order
-        virtual void sample(int howMany) = 0;
+        virtual void sample(int howMany = 0) = 0;
         std::vector< std::pair<double,double> > getSampledValuesWithProb() const;
         std::vector<double> getSampledValues() const;
         double getSampledValue(int index) const;
@@ -44,9 +46,14 @@ namespace flopc{
         void AdditiveConstant(double val) { additiveConstant = val; }
         double MultiplicativeConstant() const { return multiplicativeConstant; }
         void MultiplicativeConstant(double val) { multiplicativeConstant = val; }
+        int Seed() const { return seed; }
+        void Seed(int val) { seed = val; }
     protected:
-        const RandomVariable& operator=(const RandomVariable& rhs);
+        //Boost::random number generator? Needs seed
+        unsigned int seed;
 
+        //We only need one way to store the values. Speed vs. Storage and what methods are called should determine which way is better.
+        //We start with the simple solution: vector of values
         std::vector<double> values; //All values are equally probable
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
@@ -58,10 +65,7 @@ namespace flopc{
         int colIndex;
         int rowIndex;
 
-      
-        //We only need one way to store the values. Speed vs. Storage and what methods are called should determine which way is better.
-        //We start with the simple solution: vector of values
-
+        //flopc::RandomVariable& operator=(const flopc::RandomVariable &);
 
     };
 
@@ -71,20 +75,22 @@ namespace flopc{
 
         ~DiscreteRandomVariable();
 
-        const DiscreteRandomVariable& operator=(const DiscreteRandomVariable& rhs);
-
         virtual void sample(int howMany);
-
-
 
     };
 
-    class ContinuousRandomVariable : public RandomVariable {
-    public:
+    class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
+    public :
+        DiscreteUniformRandomVariable(int from, int to, double stepWidth);
+        ~DiscreteUniformRandomVariable();
 
-        ~ContinuousRandomVariable();
+        virtual void sample(int howMany);
 
-        virtual void sample(int howMany) ;
+    private:
+        //Params for DiscreteUniformDistribution: [start,end] in steps of step
+        int start;
+        int end;
+        double step;
 
     };
 
@@ -97,14 +103,30 @@ namespace flopc{
         ~ScenarioRandomVariable();
         virtual void sample(int howMany) ;
 
+    };
 
+    class ContinuousRandomVariable : public RandomVariable {
+    public:
 
-        //Assignment operator
-        const ScenarioRandomVariable& operator=(const ScenarioRandomVariable& rhs);
-    private:
-        ScenarioRandomVariable (const ScenarioRandomVariable&); //forbid copy operator
+        ~ContinuousRandomVariable();
+
+        virtual void sample(int howMany) ;
 
     };
+
+    class ContinuousUniformRandomVariable : public ContinuousRandomVariable {
+    public:
+        ContinuousUniformRandomVariable(int from, int to);
+        ~ContinuousUniformRandomVariable();
+
+        virtual void sample(int howMany) ;
+
+    private:
+        int start;
+        int end;
+    };
+
+    
 
 
 
@@ -136,7 +158,7 @@ namespace flopc{
 
         //TODO: Assignment of random variables via this operator is not yet possible
         //Needs virtual assignment operators hierarchy that might look ugly
-        RandomVariable* operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
+        RandomVariable*& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
 
         const boost::shared_ptr<RandomVariableRef> operator()( 
             const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
@@ -182,7 +204,7 @@ namespace flopc{
         RandomVariableRef(const RandomVariableRef&);
 
         //Set value via current MP_index_exp 
-        void evaluate_lhs(const RandomVariable &v) const;
+        //void evaluate_lhs(const RandomVariable &v) const;
         virtual void operator()() const;
         RandomVariable* RandomVariableRef::getRandomVariable() const;
 
