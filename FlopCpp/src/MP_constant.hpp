@@ -46,7 +46,7 @@ namespace flopc {
 
     class MP_index_exp;
     class DataRef;
-    class RandomVariableRef;
+    class RandomDataRef;
     class MP_domain;
 
 
@@ -60,7 +60,7 @@ namespace flopc {
     class Constant : public Handle<Constant_base*> {
     public:
         Constant(const MP_index_exp& i);
-        Constant(const boost::shared_ptr<RandomVariableRef> ptrRVR);
+        Constant(const boost::shared_ptr<RandomDataRef> ptrRVR);
         Constant(const DataRef& d);
         Constant(double d);
         Constant(int d);
@@ -148,8 +148,8 @@ namespace flopc {
     @return the result of multiplying the constants.
     */
     //Constant operator*(const Constant& a, const Constant_random_variable& b);
-    Constant operator*(const boost::shared_ptr<RandomVariableRef> a, const Constant& b);
-    Constant operator*(const Constant& b,const boost::shared_ptr<RandomVariableRef> a);
+    Constant operator*(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
+    Constant operator*(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
     Constant operator*(const Constant& a, const Constant& b);
     /** @brief Returns the quotient of two constants.
     @ingroup PublicInterface

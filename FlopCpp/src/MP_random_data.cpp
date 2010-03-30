@@ -1,4 +1,4 @@
-#include "MP_random_variable.hpp"
+#include "MP_random_data.hpp"
 #include <exception>
 #include <stdexcept>
 #include <vector>
@@ -20,13 +20,13 @@ namespace flopc{
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
-    class MP_random_variable_impl : public RowMajor, public Functor , public Named {
-        friend class RandomVariableRef;
+    class MP_random_data_impl : public RowMajor, public Functor , public Named {
+        friend class RandomDataRef;
 
     public:
         //If we use this constructor, we need to delete values in the end.
-        // This is only necessary if we actually add random_variables to this MP_random_variable
-        MP_random_variable_impl(const MP_set_base &s1 = MP_set::getEmpty(), 
+        // This is only necessary if we actually add random_variables to this MP_random_data
+        MP_random_data_impl(const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
             const MP_set_base &s4 = MP_set::getEmpty(), 
@@ -40,7 +40,7 @@ namespace flopc{
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
-        MP_random_variable_impl(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
+        MP_random_data_impl(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
             const MP_set_base &s4 = MP_set::getEmpty(), 
@@ -73,7 +73,7 @@ namespace flopc{
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do want to delete the created RandomVariables
-        MP_random_variable_impl(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
+        MP_random_data_impl(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
             const MP_set_base &s4 = MP_set::getEmpty(), 
@@ -106,7 +106,7 @@ namespace flopc{
                                 }
         };
 
-        ~MP_random_variable_impl(){
+        ~MP_random_data_impl(){
             if(manageData){//Iterate through array and delete pointer one-by-one.
                 for (int i = 0; i < size(); i++)
                         delete values[i];
@@ -158,33 +158,33 @@ namespace flopc{
 
 
 
-    //Implementation for MP_random_variable
-    MP_random_variable::MP_random_variable( const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
-        : ptrImpl(new MP_random_variable_impl(s1,s2,s3,s4,s5)){	}
+    //Implementation for MP_random_data
+    MP_random_data::MP_random_data( const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
+        : ptrImpl(new MP_random_data_impl(s1,s2,s3,s4,s5)){	}
 
-    MP_random_variable::MP_random_variable( RandomVariable** array, const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
-        : ptrImpl(new MP_random_variable_impl(array,s1,s2,s3,s4,s5)) {}
+    MP_random_data::MP_random_data( RandomVariable** array, const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
+        : ptrImpl(new MP_random_data_impl(array,s1,s2,s3,s4,s5)) {}
 
-    MP_random_variable::MP_random_variable( double* array, const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
-        : ptrImpl(new MP_random_variable_impl(array,s1,s2,s3,s4,s5))	{
+    MP_random_data::MP_random_data( double* array, const MP_set_base &s1 /*= MP_set::getEmpty()*/, const MP_set_base &s2 /*= MP_set::getEmpty()*/, const MP_set_base &s3 /*= MP_set::getEmpty()*/, const MP_set_base &s4 /*= MP_set::getEmpty()*/, const MP_set_base &s5 /*= MP_set::getEmpty()*/ )
+        : ptrImpl(new MP_random_data_impl(array,s1,s2,s3,s4,s5))	{
 
     }
-    RandomVariable*& MP_random_variable::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
+    RandomVariable*& MP_random_data::operator ()(int lcli1, int lcli2, int lcli3, int lcli4, int lcli5){
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
-    const boost::shared_ptr<RandomVariableRef> MP_random_variable::operator()( /*TODO: Move to .cpp */ const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
+    const boost::shared_ptr<RandomDataRef> MP_random_data::operator()( /*TODO: Move to .cpp */ const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
     {
-        boost::shared_ptr<RandomVariableRef> temp(new RandomVariableRef(ptrImpl, d1, d2, d3, d4, d5));
+        boost::shared_ptr<RandomDataRef> temp(new RandomDataRef(ptrImpl, d1, d2, d3, d4, d5));
         return temp; //TODO: Who calls corresponding delete?!
     }
 
-    void MP_random_variable::operator()() const
+    void MP_random_data::operator()() const
     {
 
     }
-    //Implementation for MP_random_variable_impl
-    void MP_random_variable_impl::operator ()() const {
+    //Implementation for MP_random_data_impl
+    void MP_random_data_impl::operator ()() const {
         if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
         if (&S2!=&MP_set::getEmpty()) cout << i2.evaluate() << " ";
         if (&S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
@@ -195,7 +195,7 @@ namespace flopc{
 
     }
 
-    void MP_random_variable_impl::initialize() //TODO: How to do that in abetter way? Think about that..
+    void MP_random_data_impl::initialize() //TODO: How to do that in abetter way? Think about that..
     {
         for (int i = 0; i < size(); i++)
         	values[i] = 0;
@@ -261,9 +261,9 @@ namespace flopc{
     //{
     //    return *this;
     //}
-    //Implementation for RandomVariableRef.
+    //Implementation for RandomDataRef.
 
-    RandomVariableRef::RandomVariableRef(boost::shared_ptr<MP_random_variable_impl> rv, 
+    RandomDataRef::RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
         const MP_index_exp& i1,
         const MP_index_exp& i2,
         const MP_index_exp& i3,
@@ -272,7 +272,7 @@ namespace flopc{
     RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(0) { 
     }
 
-    RandomVariableRef::RandomVariableRef( const RandomVariableRef& ref)
+    RandomDataRef::RandomDataRef( const RandomDataRef& ref)
         :
     RV(ref.RV),
         I1(ref.I1),
@@ -284,7 +284,7 @@ namespace flopc{
         B(ref.B)
     {}
 
-    //void RandomVariableRef::evaluate_lhs( const RandomVariable &rv ) const
+    //void RandomDataRef::evaluate_lhs( const RandomVariable &rv ) const
     //{
     //    //Check sanity of indices
     //    int i1 = RV->S1.check(I1->evaluate());
@@ -300,7 +300,7 @@ namespace flopc{
     //    }
     //}
 
-    double RandomVariableRef::evaluate() const
+    double RandomDataRef::evaluate() const
     {
         //Check for sanity of indices
         int i1 = RV->S1.check(I1->evaluate());
@@ -320,7 +320,7 @@ namespace flopc{
         }
     }
 
-    RandomVariable* RandomVariableRef::getRandomVariable() const
+    RandomVariable* RandomDataRef::getRandomVariable() const
     {
         //Check for sanity of indices
         int i1 = RV->S1.check(I1->evaluate());
@@ -340,13 +340,13 @@ namespace flopc{
         }
     }
 
-    RandomVariableRef& RandomVariableRef::such_that( const MP_boolean& b )
+    RandomDataRef& RandomDataRef::such_that( const MP_boolean& b )
     {
         B = b;
         return *this;
     }
 
-    int RandomVariableRef::getStage() const
+    int RandomDataRef::getStage() const
     {	//We do not know which of these sets is the stage set, so we have to check all (but could abort after we found one)
         int i1 = RV->S1.checkStage(I1->evaluate());
         int i2 = RV->S2.checkStage(I2->evaluate());
@@ -364,7 +364,7 @@ namespace flopc{
     }
 
 
-    void RandomVariableRef::operator()() const
+    void RandomDataRef::operator()() const
     {
         throw not_implemented_error();
         //TODO: If C is not a constant_random_variable, something went wrong. Obviously
