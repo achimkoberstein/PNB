@@ -24,6 +24,7 @@ namespace flopc {
 	  
 	  //During first initialization, currentModel pointer is zero. Under this circumstances,
 	  //stage gets initalized with 0 by MP_model constructor and belongs to the current model
+      this->setName(MP_model::stageString); //Assign stageString to MP_stage set to identify it later on.
 	  if (MP_model::getCurrentModel() != 0)
 		MP_model::getCurrentModel()->Stage(*this);
 	  }

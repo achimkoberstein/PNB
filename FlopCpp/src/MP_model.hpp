@@ -8,6 +8,7 @@
 #include <ostream>
 #include <vector>
 #include <set>
+#include <string>
 
 
 #include <CoinPackedVector.hpp>
@@ -122,6 +123,8 @@ namespace flopc {
             /// No solver is attached.
             DETACHED
         } MP_status;
+
+        static const std::string stageString;
 
         /// Constructs an MP_model from an OsiSolverInterface *.
         MP_model(OsiSolverInterface* s, Messenger* m = new NormalMessenger);
