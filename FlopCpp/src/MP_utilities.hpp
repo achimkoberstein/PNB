@@ -21,6 +21,7 @@ namespace flopc {
     struct exception_base: virtual std::exception, virtual boost::exception { };
     struct io_error: virtual exception_base { };
     struct not_implemented_error: virtual exception_base { };
+    struct invalid_argument_exception: virtual exception_base { };
 
     /** @file This file contains several different useful utilities which are
     used to simplify use of FlopC++.

@@ -4,6 +4,7 @@
 #include "OsiClpSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 #include <iostream>
+#include <ctime>
 
 //#include <vld.h> //Visual Leak Detector
 
@@ -15,26 +16,26 @@ namespace {
 
     class MP_modelTest: public ::testing::Test {
     public:
-
     protected:
-        MP_modelTest() :testModel(new OsiClpSolverInterface){
+        MP_modelTest() :testModel(new OsiClpSolverInterface){}
+        virtual ~MP_modelTest(){}
+        virtual void SetUp(){}
+        virtual void TearDown(){}
+        MP_model testModel;
+    };
 
-        }
-        virtual ~MP_modelTest(){
-
-        }
-        virtual void SetUp(){
-
-        }
-        virtual void TearDown(){
-
-
-        }
+    class RandomVariableTest: public ::testing::Test {
+    public:
+    protected:
+        RandomVariableTest() :testModel(new OsiClpSolverInterface){}
+        virtual ~RandomVariableTest(){}
+        virtual void SetUp(){}
+        virtual void TearDown(){}
         MP_model testModel;
     };
 
     TEST_F(MP_modelTest,InvestmentExampleTest){
-
+        // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
         MP_model investmentModel(new OsiClpSolverInterface);
         MP_data initialWealth;
         initialWealth() = 55; //set data
@@ -77,10 +78,12 @@ namespace {
         investmentModel.attach(investmentModel.Solver);
         investmentModel.solve(MP_model::MAXIMIZE);
         const double* colArray = investmentModel.Solver->getColSolution();
+        //Compare solution values.
 
     }
 
     TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
+        //Create RV via double array. 
         MP_set autos(4); //We have a set with elements 0 to 3
         enum {numScen = 3};
         MP_scenario_set scen(numScen);
@@ -98,7 +101,7 @@ namespace {
 
 
     TEST_F(MP_modelTest,SimpleRandomVariableExpressionParsingTest){
-
+        //Tests RV without sets and some combinations. Compile-Time Test
         MP_random_variable rVar1;
         MP_variable x1;
         MP_variable y1;
@@ -112,11 +115,10 @@ namespace {
         exp1() = 4*x1()+5*x2() <= 10;
         exp1() = rVar1()*4 + y2()*rVar1() <= 8; //How can this work? constant get implicitly converted to expression..
         //Somehow we have to check if the rhs is properly evaluated in the end
-        //TODO:
     }
 
     TEST_F(MP_modelTest,RandomVariableExpressionParsingTest){
-        //Now we test RandomVariables with sets
+        //Now we test RandomVariables with sets. Compile-Time Test
         MP_stage T(2); //2 stages
         MP_random_variable rVar1(T);
         MP_variable x;
@@ -129,7 +131,6 @@ namespace {
         exp1(T) = y2(T)*4 <= rVar1(T);
         exp1(T+1) = y2(T+1)*rVar1(T+1) <= 8;
         //Only latest assignment remains.. clearly this is correct behaviour
-        //TODO: Test if the parsed expressions are correct
     }
 
     TEST_F(MP_modelTest,SimpleRandomVariableSolverTest){
@@ -138,7 +139,8 @@ namespace {
         MP_variable x;
         MP_variable y(T);
         MP_random_variable rVar(T);
-        //rVar(0) = new DiscreteRandomVariable();
+        rVar(0) = new DiscreteRandomVariable();
+        rVar(1) = new DiscreteRandomVariable();
         MP_random_variable rVar2(T);
         MP_random_variable rVar3(T);
         MP_constraint constraint1(T);
@@ -147,6 +149,7 @@ namespace {
         //constraint1(0) = 3*x() <= 10;
         constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20;
         //TODO: This is counterintuitive
+        //TODO: Test of the coefficients get generated in the right manner.
         testModel.setObjective( 3*x() );
         testModel.attach(testModel.Solver);
         //We need to do some tests here..
@@ -158,14 +161,23 @@ namespace {
     }
 
     TEST_F(MP_modelTest,RandomVariableInitializationTest){
-
+        // Test RV Usage by Assignment or Initialization.
         enum {Audi, BMW, Ford, numCars};
         MP_set cars(numCars);
-        MP_random_variable vars(cars);
+        MP_random_variable vars(cars); //Initialize RV with set
         //TODO: Uncomment if functionality is implemented..
-        //DiscreteRandomVariable x;
-        //vars(BMW) = x; //Not yet allowed
-        RandomVariable* varsArr[3] = { new DiscreteRandomVariable(),new DiscreteRandomVariable(),new DiscreteRandomVariable() };
+        DiscreteRandomVariable *x,*y,*z;
+        x = new DiscreteRandomVariable();
+        y = new DiscreteRandomVariable();
+        z = new DiscreteRandomVariable();
+        vars(BMW) = x; 
+        vars(Audi) = y;
+        vars(Ford) = z;
+        RandomVariable* varsArr[3] = { new DiscreteRandomVariable(),new DiscreteRandomVariable(),new DiscreteRandomVariable() }; //Initialize RV with Array of RV
+        // Need to delete Array as RV does not take ownership..
+        // Maybe store boost::shared_ptr<> to RV?
+        // Then the values assigned to the RV get managed by the RV and released too
+        // No Deletion of array values necessary afterwards..
         MP_random_variable vars2(&varsArr[0],cars);
         //Check if vars2 contains these random variables
         EXPECT_EQ(varsArr[0],vars2(0)); //only checks pointer
@@ -175,6 +187,18 @@ namespace {
         //Delete pointers
         for (int i = 0; i <3; i++)
             delete varsArr[i];
+    }
+
+    //RandomVariable Sampling Tests..
+    TEST_F(RandomVariableTest,UniformDistributionTest){
+        MP_random_variable rVarDiscrete;
+        MP_random_variable rVarContinuous;
+        DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,1.0/2);
+        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2);
+        rv->Seed(static_cast<unsigned int>(std::time(0)));
+        rv->sample(20);
+        rv2->Seed(static_cast<unsigned int>(std::time(0)));
+        rv2->sample(20);
     }
 
 } //end namespace
