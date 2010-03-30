@@ -25,6 +25,7 @@ using std::endl;
 
 using namespace flopc;
 
+const std::string MP_model::stageString("StageSet");
 MP_model& MP_model::default_model = *new MP_model(0);
 MP_model* MP_model::current_model = &MP_model::default_model;
 MP_model &MP_model::getDefaultModel() { return default_model;}
@@ -908,5 +909,8 @@ namespace flopc {
     }
 
 
+
+
+    
 
 }

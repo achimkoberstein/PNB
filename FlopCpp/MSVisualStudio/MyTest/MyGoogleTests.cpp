@@ -185,8 +185,8 @@ namespace {
         EXPECT_EQ(varsArr[2],vars2(2));
 
         //Delete pointers
-        for (int i = 0; i <3; i++)
-            delete varsArr[i];
+        //for (int i = 0; i <3; i++)
+        //    delete varsArr[i];
     }
 
     //RandomVariable Sampling Tests..
