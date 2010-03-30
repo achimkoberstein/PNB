@@ -47,6 +47,9 @@ namespace flopc{
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) {  //Consistency check?
+                initialize();
+                // Very ugly code..
+                // What is done here: Arrays stage index is one less than normal stage index because first stage needs no RV. 
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
                 if (s1.getName() == MP_model::stageString)
@@ -59,16 +62,13 @@ namespace flopc{
                     j4i = 1;
                 else if (S5.getName() == MP_model::stageString)
                     j5i = 1;
-
                 for (int j1 = 0; j1 < S1.size();j1++)
                     for (int j2 = 0; j2 < S2.size(); j2++)
                         for (int j3 = 0; j3 < S3.size(); j3++)
                             for (int j4 = 0; j4 < S4.size();j4++)
                                 for (int j5 = 0; j5 < S5.size();j5++){
-                                    if (j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i) //In case of first stage
-                                        values[f(j1,j2,j3,j4,j5)] = new DiscreteRandomVariable();
-                                    else 
-                                        values[f(j1,j2,j3,j4,j5)] = array[f(j1,j2,j3,j4,j5)];
+                                    if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)) //In case of not first stage: assign value
+                                        values[f(j1,j2,j3,j4,j5)] = array[f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i)];
                                 }
         }; 
 
@@ -80,7 +80,10 @@ namespace flopc{
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) {  //Consistency check?
+                initialize();
                 int scen = MP_model::getCurrentModel()->ScenSet().size();
+                //Identify stage set: The set with getStage > 0 is the stage set.
+                //If there is no stage set: Problem ;)
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
                 if (s1.getName() == MP_model::stageString)
@@ -93,19 +96,15 @@ namespace flopc{
                     j4i = 1;
                 else if (S5.getName() == MP_model::stageString)
                     j5i = 1;
-
                 for (int j1 = 0; j1 < S1.size();j1++)
                     for (int j2 = 0; j2 < S2.size(); j2++)
                         for (int j3 = 0; j3 < S3.size(); j3++)
                             for (int j4 = 0; j4 < S4.size();j4++)
                                 for (int j5 = 0; j5 < S5.size();j5++){
-                                    if (j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i) //In case of first stage
-                                        values[f(j1,j2,j3,j4,j5)] = new DiscreteRandomVariable();
-                                    else 
-                                        createRandomVariableFromIndices(array,f(j1,j2,j3,j4,j5),scen);
+                                    if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)) //In case of not first stage
+                                        createRandomVariableFromIndices(array,f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i),f(j1,j2,j3,j4,j5),scen);
                                 }
         };
-
 
         ~MP_random_variable_impl(){
             if(manageData){//Iterate through array and delete pointer one-by-one.
@@ -138,7 +137,7 @@ namespace flopc{
 
 
     private:
-        void createRandomVariableFromIndices(double* arr,int indexForValues, int scen){
+        void createRandomVariableFromIndices(double* arr,int indexForArr,int indexForValues, int scen){
             double *tempArray;
             tempArray = new double[scen]; //new/delete
             for (int i = 0; i < scen; i++){
@@ -199,7 +198,7 @@ namespace flopc{
     void MP_random_variable_impl::initialize() //TODO: How to do that in abetter way? Think about that..
     {
         for (int i = 0; i < size(); i++)
-        	values[i] = new DiscreteRandomVariable();
+        	values[i] = 0;
     }
 
 

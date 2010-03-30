@@ -22,6 +22,13 @@ namespace flopc {
     struct io_error: virtual exception_base { };
     struct not_implemented_error: virtual exception_base { };
     struct invalid_argument_exception: virtual exception_base { };
+    struct not_initialized_exception: virtual exception_base { };
+
+
+    //bool compareDouble(double x, double y, double absoluteTolerance, double relativeTolerance){
+    //    if ((std::fabs(x-y) <= absoluteTolerance) || std::fabs(x-y) <= relativeTolerance*(std::max(std::fabs(x),std::fabs(y))))
+    //}
+
 
     /** @file This file contains several different useful utilities which are
     used to simplify use of FlopC++.

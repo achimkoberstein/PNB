@@ -340,6 +340,8 @@ void MP::GenerateFunctor::operator()() const {
         if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
             stage = multiplicators[i]->getStage();
             ptrRV = multiplicators[i]->getRandomVariable();
+            if (ptrRV == 0)
+                throw not_initialized_exception();
             ptrRV->Stage(stage);
             ptrRV->AdditiveConstant(multiplicators[i]->evaluateAdditive());
             ptrRV->MultiplicativeConstant(multiplicators[i]->evaluateMultiplicative());
