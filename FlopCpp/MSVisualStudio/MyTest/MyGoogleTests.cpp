@@ -58,7 +58,7 @@ namespace {
                 {3,6,9,12},{15,18,21,24} //scen
             }
         };
-        MP_random_variable returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
+        MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
 
 
         MP_variable x(T,assets);
@@ -89,8 +89,8 @@ namespace {
         enum {numScen = 3};
         MP_scenario_set scen(numScen);
         double rvArr[4][numScen] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
-        MP_random_variable rvar1;
-        MP_random_variable rvar2(&rvArr[0][0],autos);
+        MP_random_data rvar1;
+        MP_random_data rvar2(&rvArr[0][0],autos);
         EXPECT_DOUBLE_EQ(rvArr[0][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(0) );
         EXPECT_DOUBLE_EQ(rvArr[0][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(1) );
         EXPECT_DOUBLE_EQ(rvArr[0][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(2) );
@@ -102,7 +102,7 @@ namespace {
 
     TEST_F(MP_modelTest,SimpleRandomVariableExpressionParsingTest){
         //Tests RV without sets and some combinations. Compile-Time Test
-        MP_random_variable rVar1;
+        MP_random_data rVar1;
         MP_variable x1;
         MP_variable y1;
         MP_variable x2;
@@ -120,7 +120,7 @@ namespace {
     TEST_F(MP_modelTest,RandomVariableExpressionParsingTest){
         //Now we test RandomVariables with sets. Compile-Time Test
         MP_stage T(2); //2 stages
-        MP_random_variable rVar1(T);
+        MP_random_data rVar1(T);
         MP_variable x;
         MP_variable y(T);
         MP_variable x2;
@@ -138,11 +138,11 @@ namespace {
         MP_stage T(2);
         MP_variable x;
         MP_variable y(T);
-        MP_random_variable rVar(T);
+        MP_random_data rVar(T);
         rVar(0) = new DiscreteRandomVariable();
         rVar(1) = new DiscreteRandomVariable();
-        MP_random_variable rVar2(T);
-        MP_random_variable rVar3(T);
+        MP_random_data rVar2(T);
+        MP_random_data rVar3(T);
         MP_constraint constraint1(T);
         MP_index j;
         //I would expect that such things would work, i.e. assign to different indices of one constraint.
@@ -161,8 +161,8 @@ namespace {
 
     TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
         MP_stage T(3); //We have three stages
-        MP_random_variable rVar(T); //Random Variable depends only on stage
-        MP_random_variable rVar2(T);
+        MP_random_data rVar(T); //Random Variable depends only on stage
+        MP_random_data rVar2(T);
         //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
         rVar(1) = new DiscreteRandomVariable();
         rVar2(1) = new DiscreteRandomVariable();
@@ -183,7 +183,7 @@ namespace {
         // Test RV Usage by Assignment or Initialization.
         enum {Audi, BMW, Ford, numCars};
         MP_set cars(numCars);
-        MP_random_variable vars(cars); //Initialize RV with set
+        MP_random_data vars(cars); //Initialize RV with set
         //TODO: Uncomment if functionality is implemented..
         DiscreteRandomVariable *x,*y,*z;
         x = new DiscreteRandomVariable();
@@ -197,7 +197,7 @@ namespace {
         // Maybe store boost::shared_ptr<> to RV?
         // Then the values assigned to the RV get managed by the RV and released too
         // No Deletion of array values necessary afterwards..
-        MP_random_variable vars2(&varsArr[0],cars);
+        MP_random_data vars2(&varsArr[0],cars);
         //Check if vars2 contains these random variables
         EXPECT_EQ(varsArr[0],vars2(0)); //only checks pointer
         EXPECT_EQ(varsArr[1],vars2(1));
@@ -206,8 +206,8 @@ namespace {
 
     //RandomVariable Sampling Tests..
     TEST_F(RandomVariableTest,UniformDistributionTest){
-        MP_random_variable rVarDiscrete;
-        MP_random_variable rVarContinuous;
+        MP_random_data rVarDiscrete;
+        MP_random_data rVarContinuous;
         DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,1.0/2);
         ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2);
         rv->Seed(static_cast<unsigned int>(std::time(0)));

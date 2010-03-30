@@ -13,7 +13,7 @@ using std::set;
 #include "MP_domain.hpp"
 #include "MP_constant.hpp"
 #include "MP_utilities.hpp"
-#include "MP_random_variable.hpp"
+#include "MP_random_data.hpp"
 
 
 

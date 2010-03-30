@@ -11,15 +11,15 @@
 
 namespace flopc{
 
-    class MP_random_variable_impl;
-    class RandomVariableRef;
+    class MP_random_data_impl;
+    class RandomDataRef;
 
     int round(double x);
 
 
     //Class that defines a concrete RandomVariable for one coefficient
     class RandomVariable : boost::noncopyable{
-        friend RandomVariableRef;
+        friend RandomDataRef;
     public:
         typedef std::vector< std::pair< double, double > > sampleVector;
         typedef std::vector< std::vector< RandomVariable* > > randVarVector;
@@ -132,23 +132,23 @@ namespace flopc{
 
 
     //Class that defines indexable random_variables. Contains concrete RandomVariables.
-    class MP_random_variable : public Functor, public Named //, public boost::enable_shared_from_this //We want to allow names, computation of flattened arrays and functors
+    class MP_random_data : public Functor, public Named //, public boost::enable_shared_from_this //We want to allow names, computation of flattened arrays and functors
     {
     public:
 
-        MP_random_variable(const MP_set_base &s1 = MP_set::getEmpty(), 
+        MP_random_data(const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
             const MP_set_base &s4 = MP_set::getEmpty(), 
             const MP_set_base &s5 = MP_set::getEmpty());
 
-        MP_random_variable(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
+        MP_random_data(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
             const MP_set_base &s4 = MP_set::getEmpty(), 
             const MP_set_base &s5 = MP_set::getEmpty());
 
-        MP_random_variable(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
+        MP_random_data(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
             const MP_set_base &s2 = MP_set::getEmpty(), 
             const MP_set_base &s3 = MP_set::getEmpty(),
             const MP_set_base &s4 = MP_set::getEmpty(), 
@@ -160,7 +160,7 @@ namespace flopc{
         //Needs virtual assignment operators hierarchy that might look ugly
         RandomVariable*& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
 
-        const boost::shared_ptr<RandomVariableRef> operator()( 
+        const boost::shared_ptr<RandomDataRef> operator()( 
             const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d2 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d3 = MP_index_exp::getEmpty(),
@@ -172,18 +172,18 @@ namespace flopc{
 
     private:
         //TODO: Think about copying behaviour?
-        MP_random_variable(const MP_random_variable& rhs); //forbid copy constructor
-        MP_random_variable& operator=(const MP_random_variable& rhs); //forbid assignment operator
-        boost::shared_ptr<MP_random_variable_impl> ptrImpl;
+        MP_random_data(const MP_random_data& rhs); //forbid copy constructor
+        MP_random_data& operator=(const MP_random_data& rhs); //forbid assignment operator
+        boost::shared_ptr<MP_random_data_impl> ptrImpl;
 
 
     };
 
-    class RandomVariableRef : public Functor { //Are we really a constant_base object?
-        friend class MP_random_variable_impl;
+    class RandomDataRef : public Functor { //Are we really a constant_base object?
+        friend class MP_random_data_impl;
     public:
 
-        RandomVariableRef(boost::shared_ptr<MP_random_variable_impl> rv, 
+        RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
             const MP_index_exp& i1,
             const MP_index_exp& i2,
             const MP_index_exp& i3,
@@ -191,25 +191,25 @@ namespace flopc{
             const MP_index_exp& i5);
 
 
-        ~RandomVariableRef() {} 
-        RandomVariableRef& such_that(const MP_boolean& b);
+        ~RandomDataRef() {} 
+        RandomDataRef& such_that(const MP_boolean& b);
 
         //Get Value via current settings for MP_index_exp
         double evaluate() const;
         int getStage() const;
         //Assignment-operators (Not yet defined..)
-        const RandomVariableRef& operator=(const RandomVariableRef& r); 
-        const RandomVariableRef& operator=(const Constant& c);
+        const RandomDataRef& operator=(const RandomDataRef& r); 
+        const RandomDataRef& operator=(const Constant& c);
         //Copy Constructor (needed in initialization of Constant_random_variable
-        RandomVariableRef(const RandomVariableRef&);
+        RandomDataRef(const RandomDataRef&);
 
         //Set value via current MP_index_exp 
         //void evaluate_lhs(const RandomVariable &v) const;
         virtual void operator()() const;
-        RandomVariable* RandomVariableRef::getRandomVariable() const;
+        RandomVariable* RandomDataRef::getRandomVariable() const;
 
     private:
-        boost::shared_ptr<MP_random_variable_impl> RV;
+        boost::shared_ptr<MP_random_data_impl> RV;
         const MP_index_exp I1,I2,I3,I4,I5;
         Constant C;
         MP_boolean B;

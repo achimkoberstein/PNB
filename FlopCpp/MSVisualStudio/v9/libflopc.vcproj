@@ -205,7 +205,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\MP_random_variable.cpp"
+				RelativePath="..\..\src\MP_random_data.cpp"
 				>
 			</File>
 			<File
@@ -263,7 +263,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\MP_random_variable.hpp"
+				RelativePath="..\..\src\MP_random_data.hpp"
 				>
 			</File>
 			<File
