@@ -79,6 +79,7 @@ namespace {
         investmentModel.solve(MP_model::MAXIMIZE);
         const double* colArray = investmentModel.Solver->getColSolution();
         //Compare solution values.
+        EXPECT_DOUBLE_EQ(1402.5,investmentModel.Solver->getObjValue());
 
     }
 
@@ -96,7 +97,6 @@ namespace {
         EXPECT_DOUBLE_EQ(rvArr[3][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(0) );
         EXPECT_DOUBLE_EQ(rvArr[3][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(1) );
         EXPECT_DOUBLE_EQ(rvArr[3][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(2) );
-
     }
 
 
@@ -157,7 +157,26 @@ namespace {
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(0,testModel->getObjValue()); //Model is empty, as no scenarios were specified..
+    }
 
+    TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
+        MP_stage T(3); //We have three stages
+        MP_random_variable rVar(T); //Random Variable depends only on stage
+        MP_random_variable rVar2(T);
+        //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
+        rVar(1) = new DiscreteRandomVariable();
+        rVar2(1) = new DiscreteRandomVariable();
+        rVar(2) = new DiscreteRandomVariable();
+        rVar2(2) = new DiscreteRandomVariable();
+        MP_variable x;
+        MP_variable y(T);
+        MP_constraint con1; 
+        MP_constraint con2(T);
+        con1() = x() <= 10;
+        con2(T) = x() + rVar(T)*y(T) <= rVar2(T);
+        testModel.setObjective(y(T.last()));
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MAXIMIZE);
     }
 
     TEST_F(MP_modelTest,RandomVariableInitializationTest){
@@ -183,10 +202,6 @@ namespace {
         EXPECT_EQ(varsArr[0],vars2(0)); //only checks pointer
         EXPECT_EQ(varsArr[1],vars2(1));
         EXPECT_EQ(varsArr[2],vars2(2));
-
-        //Delete pointers
-        //for (int i = 0; i <3; i++)
-        //    delete varsArr[i];
     }
 
     //RandomVariable Sampling Tests..
