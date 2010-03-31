@@ -256,13 +256,15 @@ namespace {
     TEST_F(RandomVariableTest,DoubleComparisonTest){
         double testValue = 0;
         testValue += flopc::absoluteTolerance;
-        EXPECT_EQ(true,flopc::compareDouble(testValue,0.0));
+        EXPECT_TRUE(flopc::compareDouble(testValue,0.0));
         testValue += std::numeric_limits<double>::epsilon();
         EXPECT_FALSE(flopc::compareDouble(testValue,0.0));
         testValue = 0 - flopc::absoluteTolerance;
-        EXPECT_EQ(true,flopc::compareDouble(testValue,0.0));
+        EXPECT_TRUE(flopc::compareDouble(testValue,0.0));
         testValue -= std::numeric_limits<double>::epsilon();
         EXPECT_FALSE(flopc::compareDouble(testValue,0.0));
+        testValue = 1e100;
+        EXPECT_TRUE(flopc::compareDouble(testValue,1e100-2));
     }
     
 
