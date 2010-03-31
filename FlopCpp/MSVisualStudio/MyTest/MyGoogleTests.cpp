@@ -214,42 +214,26 @@ namespace {
         //MP_random_data rVarDiscrete;
         //MP_random_data rVarContinuous;
         DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,1.0/2);
-        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2);
+        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2); 
         rv->Seed(static_cast<unsigned int>(std::time(0)));
         rv->sample(20);
         std::vector<double> sampledValues = rv->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+            EXPECT_GE(sampledValues[i],-3);
+            EXPECT_LE(sampledValues[i],2);
         }
         rv2->Seed(static_cast<unsigned int>(std::time(0)));
         rv2->sample(20);
         sampledValues = rv2->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+            EXPECT_GE(sampledValues[i],-2);
+            EXPECT_LE(sampledValues[i],2);
         }
         ScenarioRandomVariable* rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(0));
         rv3->sample();
         sampledValues = rv3->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
-        }
-        rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(1));
-        rv3->sample();
-        sampledValues = rv3->getSampledValues();
-        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
-        }
-        rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(2));
-        rv3->sample();
-        sampledValues = rv3->getSampledValues();
-        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
-        }
-        rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(3));
-        rv3->sample();
-        sampledValues = rv3->getSampledValues();
-        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+            EXPECT_EQ(vals[0][i],sampledValues[i]);
         }
     }
 

@@ -492,7 +492,7 @@ namespace flopc{
         typedef boost::uniform_int<> distr_type;
         boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
-            values.push_back(applyConstant(step*variateGen()));
+            values.push_back(applyConstant(start+step*variateGen()));
         }
         // Ensure values are in ascending order
         //std::sort(values.begin(),values.end());

@@ -325,6 +325,6 @@ namespace flopc {
 namespace flopc{
     SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
     SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
-    bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen);
+    bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen,int compareScen);
 }
 #endif

@@ -8,6 +8,7 @@ using std::cout;
 using std::endl;
 #include <algorithm>
 #include <limits>
+#include <map>
 
 #include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
@@ -782,78 +783,112 @@ namespace flopc {
         std::vector<int> ancScenVec(nScen,-1); //Initalized Vector with -1
         std::vector<int> branchStageVec(nScen); //Initialized Vector with 0
         //Create std::set<int> that stores all scenario values and allows for deletion of these values
-        std::set<int> scenarioHeap();
+        std::set<int> scenarioHeap;
+        typedef std::set<int>::iterator scenIt;
+        for (int i = 0; i < nScen; i++)
+            scenarioHeap.insert(i);
+        std::set<int> tempHeap = scenarioHeap;
+        typedef std::map<int,std::vector<int>>::iterator nodeIt;
+        std::map<int,std::vector<int> > nodeScenariosPerStage;
         for (int curStage = 1; curStage < nStages; curStage++){ //First stage has no RV
             // Check values of all rand vars per stage and create nodes on this stage for each different combined outcome
-            
+            if (scenarioHeap.empty())
+                scenarioHeap = tempHeap;
+            nodeScenariosPerStage.clear();
 
-            //Iterate over all scenarios
-            for (int curScen = 0; curScen < nScen; ++curScen){
-                for (int nextScen = curScen+1; nextScen < nScen; ++nextScen){
-                    //Check if we have a new scenario to add: Check if values differ from previous round.
-                    //If we are at the first scenario we add the values. 
-                    // Or: ancestor is already defined. this means we start a new node with respect to last stage
-                    // Or: Our values differ from previous round: We start a new node
-                    if (curScen == 0 || ancScenVec[curScen] != -1 || differFromPrevious(randomVariableVector,curStage,curScen,nextScen)){ //We need to look not only at the first but at the first scenario with respect to the current "node"                   
-                        //Define bookkeeping stuff for scenario tree generation: Ancestor of scenario and branchStage
-                        if (curStage == 1){ //In the first stage, every ancestor is set to scenario 0 (also if this is not exactly true
-                            ancScenVec[curScen]=0;
-                            branchStageVec[curScen]=curStage;
-                        }
-                        else{ 
-                            if (ancScenVec[curScen] == -1){ //If we are in the other stages AND ancScen not defined, define it now (last case of if clause above)
-                                ancScenVec[curScen]=curScen-1;
-                                branchStageVec[curScen]=curStage;
-                            }
-                        }
+            //Iterate over all scenarios in scenario set
+            while ( !scenarioHeap.empty() ){
+                //Get next scenario and delete it from the heap
+                scenIt it = scenarioHeap.begin();
+                int curScen = *it;
+                scenarioHeap.erase(it);
 
-                        //Add all random coefficients to corresponding places
-                        for (int j = 0; j < randVarsPerStage[curStage];j++){  //Values differ 
-                            RandomVariable* it = randomVariableVector[curStage][j];
-                            double coefficient = it->getSampledValue(curScen);
-                            int colIndex = it->ColIndex();
-                            int rowIndex = it->RowIndex();
-                            if (colIndex < n) {//Matrix-Element 
-                                if (rowIndex < m){ //Matrix-Element
-                                    assert(rowIndex >= 0 ); //row index needs to be inside bounds
-                                    assert(colIndex >= 0); //col index needs to be inside bounds
-                                    matrixVec[curScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
-                                }
-                                else{ //Objective Function
-                                    assert(rowIndex == m);
-                                    objVec[curScen]->insert(colIndex,coefficient);
-                                }
+                //Iterate over all scenarios in current node. If this is empty and we are on the third stage at least, the process simplifies somewhat
+                // : This scenario is alone in the world, no other scenario dares to branches from it. Sad really, but computationally attractive.
+                if (curStage > 1){
+                    nodeIt nIt = nodeScenariosPerStage.find(curScen);
+                    if (nIt != nodeScenariosPerStage.end()){ //NodeScenarioSet is not empty, so iterate over all elements and see if they differ
+                        std::vector<int> tempVector;
+                        for (std::vector<int>::iterator vecIt = nIt->second.begin();vecIt != nIt->second.end();++vecIt){
+                            if (differFromPrevious(randomVariableVector,curStage,curScen,*it)){ //Scenario differs.. set branchStage and ancScen
+                                //Set ancestor and branching scenarios..
+                                branchStageVec[*vecIt] = curStage;
+                                ancScenVec[*vecIt] = curScen;
                             }
-                            else{ //RHS
-                                assert(colIndex == n);
-                                //We need the row sense to insert in the right vector..
-                                switch (flopModel->Solver->getRowSense()[rowIndex])
-                                {
-                                case 'E' : rloVec[curScen]->insert(rowIndex,coefficient); rupVec[curScen]->insert(rowIndex,coefficient); break;
-                                case 'G' : rloVec[curScen]->insert(rowIndex,coefficient); break;
-                                case 'L' : rloVec[curScen]->insert(rowIndex,coefficient); break;
-                                case 'N' : break;
-                                default : throw not_implemented_error(); 
-                                }
-                            }
+                            else{//Scenario has the same values in this stage, so add it to the nodeSet.
+                                tempVector.push_back(*vecIt);
+                                scenarioHeap.erase(*vecIt); //Remove it from the scenario heap as we already investigated it.
+                            }//end else
+                        }//end for
+                        nIt->second.clear();
+                        nIt->second.insert(nIt->second.begin(),tempVector.begin(),tempVector.end()); //Clear vector for current scenario and add all the scenarios found above
+                    }//end if
+                }//end if
+                //Iterate over the rest of the scenarios to find scenarios with the same values (this means they will form a node)
+                else if (curStage == 1){
+                    std::vector<int> tempVector;
+                    for (it = scenarioHeap.begin();it != scenarioHeap.end();){
+                        if (differFromPrevious(randomVariableVector,curStage,curScen,*it)){ //Scenario differs.. set branchStage and ancScen. Do not remove from scenarioHeap..
+                            //Set ancestor and branching scenarios..
+                            branchStageVec[*it] = curStage;
+                            ancScenVec[*it] = 0; //Convention (needed by SMI)
+                            ++it; //Increase iterator
+                        }
+                        else {//Scenario has the same values in this stage, so add it to the nodeSet.
+                            tempVector.push_back(*it);
+                            scenarioHeap.erase(it++); //Remove it from the scenario heap as we already investigated it AND increase iterator. PostIncrement necessary, Item 9 of Effective STL
+                        }//end else
+
+                    }
+                    nodeScenariosPerStage.insert(std::pair<int,std::vector<int> > (curScen,tempVector));
+                }
+
+                //Do the real stuff: Add values for the current scenario.
+                //Add all random coefficients to corresponding places
+                for (int j = 0; j < randVarsPerStage[curStage];j++){  //Values differ 
+                    RandomVariable* it = randomVariableVector[curStage][j];
+                    double coefficient = it->getSampledValue(curScen);
+                    int colIndex = it->ColIndex();
+                    int rowIndex = it->RowIndex();
+                    if (colIndex < n) {//Matrix-Element 
+                        if (rowIndex < m){ //Matrix-Element
+                            assert(rowIndex >= 0 ); //row index needs to be inside bounds
+                            assert(colIndex >= 0); //col index needs to be inside bounds
+                            matrixVec[curScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
+                        }
+                        else{ //Objective Function
+                            assert(rowIndex == m);
+                            objVec[curScen]->insert(colIndex,coefficient);
                         }
                     }
-                }
-            }
-        }
+                    else{ //RHS
+                        assert(colIndex == n);
+                        //We need the row sense to insert in the right vector..
+                        switch (flopModel->Solver->getRowSense()[rowIndex])
+                        {
+                        case 'E' : rloVec[curScen]->insert(rowIndex,coefficient); rupVec[curScen]->insert(rowIndex,coefficient); break;
+                        case 'G' : rloVec[curScen]->insert(rowIndex,coefficient); break;
+                        case 'L' : rloVec[curScen]->insert(rowIndex,coefficient); break;
+                        case 'N' : break;
+                        default : throw not_implemented_error(); 
+                        }//end switch
+                    }//end else
+                }//end for: randVars
+            }//end while
+        }//end for: stages
+
+        //At this point our scenario ordering is not necessarily the way we would like it to be..
+        //Fix this ordering to get correct ordering for SMI ?!?
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
-        //Generate scenarios
+        //Generate scenarios in SMI
         int scenCounter = 0;
         for (int curStage = 0; curStage < nScen; curStage++){
-
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curStage]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
                 smiModel->generateScenario(smiCore,matrixVec[curStage],NULL,NULL,objVec[curStage],rloVec[curStage],rupVec[curStage],branchStageVec[curStage],ancScenVec[curStage],1.0/nScen);
                 scenCounter++;
-
-            }
-
+           }
         }
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
@@ -867,8 +902,29 @@ namespace flopc {
         return smiModel;
     }
 
+    ////Check if we have a new scenario to add: Check if values differ from previous round.
+    ////If we are at the first scenario we add the values. 
+    //// Or: ancestor is already defined. this means we start a new node with respect to last stage
+    //// Or: Our values differ from previous round: We start a new node
+    //if (curScen == 0 || ancScenVec[curScen] != -1 || differFromPrevious(randomVariableVector,curStage,curScen,nextScen)){ //We need to look not only at the first but at the first scenario with respect to the current "node"                   
+    //    //Define bookkeeping stuff for scenario tree generation: Ancestor of scenario and branchStage
+    //    if (curStage == 1){ //In the first stage, every ancestor is set to scenario 0 (also if this is not exactly true
+    //        ancScenVec[curScen]=0;
+    //        branchStageVec[curScen]=curStage;
+    //    }
+    //    else{ 
+    //        if (ancScenVec[curScen] == -1){ //If we are in the other stages AND ancScen not defined, define it now (last case of if clause above)
+    //            ancScenVec[curScen]=curScen-1;
+    //            branchStageVec[curScen]=curStage;
+    //        }
+    //    }
+    //}
+
+
+
+    
+
     bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen,int nextScen){
-        assert(curScen >0); //Otherwise function should not be called
         bool identical = true;
         for (RandomVariable::randVarVector::size_type i = 0; i < randomVariableVector[curStage].size();i++){
             if (!compareDouble(randomVariableVector[curStage][i]->getSampledValue(curScen),randomVariableVector[curStage][i]->getSampledValue(nextScen)) ){
