@@ -24,10 +24,12 @@ namespace flopc {
     struct invalid_argument_exception: virtual exception_base { };
     struct not_initialized_exception: virtual exception_base { };
 
+    //These values are default values for the comparison function compareDouble and can be changed if needed.
+    static double absoluteTolerance = 0.0001;
+    static double relativeTolerance = 0.0001;
 
-    //bool compareDouble(double x, double y, double absoluteTolerance, double relativeTolerance){
-    //    if ((std::fabs(x-y) <= absoluteTolerance) || std::fabs(x-y) <= relativeTolerance*(std::max(std::fabs(x),std::fabs(y))))
-    //}
+    bool compareDouble(double x, double y, double absoluteTolerance = flopc::absoluteTolerance, double relativeTolerance = flopc::relativeTolerance);
+    int round(double x);
 
 
     /** @file This file contains several different useful utilities which are

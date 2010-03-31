@@ -2,7 +2,7 @@
 #include <exception>
 #include <stdexcept>
 #include <vector>
-//#include <cmath>
+#include <set>
 
 #include <boost/ptr_container/ptr_array.hpp>
 #include <boost/random.hpp>
@@ -257,6 +257,17 @@ namespace flopc{
         values.clear();
         values.reserve(howMany);
     }
+
+    double RandomVariable::applyConstant( double val )
+    {
+        if (multiplicativeConstant != 1){
+            val *= multiplicativeConstant;
+        }
+        if( additiveConstant != 0){
+            val+=additiveConstant;
+        }
+        return val;
+    }
     //flopc::RandomVariable& RandomVariable::operator=( const flopc::RandomVariable & )
     //{
     //    return *this;
@@ -389,15 +400,12 @@ namespace flopc{
 
     void ScenarioRandomVariable::sample(int howMany) 
     {
-        //We have fixed number of scenarios. Sample command does nothing except from adding constant terms to values.
-        if( additiveConstant != 0){
-            for (std::vector<double>::size_type i = 0; i < values.size(); i++)
-                values[i] += additiveConstant;
+        //Apply the constant values to every element.
+        for (std::vector<double>::size_type i = 0; i < values.size();++i){
+            values[i] = applyConstant(values[i]);
         }
-        if (multiplicativeConstant != 1){
-            for (std::vector<double>::size_type i = 0; i < values.size(); i++)
-                values[i] *= multiplicativeConstant;
-        }
+        //Ensure that values are in ascending order
+        std::sort(values.begin(),values.end());
     }
 
     ScenarioRandomVariable::~ScenarioRandomVariable()
@@ -418,7 +426,7 @@ namespace flopc{
     //Implementation for ContinuousRandomVariable
     void ContinuousRandomVariable::sample(int howMany) 
     {
-
+        //call std::sort
     }
 
     ContinuousRandomVariable::~ContinuousRandomVariable()
@@ -428,7 +436,7 @@ namespace flopc{
     //Implementation for DiscreteRandomVariable
     void DiscreteRandomVariable::sample(int howMany)
     {
-
+        //call std::sort
     }
 
     DiscreteRandomVariable::~DiscreteRandomVariable()
@@ -471,6 +479,7 @@ namespace flopc{
 
     void DiscreteUniformRandomVariable::sample( int howMany )
     {
+        //Initialize data structure
         RandomVariable::sample(howMany);
         //Define RNG and 01UniformRNG using RNG
         base_generator_type rng(seed);
@@ -482,31 +491,15 @@ namespace flopc{
         // Then generate the variates: start+step*random_variate
         typedef boost::uniform_int<> distr_type;
         boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
-        for (int i = 0; i < howMany; i++){
-            values.push_back(step*variateGen());
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(applyConstant(step*variateGen()));
         }
+        // Ensure values are in ascending order
+        std::sort(values.begin(),values.end());
 
     }
 
-    int round(double x){
-        double temp;
-        if (std::modf(x,&temp)>=0.5){
-            if (x>=0){
-                return int(std::ceil(x));
-            }
-            else{
-                return int(std::floor(x));
-            }
-        }
-        else{
-            if (x<0){
-                return int(std::ceil(x));
-            }
-            else{
-                return int(std::floor(x));
-            }
-        }
-    }
+   
 
     ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to ) : ContinuousRandomVariable(),start(from),end(to)
     {
@@ -525,6 +518,7 @@ namespace flopc{
 
     void ContinuousUniformRandomVariable::sample( int howMany )
     {
+        //Initialize data structures
         RandomVariable::sample(howMany);
         //Define RNG and 01UniformRNG using RNG
         base_generator_type rng(seed);
@@ -534,7 +528,9 @@ namespace flopc{
         double domainSize = end-start;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
-            values.push_back(start+variateGen());
+            values.push_back(applyConstant(start+variateGen()));
         }
+        //Ensure ascending order
+        std::sort(values.begin(),values.end());
     }
 }

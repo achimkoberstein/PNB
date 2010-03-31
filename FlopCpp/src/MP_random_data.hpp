@@ -1,21 +1,23 @@
 #ifndef _MP_random_variable_hpp_
 #define _MP_random_variable_hpp_
 
+#include <vector>
+#include <set>
+#include <map>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
 #include "MP_data.hpp"
 #include "MP_index.hpp"
 #include "MP_set.hpp"
+#include "MP_utilities.hpp"
 
 
 namespace flopc{
 
     class MP_random_data_impl;
     class RandomDataRef;
-
-    int round(double x);
-
 
     //Class that defines a concrete RandomVariable for one coefficient
     class RandomVariable : boost::noncopyable{
@@ -49,6 +51,8 @@ namespace flopc{
         int Seed() const { return seed; }
         void Seed(int val) { seed = val; }
     protected:
+        double applyConstant(double val);
+
         //Boost::random number generator? Needs seed
         unsigned int seed;
 
@@ -75,7 +79,7 @@ namespace flopc{
 
         ~DiscreteRandomVariable();
 
-        virtual void sample(int howMany);
+        virtual void sample(int howMany = 0);
 
     };
 
@@ -84,7 +88,7 @@ namespace flopc{
         DiscreteUniformRandomVariable(int from, int to, double stepWidth);
         ~DiscreteUniformRandomVariable();
 
-        virtual void sample(int howMany);
+        virtual void sample(int howMany = 0);
 
     private:
         //Params for DiscreteUniformDistribution: [start,end] in steps of step
@@ -101,7 +105,7 @@ namespace flopc{
         ScenarioRandomVariable();
 
         ~ScenarioRandomVariable();
-        virtual void sample(int howMany) ;
+        virtual void sample(int howMany = 0) ;
 
     };
 
@@ -110,7 +114,7 @@ namespace flopc{
 
         ~ContinuousRandomVariable();
 
-        virtual void sample(int howMany) ;
+        virtual void sample(int howMany = 0) ;
 
     };
 
@@ -119,7 +123,7 @@ namespace flopc{
         ContinuousUniformRandomVariable(int from, int to);
         ~ContinuousUniformRandomVariable();
 
-        virtual void sample(int howMany) ;
+        virtual void sample(int howMany = 0) ;
 
     private:
         int start;
