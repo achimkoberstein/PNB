@@ -2,5 +2,35 @@
 // File: MP_utilities.cpp
 //****************************************************************************
 
+#include <cmath>
+
 #include "MP_utilities.hpp"
-using namespace flopc;
+namespace flopc{
+
+    bool compareDouble(double x, double y, double absoluteTolerance, double relativeTolerance){
+        if ((std::fabs(x-y) <= absoluteTolerance) || std::fabs(x-y) <= relativeTolerance*(std::max(std::fabs(x),std::fabs(y))))
+            return true;
+        return false;
+    }
+
+    int round(double x){
+        double temp;
+        if (std::modf(x,&temp)>=0.5){
+            if (x>=0){
+                return int(std::ceil(x));
+            }
+            else{
+                return int(std::floor(x));
+            }
+        }
+        else{
+            if (x<0){
+                return int(std::ceil(x));
+            }
+            else{
+                return int(std::floor(x));
+            }
+        }
+    }
+
+}

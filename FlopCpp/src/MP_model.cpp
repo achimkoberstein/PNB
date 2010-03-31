@@ -866,7 +866,7 @@ namespace flopc {
         assert(curScen >0); //Otherwise function should not be called
         bool identical = true;
         for (RandomVariable::randVarVector::size_type i = 0; i < randomVariableVector[curStage].size();i++){
-            if (randomVariableVector[curStage][i]->getSampledValue(curScen) != randomVariableVector[curStage][i]->getSampledValue(curScen-1)){
+            if (!compareDouble(randomVariableVector[curStage][i]->getSampledValue(curScen),randomVariableVector[curStage][i]->getSampledValue(curScen-1)) ){
                 identical = false;
                 break; //break loop and return
             }

@@ -5,6 +5,7 @@
 #include "CoinFloatEqual.hpp"
 #include <iostream>
 #include <ctime>
+#include <limits>
 
 //#include <vld.h> //Visual Leak Detector
 
@@ -205,16 +206,65 @@ namespace {
     }
 
     //RandomVariable Sampling Tests..
-    TEST_F(RandomVariableTest,UniformDistributionTest){
-        MP_random_data rVarDiscrete;
-        MP_random_data rVarContinuous;
+    TEST_F(RandomVariableTest,RandomVariableSamplingTest){
+        MP_scenario_set scenSet(3);
+        double vals[4][3] = { {4, 3, 2},{2,1,5},{7,3,2},{1,5,7} };
+        MP_set testSet(4);
+        MP_random_data rVarScenario(&vals[0][0],testSet);
+        //MP_random_data rVarDiscrete;
+        //MP_random_data rVarContinuous;
         DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,1.0/2);
         ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2);
         rv->Seed(static_cast<unsigned int>(std::time(0)));
         rv->sample(20);
+        std::vector<double> sampledValues = rv->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+        }
         rv2->Seed(static_cast<unsigned int>(std::time(0)));
         rv2->sample(20);
+        sampledValues = rv2->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+        }
+        ScenarioRandomVariable* rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(0));
+        rv3->sample();
+        sampledValues = rv3->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+        }
+        rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(1));
+        rv3->sample();
+        sampledValues = rv3->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+        }
+        rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(2));
+        rv3->sample();
+        sampledValues = rv3->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+        }
+        rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(3));
+        rv3->sample();
+        sampledValues = rv3->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_LE(sampledValues[i-1],sampledValues[i]);
+        }
     }
+
+    TEST_F(RandomVariableTest,DoubleComparisonTest){
+        double testValue = 0;
+        testValue += flopc::absoluteTolerance;
+        EXPECT_EQ(true,flopc::compareDouble(testValue,0.0));
+        testValue += std::numeric_limits<double>::epsilon();
+        EXPECT_FALSE(flopc::compareDouble(testValue,0.0));
+        testValue = 0 - flopc::absoluteTolerance;
+        EXPECT_EQ(true,flopc::compareDouble(testValue,0.0));
+        testValue -= std::numeric_limits<double>::epsilon();
+        EXPECT_FALSE(flopc::compareDouble(testValue,0.0));
+    }
+    
 
 } //end namespace
 
