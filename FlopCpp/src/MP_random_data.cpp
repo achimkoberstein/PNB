@@ -405,7 +405,7 @@ namespace flopc{
             values[i] = applyConstant(values[i]);
         }
         //Ensure that values are in ascending order
-        std::sort(values.begin(),values.end());
+        //std::sort(values.begin(),values.end());
     }
 
     ScenarioRandomVariable::~ScenarioRandomVariable()
@@ -495,7 +495,7 @@ namespace flopc{
             values.push_back(applyConstant(step*variateGen()));
         }
         // Ensure values are in ascending order
-        std::sort(values.begin(),values.end());
+        //std::sort(values.begin(),values.end());
 
     }
 
@@ -531,6 +531,6 @@ namespace flopc{
             values.push_back(applyConstant(start+variateGen()));
         }
         //Ensure ascending order
-        std::sort(values.begin(),values.end());
+        //std::sort(values.begin(),values.end());
     }
 }
