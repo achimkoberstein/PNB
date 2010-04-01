@@ -785,19 +785,15 @@ namespace flopc {
         std::vector<CoinPackedVector*> rupVec(nScen);
         //CoinPackedVector clo;
         //CoinPackedVector cup;
-        std::vector<int> ancScenVec(nScen,-2); //Initalized Vector with -2 (not valid)
+        std::vector<int> tempAncScenVec(nScen,-2); //Initalized Vector with -2 (not valid)
         std::vector<int> branchStageVec(nScen,-2); //Initialized Vector with 0
         //set correct values for first scenario:
-        ancScenVec[0] = 0;
+        tempAncScenVec[0] = 0;
         branchStageVec[0] = 1;
-        //Create std::set<int> that stores all scenario values and allows for deletion of these values
 
-        //typedef std::map<int,std::vector<int>>::iterator nodeIt;
-        //std::map<int,std::vector<int> > nodeScenariosPerStageNext;
-        //std::map<int,std::vector<int> > nodeScenariosPerStage;
-        std::map<int,int> scenCounterMap;
-        scenCounterMap.insert(std::pair<int,int> (0,0));
         std::vector<int> scenarioIndirection(nScen,-1);
+        std::vector<int> realOrderingFromVirtualScenario(nScen,-1);
+        std::vector<double> probabilities(nScen,1.0/nScen);
 
         typedef std::set<int>::iterator scenIt;
         std::set<int> scenarioHeap;
@@ -829,19 +825,17 @@ namespace flopc {
                 int parentScen = *subScenariosPerStageAndScenario[curStage][curScen].begin(); //New node: add coefficients
                 if (branchStageVec[parentScen] == -2)
                     branchStageVec[parentScen] = curStage+1;
-                if (ancScenVec[parentScen] == -2)
-                    ancScenVec[parentScen] = curScen;
+                if (tempAncScenVec[parentScen] == -2)
+                    tempAncScenVec[parentScen] = curScen;
 
                 if (curStage < nStages-1){//Add to queue for the next stage, if we are not in the last stage
                     subScenarioQueueVector[curStage+1].push_back(parentScen);
                 }
                 else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete from subScenarios
                     scenarioIndirection[parentScen] = scenCounter++;
+                    realOrderingFromVirtualScenario[scenCounter -1] = parentScen;
                     subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin());
-
                 }
-
-
 
 #pragma region setCoefficients
                 //Do the real stuff: Add values for the current scenario.
@@ -882,7 +876,10 @@ namespace flopc {
                     if (curStage == nStages-1){
                         //We are in the last stage. All scenarios that still have the same values are the same scenario: But with greater probability..TODO
                         //Remove the scenario from current stage
+                        tempAncScenVec[*innerIt] = tempAncScenVec[parentScen];
                         scenarioIndirection[*innerIt] = scenCounter;
+                        realOrderingFromVirtualScenario[scenCounter] = *innerIt;
+                        probabilities[parentScen] += 1.0/nScen; //add one scenario prob
                         subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     else if (!differFromPrevious(randomVariableVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
@@ -989,15 +986,22 @@ namespace flopc {
         //}//end for: stages
         //nodeScenariosPerStage.clear();
 
-        SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
-        //Generate scenarios in SMI
-        //We need to use scenarioIndirection.
 
+        //Generate scenarios in SMI
+        //We need to use scenarioIndirection to get correct index for scenario i (natural ordering as expected from smi).
+
+        scenCounter = 0;
+        std::vector<int> ancScenVec(nScen);
+        for (int i = 0; i < nScen; i++){
+            ancScenVec[i] = realOrderingFromVirtualScenario[tempAncScenVec[scenarioIndirection[i]]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
+        }
+
+        SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
         for (int i = 0; i < nScen; i++){
             int curScen = scenarioIndirection[i];
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curScen]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
-                smiModel->generateScenario(smiCore,matrixVec[curScen],NULL,NULL,objVec[curScen],rloVec[curScen],rupVec[curScen],branchStageVec[curScen],ancScenVec[curScen],1.0/nScen);
+                smiModel->generateScenario(smiCore,matrixVec[curScen],NULL,NULL,objVec[curScen],rloVec[curScen],rupVec[curScen],branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
                 scenCounter++;
             }
         }
