@@ -9,6 +9,7 @@ using std::endl;
 #include <algorithm>
 #include <limits>
 #include <map>
+#include <queue>
 
 #include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
@@ -562,7 +563,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             // Get SmiScnModel that holds a generated ScenarioTree.
             //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
             smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
-            smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
+            if (smiModel == 0)//We were not sucessful in creating a scenario tree. Try normal operation.
+                Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
+            else
+                smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
         }
         else {
             Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
@@ -649,8 +653,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
             break;
         }
     }
-    if (stage.size() > 0) { // We have a time structure. This means we already have an attached solver with smiModel
-        assert(smiModel != 0);
+    if (stage.size() > 0 && smiModel != 0) { // We have a time structure AND a smiModel ready. If only timeStructure, there were no RandomVariables specified.
         //OsiClpSolverInterface osiClp;
         //smiModel->setOsiSolverHandle(osiClp);
         smiModel->setOsiSolverHandle(Solver);
@@ -764,6 +767,8 @@ namespace flopc {
                 randVarsPerStage[curStage]++;
             }
         }
+        if (nScen == 0)//If we have nothing to do, we have nothing to. 
+            return 0;
         //At this point we have a fan of values, represented by values inside each RV
         //Now we want to make a tree out of it
         int m = smiCore->getNumRows();
@@ -780,85 +785,81 @@ namespace flopc {
         std::vector<CoinPackedVector*> rupVec(nScen);
         //CoinPackedVector clo;
         //CoinPackedVector cup;
-        std::vector<int> ancScenVec(nScen,-1); //Initalized Vector with -1
-        std::vector<int> branchStageVec(nScen); //Initialized Vector with 0
+        std::vector<int> ancScenVec(nScen,-2); //Initalized Vector with -2 (not valid)
+        std::vector<int> branchStageVec(nScen,-2); //Initialized Vector with 0
+        //set correct values for first scenario:
+        ancScenVec[0] = 0;
+        branchStageVec[0] = 1;
         //Create std::set<int> that stores all scenario values and allows for deletion of these values
-        std::set<int> scenarioHeap;
+
+        //typedef std::map<int,std::vector<int>>::iterator nodeIt;
+        //std::map<int,std::vector<int> > nodeScenariosPerStageNext;
+        //std::map<int,std::vector<int> > nodeScenariosPerStage;
+        std::map<int,int> scenCounterMap;
+        scenCounterMap.insert(std::pair<int,int> (0,0));
+        std::vector<int> scenarioIndirection(nScen,-1);
+
         typedef std::set<int>::iterator scenIt;
+        std::set<int> scenarioHeap;
+
         for (int i = 0; i < nScen; i++)
             scenarioHeap.insert(i);
-        std::set<int> tempHeap = scenarioHeap;
-        typedef std::map<int,std::vector<int>>::iterator nodeIt;
-        std::map<int,std::vector<int> > nodeScenariosPerStage;
-        for (int curStage = 1; curStage < nStages; curStage++){ //First stage has no RV
-            // Check values of all rand vars per stage and create nodes on this stage for each different combined outcome
-            if (scenarioHeap.empty())
-                scenarioHeap = tempHeap;
-            nodeScenariosPerStage.clear();
 
-            //Iterate over all scenarios in scenario set
-            while ( !scenarioHeap.empty() ){
-                //Get next scenario and delete it from the heap
-                scenIt it = scenarioHeap.begin();
-                int curScen = *it;
-                scenarioHeap.erase(it);
+        std::vector<std::deque<int> > subScenarioQueueVector(nStages,std::deque<int> ()); //For each stage an own queue
+        subScenarioQueueVector[0].push_front(0);
 
-                //Iterate over all scenarios in current node. If this is empty and we are on the third stage at least, the process simplifies somewhat
-                // : This scenario is alone in the world, no other scenario dares to branches from it. Sad really, but computationally attractive.
-                if (curStage > 1){
-                    nodeIt nIt = nodeScenariosPerStage.find(curScen);
-                    if (nIt != nodeScenariosPerStage.end()){ //NodeScenarioSet is not empty, so iterate over all elements and see if they differ
-                        std::vector<int> tempVector;
-                        for (std::vector<int>::iterator vecIt = nIt->second.begin();vecIt != nIt->second.end();++vecIt){
-                            if (differFromPrevious(randomVariableVector,curStage,curScen,*it)){ //Scenario differs.. set branchStage and ancScen
-                                //Set ancestor and branching scenarios..
-                                branchStageVec[*vecIt] = curStage;
-                                ancScenVec[*vecIt] = curScen;
-                            }
-                            else{//Scenario has the same values in this stage, so add it to the nodeSet.
-                                tempVector.push_back(*vecIt);
-                                scenarioHeap.erase(*vecIt); //Remove it from the scenario heap as we already investigated it.
-                            }//end else
-                        }//end for
-                        nIt->second.clear();
-                        nIt->second.insert(nIt->second.begin(),tempVector.begin(),tempVector.end()); //Clear vector for current scenario and add all the scenarios found above
-                    }//end if
-                }//end if
-                //Iterate over the rest of the scenarios to find scenarios with the same values (this means they will form a node)
-                else if (curStage == 1){
-                    std::vector<int> tempVector;
-                    for (it = scenarioHeap.begin();it != scenarioHeap.end();){
-                        if (differFromPrevious(randomVariableVector,curStage,curScen,*it)){ //Scenario differs.. set branchStage and ancScen. Do not remove from scenarioHeap..
-                            //Set ancestor and branching scenarios..
-                            branchStageVec[*it] = curStage;
-                            ancScenVec[*it] = 0; //Convention (needed by SMI)
-                            ++it; //Increase iterator
-                        }
-                        else {//Scenario has the same values in this stage, so add it to the nodeSet.
-                            tempVector.push_back(*it);
-                            scenarioHeap.erase(it++); //Remove it from the scenario heap as we already investigated it AND increase iterator. PostIncrement necessary, Item 9 of Effective STL
-                        }//end else
+        //We do not like recursion, therefore we need to store all the elements in a list of vectors and stuff
+        std::vector< std::vector< std::set<int> > > subScenariosPerStageAndScenario(nStages,std::vector<std::set<int> > (nScen));
+        for (int j = 0; j < nScen; j++){ // Assign scenarioHeap to all the first stage sets. TODO: Improve memory consumption..
+            subScenariosPerStageAndScenario[0][j] = scenarioHeap;
+        }
 
-                    }
-                    nodeScenariosPerStage.insert(std::pair<int,std::vector<int> > (curScen,tempVector));
+
+        int curStage = 0; //We start at stage 0
+        int curScen = 0; //We start with scenario 0
+        int scenCounter = 0; //We only need this counter in the very last round.
+
+        //We do the following: Add all subnodes to this node to the subqueue list with their list of scenarios. Then go to the subqueue list and do the same.
+        while( !subScenarioQueueVector[curStage].empty()){
+            //Add all nodes from this sibling set that are no scenario subnodes
+            curScen = subScenarioQueueVector[curStage].front();
+            subScenarioQueueVector[curStage].pop_front();
+            // Loop over all subset scenarios to form new nodes
+            while (!subScenariosPerStageAndScenario[curStage][curScen].empty()){
+                int parentScen = *subScenariosPerStageAndScenario[curStage][curScen].begin(); //New node: add coefficients
+                if (branchStageVec[parentScen] == -2)
+                    branchStageVec[parentScen] = curStage+1;
+                if (ancScenVec[parentScen] == -2)
+                    ancScenVec[parentScen] = curScen;
+
+                if (curStage < nStages-1){//Add to queue for the next stage, if we are not in the last stage
+                    subScenarioQueueVector[curStage+1].push_back(parentScen);
+                }
+                else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete from subScenarios
+                    scenarioIndirection[parentScen] = scenCounter++;
+                    subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin());
+
                 }
 
+
+
+#pragma region setCoefficients
                 //Do the real stuff: Add values for the current scenario.
                 //Add all random coefficients to corresponding places
                 for (int j = 0; j < randVarsPerStage[curStage];j++){  //Values differ 
                     RandomVariable* it = randomVariableVector[curStage][j];
-                    double coefficient = it->getSampledValue(curScen);
+                    double coefficient = it->getSampledValue(parentScen);
                     int colIndex = it->ColIndex();
                     int rowIndex = it->RowIndex();
                     if (colIndex < n) {//Matrix-Element 
                         if (rowIndex < m){ //Matrix-Element
                             assert(rowIndex >= 0 ); //row index needs to be inside bounds
                             assert(colIndex >= 0); //col index needs to be inside bounds
-                            matrixVec[curScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
+                            matrixVec[parentScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
                         }
                         else{ //Objective Function
                             assert(rowIndex == m);
-                            objVec[curScen]->insert(colIndex,coefficient);
+                            objVec[parentScen]->insert(colIndex,coefficient);
                         }
                     }
                     else{ //RHS
@@ -866,38 +867,148 @@ namespace flopc {
                         //We need the row sense to insert in the right vector..
                         switch (flopModel->Solver->getRowSense()[rowIndex])
                         {
-                        case 'E' : rloVec[curScen]->insert(rowIndex,coefficient); rupVec[curScen]->insert(rowIndex,coefficient); break;
-                        case 'G' : rloVec[curScen]->insert(rowIndex,coefficient); break;
-                        case 'L' : rloVec[curScen]->insert(rowIndex,coefficient); break;
+                        case 'E' : rloVec[parentScen]->insert(rowIndex,coefficient); rupVec[parentScen]->insert(rowIndex,coefficient); break;
+                        case 'G' : rloVec[parentScen]->insert(rowIndex,coefficient); break;
+                        case 'L' : rloVec[parentScen]->insert(rowIndex,coefficient); break;
                         case 'N' : break;
                         default : throw not_implemented_error(); 
                         }//end switch
                     }//end else
                 }//end for: randVars
-            }//end while
-        }//end for: stages
+#pragma endregion setCoefficients
 
-        //At this point our scenario ordering is not necessarily the way we would like it to be..
-        //Fix this ordering to get correct ordering for SMI ?!?
+                // Remove elements from subsetHeap that are equal to this one and add them to subset for next stage.
+                for (scenIt innerIt = subScenariosPerStageAndScenario[curStage][curScen].begin(); innerIt != subScenariosPerStageAndScenario[curStage][curScen].end();){
+                    if (curStage == nStages-1){
+                        //We are in the last stage. All scenarios that still have the same values are the same scenario: But with greater probability..TODO
+                        //Remove the scenario from current stage
+                        scenarioIndirection[*innerIt] = scenCounter;
+                        subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
+                    }
+                    else if (!differFromPrevious(randomVariableVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
+                        //Add to scenario subset heap of next stage node and scenario
+                        subScenariosPerStageAndScenario[curStage+1][parentScen].insert(*innerIt); //debug this statement
+                        //Erase from subsetHeap
+                        subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
+                    }
+                    else{//Nodes differ from current node..
+                        ++innerIt;
+                    }
+                }//end for
+            }//end while: subScenariosPerStageAndScenario
+            if (subScenarioQueueVector[curStage].empty() && curStage < nStages-1){
+                curStage++;
+            }
+        }//end while: deque
+
+
+        //for (int curStage = 1; curStage < nStages; curStage++){ //First stage has no RV
+        //    // Check values of all rand vars per stage and create nodes on this stage for each different combined outcome
+        //    if (scenarioHeap.empty())
+        //        scenarioHeap = tempHeap;
+        //    int scenCounter = 0;
+        //    nodeScenariosPerStage = nodeScenariosPerStageNext;
+        //    nodeScenariosPerStageNext.clear(); //Fresh start for next round..
+
+        //    //Iterate over all scenarios in scenario set
+        //    while ( !scenarioHeap.empty() ){
+        //        //Iterate over all subscenarios of a given scenario
+        //        while ( !subScenarioQueue.empty()){
+        //        //Get next scenario and delete it from the heap
+        //        scenIt it = scenarioHeap.begin();
+        //        int curScen = *it;
+        //        scenarioHeap.erase(it);
+        //        if (scenarioIndirection[curScen] == -1)//no scenario set
+        //            scenarioIndirection[curScen] = (scenCounterMap.find(curScen))->second;
+
+        //        
+
+        //        //Iterate over all scenarios in current node. If this is empty and we are on the third stage at least, the process simplifies somewhat
+        //        if (curStage > 1){
+        //            nodeIt nIt = nodeScenariosPerStage.find(curScen); //Get nodeScenarios for node we branched from
+        //            //If we have a node set, the node already has a scenario index, so we don't have to bother about that. 
+        //            if (nIt != nodeScenariosPerStage.end()){ //NodeScenarioSet is not empty, so iterate over all elements and see if they differ
+        //                std::vector<int> tempVector;
+        //                scenCounter = scenCounterMap[branchStageVec[curScen]]; //this value has to be in the map, as the node we branched from was added earlier
+        //                for (std::vector<int>::iterator vecIt = nIt->second.begin();vecIt != nIt->second.end();++vecIt){
+        //                    if (differFromPrevious(randomVariableVector,curStage,curScen,*vecIt)){ //Scenario differs.. set branchStage and ancScen
+        //                        //Set ancestor and branching scenarios.., as we branch from here
+        //                        branchStageVec[*vecIt] = curStage;
+        //                        ancScenVec[*vecIt] = curScen;
+        //                        //if (curStage==nStages-1)//last stage, empty scenarioHeap
+        //                        //    scenarioHeap.erase(*vecIt);
+        //                    }
+        //                    else{//Scenario has the same values in this stage, so add it to the nodeSet.
+        //                        tempVector.push_back(*vecIt);
+        //                        scenarioHeap.erase(*vecIt); //Remove it from the scenario heap as we already investigated it.
+        //                        scenCounter++;
+        //                        //TODO: Invalidation of scenario heap iterator?
+        //                    }//end else
+        //                    //increment scen counter, as we processed a scenario
+        //                }//end for
+        //                for (std::vector<int>::iterator vecIt = tempVector.begin(); vecIt != tempVector.end();++vecIt){ //Erase from nIt all scenarios for new node
+        //                    nIt->second.erase(std::remove(nIt->second.begin(),nIt->second.end(),*vecIt));
+        //                }
+        //                nodeScenariosPerStageNext.insert(std::pair<int,std::vector<int>> (curScen,tempVector)); //Use this node in the next run
+        //                std::map<int,int>::iterator scenCounterMapIt = scenCounterMap.find(curScen);
+
+        //                //Set number of subscenarios for this node
+        //                //if (scenCounterMapIt != scenCounterMap.end()) //Element is already in the container..
+        //                //    scenCounterMap.erase(scenCounterMapIt--);
+        //                //scenCounterMap.insert(scenCounterMapIt,std::pair<int,int>(curScen,scenCounter));
+        //                scenCounterMap[curScen] = scenCounter;
+        //            }//end if
+        //            else{
+        //                //Why are we here?
+        //                std::cout << "NoOp"<< std::endl;
+        //            }
+        //        }//end if
+        //        //Iterate over the rest of the scenarios to find scenarios with the same values (this means they will form a node)
+        //        else if (curStage == 1){
+        //            std::vector<int> tempVector;
+        //            for (it = scenarioHeap.begin();it != scenarioHeap.end();){
+        //                if (differFromPrevious(randomVariableVector,curStage,curScen,*it)){ //Scenario differs.. set branchStage and ancScen. Do not remove from scenarioHeap..
+        //                    //Set ancestor and branching scenarios..
+        //                    branchStageVec[*it] = curStage;
+        //                    ancScenVec[*it] = -1; //Convention (needed by SMI)
+        //                    ++it; //Increase iterator
+        //                }
+        //                else {//Scenario has the same values in this stage, so add it to the nodeSet.
+        //                    tempVector.push_back(*it);
+        //                    scenarioHeap.erase(it++); //Remove it from the scenario heap as we already investigated it AND increase iterator. PostIncrement necessary, Item 9 of Effective STL                         
+        //                    scenCounter++;
+        //                }//end else
+        //            }
+        //            nodeScenariosPerStageNext.insert(std::pair<int,std::vector<int> > (curScen,tempVector));
+        //            scenCounterMap.insert(std::pair<int,int> (curScen,scenCounter)); //Number of scenarios in current node, next node get's it's scenario number according to this.
+        //        }
+
+        //
+        //        }//end while subscenarios
+        //    }//end while
+        //}//end for: stages
+        //nodeScenariosPerStage.clear();
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
         //Generate scenarios in SMI
-        int scenCounter = 0;
-        for (int curStage = 0; curStage < nScen; curStage++){
+        //We need to use scenarioIndirection.
+
+        for (int i = 0; i < nScen; i++){
+            int curScen = scenarioIndirection[i];
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
-            if (ancScenVec[curStage]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
-                smiModel->generateScenario(smiCore,matrixVec[curStage],NULL,NULL,objVec[curStage],rloVec[curStage],rupVec[curStage],branchStageVec[curStage],ancScenVec[curStage],1.0/nScen);
+            if (ancScenVec[curScen]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
+                smiModel->generateScenario(smiCore,matrixVec[curScen],NULL,NULL,objVec[curScen],rloVec[curScen],rupVec[curScen],branchStageVec[curScen],ancScenVec[curScen],1.0/nScen);
                 scenCounter++;
-           }
+            }
         }
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
         //Delete temporary variables
-        for (int curStage = 0; curStage < nScen; curStage++){
-            delete matrixVec[curStage];
-            delete objVec[curStage];
-            delete rloVec[curStage];
-            delete rupVec[curStage];
+        for (int curScen = 0; curScen < nScen; curScen++){
+            delete matrixVec[curScen];
+            delete objVec[curScen];
+            delete rloVec[curScen];
+            delete rupVec[curScen];
         }
         return smiModel;
     }
@@ -922,9 +1033,11 @@ namespace flopc {
 
 
 
-    
+
 
     bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen,int nextScen){
+        if (curScen == nextScen)
+            return false;
         bool identical = true;
         for (RandomVariable::randVarVector::size_type i = 0; i < randomVariableVector[curStage].size();i++){
             if (!compareDouble(randomVariableVector[curStage][i]->getSampledValue(curScen),randomVariableVector[curStage][i]->getSampledValue(nextScen)) ){

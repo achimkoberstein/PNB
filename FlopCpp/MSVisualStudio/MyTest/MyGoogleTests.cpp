@@ -47,13 +47,13 @@ namespace {
         MP_scenario_set scen(numScen);
         enum {asset1,asset2,numAssets=2};
         MP_set assets(numAssets);
-        double scenarios[numStage][numAssets][numScen]=
+        double scenarios[numStage-1][numAssets][numScen]=
         {//T
+            //{//assets
+            //    {1,2,3,4},{5,6,7,8} //scen
+            //},
             {//assets
-                {1,2,3,4},{5,6,7,8} //scen
-            },
-            {//assets
-                {2,2,4,4},{10,10,14,14} //scen
+                {2,4,2,4},{10,14,10,14} //scen
             },
             {//assets
                 {3,6,9,12},{15,18,21,24} //scen
@@ -157,7 +157,7 @@ namespace {
         testModel.solve(MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(0,testModel->getObjValue()); //Model is empty, as no scenarios were specified..
+        EXPECT_EQ(15,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
     }
 
     TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
