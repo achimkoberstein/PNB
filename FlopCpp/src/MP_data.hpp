@@ -43,7 +43,7 @@ namespace flopc {
         //Set value in D via current MP_index_exp
         void evaluate_lhs(double v) const;
         void operator()() const;
-        DataRef& probability(double p) { return *this; }
+        DataRef& probability(double p);
     private:
         //Disable copy constructor
         DataRef(const DataRef&);

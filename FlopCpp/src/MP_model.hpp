@@ -45,13 +45,13 @@ namespace flopc {
     */
     class Messenger {
     public:
-        virtual void logMessage(int level, const char * const msg){}
+        virtual void logMessage(int level, const char * const msg);
         friend class MP_model;
     private:
-        virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) {}
-        virtual void objectiveDebug(const vector<MP::Coef>& cfs) {}
-        virtual void statistics(int bm, int m, int bn, int n, int nz) {}
-        virtual void generationTime(double t) {}
+        virtual void constraintDebug(string name, const vector<MP::Coef>& cfs);
+        virtual void objectiveDebug(const vector<MP::Coef>& cfs);
+        virtual void statistics(int bm, int m, int bn, int n, int nz);
+        virtual void generationTime(double t);
     protected:
         virtual ~Messenger() {}
     };
@@ -324,7 +324,7 @@ namespace flopc {
 
 namespace flopc{
     SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
-    SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
+    //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
     bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen,int compareScen);
 }
 #endif
