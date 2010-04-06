@@ -382,10 +382,8 @@ namespace flopc{
         //TODO: If C is not a constant_random_variable, something went wrong. Obviously
         //evaluate_lhs(C->evaluate());
     }
-    std::ostream & operator<<( std::ostream &out, const RandomVariable& rhs )
-    {
-        return out;
-    }
+
+
     //Implementation for ScenarioRandomVariable
     ScenarioRandomVariable::ScenarioRandomVariable( double* scenValues,int length)
         : DiscreteRandomVariable()
@@ -507,7 +505,7 @@ namespace flopc{
         if (end < start){
             int temp = start;
             start = end;
-            end = start;
+            end = temp;
         }
 
     }

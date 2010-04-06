@@ -18,22 +18,50 @@ namespace {
     class MP_modelTest: public ::testing::Test {
     public:
     protected:
-        MP_modelTest() :testModel(new OsiClpSolverInterface){}
+        MP_modelTest() : testModel(new OsiClpSolverInterface()){}
         virtual ~MP_modelTest(){}
         virtual void SetUp(){}
         virtual void TearDown(){}
-        MP_model testModel;
+
+        MP_model testModel; //Attention: Do not rely on testModel for actual testing (includes attachment of solver): Leads to Run-Time Failure #0
     };
 
     class RandomVariableTest: public ::testing::Test {
     public:
     protected:
-        RandomVariableTest() :testModel(new OsiClpSolverInterface){}
+        RandomVariableTest() :testModel(new OsiClpSolverInterface()){}
         virtual ~RandomVariableTest(){}
         virtual void SetUp(){}
         virtual void TearDown(){}
+
         MP_model testModel;
     };
+
+    TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        MP_stage T(3); // three stages
+        MP_set demands(2); // two different demands
+        MP_scenario_set scen(6); //six scenarios
+        double scenarios[2][2][6] =
+        { // T
+            {//demands 
+                {3,1,1,1,2,2},{3,1,1,1,2,2} //scen
+            },
+            {
+                {9,4,5,6,7,8},{9,4,5,6,7,8} //scen
+            }
+
+        };
+        MP_random_data rvar(&scenarios[0][0][0],T,demands);
+        MP_variable x(T,demands);
+        MP_variable firstStageVar;
+        MP_constraint constraint1(T);
+        constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
+        testModel2.setObjective(x(T.last(),demands));
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MINIMIZE);
+        EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
+    }
 
     TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
@@ -78,9 +106,9 @@ namespace {
         investmentModel.setObjective(wealth(T.last()));
         investmentModel.attach(investmentModel.Solver);
         investmentModel.solve(MP_model::MAXIMIZE);
-        const double* colArray = investmentModel.Solver->getColSolution();
+        //const double* colArray = investmentModel.Solver->getColSolution();
         //Compare solution values.
-        EXPECT_DOUBLE_EQ(1402.5,investmentModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(1320,investmentModel.Solver->getObjValue());
 
     }
 

@@ -36,4 +36,19 @@ namespace flopc {
 	  if (MP_model::getCurrentModel() != 0)
 		  MP_model::getCurrentModel()->ScenSet(*this);
 	  }
-	}
+
+  flopc::MP_domain SUBSETREF::getDomain( MP_set* s ) const
+  {
+      return MP_domain::getEmpty();
+  }
+
+  int SUBSETREF::evaluate() const
+  {
+      return 0;
+  }
+
+  MP_index* SUBSETREF::getIndex() const
+  {
+      return 0;
+  }
+}

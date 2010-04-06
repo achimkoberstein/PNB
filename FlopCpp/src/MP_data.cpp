@@ -103,3 +103,8 @@ void MP_data::display(string s) {
     cout<<s<<endl;
     ((S1)(i1)*(S2)(i2)*(S3)(i3)*(S4)(i4)*(S5)(i5)).forall(this);
 }
+
+DataRef& flopc::DataRef::probability( double p )
+{
+    return *this;
+}

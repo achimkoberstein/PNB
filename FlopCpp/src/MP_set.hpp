@@ -285,15 +285,9 @@ namespace flopc {
 
     class SUBSETREF : public MP_index_base {
     public:
-        virtual MP_index* getIndex() const {
-            return 0;
-        }
-        virtual MP_domain getDomain(MP_set* s) const {
-            return MP_domain::getEmpty();
-        }
-        virtual int evaluate() const {
-            return 0;
-        }
+        virtual MP_index* getIndex() const;
+        virtual MP_domain getDomain(MP_set* s) const;
+        virtual int evaluate() const;
     };
 
     /** @brief Internal representation of a "set" 
