@@ -5,6 +5,8 @@ stable
 .svn
 Debug\
 Release\
+boost\
+gtest\
 
 *.*.*
 *.ncb
