@@ -34,9 +34,8 @@ namespace flopc {
         Constant_random_variable(const boost::shared_ptr<RandomDataRef> r): r(r),addConst(0),multConst(1){}
 
         virtual double evaluate() const {
-            //TODO: What should this method return? Expected Value?
+            //TODO: When is this method called? When the RV is a TerminalExpression, this means it is a standalone variable. TerminalExpression.getValues finally results in this call to evaluate. If this is the case we would like to return the additive constant?!
             return 0;
-            throw not_implemented_error(); //
         }
 
         virtual double evaluateAdditive() const {
@@ -213,6 +212,9 @@ namespace flopc {
         double evaluate() const {
             return left->evaluateAdditive()+right->evaluateAdditive();
         }
+        double evaluateMultiplicative() const { //In case of multiplicative evaluation, we return 1, as this is the wrong context..
+            return 1;
+        }
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
@@ -250,6 +252,9 @@ namespace flopc {
         Constant_minus(const Constant& i, const Constant& j): Constant_exp(i,j) {}
         double evaluate() const {
             return left->evaluateAdditive()-right->evaluateAdditive(); 
+        }
+        double evaluateMultiplicative() const { //In case of multiplicative evaluation, we return 1, as this is the wrong context..
+            return 1;
         }
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
@@ -302,6 +307,9 @@ namespace flopc {
         double evaluate() const {
             return left->evaluateMultiplicative()*right->evaluateMultiplicative(); 
         }
+        double evaluateAdditive() const { //In case of additive evaluation, we return 0, as this is the wrong context..
+            return 0;
+        }
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
@@ -342,6 +350,9 @@ namespace flopc {
         Constant_div(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
         double evaluate() const {
             return left->evaluateMultiplicative()/right->evaluateMultiplicative(); 
+        }
+        double evaluateAdditive() const { //In case of additive evaluation, we return 0, as this is the wrong context..
+            return 0;
         }
         int getStage() const {
             return std::max(left->getStage(),right->getStage());

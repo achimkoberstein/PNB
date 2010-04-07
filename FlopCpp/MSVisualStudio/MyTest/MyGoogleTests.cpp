@@ -1,11 +1,15 @@
 //#include <vld.h> uncomment to enable Visual Leak Detector
 #include <gtest/gtest.h>
-#include <flopc.hpp>
-#include "OsiClpSolverInterface.hpp"
-#include "CoinFloatEqual.hpp"
 #include <iostream>
 #include <ctime>
 #include <limits>
+
+#include "OsiClpSolverInterface.hpp"
+#include "CoinFloatEqual.hpp"
+
+#include "flopc.hpp"
+#include "OsiStochasticSolverInterface.hpp"
+
 
 //#include <vld.h> //Visual Leak Detector
 
@@ -65,7 +69,7 @@ namespace {
 
     TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
-        MP_model investmentModel(new OsiClpSolverInterface);
+        MP_model investmentModel(new OsiClpSolverInterface());
         MP_data initialWealth;
         initialWealth() = 55; //set data
 
@@ -277,6 +281,44 @@ namespace {
         EXPECT_FALSE(flopc::compareDouble(testValue,0.0));
         testValue = 1e100;
         EXPECT_TRUE(flopc::compareDouble(testValue,1e100-2));
+    }
+
+    TEST_F(RandomVariableTest,AdditiveConstantSamplingTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        double testValue = 3;
+        MP_stage T(2);
+        MP_scenario_set scen(10);
+        double scenarios[10] = {0,1,2,3,4,5,6,7,8,9};
+        MP_random_data rvar(&scenarios[0],T);
+        MP_variable x;
+        MP_variable y(T);
+        MP_constraint constraint1(T);
+        constraint1(T+1) = x()+y(T+1)*(rvar(T+1)+testValue) >= 7;
+        testModel2.setObjective(x());
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MINIMIZE);
+        //Test for Correctnes 
+        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
+        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
+        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
+        testModel2.detach();
+        double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
+        MP_random_data rvar2(&scenarios2[0],T);
+        constraint1(T+1) = x()+y(T+1)*(rvar2(T+1)*testValue) >= 7;
+        testModel2.setObjective(x());
+        testModel2.attach(new OsiClpSolverInterface());
+        testModel2.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(testValue*0,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
+        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
+        EXPECT_EQ(testValue*5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
+        //testModel2.detach();
+        //double scenarios3[10] = {0,1,2,3,4,5,6,7,8,9};
+        //MP_random_data rvar3(&scenarios2[0],T);
+        //constraint1(T+1) = x()+y(T+1)*((rvar3(T+1)+testValue)*10) >= 7; //This does not yet work. But i think it is not so important either..
+        //testModel2.setObjective(x());
+        //testModel2.attach(new OsiClpSolverInterface());
+        //testModel2.solve(MP_model::MINIMIZE);
+
     }
     
 
