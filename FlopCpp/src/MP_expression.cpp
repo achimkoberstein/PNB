@@ -355,7 +355,7 @@ void MP::GenerateFunctor::operator()() const {
     if (R != 0) { //If we are at a normal constraint get correct rowNumber
         rowNumber = R->row_number();
     }
-    if (rowNumber != outOfBound) {
+    if (rowNumber != outOfBound) { //C 
         assert(C != 0);
         int colNumber = C->getColumn(); //Get Column number.
         if ( colNumber != outOfBound  ) {

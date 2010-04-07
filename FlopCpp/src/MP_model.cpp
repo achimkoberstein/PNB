@@ -236,15 +236,15 @@ void MP_model::minimize(const MP_expression &obj) {
     }
 }
 
-void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to sample-function?!
-    if (_solver == 0) {
-        if (Solver == 0) {
+void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sample-function?!
+    if (_solver == 0) {//No solver was given
+        if (Solver == 0) {// No solver was set: Attachment is not possible, so we return and set state to detached.
             mSolverState = MP_model::DETACHED;
             return;
         }  
     } else {  // use pre-attached solver.
         if(Solver && Solver!=_solver) {
-            detach(); //If old solver is not new solver, go delete the old solver
+            detach(); //If old solver is not new solver, go delete the old solver and continue to work with the new one
         }
         Solver=_solver;
     }
@@ -547,7 +547,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
 #pragma endregion coreModelGeneration
 
 
-        //Check for stochasticity: If so, we have a stage set with size greater than 0.
+        //Check for stochasticity: This is the case if we have a stage set with size greater than 0.
         if (stage.size() > 0){
             ////
             // Feed Core Model to SmiScnModel
@@ -563,7 +563,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO:give pointer to samp
             // Get SmiScnModel that holds a generated ScenarioTree.
             //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
             smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
-            if (smiModel == 0)//We were not sucessful in creating a scenario tree. Try normal operation.
+            if (smiModel == 0)
+                //We were not sucessful in creating a scenario tree. Try normal operation.
                 Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
             else
                 smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
@@ -753,7 +754,7 @@ namespace flopc {
         int nScen = flopModel->ScenSet().size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
         std::vector<int> randVarsPerStage(nStages);
         bool count = false;
-        if (nScen==0)
+        if (nScen==0) // We have no specified scenario set, so we rely on the default sample size and count the scenario size afterwards.
             count = true;
         for (int curStage = 1; curStage < nStages; curStage++){
             for (randVarIterator it = randomVariableVector[curStage].begin(); it != randomVariableVector[curStage].end();++it){
@@ -850,7 +851,7 @@ namespace flopc {
                         if (rowIndex < m){ //Matrix-Element
                             assert(rowIndex >= 0 ); //row index needs to be inside bounds
                             assert(colIndex >= 0); //col index needs to be inside bounds
-                            matrixVec[parentScen]->modifyCoefficient(rowIndex,colIndex,coefficient);
+                            matrixVec[parentScen]->modifyCoefficient(rowIndex,colIndex,coefficient,true); // Keeps added zeroes. If set to false, zeroes get changed to ones
                         }
                         else{ //Objective Function
                             assert(rowIndex == m);
