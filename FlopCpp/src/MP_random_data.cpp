@@ -174,10 +174,10 @@ namespace flopc{
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
-    const boost::shared_ptr<RandomDataRef> MP_random_data::operator()( /*TODO: Move to .cpp */ const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
+    const boost::shared_ptr<RandomDataRef> MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
     {
         boost::shared_ptr<RandomDataRef> temp(new RandomDataRef(ptrImpl, d1, d2, d3, d4, d5));
-        return temp; //TODO: Who calls corresponding delete?!
+        return temp; 
     }
 
     void MP_random_data::operator()() const
@@ -346,9 +346,7 @@ namespace flopc{
         if ( i ==  outOfBound ) {
             return 0;
         } else {
-            //TODO: What to return? Expected value?
-            //return RV->values[i];
-            return RV->values[i]; //Fix this
+            return RV->values[i]; 
         }
     }
 

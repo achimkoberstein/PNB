@@ -16,6 +16,19 @@ using std::endl;
 using namespace flopc;
 double MP_data::outOfBoundData = 0;
 
+DataRef::DataRef(MP_data* d, 
+                 const MP_index_exp& i1,
+                 const MP_index_exp& i2,
+                 const MP_index_exp& i3,
+                 const MP_index_exp& i4,
+                 const MP_index_exp& i5,
+                 int s) : 
+D(d),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(0),stochastic(s) {
+    if (!d->myrefs.empty()){ //Myrefs is not empty.. so copy Constant from last DataRef
+        C = (*d->myrefs.back()).C;
+    }
+}
+
 const DataRef& DataRef::operator=(const Constant& c) {
     C = c;
     ((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
@@ -34,6 +47,11 @@ DataRef& DataRef::such_that(const MP_boolean& b) {
     B = b;
     return *this;
 }
+
+RandomVariable* DataRef::getRandomVariable() const {
+    return C->getRandomVariable();
+}
+
 
 
 double DataRef::evaluate() const {

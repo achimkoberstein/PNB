@@ -28,17 +28,19 @@ namespace flopc {
             const MP_index_exp& i3,
             const MP_index_exp& i4,
             const MP_index_exp& i5,
-            int s = 0) : 
-        D(d),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(0),stochastic(s) {}
+            int s = 0) ;
 
         ~DataRef() {} 
         DataRef& such_that(const MP_boolean& b);
 
         //Get Value via current settings for MP_index_exp
-        double evaluate() const;
-        int getStage() const;
+        virtual double evaluate() const;
+        virtual int getStage() const;
         const DataRef& operator=(const DataRef& r); 
         const DataRef& operator=(const Constant& c);
+
+        //Get RandomVariable
+        virtual RandomVariable* getRandomVariable() const;
 
         //Set value in D via current MP_index_exp
         void evaluate_lhs(double v) const;
@@ -158,7 +160,7 @@ namespace flopc {
             const MP_index_exp& lcli3 = MP_index_exp::getEmpty(), 
             const MP_index_exp& lcli4 = MP_index_exp::getEmpty(), 
             const MP_index_exp& lcli5 = MP_index_exp::getEmpty() 
-            ) {
+            ) { //Why do we return more than one DataRefs? Why do we return only a new DataRef?
                 myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
                 return *myrefs.back();
         }

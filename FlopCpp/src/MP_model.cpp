@@ -375,7 +375,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
     }
     //Now we need to sort the rows by stage
-    std::vector<int> rowCounter(stage.size()); //Store overall number of rows of a stage
+    std::vector<int> rowCounter(stage.size(),0); //Store overall number of rows of a stage
     std::vector<int> rowOffset(m); //store offset of current row in a stage
     std::vector<int> tempRowStage(m);
     rowIndirection = new int[m];
@@ -388,14 +388,16 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         rowStage[i] = 0;
     //Now reset the rowIndex in the coefficient set (and RandomVars..)
     //Iterate over every coefficient. Set old coefficient to new coefficient
+    //Something goes wrong here..
     for (int i = 0; i < nz; i++){
         int oldRow = coefs[i].row;
         int curRowStage = tempRowStage[oldRow];
+        //Count number of rows before this row
         int rowCount = 0;
         for (int j = 0; j < curRowStage;j++){
             rowCount += rowCounter[j];
         }
-        coefs[i].row = rowCount + rowOffset[oldRow];
+        coefs[i].row = rowCount + rowOffset[oldRow]; //compute correct offset
         rowStage[coefs[i].row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
         rowIndirection[oldRow] = coefs[i].row;
         if (coefs[i].ptrVar != 0)
@@ -403,6 +405,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
     //Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
     //TODO: Check that
+    // Yes, this is indeed possible and is an error
+    //for (int i = 0; i < m; i++) {
+    //    if( rowIndirection[i] == -2) { // We have an empty row. Can we delete that row without messing everything up?!
+    //        //Assign row index of an empty row. Not so easy to do..
+    //    }
+    //}
 
 
 
@@ -466,25 +474,32 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             bu[Rnr[j]] = -Elm[j];
         }
         //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
+        //TODO: Empty row handling done here..
         for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
             if ((*i)->left.isDefined() && (*i)->right.isDefined() ) {
                 int begin = (*i)->offset;
                 int end = (*i)->offset+(*i)->size();
                 switch ((*i)->sense) {
-          case LE:
-              for (int k=begin; k<end; k++) {
-                  bl[k] = - inf;
-              } 
-              break;
-          case GE:
-              for (int k=begin; k<end; k++) {
-                  bu[k] = inf;
-              }     
-              break;
-          case EQ:
-              // Nothing to do
-              break;                
-                }
+                  case LE:
+                      for (int k=begin; k<end; k++) {
+                          if (stage.size() && rowIndirection[k] != -2)
+                            bl[rowIndirection[k]] = - inf;
+                          else
+                              bl[k] = -inf;
+                      } 
+                      break;
+                  case GE:
+                      for (int k=begin; k<end; k++) {
+                          if (stage.size() && rowIndirection[k] != -2)
+                            bu[rowIndirection[k]] = inf;
+                          else
+                              bu[k] = inf;
+                      }     
+                      break;
+                  case EQ:
+                      // Nothing to do
+                      break;                
+               }
             }
         }
 
