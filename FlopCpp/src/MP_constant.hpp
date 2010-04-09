@@ -30,11 +30,11 @@ namespace flopc {
         virtual double evaluateMultiplicative() const {
             return evaluate();
         }
-        virtual int getStage() const { //get Stage. If no stochastic variable are present, i.e. no MP_stage defined and assigned, return 0.
-            throw not_implemented_error();
+        virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
+            return 0;
         }
         virtual RandomVariable* getRandomVariable() const {
-            throw not_implemented_error();
+            return 0; // If we want to get a RandomVariable, but no subclass returns one, return 0 to indicate there is no RandomVariable present..
         }
 
     protected:

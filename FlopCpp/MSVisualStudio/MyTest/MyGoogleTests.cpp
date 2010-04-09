@@ -100,12 +100,13 @@ namespace {
         MP_constraint 
             initialWealthConstr,
             returnConstr(T),
-            allocationConstr(T);
+            allocationConstr(T),
+            globalTestConstraint(T);
 
-        MP_index i;
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+        globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
         //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
         investmentModel.setObjective(wealth(T.last()));
         investmentModel.attach(investmentModel.Solver);
@@ -320,6 +321,27 @@ namespace {
         //testModel2.solve(MP_model::MINIMIZE);
 
     }
+
+    //TEST_F(RandomVariableTest,RandomParamCombinationTest){
+    //    MP_model testModel2(new OsiClpSolverInterface());
+    //    double testValue = 3;
+    //    MP_stage T(2);
+    //    MP_scenario_set scen(10);
+    //    double scenarios[10] = {0,1,2,3,4,5,6,7,8,9};
+    //    double testValues[2] = {-3,3};
+    //    MP_random_data rvar(&scenarios[0],T);
+    //    MP_variable x;
+    //    MP_variable y(T);
+    //    MP_constraint constraint1(T);
+    //    MP_data testData(&testValues[0],T);
+    //    
+    //    MP_data combinedData(T);
+    //    combinedData(T) = testData(T)*rvar(T);
+    //    constraint1(T+1) = x()+y(T+1)*combinedData(T+1) >= 7;
+    //    testModel2.setObjective(x());
+    //    testModel2.attach(testModel2.Solver);
+    //    testModel2.solve(MP_model::MINIMIZE);
+    //}
     
 
 } //end namespace

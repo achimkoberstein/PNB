@@ -338,16 +338,22 @@ void MP::GenerateFunctor::operator()() const {
         //When is more than 1 element in the vector??
         sideOfConstraint *= multiplicators[i]->evaluateMultiplicative();
         if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
+            // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
             stage = multiplicators[i]->getStage();
             ptrRV = multiplicators[i]->getRandomVariable();
-            if (ptrRV == 0)
-                throw not_initialized_exception();
-            ptrRV->Stage(stage);
-            ptrRV->AdditiveConstant(multiplicators[i]->evaluateAdditive());
-            ptrRV->MultiplicativeConstant(multiplicators[i]->evaluateMultiplicative());
+            if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
+                //continue; //Go to next loop
+                throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
+            }
+            else {
+                // We need to set current Constant to the RV (to get computational description)
+                ptrRV->Stage(stage);
+                ptrRV->AdditiveConstant(multiplicators[i]->evaluateAdditive());
+                ptrRV->MultiplicativeConstant(multiplicators[i]->evaluateMultiplicative());
+            }
         }
     }
-    //If stage is > 0, we have a RandomVariable and not a double coefficient
+    //If ptrRV!= 0, we have a RandomVariable and not a double coefficient
     //I still need to find out why multiplicators can be of size > 0? Maybe for rhs?
 
     // If objective, rowNumber is -1
@@ -380,7 +386,6 @@ void MP::GenerateFunctor::operator()() const {
 
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage, ptrRV));
-
         }
     }
 }
