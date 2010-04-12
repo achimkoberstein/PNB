@@ -41,6 +41,27 @@ namespace {
         MP_model testModel;
     };
 
+    TEST_F(MP_modelTest,TimoTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_scenario_set scen(2);
+        double scenarios[1][2] =
+        { // T
+            {1,2} //scen
+        };
+        MP_random_data rvar(&scenarios[0][0],T);
+        MP_variable x(T);
+        MP_constraint constraint1, constraint2(T);
+        constraint1 = x(0) == 1;
+        //constraint2(T+1) = x(T+1)*rvar(T+1) >= x(T);
+        //constraint2(T+1) = x(T+1) + rvar(T+1) <= x(T); 
+        constraint2(T+1) = x(T+1) >= x(T)*rvar(T+1); 
+        testModel2.setObjective(x(T.last()));
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MINIMIZE); 
+
+    }
+
     TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3); // three stages

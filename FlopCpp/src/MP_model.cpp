@@ -791,14 +791,24 @@ namespace flopc {
         int n = smiCore->getNumCols(); 
         // Initialize data structures needed later on
         std::vector<CoinPackedMatrix*> matrixVec(nScen); // Column Ordered Matrices
-        for (int curStage = 0; curStage < nScen;curStage++){
-            matrixVec[curStage] = new CoinPackedMatrix();
-            matrixVec[curStage]->reverseOrdering();
-            matrixVec[curStage]->setDimensions(m,n);
+        std::vector<CoinPackedMatrix*> objVec(nScen); //Empty Column ordered matrices for objective function and row bounds.. Necessary as CoinPackedVector does not allow adding of elements
+        std::vector<CoinPackedMatrix*> rloVec(nScen);
+        std::vector<CoinPackedMatrix*> rupVec(nScen);
+        for (int curScen = 0; curScen < nScen;curScen++){ //Think about that in terms of lazy evaluation..?!
+            //Initialize all matrices
+            matrixVec[curScen] = new CoinPackedMatrix();
+            matrixVec[curScen]->reverseOrdering();
+            matrixVec[curScen]->setDimensions(m,n);
+            //Initialize all vectors
+            objVec[curScen] = new CoinPackedMatrix();
+            objVec[curScen]->setDimensions(n,1);
+            rloVec[curScen] = new CoinPackedMatrix();
+            rloVec[curScen]->setDimensions(m,1);
+            rupVec[curScen] = new CoinPackedMatrix();
+            rupVec[curScen]->setDimensions(m,1);
+
         }
-        std::vector<CoinPackedVector*> objVec(nScen); //Empty Vector for objective function
-        std::vector<CoinPackedVector*> rloVec(nScen);
-        std::vector<CoinPackedVector*> rupVec(nScen);
+
         //CoinPackedVector clo;
         //CoinPackedVector cup;
         std::vector<int> tempAncScenVec(nScen,-2); //Initalized Vector with -2 (not valid)
@@ -870,7 +880,7 @@ namespace flopc {
                         }
                         else{ //Objective Function
                             assert(rowIndex == m);
-                            objVec[parentScen]->insert(colIndex,coefficient);
+                            objVec[parentScen]->modifyCoefficient(colIndex,0,coefficient);
                         }
                     }
                     else{ //RHS
@@ -878,9 +888,9 @@ namespace flopc {
                         //We need the row sense to insert in the right vector..
                         switch (flopModel->Solver->getRowSense()[rowIndex])
                         {
-                        case 'E' : rloVec[parentScen]->insert(rowIndex,coefficient); rupVec[parentScen]->insert(rowIndex,coefficient); break;
-                        case 'G' : rloVec[parentScen]->insert(rowIndex,coefficient); break;
-                        case 'L' : rloVec[parentScen]->insert(rowIndex,coefficient); break;
+                        case 'E' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); rupVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); break;
+                        case 'G' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); break;
+                        case 'L' : rupVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); break; 
                         case 'N' : break;
                         default : throw not_implemented_error(); 
                         }//end switch
@@ -932,7 +942,13 @@ namespace flopc {
             int curScen = scenarioIndirection[i];
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curScen]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
-                smiModel->generateScenario(smiCore,matrixVec[curScen],NULL,NULL,objVec[curScen],rloVec[curScen],rupVec[curScen],branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
+                //We need to convert the CoinPackedMatrix to CoinPackedVectors..
+                CoinPackedVector curObjVec(objVec[curScen]->getVector(0));
+                CoinPackedVector curRloVec(rloVec[curScen]->getVector(0));
+                CoinPackedVector curRupVec(rupVec[curScen]->getVector(0));
+
+
+                smiModel->generateScenario(smiCore,matrixVec[curScen],NULL,NULL,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
                 scenCounter++;
             }
         }
