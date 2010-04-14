@@ -245,7 +245,7 @@ SmiScnModel::loadOsiSolverData()
 	this->drup_ = new double[this->nrow_];
 
 	// initialize row-ordered matrix arrays
-	this->dels_ = new double[this->nels_];
+	this->dels_ = new double[this->nels_+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
 	this->indx_ = new int[this->nels_];
 	this->rstrt_ = new int[this->nrow_+1];
 	this->rstrt_[0] = 0;
@@ -266,7 +266,9 @@ SmiScnModel::loadOsiSolverData()
 		dels_,indx_,rstrt_,len);
 
 	// pass data to osiStoch
-	osiStoch_->loadProblem(CoinPackedMatrix(*matrix_),dclo_,dcup_,dobj_,drlo_,drup_);
+	osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
+
+
 
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..

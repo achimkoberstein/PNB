@@ -336,7 +336,7 @@ void MP::GenerateFunctor::operator()() const {
     RandomVariable* ptrRV = 0;
     for (unsigned int i=0; i<multiplicators.size(); i++) {
         //When is more than 1 element in the vector??
-        sideOfConstraint *= multiplicators[i]->evaluateMultiplicative();
+        sideOfConstraint *= multiplicators[i]->evaluate();
         if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
             // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
             stage = multiplicators[i]->getStage();
@@ -348,8 +348,7 @@ void MP::GenerateFunctor::operator()() const {
             else {
                 // We need to set current Constant to the RV (to get computational description)
                 ptrRV->Stage(stage);
-                ptrRV->AdditiveConstant(multiplicators[i]->evaluateAdditive());
-                ptrRV->MultiplicativeConstant(multiplicators[i]->evaluateMultiplicative());
+
             }
         }
     }

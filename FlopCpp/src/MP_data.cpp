@@ -24,9 +24,9 @@ DataRef::DataRef(MP_data* d,
                  const MP_index_exp& i5,
                  int s) : 
 D(d),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(0),stochastic(s) {
-    if (!d->myrefs.empty()){ //Myrefs is not empty.. so copy Constant from last DataRef TODO: Think about that if we know why we have a vector here in the first place?!
-        C = (*d->myrefs.back()).C;
-    }
+    //if (!d->myrefs.empty()){ //Myrefs is not empty.. so copy Constant from last DataRef TODO: Think about that if we know why we have a vector here in the first place?!
+    //    C = (*d->myrefs.back()).C;
+    //}
 }
 
 const DataRef& DataRef::operator=(const Constant& c) {

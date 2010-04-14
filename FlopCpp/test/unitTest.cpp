@@ -84,6 +84,7 @@ int main() {
 
     deltb(j,h) = pos(dd(j,h)-dd(j,h-1));
 
+    lambda.display("lambda");
     ed.display("ed");
     gamma.display("gamma");
     deltb.display("deltb");

@@ -6,6 +6,7 @@
 
 #include "OsiStochasticSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
+#include "OsiCbcSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
@@ -56,70 +57,70 @@ namespace {
         MP_model model; //model
     };
 
-    TEST_F(BendersTest,BendersSolverTest){
-        //model.solve(MP_model::MINIMIZE);
-        // call copyModel(smiModel)
-        // call copySubModel(smiModel) methods from Benders..
-    }
+    //TEST_F(BendersTest,BendersSolverTest){
+    //    //model.solve(MP_model::MINIMIZE);
+    //    // call copyModel(smiModel)
+    //    // call copySubModel(smiModel) methods from Benders..
+    //}
 
-    TEST_F(MP_modelTest,DataTest){
-        MP_data data1;
-        MP_data data2;
-        data1() = 7;
-        data2() = 10;
-        MP_data data3;
-        MP_data data4;
-        data4() = data3();
-        data3() = data1() + data2();
+    //TEST_F(MP_modelTest,DataTest){
+    //    MP_data data1;
+    //    MP_data data2;
+    //    data1() = 7;
+    //    data2() = 10;
+    //    MP_data data3;
+    //    MP_data data4;
+    //    data4() = data3();
+    //    data3() = data1() + data2();
 
-    }
+    //}
 
-    TEST_F(MP_modelTest,TimoTest){
-        MP_model testModel2(new OsiClpSolverInterface());
-        MP_stage T(2);
-        MP_scenario_set scen(2);
-        double scenarios[1][2] =
-        { // T
-            {1,2} //scen
-        };
-        MP_random_data rvar(&scenarios[0][0],T);
-        MP_variable x(T);
-        MP_constraint constraint1, constraint2(T);
-        constraint1 = x(0) == 1;
-        //constraint2(T+1) = x(T+1)*rvar(T+1) >= x(T);
-        //constraint2(T+1) = x(T+1) + rvar(T+1) <= x(T); 
-        constraint2(T+1) = x(T+1) >= x(T)*rvar(T+1); 
-        testModel2.setObjective(x(T.last()));
-        testModel2.attach(testModel2.Solver);
-        testModel2.solve(MP_model::MINIMIZE); 
+    //TEST_F(MP_modelTest,TimoTest){
+    //    MP_model testModel2(new OsiClpSolverInterface());
+    //    MP_stage T(2);
+    //    MP_scenario_set scen(2);
+    //    double scenarios[1][2] =
+    //    { // T
+    //        {1,2} //scen
+    //    };
+    //    MP_random_data rvar(&scenarios[0][0],T);
+    //    MP_variable x(T);
+    //    MP_constraint constraint1, constraint2(T);
+    //    constraint1 = x(0) == 1;
+    //    constraint2(T+1) = x(T+1)*rvar(T+1) >= x(T);
+    //    //constraint2(T+1) = x(T+1) + rvar(T+1) <= x(T); 
+    //    //constraint2(T+1) = x(T+1) >= x(T)*rvar(T+1); 
+    //    testModel2.setObjective(x(T.last()));
+    //    testModel2.attach(testModel2.Solver);
+    //    testModel2.solve(MP_model::MINIMIZE); 
 
-    }
+    //}
 
-    TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
-        MP_model testModel2(new OsiClpSolverInterface());
-        MP_stage T(3); // three stages
-        MP_set demands(2); // two different demands
-        MP_scenario_set scen(6); //six scenarios
-        double scenarios[2][2][6] =
-        { // T
-            {//demands 
-                {3,1,1,1,2,2},{3,1,1,1,2,2} //scen
-            },
-            {
-                {9,4,5,6,7,8},{9,4,5,6,7,8} //scen
-            }
+    //TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
+    //    MP_model testModel2(new OsiClpSolverInterface());
+    //    MP_stage T(3); // three stages
+    //    MP_set demands(2); // two different demands
+    //    MP_scenario_set scen(6); //six scenarios
+    //    double scenarios[2][2][6] =
+    //    { // T
+    //        {//demands 
+    //            {3,1,1,1,2,2},{3,1,1,1,2,2} //scen
+    //        },
+    //        {
+    //            {9,4,5,6,7,8},{9,4,5,6,7,8} //scen
+    //        }
 
-        };
-        MP_random_data rvar(&scenarios[0][0][0],T,demands);
-        MP_variable x(T,demands);
-        MP_variable firstStageVar;
-        MP_constraint constraint1(T);
-        constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
-        testModel2.setObjective(x(T.last(),demands));
-        testModel2.attach(testModel2.Solver);
-        testModel2.solve(MP_model::MINIMIZE);
-        EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
-    }
+    //    };
+    //    MP_random_data rvar(&scenarios[0][0][0],T,demands);
+    //    MP_variable x(T,demands);
+    //    MP_variable firstStageVar;
+    //    MP_constraint constraint1(T);
+    //    constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
+    //    testModel2.setObjective(x(T.last(),demands));
+    //    testModel2.attach(testModel2.Solver);
+    //    testModel2.solve(MP_model::MINIMIZE);
+    //    EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
+    //}
 
     TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
@@ -160,7 +161,7 @@ namespace {
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-        globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
+        //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
         //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
         investmentModel.setObjective(wealth(T.last()));
         investmentModel.attach(investmentModel.Solver);
@@ -396,6 +397,153 @@ namespace {
     //    testModel2.attach(testModel2.Solver);
     //    testModel2.solve(MP_model::MINIMIZE);
     //}
+
+    TEST(UnitTest,OldUnitTest){
+        enum {airA, airB, airC, airD, numA};
+        enum {route_1, route_2, route_3, route_4, route_5, numRoutes};
+        const int numDemandStates = 5;
+
+        MP_set i(numA); // aircraft types and unassigned passengers
+        MP_set j(numRoutes);      // assigned and unassigned routes
+        MP_set h(numDemandStates);// demand states 
+
+        double ddval[5][5] = {{200,     220,    250,    270,    300},
+        { 50,     150,      0,      0,      0},  
+        {140,     160,    180,    200,    220},
+        { 10,      50,     80,    100,    340},
+        {580,     600,    620,      0,      0}};
+
+        double lambdaval[5][5] =
+        {{.2,     .05,    .35,    .2,     .2},
+        {.3,     .7,    0.0,    0.0,    0.0},
+        {.1,     .2,     .4,     .2,     .1},
+        {.2,     .2,     .3,     .2,     .1},
+        {.1,     .8,     .1,    0.0,    0.0}};
+
+
+        double cval[4][5] =
+        {{18,         21,         18,          16,           10},
+        {0,          15,         16,          14,           9},
+        {0,          10,          0,          9,            6},
+        {17,         16,         17,          15,           10}};
+
+        double pval[4][5] =
+        {{16,         15,          28,          23,          81},
+        {0,         10,          14,         15,          57},
+        {0,          5,           0,           7,          29},
+        {9,         11,          22,          17,          55}};
+
+        MP_data dd(&ddval[0][0],j,h); //    dd.value(&ddval[0][0]);
+        MP_data lambda(&lambdaval[0][0],j,h); //lambda.value(&lambdaval[0][0]);
+        MP_data c(&cval[0][0],i,j); //     c.value(&cval[0][0]);
+        MP_data p(&pval[0][0],i,j); //     p.value(&pval[0][0]);
+
+        c.display("c");
+
+        MP_data 
+            aa(i),      // aircraft availiability 
+            k(j),       // revenue lost (1000 per 100  bumped) 
+            ed(j),      // expected demand
+            gamma(j,h), // probability of exceeding demand increment h on route j
+            deltb(j,h); // incremental passenger load in demand states;
+
+        aa(airA) = 10;  aa(airB) = 19;  
+        aa(airC) = 25;  aa(airD) = 15;
+
+        k(route_1) = 13;
+        k(route_2) = 13;
+        k(route_3) =  7;
+        k(route_4) =  7;
+        k(route_5) =  1;
+
+        ed(j) = sum(h, lambda(j,h)*dd(j,h));
+
+        MP_index hp;
+
+        gamma(j,h) = sum( h(hp).such_that(hp >= h), lambda(j,hp));
+
+        deltb(j,h) = pos(dd(j,h)-dd(j,h-1));
+
+        lambda.display("lambda");
+        ed.display("ed");
+        gamma.display("gamma");
+        deltb.display("deltb");
+        aa.display("aa");
+
+        MP_variable
+            x(i,j),   // number of aircraft type i assigned to route j
+            y(j,h),   // passengers actually carried
+            b(j,h),   // passengers bumped
+            oc,       // operating cost
+            bc;       // bumping cost
+
+        MP_constraint
+            ab(i),    // aircraft balance
+            db(j),    // demand balance
+            yd(j,h),  // definition of boarded passangers
+            bd(j,h),  // definition of bumped passangers
+            ocd,     // 
+            bcd1,     // bumping cost definition: version 1
+            bcd2;     // bumping cost definition: version 2
+
+
+        ab(i) =   sum(j, x(i,j)) <= aa(i);
+        ab.setName("aircraft balance");
+
+        db(j) =  sum(i, p(i,j)*x(i,j)) >= sum( h.such_that(deltb(j,h)>0), y(j,h));
+        db.setName("demand balance");
+
+        yd(j,h) = y(j,h) <= sum(i, p(i,j)*x(i,j));
+        yd.setName("definition of boarded passengers");
+
+        bd(j,h) = b(j,h) == dd(j,h) - y(j,h);
+        bd.setName("definition of bumped passengers");
+
+        ocd() =     oc() == sum(i*j, c(i,j)*x(i,j));
+
+        bcd1() =    bc() == sum(j, k(j)*(ed(j)-sum(h, gamma(j,h)*y(j,h))));
+
+        bcd2() =    bc() == sum(j*h, k(j)*lambda(j,h)*b(j,h));
+
+        MP_model m1(new OsiCbcSolverInterface), m2(new OsiCbcSolverInterface);
+
+        y.upperLimit(j,h) = deltb(j,h);
+
+        y.upperLimit.display("y upper");
+
+        m1.add(ab).add(db).add(bcd1).add(ocd);
+        m1.minimize(oc() + bc());
+
+        assert(m1->getNumRows()==11);
+        assert(m1->getNumCols()==47);
+        assert(m1->getNumElements()==96);
+        assert(m1->getObjValue()>=1566.03 && m1->getObjValue()<=1566.05);
+
+        y.display("y first model");
+        ab.display("ab");
+        db.display("db");
+        bcd1.display("bcd1");
+        ocd.display("ocd");
+
+        m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
+        y.upperLimit(j,h) = m2->getInfinity();
+
+        m2.minimize(oc() + bc());
+
+        assert(m2->getNumRows()==56);
+        assert(m2->getNumCols()==72);
+        assert(m2->getNumElements()==219);
+
+        // Optimal objective value m1: 1566.04218913
+        // Optimal objective value m2: 1566.04218913 (like m1)
+        assert(m2->getObjValue()>=1566.03 && m2->getObjValue()<=1566.05);
+
+        CoinRelFltEq eq;
+        assert( eq(m2->getObjValue(),1566.04218913) );
+        assert( eq(m1->getObjValue(),1566.04218913) );
+
+        y.display("y second model");
+    }
     
 
 } //end namespace

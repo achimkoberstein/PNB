@@ -591,14 +591,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
         smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
         if (smiModel == 0)
-            //We were not sucessful in creating a scenario tree. Try normal operation.
+            //We were not sucessful in creating a scenario tree. Try normal operation. TODO: Think about reversed matrix..
             Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
         else
             smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
     }
     else {
         Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
-        
         printMatrix( const_cast<CoinPackedMatrix*>(Solver->getMatrixByRow()),n,m,l,u,c,bl,bu,colStage,rowStage);
     }
     //We need indirection here to set the correct variables..
@@ -797,7 +796,7 @@ namespace flopc {
                 randVarsPerStage[curStage]++;
             }
         }
-        if (nScen == 0)//If we have nothing to do, we have nothing to. 
+        if (nScen == 0 || randVarsPerStage[1] == 0)//If we have nothing to do, we have nothing to. 
             return 0;
         //At this point we have a fan of values, represented by values inside each RV
         //Now we want to make a tree out of it

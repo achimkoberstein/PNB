@@ -38,27 +38,6 @@ namespace flopc {
             return 0;
         }
 
-        virtual double evaluateAdditive() const {
-            //return 0;
-            return addConst->evaluateAdditive();
-        }
-        virtual double evaluateMultiplicative() const {
-            //return 1;
-            return multConst->evaluateMultiplicative();
-        }
-
-        void setAdditiveConstant(const Constant& val){
-            addConst = addConst + val;
-            //r->setAdditiveConstant(addConst->evaluateAdditive());
-        }
-
-        void setMultiplicativeConstant(const Constant& val){
-            multConst = multConst * val;
-            multConst->evaluate();
-            //r->setMultiplicativeConstant(multConst->evaluateMultiplicative());
-        }
-
-
         virtual int getStage() const{
             return r->getStage();
         }
@@ -210,11 +189,9 @@ namespace flopc {
     private:
         Constant_plus(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
         double evaluate() const {
-            return left->evaluateAdditive()+right->evaluateAdditive();
+            return left->evaluate()+right->evaluate();
         }
-        double evaluateMultiplicative() const { //In case of multiplicative evaluation, we return 1, as this is the wrong context..
-            return 1;
-        }
+
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
@@ -233,8 +210,7 @@ namespace flopc {
     }
     Constant operator+(const boost::shared_ptr<RandomDataRef> a, const Constant& b) {
         Constant_random_variable* rvConst = new Constant_random_variable(a);
-        rvConst->setAdditiveConstant(b);
-        return new Constant_plus(a,0);
+        return new Constant_plus(a,b);
     }
     Constant operator+(const Constant& b,const boost::shared_ptr<RandomDataRef> a) {
         return operator+(a,b);
@@ -245,17 +221,16 @@ namespace flopc {
     }
 
     class Constant_minus : public Constant_exp {
+        friend Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
         friend Constant operator-(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
         friend Constant operator-(const Constant& a, const Constant& b);
         friend Constant operator-(MP_index& a, MP_index& b);
     private:
         Constant_minus(const Constant& i, const Constant& j): Constant_exp(i,j) {}
         double evaluate() const {
-            return left->evaluateAdditive()-right->evaluateAdditive(); 
+            return left->evaluate()-right->evaluate(); 
         }
-        double evaluateMultiplicative() const { //In case of multiplicative evaluation, we return 1, as this is the wrong context..
-            return 1;
-        }
+
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
@@ -270,8 +245,7 @@ namespace flopc {
 
     Constant operator-(const boost::shared_ptr<RandomDataRef> a, const Constant& b){
         Constant_random_variable* rvConst = new Constant_random_variable(a);
-        rvConst->setAdditiveConstant(-b);
-        return new Constant_minus(a,0);
+        return new Constant_minus(a,b);
     }
 
 
@@ -289,7 +263,7 @@ namespace flopc {
     private:
         Constant_unary_minus(const Constant& i) : left(i) {}
         double evaluate() const {
-            return -left->evaluateAdditive(); 
+            return -left->evaluate(); 
         }
         Constant left;
     };
@@ -305,11 +279,9 @@ namespace flopc {
     private:
         Constant_mult(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
         double evaluate() const {
-            return left->evaluateMultiplicative()*right->evaluateMultiplicative(); 
+            return left->evaluate()*right->evaluate(); 
         }
-        double evaluateAdditive() const { //In case of additive evaluation, we return 0, as this is the wrong context..
-            return 0;
-        }
+
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
@@ -324,16 +296,13 @@ namespace flopc {
 
     Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a){
         Constant_random_variable* rvConst = new Constant_random_variable(a);
-        rvConst->setAdditiveConstant(b);
-        rvConst->setMultiplicativeConstant(-1);
-        return new Constant_mult(a,-1);
+        return new Constant_minus(b,a);
 
     }
 
     Constant operator*(const boost::shared_ptr<RandomDataRef> a, const Constant& b) {
         Constant_random_variable* rvConst = new Constant_random_variable(a);
-        rvConst->setMultiplicativeConstant(b);
-        return new Constant_mult(rvConst,1); //In this way, RV stays on the left and is TerminalExpression..
+        return new Constant_mult(rvConst,b); //In this way, RV stays on the left and is TerminalExpression..
     }
 
     Constant operator*(const Constant& b,const boost::shared_ptr<RandomDataRef> a) {
@@ -349,11 +318,9 @@ namespace flopc {
     private:
         Constant_div(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
         double evaluate() const {
-            return left->evaluateMultiplicative()/right->evaluateMultiplicative(); 
+            return left->evaluate()/right->evaluate(); 
         }
-        double evaluateAdditive() const { //In case of additive evaluation, we return 0, as this is the wrong context..
-            return 0;
-        }
+
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
@@ -457,7 +424,7 @@ namespace flopc {
     private:
         Constant_sum(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
         void operator()() const {
-            the_sum += exp->evaluateAdditive();
+            the_sum += exp->evaluate();
         }
         double evaluate() const {  
             the_sum = 0;
@@ -475,7 +442,7 @@ namespace flopc {
     private:
         Constant_product(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
         void operator()() const {
-            the_product *= exp->evaluateMultiplicative();
+            the_product *= exp->evaluate();
         }
         double evaluate() const {  
             the_product = 1;
