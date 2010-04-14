@@ -4,11 +4,15 @@
 #include <ctime>
 #include <limits>
 
+#include "OsiStochasticSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
-#include "OsiStochasticSolverInterface.hpp"
+//#include "Benders.hpp"
+
+
+
 
 
 //#include <vld.h> //Visual Leak Detector
@@ -40,6 +44,23 @@ namespace {
 
         MP_model testModel;
     };
+
+    class BendersTest: public ::testing::Test{
+
+    protected:
+        BendersTest() : model(new OsiClpSolverInterface()){
+            //initalize model
+
+            //everything initialized, got SmiScnModel
+        }
+        MP_model model; //model
+    };
+
+    TEST_F(BendersTest,BendersSolverTest){
+        //model.solve(MP_model::MINIMIZE);
+        // call copyModel(smiModel)
+        // call copySubModel(smiModel) methods from Benders..
+    }
 
     TEST_F(MP_modelTest,TimoTest){
         MP_model testModel2(new OsiClpSolverInterface());
