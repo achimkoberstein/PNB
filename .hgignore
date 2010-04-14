@@ -8,6 +8,7 @@ Release\
 boost\
 gtest\
 doxydoc\
+test_detail.xml
 
 *.*.*
 *.ncb
