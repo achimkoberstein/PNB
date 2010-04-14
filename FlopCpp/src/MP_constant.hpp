@@ -24,12 +24,7 @@ namespace flopc {
         friend class Handle<Constant_base*>;
     public:
         virtual double evaluate() const = 0; //get value of constant (must be double)
-        virtual double evaluateAdditive() const {
-            return evaluate();
-        }
-        virtual double evaluateMultiplicative() const {
-            return evaluate();
-        }
+
         virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
             return 0;
         }
