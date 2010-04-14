@@ -189,11 +189,9 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
                 //We do not add random variables, so we better do not have a valid pointer yet
                 assert(ptr == 0);
                 ptr = i->ptrVar;
-                //TODO: Coefficient will get replaced by value of RV. Maybe addd constant term to RV?
             }
             i++;
         }
-        //FIXME: Add constant term to RV (can be multiplied or added..)
         av.push_back(MP::Coef(c,r,val,s,ptr));
     }
 }
@@ -357,51 +355,55 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         bu  = new double[m];  
         rowStage = new int[m];
     }
-    const double inf = Solver->getInfinity();
-    // Set correct Row Stage for every row by iterating over all elements
-    // Row Stage is equal to the highest stage of a belonging variable
     for (int i=0; i<m; i++) {
         rowStage[i] = 0;
     }
     for (int i=0; i<n+1; i++) {
         colStage[i] = 0;
     }
-    for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
-        int s = coefs[i].stage; //Stage of Variable that belongs to current coefficient
-        colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
-        int row = coefs[i].row; 
-        if ( s > rowStage[row] )  {
-            rowStage[row] = s;
+
+    const double inf = Solver->getInfinity();
+    if (stage.size()){
+        // Set correct Row Stage for every row by iterating over all elements
+        // Row Stage is equal to the highest stage of a belonging variable
+
+        for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
+            int s = coefs[i].stage; //Stage of Variable that belongs to current coefficient
+            colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
+            int row = coefs[i].row; 
+            if ( s > rowStage[row] )  {
+                rowStage[row] = s;
+            }
         }
-    }
-    //Now we need to sort the rows by stage
-    std::vector<int> rowCounter(stage.size(),0); //Store overall number of rows of a stage
-    std::vector<int> rowOffset(m); //store offset of current row in a stage
-    std::vector<int> tempRowStage(m);
-    rowIndirection = new int[m];
-    for (int i = 0; i < m; i++){
-        rowOffset[i] = rowCounter[rowStage[i]]++; //In the end, rowCounter gives the number of rows in a stage.
-        tempRowStage[i] = rowStage[i];
-        rowIndirection[i] = -2;
-    }
-    for (int i = 0; i < m; i++)//Reset rowStage. Empty rows are now rows with stage 0
-        rowStage[i] = 0;
-    //Now reset the rowIndex in the coefficient set (and RandomVars..)
-    //Iterate over every coefficient. Set old coefficient to new coefficient
-    //Something goes wrong here..
-    for (int i = 0; i < nz; i++){
-        int oldRow = coefs[i].row;
-        int curRowStage = tempRowStage[oldRow];
-        //Count number of rows before this row
-        int rowCount = 0;
-        for (int j = 0; j < curRowStage;j++){
-            rowCount += rowCounter[j];
+        //Now we need to sort the rows by stage
+        std::vector<int> rowCounter(stage.size(),0); //Store overall number of rows of a stage
+        std::vector<int> rowOffset(m); //store offset of current row in a stage
+        std::vector<int> tempRowStage(m);
+        rowIndirection = new int[m];
+        for (int i = 0; i < m; i++){
+            rowOffset[i] = rowCounter[rowStage[i]]++; //In the end, rowCounter gives the number of rows in a stage.
+            tempRowStage[i] = rowStage[i];
+            rowIndirection[i] = -2;
         }
-        coefs[i].row = rowCount + rowOffset[oldRow]; //compute correct offset
-        rowStage[coefs[i].row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
-        rowIndirection[oldRow] = coefs[i].row;
-        if (coefs[i].ptrVar != 0)
-            coefs[i].ptrVar->RowIndex(coefs[i].row);
+        for (int i = 0; i < m; i++)//Reset rowStage. Empty rows are now rows with stage 0
+            rowStage[i] = 0;
+        //Now reset the rowIndex in the coefficient set (and RandomVars..)
+        //Iterate over every coefficient. Set old coefficient to new coefficient
+        //Something goes wrong here..
+        for (int i = 0; i < nz; i++){
+            int oldRow = coefs[i].row;
+            int curRowStage = tempRowStage[oldRow];
+            //Count number of rows before this row
+            int rowCount = 0;
+            for (int j = 0; j < curRowStage;j++){
+                rowCount += rowCounter[j];
+            }
+            coefs[i].row = rowCount + rowOffset[oldRow]; //compute correct offset
+            rowStage[coefs[i].row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
+            rowIndirection[oldRow] = coefs[i].row;
+            if (coefs[i].ptrVar != 0)
+                coefs[i].ptrVar->RowIndex(coefs[i].row);
+        }
     }
     //Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
     //TODO: Check that
@@ -420,70 +422,73 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
     vector< vector<RandomVariable*> > randomVars(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
     //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
-    if (stage.size())
+    if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             if (coefs[i].ptrVar != 0) {
                 //We have a random variable associated with this column/row index
                 randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
             }
         }
+    }
 
-        // Compute Column Length Array to easily compute start array from there
-        for (int j=0; j<=n; j++) {
-            Clg[j] = 0;
+    // Compute Column Length Array to easily compute start array from there
+    for (int j=0; j<=n; j++) {
+        Clg[j] = 0;
+    }
+    // Treat right hand side as n'th column
+    for (int j=0; j<=n; j++) {
+        Clg[j] = 0;
+    }
+    for (int i=0; i<nz; i++) { //count occurence of a variable (in how many rows is a variable present?
+        int col = coefs[i].col;
+        if (col == n)  { 
+            realnz--;
         }
-        // Treat right hand side as n'th column
-        for (int j=0; j<=n; j++) {
-            Clg[j] = 0;
+        if (col == -1){ //If col is -1 it is the right hand side. We set col to n in the following and reduce number of realnz in matrix by 1
+            realnz--;
+            col = n;
+            coefs[i].col = n; //Also set coefficient to n to do it permanently
         }
-        for (int i=0; i<nz; i++) { //count occurence of a variable (in how many rows is a variable present?
-            int col = coefs[i].col;
-            if (col == n)  { //If col is -1 it is the right hand side, and inserted to column
-                realnz--;
-            }
-            Clg[col]++;
-        }
-        //Compute Column Start Array
-        Cst[0]=0; //count number of non-zero-elements up to column i: cst[n+1] = anzahl an nicht-null-elementen
-        for (int j=0; j<=n; j++) {
-            Cst[j+1]=Cst[j]+Clg[j]; 
-        }
-        for (int i=0; i<=n; i++) { //Reset column length array, to compute Elm and Rnr 
-            Clg[i]=0;
-        }
-        //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
-        for (int i=0; i<nz; i++) {
-            int col = coefs[i].col;
-            if (col==-1) { //Right Hand Side?
-                col = n;
-            }
-            int row = coefs[i].row;
-            double elm = coefs[i].val;
-            Elm[Cst[col]+Clg[col]] = elm;
-            Rnr[Cst[col]+Clg[col]] = row;
-            Clg[col]++;
-        }
+        Clg[col]++;
+    }
+    //Compute Column Start Array
+    Cst[0]=0; //count number of non-zero-elements up to column i: cst[n+1] = anzahl an nicht-null-elementen
+    for (int j=0; j<=n; j++) {
+        Cst[j+1]=Cst[j]+Clg[j]; 
+    }
+    for (int i=0; i<=n; i++) { //Reset column length array, to compute Elm and Rnr 
+        Clg[i]=0;
+    }
+    //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
+    for (int i=0; i<nz; i++) {
+        int col = coefs[i].col;
+        int row = coefs[i].row;
+        double elm = coefs[i].val;
+        Elm[Cst[col]+Clg[col]] = elm;
+        Rnr[Cst[col]+Clg[col]] = row;
+        Clg[col]++;
+    }
 
-        // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
-        for (int i=0; i<m; i++) {
-            bl[i] = 0;
-            bu[i] = 0;
-        }
-        for (int j=Cst[n]; j<Cst[n+1]; j++) {
-            bl[Rnr[j]] = -Elm[j];
-            bu[Rnr[j]] = -Elm[j];
-        }
-        //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
-        //TODO: Empty row handling done here..
-        for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
-            if ((*i)->left.isDefined() && (*i)->right.isDefined() ) {
-                int begin = (*i)->offset;
-                int end = (*i)->offset+(*i)->size();
-                switch ((*i)->sense) {
+    // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
+    for (int i=0; i<m; i++) {
+        bl[i] = 0;
+        bu[i] = 0;
+    }
+    for (int j=Cst[n]; j<Cst[n+1]; j++) {
+        bl[Rnr[j]] = -Elm[j];
+        bu[Rnr[j]] = -Elm[j];
+    }
+    //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
+    //TODO: Empty row handling done here..
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
+        if ((*i)->left.isDefined() && (*i)->right.isDefined() ) {
+            int begin = (*i)->offset;
+            int end = (*i)->offset+(*i)->size();
+            switch ((*i)->sense) {
                   case LE:
                       for (int k=begin; k<end; k++) {
                           if (stage.size() && rowIndirection[k] != -2)
-                            bl[rowIndirection[k]] = - inf;
+                              bl[rowIndirection[k]] = - inf;
                           else
                               bl[k] = -inf;
                       } 
@@ -491,7 +496,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                   case GE:
                       for (int k=begin; k<end; k++) {
                           if (stage.size() && rowIndirection[k] != -2)
-                            bu[rowIndirection[k]] = inf;
+                              bu[rowIndirection[k]] = inf;
                           else
                               bu[k] = inf;
                       }     
@@ -499,39 +504,40 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                   case EQ:
                       // Nothing to do
                       break;                
-               }
             }
         }
+    }
 
-        // Compute column bounds. 
-        //Initialize all Variables with standard bounds.
-        for (int j=0; j<n; j++) {
-            l[j] = 0.0;
-            u[j] = inf;
-        }
-        //Set Bounds obtained via MP_variable
-        for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-            for (int k=0; k<(*i)->size(); k++) {
-                if (stage.size()){
-                    l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit.v[k];
-                    u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit.v[k];
-                }
-                else {
-                    l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
-                    u[(*i)->offset+k] = (*i)->upperLimit.v[k];
-                }
+    // Compute column bounds. 
+    //Initialize all Variables with standard bounds.
+    for (int j=0; j<n; j++) {
+        l[j] = 0.0;
+        u[j] = inf;
+    }
+    //Set Bounds obtained via MP_variable
+    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+        for (int k=0; k<(*i)->size(); k++) {
+            if (stage.size()){
+                l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit.v[k];
+                u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit.v[k];
+            }
+            else {
+                l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
+                u[(*i)->offset+k] = (*i)->upperLimit.v[k];
             }
         }
+    }
 
-        // Generate objective function coefficients
-        vector<Constant> v;
-        MP::GenerateFunctor f(0,cfs);
-        coefs.erase(coefs.begin(),coefs.end());
-        Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
+    // Generate objective function coefficients
+    vector<Constant> v;
+    MP::GenerateFunctor f(0,cfs);
+    coefs.erase(coefs.begin(),coefs.end());
+    Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
 
-        messenger->objectiveDebug(cfs);
-        assemble(cfs,coefs);
-        //add random variables (if any)
+    messenger->objectiveDebug(cfs);
+    assemble(cfs,coefs);
+    //add random variables (if any) and we are in the stochastic setting
+    if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             coefs[i].col = colIndirection[coefs[i].col];
@@ -543,88 +549,95 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
             }
         }
+    }
+    else {
+        for (int i = 0; i != coefs.size(); i++)
+            coefs[i].row = m;
+    }
 
-        for (int j=0; j<n; j++) {
-            c[j] = 0.0;
-        }
-        for (size_t i=0; i<coefs.size(); i++) {
-            int col = coefs[i].col;
-            double elm = coefs[i].val;
-            c[col] = elm;
-        } 
+    for (int j=0; j<n; j++) {
+        c[j] = 0.0;
+    }
+    for (size_t i=0; i<coefs.size(); i++) {
+        int col = coefs[i].col;
+        double elm = coefs[i].val;
+        c[col] = elm;
+    } 
 
-        ////
-        // Core Model generated..
-        // All rows and cols are sorted by stage.
-        // RHS = n, Objective = m (indices)
-        // Old indices are stored in colIndirection and rowIndirection
-        ////
+    ////
+    // Core Model generated..
+    // All rows and cols are sorted by stage.
+    // RHS = n, Objective = m (indices)
+    // Old indices are stored in colIndirection and rowIndirection
+    ////
 #pragma endregion coreModelGeneration
 
 
-        //Check for stochasticity: This is the case if we have a stage set with size greater than 0.
-        if (stage.size() > 0){
-            ////
-            // Feed Core Model to SmiScnModel
-            ////
-            // Generate Core ModelMatrix: Need Only the matrix, no rhs, so we need realnz (Elm,Rnr and Cst are too big..)	
-            CoinPackedMatrix matrix(true,m,n,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
-            matrix.reverseOrdering(); //Smi needs matrix in row ordered form
-            printMatrix(&matrix,n,m,l,u,c,bl,bu,colStage,rowStage);
-            //matrix.removeGaps(); //What is this for?
-            Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
-            SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+    //Check for stochasticity: This is the case if we have a stage set with size greater than 0.
+    if (stage.size() > 0){
+        ////
+        // Feed Core Model to SmiScnModel
+        ////
+        // Generate Core ModelMatrix: Need Only the matrix, no rhs, so we need realnz (Elm,Rnr and Cst are too big..)	
+        CoinPackedMatrix matrix(true,m,n,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
+        matrix.reverseOrdering(); //Smi needs matrix in row ordered form
+        printMatrix(&matrix,n,m,l,u,c,bl,bu,colStage,rowStage);
+        //matrix.removeGaps(); //What is this for?
+        Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
+        SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
 
-            // Get SmiScnModel that holds a generated ScenarioTree.
-            //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
-            smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
-            if (smiModel == 0)
-                //We were not sucessful in creating a scenario tree. Try normal operation.
-                Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
-            else
-                smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
-        }
-        else {
-            Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
-        }
-        //We need indirection here to set the correct variables..
-        for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-            int begin = (*i)->offset;
-            int end = (*i)->offset+(*i)->size();
-            if ((*i)->type == discrete) {
-                for (int k=begin; k<end; k++) {
-                    if (stage.size())
-                        Solver->setInteger(colIndirection[k]);
-                    else
-                        Solver->setInteger(k);
-                }
+        // Get SmiScnModel that holds a generated ScenarioTree.
+        //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
+        smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
+        if (smiModel == 0)
+            //We were not sucessful in creating a scenario tree. Try normal operation.
+            Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
+        else
+            smiModel->Core(osiCore); //Let smiModel handle disposal of SmiCoreData
+    }
+    else {
+        Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
+        
+        printMatrix( const_cast<CoinPackedMatrix*>(Solver->getMatrixByRow()),n,m,l,u,c,bl,bu,colStage,rowStage);
+    }
+    //We need indirection here to set the correct variables..
+    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+        int begin = (*i)->offset;
+        int end = (*i)->offset+(*i)->size();
+        if ((*i)->type == discrete) {
+            for (int k=begin; k<end; k++) {
+                if (stage.size())
+                    Solver->setInteger(colIndirection[k]);
+                else
+                    Solver->setInteger(k);
             }
         }
-        mSolverState = MP_model::ATTACHED;
+    }
+    mSolverState = MP_model::ATTACHED;
 
 #pragma region cleanUp;
-        //Clean Up
-        //ColIndirection and rowIndirection arrays may be needed later on
-        if (nz>0) {    
-            delete [] Elm; 
-            delete [] Rnr;    
-        }
-        delete [] Cst;   
-        delete [] Clg;   
-        if (n>0) {
-            delete [] l;  
-            delete [] u;  
-            delete [] c;
-        }
-        if (m>0) {
-            delete [] bl;  
-            delete [] bu;
-        }  
+    //Clean Up
+    //ColIndirection and rowIndirection arrays may be needed later on
+    if (nz>0) {    
+        delete [] Elm; 
+        delete [] Rnr;    
+    }
+    delete [] Cst;   
+    delete [] Clg;   
+    if (n>0) {
+        delete [] l;  
+        delete [] u;  
+        delete [] c;
+    }
+    if (m>0) {
+        delete [] bl;  
+        delete [] bu;
+    }  
 #pragma endregion cleanUp;
 
 
 
-        messenger->generationTime(CoinCpuTime()-time);
+    messenger->generationTime(CoinCpuTime()-time);
 }
 
 void MP_model::detach() {

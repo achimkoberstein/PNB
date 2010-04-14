@@ -24,7 +24,7 @@ DataRef::DataRef(MP_data* d,
                  const MP_index_exp& i5,
                  int s) : 
 D(d),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(0),stochastic(s) {
-    if (!d->myrefs.empty()){ //Myrefs is not empty.. so copy Constant from last DataRef
+    if (!d->myrefs.empty()){ //Myrefs is not empty.. so copy Constant from last DataRef TODO: Think about that if we know why we have a vector here in the first place?!
         C = (*d->myrefs.back()).C;
     }
 }
@@ -125,4 +125,15 @@ void MP_data::display(string s) {
 DataRef& flopc::DataRef::probability( double p )
 {
     return *this;
+}
+
+DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli5 /*= MP_index_exp::getEmpty() */ )
+{
+    //TODO: Why do we return more than one DataRefs? Why do we return only a new DataRef?
+    //if (myrefs.empty()){
+        myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
+        return *myrefs.back();
+    //}
+    //else
+    //    return *myrefs.back();
 }
