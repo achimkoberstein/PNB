@@ -215,10 +215,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\FlopCppConfig.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\MP_boolean.hpp"
 				>
 			</File>
@@ -273,10 +269,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
-		<File
-			RelativePath=".\ClassDiagram1.cd"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

@@ -62,6 +62,18 @@ namespace {
         // call copySubModel(smiModel) methods from Benders..
     }
 
+    TEST_F(MP_modelTest,DataTest){
+        MP_data data1;
+        MP_data data2;
+        data1() = 7;
+        data2() = 10;
+        MP_data data3;
+        MP_data data4;
+        data4() = data3();
+        data3() = data1() + data2();
+
+    }
+
     TEST_F(MP_modelTest,TimoTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);

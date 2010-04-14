@@ -160,10 +160,7 @@ namespace flopc {
             const MP_index_exp& lcli3 = MP_index_exp::getEmpty(), 
             const MP_index_exp& lcli4 = MP_index_exp::getEmpty(), 
             const MP_index_exp& lcli5 = MP_index_exp::getEmpty() 
-            ) { //Why do we return more than one DataRefs? Why do we return only a new DataRef?
-                myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
-                return *myrefs.back();
-        }
+            );
 
 
         /// For displaying data in a human readable format.

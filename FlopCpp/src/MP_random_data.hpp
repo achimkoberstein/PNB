@@ -1,5 +1,5 @@
-#ifndef _MP_random_variable_hpp_
-#define _MP_random_variable_hpp_
+#ifndef _MP_random_data_hpp_
+#define _MP_random_data_hpp_
 
 #include <vector>
 #include <set>
@@ -178,7 +178,7 @@ namespace flopc{
         //TODO: Think about copying behaviour?
         MP_random_data(const MP_random_data& rhs); //forbid copy constructor
         MP_random_data& operator=(const MP_random_data& rhs); //forbid assignment operator
-        boost::shared_ptr<MP_random_data_impl> ptrImpl;
+        boost::shared_ptr<MP_random_data_impl> ptrImpl; //TODO: We can change this to CoinSharedPointer?!
 
 
     };
