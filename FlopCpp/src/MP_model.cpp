@@ -522,6 +522,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit.v[k];
             }
             else {
+                //TODO If double infinity limit, set solver infinity..
+                if ((*i)->upperLimit.v[k] == std::numeric_limits<double>::infinity());
                 l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
                 u[(*i)->offset+k] = (*i)->upperLimit.v[k];
             }
@@ -533,7 +535,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     MP::GenerateFunctor f(0,cfs);
     coefs.erase(coefs.begin(),coefs.end());
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
-
     messenger->objectiveDebug(cfs);
     assemble(cfs,coefs);
     //add random variables (if any) and we are in the stochastic setting
@@ -607,7 +608,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         if ((*i)->type == discrete) {
             for (int k=begin; k<end; k++) {
                 if (stage.size())
-                    Solver->setInteger(colIndirection[k]);
+                    Solver->setInteger(colIndirection[k]); //Set integer in SmiCoreData.. TODO
                 else
                     Solver->setInteger(k);
             }
