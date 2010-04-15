@@ -247,7 +247,13 @@ namespace flopc{
 
     double RandomVariable::getSampledValue(int index) const
     {
-        return values[index];
+        if (index != -1)
+        {
+            return values[index];
+        }
+        else {
+            return 0; // Is this the correct behaviour?!
+        }
     }
 
     void RandomVariable::sample( int howMany /*= 0*/ )

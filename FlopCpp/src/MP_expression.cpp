@@ -90,8 +90,8 @@ namespace flopc {
         double level() const { 
             return C->evaluate(); 
         }
-        double getValue() const {
-            return C->evaluate();
+        double getValue(int scenario) const {
+            return C->evaluate(scenario);
         }
         virtual int getColumn() const { //All Values that get transformed to Expression_constant have no
             //associated variable. Therefore: RHS.
@@ -310,14 +310,23 @@ bool MP::CoefLess (const MP::Coef& a, const MP::Coef& b) {
     }
 }
 
+bool MP::CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) {
+    if (a->col < b->col) {
+        return true;
+    } else if (a->col == b->col && a->row < b->row) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
-//bool MP::CoefLessWithStage::operator()( const MP::Coef& a, const MP::Coef& b ) const {
-bool MP::CoefLessWithStage( const MP::Coef& a, const MP::Coef& b ) {
-    if (a.stage < b.stage){
+
+bool MP::CoefLessWithStageShared( const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b ) {
+    if (a->varStage < b->varStage){
         return true;
     }
-    else if (a.stage == b.stage && a.col < b.col){
-        return MP::CoefLess(a,b);
+    else if (a->varStage == b->varStage && a->col < b->col){
+        return MP::CoefLessShared(a,b);
     }
     else {
         return false;
@@ -328,6 +337,7 @@ void MP::GenerateFunctor::operator()() const {
     assert(M==-1 || M==1);
     double sideOfConstraint = M; //LHS (=1) or RHS (=-1)?
     int stage = 0;
+    std::vector<double> scenarioValues;
     //TODO: Remove this, debugging only
     if (multiplicators.size() > 1){
         cout << multiplicators.size() << endl;
@@ -336,21 +346,23 @@ void MP::GenerateFunctor::operator()() const {
     RandomVariable* ptrRV = 0;
     for (unsigned int i=0; i<multiplicators.size(); i++) {
         //When is more than 1 element in the vector??
-        sideOfConstraint *= multiplicators[i]->evaluate();
         if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
             // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
             stage = multiplicators[i]->getStage();
             ptrRV = multiplicators[i]->getRandomVariable();
+            for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){
+                double temp = sideOfConstraint*(multiplicators[i]->evaluate(j));
+                scenarioValues.push_back(temp);
+            }
             if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
                 //continue; //Go to next loop
                 throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
             }
-            else {
-                // We need to set current Constant to the RV (to get computational description)
-                ptrRV->Stage(stage);
-
-            }
         }
+        else {
+            sideOfConstraint *= multiplicators[i]->evaluate();
+        }
+        
     }
     //If ptrRV!= 0, we have a RandomVariable and not a double coefficient
     //I still need to find out why multiplicators can be of size > 0? Maybe for rhs?
@@ -365,26 +377,36 @@ void MP::GenerateFunctor::operator()() const {
         int colNumber = C->getColumn(); //Get Column number.
         if ( colNumber != outOfBound  ) {
             double val = sideOfConstraint*C->getValue(); //Get Value of Coefficient
-            //TODO: Set stage
+
+            // Set variable stage.
             int varStage = C->getStage();
             //Now comes the fun part: If varStage > stage this means one of two things:
             //1: VariableRef with fixed Coefficient
-            //2: We added a RandomVariable without a variable, so that the RandomVariable is treted 
+            //2: We added a RandomVariable without a variable
             //as a terminalExpression: => No Multiplicative constant whatsoever..
             // What is not allowed? varStage > stage && stage > 0 . 
             if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
-                ptrRV =  C->getRandomVariable();
-                if (ptrRV != 0)
-                    ptrRV->Stage(varStage);
+                stage = varStage;
+                //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
+                try {
+                    dynamic_cast<const Expression_constant*> (C);
+                    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
+                        scenarioValues.push_back(sideOfConstraint*C->getValue(i));
+                    }
+                }
+                catch (const std::bad_cast& e){
+                   
+                }
+
 
             }
-            //store col and row index in random variable, if there is any
-            if (ptrRV != 0){
-                ptrRV->ColIndex(colNumber);
-                ptrRV->RowIndex(rowNumber);
+            ////store col and row index in random variable, if there is any
+            //if (ptrRV != 0){
+            //    ptrRV->ColIndex(colNumber);
+            //    ptrRV->RowIndex(rowNumber);
+            //}
 
-            }
-            Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage, ptrRV));
+            Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
         }
     }
 }

@@ -35,21 +35,22 @@ namespace flopc {
         friend class VariableRef;
 
         struct Coef {
-            Coef(int c, int r, double v, int s = 0,RandomVariable* ptr = 0) : 
-        col(c), row(r), stage(s), val(v), ptrVar(ptr)  {}
-        int col, row, stage;
+            Coef(int c, int r, double v, int s = 0,int rs = 0,std::vector<double> scen = std::vector<double>()) : 
+        col(c), row(r), varStage(s),randomStage(rs), val(v), scenVector(scen)  {}
+        int col, row, varStage,randomStage;
         double val;
-        RandomVariable* ptrVar;
+        std::vector<double> scenVector;
         //Col = Column Number of Coef
         //Row = Row Number of Coef
         //Stage = Stage of belonging Variable (Column)
         //Val = Coefficient value
-        //ptrVar = ptr to a RandomVariable, if data is not stochastic, set to 0.
+        //scenVal = stores random values for given scenarios..
 
         };
 
         static bool CoefLess (const MP::Coef& a, const MP::Coef& b);
-        static bool CoefLessWithStage  (const MP::Coef& a, const MP::Coef& b);
+        static bool CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b);
+        static bool CoefLessWithStageShared  (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b);
         /*struct CoefLess {
         bool operator()  const;
         };
@@ -149,7 +150,7 @@ namespace flopc {
     public:
         virtual ~TerminalExpression() {};
 
-        virtual double getValue() const = 0; 
+        virtual double getValue(int scenario = -1) const = 0; 
         virtual int getColumn() const = 0;
         virtual int getStage() const = 0;
         virtual RandomVariable* getRandomVariable() const = 0;
@@ -178,7 +179,7 @@ namespace flopc {
         void insertVariables(set<MP_variable*>& v) const {
             v.insert(V);
         }
-        virtual double getValue() const { 
+        virtual double getValue(int scenario) const { 
             return 1.0;
         }
         virtual int getStage() const;

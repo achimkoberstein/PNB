@@ -11,6 +11,8 @@ using std::endl;
 #include <map>
 #include <queue>
 
+#include "boost/shared_ptr.hpp"
+
 #include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
 #include <CoinPackedVector.hpp>
@@ -51,7 +53,7 @@ void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs)
         int col=cfs[j].col;
         int row=cfs[j].row;
         double elm=cfs[j].val;
-        int stage=cfs[j].stage;
+        int stage=cfs[j].varStage;
         cout<<row<<"   "<<col<<"  "<<elm<<"  "<<stage<<endl;
     }
 }
@@ -166,33 +168,38 @@ void MP_model::minimize_max(MP_set &s, const MP_expression  &obj) {
 } 
 
 
-void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
+void MP_model::assemble(vector<MP::Coef>& v, vector<boost::shared_ptr<MP::Coef> >& av) {
     std::sort(v.begin(),v.end(),&MP::CoefLess);
-    int c,r,s;
+    int c,r,s,rs;
     double val;
-    RandomVariable* ptr;
+    std::vector<double> scenVector;
     std::vector<MP::Coef>::const_iterator i = v.begin();
     while (i!=v.end()) {
         c = i->col;
         r = i->row;
         val = i->val;
-        s = i->stage;
-        ptr = i->ptrVar;
+        s = i->varStage;
+        rs = i->randomStage;
+        scenVector = i->scenVector;
         i++;
         //In case of RHS with a constant term consisting of more than one constant
         //These values were added one after another, otherwise this does not make sense.
         while (i!=v.end() && c==i->col && r==i->row) {
             val += i->val;
-            if (i->stage>0) {//If Coefficient was added with a random variable..
+            if (i->varStage>0) {//If Coefficient was added with a random variable..
                 //This is for right-hand-side addition
-                s = i->stage;
+                s = i->varStage;
                 //We do not add random variables, so we better do not have a valid pointer yet
-                assert(ptr == 0);
-                ptr = i->ptrVar;
+                //Add values of other scenarios
+                assert(scenVector.size() == i->scenVector.size());
+                for (int j = 0; j < scenVector.size(); j++){
+                    scenVector[j] = scenVector[j] + (i->scenVector)[j];
+                }
             }
             i++;
         }
-        av.push_back(MP::Coef(c,r,val,s,ptr));
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
+        av.push_back(temp);
     }
 }
 
@@ -249,7 +256,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     double time = CoinCpuTime();
     m=0;
     n=0;
-    vector<MP::Coef> coefs;
+    vector<boost::shared_ptr<MP::Coef> > coefs;
     vector<MP::Coef> cfs;
 
     typedef std::set<MP_variable* >::iterator varIt;
@@ -285,7 +292,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
 
-        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStage);
+        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStageShared);
         //Initialize all values with -2 to prevent misuse
         colIndirection = new int[n+1]; //store all variables (n) starting from index 0 and rhs as value n => n+1 size needed to store all these values
         for (int i = 0; i < n+1; i++){
@@ -294,7 +301,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //Iterate over set to set correct indices in the coefficients and store the old indices in indirection array. This way we get correct column indices. Rows are not sorted by then
         int j = 0; //index counter
         for (int i = 0; i < nz; i++){
-            int oldCol = coefs[i].col;
+            int oldCol = coefs[i]->col;
             if (oldCol == -1)//Handle RHS
                 oldCol = n;
             if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, store new index
@@ -305,9 +312,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                     colIndirection[oldCol] = j++;
                 }
             }// Assign correct values 
-            coefs[i].col = colIndirection[oldCol];
-            if (coefs[i].ptrVar != 0) //Change coefficient in RV
-                coefs[i].ptrVar->ColIndex(coefs[i].col);
+            coefs[i]->col = colIndirection[oldCol];
+            //if (coefs[i]->ptrVar != 0) //Change coefficient in RV
+            //    coefs[i]->ptrVar->ColIndex(coefs[i]->col);
         }
         //Check for empty variables, i.e. variables not assigned in the problem. Maybe we can report that as an error??
         // Empty Variables have no coefficients assigned, but they increase the variable counter
@@ -325,7 +332,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
         //Now we can access the new column ordering via colIndirection from FlopC++.
         //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
-        std::sort(coefs.begin(),coefs.end(),&MP::CoefLess);
+        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessShared);
     }
 #pragma endregion colIndirection;
 
@@ -368,9 +375,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         // Row Stage is equal to the highest stage of a belonging variable
 
         for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
-            int s = coefs[i].stage; //Stage of Variable that belongs to current coefficient
-            colStage[coefs[i].col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
-            int row = coefs[i].row; 
+            int s = coefs[i]->varStage; //Stage of Variable that belongs to current coefficient
+            colStage[coefs[i]->col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
+            int row = coefs[i]->row; 
             if ( s > rowStage[row] )  {
                 rowStage[row] = s;
             }
@@ -391,18 +398,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //Iterate over every coefficient. Set old coefficient to new coefficient
         //Something goes wrong here..
         for (int i = 0; i < nz; i++){
-            int oldRow = coefs[i].row;
+            int oldRow = coefs[i]->row;
             int curRowStage = tempRowStage[oldRow];
             //Count number of rows before this row
             int rowCount = 0;
             for (int j = 0; j < curRowStage;j++){
                 rowCount += rowCounter[j];
             }
-            coefs[i].row = rowCount + rowOffset[oldRow]; //compute correct offset
-            rowStage[coefs[i].row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
-            rowIndirection[oldRow] = coefs[i].row;
-            if (coefs[i].ptrVar != 0)
-                coefs[i].ptrVar->RowIndex(coefs[i].row);
+            coefs[i]->row = rowCount + rowOffset[oldRow]; //compute correct offset
+            rowStage[coefs[i]->row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
+            rowIndirection[oldRow] = coefs[i]->row;
+            //if (coefs[i]->ptrVar != 0)
+            //    coefs[i]->ptrVar->RowIndex(coefs[i]->row);
         }
     }
     //Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
@@ -420,13 +427,14 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     //Now we can access the new column ordering via colIndirection from FlopC++.
 
     //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
-    vector< vector<RandomVariable*> > randomVars(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
+    vector< vector<boost::shared_ptr<MP::Coef> > > randomCoefs(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
     //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
+    //TODO: Add Coefficients instead of random vars..
     if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
-            if (coefs[i].ptrVar != 0) {
-                //We have a random variable associated with this column/row index
-                randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
+            if ( !coefs[i]->scenVector.empty() ) { //We have scenario values
+                //We have a random parameter with values
+                randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
             }
         }
     }
@@ -440,14 +448,14 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         Clg[j] = 0;
     }
     for (int i=0; i<nz; i++) { //count occurence of a variable (in how many rows is a variable present?
-        int col = coefs[i].col;
+        int col = coefs[i]->col;
         if (col == n)  { 
             realnz--;
         }
         if (col == -1){ //If col is -1 it is the right hand side. We set col to n in the following and reduce number of realnz in matrix by 1
             realnz--;
             col = n;
-            coefs[i].col = n; //Also set coefficient to n to do it permanently
+            coefs[i]->col = n; //Also set coefficient to n to do it permanently
         }
         Clg[col]++;
     }
@@ -461,9 +469,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
     //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
     for (int i=0; i<nz; i++) {
-        int col = coefs[i].col;
-        int row = coefs[i].row;
-        double elm = coefs[i].val;
+        int col = coefs[i]->col;
+        int row = coefs[i]->row;
+        double elm = coefs[i]->val;
         Elm[Cst[col]+Clg[col]] = elm;
         Rnr[Cst[col]+Clg[col]] = row;
         Clg[col]++;
@@ -487,16 +495,20 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             switch ((*i)->sense) {
                   case LE:
                       for (int k=begin; k<end; k++) {
-                          if (stage.size() && rowIndirection[k] != -2)
-                              bl[rowIndirection[k]] = - inf;
+                          if (stage.size()){
+                              if (rowIndirection[k] != -2) //Else empty row
+                                bl[rowIndirection[k]] = - inf;
+                          }
                           else
                               bl[k] = -inf;
                       } 
                       break;
                   case GE:
                       for (int k=begin; k<end; k++) {
-                          if (stage.size() && rowIndirection[k] != -2)
-                              bu[rowIndirection[k]] = inf;
+                          if (stage.size()){
+                              if (rowIndirection[k] != -2) //Else empty row
+                                bu[rowIndirection[k]] = inf;
+                          }
                           else
                               bu[k] = inf;
                       }     
@@ -541,27 +553,29 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
-            coefs[i].col = colIndirection[coefs[i].col];
-            coefs[i].row = m;
-            if (coefs[i].ptrVar != 0) {
-                coefs[i].ptrVar->ColIndex(coefs[i].col);
-                coefs[i].ptrVar->ColIndex(coefs[i].row);
+            coefs[i]->col = colIndirection[coefs[i]->col];
+            coefs[i]->row = m;
+            if (!coefs[i]->scenVector.empty()) {
+                randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
+                //coefs[i]->ptrVar->ColIndex(coefs[i]->col);
+                //coefs[i]->ptrVar->ColIndex(coefs[i]->row);
                 //We have a random variable associated with this column/row index
-                randomVars[coefs[i].ptrVar->Stage()].push_back(coefs[i].ptrVar);
+                //TODO Add coefficient to scentreegeneration
+                //randomVars[coefs[i]->ptrVar->Stage()].push_back(coefs[i]->ptrVar);
             }
         }
     }
     else {
         for (int i = 0; i != coefs.size(); i++)
-            coefs[i].row = m;
+            coefs[i]->row = m;
     }
 
     for (int j=0; j<n; j++) {
         c[j] = 0.0;
     }
     for (size_t i=0; i<coefs.size(); i++) {
-        int col = coefs[i].col;
-        double elm = coefs[i].val;
+        int col = coefs[i]->col;
+        double elm = coefs[i]->val;
         c[col] = elm;
     } 
 
@@ -589,7 +603,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
-        smiModel = flopc::generateScenarioTree(this,randomVars,osiCore);
+        smiModel = generateScenarioTree(randomCoefs,osiCore);
         if (smiModel == 0)
             //We were not sucessful in creating a scenario tree. Try normal operation. TODO: Think about reversed matrix..
             Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
@@ -775,24 +789,17 @@ namespace flopc {
     }
 
     //Make this a member function, so we can look at the arrays we need (row sense for example)
-    SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore){
-        typedef std::vector<RandomVariable*>::const_iterator randVarIterator;
+    SmiScnModel* MP_model::generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore){
+        typedef std::vector<boost::shared_ptr<MP::Coef>>::const_iterator randVarIterator;
         //Get basic important values
         int nStages = smiCore->getNumStages();
-        int nScen = flopModel->ScenSet().size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
+        int nScen = this->ScenSet().size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
         std::vector<int> randVarsPerStage(nStages);
         bool count = false;
         if (nScen==0) // We have no specified scenario set, so we rely on the default sample size and count the scenario size afterwards.
             count = true;
-        for (int curStage = 1; curStage < nStages; curStage++){
+        for (int curStage = 1; curStage < nStages; curStage++){ //Count number of random coefficients for each stage..
             for (randVarIterator it = randomVariableVector[curStage].begin(); it != randomVariableVector[curStage].end();++it){
-                //Sample Values for all variables. If no scenario set was specified, we rely on previously set sample sizes.
-                if (!count)
-                    (*it)->sample(nScen);
-                else{
-                    (*it)->sample(0);
-                    nScen += (*it)->SampleSize();
-                }
                 randVarsPerStage[curStage]++;
             }
         }
@@ -881,10 +888,10 @@ namespace flopc {
                 //Do the real stuff: Add values for the current scenario.
                 //Add all random coefficients to corresponding places
                 for (int j = 0; j < randVarsPerStage[curStage];j++){  //Values differ 
-                    RandomVariable* it = randomVariableVector[curStage][j];
-                    double coefficient = it->getSampledValue(parentScen);
-                    int colIndex = it->ColIndex();
-                    int rowIndex = it->RowIndex();
+                    boost::shared_ptr<MP::Coef> it = randomVariableVector[curStage][j];
+                    double coefficient = it->scenVector[parentScen];
+                    int colIndex = it->col;
+                    int rowIndex = it->row;
                     if (colIndex < n) {//Matrix-Element 
                         if (rowIndex < m){ //Matrix-Element
                             assert(rowIndex >= 0 ); //row index needs to be inside bounds
@@ -896,14 +903,14 @@ namespace flopc {
                             objVec[parentScen]->modifyCoefficient(colIndex,0,coefficient);
                         }
                     }
-                    else{ //RHS
+                    else{ //RHS : This means coefficient is multiplied with -1. TODO: Change this behaviour in FlopC++ so that also right hand side has original values.
                         assert(colIndex == n);
                         //We need the row sense to insert in the right vector..
-                        switch (flopModel->Solver->getRowSense()[rowIndex])
-                        {
-                        case 'E' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); rupVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); break;
-                        case 'G' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); break;
-                        case 'L' : rupVec[parentScen]->modifyCoefficient(rowIndex,0,coefficient,true); break; 
+                        switch (this->Solver->getRowSense()[rowIndex])
+                        { 
+                        case 'E' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,-coefficient,true); rupVec[parentScen]->modifyCoefficient(rowIndex,0,-coefficient,true); break;
+                        case 'G' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,-coefficient,true); break;
+                        case 'L' : rupVec[parentScen]->modifyCoefficient(rowIndex,0,-coefficient,true); break; 
                         case 'N' : break;
                         default : throw not_implemented_error(); 
                         }//end switch
@@ -1000,12 +1007,12 @@ namespace flopc {
 
 
 
-    bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen,int nextScen){
+    bool MP_model::differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector,int curStage,int curScen,int nextScen){
         if (curScen == nextScen)
             return false;
         bool identical = true;
-        for (RandomVariable::randVarVector::size_type i = 0; i < randomVariableVector[curStage].size();i++){
-            if (!compareDouble(randomVariableVector[curStage][i]->getSampledValue(curScen),randomVariableVector[curStage][i]->getSampledValue(nextScen)) ){
+        for (int i = 0; i < randomVariableVector[curStage].size();i++){
+            if (!compareDouble(randomVariableVector[curStage][i]->scenVector[curScen],randomVariableVector[curStage][i]->scenVector[nextScen]) ){
                 identical = false;
                 break; //break loop and return
             }

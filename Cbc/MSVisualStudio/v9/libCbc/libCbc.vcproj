@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="libCbc"
 	ProjectGUID="{363BA154-FEC9-4E1E-BC23-93CEC58AB785}"
 	RootNamespace="libCbc"
@@ -50,7 +50,7 @@
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
-				WarningLevel="3"
+				WarningLevel="0"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				CompileAs="0"
@@ -1200,6 +1200,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\Cgl\src\CglLandP.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cgl\src\CglMixedIntegerRounding\CglMixedIntegerRounding.hpp"
 				>
 			</File>
@@ -1220,15 +1224,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Cgl\src\CglTwomir\CglTwomir.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\Cgl\src\CglResidualCapacity.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Cgl\src\CglLandP.hpp"
+				RelativePath="..\..\..\..\Cgl\src\CglTwomir\CglTwomir.hpp"
 				>
 			</File>
 			<File

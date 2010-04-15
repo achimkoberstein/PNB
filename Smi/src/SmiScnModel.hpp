@@ -165,6 +165,12 @@ public:
 	SmiScnNode * getLeafNode(SmiScenarioIndex i){ return smiTree_.getLeaf(i)->getDataPtr(); }
 	SmiScnNode * getRootNode(){ return smiTree_.getRoot()->getDataPtr(); }
 
+    int* getIntegerInd(){return integerInd;}
+	int getIntegerLen(){return integerLen;}
+	int* getBinaryInd(){return binaryInd;}
+	int getBinaryLen(){return binaryLen;}
+
+
 
 	// getXXX by scenario
 	double getObjectiveValue(SmiScenarioIndex ns);
@@ -230,6 +236,12 @@ private:
 	SmiCoreData * core_;
     // scenario tree pointer
 	SmiScenarioTree<SmiScnNode *> smiTree_;
+
+    int* integerInd;
+	int integerLen;
+	int* binaryInd;
+	int binaryLen;
+
 };
 
 class SmiScnNode
