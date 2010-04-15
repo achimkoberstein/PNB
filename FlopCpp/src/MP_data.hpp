@@ -34,7 +34,7 @@ namespace flopc {
         DataRef& such_that(const MP_boolean& b);
 
         //Get Value via current settings for MP_index_exp
-        virtual double evaluate() const;
+        virtual double evaluate(int scenario) const;
         virtual int getStage() const;
         const DataRef& operator=(const DataRef& r); 
         const DataRef& operator=(const Constant& c);
@@ -179,28 +179,28 @@ namespace flopc {
         bool manageData;
     };
 
-    class MP_stochastic_data : public MP_data {
-    public:
-        MP_stochastic_data(const MP_set_base &s1 = MP_set::getEmpty(), 
-            const MP_set_base &s2 = MP_set::getEmpty(), 
-            const MP_set_base &s3 = MP_set::getEmpty(),
-            const MP_set_base &s4 = MP_set::getEmpty(), 
-            const MP_set_base &s5 = MP_set::getEmpty()) :
-        MP_data(s1,s2,s3,s4,s5) {}
+    //class MP_stochastic_data : public MP_data {
+    //public:
+    //    MP_stochastic_data(const MP_set_base &s1 = MP_set::getEmpty(), 
+    //        const MP_set_base &s2 = MP_set::getEmpty(), 
+    //        const MP_set_base &s3 = MP_set::getEmpty(),
+    //        const MP_set_base &s4 = MP_set::getEmpty(), 
+    //        const MP_set_base &s5 = MP_set::getEmpty()) :
+    //    MP_data(s1,s2,s3,s4,s5) {}
 
-        using flopc::MP_data::operator(); // From bugsquashing party. Some compiler needs this? 
+    //    using flopc::MP_data::operator(); // From bugsquashing party. Some compiler needs this? 
 
-        DataRef& operator() (
-            const MP_index_exp& lcli1 = MP_index_exp::getEmpty(), 
-            const MP_index_exp& lcli2 = MP_index_exp::getEmpty(), 
-            const MP_index_exp& lcli3 = MP_index_exp::getEmpty(), 
-            const MP_index_exp& lcli4 = MP_index_exp::getEmpty(), 
-            const MP_index_exp& lcli5 = MP_index_exp::getEmpty() 
-            ) {
-                myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5, 1));
-                return *myrefs.back();
-        }
-    };
+    //    DataRef& operator() (
+    //        const MP_index_exp& lcli1 = MP_index_exp::getEmpty(), 
+    //        const MP_index_exp& lcli2 = MP_index_exp::getEmpty(), 
+    //        const MP_index_exp& lcli3 = MP_index_exp::getEmpty(), 
+    //        const MP_index_exp& lcli4 = MP_index_exp::getEmpty(), 
+    //        const MP_index_exp& lcli5 = MP_index_exp::getEmpty() 
+    //        ) {
+    //            myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5, 1));
+    //            return *myrefs.back();
+    //    }
+    //};
 
 } // End of namespace flopc
 #endif

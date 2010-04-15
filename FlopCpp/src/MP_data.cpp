@@ -54,7 +54,7 @@ RandomVariable* DataRef::getRandomVariable() const {
 
 
 
-double DataRef::evaluate() const {
+double DataRef::evaluate(int scenario) const {
     //Check for sanity of indices
     int i1 = D->S1.check(I1->evaluate());
     int i2 = D->S2.check(I2->evaluate());

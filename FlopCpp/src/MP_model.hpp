@@ -272,9 +272,12 @@ namespace flopc {
 
 
         //Sort Coefficient Vectors with CoefLess
-        static void assemble(vector<MP::Coef>& v, vector<MP::Coef>& av);
+        static void assemble(vector<MP::Coef>& v, vector< boost::shared_ptr<MP::Coef> >& av);
         void add(MP_constraint* constraint);
 
+        SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
+        //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
+        bool differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef>>>& randomVariableVector,int curStage,int curScen,int compareScen);
 
 
         Messenger* messenger;
@@ -313,7 +316,7 @@ namespace flopc {
     std::ostream &operator<<(std::ostream &os, 
         const MP_model::MP_direction &direction);
 
-
+   
 
     void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
 
@@ -323,8 +326,6 @@ namespace flopc {
 
 
 namespace flopc{
-    SmiScnModel* generateScenarioTree(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore);
-    //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
-    bool differFromPrevious(const RandomVariable::randVarVector& randomVariableVector,int curStage,int curScen,int compareScen);
+
 }
 #endif

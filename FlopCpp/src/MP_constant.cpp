@@ -18,7 +18,7 @@ namespace flopc {
         friend class Constant;
     private:
         Constant_index(const MP_index_exp& i) : I(i) {}
-        virtual double evaluate() const {
+        virtual double evaluate(int scenario) const {
             return I->evaluate(); 
         }
         const MP_index_exp I;
@@ -31,11 +31,11 @@ namespace flopc {
         friend Constant operator-(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
         friend Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
     private:
-        Constant_random_variable(const boost::shared_ptr<RandomDataRef> r): r(r),addConst(0),multConst(1){}
+        Constant_random_variable(const boost::shared_ptr<RandomDataRef> r): r(r){}
 
-        virtual double evaluate() const {
+        virtual double evaluate(int scenario) const {
             //TODO: When is this method called? When the RV is a TerminalExpression, this means it is a standalone variable. TerminalExpression.getValues finally results in this call to evaluate. If this is the case we would like to return the additive constant?!
-            return 0;
+            return r->getRandomVariable()->getSampledValue(scenario);
         }
 
         virtual int getStage() const{
@@ -48,15 +48,13 @@ namespace flopc {
 
 
         const boost::shared_ptr<RandomDataRef> r;
-        Constant addConst;
-        Constant multConst;
     };
 
     class Constant_double : public Constant_base {
         friend class Constant;
     private:
         Constant_double(double d) : D(d) {}
-        double evaluate() const { 
+        virtual double evaluate(int scenario) const { 
             return D; 
         }
         int getStage() const {
@@ -72,8 +70,8 @@ namespace flopc {
         friend Constant abs(const Constant& c);
     private:
         Constant_abs(const Constant& c) : C(c) {}
-        double evaluate() const {
-            return fabs(C->evaluate());
+        virtual double evaluate(int scenario) const {
+            return fabs(C->evaluate(scenario));
         }
         int getStage() const {
             return C->getStage();
@@ -88,8 +86,8 @@ namespace flopc {
         friend Constant pos(const Constant& c);
     private:
         Constant_pos(const Constant& c) : C(c) {}
-        double evaluate() const {
-            double temp = C->evaluate();
+        virtual double evaluate(int scenario) const {
+            double temp = C->evaluate(scenario);
             if (temp>0) {
                 return temp;
             } else {
@@ -109,8 +107,8 @@ namespace flopc {
         friend Constant ceil(const Constant& c);
     private:
         Constant_ceil(const Constant& c) : C(c) {}
-        double evaluate() const {
-            return std::ceil(C->evaluate());
+        virtual double evaluate(int scenario) const {
+            return std::ceil(C->evaluate(scenario));
         }
         int getStage() const {
             return C->getStage();
@@ -125,8 +123,8 @@ namespace flopc {
         friend Constant floor(const Constant& c);
     private:
         Constant_floor(const Constant& c) : C(c) {}
-        double evaluate() const {
-            return std::floor(C->evaluate());
+        virtual double evaluate(int scenario) const {
+            return std::floor(C->evaluate(scenario));
         }
         int getStage() const {
             return C->getStage();
@@ -154,8 +152,8 @@ namespace flopc {
         friend Constant minimum(const Constant& a, const Constant& b);
     private:
         Constant_min_2(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
-        double evaluate() const {
-            return std::min(left->evaluate(),right->evaluate());
+        virtual double evaluate(int scenario) const {
+            return std::min(left->evaluate(scenario),right->evaluate(scenario));
         }
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
@@ -170,8 +168,8 @@ namespace flopc {
         friend Constant maximum(const Constant& a, const Constant& b);
     private:
         Constant_max_2(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
-        double evaluate() const {
-            return std::max(left->evaluate(),right->evaluate());
+        virtual double evaluate(int scenario) const {
+            return std::max(left->evaluate(scenario),right->evaluate(scenario));
         }
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
@@ -188,8 +186,8 @@ namespace flopc {
         friend Constant operator+(MP_index& a, MP_index& b);
     private:
         Constant_plus(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
-        double evaluate() const {
-            return left->evaluate()+right->evaluate();
+        virtual double evaluate(int scenario) const {
+            return left->evaluate(scenario)+right->evaluate(scenario);
         }
 
         int getStage() const {
@@ -227,8 +225,8 @@ namespace flopc {
         friend Constant operator-(MP_index& a, MP_index& b);
     private:
         Constant_minus(const Constant& i, const Constant& j): Constant_exp(i,j) {}
-        double evaluate() const {
-            return left->evaluate()-right->evaluate(); 
+        virtual double evaluate(int scenario) const {
+            return left->evaluate(scenario)-right->evaluate(scenario); 
         }
 
         int getStage() const {
@@ -262,8 +260,8 @@ namespace flopc {
         friend Constant operator-(const Constant& a);
     private:
         Constant_unary_minus(const Constant& i) : left(i) {}
-        double evaluate() const {
-            return -left->evaluate(); 
+        virtual double evaluate(int scenario) const {
+            return -left->evaluate(scenario); 
         }
         Constant left;
     };
@@ -278,8 +276,8 @@ namespace flopc {
         friend Constant operator/(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
     private:
         Constant_mult(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
-        double evaluate() const {
-            return left->evaluate()*right->evaluate(); 
+        virtual double evaluate(int scenario) const {
+            return left->evaluate(scenario)*right->evaluate(scenario); 
         }
 
         int getStage() const {
@@ -317,8 +315,8 @@ namespace flopc {
         friend Constant operator/(const Constant& a, const Constant& b); 
     private:
         Constant_div(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
-        double evaluate() const {
-            return left->evaluate()/right->evaluate(); 
+        virtual double evaluate(int scenario) const {
+            return left->evaluate(scenario)/right->evaluate(scenario); 
         }
 
         int getStage() const {
@@ -349,11 +347,11 @@ namespace flopc {
         friend Constant mpif(const MP_boolean& c, const Constant& a, const Constant& b); 
     private:
         Constant_if(const MP_boolean b, const Constant& i, const Constant& j) : Constant_exp(i,j), B(b) {}
-        double evaluate() const {
+        virtual double evaluate(int scenario) const {
             if (B->evaluate()==true) {
-                return left->evaluate();
+                return left->evaluate(scenario);
             } else {
-                return right->evaluate(); 
+                return right->evaluate(scenario); 
             }
         }
         int getStage() const {
@@ -376,22 +374,24 @@ namespace flopc {
         friend Constant maximum(const MP_domain& i, const Constant& e);
     private:
         Constant_max(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
-        double evaluate() const {    
+        virtual double evaluate(int scenario) const {    
             MaxFunctor MF(exp);
+            MF.scenario = scenario;
             d.forall(MF);
             return MF.the_max;
         }
         class MaxFunctor : public Functor {
         public:
-            MaxFunctor(Constant exp) : C(exp), the_max(DBL_MIN) {}
+            MaxFunctor(Constant exp) : C(exp), the_max(DBL_MIN),scenario(-1) {}
             void operator()() const {
-                double temp = C->evaluate();
+                double temp = C->evaluate(scenario);
                 if (temp > the_max) {
                     the_max = temp;
                 }
             }
             Constant C;      
             mutable double the_max;
+            int scenario;
         };
 
         MP_domain d;
@@ -401,15 +401,16 @@ namespace flopc {
     class Constant_min : public Constant_base, public Functor {
         friend Constant minimum(const MP_domain& i, const Constant& e);
     private:
-        Constant_min(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
+        Constant_min(const MP_domain& i, const Constant& e) : d(i), exp(e),the_min(DBL_MAX),scenario(-1) {}
         void operator()() const {
-            double temp = exp->evaluate();
+            double temp = exp->evaluate(scenario);
             if (temp < the_min) {
                 the_min = temp;
             }
         }
-        double evaluate() const {    
+        virtual double evaluate(int scenario) const {    
             the_min = DBL_MAX;
+            this->scenario = scenario;
             d.forall(this);
             return the_min;
         }
@@ -417,17 +418,19 @@ namespace flopc {
         MP_domain d;
         Constant exp;
         mutable double the_min;
+        mutable int scenario;
     };
 
     class Constant_sum : public Constant_base, public Functor {
         friend Constant sum(const MP_domain& i, const Constant& e);
     private:
-        Constant_sum(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
+        Constant_sum(const MP_domain& i, const Constant& e) : d(i), exp(e),the_sum(0),scenario(-1) {}
         void operator()() const {
-            the_sum += exp->evaluate();
+            the_sum += exp->evaluate(scenario);
         }
-        double evaluate() const {  
+        virtual double evaluate(int scenario) const {  
             the_sum = 0;
+            this->scenario = scenario;
             d.forall(this);
             return the_sum;
         }
@@ -435,17 +438,19 @@ namespace flopc {
         MP_domain d;
         Constant exp;
         mutable double the_sum;
+        mutable int scenario;
     };
 
     class Constant_product : public Constant_base, public Functor {
         friend Constant product(const MP_domain& i, const Constant& e);
     private:
-        Constant_product(const MP_domain& i, const Constant& e) : d(i), exp(e) {}
+        Constant_product(const MP_domain& i, const Constant& e) : d(i), exp(e),the_product(1),scenario(-1) {}
         void operator()() const {
-            the_product *= exp->evaluate();
+            the_product *= exp->evaluate(scenario);
         }
-        double evaluate() const {  
+        virtual double evaluate(int scenario) const {  
             the_product = 1;
+            this->scenario = scenario;
             d.forall(this);
             return the_product;
         }
@@ -453,6 +458,7 @@ namespace flopc {
         MP_domain d;
         Constant exp;
         mutable double the_product;
+        mutable int scenario;
     };
 
     Constant maximum(const MP_domain& i, const Constant& e) {

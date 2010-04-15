@@ -23,7 +23,7 @@ namespace flopc {
         friend class Constant;
         friend class Handle<Constant_base*>;
     public:
-        virtual double evaluate() const = 0; //get value of constant (must be double)
+        virtual double evaluate(int scenario = -1) const = 0; //get value of constant (must be double)
 
         virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
             return 0;

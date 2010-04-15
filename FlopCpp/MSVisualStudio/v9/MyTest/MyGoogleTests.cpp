@@ -63,64 +63,75 @@ namespace {
     //    // call copySubModel(smiModel) methods from Benders..
     //}
 
-    //TEST_F(MP_modelTest,DataTest){
-    //    MP_data data1;
-    //    MP_data data2;
-    //    data1() = 7;
-    //    data2() = 10;
-    //    MP_data data3;
-    //    MP_data data4;
-    //    data4() = data3();
-    //    data3() = data1() + data2();
+    TEST_F(MP_modelTest,DataTest){
+        MP_data data1;
+        MP_data data2;
+        data1() = 7;
+        data2() = 10;
+        MP_data data3;
+        MP_data data4;
+        data4() = data3();
+        data3() = data1() + data2();
 
-    //}
+    }
 
-    //TEST_F(MP_modelTest,TimoTest){
-    //    MP_model testModel2(new OsiClpSolverInterface());
-    //    MP_stage T(2);
-    //    MP_scenario_set scen(2);
-    //    double scenarios[1][2] =
-    //    { // T
-    //        {1,2} //scen
-    //    };
-    //    MP_random_data rvar(&scenarios[0][0],T);
-    //    MP_variable x(T);
-    //    MP_constraint constraint1, constraint2(T);
-    //    constraint1 = x(0) == 1;
-    //    constraint2(T+1) = x(T+1)*rvar(T+1) >= x(T);
-    //    //constraint2(T+1) = x(T+1) + rvar(T+1) <= x(T); 
-    //    //constraint2(T+1) = x(T+1) >= x(T)*rvar(T+1); 
-    //    testModel2.setObjective(x(T.last()));
-    //    testModel2.attach(testModel2.Solver);
-    //    testModel2.solve(MP_model::MINIMIZE); 
+    TEST_F(MP_modelTest,TimoTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_scenario_set scen(2);
+        double scenarios[1][2] =
+        { // T
+            {1,2} //scen
+        };
+                double scenarios2[1][2] =
+        { // T
+            {1,2} //scen
+        };
+                        double scenarios3[1][2] =
+        { // T
+            {1,2} //scen
+        };
+        MP_random_data rvar(&scenarios[0][0],T);
+        MP_random_data rvar2(&scenarios2[0][0],T);
+        MP_random_data rvar3(&scenarios3[0][0],T);
+        MP_variable x(T);
+        MP_constraint constraint1, constraint2(T),constraint3(T),constraint4(T);
+        constraint1 = x(0) == 1;
+        //This does not yet work, as rvar is only allowed once..
+        //constraint2(T+1) = x(T+1)*rvar(T+1) >= x(T);
+        //constraint3(T+1) = x(T+1) + rvar2(T+1) <= x(T); 
+        constraint4(T+1) = x(T+1) >= x(T)*(rvar3(T+1)+3); 
+        testModel2.setObjective(x(T.last()));
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MINIMIZE); 
 
-    //}
+    }
 
-    //TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
-    //    MP_model testModel2(new OsiClpSolverInterface());
-    //    MP_stage T(3); // three stages
-    //    MP_set demands(2); // two different demands
-    //    MP_scenario_set scen(6); //six scenarios
-    //    double scenarios[2][2][6] =
-    //    { // T
-    //        {//demands 
-    //            {3,1,1,1,2,2},{3,1,1,1,2,2} //scen
-    //        },
-    //        {
-    //            {9,4,5,6,7,8},{9,4,5,6,7,8} //scen
-    //        }
+    TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        MP_stage T(3); // three stages
+        MP_set demands(2); // two different demands
+        MP_scenario_set scen(6); //six scenarios
+        double scenarios[2][2][6] =
+        { // T
+            {//demands 
+                {3,1,1,1,2,2},{3,1,1,1,2,2} //scen
+            },
+            {
+                {9,4,5,6,7,8},{9,4,5,6,7,8} //scen
+            }
 
-    //    };
-    //    MP_random_data rvar(&scenarios[0][0][0],T,demands);
-    //    MP_variable x(T,demands);
-    //    MP_variable firstStageVar;
-    //    MP_constraint constraint1(T);
-    //    constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
-    //    testModel2.setObjective(x(T.last(),demands));
-    //    testModel2.attach(testModel2.Solver);
-    //    testModel2.solve(MP_model::MINIMIZE);
-    //    EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
-    //}
+        };
+        MP_random_data rvar(&scenarios[0][0][0],T,demands);
+        MP_variable x(T,demands);
+        MP_variable firstStageVar;
+        MP_constraint constraint1(T);
+        constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
+        testModel2.setObjective(x(T.last(),demands));
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MINIMIZE);
+        EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
+    }
 
     TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
@@ -166,6 +177,7 @@ namespace {
         investmentModel.setObjective(wealth(T.last()));
         investmentModel.attach(investmentModel.Solver);
         investmentModel.solve(MP_model::MAXIMIZE);
+
         //const double* colArray = investmentModel.Solver->getColSolution();
         //Compare solution values.
         EXPECT_DOUBLE_EQ(1320,investmentModel.Solver->getObjValue());
@@ -225,18 +237,23 @@ namespace {
     TEST_F(MP_modelTest,SimpleRandomVariableSolverTest){
         testModel.verbose();
         MP_stage T(2);
+        MP_scenario_set scen(2);
         MP_variable x;
         MP_variable y(T);
-        MP_random_data rVar(T);
-        rVar(0) = new DiscreteRandomVariable();
-        rVar(1) = new DiscreteRandomVariable();
-        MP_random_data rVar2(T);
-        MP_random_data rVar3(T);
-        MP_constraint constraint1(T);
+        double scenarios[1][2] = {{ 1,2 }};
+        double scenarios2[1][2] = {{ 3,4 }};
+        double scenarios3[1][2] = {{ 5,6 }};
+        MP_random_data rVar(&scenarios[0][0],T);
+        MP_random_data rVar2(&scenarios2[0][0],T);
+        MP_random_data rVar3(&scenarios3[0][0],T);
+        MP_constraint constraint,constraint1(T),constraint2(T);
         MP_index j;
         //I would expect that such things would work, i.e. assign to different indices of one constraint.
         //constraint1(0) = 3*x() <= 10;
-        constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20;
+        constraint() = 5*x() >= 60; //Funny thing: Problem gets presolved so that nothing is left.. this is definitly not the correct behaviour, as we want to maximize..
+        constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20 + rVar2(T+1);
+        constraint2(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) >= rVar3(T+1)*20 + rVar2(T+1);
+        //TODO: Test coefficients right hand sides and stuff.. it is REALLY necessary to do so
         //TODO: This is counterintuitive
         //TODO: Test of the coefficients get generated in the right manner.
         testModel.setObjective( 3*x() );
