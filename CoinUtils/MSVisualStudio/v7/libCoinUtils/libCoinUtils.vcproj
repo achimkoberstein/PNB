@@ -1,120 +1,169 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="9,00"
 	Name="libCoinUtils"
 	ProjectGUID="{3FF2C6EE-EF72-44A1-9C75-CF6B496AB108}"
-	SccProjectName=""
-	SccLocalPath="">
+	TargetFrameworkVersion="131072"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				StringPooling="TRUE"
-				RuntimeLibrary="4"
-				EnableFunctionLevelLinking="TRUE"
-				RuntimeTypeInfo="TRUE"
-				UsePrecompiledHeader="2"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/libCoinUtils.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				CompileAs="0"/>
+				SuppressStartupBanner="true"
+				CompileAs="0"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile=".\Release\libCoinUtils.lib"
-				SuppressStartupBanner="TRUE"/>
-			<Tool
-				Name="VCMIDLTool"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"/>
+				Culture="1033"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
+				Name="VCLibrarianTool"
+				OutputFile=".\Release\libCoinUtils.lib"
+				SuppressStartupBanner="true"
+			/>
 			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="4"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="5"
-				RuntimeTypeInfo="TRUE"
-				UsePrecompiledHeader="2"
+				RuntimeLibrary="1"
+				RuntimeTypeInfo="true"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Debug/libCoinUtils.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
+				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CompileAs="0"/>
+				CompileAs="0"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLibrarianTool"
-				OutputFile=".\Debug\libCoinUtils.lib"
-				SuppressStartupBanner="TRUE"/>
-			<Tool
-				Name="VCMIDLTool"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"/>
+				Culture="1033"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
+				Name="VCLibrarianTool"
+				OutputFile=".\Debug\libCoinUtils.lib"
+				SuppressStartupBanner="true"
+			/>
 			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -122,1018 +171,1286 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+			>
 			<File
-				RelativePath="..\..\..\src\CoinAlloc.cpp">
+				RelativePath="..\..\..\src\CoinAlloc.cpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinDenseVector.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDenseVector.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinError.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinError.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization1.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization1.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization2.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization2.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization3.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization3.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization4.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization4.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinIndexedVector.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinIndexedVector.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinLpIO.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinLpIO.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful2.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful2.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.cpp">
+				RelativePath="..\..\..\src\CoinParam.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CoinParamUtils.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPostsolveMatrix.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CoinParam.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\src\CoinParamUtils.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPostsolveMatrix.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPrePostsolveMatrix.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPrePostsolveMatrix.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveHelperFunctions.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveHelperFunctions.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.cpp">
+				RelativePath="..\..\..\src\CoinSearchTree.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CoinSearchTree.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartDual.cpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartDual.cpp"
+				>
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""/>
+						PreprocessorDefinitions=""
+					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32">
+					Name="Debug|Win32"
+					>
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"/>
+						BasicRuntimeChecks="3"
+					/>
 				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl">
+			Filter="h;hpp;hxx;hm;inl"
+			>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\Coin_C_defines.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\Coin_C_defines.h">
+				RelativePath="..\..\..\src\CoinAlloc.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CoinAlloc.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinDenseVector.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDenseVector.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinDistance.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDistance.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinError.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinError.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFinite.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFinite.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFloatEqual.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFloatEqual.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinHelperFunctions.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinHelperFunctions.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinIndexedVector.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinIndexedVector.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinLpIO.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinLpIO.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.hpp">
+				RelativePath="..\..\..\src\CoinParam.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CoinParam.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPragma.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPragma.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.hpp">
+				RelativePath="..\..\..\src\CoinSearchTree.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CoinSearchTree.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinSort.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinSort.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinTypes.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinTypes.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinUtilsAutomake.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinUtilsAutomake.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinUtilsConfig.h">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinUtilsConfig.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStart.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStart.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartDual.hpp">
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartDual.hpp"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\BuildTools\headers\configall_system.h">
+				RelativePath="..\..\..\..\BuildTools\headers\configall_system.h"
+				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\BuildTools\headers\configall_system_msc.h">
+				RelativePath="..\..\..\..\BuildTools\headers\configall_system_msc.h"
+				>
 			</File>
 		</Filter>
 	</Files>

@@ -28,112 +28,112 @@
 using namespace std;
 
 
-int main(int argc,  char* argv[]){	
-	// ###################################################################################
-	// Begin: main
-	// ###################################################################################
-   
-	// Input parameters:
-	// #1: Maximal Iterations
-	// #2: Single/multi: s m
-	// #3: Warmstart: +wsI +wsS -ws
-	// #4: Knapsack Inequalities: +ki -ki
-	// #5: TrustRegion: +tr -tr
-	// #6: Benders or detEq: +ben -ben
-	// #7: Problem Path
-	// #8: Solution Path
-
-	// Check if input is correct
-	if(argc!=9){
-		cout << "Number of parameters is not correct! Please review input!" << endl;
-		system("pause");
-		return 0;
-	}
-	if(strcmp(argv[2],"s") && strcmp(argv[2],"m")){
-		cout << "Second parameter is not correct! Please review input!" << endl;
-		system("pause");
-		return 0;
-	}
-	if(strcmp(argv[3],"-ws") && strcmp(argv[3],"+wsI") && strcmp(argv[3],"+wsS")
-		&& strcmp(argv[3],"+wsi") && strcmp(argv[3],"+wss")){
-		cout << "Third parameter is not correct! Please review input!" << endl;
-		system("pause");
-		return 0;
-	}
-	if(strcmp(argv[4],"+ki") && strcmp(argv[4],"-ki")){
-		cout << "Fourth parameter is not correct! Please review input!" << endl;
-		system("pause");
-		return 0;
-	}
-	if(strcmp(argv[5],"+tr") && strcmp(argv[5],"-tr")){
-		cout << "Sixth parameter is not correct! Please review input!" << endl;
-		system("pause");
-		return 0;
-	}
-	if(strcmp(argv[6],"+ben") && strcmp(argv[6],"-ben")){
-		cout << "Fifth parameter is not correct! Please review input!" << endl;
-		system("pause");
-		return 0;
-	}
-
-	// If input is correct, start solving the problem
-
-	// Start time measurement
-	clock_t begin=clock();
-	// Create a new Benders object, input: use single or multi cut, 
-	// use warmstart or not, use knapsack inequalities or not, use
-	// trust region or not, solve via Benders or via detEq
-	Benders* benders = new Benders(argv[2], argv[3], argv[4], argv[5], argv[6]);
-	// Initialize maximal iteration counter
-	int maxIt = atoi(argv[1]);
-	// Path of problem
-	const char * path = argv[7];
-	// Path of solution file
-	const char * solpath = argv[8];
-	// Read SMPS file
-	if(benders->readSMPS(path)==0){
-		if(benders->benders_){
-			// Solve problem with benders decomposition method
-			// Input: tolerance epsilon, maximal number of iterations
-			benders->BendersSolve(0.000001, maxIt );		
-		}
-		if(!benders->benders_){
-			// Solve problem with the deterministic equivalent
-			if(benders->detEq()==-1){
-				// End time measurement
-				clock_t end=clock();
-				cout << "Problem is infeasible" << endl;
-				// Print elapsed time 
-				cout << "Elapsed Time: " << (end-begin)/1000.0 << " sec" << endl;
-				// Delete benders object
-				delete benders;
-				return 0;
-			}		
-		}
-	}
-	// End time measurement
-	clock_t end=clock();
-	double time = (end-begin)/1000.0;
-	// Print elapsed time
-	cout << "Elapsed Time: " << time << " sec" << endl;
-	// Write solution file
-	if(benders->benders_){
-		benders->writeSolutionFileBenders(solpath, time);
-	}
-	if(!benders->benders_){
-		benders->writeSolutionFileDetEq(solpath, time);
-	}
-	// Delete benders object
-	delete benders;
-	// Pause before close program
-	system("pause");
-	return 0;
-
-
-	// ###################################################################################
-	// End: main
-	// ###################################################################################
-}
+//int main(int argc,  char* argv[]){	
+//	// ###################################################################################
+//	// Begin: main
+//	// ###################################################################################
+//   
+//	// Input parameters:
+//	// #1: Maximal Iterations
+//	// #2: Single/multi: s m
+//	// #3: Warmstart: +wsI +wsS -ws
+//	// #4: Knapsack Inequalities: +ki -ki
+//	// #5: TrustRegion: +tr -tr
+//	// #6: Benders or detEq: +ben -ben
+//	// #7: Problem Path
+//	// #8: Solution Path
+//
+//	// Check if input is correct
+//	if(argc!=9){
+//		cout << "Number of parameters is not correct! Please review input!" << endl;
+//		system("pause");
+//		return 0;
+//	}
+//	if(strcmp(argv[2],"s") && strcmp(argv[2],"m")){
+//		cout << "Second parameter is not correct! Please review input!" << endl;
+//		system("pause");
+//		return 0;
+//	}
+//	if(strcmp(argv[3],"-ws") && strcmp(argv[3],"+wsI") && strcmp(argv[3],"+wsS")
+//		&& strcmp(argv[3],"+wsi") && strcmp(argv[3],"+wss")){
+//		cout << "Third parameter is not correct! Please review input!" << endl;
+//		system("pause");
+//		return 0;
+//	}
+//	if(strcmp(argv[4],"+ki") && strcmp(argv[4],"-ki")){
+//		cout << "Fourth parameter is not correct! Please review input!" << endl;
+//		system("pause");
+//		return 0;
+//	}
+//	if(strcmp(argv[5],"+tr") && strcmp(argv[5],"-tr")){
+//		cout << "Sixth parameter is not correct! Please review input!" << endl;
+//		system("pause");
+//		return 0;
+//	}
+//	if(strcmp(argv[6],"+ben") && strcmp(argv[6],"-ben")){
+//		cout << "Fifth parameter is not correct! Please review input!" << endl;
+//		system("pause");
+//		return 0;
+//	}
+//
+//	// If input is correct, start solving the problem
+//
+//	// Start time measurement
+//	clock_t begin=clock();
+//	// Create a new Benders object, input: use single or multi cut, 
+//	// use warmstart or not, use knapsack inequalities or not, use
+//	// trust region or not, solve via Benders or via detEq
+//	Benders* benders = new Benders(argv[2], argv[3], argv[4], argv[5], argv[6]);
+//	// Initialize maximal iteration counter
+//	int maxIt = atoi(argv[1]);
+//	// Path of problem
+//	const char * path = argv[7];
+//	// Path of solution file
+//	const char * solpath = argv[8];
+//	// Read SMPS file
+//	if(benders->readSMPS(path)==0){
+//		if(benders->benders_){
+//			// Solve problem with benders decomposition method
+//			// Input: tolerance epsilon, maximal number of iterations
+//			benders->BendersSolve(0.000001, maxIt );		
+//		}
+//		if(!benders->benders_){
+//			// Solve problem with the deterministic equivalent
+//			if(benders->detEq()==-1){
+//				// End time measurement
+//				clock_t end=clock();
+//				cout << "Problem is infeasible" << endl;
+//				// Print elapsed time 
+//				cout << "Elapsed Time: " << (end-begin)/1000.0 << " sec" << endl;
+//				// Delete benders object
+//				delete benders;
+//				return 0;
+//			}		
+//		}
+//	}
+//	// End time measurement
+//	clock_t end=clock();
+//	double time = (end-begin)/1000.0;
+//	// Print elapsed time
+//	cout << "Elapsed Time: " << time << " sec" << endl;
+//	// Write solution file
+//	if(benders->benders_){
+//		benders->writeSolutionFileBenders(solpath, time);
+//	}
+//	if(!benders->benders_){
+//		benders->writeSolutionFileDetEq(solpath, time);
+//	}
+//	// Delete benders object
+//	delete benders;
+//	// Pause before close program
+//	system("pause");
+//	return 0;
+//
+//
+//	// ###################################################################################
+//	// End: main
+//	// ###################################################################################
+//}
 
 void Benders::BendersSolve(double eps, int maxIter){
 	// ###################################################################################

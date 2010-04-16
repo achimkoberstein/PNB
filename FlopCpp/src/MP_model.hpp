@@ -305,6 +305,7 @@ namespace flopc {
         int *colIndirection; //Redirect from FlopC++ Variable Index to Index used by Solver (in case of stochastic variables only..)
         int *rowIndirection;
         MP_status mSolverState;
+   public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
 
     };
