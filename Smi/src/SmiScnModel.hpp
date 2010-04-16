@@ -193,9 +193,10 @@ public:
 
 	// constructor
 	SmiScnModel():
-		osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),
+		handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
 		drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
-		solve_synch_(false),totalProb_(0),core_(NULL)
+        dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
+		solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0)
 	{ }
 
 	// destructor
@@ -233,8 +234,11 @@ private:
 	// total probability of added scenarios; used to normalize probability to one
 	double totalProb_;
 	//core model --- used for discrete distributions
+    //TODO: Changes from Corinna
+public:
 	SmiCoreData * core_;
-    // scenario tree pointer
+private:
+    // scenario tree 
 	SmiScenarioTree<SmiScnNode *> smiTree_;
 
     int* integerInd;
@@ -292,11 +296,15 @@ public:
 private:
 	inline void setRowOffset(int r) {roffset_ = r;}
 	inline void setColOffset(int c) {coffset_ = c;}
-	inline double getProb(){return prob_;}
+	
 	inline double getCondProb(){return condProb_;}
 	inline void setCondProb(double p){condProb_=p;}
 	inline void setModelProb(double p){mdl_prob_=p;}
+    //TODO: Changes from Corinna: Find another way..
+public:
 	inline SmiNodeData *getNode() {return node_;}
+    inline double getProb(){return prob_;}
+private:
 	inline void setIncludeOff() { include_=false; }
 	inline void setIncludeOn()  { include_=true; }
 	inline bool getInclude() { return include_; }
