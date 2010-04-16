@@ -9,6 +9,7 @@ boost\
 gtest\
 doxydoc\
 test_detail.xml
+SmiBenders\
 
 *.*.*
 *.ncb
