@@ -349,15 +349,15 @@ void MP::GenerateFunctor::operator()() const {
         if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
             // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
             stage = multiplicators[i]->getStage();
-            ptrRV = multiplicators[i]->getRandomVariable();
+            //ptrRV = multiplicators[i]->getRandomVariable();
             for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){
                 double temp = sideOfConstraint*(multiplicators[i]->evaluate(j));
                 scenarioValues.push_back(temp);
             }
-            if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
-                //continue; //Go to next loop
-                throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
-            }
+            //if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
+            //    //continue; //Go to next loop
+            //    throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
+            //}
         }
         else {
             sideOfConstraint *= multiplicators[i]->evaluate();
@@ -407,7 +407,7 @@ void MP::GenerateFunctor::operator()() const {
             //}
 
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
-        }
-    }
+        }//end if colNumber != outOfBound
+    }//end if rowNumber != out of bound
 }
 

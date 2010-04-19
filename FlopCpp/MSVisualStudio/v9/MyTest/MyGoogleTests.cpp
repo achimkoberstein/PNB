@@ -7,6 +7,7 @@
 #include "OsiStochasticSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
@@ -70,9 +71,74 @@ namespace {
         data2() = 10;
         MP_data data3;
         MP_data data4;
-        data4() = data3();
+        data4() = data2();
         data3() = data1() + data2();
+        MP_variable x;
 
+        MP_constraint constraint1,constraint2;
+        constraint1 = (data4() +data3())*x() <= 10;
+        constraint2 = data4()*data3()*x() <= 10;
+
+        testModel.setObjective(x());
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MAXIMIZE);
+
+
+    }
+
+    TEST_F(MP_modelTest,DacotaModel) { 
+        MP_model dacota(new OsiCpxSolverInterface()); 
+        MP_stage T(2); 
+         
+        enum {low, normal, high, numScenarios}; 
+        MP_scenario_set scen(numScenarios); 
+         
+        enum {desk, table, chair, numProducts}; 
+        MP_set P(numProducts); 
+         
+        enum {lumber, finishing, carpentry, numResources}; 
+        MP_set R(numResources); 
+         
+        MP_data resourceCost(R); 
+        resourceCost(lumber) = 2; 
+        resourceCost(finishing) = 4; 
+        resourceCost(carpentry) = 5.2; 
+         
+        MP_data resourceReq(P, R); 
+        resourceReq(desk, lumber) = 8;      resourceReq(desk, finishing) = 4;       resourceReq(desk, carpentry) = 2; 
+        resourceReq(table, lumber) = 6;     resourceReq(table, finishing) = 2;      resourceReq(table, carpentry) = 1.5; 
+        resourceReq(chair, lumber) = 1;     resourceReq(chair, finishing) = 1.5;    resourceReq(chair, carpentry) = 0.5; 
+         
+        double prices[3] = {60.0, 40.0, 10.0}; 
+        MP_data sellingPrice(&prices[0], P); 
+         
+        double scenDemand[1][numProducts][numScenarios] = 
+        { 
+            { // L     M    H 
+                {50,  150, 250}, // desk 
+                {20,  110, 250}, // table 
+                {200, 225, 500}  // chair 
+            } 
+        }; 
+        MP_random_data demand(&scenDemand[0][0][0], T, P); 
+         
+        MP_variable x(R), y(T,P); 
+         
+        MP_constraint demandConstraint(T,P), productionConstraint(R), conR(R); 
+        demandConstraint(T+1,P) = y(T+1,P) <= demand(T+1,P); 
+        productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R); 
+         
+        // Ohne diese zusätzliche Restriktion ist das Modell unbeschränkt, obwohl x(R) mit negativen Kosten in die ZF eingeht 
+        // conR(R) = x(R) <= 100; 
+         
+        dacota.setObjective( 
+            sum(P, y(T+1,P) * sellingPrice(P)) 
+          - sum(R, x(R) * resourceCost(R)) 
+        ); 
+        dacota.attach(dacota.Solver); 
+        dacota.solve(MP_model::MAXIMIZE);  
+        x.display("x (Resources)"); 
+        cout << "Finished"; 
     }
 
     TEST_F(MP_modelTest,TimoTest){
@@ -83,23 +149,25 @@ namespace {
         { // T
             {1,2} //scen
         };
-                double scenarios2[1][2] =
+        double scenarios2[1][2] =
         { // T
             {1,2} //scen
         };
-                        double scenarios3[1][2] =
+        double scenarios3[1][2] =
         { // T
             {1,2} //scen
         };
         MP_random_data rvar(&scenarios[0][0],T);
         MP_random_data rvar2(&scenarios2[0][0],T);
         MP_random_data rvar3(&scenarios3[0][0],T);
+        //MP_data blubb(T);
+        //blubb(T) = rvar(T) +rvar2(T);// + rvar2(T);
         MP_variable x(T);
         MP_constraint constraint1, constraint2(T),constraint3(T),constraint4(T);
         constraint1 = x(0) == 1;
         //This does not yet work, as rvar is only allowed once..
-        //constraint2(T+1) = x(T+1)*rvar(T+1) >= x(T);
-        //constraint3(T+1) = x(T+1) + rvar2(T+1) <= x(T); 
+        //constraint2(T+1) = x(T+1)*blubb(T) >= x(T);
+        constraint3(T+1) = x(T+1) + rvar2(T+1) <= x(T); 
         constraint4(T+1) = x(T+1) >= x(T)*(rvar3(T+1)+3); 
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
@@ -262,7 +330,7 @@ namespace {
         testModel.solve(MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(15,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
+        EXPECT_EQ(36,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
     }
 
     TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
@@ -394,26 +462,25 @@ namespace {
 
     }
 
-    //TEST_F(RandomVariableTest,RandomParamCombinationTest){
-    //    MP_model testModel2(new OsiClpSolverInterface());
-    //    double testValue = 3;
-    //    MP_stage T(2);
-    //    MP_scenario_set scen(10);
-    //    double scenarios[10] = {0,1,2,3,4,5,6,7,8,9};
-    //    double testValues[2] = {-3,3};
-    //    MP_random_data rvar(&scenarios[0],T);
-    //    MP_variable x;
-    //    MP_variable y(T);
-    //    MP_constraint constraint1(T);
-    //    MP_data testData(&testValues[0],T);
-    //    
-    //    MP_data combinedData(T);
-    //    combinedData(T) = testData(T)*rvar(T);
-    //    constraint1(T+1) = x()+y(T+1)*combinedData(T+1) >= 7;
-    //    testModel2.setObjective(x());
-    //    testModel2.attach(testModel2.Solver);
-    //    testModel2.solve(MP_model::MINIMIZE);
-    //}
+    TEST_F(RandomVariableTest,RandomParamCombinationTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        double testValue = 3;
+        MP_stage T(2);
+        MP_scenario_set scen(10);
+        double scenarios[1][10] = {{0,1,2,3,4,5,6,7,8,9}};
+        double testValues[2] = {-3,3};
+        MP_random_data rvar(&scenarios[0][0],T); //TODO: Incorrect initialization..
+        MP_variable x;
+        MP_variable y(T);
+        MP_constraint constraint1(T);
+        MP_data testData(&testValues[0],T);
+        MP_random_data combinedData(T);
+        combinedData(T) = testData(T)*rvar(T); // Necessitates an update for index expressions? Indices on the right hand side should store the same index as item on the left hand side, so if left hand side item changes, all other indices change too. This necessitates an index update mechanism, so that they are linked. => Indices need to be stored as pointers. 
+        constraint1(T+1) = x()+y(T+1)*combinedData(T+1) >= 7;
+        testModel2.setObjective(x());
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MINIMIZE);
+    }
 
     TEST(UnitTest,OldUnitTest){
         enum {airA, airB, airC, airD, numA};
@@ -561,12 +628,13 @@ namespace {
 
         y.display("y second model");
     }
-    
+
 
 } //end namespace
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
+    //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
     return RUN_ALL_TESTS();
 }

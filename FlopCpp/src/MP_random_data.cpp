@@ -4,8 +4,8 @@
 #include <vector>
 #include <set>
 
-#include <boost/ptr_container/ptr_array.hpp>
 #include <boost/random.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 #include "MP_expression.hpp"
 #include "MP_model.hpp"
@@ -16,11 +16,11 @@ namespace flopc{
 
     typedef boost::mt19937 base_generator_type; //Set RNG
     typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
-    
+
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
-    class MP_random_data_impl : public RowMajor, public Functor , public Named {
+    class MP_random_data_impl : public RowMajor, public Functor , public Named, public boost::enable_shared_from_this<MP_random_data_impl> {
         friend class RandomDataRef;
 
     public:
@@ -32,9 +32,9 @@ namespace flopc{
             const MP_set_base &s4 = MP_set::getEmpty(), 
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) { 
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) { 
                 initialize();
-       }; 
+        }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
         MP_random_data_impl(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
@@ -43,7 +43,7 @@ namespace flopc{
             const MP_set_base &s4 = MP_set::getEmpty(), 
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) {  //Consistency check?
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) {  //Consistency check?
                 initialize();
                 // Very ugly code..
                 // What is done here: Arrays stage index is one less than normal stage index because first stage needs no RV. 
@@ -78,7 +78,7 @@ namespace flopc{
             const MP_set_base &s4 = MP_set::getEmpty(), 
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),values(new RandomVariable*[size()]),manageData(true) {  //Consistency check?
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) {  //Consistency check?
                 initialize();
                 int scen = MP_model::getCurrentModel()->ScenSet().size();
                 //Identify stage set: The set with getStage > 0 is the stage set.
@@ -110,7 +110,7 @@ namespace flopc{
         ~MP_random_data_impl(){
             if(manageData){//Iterate through array and delete pointer one-by-one.
                 for (int i = 0; i < size(); i++)
-                        delete values[i];
+                    delete values[i];
                 delete [] values;
             }
 
@@ -136,6 +136,19 @@ namespace flopc{
             }
         }
 
+        RandomDataRef& operator()(
+            const MP_index_exp& d1, 
+            const MP_index_exp& d2, 
+            const MP_index_exp& d3,
+            const MP_index_exp& d4, 
+            const MP_index_exp& d5) {
+                Coin::SmartPtr<RandomDataRef> tempPtr(new RandomDataRef(this->shared_from_this(), d1, d2, d3, d4, d5));
+                c->propagateIndexExpression(d1,d2,d3,d4,d5);
+                myrefs.push_back(tempPtr);
+                return *tempPtr; 
+
+        }
+
 
     private:
         void createRandomVariableFromIndices(double* arr,int indexForArr,int indexForValues, int scen){
@@ -152,8 +165,10 @@ namespace flopc{
 
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
         MP_index i1,i2,i3,i4,i5;
+        Constant c; //This constant gets set by corresponding RandomDataRef
         //boost::ptr_vector<RandomVariable> values;
-        RandomVariable** values; //Array of pointers to RandomVariables
+        RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
+        std::vector<Coin::SmartPtr<RandomDataRef> > myrefs;
         bool manageData;
     };
 
@@ -174,10 +189,9 @@ namespace flopc{
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
-    const boost::shared_ptr<RandomDataRef> MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
+    RandomDataRef& MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
     {
-        boost::shared_ptr<RandomDataRef> temp(new RandomDataRef(ptrImpl, d1, d2, d3, d4, d5));
-        return temp; 
+        return ptrImpl->operator()(d1,d2,d3,d4,d5);
     }
 
     void MP_random_data::operator()() const
@@ -196,16 +210,15 @@ namespace flopc{
 
     }
 
-    void MP_random_data_impl::initialize() //TODO: How to do that in abetter way? Think about that..
+    void MP_random_data_impl::initialize() //TODO: How to do that in a better way? Think about that..
     {
         for (int i = 0; i < size(); i++)
-        	values[i] = 0;
+            values[i] = 0;
     }
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : seed(0),values(),valuesMap(),defaultSampleSize(0),additiveConstant(0),multiplicativeConstant(1),stage(0),colIndex(0),rowIndex(0) {
-        
+    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),stage(0),colIndex(0),rowIndex(0) {
     } 
 
 
@@ -265,16 +278,6 @@ namespace flopc{
         values.reserve(howMany);
     }
 
-    double RandomVariable::applyConstant( double val )
-    {
-        if (multiplicativeConstant != 1){
-            val *= multiplicativeConstant;
-        }
-        if( additiveConstant != 0){
-            val+=additiveConstant;
-        }
-        return val;
-    }
     //flopc::RandomVariable& RandomVariable::operator=( const flopc::RandomVariable & )
     //{
     //    return *this;
@@ -287,7 +290,8 @@ namespace flopc{
         const MP_index_exp& i3,
         const MP_index_exp& i4,
         const MP_index_exp& i5) :
-    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(0) { 
+    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c) {
+               
     }
 
     RandomDataRef::RandomDataRef( const RandomDataRef& ref)
@@ -301,6 +305,31 @@ namespace flopc{
         C(ref.C),
         B(ref.B)
     {}
+
+    void RandomDataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const {
+        I1 = i1;
+        I2 = i2;
+        I3 = i3;
+        I4 = i4;
+        I5 = i5;
+    }
+
+    const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
+        //TODO: Delete current values of this RandomDataRef.. 
+        // Set Constant to RV
+        RV->c = c;
+        //((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
+        // We need to update all index expression to point to the index expression used in this RandomDataRef..
+        return *this;
+    }
+
+    const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
+        //Check for assignment to self
+        if (this == &r)
+            return *this;
+        return operator=(Constant(r)); //TODO: Do not do this, it is evil..
+    }
+
 
     //void RandomDataRef::evaluate_lhs( const RandomVariable &rv ) const
     //{
@@ -318,8 +347,10 @@ namespace flopc{
     //    }
     //}
 
-    double RandomDataRef::evaluate() const
+    double RandomDataRef::evaluate(int scenario) const
     {
+        if (scenario == -1) //This call happens in case we are not aware of scenarios: Coefficient generation: getValue
+            return 0;
         //Check for sanity of indices
         int i1 = RV->S1.check(I1->evaluate());
         int i2 = RV->S2.check(I2->evaluate());
@@ -332,9 +363,10 @@ namespace flopc{
         if ( i ==  outOfBound ) {
             return 0;
         } else {
-            //TODO: What to return? Expected value?
-            //return RV->values[i];
-            return 1; //Fix this
+            if (RV->values[i] != 0) // MP_random_data is a random variable
+                return RV->values[i]->getSampledValue(scenario);
+            else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
+                return RV->c->evaluate(scenario);
         }
     }
 
@@ -404,11 +436,7 @@ namespace flopc{
     void ScenarioRandomVariable::sample(int howMany) 
     {
         //Apply the constant values to every element.
-        for (std::vector<double>::size_type i = 0; i < values.size();++i){
-            values[i] = applyConstant(values[i]);
-        }
-        //Ensure that values are in ascending order
-        //std::sort(values.begin(),values.end());
+
     }
 
     ScenarioRandomVariable::~ScenarioRandomVariable()
@@ -487,7 +515,7 @@ namespace flopc{
         //Define RNG and 01UniformRNG using RNG
         base_generator_type rng(seed);
         uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
-        
+
         // We want to compute values from start to end with a stepWidth of step (double)
         // So we first compute size of domain : (end-start)*stepWidth
         int domainSize = round((end-start)/step);
@@ -495,14 +523,13 @@ namespace flopc{
         typedef boost::uniform_int<> distr_type;
         boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
-            values.push_back(applyConstant(start+step*variateGen()));
+            values.push_back(start+step*variateGen());
         }
-        // Ensure values are in ascending order
-        //std::sort(values.begin(),values.end());
+
 
     }
 
-   
+
 
     ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to ) : ContinuousRandomVariable(),start(from),end(to)
     {
@@ -531,7 +558,7 @@ namespace flopc{
         double domainSize = end-start;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
-            values.push_back(applyConstant(start+variateGen()));
+            values.push_back(start+variateGen());
         }
         //Ensure ascending order
         //std::sort(values.begin(),values.end());

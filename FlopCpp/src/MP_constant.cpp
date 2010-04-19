@@ -21,33 +21,32 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return I->evaluate(); 
         }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+        }
+
         const MP_index_exp I;
     };
 
     class Constant_random_variable : public Constant_base{
         friend class Constant;
-        friend Constant operator*(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
-        friend Constant operator+(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
-        friend Constant operator-(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
-        friend Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
     private:
-        Constant_random_variable(const boost::shared_ptr<RandomDataRef> r): r(r){}
+        Constant_random_variable(const RandomDataRef& r): r(r){}
 
         virtual double evaluate(int scenario) const {
-            //TODO: When is this method called? When the RV is a TerminalExpression, this means it is a standalone variable. TerminalExpression.getValues finally results in this call to evaluate. If this is the case we would like to return the additive constant?!
-            return r->getRandomVariable()->getSampledValue(scenario);
+            return r.evaluate(scenario);
         }
 
         virtual int getStage() const{
-            return r->getStage();
+            return r.getStage();
         }
 
         virtual RandomVariable* getRandomVariable() const {
-            return r->getRandomVariable();
+            return r.getRandomVariable();
         }
-
-
-        const boost::shared_ptr<RandomDataRef> r;
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            r.propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
+        const RandomDataRef& r;
     };
 
     class Constant_double : public Constant_base {
@@ -63,6 +62,9 @@ namespace flopc {
         RandomVariable* getRandomVariable() const {
             return 0;
         }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+
+        }
         double D;
     };
 
@@ -73,8 +75,11 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return fabs(C->evaluate(scenario));
         }
-        int getStage() const {
+        virtual int getStage() const {
             return C->getStage();
+        }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
         Constant C;
     };
@@ -97,6 +102,9 @@ namespace flopc {
         int getStage() const {
             return C->getStage();
         }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            C->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
         Constant C;
     };
     Constant pos(const Constant& c) {
@@ -110,8 +118,11 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return std::ceil(C->evaluate(scenario));
         }
-        int getStage() const {
+        virtual int getStage() const {
             return C->getStage();
+        }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
         Constant C;
     };
@@ -126,8 +137,11 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return std::floor(C->evaluate(scenario));
         }
-        int getStage() const {
+        virtual int getStage() const {
             return C->getStage();
+        }
+                virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
         Constant C;
     };
@@ -145,6 +159,10 @@ namespace flopc {
             RandomVariable* ptrA = left->getRandomVariable();
             return ptrA;
         }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            left->propagateIndexExpression(d1,d2,d3,d4,d5);
+            right->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
         Constant left, right;
     };
 
@@ -155,7 +173,7 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return std::min(left->evaluate(scenario),right->evaluate(scenario));
         }
-        int getStage() const {
+        virtual int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
     };
@@ -181,7 +199,6 @@ namespace flopc {
     }
 
     class Constant_plus : public Constant_exp {
-        friend Constant operator+(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
         friend Constant operator+(const Constant& a, const Constant& b);
         friend Constant operator+(MP_index& a, MP_index& b);
     private:
@@ -206,21 +223,14 @@ namespace flopc {
     Constant operator+(const Constant& a, const Constant& b) {
         return new Constant_plus(a,b);
     }
-    Constant operator+(const boost::shared_ptr<RandomDataRef> a, const Constant& b) {
-        Constant_random_variable* rvConst = new Constant_random_variable(a);
-        return new Constant_plus(a,b);
-    }
-    Constant operator+(const Constant& b,const boost::shared_ptr<RandomDataRef> a) {
-        return operator+(a,b);
-    }
 
     Constant operator+(MP_index& a, MP_index& b) {
         return new Constant_plus(Constant(a),Constant(b));
     }
 
     class Constant_minus : public Constant_exp {
-        friend Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
-        friend Constant operator-(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
+        friend Constant operator-(const Constant& b,const RandomDataRef& a);
+        friend Constant operator-(const RandomDataRef& a, const Constant& b);
         friend Constant operator-(const Constant& a, const Constant& b);
         friend Constant operator-(MP_index& a, MP_index& b);
     private:
@@ -241,8 +251,7 @@ namespace flopc {
         }
     };
 
-    Constant operator-(const boost::shared_ptr<RandomDataRef> a, const Constant& b){
-        Constant_random_variable* rvConst = new Constant_random_variable(a);
+    Constant operator-(const RandomDataRef& a, const Constant& b){
         return new Constant_minus(a,b);
     }
 
@@ -263,6 +272,12 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return -left->evaluate(scenario); 
         }
+        virtual int getStage() const {
+            return left->getStage();
+        }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            left->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
         Constant left;
     };
     Constant operator-(const Constant& a) {
@@ -271,9 +286,6 @@ namespace flopc {
 
     class Constant_mult : public Constant_exp {
         friend Constant operator*(const Constant& a, const Constant& b);
-        friend Constant operator*(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
-        friend Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
-        friend Constant operator/(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
     private:
         Constant_mult(const Constant& i, const Constant& j) : Constant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
@@ -291,21 +303,6 @@ namespace flopc {
                 return right->getRandomVariable();
         }
     };
-
-    Constant operator-(const Constant& b,const boost::shared_ptr<RandomDataRef> a){
-        Constant_random_variable* rvConst = new Constant_random_variable(a);
-        return new Constant_minus(b,a);
-
-    }
-
-    Constant operator*(const boost::shared_ptr<RandomDataRef> a, const Constant& b) {
-        Constant_random_variable* rvConst = new Constant_random_variable(a);
-        return new Constant_mult(rvConst,b); //In this way, RV stays on the left and is TerminalExpression..
-    }
-
-    Constant operator*(const Constant& b,const boost::shared_ptr<RandomDataRef> a) {
-        return operator*(a,b);
-    }
 
     Constant operator*(const Constant& a, const Constant& b) {
         return new Constant_mult(a,b);
@@ -330,14 +327,6 @@ namespace flopc {
                 return right->getRandomVariable();
         }
     };
-
-    Constant operator/(const boost::shared_ptr<RandomDataRef> a, const Constant& b) {
-        return new Constant_mult(a,1/b);
-    }
-
-    Constant operator/(const Constant& b,const boost::shared_ptr<RandomDataRef> a) {
-        throw not_implemented_error();
-    }
 
     Constant operator/(const Constant& a, const Constant& b) {
         return new Constant_div(a,b);
@@ -380,6 +369,12 @@ namespace flopc {
             d.forall(MF);
             return MF.the_max;
         }
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            exp->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
+        virtual int getStage() const{
+            return exp->getStage();
+        }
         class MaxFunctor : public Functor {
         public:
             MaxFunctor(Constant exp) : C(exp), the_max(DBL_MIN),scenario(-1) {}
@@ -414,6 +409,13 @@ namespace flopc {
             d.forall(this);
             return the_min;
         }
+        virtual int getStage() const{
+            return exp->getStage();
+        }
+
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            exp->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
 
         MP_domain d;
         Constant exp;
@@ -434,6 +436,13 @@ namespace flopc {
             d.forall(this);
             return the_sum;
         }
+        virtual int getStage() const {
+            return exp->getStage();
+        }
+
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            exp->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
 
         MP_domain d;
         Constant exp;
@@ -453,6 +462,13 @@ namespace flopc {
             this->scenario = scenario;
             d.forall(this);
             return the_product;
+        }
+        virtual int getStage() const {
+            return exp->getStage();
+        }
+
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+            exp->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
 
         MP_domain d;
@@ -486,8 +502,8 @@ namespace flopc {
     Constant::Constant(int d) :
     Handle<Constant_base*>(new Constant_double(d)) {}
 
-    Constant::Constant( const boost::shared_ptr<RandomDataRef> ptrRVR ) :
-    Handle<Constant_base*>(new Constant_random_variable(ptrRVR)) {}
+    Constant::Constant( const RandomDataRef& r ) :
+    Handle<Constant_base*>(new Constant_random_variable(r)) {}
 
 } // End of namespace flopc
 
