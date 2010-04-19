@@ -7,57 +7,52 @@
 
 using namespace std;
 
-SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag)
+SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices)
 {	//Copies all values already stored in the Solver..
-	int nrow = osi->getNumRows();
-	int ncol = osi->getNumCols();
-	CoinPackedVector *drlo = new CoinPackedVector(nrow,osi->getRowLower());
-	CoinPackedVector *drup = new CoinPackedVector(nrow,osi->getRowUpper());
-	CoinPackedVector *dclo = new CoinPackedVector(ncol,osi->getColLower());
-	CoinPackedVector *dcup = new CoinPackedVector(ncol,osi->getColUpper());
-	CoinPackedVector *dobj = new CoinPackedVector(ncol,osi->getObjCoefficients());
+    int nrow = osi->getNumRows();
+    int ncol = osi->getNumCols();
+    CoinPackedVector *drlo = new CoinPackedVector(nrow,osi->getRowLower());
+    CoinPackedVector *drup = new CoinPackedVector(nrow,osi->getRowUpper());
+    CoinPackedVector *dclo = new CoinPackedVector(ncol,osi->getColLower());
+    CoinPackedVector *dcup = new CoinPackedVector(ncol,osi->getColUpper());
+    CoinPackedVector *dobj = new CoinPackedVector(ncol,osi->getObjCoefficients());
 
-	CoinPackedMatrix *matrix = new CoinPackedMatrix(*osi->getMatrixByRow());
-	matrix->eliminateDuplicates(0.0);
+    CoinPackedMatrix *matrix = new CoinPackedMatrix(*osi->getMatrixByRow());
+    matrix->eliminateDuplicates(0.0);
 
-	gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup);
+    gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup,integerIndices,osi->getNumIntegers());
 
-		delete matrix;
-		delete drlo;
-		delete drup;
-		delete dclo;
-		delete dcup;
-		delete dobj;
-
-
-
+    delete matrix;
+    delete drlo;
+    delete drup;
+    delete dclo;
+    delete dcup;
+    delete dobj;
 }
 
 SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag)
 {
-	int nrow = osi->getNumRows();
-	int ncol = osi->getNumCols();
-	CoinPackedVector *drlo = new CoinPackedVector(nrow,osi->getRowLower());
-	CoinPackedVector *drup = new CoinPackedVector(nrow,osi->getRowUpper());
-	CoinPackedVector *dclo = new CoinPackedVector(ncol,osi->getColLower());
-	CoinPackedVector *dcup = new CoinPackedVector(ncol,osi->getColUpper());
-	CoinPackedVector *dobj = new CoinPackedVector(ncol,osi->getObjCoefficients());
+    int nrow = osi->getNumRows();
+    int ncol = osi->getNumCols();
+    CoinPackedVector *drlo = new CoinPackedVector(nrow,osi->getRowLower());
+    CoinPackedVector *drup = new CoinPackedVector(nrow,osi->getRowUpper());
+    CoinPackedVector *dclo = new CoinPackedVector(ncol,osi->getColLower());
+    CoinPackedVector *dcup = new CoinPackedVector(ncol,osi->getColUpper());
+    CoinPackedVector *dobj = new CoinPackedVector(ncol,osi->getObjCoefficients());
 
-	CoinPackedMatrix *matrix = new CoinPackedMatrix(*osi->getMatrixByRow());
-	matrix->eliminateDuplicates(0.0);
+    CoinPackedMatrix *matrix = new CoinPackedMatrix(*osi->getMatrixByRow());
+    matrix->eliminateDuplicates(0.0);
 
-	gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup);
+    gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup);
 
-		delete matrix;
-		delete drlo;
-		delete drup;
-		delete dclo;
-		delete dcup;
-		delete dobj;
-
-
-
+    delete matrix;
+    delete drlo;
+    delete drup;
+    delete dclo;
+    delete dcup;
+    delete dobj;
 }
+
 void
 SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 							   int *cstag,int *rstag,
@@ -66,11 +61,15 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 							   CoinPackedVector *dcup,
 							   CoinPackedVector *dobj,
 							   CoinPackedVector *drlo,
-							   CoinPackedVector *drup)
+							   CoinPackedVector *drup,
+                               int* integerIndices, int integerIndicesLength)
 {
 	int i;
 	nrow_ = nrow;
 	ncol_ = ncol;
+    integerIndices_ = new int[integerIndicesLength];
+    integerLength_ = integerIndicesLength;
+    memcpy(integerIndices_,integerIndices,integerIndicesLength);
 
 	// store number stages
 	nstag_ = nstag;
@@ -165,14 +164,10 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 	//Christian: Create core nodes for every stage
 	for (i=0;i<nstag_;i++)
 	{
-
 		SmiNodeData *node = new SmiNodeData(i,this,
 			matrix,dclo,dcup,dobj,drlo,drup);
-
 		node->setCoreNode();
-
 		nodes_.push_back(node);
-
 		int nrow=this->getNumRows(i);
 		int ncol=this->getNumCols(i);
 		int irow=this->getRowStart(i);
@@ -269,6 +264,7 @@ SmiCoreData::~SmiCoreData()
 	delete [] cdclo_;
 	delete [] cdcup_;
 	delete [] cdobj_;
+    delete [] integerIndices_;
 	for (unsigned int i=1; i<nodes_.size(); ++i)
 	  delete nodes_[i];
 

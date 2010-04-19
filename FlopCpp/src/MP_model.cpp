@@ -497,7 +497,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                       for (int k=begin; k<end; k++) {
                           if (stage.size()){
                               if (rowIndirection[k] != -2) //Else empty row
-                                bl[rowIndirection[k]] = - inf;
+                                  bl[rowIndirection[k]] = - inf;
                           }
                           else
                               bl[k] = -inf;
@@ -507,7 +507,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                       for (int k=begin; k<end; k++) {
                           if (stage.size()){
                               if (rowIndirection[k] != -2) //Else empty row
-                                bu[rowIndirection[k]] = inf;
+                                  bu[rowIndirection[k]] = inf;
                           }
                           else
                               bu[k] = inf;
@@ -578,6 +578,23 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         double elm = coefs[i]->val;
         c[col] = elm;
     } 
+    // Set integer information..
+    std::vector<int> integerIndices;
+    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+        int begin = (*i)->offset;
+        int end = (*i)->offset+(*i)->size();
+        if ((*i)->type == discrete) {
+            for (int k=begin; k<end; k++) {
+                if (stage.size()){
+                    integerIndices.push_back(colIndirection[k]);
+                }
+                else{
+                    integerIndices.push_back(k);
+                }
+            }
+        }
+    }
+    std::sort(integerIndices.begin(),integerIndices.end()); //Sort indices in ascending order
 
     ////
     // Core Model generated..
@@ -599,7 +616,14 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         printMatrix(&matrix,n,m,l,u,c,bl,bu,colStage,rowStage);
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
-        SmiCoreData *osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+        SmiCoreData *osiCore = 0;
+        if (!integerIndices.empty()){
+            Solver->setInteger(&integerIndices[0],integerIndices.size());
+            osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0]); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+        }
+        else {
+            osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+        }
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         //TODO: Think about that. Maybe the attach function should just set the SmiCoreData object and return with that
@@ -612,21 +636,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
     else {
         Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
+        if (!integerIndices.empty())
+            Solver->setInteger(&integerIndices[0],integerIndices.size());
         printMatrix( const_cast<CoinPackedMatrix*>(Solver->getMatrixByRow()),n,m,l,u,c,bl,bu,colStage,rowStage);
     }
-    //We need indirection here to set the correct variables..
-    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-        int begin = (*i)->offset;
-        int end = (*i)->offset+(*i)->size();
-        if ((*i)->type == discrete) {
-            for (int k=begin; k<end; k++) {
-                if (stage.size())
-                    Solver->setInteger(colIndirection[k]); //Set integer in SmiCoreData.. TODO
-                else
-                    Solver->setInteger(k);
-            }
-        }
-    }
+
     mSolverState = MP_model::ATTACHED;
 
 #pragma region cleanUp;
@@ -984,25 +998,6 @@ namespace flopc {
         }
         return smiModel;
     }
-
-    ////Check if we have a new scenario to add: Check if values differ from previous round.
-    ////If we are at the first scenario we add the values. 
-    //// Or: ancestor is already defined. this means we start a new node with respect to last stage
-    //// Or: Our values differ from previous round: We start a new node
-    //if (curScen == 0 || ancScenVec[curScen] != -1 || differFromPrevious(randomVariableVector,curStage,curScen,nextScen)){ //We need to look not only at the first but at the first scenario with respect to the current "node"                   
-    //    //Define bookkeeping stuff for scenario tree generation: Ancestor of scenario and branchStage
-    //    if (curStage == 1){ //In the first stage, every ancestor is set to scenario 0 (also if this is not exactly true
-    //        ancScenVec[curScen]=0;
-    //        branchStageVec[curScen]=curStage;
-    //    }
-    //    else{ 
-    //        if (ancScenVec[curScen] == -1){ //If we are in the other stages AND ancScen not defined, define it now (last case of if clause above)
-    //            ancScenVec[curScen]=curScen-1;
-    //            branchStageVec[curScen]=curStage;
-    //        }
-    //    }
-    //}
-
 
 
 

@@ -36,6 +36,7 @@ namespace flopc {
         //Get Value via current settings for MP_index_exp
         virtual double evaluate(int scenario) const;
         virtual int getStage() const;
+        virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
         const DataRef& operator=(const DataRef& r); 
         const DataRef& operator=(const Constant& c);
 
@@ -51,7 +52,7 @@ namespace flopc {
         DataRef(const DataRef&);
 
         MP_data* D;
-        MP_index_exp I1,I2,I3,I4,I5;
+        mutable MP_index_exp I1,I2,I3,I4,I5;
         Constant C;
         int stochastic;
         MP_boolean B;
@@ -117,6 +118,11 @@ namespace flopc {
 
         ~MP_data() {
             if (manageData == true) delete[] v;
+            //Delete DataRefs ?
+            if (!myrefs.empty()){
+                
+            }
+
         }
 
         /// Used to bind and deep copy data into the MP_data data structure.

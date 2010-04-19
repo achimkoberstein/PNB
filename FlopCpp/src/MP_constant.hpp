@@ -13,6 +13,7 @@ namespace flopc {
     //Forward Declaration for Constant Class
     class RandomVariable;
     class Constant_random_variable;
+    class MP_index_exp;
 
     /** @brief Base class for all "constant" types of data.
     @ingroup INTERNAL_USE
@@ -31,6 +32,10 @@ namespace flopc {
         virtual RandomVariable* getRandomVariable() const {
             return 0; // If we want to get a RandomVariable, but no subclass returns one, return 0 to indicate there is no RandomVariable present..
         }
+
+        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const = 0;
+
+
 
     protected:
         Constant_base() : count(0) {}
@@ -55,7 +60,7 @@ namespace flopc {
     class Constant : public Handle<Constant_base*> {
     public:
         Constant(const MP_index_exp& i);
-        Constant(const boost::shared_ptr<RandomDataRef> ptrRVR);
+        Constant(const RandomDataRef& r);
         Constant(const DataRef& d);
         Constant(double d);
         Constant(int d);
@@ -142,9 +147,6 @@ namespace flopc {
     @param b second constant
     @return the result of multiplying the constants.
     */
-    //Constant operator*(const Constant& a, const Constant_random_variable& b);
-    Constant operator*(const boost::shared_ptr<RandomDataRef> a, const Constant& b);
-    Constant operator*(const Constant& b,const boost::shared_ptr<RandomDataRef> a);
     Constant operator*(const Constant& a, const Constant& b);
     /** @brief Returns the quotient of two constants.
     @ingroup PublicInterface

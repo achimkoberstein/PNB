@@ -36,7 +36,7 @@ namespace flopc {
 
 
 
-        //Check if given integer is falid. If not return outOfBound. In Case of cyclic return i mod size.
+        //Check if given integer is valid. If not return outOfBound. In Case of cyclic return i mod size.
         int check(int i) const {
             if ((i>=0) && (i<size())) {
                 return i;

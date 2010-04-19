@@ -40,7 +40,7 @@ const DataRef& DataRef::operator=(const DataRef& r) {
 }
 
 void DataRef::operator()() const {
-    evaluate_lhs(C->evaluate());
+    evaluate_lhs(C->evaluate()); 
 }
 
 DataRef& DataRef::such_that(const MP_boolean& b) {
@@ -64,10 +64,11 @@ double DataRef::evaluate(int scenario) const {
     // Compute index in flattened multidimensional array
     int i = D->f(i1,i2,i3,i4,i5);
     // Return value
-    if ( i ==  outOfBound ) {
+    if ( i == outOfBound ) { //This is interesting behaviour. What happens if indexing expressions are so that multiplicative stuff needs to be done? Zero migth be the correct answer?
         return 0;
-    } else {
-        return D->v[i];
+    } else { //What would happen if we would evaluate C?
+         return D->v[i];
+        //return C->evaluate(scenario);
     }
 }
 
@@ -129,11 +130,17 @@ DataRef& flopc::DataRef::probability( double p )
 
 DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli5 /*= MP_index_exp::getEmpty() */ )
 {
-    //TODO: Why do we return more than one DataRefs? Why do we return only a new DataRef?
-    //if (myrefs.empty()){
-        myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
-        return *myrefs.back();
-    //}
-    //else
-    //    return *myrefs.back();
+    // Why do we return more than one DataRefs? Why do we return only a new DataRef?
+    //Answer: Depends on the calling context, depending on the index expressions. These can be different from one call to another and we need different DataRef to obey the indexation.
+    myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
+    return *myrefs.back();
+
 }
+
+    void DataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const{
+        I1 = i1;
+        I2 = i2;
+        I3 = i3;
+        I4 = i4;
+        I5 = i5;
+    }
