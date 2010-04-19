@@ -80,6 +80,16 @@ void MP_constraint::insertVariables(set<MP_variable*>& v) {
     }
 }
 
+void MP_constraint::insertRandomVariables(std::set<RandomVariable*>& v){
+        if (left.operator->()!=0) {
+        left->insertRandomVariables(v);
+    }
+    if (right.operator->()!=0) {
+        right->insertRandomVariables(v);
+    }
+}
+
+
 void MP_constraint::display(string s) const {
     cout<<s<<endl;
     if (offset >=0) {

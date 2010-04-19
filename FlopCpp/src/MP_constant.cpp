@@ -23,6 +23,10 @@ namespace flopc {
         }
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
         }
+                       virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            
+            
+        }  
 
         const MP_index_exp I;
     };
@@ -46,6 +50,10 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             r.propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                       virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            r.insertRandomVariables(v);
+            
+        }  
         const RandomDataRef& r;
     };
 
@@ -65,6 +73,10 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
 
         }
+                       virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+           
+            
+        }  
         double D;
     };
 
@@ -81,6 +93,10 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                       virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            C->insertRandomVariables(v);
+            
+        }  
         Constant C;
     };
     Constant abs(const Constant& c) {
@@ -105,6 +121,10 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                       virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            C->insertRandomVariables(v);
+            
+        }  
         Constant C;
     };
     Constant pos(const Constant& c) {
@@ -124,6 +144,10 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                       virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            C->insertRandomVariables(v);
+            
+        }  
         Constant C;
     };
     Constant ceil(const Constant& c) {
@@ -143,6 +167,10 @@ namespace flopc {
                 virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             C->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                 virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            C->insertRandomVariables(v);
+            
+        }  
         Constant C;
     };
     Constant floor(const Constant& c) {
@@ -162,6 +190,10 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             left->propagateIndexExpression(d1,d2,d3,d4,d5);
             right->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
+                virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            left->insertRandomVariables(v);
+            right->insertRandomVariables(v);
         }
         Constant left, right;
     };
@@ -278,6 +310,9 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             left->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            left->insertRandomVariables(v);
+        }
         Constant left;
     };
     Constant operator-(const Constant& a) {
@@ -372,6 +407,9 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             exp->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            exp->insertRandomVariables(v);
+        }
         virtual int getStage() const{
             return exp->getStage();
         }
@@ -416,6 +454,9 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             exp->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            exp->insertRandomVariables(v);
+        }
 
         MP_domain d;
         Constant exp;
@@ -443,6 +484,9 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             exp->propagateIndexExpression(d1,d2,d3,d4,d5);
         }
+                virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            exp->insertRandomVariables(v);
+        }
 
         MP_domain d;
         Constant exp;
@@ -469,6 +513,9 @@ namespace flopc {
 
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             exp->propagateIndexExpression(d1,d2,d3,d4,d5);
+        }
+                virtual void insertRandomVariables(std::set<RandomVariable*>& v) const {
+            exp->insertRandomVariables(v);
         }
 
         MP_domain d;

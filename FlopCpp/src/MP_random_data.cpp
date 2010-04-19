@@ -149,6 +149,8 @@ namespace flopc{
 
         }
 
+        
+
 
     private:
         void createRandomVariableFromIndices(double* arr,int indexForArr,int indexForValues, int scen){
@@ -417,6 +419,15 @@ namespace flopc{
         throw not_implemented_error();
         //TODO: If C is not a constant_random_variable, something went wrong. Obviously
         //evaluate_lhs(C->evaluate());
+    }
+
+    void RandomDataRef::insertRandomVariables(std::set<RandomVariable*>& v) const{
+        //Insert all variables available in values** array
+        for (int i = 0; i < RV->size();i++){
+            if (RV->values[i] != 0){
+                v.insert(RV->values[i]);
+            }
+        }
     }
 
 

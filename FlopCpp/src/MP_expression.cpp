@@ -110,6 +110,10 @@ namespace flopc {
         }
         void insertVariables(set<MP_variable*>& v) const {}
 
+        void insertRandomVariables(std::set<RandomVariable*>& v) const {
+         C->insertRandomVariables(v);
+        }
+
         virtual RandomVariable* getRandomVariable() const {
             return C->getRandomVariable();
         }
@@ -126,6 +130,11 @@ namespace flopc {
              void insertVariables(set<MP_variable*>& v) const {
                  left->insertVariables(v);
                  right->insertVariables(v);
+             }
+
+            void insertRandomVariables(std::set<RandomVariable*>& v) const {
+                 left->insertRandomVariables(v);
+                 right->insertRandomVariables(v);
              }
 
              MP_expression left,right;
@@ -189,6 +198,9 @@ namespace flopc {
            void insertVariables(set<MP_variable*>& v) const {
                right->insertVariables(v);
            }
+           void insertRandomVariables(std::set<RandomVariable*>& v) const {
+               left->insertRandomVariables(v);
+           }
            Constant left;
            MP_expression right;
     };
@@ -210,6 +222,9 @@ namespace flopc {
            }
            void insertVariables(set<MP_variable*>& v) const {
                left->insertVariables(v);
+           }
+           void insertRandomVariables(std::set<RandomVariable*>& v) const {
+               right->insertRandomVariables(v);
            }
            MP_expression left;
            Constant right;
@@ -234,6 +249,9 @@ namespace flopc {
         }
         void insertVariables(set<MP_variable*>& v) const {
             exp->insertVariables(v);
+        }
+        void insertRandomVariables(std::set<RandomVariable*>& v) const {
+               exp->insertRandomVariables(v);
         }
 
         class SumFunctor : public Functor {

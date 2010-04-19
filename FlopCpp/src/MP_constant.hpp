@@ -5,7 +5,10 @@
 #ifndef _MP_constant_hpp_
 #define _MP_constant_hpp_
 
+#include <set>
+
 #include "MP_utilities.hpp"
+
 
 
 namespace flopc {
@@ -14,6 +17,8 @@ namespace flopc {
     class RandomVariable;
     class Constant_random_variable;
     class MP_index_exp;
+    class MP_random_data;
+    class RandomVariable;
 
     /** @brief Base class for all "constant" types of data.
     @ingroup INTERNAL_USE
@@ -34,6 +39,10 @@ namespace flopc {
         }
 
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const = 0;
+
+        virtual void insertRandomVariables(std::set<RandomVariable*>& v) const = 0;
+
+
 
 
 
