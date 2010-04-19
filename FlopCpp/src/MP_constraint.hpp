@@ -242,6 +242,8 @@ namespace flopc {
 
         void insertVariables(set<MP_variable*>& v);
 
+        void insertRandomVariables(std::set<RandomVariable*>& v);
+
         void operator=(const Constraint& v); 
 
         void display(string s="") const;
