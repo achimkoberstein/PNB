@@ -534,7 +534,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         l[j] = 0.0;
         u[j] = inf;
     }
-    //Set Bounds obtained via MP_variable
+    //Set Bounds obtained via MP_variable via direct access
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         for (int k=0; k<(*i)->size(); k++) {
             if (stage.size()){
@@ -557,7 +557,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
     messenger->objectiveDebug(cfs);
     assemble(cfs,coefs);
-    //add random variables (if any) and we are in the stochastic setting
+    //add random coefficients (if any) and we are in the stochastic setting
     if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
@@ -565,11 +565,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             coefs[i]->row = m;
             if (!coefs[i]->scenVector.empty()) {
                 randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
-                //coefs[i]->ptrVar->ColIndex(coefs[i]->col);
-                //coefs[i]->ptrVar->ColIndex(coefs[i]->row);
-                //We have a random variable associated with this column/row index
-                //TODO Add coefficient to scentreegeneration
-                //randomVars[coefs[i]->ptrVar->Stage()].push_back(coefs[i]->ptrVar);
             }
         }
     }
@@ -683,19 +678,19 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> > rv, 
     //For every stage: We have stage independence
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently, all sampled values are equally probable
-        for (rvIterator it = rv.begin(); it != rv.end();++it){
+        for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
         }
         // Combine all-against-all 
-        int overallSamples = randVarsPerStage[j]*sampleSize;
+        int overallSamples = randVarsPerStage[i]*sampleSize;
         double prob = 1/overallSamples; //Prob of a sample
         for (int j = 0; j < sampleSize; j++) {
             
-            for (rvIterator it = rv.begin(); it!= rv.end();++it){
+            for (rvIterator it = rv[i].begin(); it!= rv[i].end();++it){
                 double curVal = (*it)->getSampledValue(j);
-                for (rvIterator it2 = rv.begin(); it2 != rv.end();++it){ //Start with next variable
-                    if (it2 = it)
+                for (rvIterator it2 = rv[i].begin(); it2 != rv[i].end();++it){ //Start with next variable
+                    if (it2 == it)
                         continue; //go to end of loop if we are at the same variable
 
 
