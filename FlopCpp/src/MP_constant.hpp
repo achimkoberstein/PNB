@@ -40,7 +40,7 @@ namespace flopc {
 
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const = 0;
 
-        virtual void insertRandomVariables(std::set<RandomVariable*>& v) const = 0;
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
 
 
 

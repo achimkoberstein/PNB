@@ -50,24 +50,40 @@ namespace flopc{
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
                 if (MP_model::getCurrentModel()->Stage().size() > 0){
-                    if (s1.getName() == MP_model::stageString)
+                    if (S1.isStage())
                         j1i = 1;
-                    else if (S2.getName() == MP_model::stageString)
+                    else if (S2.isStage())
                         j2i = 1;
-                    else if (S3.getName() == MP_model::stageString)
+                    else if (S3.isStage())
                         j3i = 1;
-                    else if (S4.getName() == MP_model::stageString)
+                    else if (S4.isStage())
                         j4i = 1;
-                    else if (S5.getName() == MP_model::stageString)
+                    else if (S5.isStage())
                         j5i = 1;
+                    else
+                        throw invalid_argument_exception();
                 }
                 for (int j1 = j1i; j1 < S1.size();j1++)
                     for (int j2 = j2i; j2 < S2.size(); j2++)
                         for (int j3 = j3i; j3 < S3.size(); j3++)
                             for (int j4 = j4i; j4 < S4.size();j4++)
                                 for (int j5 = j5i; j5 < S5.size();j5++){
-                                    if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)) //In case of not first stage: assign value
+                                    if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)){ //In case of not first stage: assign value
                                         values[f(j1,j2,j3,j4,j5)] = array[f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i)];
+                                        // Set current stage to random variable
+                                        int stage;
+                                        if (S1.isStage())
+                                            stage = j1;
+                                        else if (S2.isStage())
+                                            stage = j2;
+                                        else if (S3.isStage())
+                                            stage = j3;
+                                        else if (S4.isStage())
+                                            stage = j4;
+                                        else if (S5.isStage())
+                                            stage = j5;
+                                        values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                    }
                                 }
         }; 
 
@@ -86,24 +102,41 @@ namespace flopc{
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
                 if (MP_model::getCurrentModel()->Stage().size() > 0){
-                    if (s1.getName() == MP_model::stageString)
+                    if (S1.isStage())
                         j1i = 1;
-                    else if (S2.getName() == MP_model::stageString)
+                    else if (S2.isStage())
                         j2i = 1;
-                    else if (S3.getName() == MP_model::stageString)
+                    else if (S3.isStage())
                         j3i = 1;
-                    else if (S4.getName() == MP_model::stageString)
+                    else if (S4.isStage())
                         j4i = 1;
-                    else if (S5.getName() == MP_model::stageString)
+                    else if (S5.isStage())
                         j5i = 1;
+                    else
+                        throw invalid_argument_exception();
                 }
                 for (int j1 = j1i; j1 < S1.size();j1++)
                     for (int j2 = j2i; j2 < S2.size(); j2++)
                         for (int j3 = j3i; j3 < S3.size(); j3++)
                             for (int j4 = j4i; j4 < S4.size();j4++)
                                 for (int j5 = j5i; j5 < S5.size();j5++){
-                                    if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)) //In case of not first stage
+                                    if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)) {//In case of not first stage
                                         createRandomVariableFromIndices(array,f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i),f(j1,j2,j3,j4,j5),scen);
+                                        // Set current stage to random variable
+                                        int stage;
+                                        if (S1.isStage())
+                                            stage = j1;
+                                        else if (S2.isStage())
+                                            stage = j2;
+                                        else if (S3.isStage())
+                                            stage = j3;
+                                        else if (S4.isStage())
+                                            stage = j4;
+                                        else if (S5.isStage())
+                                            stage = j5;
+                                        values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                    }
+
                                 }
         };
 
@@ -149,7 +182,7 @@ namespace flopc{
 
         }
 
-        
+
 
 
     private:
@@ -293,7 +326,7 @@ namespace flopc{
         const MP_index_exp& i4,
         const MP_index_exp& i5) :
     RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c) {
-               
+
     }
 
     RandomDataRef::RandomDataRef( const RandomDataRef& ref)
@@ -421,11 +454,11 @@ namespace flopc{
         //evaluate_lhs(C->evaluate());
     }
 
-    void RandomDataRef::insertRandomVariables(std::set<RandomVariable*>& v) const{
+    void RandomDataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const{
         //Insert all variables available in values** array
         for (int i = 0; i < RV->size();i++){
             if (RV->values[i] != 0){
-                v.insert(RV->values[i]);
+                v[RV->values[i]->Stage()].insert(RV->values[i]);
             }
         }
     }

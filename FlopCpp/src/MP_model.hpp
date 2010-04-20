@@ -271,9 +271,13 @@ namespace flopc {
 
 
 
-        //Sort Coefficient Vectors with CoefLess
+        //Transfer Coefficients from v to av, build rhs and sort coefficients
         static void assemble(vector<MP::Coef>& v, vector< boost::shared_ptr<MP::Coef> >& av);
+        //count number of constraints and add offests
         void add(MP_constraint* constraint);
+
+        //Sample RandomVariates
+        void sampleRandomVariates(std::vector<std::set<RandomVariable*> > rv,int sampleSize = 0); 
 
         SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
@@ -286,6 +290,7 @@ namespace flopc {
         MP_scenario_set scenSet;
         set<MP_constraint *> Constraints;
         set<MP_variable *> Variables;
+        std::vector< std::set<RandomVariable*> > RandomVariables;
 
     private:
         int m;

@@ -69,7 +69,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-Solver(s),messenger(m), Objective(0), stage(0),scenSet(0), 
+Solver(s),messenger(m), Objective(0), stage(0),scenSet(0),RandomVariables(stage.size()), 
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) {
     MP_model::current_model = this;
@@ -92,7 +92,7 @@ MP_model& MP_model::add(MP_constraint& constraint) {
     return *this;
 }
 
-void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in this model
+void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in this model and sets correct offsets
     constraint->M = this;
     if (constraint->left.isDefined() && constraint->right.isDefined()) {
         constraint->offset = m;
@@ -264,10 +264,15 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     //Insert decision variables into list of variables
     Objective->insertVariables(Variables);
+    if (stage.size()){ //if stochastic insert Random Variables
+        Objective->insertRandomVariables(RandomVariables);
+    }
     //Count number of columns and rows in the add methods. 
     //Insert the remaining variables not in the objective to the list of variables stored in container Variables.
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
         add(*i);
+        if (stage.size()) // if stochastic insert Random Variables
+            (*i)->insertRandomVariables(RandomVariables);
         (*i)->insertVariables(Variables);
     }
     //Count the number of real variables in the model with the add Method. Variables defined but not used in the model are also counted. 
@@ -275,6 +280,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
         add(*j); 
     }// We have number of rows and number of columns at this point
+
+    // TODO: Sample Values for all variables (independent ones..)
+    //sampleRandomVariates(RandomVariables); //Give standard sample size!!
 
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
     //At first, generate coefficients for every constraint and store them in coefs vector: Assigns column and row number
@@ -666,6 +674,37 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
 
     messenger->generationTime(CoinCpuTime()-time);
+}
+
+void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> > rv, int sampleSize){
+    typedef std::set<RandomVariable*>::iterator rvIterator;
+
+    std::vector<int> randVarsPerStage(stage.size(),0);
+    //For every stage: We have stage independence
+    for( int i = 1; i < stage.size(); i++){
+        // Sample values for every variable independently, all sampled values are equally probable
+        for (rvIterator it = rv.begin(); it != rv.end();++it){
+            (*it)->sample(sampleSize);
+            randVarsPerStage[i]++;
+        }
+        // Combine all-against-all 
+        int overallSamples = randVarsPerStage[j]*sampleSize;
+        double prob = 1/overallSamples; //Prob of a sample
+        for (int j = 0; j < sampleSize; j++) {
+            
+            for (rvIterator it = rv.begin(); it!= rv.end();++it){
+                double curVal = (*it)->getSampledValue(j);
+                for (rvIterator it2 = rv.begin(); it2 != rv.end();++it){ //Start with next variable
+                    if (it2 = it)
+                        continue; //go to end of loop if we are at the same variable
+
+
+
+                }
+            }
+        }//end for j=0 to sampleSize
+    }//end for i=1 to stage
+
 }
 
 void MP_model::detach() {

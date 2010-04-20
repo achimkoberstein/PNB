@@ -145,7 +145,7 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
         I5 = i5;
     }
 
- void DataRef::insertRandomVariables(std::set<RandomVariable*>& v) const {
+ void DataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
 
 
             
