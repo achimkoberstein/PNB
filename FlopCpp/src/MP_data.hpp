@@ -53,8 +53,9 @@ namespace flopc {
     private:
         //Disable copy constructor
         DataRef(const DataRef&);
-
+    public:
         MP_data* D;
+    private:
         mutable MP_index_exp I1,I2,I3,I4,I5;
         Constant C;
         int stochastic;

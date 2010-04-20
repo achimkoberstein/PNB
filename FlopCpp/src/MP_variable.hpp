@@ -10,6 +10,7 @@
 #include "MP_expression.hpp"
 #include "MP_domain.hpp"
 #include "MP_data.hpp"
+#include "MP_constant.hpp"
 
 namespace flopc {
 
@@ -60,10 +61,11 @@ namespace flopc {
     }
     
     /// Call this method to turn the variable into a binary variable
-	//TODO: What is with lower Bound?
     void binary() { 
-      upperLimit.initialize(1);
-      type = discrete; 
+      //upperLimit.initialize(1);
+        lowerLimit = Constant(0);
+        upperLimit = Constant(1);
+        type = discrete; 
     }
 
     /// Call this method to turn the MP_variable into an integer variable
@@ -72,9 +74,9 @@ namespace flopc {
     }
  
     /// Upper bound on the variable value.
-    MP_data upperLimit;
+    Constant upperLimit;
     /// Lower bound on the variable value.
-    MP_data lowerLimit;
+    Constant lowerLimit;
   private:
     //Disabling copy constructor and assignment
     MP_variable(const MP_variable&);
