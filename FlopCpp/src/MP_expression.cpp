@@ -405,13 +405,12 @@ void MP::GenerateFunctor::operator()() const {
             if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
                 stage = varStage;
                 //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
-                try {
-                    dynamic_cast<const Expression_constant*> (C);
+                const Expression_constant* ePtr = dynamic_cast<const Expression_constant*> (C);
+                if (ePtr != 0)
                     for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
-                }
-                catch (const std::bad_cast& e){}   
+
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
             //Generate Coefficient for random bounds only.. we have to take a look at the variables bounds
