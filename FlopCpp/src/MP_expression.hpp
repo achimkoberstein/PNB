@@ -113,7 +113,7 @@ namespace flopc {
 
         virtual void insertVariables(set<MP_variable *>& v) const = 0; //Insert given Variables to the Model?!
 
-        virtual void insertRandomVariables(std::set<RandomVariable*>& v) const = 0;
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
 
         virtual ~MP_expression_base() {}
     };
@@ -182,7 +182,7 @@ namespace flopc {
             v.insert(V);
         }
 
-        void insertRandomVariables(std::set<RandomVariable*>& v) const {
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
          
         }
 

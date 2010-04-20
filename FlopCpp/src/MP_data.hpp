@@ -38,7 +38,7 @@ namespace flopc {
         virtual double evaluate(int scenario) const;
         virtual int getStage() const;
         virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
-        virtual void insertRandomVariables(std::set<RandomVariable*>&v) const;
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >&v) const;
 
         const DataRef& operator=(const DataRef& r); 
         const DataRef& operator=(const Constant& c);
