@@ -593,9 +593,9 @@ namespace {
 
         MP_model m1(new OsiCbcSolverInterface), m2(new OsiCbcSolverInterface);
 
-        y.upperLimit(j,h) = deltb(j,h);
+        y.upperLimit = deltb(j,h);
 
-        y.upperLimit.display("y upper");
+        //y.upperLimit.display("y upper");
 
         m1.add(ab).add(db).add(bcd1).add(ocd);
         m1.minimize(oc() + bc());
@@ -612,7 +612,7 @@ namespace {
         ocd.display("ocd");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
-        y.upperLimit(j,h) = m2->getInfinity();
+        y.upperLimit = m2->getInfinity();
 
         m2.minimize(oc() + bc());
 

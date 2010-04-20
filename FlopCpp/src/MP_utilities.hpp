@@ -80,7 +80,10 @@ namespace flopc {
     }
 
     /// Distinct return value on conditions where an index goes out of bounds.
-    const int outOfBound = -2;    
+    const int outOfBound = -4;    
+    const int lowerBound = -3;   
+    const int upperBound = -2;   
+
 
     /** Utility class to flatten multidimensional information into single
     dimentional offset information.

@@ -538,17 +538,45 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         u[j] = inf;
     }
     //Set Bounds obtained via MP_variable via direct access
+    // Furthermore: Variables obtain solver infinity bounds
+    const double numericInfinity = std::numeric_limits<double>::infinity();
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         for (int k=0; k<(*i)->size(); k++) {
-            if (stage.size()){
-                l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit.v[k];
-                u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit.v[k];
-            }
+            const DataRef* dPtr;
+            if (stage.size()){ //In case of stochastic, we have to obey colIndirection
+                dPtr = dynamic_cast<const DataRef*> ((*i)->lowerLimit.operator->());// v[k];
+                if (dPtr == 0)
+                    l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate();
+                else
+                    l[colIndirection[(*i)->offset+k]] = dPtr->D->v[k];
+                dPtr = dynamic_cast<const DataRef*> ((*i)->upperLimit.operator->());
+                if (dPtr == 0)
+                    u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate();
+                else
+                    u[colIndirection[(*i)->offset+k]] = dPtr->D->v[k];
+
+                if (l[colIndirection[(*i)->offset+k]] == -numericInfinity)
+                    l[colIndirection[(*i)->offset+k]] = -inf;
+                if (u[colIndirection[(*i)->offset+k]] == numericInfinity)
+                    u[colIndirection[(*i)->offset+k]] = inf;
+
+             }
             else {
-                //TODO If double infinity limit, set solver infinity..
-                if ((*i)->upperLimit.v[k] == std::numeric_limits<double>::infinity());
-                l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
-                u[(*i)->offset+k] = (*i)->upperLimit.v[k];
+               dPtr = dynamic_cast<const DataRef*> ((*i)->lowerLimit.operator->());// v[k];
+                if (dPtr == 0)
+                    l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
+                else
+                    l[(*i)->offset+k] = dPtr->D->v[k];
+                dPtr = dynamic_cast<const DataRef*> ((*i)->upperLimit.operator->());
+                if (dPtr == 0)
+                    u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
+                else
+                    u[(*i)->offset+k] = dPtr->D->v[k];
+
+                if (l[(*i)->offset+k] == -numericInfinity)
+                    l[(*i)->offset+k] = -inf;
+                if (u[(*i)->offset+k] == numericInfinity)
+                    u[(*i)->offset+k] = inf;
             }
         }
     }

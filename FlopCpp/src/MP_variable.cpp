@@ -21,13 +21,11 @@ MP_variable::MP_variable(const MP_set_base &s1,
                          const MP_set_base &s4, 
                          const MP_set_base &s5) :
 RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-upperLimit(s1,s2,s3,s4,s5),
-lowerLimit(s1,s2,s3,s4,s5),
+upperLimit(MP_model::getCurrentModel()->getInfinity()),
+lowerLimit(0),
 S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
 offset(-1)
 {
-    lowerLimit.initialize(0.0);
-    upperLimit.initialize(MP_model::getCurrentModel()->getInfinity());
     type = continuous;
 }    
 

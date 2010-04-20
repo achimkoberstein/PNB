@@ -166,6 +166,26 @@ namespace flopc {
         friend class MP_variable;
     public:
         virtual int getColumn() const;
+        double level() const;
+
+        void insertVariables(set<MP_variable*>& v) const {
+            v.insert(V);
+        }
+
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+         
+        }
+        virtual double getValue(int scenario) const { 
+            return 1.0;
+        }
+        virtual int getStage() const;
+
+        virtual RandomVariable* getRandomVariable() const {
+            return 0;
+        }
+
+
+
     private:
         VariableRef(MP_variable* v, 
             const MP_index_exp& i1,
@@ -176,31 +196,16 @@ namespace flopc {
 
         //VariableRef& operator=(const &VariableRef); Why is there a compiler warning about assignment operator can not be generated? due to the private constructor?
 
-        double level() const;
 
-        void insertVariables(set<MP_variable*>& v) const {
-            v.insert(V);
-        }
-
-        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-         
-        }
-
-        virtual double getValue(int scenario) const { 
-            return 1.0;
-        }
-        virtual int getStage() const;
-
-        virtual RandomVariable* getRandomVariable() const {
-            return 0;
-        }
 
         void generate(const MP_domain& domain,
             vector<Constant> multiplicators,
             MP::GenerateFunctor& f,
             double m) const;
 
+    public:
         MP_variable* V;
+    private:
         int offset;
         const MP_index_exp I1,I2,I3,I4,I5;
     };
