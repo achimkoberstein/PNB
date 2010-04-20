@@ -593,7 +593,7 @@ namespace {
 
         MP_model m1(new OsiCbcSolverInterface), m2(new OsiCbcSolverInterface);
 
-        y.upperLimit = deltb(j,h);
+        y.upperLimit(j,h) = deltb(j,h);
 
         //y.upperLimit.display("y upper");
 
