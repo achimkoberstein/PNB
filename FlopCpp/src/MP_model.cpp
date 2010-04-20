@@ -605,10 +605,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             coefs[i]->col = colIndirection[coefs[i]->col];
-            coefs[i]->row = m;
-            if (!coefs[i]->scenVector.empty()) {
+            if (coefs[i]->row == -1) //Objective function 
+                coefs[i]->row = m;
+            if (!coefs[i]->scenVector.empty())
                 randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
-            }
         }
     }
     else {
@@ -621,8 +621,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
     for (size_t i=0; i<coefs.size(); i++) {
         int col = coefs[i]->col;
-        double elm = coefs[i]->val;
-        c[col] = elm;
+        if ( coefs[i]->row == m){
+            double elm = coefs[i]->val;
+            c[col] = elm;
+        }
     } 
     // Set integer information..
     std::vector<int> integerIndices;

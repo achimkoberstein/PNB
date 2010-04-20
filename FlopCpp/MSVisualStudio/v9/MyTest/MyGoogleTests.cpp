@@ -288,6 +288,22 @@ namespace {
         //Somehow we have to check if the rhs is properly evaluated in the end
     }
 
+    TEST_F(MP_modelTest,RandomBoundsTest){
+        MP_stage T(2);
+        MP_scenario_set scen(2);
+        double scenarioValues[1][2] = { {1,2} };
+        MP_random_data var(&scenarioValues[0][0],T);
+        MP_variable x(T);
+        x.lowerLimit = var(T); //Set different lower limits
+        //MP_constraint objective(T);
+        //objective(T+1) = x(T+1);
+
+        testModel.setObjective(x(T+1));
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MINIMIZE);
+
+    }
+
     TEST_F(MP_modelTest,RandomVariableExpressionParsingTest){
         //Now we test RandomVariables with sets. Compile-Time Test
         MP_stage T(2); //2 stages
