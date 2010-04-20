@@ -383,8 +383,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
             int s = coefs[i]->varStage; //Stage of Variable that belongs to current coefficient
             colStage[coefs[i]->col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
-            int row = coefs[i]->row; 
-            if ( s > rowStage[row] )  {
+            int row = coefs[i]->row;
+            if ( row >= 0 && s > rowStage[row] )  {
                 rowStage[row] = s;
             }
         }
@@ -405,6 +405,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //Something goes wrong here..
         for (int i = 0; i < nz; i++){
             int oldRow = coefs[i]->row;
+            if (oldRow < 0) //In the case of Random coefficient for variable bound, continue with next coeff
+                continue;
             int curRowStage = tempRowStage[oldRow];
             //Count number of rows before this row
             int rowCount = 0;
@@ -463,7 +465,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             col = n;
             coefs[i]->col = n; //Also set coefficient to n to do it permanently
         }
-        Clg[col]++;
+        if (coefs[i]->row >= 0) //We have a correct variable here that occurs in a row 
+            Clg[col]++;
+        //In the else case we do not want to count the coefficient here, but we want to reduce number of realnz: We have a random variable bound
+        else 
+            realnz--;
     }
     //Compute Column Start Array
     Cst[0]=0; //count number of non-zero-elements up to column i: cst[n+1] = anzahl an nicht-null-elementen
