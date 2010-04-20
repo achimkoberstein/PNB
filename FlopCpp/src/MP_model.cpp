@@ -69,7 +69,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-Solver(s),messenger(m), Objective(0), stage(0),scenSet(0),RandomVariables(stage.size()), 
+Solver(s),messenger(m), Objective(0), stage(0),scenSet(0), 
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) {
     MP_model::current_model = this;
@@ -261,6 +261,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     typedef std::set<MP_variable* >::iterator varIt;
     typedef std::set<MP_constraint* >::iterator conIt;
+
+    if (RandomVariables.empty())
+        RandomVariables = std::vector<std::set<RandomVariable*> >(stage.size());
 
     //Insert decision variables into list of variables
     Objective->insertVariables(Variables);

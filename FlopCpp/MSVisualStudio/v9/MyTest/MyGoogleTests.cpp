@@ -260,6 +260,8 @@ namespace {
         double rvArr[4][numScen] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
         MP_random_data rvar1;
         MP_random_data rvar2(&rvArr[0][0],autos);
+        //Expect invalid argument exception
+        //EXPECT_THROW(MP_random_data rvar2(&rvArr[0][0],autos),invalid_argument_exception);
         EXPECT_DOUBLE_EQ(rvArr[0][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(0) );
         EXPECT_DOUBLE_EQ(rvArr[0][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(1) );
         EXPECT_DOUBLE_EQ(rvArr[0][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(2) );
