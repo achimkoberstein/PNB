@@ -322,15 +322,8 @@ namespace flopc {
         const MP_model::MP_direction &direction);
 
    
-
     void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
 
 } // End of namespace flopc
 
-
-
-
-namespace flopc{
-
-}
 #endif
