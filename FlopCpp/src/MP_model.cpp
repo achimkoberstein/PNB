@@ -301,10 +301,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
 
         std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStageShared);
-        //Initialize all values with -2 to prevent misuse
+        //Initialize all values with outOfBound to prevent misuse
         colIndirection = new int[n+1]; //store all variables (n) starting from index 0 and rhs as value n => n+1 size needed to store all these values
         for (int i = 0; i < n+1; i++){
-            colIndirection[i] = -2;
+            colIndirection[i] = outOfBound;
         }
         //Iterate over set to set correct indices in the coefficients and store the old indices in indirection array. This way we get correct column indices. Rows are not sorted by then
         int j = 0; //index counter
@@ -312,7 +312,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             int oldCol = coefs[i]->col;
             if (oldCol == -1)//Handle RHS
                 oldCol = n;
-            if ( colIndirection[oldCol] == -2 ){ //this Coefficient is not already assigned to a new index, store new index
+            if ( colIndirection[oldCol] == outOfBound ){ //this Coefficient is not already assigned to a new index, store new index
                 if (oldCol == n){//Handle RHS
                     colIndirection[oldCol] = n;
                 }
@@ -332,7 +332,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             std::cout << "We have empty variables in this formulation" << std::endl;
             //We need to assign all empty variables to an index which is not used. This is fairly easy: Index j and above are not used..
             for (int count = 0; count < n; count++){
-                if (colIndirection[count] == -2) //We have found an empty variable index
+                if (colIndirection[count] == outOfBound) //We have found an empty variable index
                     colIndirection[count] = j++;
             }
             assert(j == n);
@@ -398,7 +398,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for (int i = 0; i < m; i++){
             rowOffset[i] = rowCounter[rowStage[i]]++; //In the end, rowCounter gives the number of rows in a stage.
             tempRowStage[i] = rowStage[i];
-            rowIndirection[i] = -2;
+            rowIndirection[i] = outOfBound;
         }
         for (int i = 0; i < m; i++)//Reset rowStage. Empty rows are now rows with stage 0
             rowStage[i] = 0;
@@ -424,7 +424,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     //TODO: Check that
     // Yes, this is indeed possible and is an error
     //for (int i = 0; i < m; i++) {
-    //    if( rowIndirection[i] == -2) { // We have an empty row. Can we delete that row without messing everything up?!
+    //    if( rowIndirection[i] == outOfBound) { // We have an empty row. Can we delete that row without messing everything up?!
     //        //Assign row index of an empty row. Not so easy to do..
     //    }
     //}
@@ -504,7 +504,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                   case LE:
                       for (int k=begin; k<end; k++) {
                           if (stage.size()){
-                              if (rowIndirection[k] != -2) //Else empty row
+                              if (rowIndirection[k] != outOfBound) //Else empty row
                                   bl[rowIndirection[k]] = - inf;
                           }
                           else
@@ -514,7 +514,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                   case GE:
                       for (int k=begin; k<end; k++) {
                           if (stage.size()){
-                              if (rowIndirection[k] != -2) //Else empty row
+                              if (rowIndirection[k] != outOfBound) //Else empty row
                                   bu[rowIndirection[k]] = inf;
                           }
                           else
@@ -879,8 +879,8 @@ namespace flopc {
 
         //CoinPackedVector clo;
         //CoinPackedVector cup;
-        std::vector<int> tempAncScenVec(nScen,-2); //Initalized Vector with -2 (not valid)
-        std::vector<int> branchStageVec(nScen,-2); //Initialized Vector with 0
+        std::vector<int> tempAncScenVec(nScen,outOfBound); //Initalized Vector with outOfBound (not valid)
+        std::vector<int> branchStageVec(nScen,outOfBound); //Initialized Vector with 0
         //set correct values for first scenario:
         tempAncScenVec[0] = 0;
         branchStageVec[0] = 1;
@@ -918,9 +918,9 @@ namespace flopc {
             while (!subScenariosPerStageAndScenario[curStage][curScen].empty()){
                 int parentScen = *subScenariosPerStageAndScenario[curStage][curScen].begin(); //the parentScen will be the "parent" or head of the new node.
                 //If the node is already a parent of a node in a lower stage, we keep the old values
-                if (branchStageVec[parentScen] == -2)
+                if (branchStageVec[parentScen] == outOfBound)
                     branchStageVec[parentScen] = curStage+1;
-                if (tempAncScenVec[parentScen] == -2)
+                if (tempAncScenVec[parentScen] == outOfBound)
                     tempAncScenVec[parentScen] = curScen;
 
                 if (curStage < nStages-1){//Add to queue for the next stage, if we are not in the last stage
