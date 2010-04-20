@@ -600,11 +600,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
     messenger->objectiveDebug(cfs);
     assemble(cfs,coefs);
+    //Sort coefficients by stage..
+    std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStageShared);
     //add random coefficients (if any) and we are in the stochastic setting
+    //TODO: Coefficients that are in the objective function but not in the constraints can mess things up..?
     if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             coefs[i]->col = colIndirection[coefs[i]->col];
+            if (colStage[coefs[i]->col] != coefs[i]->varStage) {
+                assert(colStage[coefs[i]->col] == 0);
+                colStage[coefs[i]->col] = coefs[i]->varStage; //
+            }
             if (coefs[i]->row == -1) //Objective function 
                 coefs[i]->row = m;
             if (!coefs[i]->scenVector.empty())
@@ -619,6 +626,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (int j=0; j<n; j++) {
         c[j] = 0.0;
     }
+    //Set objective coefficients
     for (size_t i=0; i<coefs.size(); i++) {
         int col = coefs[i]->col;
         if ( coefs[i]->row == m){
@@ -626,6 +634,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             c[col] = elm;
         }
     } 
+    //We need to set column information by stage for all columns where it is not yet set
+
     // Set integer information..
     std::vector<int> integerIndices;
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
@@ -795,6 +805,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         smiModel->setOsiSolverHandle(Solver);
         //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
         Solver = smiModel->loadOsiSolverData();
+        Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
         try {
             Solver->initialSolve();
         }  catch (CoinError e) {

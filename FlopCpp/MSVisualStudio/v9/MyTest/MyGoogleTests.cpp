@@ -248,7 +248,7 @@ namespace {
 
         //const double* colArray = investmentModel.Solver->getColSolution();
         //Compare solution values.
-        EXPECT_DOUBLE_EQ(1320,investmentModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(13035,investmentModel.Solver->getObjValue());
 
     }
 
@@ -295,12 +295,27 @@ namespace {
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
         x.lowerLimit = var(T); //Set different lower limits
-        //MP_constraint objective(T);
-        //objective(T+1) = x(T+1);
-
         testModel.setObjective(x(T+1));
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_EQ(1.5,testModel->getObjValue());
+    }
+
+    TEST_F(MP_modelTest,ComplicatedRandomBoundsTest){
+        MP_stage T(2);
+        MP_scenario_set scen(2);
+        double scenarioValues[1][2] = { {1,2} };
+        MP_random_data var(&scenarioValues[0][0],T);
+        MP_variable x(T);
+        x.lowerLimit = var(T);
+        x.upperLimit = var(T)+5;
+
+        testModel.setObjective(x(T+1));
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_EQ(6.5,testModel->getObjValue());
 
     }
 
@@ -348,7 +363,7 @@ namespace {
         testModel.solve(MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(36,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
+        EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
     }
 
     TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
