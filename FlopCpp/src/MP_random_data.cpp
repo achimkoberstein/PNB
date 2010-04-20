@@ -71,20 +71,26 @@ namespace flopc{
                                     if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)){ //In case of not first stage: assign value
                                         values[f(j1,j2,j3,j4,j5)] = array[f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i)];
                                         // Set current stage to random variable
-                                        int stage;
-                                        if (S1.isStage())
-                                            stage = j1;
-                                        else if (S2.isStage())
-                                            stage = j2;
-                                        else if (S3.isStage())
-                                            stage = j3;
-                                        else if (S4.isStage())
-                                            stage = j4;
-                                        else if (S5.isStage())
-                                            stage = j5;
-                                        values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                        if (j1i+j2i+j3i+j4i+j5i == 1){
+                                            int stage;
+                                            if (S1.isStage())
+                                                stage = j1;
+                                            else if (S2.isStage())
+                                                stage = j2;
+                                            else if (S3.isStage())
+                                                stage = j3;
+                                            else if (S4.isStage())
+                                                stage = j4;
+                                            else if (S5.isStage())
+                                                stage = j5;
+                                            values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                        }
+                                        else
+                                            values[f(j1,j2,j3,j4,j5)]->Stage(1); //Otherwise we may have a two stage problem: set to 1
                                     }
                                 }
+
+                                //else throw invalid_argument_exception();
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do want to delete the created RandomVariables
@@ -101,7 +107,7 @@ namespace flopc{
                 //If there is no stage set: No Problem ;)
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
-                if (MP_model::getCurrentModel()->Stage().size() > 0){
+                if (MP_model::getCurrentModel()->Stage().size()){
                     if (S1.isStage())
                         j1i = 1;
                     else if (S2.isStage())
@@ -115,6 +121,7 @@ namespace flopc{
                     else
                         throw invalid_argument_exception();
                 }
+
                 for (int j1 = j1i; j1 < S1.size();j1++)
                     for (int j2 = j2i; j2 < S2.size(); j2++)
                         for (int j3 = j3i; j3 < S3.size(); j3++)
@@ -123,21 +130,27 @@ namespace flopc{
                                     if (!(j1 < j1i || j2 < j2i || j3 < j3i || j4 < j4i || j5 < j5i)) {//In case of not first stage
                                         createRandomVariableFromIndices(array,f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i),f(j1,j2,j3,j4,j5),scen);
                                         // Set current stage to random variable
-                                        int stage;
-                                        if (S1.isStage())
-                                            stage = j1;
-                                        else if (S2.isStage())
-                                            stage = j2;
-                                        else if (S3.isStage())
-                                            stage = j3;
-                                        else if (S4.isStage())
-                                            stage = j4;
-                                        else if (S5.isStage())
-                                            stage = j5;
-                                        values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                        if (j1i+j2i+j3i+j4i+j5i == 1){
+                                            int stage;
+                                            if (S1.isStage())
+                                                stage = j1;
+                                            else if (S2.isStage())
+                                                stage = j2;
+                                            else if (S3.isStage())
+                                                stage = j3;
+                                            else if (S4.isStage())
+                                                stage = j4;
+                                            else if (S5.isStage())
+                                                stage = j5;
+                                            values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                        }
+                                        else
+                                            values[f(j1,j2,j3,j4,j5)]->Stage(1); //Otherwise we may have a two stage problem: set to 1
                                     }
 
                                 }
+
+                                //else throw invalid_argument_exception(); //More like: You added RV without stage set, do you really want to this?
         };
 
         ~MP_random_data_impl(){
