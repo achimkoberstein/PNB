@@ -905,6 +905,8 @@ namespace flopc {
         std::vector<CoinPackedMatrix*> objVec(nScen); //Empty Column ordered matrices for objective function and row bounds.. Necessary as CoinPackedVector does not allow adding of elements
         std::vector<CoinPackedMatrix*> rloVec(nScen);
         std::vector<CoinPackedMatrix*> rupVec(nScen);
+        std::vector<CoinPackedMatrix*> bloVec(nScen);
+        std::vector<CoinPackedMatrix*> bupVec(nScen);
         for (int curScen = 0; curScen < nScen;curScen++){ //Think about that in terms of lazy evaluation..?!
             //Initialize all matrices
             matrixVec[curScen] = new CoinPackedMatrix();
@@ -917,6 +919,10 @@ namespace flopc {
             rloVec[curScen]->setDimensions(m,1);
             rupVec[curScen] = new CoinPackedMatrix();
             rupVec[curScen]->setDimensions(m,1);
+            bloVec[curScen] = new CoinPackedMatrix();
+            bloVec[curScen]->setDimensions(n,1);
+            bupVec[curScen] = new CoinPackedMatrix();
+            bupVec[curScen]->setDimensions(n,1);
 
         }
 
@@ -983,9 +989,18 @@ namespace flopc {
                     double coefficient = it->scenVector[parentScen];
                     int colIndex = it->col;
                     int rowIndex = it->row;
-                    if (colIndex < n) {//Matrix-Element 
-                        if (rowIndex < m){ //Matrix-Element
-                            assert(rowIndex >= 0 ); //row index needs to be inside bounds
+                    if (colIndex < n) {//Matrix-Element or variable bounds
+                        assert(rowIndex <= m); //matrix element or objective function or variable bound
+                        if (rowIndex < 0){ //variable bound
+                            assert(colIndex >= 0); //col index needs to be inside bounds
+                            if (rowIndex == lowerBound)
+                                bloVec[parentScen]->modifyCoefficient(colIndex,0,coefficient,true);
+                            else if (rowIndex == upperBound)
+                                bupVec[parentScen]->modifyCoefficient(colIndex,0,coefficient,true);
+                            else
+                                throw invalid_argument_exception();
+                        }
+                        else if (rowIndex < m){ //matrix element
                             assert(colIndex >= 0); //col index needs to be inside bounds
                             matrixVec[parentScen]->modifyCoefficient(rowIndex,colIndex,coefficient,true); // Keeps added zeroes. If set to false, zeroes get changed to ones
                         }
@@ -1054,12 +1069,14 @@ namespace flopc {
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curScen]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
                 //We need to convert the CoinPackedMatrix to CoinPackedVectors..
+                CoinPackedVector curBloVec(bloVec[curScen]->getVector(0));
+                CoinPackedVector curBupVec(bupVec[curScen]->getVector(0));
                 CoinPackedVector curObjVec(objVec[curScen]->getVector(0));
                 CoinPackedVector curRloVec(rloVec[curScen]->getVector(0));
                 CoinPackedVector curRupVec(rupVec[curScen]->getVector(0));
 
 
-                smiModel->generateScenario(smiCore,matrixVec[curScen],NULL,NULL,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
+                smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
                 scenCounter++;
             }
         }
