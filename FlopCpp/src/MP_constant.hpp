@@ -10,7 +10,6 @@
 #include "MP_utilities.hpp"
 
 
-
 namespace flopc {
 
     //Forward Declaration for Constant Class
@@ -53,10 +52,12 @@ namespace flopc {
 
     };
 
-    class MP_index_exp;
+    //forward declarations
     class DataRef;
     class RandomDataRef;
     class MP_domain;
+   
+
 
 
     /** @brief Reference counted class for all "constant" types of data.
@@ -76,6 +77,15 @@ namespace flopc {
         // operator-();
         //   private:
         Constant(Constant_base* r) : Handle<Constant_base*>(r) {}
+
+        // Transitional method: Can be removed if all of the flopc++ programs have switched to the new standard..
+        Constant& operator()() { return *this; };
+        Constant& operator()(const MP_index_exp&) { return *this; };
+        Constant& operator()(const MP_index_exp&,const MP_index_exp&) { return *this; };
+        Constant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
+        Constant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
+        Constant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
+
     };
 
     Constant operator-(const Constant& a);

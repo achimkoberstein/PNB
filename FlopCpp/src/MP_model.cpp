@@ -302,7 +302,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 #pragma region colIndirection;
     if (stage.size()){
         //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
-
         std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStageShared);
         //Initialize all values with outOfBound to prevent misuse
         colIndirection = new int[n+1]; //store all variables (n) starting from index 0 and rhs as value n => n+1 size needed to store all these values
@@ -324,8 +323,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 }
             }// Assign correct values 
             coefs[i]->col = colIndirection[oldCol];
-            //if (coefs[i]->ptrVar != 0) //Change coefficient in RV
-            //    coefs[i]->ptrVar->ColIndex(coefs[i]->col);
+            //If coef is a random coefficient for a variable bound, we want it removed from the coefs array..
         }
         //Check for empty variables, i.e. variables not assigned in the problem. Maybe we can report that as an error??
         // Empty Variables have no coefficients assigned, but they increase the variable counter
@@ -344,6 +342,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //Now we can access the new column ordering via colIndirection from FlopC++.
         //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
         std::sort(coefs.begin(),coefs.end(),&MP::CoefLessShared);
+        //We need to extract all the random Coefficients that belong to the variable bounds and store them in the random coefficients array.
+  
     }
 #pragma endregion colIndirection;
 
@@ -356,10 +356,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     //nz should only count number of elements in the matrix and not the RHS also..
     int realnz = nz;
-    if (nz>0) {    
-        Elm = new double[nz]; 
-        Rnr = new int[nz];    
-    }
     Cst = new int[n+2];   
     Clg = new int[n+1];   
     if (n>0) {
@@ -384,7 +380,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         // Set correct Row Stage for every row by iterating over all elements
         // Row Stage is equal to the highest stage of a belonging variable
-
         for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
             int s = coefs[i]->varStage; //Stage of Variable that belongs to current coefficient
             colStage[coefs[i]->col] = s; //Set correct colStage. Must be the same for every coefficient for the same variable
@@ -478,25 +473,36 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (int i=0; i<=n; i++) { //Reset column length array, to compute Elm and Rnr 
         Clg[i]=0;
     }
+    if (realnz>0) {    
+        Elm = new double[realnz]; 
+        Rnr = new int[realnz];    
+    }
+        // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
+    for (int i=0; i<m; i++) {
+        bl[i] = 0;
+        bu[i] = 0;
+    }
     //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
     for (int i=0; i<nz; i++) {
         int col = coefs[i]->col;
         int row = coefs[i]->row;
         double elm = coefs[i]->val;
-        Elm[Cst[col]+Clg[col]] = elm;
-        Rnr[Cst[col]+Clg[col]] = row;
+        if (col == n){ //RHS:
+            bl[row] = -elm;
+            bu[row] = -elm;
+        }
+        else {
+            Elm[Cst[col]+Clg[col]] = elm;
+            Rnr[Cst[col]+Clg[col]] = row;
+        }
         Clg[col]++;
     }
 
-    // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
-    for (int i=0; i<m; i++) {
-        bl[i] = 0;
-        bu[i] = 0;
-    }
-    for (int j=Cst[n]; j<Cst[n+1]; j++) {
-        bl[Rnr[j]] = -Elm[j];
-        bu[Rnr[j]] = -Elm[j];
-    }
+
+    //for (int j=Cst[n]; j<Cst[n+1]; j++) {
+    //    bl[Rnr[j]] = -Elm[j];
+    //    bu[Rnr[j]] = -Elm[j];
+    //}
     //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
     //TODO: Empty row handling done here..
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
