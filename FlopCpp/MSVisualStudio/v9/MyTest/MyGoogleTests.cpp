@@ -19,7 +19,7 @@
 
 //#include <vld.h> //Visual Leak Detector
 
-
+//TODO: Test about correct colOrdering that is given to the solver..
 
 
 using namespace flopc;
