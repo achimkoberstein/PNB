@@ -67,9 +67,9 @@ void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef>> >&
     //MP_index in1,in2,in3,in4,in5;
     //const VariableRef* var = new VariableRef(this,in1,in2,in3,in4,in5);
     //delete var;
-    //const VariableRef& var = this->operator()(i1,i2,i3,i4,i5); //This is incorrect: We put MP_index in but we want a MP_index_exp. What happens to the indices of the limit Constants?!
-    //MP::VariableBoundsFunctor f(&var, cfs);
-    //((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(&f);
-    //delete myrefs.back();
-    //myrefs.pop_back();
+    const VariableRef& var = this->operator()(i1,i2,i3,i4,i5); //This is incorrect: We put MP_index in but we want a MP_index_exp. What happens to the indices of the limit Constants?!
+    MP::VariableBoundsFunctor f(&var, cfs);
+    ((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(&f);
+    delete myrefs.back();
+    myrefs.pop_back();
 }

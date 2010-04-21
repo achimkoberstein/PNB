@@ -69,7 +69,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-Solver(s),messenger(m), Objective(0), stage(0),scenSet(0), 
+Solver(s),messenger(m),stage(0),scenSet(0),Objective(0), 
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) {
     MP_model::current_model = this;
@@ -80,6 +80,11 @@ MP_model::~MP_model() {
     if (Solver!=0) { //If solver was not deleted, call detach and therefore delete the Solver
         this->detach();
     }
+    //Delete objective first? I do not know what happens here..
+    //if (stage != 0)
+    //    delete stage;
+    //if (scenSet != 0)
+    //    delete scenSet;
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
@@ -439,17 +444,25 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
     //TODO: Add Coefficients instead of random vars..
     if (stage.size()){
+        //In case of random variables in the model we might have random bounds..
+        //Generate random bounds for all variables..
+        // As these bounds were generated in the variables section, the indirection layer is incorrect, this means we have to update that
+        for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
+            (*j)->bounds(randomCoefs);
+        }
+        for (int i = 0; i < randomCoefs.size();i++) {
+            for (int j = 0; j < randomCoefs[i].size();j++) {
+                randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
+            }
+        }
+
         for ( int i = 0; i != coefs.size(); i++){
             if ( !coefs[i]->scenVector.empty() ) { //We have scenario values
                 //We have a random parameter with values
                 randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
             }
         }
-        //In case of random variables in the model we might have random bounds..
-        //Generate random bounds for all variables..
-        //for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
-        //    (*j)->bounds(randomCoefs);
-        //}
+
     }
 
     // Compute Column Length Array to easily compute start array from there
