@@ -285,9 +285,9 @@ namespace flopc {
 
 
         Messenger* messenger;
-        MP_expression Objective;
         MP_stage stage;
         MP_scenario_set scenSet;
+        MP_expression Objective;
         set<MP_constraint *> Constraints;
         set<MP_variable *> Variables;
         std::vector< std::set<RandomVariable*> > RandomVariables;

@@ -289,35 +289,40 @@ namespace {
     }
 
     TEST_F(MP_modelTest,RandomBoundsTest){
+        MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
-        x.lowerLimit = var(T); //Set different lower limits
-        testModel.setObjective(x(T+1));
-        testModel.attach(testModel.Solver);
-        testModel.solve(MP_model::MINIMIZE);
-        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(1.5,testModel->getObjValue());
+        MP_constraint con1(T);
+        con1(T) = x(T) <= var(T);
+        x.lowerLimit() = var(T); //Set different lower limits
+        MP_expression objective;
+        objective = x(T+1);
+        testModel2.setObjective(objective);
+        testModel2.attach(testModel.Solver);
+        testModel2.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        EXPECT_EQ(1.5,testModel2->getObjValue());
     }
 
     TEST_F(MP_modelTest,ComplicatedRandomBoundsTest){
+        MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
-        x.lowerLimit = var(T);
-        x.upperLimit = var(T)+5;
+        x.lowerLimit() = var(T);
+        x.upperLimit() = var(T)+5;
         MP_constraint con1(T);
         con1(T+1) = x(T+1) <= 200;
-
-        testModel.setObjective(x(T+1));
-        testModel.attach(testModel.Solver);
-        testModel.solve(MP_model::MAXIMIZE);
-        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(6.5,testModel->getObjValue());
+        testModel2.setObjective(x(T+1));
+        testModel2.attach(testModel.Solver);
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        EXPECT_EQ(6.5,testModel2->getObjValue());
 
     }
 

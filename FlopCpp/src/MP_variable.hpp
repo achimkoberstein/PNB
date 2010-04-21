@@ -58,8 +58,8 @@ namespace flopc {
       const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
       const MP_index_exp& d5 = MP_index_exp::getEmpty()
       ) {
-          //lowerLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
-          //upperLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
+          lowerLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
+          upperLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
           myrefs.push_back(new VariableRef(this, d1, d2, d3, d4, d5));
       return *myrefs.back(); //TODO: possible Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
     }

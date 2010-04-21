@@ -29,6 +29,11 @@ namespace flopc {
 		MP_model::getCurrentModel()->Stage(*this);
 	  }
 
+  MP_stage::~MP_stage() {
+      //if (MP_model::getCurrentModel() != 0 && &MP_model::getCurrentModel()->Stage() == this)
+      //    MP_model::getCurrentModel()->Stage(0); //Set Stage to 0.
+  }
+
   MP_scenario_set::MP_scenario_set( int i /*= 0*/ ):MP_set(i)
 	  {
 	  //During first initialization, currentModel pointer is zero. Under this circumstances,
@@ -36,6 +41,11 @@ namespace flopc {
 	  if (MP_model::getCurrentModel() != 0)
 		  MP_model::getCurrentModel()->ScenSet(*this);
 	  }
+
+    MP_scenario_set::~MP_scenario_set() {
+      //if (MP_model::getCurrentModel() != 0 && &MP_model::getCurrentModel()->ScenSet() == this)
+      //    MP_model::getCurrentModel()->ScenSet(0); //Set Stage to 0.
+  }
 
   flopc::MP_domain SUBSETREF::getDomain( MP_set* s ) const
   {
