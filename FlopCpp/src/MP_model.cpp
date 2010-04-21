@@ -289,7 +289,15 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         add(*j); 
     }// We have number of rows and number of columns at this point
 
+    // We need to generate all the values we need at this point, if they are not already present.
+    // For now: Simple Check: All randomVariables are either ScenarioRandomVars OR (exclusive) Independently distributed RandomVars.
+    //TODO: Write that check
+
+
     // TODO: Sample Values for all variables (independent ones..)
+    // TODO: We can use more intelligent ways of storing the values (sparse arrays..)?
+    // TODO: We need to calculate the number of scenarios per stage(for one node). With this information we can calculate the rest...
+    // TODO: Think about combining all-against-all (with equal prob or not)
     //sampleRandomVariates(RandomVariables); //Give standard sample size!!
 
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
