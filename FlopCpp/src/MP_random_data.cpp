@@ -355,6 +355,7 @@ namespace flopc{
     {}
 
     void RandomDataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const {
+        //Delete old index expression and set new one afterwards?!
         I1 = i1;
         I2 = i2;
         I3 = i3;

@@ -131,6 +131,7 @@ namespace flopc {
         virtual int isStage() const {
             return 1;
         }
+        virtual ~MP_stage() {}
     };
 
     class MP_scenario_set : public MP_set {

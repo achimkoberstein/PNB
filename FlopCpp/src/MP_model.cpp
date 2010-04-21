@@ -445,6 +445,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
             }
         }
+        //In case of random variables in the model we might have random bounds..
+        //Generate random bounds for all variables..
+        //for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
+        //    (*j)->bounds(randomCoefs);
+        //}
     }
 
     // Compute Column Length Array to easily compute start array from there
@@ -608,14 +613,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             coefs[i]->col = colIndirection[coefs[i]->col];
-            if (colStage[coefs[i]->col] != coefs[i]->varStage) {
+            if (colStage[coefs[i]->col] != coefs[i]->varStage) { // Variable is not present in any expression..
                 assert(colStage[coefs[i]->col] == 0);
                 colStage[coefs[i]->col] = coefs[i]->varStage; //
             }
             if (coefs[i]->row == -1) //Objective function 
                 coefs[i]->row = m;
-            if (!coefs[i]->scenVector.empty())
-                randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
         }
     }
     else {
