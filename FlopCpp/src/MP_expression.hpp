@@ -10,6 +10,8 @@
 using std::vector;
 using std::set;
 
+#include <boost/shared_ptr.hpp>
+
 #include "MP_domain.hpp"
 #include "MP_constant.hpp"
 #include "MP_utilities.hpp"
@@ -33,6 +35,7 @@ namespace flopc {
         friend class CoefLess;
         friend class MP_expression_base;
         friend class VariableRef;
+        friend class MP_variable;
 
         struct Coef {
             Coef(int c, int r, double v, int s = 0,int rs = 0,std::vector<double> scen = std::vector<double>()) : 
@@ -87,6 +90,20 @@ namespace flopc {
             const TerminalExpression* C; //Current 
             //End Temporary values
             vector<MP::Coef>& Coefs;
+        };
+
+        class VariableBoundsFunctor : public Functor {
+        public:
+            VariableBoundsFunctor(const VariableRef* v, std::vector< std::vector< boost::shared_ptr<MP::Coef>> >& cfs): var(v), Coefs(cfs) {}
+            void operator()() const;
+        private:
+            //Disable copy contructor and assignment operator
+            VariableBoundsFunctor(const VariableBoundsFunctor&);
+            VariableBoundsFunctor& operator=(const VariableBoundsFunctor&);
+
+
+            const VariableRef* var;
+            std::vector<std::vector< boost::shared_ptr<MP::Coef>> >& Coefs;
         };
     };
 
@@ -165,6 +182,9 @@ namespace flopc {
     class VariableRef : public TerminalExpression {
         friend class MP_variable;
     public:
+
+        virtual ~VariableRef();
+
         virtual int getColumn() const;
         double level() const;
 
@@ -195,8 +215,6 @@ namespace flopc {
             const MP_index_exp& i5);
 
         //VariableRef& operator=(const &VariableRef); Why is there a compiler warning about assignment operator can not be generated? due to the private constructor?
-
-
 
         void generate(const MP_domain& domain,
             vector<Constant> multiplicators,

@@ -25,6 +25,8 @@ namespace flopc {
         offset = v->offset; 
     }
 
+    VariableRef::~VariableRef() { }
+
     double VariableRef::level() const {
         return  V->M->Solver->getColSolution()[V->offset +
             V->f(V->S1->evaluate(),
@@ -350,6 +352,30 @@ bool MP::CoefLessWithStageShared( const boost::shared_ptr<MP::Coef>& a, const bo
         return false;
     }
 }
+
+void MP::VariableBoundsFunctor::operator()() const {
+ //Generate Coefficient for random bounds only.. we have to take a look at the variables bounds
+    //TODO: Evaluate lower limit and upper limit for every scenario, IF they contain a RandomVariable (that is a stage dependent random variable..)
+    //if (var->V->lowerLimit)
+    std::vector<double> scenarioValues;
+    if (var->V->lowerLimit->getStage()){ //
+        scenarioValues.clear();
+        for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+            scenarioValues.push_back(var->V->lowerLimit->evaluate(i));
+        }
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,0,var->getStage(),var->V->lowerLimit->getStage(),scenarioValues));
+        Coefs[temp->randomStage].push_back(temp);
+    }
+    if (var->V->upperLimit->getStage()){ //
+        scenarioValues.clear();
+        for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+            scenarioValues.push_back(var->V->upperLimit->evaluate(i));
+        }
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,0,var->getStage(),var->V->upperLimit->getStage(),scenarioValues));
+        Coefs[temp->randomStage].push_back(temp);
+    }
+}
+
 //This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
     assert(M==-1 || M==1);
@@ -413,29 +439,7 @@ void MP::GenerateFunctor::operator()() const {
 
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
-            //Generate Coefficient for random bounds only.. we have to take a look at the variables bounds
-            try {
-                const VariableRef* var = dynamic_cast<const VariableRef*>(C);
-                if (var == 0) //Null Pointer returned
-                    throw std::bad_cast();
-                //TODO: Evaluate lower limit and upper limit for every scenario, IF they contain a RandomVariable (that is a stage dependent random variable..)
-                //if (var->V->lowerLimit)
-                if (var->V->lowerLimit->getStage()){ //
-                    scenarioValues.clear();
-                    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
-                        scenarioValues.push_back(var->V->lowerLimit->evaluate(i));
-                    }
-                    Coefs.push_back(MP::Coef(colNumber,lowerBound,0,varStage,var->V->lowerLimit->getStage(),scenarioValues));
-                }
-                if (var->V->upperLimit->getStage()){ //
-                    scenarioValues.clear();
-                    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
-                        scenarioValues.push_back(var->V->upperLimit->evaluate(i));
-                    }
-                    Coefs.push_back(MP::Coef(colNumber,upperBound,0,varStage,var->V->upperLimit->getStage(),scenarioValues));
-                }
-            }
-            catch (const std::bad_cast& e) {} //Do nothing 
+           
 
         }//end if colNumber != outOfBound
     }//end if rowNumber != out of bound

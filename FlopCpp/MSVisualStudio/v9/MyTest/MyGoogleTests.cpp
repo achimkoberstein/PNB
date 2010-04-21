@@ -310,6 +310,8 @@ namespace {
         MP_variable x(T);
         x.lowerLimit = var(T);
         x.upperLimit = var(T)+5;
+        MP_constraint con1(T);
+        con1(T+1) = x(T+1) <= 200;
 
         testModel.setObjective(x(T+1));
         testModel.attach(testModel.Solver);

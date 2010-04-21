@@ -5,6 +5,8 @@
 #ifndef _MP_variable_hpp_
 #define _MP_variable_hpp_
 
+#include <boost/shared_ptr.hpp>
+
 #include "MP_set.hpp"
 #include "MP_index.hpp"
 #include "MP_expression.hpp"
@@ -40,8 +42,7 @@ namespace flopc {
                 const MP_set_base &s4 = MP_set::getEmpty(), 
                 const MP_set_base &s5 = MP_set::getEmpty());
 
-    ~MP_variable() {
-    }
+    ~MP_variable();
 
 	void display(const std::string &s = "");  
 
@@ -57,10 +58,10 @@ namespace flopc {
       const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
       const MP_index_exp& d5 = MP_index_exp::getEmpty()
       ) {
-          lowerLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
-          upperLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
+          //lowerLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
+          //upperLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
           myrefs.push_back(new VariableRef(this, d1, d2, d3, d4, d5));
-      return *myrefs.back(); //TODO: Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
+      return *myrefs.back(); //TODO: possible Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
     }
     
     /// Call this method to turn the variable into a binary variable
@@ -75,6 +76,8 @@ namespace flopc {
     void integer() { 
       type = discrete; 
     }
+
+    void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef>> >& v);
  
     /// Upper bound on the variable value.
     Constant upperLimit;
