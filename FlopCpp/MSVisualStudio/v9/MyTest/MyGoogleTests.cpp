@@ -52,46 +52,7 @@ namespace {
     protected:
         BendersTest() : model(new OsiClpSolverInterface()){
             //initalize model: Investmentexample test from below
-            MP_data initialWealth;
-            initialWealth() = 55; //set data
-
-            enum {numStage=3};
-            MP_stage T(numStage); //Time Stages
-            enum {numScen=4};
-            MP_scenario_set scen(numScen);
-            enum {asset1,asset2,numAssets=2};
-            MP_set assets(numAssets);
-            double scenarios[numStage-1][numAssets][numScen]=
-            {//T
-                //{//assets
-                //    {1,2,3,4},{5,6,7,8} //scen
-                //},
-                {//assets
-                    {2,4,2,4},{10,14,10,14} //scen
-                },
-                {//assets
-                    {3,6,9,12},{15,18,21,24} //scen
-                }
-            };
-            MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
-
-
-            MP_variable x(T,assets);
-            MP_variable wealth(T);
-
-            MP_constraint 
-                initialWealthConstr,
-                returnConstr(T),
-                allocationConstr(T),
-                globalTestConstraint(T);
-
-            initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-            allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
-            returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-            //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
-            //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
-            model.setObjective(wealth(T.last()));
-            model.attach(model.Solver);
+            
 
             //everything initialized, got SmiScnModel
         }
@@ -100,17 +61,56 @@ namespace {
 
 #pragma endregion initialization
 
-    //TEST_F(BendersTest,BendersSolverTest){
-    //    //model.solve(MP_model::MINIMIZE);
-    //    // call copyModel(smiModel)
-    //    // call copySubModel(smiModel) methods from Benders..
-    //    int maxIt = 100;
-    //    Benders* benders = new Benders("s", "-ws", "-ki", "-tr", "+ben");
+    TEST_F(BendersTest,BendersSolverTest){
+        //model.solve(MP_model::MINIMIZE);
+        // call copyModel(smiModel)
+        // call copySubModel(smiModel) methods from Benders..
+        int maxIt = 100;
+        Benders* benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
 
-    //    benders->copyMaster(model.smiModel);
-    //    benders->copySubmodel(model.smiModel);
-    //    benders->BendersSolve(0.000001, maxIt );
-    //}
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_data initialWealth;
+        initialWealth() = 55; //set data
+
+        enum {numStage=2};
+        MP_stage T(numStage); //Time Stages
+        enum {numScen=4};
+        MP_scenario_set scen(numScen);
+        enum {asset1,asset2,numAssets=2};
+        MP_set assets(numAssets);
+        double scenarios[numStage-1][numAssets][numScen]=
+        {//T
+            {//assets
+                {2,4,2,4},{10,14,10,14} //scen
+            },
+                //{//assets
+                //    {3,6,9,12},{15,18,21,24} //scen
+                //}
+        };
+        MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
+
+
+        MP_variable x(T,assets);
+        MP_variable wealth(T);
+
+        MP_constraint 
+            initialWealthConstr,
+            returnConstr(T),
+            allocationConstr(T),
+            globalTestConstraint(T);
+
+        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+        //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
+        //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
+        testModel.setObjective(wealth(T.last()));
+        testModel.attach(model.Solver);
+
+        benders->copyMaster(model.smiModel);
+        benders->copySubmodel(model.smiModel);
+        benders->BendersSolve(0.000001, maxIt );
+    }
 
     TEST_F(MP_modelTest,DataTest){
         MP_data data1;
