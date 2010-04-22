@@ -7,7 +7,7 @@
 #include "OsiStochasticSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-#include "OsiCpxSolverInterface.hpp"
+//#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
@@ -87,7 +87,7 @@ namespace {
     }
 
     TEST_F(MP_modelTest,DacotaModel) { 
-        MP_model dacota(new OsiCpxSolverInterface()); 
+        MP_model dacota(new OsiClpSolverInterface()); 
         MP_stage T(2); 
          
         enum {low, normal, high, numScenarios}; 
