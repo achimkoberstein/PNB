@@ -25,6 +25,8 @@ namespace flopc {
         offset = v->offset; 
     }
 
+    VariableRef::~VariableRef() { }
+
     double VariableRef::level() const {
         return  V->M->Solver->getColSolution()[V->offset +
             V->f(V->S1->evaluate(),
@@ -110,6 +112,10 @@ namespace flopc {
         }
         void insertVariables(set<MP_variable*>& v) const {}
 
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+         C->insertRandomVariables(v);
+        }
+
         virtual RandomVariable* getRandomVariable() const {
             return C->getRandomVariable();
         }
@@ -126,6 +132,11 @@ namespace flopc {
              void insertVariables(set<MP_variable*>& v) const {
                  left->insertVariables(v);
                  right->insertVariables(v);
+             }
+
+            void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+                 left->insertRandomVariables(v);
+                 right->insertRandomVariables(v);
              }
 
              MP_expression left,right;
@@ -189,6 +200,9 @@ namespace flopc {
            void insertVariables(set<MP_variable*>& v) const {
                right->insertVariables(v);
            }
+           void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+               left->insertRandomVariables(v);
+           }
            Constant left;
            MP_expression right;
     };
@@ -210,6 +224,9 @@ namespace flopc {
            }
            void insertVariables(set<MP_variable*>& v) const {
                left->insertVariables(v);
+           }
+           void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+               right->insertRandomVariables(v);
            }
            MP_expression left;
            Constant right;
@@ -234,6 +251,9 @@ namespace flopc {
         }
         void insertVariables(set<MP_variable*>& v) const {
             exp->insertVariables(v);
+        }
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+               exp->insertRandomVariables(v);
         }
 
         class SumFunctor : public Functor {
@@ -332,6 +352,30 @@ bool MP::CoefLessWithStageShared( const boost::shared_ptr<MP::Coef>& a, const bo
         return false;
     }
 }
+
+void MP::VariableBoundsFunctor::operator()() const {
+ //Generate Coefficient for random bounds only.. we have to take a look at the variables bounds
+    //TODO: Evaluate lower limit and upper limit for every scenario, IF they contain a RandomVariable (that is a stage dependent random variable..)
+    //if (var->V->lowerLimit)
+    std::vector<double> scenarioValues;
+    if (var->V->lowerLimit->getStage()){ //
+        scenarioValues.clear();
+        for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+            scenarioValues.push_back(var->V->lowerLimit->evaluate(i));
+        }
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,0,var->getStage(),var->V->lowerLimit->getStage(),scenarioValues));
+        Coefs[temp->randomStage].push_back(temp);
+    }
+    if (var->V->upperLimit->getStage()){ //
+        scenarioValues.clear();
+        for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+            scenarioValues.push_back(var->V->upperLimit->evaluate(i));
+        }
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,0,var->getStage(),var->V->upperLimit->getStage(),scenarioValues));
+        Coefs[temp->randomStage].push_back(temp);
+    }
+}
+
 //This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
     assert(M==-1 || M==1);
@@ -349,15 +393,15 @@ void MP::GenerateFunctor::operator()() const {
         if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
             // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
             stage = multiplicators[i]->getStage();
-            ptrRV = multiplicators[i]->getRandomVariable();
+            //ptrRV = multiplicators[i]->getRandomVariable();
             for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){
                 double temp = sideOfConstraint*(multiplicators[i]->evaluate(j));
                 scenarioValues.push_back(temp);
             }
-            if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
-                //continue; //Go to next loop
-                throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
-            }
+            //if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
+            //    //continue; //Go to next loop
+            //    throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
+            //}
         }
         else {
             sideOfConstraint *= multiplicators[i]->evaluate();
@@ -377,7 +421,6 @@ void MP::GenerateFunctor::operator()() const {
         int colNumber = C->getColumn(); //Get Column number.
         if ( colNumber != outOfBound  ) {
             double val = sideOfConstraint*C->getValue(); //Get Value of Coefficient
-
             // Set variable stage.
             int varStage = C->getStage();
             //Now comes the fun part: If varStage > stage this means one of two things:
@@ -388,26 +431,17 @@ void MP::GenerateFunctor::operator()() const {
             if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
                 stage = varStage;
                 //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
-                try {
-                    dynamic_cast<const Expression_constant*> (C);
+                const Expression_constant* ePtr = dynamic_cast<const Expression_constant*> (C);
+                if (ePtr != 0)
                     for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
-                }
-                catch (const std::bad_cast& e){
-                   
-                }
-
 
             }
-            ////store col and row index in random variable, if there is any
-            //if (ptrRV != 0){
-            //    ptrRV->ColIndex(colNumber);
-            //    ptrRV->RowIndex(rowNumber);
-            //}
-
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
-        }
-    }
+           
+
+        }//end if colNumber != outOfBound
+    }//end if rowNumber != out of bound
 }
 

@@ -224,5 +224,6 @@ namespace flopc {
         Constant right;
     };
 
+
 } // End of namespace flopc
 #endif

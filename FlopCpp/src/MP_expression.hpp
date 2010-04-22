@@ -10,6 +10,8 @@
 using std::vector;
 using std::set;
 
+#include <boost/shared_ptr.hpp>
+
 #include "MP_domain.hpp"
 #include "MP_constant.hpp"
 #include "MP_utilities.hpp"
@@ -33,6 +35,7 @@ namespace flopc {
         friend class CoefLess;
         friend class MP_expression_base;
         friend class VariableRef;
+        friend class MP_variable;
 
         struct Coef {
             Coef(int c, int r, double v, int s = 0,int rs = 0,std::vector<double> scen = std::vector<double>()) : 
@@ -88,6 +91,20 @@ namespace flopc {
             //End Temporary values
             vector<MP::Coef>& Coefs;
         };
+
+        class VariableBoundsFunctor : public Functor {
+        public:
+            VariableBoundsFunctor(const VariableRef* v, std::vector< std::vector< boost::shared_ptr<MP::Coef>> >& cfs): var(v), Coefs(cfs) {}
+            void operator()() const;
+        private:
+            //Disable copy contructor and assignment operator
+            VariableBoundsFunctor(const VariableBoundsFunctor&);
+            VariableBoundsFunctor& operator=(const VariableBoundsFunctor&);
+
+
+            const VariableRef* var;
+            std::vector<std::vector< boost::shared_ptr<MP::Coef>> >& Coefs;
+        };
     };
 
 
@@ -112,6 +129,8 @@ namespace flopc {
             double m) const = 0;
 
         virtual void insertVariables(set<MP_variable *>& v) const = 0; //Insert given Variables to the Model?!
+
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
 
         virtual ~MP_expression_base() {}
     };
@@ -163,21 +182,18 @@ namespace flopc {
     class VariableRef : public TerminalExpression {
         friend class MP_variable;
     public:
+
+        virtual ~VariableRef();
+
         virtual int getColumn() const;
-    private:
-        VariableRef(MP_variable* v, 
-            const MP_index_exp& i1,
-            const MP_index_exp& i2,
-            const MP_index_exp& i3,
-            const MP_index_exp& i4,
-            const MP_index_exp& i5);
-
-        //VariableRef& operator=(const &VariableRef); Why is there a compiler warning about assignment operator can not be generated? due to the private constructor?
-
         double level() const;
 
         void insertVariables(set<MP_variable*>& v) const {
             v.insert(V);
+        }
+
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+         
         }
         virtual double getValue(int scenario) const { 
             return 1.0;
@@ -188,12 +204,26 @@ namespace flopc {
             return 0;
         }
 
+
+
+    private:
+        VariableRef(MP_variable* v, 
+            const MP_index_exp& i1,
+            const MP_index_exp& i2,
+            const MP_index_exp& i3,
+            const MP_index_exp& i4,
+            const MP_index_exp& i5);
+
+        //VariableRef& operator=(const &VariableRef); Why is there a compiler warning about assignment operator can not be generated? due to the private constructor?
+
         void generate(const MP_domain& domain,
             vector<Constant> multiplicators,
             MP::GenerateFunctor& f,
             double m) const;
 
+    public:
         MP_variable* V;
+    private:
         int offset;
         const MP_index_exp I1,I2,I3,I4,I5;
     };

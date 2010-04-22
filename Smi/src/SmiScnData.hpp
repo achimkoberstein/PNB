@@ -224,7 +224,7 @@ public:
 	void copyObjective(double * dobj,SmiStageIndex t);
 
 	inline SmiNodeData * getNode(SmiStageIndex t){return nodes_[t];}
-	SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag);
+    SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0);
 	SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag);
 	~SmiCoreData();
 
@@ -239,7 +239,8 @@ private:
 							   CoinPackedVector *dcup,
 							   CoinPackedVector *dobj,
 							   CoinPackedVector *drlo,
-							   CoinPackedVector *drup);
+							   CoinPackedVector *drup,
+                               int* integerIndices = 0,int integerLength = 0);
 private:
 	int nrow_;
 	int ncol_;
@@ -254,6 +255,8 @@ private:
 	int *rowEx2In_; //Not clear yet
 	int *colIn2Ex_; // Not clear yet
 	int *rowIn2Ex_; // Not clear yet
+    int *integerIndices_; //indices of integer variables
+    int integerLength_; //number of integer variables
 	double **cdrlo_;
 	double **cdrup_;
 	double **cdobj_;

@@ -5,11 +5,14 @@
 #ifndef _MP_variable_hpp_
 #define _MP_variable_hpp_
 
+#include <boost/shared_ptr.hpp>
+
 #include "MP_set.hpp"
 #include "MP_index.hpp"
 #include "MP_expression.hpp"
 #include "MP_domain.hpp"
 #include "MP_data.hpp"
+#include "MP_constant.hpp"
 
 namespace flopc {
 
@@ -39,8 +42,7 @@ namespace flopc {
                 const MP_set_base &s4 = MP_set::getEmpty(), 
                 const MP_set_base &s5 = MP_set::getEmpty());
 
-    ~MP_variable() {
-    }
+    ~MP_variable();
 
 	void display(const std::string &s = "");  
 
@@ -56,25 +58,31 @@ namespace flopc {
       const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
       const MP_index_exp& d5 = MP_index_exp::getEmpty()
       ) {
-      return *new VariableRef(this, d1, d2, d3, d4, d5);
+          lowerLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
+          upperLimit->propagateIndexExpression(d1,d2,d3,d4,d5);
+          myrefs.push_back(new VariableRef(this, d1, d2, d3, d4, d5));
+      return *myrefs.back(); //TODO: possible Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
     }
     
     /// Call this method to turn the variable into a binary variable
-	//TODO: What is with lower Bound?
     void binary() { 
-      upperLimit.initialize(1);
-      type = discrete; 
+      //upperLimit.initialize(1);
+        lowerLimit = Constant(0);
+        upperLimit = Constant(1);
+        type = discrete; 
     }
 
     /// Call this method to turn the MP_variable into an integer variable
     void integer() { 
       type = discrete; 
     }
+
+    void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef>> >& v);
  
     /// Upper bound on the variable value.
-    MP_data upperLimit;
+    Constant upperLimit;
     /// Lower bound on the variable value.
-    MP_data lowerLimit;
+    Constant lowerLimit;
   private:
     //Disabling copy constructor and assignment
     MP_variable(const MP_variable&);
@@ -85,6 +93,7 @@ namespace flopc {
     MP_index i1,i2,i3,i4,i5;
 
     MP_model *M;
+    std::vector<VariableRef*> myrefs;
     variableType type;
     int offset;
   };
