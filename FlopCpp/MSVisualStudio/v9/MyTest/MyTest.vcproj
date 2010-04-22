@@ -59,9 +59,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cplex110.lib"
 				LinkIncremental="0"
-				AdditionalLibraryDirectories="C:\ILOG\CPLEX110\lib\x86_windows_vs2008\stat_mta"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
