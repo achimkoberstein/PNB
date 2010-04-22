@@ -47,22 +47,56 @@ namespace {
         MP_model testModel;
     };
 
-    class BendersTest: public ::testing::Test{
+     TEST_F(MP_modelTest,InvestmentExampleTest){
+        // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
+        MP_model investmentModel(new OsiClpSolverInterface());
+        MP_data initialWealth;
+        initialWealth() = 55; //set data
 
-    protected:
-        BendersTest() : model(new OsiClpSolverInterface()){
-            //initalize model
+        enum {numStage=2};
+        MP_stage T(numStage); //Time Stages
+        enum {numScen=4};
+        MP_scenario_set scen(numScen);
+        enum {asset1,asset2,numAssets=2};
+        MP_set assets(numAssets);
+        double scenarios[numStage-1][numAssets][numScen]=
+        {//T
+            //{//assets
+            //    {1,2,3,4},{5,6,7,8} //scen
+            //},
+            {//assets
+                {2,4,2,4},{10,14,10,14} //scen
+            },
+            //{//assets
+            //    {3,6,9,12},{15,18,21,24} //scen
+            //}
+        };
+        MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
 
-            //everything initialized, got SmiScnModel
-        }
-        MP_model model; //model
-    };
 
-    //TEST_F(BendersTest,BendersSolverTest){
-    //    //model.solve(MP_model::MINIMIZE);
-    //    // call copyModel(smiModel)
-    //    // call copySubModel(smiModel) methods from Benders..
-    //}
+        MP_variable x(T,assets);
+        MP_variable wealth(T);
+
+        MP_constraint 
+            initialWealthConstr,
+            returnConstr(T),
+            allocationConstr(T),
+            globalTestConstraint(T);
+
+        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+        //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
+        //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
+        investmentModel.setObjective(wealth(T.last()));
+        investmentModel.attach(investmentModel.Solver);
+        investmentModel.solve(MP_model::MAXIMIZE);
+
+        //const double* colArray = investmentModel.Solver->getColSolution();
+        //Compare solution values.
+        EXPECT_DOUBLE_EQ(660,investmentModel.Solver->getObjValue());
+
+    }
 
     TEST_F(MP_modelTest,DataTest){
         MP_data data1;
@@ -204,56 +238,7 @@ namespace {
         EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
     }
 
-    TEST_F(MP_modelTest,InvestmentExampleTest){
-        // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
-        MP_model investmentModel(new OsiClpSolverInterface());
-        MP_data initialWealth;
-        initialWealth() = 55; //set data
-
-        enum {numStage=3};
-        MP_stage T(numStage); //Time Stages
-        enum {numScen=4};
-        MP_scenario_set scen(numScen);
-        enum {asset1,asset2,numAssets=2};
-        MP_set assets(numAssets);
-        double scenarios[numStage-1][numAssets][numScen]=
-        {//T
-            //{//assets
-            //    {1,2,3,4},{5,6,7,8} //scen
-            //},
-            {//assets
-                {2,4,2,4},{10,14,10,14} //scen
-            },
-            {//assets
-                {3,6,9,12},{15,18,21,24} //scen
-            }
-        };
-        MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
-
-
-        MP_variable x(T,assets);
-        MP_variable wealth(T);
-
-        MP_constraint 
-            initialWealthConstr,
-            returnConstr(T),
-            allocationConstr(T),
-            globalTestConstraint(T);
-
-        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
-        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-        //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
-        //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
-        investmentModel.setObjective(wealth(T.last()));
-        investmentModel.attach(investmentModel.Solver);
-        investmentModel.solve(MP_model::MAXIMIZE);
-
-        //const double* colArray = investmentModel.Solver->getColSolution();
-        //Compare solution values.
-        EXPECT_DOUBLE_EQ(13035,investmentModel.Solver->getObjValue());
-
-    }
+   
 
     TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
         //Create RV via double array. 
