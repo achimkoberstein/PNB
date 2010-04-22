@@ -151,6 +151,9 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 	for (i=0;i<nstag_;i++)
 		stageColPtr_[i+1] = stageColPtr_[i] + nColInStage_[i];
 
+    //TODO: Create Array with length number of columns and containts integer information for every column.
+    // Even better: store list with values of integer columns for cur stage only
+
 
 	// reserve place for nodes holding stage dependent fixed information
 	this->nodes_.reserve(nstag_);
