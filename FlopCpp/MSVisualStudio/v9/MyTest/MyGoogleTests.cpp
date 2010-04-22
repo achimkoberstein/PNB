@@ -86,60 +86,63 @@ namespace {
 
     }
 
-    TEST_F(MP_modelTest,DacotaModel) { 
+    TEST_F(MP_modelTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
-        MP_stage T(2); 
-         
-        enum {low, normal, high, numScenarios}; 
-        MP_scenario_set scen(numScenarios); 
-         
-        enum {desk, table, chair, numProducts}; 
-        MP_set P(numProducts); 
-         
-        enum {lumber, finishing, carpentry, numResources}; 
-        MP_set R(numResources); 
-         
-        MP_data resourceCost(R); 
-        resourceCost(lumber) = 2; 
-        resourceCost(finishing) = 4; 
-        resourceCost(carpentry) = 5.2; 
-         
-        MP_data resourceReq(P, R); 
-        resourceReq(desk, lumber) = 8;      resourceReq(desk, finishing) = 4;       resourceReq(desk, carpentry) = 2; 
-        resourceReq(table, lumber) = 6;     resourceReq(table, finishing) = 2;      resourceReq(table, carpentry) = 1.5; 
-        resourceReq(chair, lumber) = 1;     resourceReq(chair, finishing) = 1.5;    resourceReq(chair, carpentry) = 0.5; 
-         
-        double prices[3] = {60.0, 40.0, 10.0}; 
-        MP_data sellingPrice(&prices[0], P); 
-         
-        double scenDemand[1][numProducts][numScenarios] = 
-        { 
-            { // L     M    H 
-                {50,  150, 250}, // desk 
-                {20,  110, 250}, // table 
-                {200, 225, 500}  // chair 
-            } 
-        }; 
-        MP_random_data demand(&scenDemand[0][0][0], T, P); 
-         
-        MP_variable x(R), y(T,P); 
-         
-        MP_constraint demandConstraint(T,P), productionConstraint(R), conR(R); 
-        demandConstraint(T+1,P) = y(T+1,P) <= demand(T+1,P); 
-        productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R); 
-         
-        // Ohne diese zusätzliche Restriktion ist das Modell unbeschränkt, obwohl x(R) mit negativen Kosten in die ZF eingeht 
-        // conR(R) = x(R) <= 100; 
-         
-        dacota.setObjective( 
-            sum(P, y(T+1,P) * sellingPrice(P)) 
-          - sum(R, x(R) * resourceCost(R)) 
-        ); 
-        dacota.attach(dacota.Solver); 
-        dacota.solve(MP_model::MAXIMIZE);  
-        x.display("x (Resources)"); 
-        cout << "Finished"; 
+        MP_stage T(2);
+        
+        enum {low, normal, high, numScenarios};
+        MP_scenario_set scen(numScenarios);
+        
+        enum {desk, table, chair, numProducts};
+        MP_set P(numProducts);
+        
+        enum {lumber, finishing, carpentry, numResources};
+        MP_set R(numResources);
+        
+        MP_data resourceCost(R);
+        resourceCost(lumber) = 2;
+        resourceCost(finishing) = 4;
+        resourceCost(carpentry) = 5.2;
+        
+        MP_data resourceReq(P, R);
+        resourceReq(desk, lumber) = 8;      resourceReq(desk, finishing) = 4;       resourceReq(desk, carpentry) = 2;
+        resourceReq(table, lumber) = 6;     resourceReq(table, finishing) = 2;      resourceReq(table, carpentry) = 1.5;
+        resourceReq(chair, lumber) = 1;     resourceReq(chair, finishing) = 1.5;    resourceReq(chair, carpentry) = 0.5;
+        
+        double prices[3] = {60.0, 40.0, 10.0};
+        MP_data sellingPrice(&prices[0], P);
+        
+        double scenDemand[1][numProducts][numScenarios] =
+        {
+            { // L     M    H
+                {50,  150, 250}, // desk
+                {20,  110, 250}, // table
+                {200, 225, 500}  // chair
+            }
+        };
+        MP_random_data demand(&scenDemand[0][0][0], T, P);
+        
+        MP_variable 
+            x(R),   // Ressourcenbedarf
+            y(T,P); // Produzierte Einheiten
+        
+        MP_constraint demandConstraint(P), productionConstraint(R), conR(R);
+        demandConstraint(P) = y(T+1,P) <= demand(T+1,P);
+        productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R);
+        
+        // Ohne diese Restriktion ist das Modell unbeschränkt, obwohl x(R) mit negativen Kosten in ZF eingeht
+        //conR(R) = x(R) <= 100;
+        
+        dacota.setObjective(
+            sum(P, y(T+1,P) * sellingPrice(P))
+          + sum(R, x(R) * resourceCost(R))
+        );
+        dacota.attach(dacota.Solver);
+        dacota.solve(MP_model::MAXIMIZE); 
+        x.display("x (Resources)");
+        cout << "Finished";
     }
+
 
     TEST_F(MP_modelTest,TimoTest){
         MP_model testModel2(new OsiClpSolverInterface());
