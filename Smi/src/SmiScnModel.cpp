@@ -251,6 +251,8 @@ SmiScnModel::loadOsiSolverData()
 	this->rstrt_[0] = 0;
 	this->nels_max = nels_;
 
+    //TODO: Define std::vector<int> for integer indices
+
 	ncol_=0;
 	nrow_=0;
 	nels_=0;
@@ -268,6 +270,7 @@ SmiScnModel::loadOsiSolverData()
 	// pass data to osiStoch
 	osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
 
+    //TODO: load integer values in solver
 
 
 	//Print out Matrix.. if in Debug Mode
@@ -496,6 +499,12 @@ SmiScnModel::addNode(SmiScnNode *tnode)
 	// set offsets for current node
 	tnode->setColOffset(ncol_);
 	tnode->setRowOffset(nrow_);
+
+    //TODO: Generate integer information from information given in core node (offset manipulation)
+    // Get index list of integers for current stage
+    // Iterate through list 
+    //    add offset
+    //    add to overall integer list
 
 	if (tnode->isVirtualNode())
 	{
