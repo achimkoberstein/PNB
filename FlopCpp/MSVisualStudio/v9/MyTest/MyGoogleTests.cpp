@@ -7,7 +7,7 @@
 #include "OsiStochasticSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-//#include "OsiCpxSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
@@ -51,13 +51,13 @@ namespace {
     class BendersTest: public ::testing::Test{
 
     protected:
-        BendersTest() : model(new OsiClpSolverInterface()){
+        BendersTest(){
             //initalize model: Investmentexample test from below
             
 
             //everything initialized, got SmiScnModel
         }
-        MP_model model; //model
+       
     };
 
 #pragma endregion initialization
@@ -69,20 +69,20 @@ namespace {
         int maxIt = 100;
         Benders* benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
 
-        MP_model testModel(new OsiClpSolverInterface());
+        MP_model testModel(new OsiCpxSolverInterface());
         MP_data initialWealth;
         initialWealth() = 55; //set data
 
         enum {numStage=2};
         MP_stage T(numStage); //Time Stages
-        enum {numScen=4};
+        enum {numScen=2};
         MP_scenario_set scen(numScen);
         enum {asset1,asset2,numAssets=2};
         MP_set assets(numAssets);
         double scenarios[numStage-1][numAssets][numScen]=
         {//T
             {//assets
-                {2,4,2,4},{10,14,10,14} //scen
+                {2,4},{10,14} //scen
             },
                 //{//assets
                 //    {3,6,9,12},{15,18,21,24} //scen
@@ -105,11 +105,12 @@ namespace {
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
         //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
         //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
-        testModel.setObjective(wealth(T.last()));
-        testModel.attach(model.Solver);
-
-        benders->copyMaster(model.smiModel);
-        benders->copySubmodel(model.smiModel);
+        testModel.setObjective(-1*wealth(T.last()));
+        //testModel.setObjective(wealth(T.last())); //Benders
+        testModel.attach(testModel.Solver); //TODO: Methodensignatur ändern!!
+        //testModel.solve(MP_model::MINIMIZE);
+        benders->copyMaster(testModel.smiModel);
+        benders->copySubmodel(testModel.smiModel);
         benders->BendersSolve(0.000001, maxIt );
     }
 
