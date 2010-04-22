@@ -971,8 +971,8 @@ namespace flopc {
         tempAncScenVec[0] = 0;
         branchStageVec[0] = 1;
 
-        std::vector<int> scenarioIndirection(nScen,-1);
-        std::vector<int> realOrderingFromVirtualScenario(nScen,-1);
+        std::vector<int> scenarioIndirection(nScen,outOfBound);
+        std::vector<int> realOrderingFromVirtualScenario(nScen,outOfBound);
         std::vector<double> probabilities(nScen,1.0/nScen);
 
         typedef std::set<int>::iterator scenIt;
@@ -1065,11 +1065,12 @@ namespace flopc {
                 for (scenIt innerIt = subScenariosPerStageAndScenario[curStage][curScen].begin(); innerIt != subScenariosPerStageAndScenario[curStage][curScen].end();){
                     if (curStage == nStages-1){
                         //We are in the last stage. All scenarios that still have the same values end up in the same scenario, but that increases the probability
-                        //Remove the scenario from current stage
+                        //Remove the scenario from current stage and set realOdering to outOfBound
                         tempAncScenVec[*innerIt] = tempAncScenVec[parentScen];
-                        scenarioIndirection[*innerIt] = scenCounter;
-                        realOrderingFromVirtualScenario[scenCounter] = *innerIt;
-                        probabilities[parentScen] += 1.0/nScen; //add one scenario prob for each added scenario.
+                        scenarioIndirection[*innerIt] = outOfBound;
+                        realOrderingFromVirtualScenario[scenCounter] = outOfBound;
+                        probabilities[parentScen] += probabilities[*innerIt]; //add one scenario prob for each added scenario.
+                        probabilities[*innerIt] = 0;
                         subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     // Define the new scenario subset node for the next stage
@@ -1094,17 +1095,17 @@ namespace flopc {
         //Generate scenarios in SMI
         // SMI expects a "correct" scenario tree ordering, so we reorder the scenarios first.
         //We need to use scenarioIndirection to get correct index for scenario i (natural ordering as expected from smi).
-        scenCounter = 0;
         std::vector<int> ancScenVec(nScen);
-        for (int i = 0; i < nScen; i++){
+        for (int i = 0; i < scenCounter; i++){
             ancScenVec[i] = realOrderingFromVirtualScenario[tempAncScenVec[scenarioIndirection[i]]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
         }
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
-        for (int i = 0; i < nScen; i++){
+        int numOfIrrelevantScen = std::count(branchStageVec.begin(),branchStageVec.end(),outOfBound);
+        for (int i = 0; i < scenCounter; i++){
             int curScen = scenarioIndirection[i];
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
-            if (ancScenVec[curScen]!=-1){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
+            if (ancScenVec[curScen]!=outOfBound){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
                 //We need to convert the CoinPackedMatrix to CoinPackedVectors..
                 CoinPackedVector curBloVec(bloVec[curScen]->getVector(0));
                 CoinPackedVector curBupVec(bupVec[curScen]->getVector(0));
@@ -1112,9 +1113,7 @@ namespace flopc {
                 CoinPackedVector curRloVec(rloVec[curScen]->getVector(0));
                 CoinPackedVector curRupVec(rupVec[curScen]->getVector(0));
 
-
                 smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
-                scenCounter++;
             }
         }
         //TODO: Think about debugging routines or debugging logger..
