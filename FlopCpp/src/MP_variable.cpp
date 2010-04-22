@@ -21,15 +21,15 @@ MP_variable::MP_variable(const MP_set_base &s1,
                          const MP_set_base &s4, 
                          const MP_set_base &s5) :
 RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-upperLimit(s1,s2,s3,s4,s5),
-lowerLimit(s1,s2,s3,s4,s5),
+upperLimit(MP_model::getCurrentModel()->getInfinity()),
+lowerLimit(0),
 S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
 offset(-1)
 {
-    lowerLimit.initialize(0.0);
-    upperLimit.initialize(MP_model::getCurrentModel()->getInfinity());
     type = continuous;
-}    
+} 
+
+MP_variable::~MP_variable() { }
 
 double MP_variable::level(int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
     assert(M != 0);
@@ -58,4 +58,18 @@ void MP_variable::display(const std::string &s) {
     } else {
         cout<<"No solution available!"<<endl;
     }
+}
+
+void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef>> >& cfs) {
+
+    //Store Constant index expressions of upper and lower bound and reset them afterwards?! Just for the moment..
+    // Create new MP_index? 
+    //MP_index in1,in2,in3,in4,in5;
+    //const VariableRef* var = new VariableRef(this,in1,in2,in3,in4,in5);
+    //delete var;
+    const VariableRef& var = this->operator()(i1,i2,i3,i4,i5); //This is incorrect: We put MP_index in but we want a MP_index_exp. What happens to the indices of the limit Constants?!
+    MP::VariableBoundsFunctor f(&var, cfs);
+    ((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(&f);
+    delete myrefs.back();
+    myrefs.pop_back();
 }

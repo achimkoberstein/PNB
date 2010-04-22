@@ -36,7 +36,7 @@ namespace flopc {
 
 
 
-        //Check if given integer is falid. If not return outOfBound. In Case of cyclic return i mod size.
+        //Check if given integer is valid. If not return outOfBound. In Case of cyclic return i mod size.
         int check(int i) const {
             if ((i>=0) && (i<size())) {
                 return i;
@@ -131,11 +131,13 @@ namespace flopc {
         virtual int isStage() const {
             return 1;
         }
+        virtual ~MP_stage();
     };
 
     class MP_scenario_set : public MP_set {
     public:
         MP_scenario_set(int i = 0);
+        virtual ~MP_scenario_set();
     };
 
     //forward declaration

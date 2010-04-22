@@ -6,6 +6,7 @@
 #include <map>
 
 #include <boost/shared_ptr.hpp>
+#include <CoinSmartPtr.hpp>
 #include <boost/utility.hpp>
 
 #include "MP_data.hpp"
@@ -44,16 +45,14 @@ namespace flopc{
         void RowIndex(int val) { rowIndex = val; }
         int SampleSize() const { return defaultSampleSize; }
         void SampleSize(int val) { defaultSampleSize = val; }
-        double AdditiveConstant() const { return additiveConstant; }
-        void AdditiveConstant(double val) { additiveConstant = val; }
-        double MultiplicativeConstant() const { return multiplicativeConstant; }
-        void MultiplicativeConstant(double val) { multiplicativeConstant = val; }
+       bool isRandomVariable() const { return initialized; }
+       
         int Seed() const { return seed; }
         void Seed(int val) { seed = val; }
     protected:
-        double applyConstant(double val);
 
         //Boost::random number generator? Needs seed
+        bool initialized;
         unsigned int seed;
 
         //We only need one way to store the values. Speed vs. Storage and what methods are called should determine which way is better.
@@ -61,13 +60,12 @@ namespace flopc{
         std::vector<double> values; //All values are equally probable
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
-        double additiveConstant;
-        double multiplicativeConstant;
 
     private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
         int colIndex;
         int rowIndex;
+        
 
         //flopc::RandomVariable& operator=(const flopc::RandomVariable &);
 
@@ -160,11 +158,10 @@ namespace flopc{
 
         virtual void operator()() const;
 
-        //TODO: Assignment of random variables via this operator is not yet possible
         //Needs virtual assignment operators hierarchy that might look ugly
         RandomVariable*& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
 
-        const boost::shared_ptr<RandomDataRef> operator()( 
+        RandomDataRef& operator()( 
             const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d2 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d3 = MP_index_exp::getEmpty(),
@@ -178,12 +175,14 @@ namespace flopc{
         //TODO: Think about copying behaviour?
         MP_random_data(const MP_random_data& rhs); //forbid copy constructor
         MP_random_data& operator=(const MP_random_data& rhs); //forbid assignment operator
+
         boost::shared_ptr<MP_random_data_impl> ptrImpl; //TODO: We can change this to CoinSharedPointer?!
+        
 
 
     };
 
-    class RandomDataRef : public Functor { //Are we really a constant_base object?
+    class RandomDataRef : public Constant_base,public Functor, public Coin::ReferencedObject { //Are we really a constant_base object?
         friend class MP_random_data_impl;
     public:
 
@@ -199,29 +198,33 @@ namespace flopc{
         RandomDataRef& such_that(const MP_boolean& b);
 
         //Get Value via current settings for MP_index_exp
-        double evaluate() const;
-        int getStage() const;
+        virtual double evaluate(int scenario) const;
+        virtual int getStage() const;
+        virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
+        virtual RandomVariable* getRandomVariable() const;
+
         //Assignment-operators (Not yet defined..)
         const RandomDataRef& operator=(const RandomDataRef& r); 
         const RandomDataRef& operator=(const Constant& c);
+        
         //Copy Constructor (needed in initialization of Constant_random_variable
         RandomDataRef(const RandomDataRef&);
 
         //Set value via current MP_index_exp 
         //void evaluate_lhs(const RandomVariable &v) const;
         virtual void operator()() const;
-        RandomVariable* RandomDataRef::getRandomVariable() const;
+        
 
     private:
         boost::shared_ptr<MP_random_data_impl> RV;
-        const MP_index_exp I1,I2,I3,I4,I5;
+        mutable MP_index_exp I1,I2,I3,I4,I5;
         Constant C;
         MP_boolean B;
     };
 
     //non-member non-friend functions
     std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;
-   
 
 }
 
