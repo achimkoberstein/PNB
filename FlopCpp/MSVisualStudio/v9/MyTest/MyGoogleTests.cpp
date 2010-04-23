@@ -280,6 +280,10 @@ namespace {
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
+        MP_data prob(scen);
+        prob(0) = 0.5;
+        prob(1) = 0.5;
+        testModel2.Probabilities(prob);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
