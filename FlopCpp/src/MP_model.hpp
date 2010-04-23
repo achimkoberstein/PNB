@@ -257,6 +257,8 @@ namespace flopc {
         void Stage(const MP_stage& val) { stage = val; }
         flopc::MP_scenario_set ScenSet() const { return scenSet; }
         void ScenSet(flopc::MP_scenario_set val) { scenSet = val; }
+        //MP_data Probabilities() const { return probabilities; }
+        void Probabilities(const MP_data& prob);
 
         OsiSolverInterface* Solver; 
 
@@ -291,6 +293,7 @@ namespace flopc {
         set<MP_constraint *> Constraints;
         set<MP_variable *> Variables;
         std::vector< std::set<RandomVariable*> > RandomVariables;
+        std::vector<double> probabilities;
 
     private:
         int m;

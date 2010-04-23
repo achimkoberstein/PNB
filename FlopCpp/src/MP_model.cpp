@@ -105,6 +105,26 @@ void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in
     }
 }
 
+void MP_model::Probabilities(const MP_data& prob){
+    // set probabilities
+    if (scenSet.size() == 0)
+        throw invalid_argument_exception(); //We need to set MP_scenario_set first..
+    MP_scenario_set* scenPtr = dynamic_cast<MP_scenario_set*> (const_cast<MP_set_base*>(&prob.S1));
+    if (scenPtr != 0){ //Cast was succesfull..
+        // Now we can set values. Check for correct probabilities also..
+        probabilities.clear();
+        probabilities.reserve(scenSet.size());
+        double sum = 0;
+        for (int i = 0; i<scenSet.size();i++){
+            double probability = prob.v[prob.f(i)];
+            probabilities.push_back(probability);
+            sum += probability;
+        }
+        if ( !compareDouble(sum,1.0)) //double equal 
+            throw invalid_argument_exception(); //Probabilities do not sum up to one
+    }
+}
+
 double MP_model::getInfinity() const {
     if (Solver==0) {
         return std::numeric_limits<double>::infinity();
@@ -754,9 +774,9 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> > rv, 
     typedef std::set<RandomVariable*>::iterator rvIterator;
 
     std::vector<int> randVarsPerStage(stage.size(),0);
-    //For every stage: We have stage independence
+    //For every stage: We have stage independence. Sample concrete values for this current stage, combine them all-against-all. Insert them in the right places to obtain correct scenario values..
     for( int i = 1; i < stage.size(); i++){
-        // Sample values for every variable independently, all sampled values are equally probable
+        // Sample values for every variable independently. We might not have equally probable scenarios.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
@@ -973,7 +993,8 @@ namespace flopc {
 
         std::vector<int> scenarioIndirection(nScen,outOfBound);
         std::vector<int> realOrderingFromVirtualScenario(nScen,outOfBound);
-        std::vector<double> probabilities(nScen,1.0/nScen);
+        if (probabilities.empty())
+            probabilities = std::vector<double>(nScen,1.0/nScen); //If probability set is present, use that, otherwise use equiprobable values.
 
         typedef std::set<int>::iterator scenIt;
         std::set<int> scenarioHeap;

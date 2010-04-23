@@ -14,6 +14,7 @@
 #include "MP_set.hpp"
 #include "MP_utilities.hpp"
 
+//TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
 
 namespace flopc{
 
