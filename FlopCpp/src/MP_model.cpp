@@ -846,10 +846,9 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
     // What we can do now: Generate scenario fan..
     std::vector< std::vector<double> > overallScenarios;
     std::vector< int > curScenario(stage.size()+1);
-
-
     int curStage = 1;
     int curScen = 0;
+    int scenCounter = 0;
     while (true){
         //Go to last stage
         while ( curScenario[curStage] != scenariosPerStage[curStage].size() ){ // As long as we have not reached the empty map, everything is fine: Go to the next map.
@@ -861,16 +860,17 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
         //Do computational stuff only at the end
         if (curStage == stage.size()-1){
 
-            // Computation start
-            ////Insert values
-            //double prob = 1.0;
+            //Computation start
+            double prob = 1.0;
             ////Compute probability and insert values per randomvar to form a scenario.
-            //for (int j = 0; j < randVarsPerStage[i];j++){
-            //    scenariosPerStage[i][scenCounter].push_back((*iteratorVector[j]).first);
-            //    prob *= (*iteratorVector[j]).second;
-            //}
-            //scenariosPerStage[i][scenCounter].push_back(prob); //
-            //scenCounter++;
+            overallScenarios.push_back(std::vector<double>()); //TODO: Reserve some space?
+            for (int j = 1; j < stage.size();j++){ // For all stages
+                overallScenarios.back().insert(overallScenarios.back().begin(),scenariosPerStage[j][curScenario[j]].begin(),--scenariosPerStage[j][curScenario[j]].end()); //Insert values for all RV in order from iterator given above, but do not insert probability of scenario.
+                prob *= scenariosPerStage[j][curScenario[j]].back();
+                
+            }
+            overallScenarios.back().push_back(prob);
+            scenCounter++;
             //Computation end
 
             // Increment scenario index
@@ -878,12 +878,40 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
 
         }
         else { //we reached the end of the iteration but we are not at the last stage => Increment previous scenario counter and restart current scenario counter. Check in the next round with previous map.
-            if (curStage == 0)
+            if (curStage == 0) //cur Stage get's reduced twice in the last step
                 break;
             curScenario[curStage+1] = 0;
             ++curScenario[curStage];
         }
     } // end while
+
+    // Scenario Fan generated. Fill RandomVariables with correct values
+    int curRVIndex = 0;
+    for( int i = 1; i < stage.size(); i++){ // For every stage
+       for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){ // For every RandomVariable: Assign values for all scenarios
+           ++curRVIndex;
+           // Lambda-Expression? Build std::vector out of values and insert the vector in RV.
+           std::vector<double> temp;
+           temp.reserve(overallScenarios.size()); //Only reserve space, no initialization.
+           for (int j = 0; j < overallScenarios.size(); j++) {
+               temp.push_back(overallScenarios[j][curRVIndex]);
+           }
+           (*it)->setSampledValues(temp);
+        }//end for rv
+    }//end for stage
+    //Prepare everything in the model: Set scenario set and add probabilities..
+    this->scenSet = MP_scenario_set(overallScenarios.size());
+    this->probabilities.clear();
+    this->probabilities.reserve(overallScenarios.size());
+    double sum = 0;
+    for (int i = 0; i < overallScenarios.size(); i++){
+        probabilities.push_back(overallScenarios[i].back());
+        sum += probabilities.back();
+    }
+    //Check for consistency
+    if ( !compareDouble(sum,1.0)) //double equal 
+        throw invalid_argument_exception(); //Probabilities do not sum up to one
+
 
 }
 

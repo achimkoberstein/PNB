@@ -294,9 +294,13 @@ namespace flopc{
 
     }
 
+    void RandomVariable::setSampledValues(const std::vector<double>& v){
+        values = v;
+    }
+
     std::vector<double> RandomVariable::getSampledValues() const
     {
-        if (!values.empty() && valuesMap.empty()) { // if we store values without probabilities, everything is fine. Order is important.
+        if ( !values.empty() ) { // if we store values without probabilities, everything is fine. Order is important.
             return values;
         }
         if (values.empty() && !valuesMap.empty()){ // Return values computed with probabilities. We do not want that, probably TODO
@@ -309,7 +313,7 @@ namespace flopc{
     std::map<double,double> RandomVariable::getSampledValuesWithProb()
     {
         //Create vector that stores pairs of value with number of occurences. HashSet is ideal to store that..
-        if (values.empty() && !valuesMap.empty()){
+        if (!valuesMap.empty()){
             return valuesMap;
         }
         if (!values.empty() && valuesMap.empty()){
