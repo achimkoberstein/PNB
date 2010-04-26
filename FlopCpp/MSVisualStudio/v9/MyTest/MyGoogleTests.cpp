@@ -54,9 +54,9 @@ namespace {
 
         TEST_F(RandomVariableTest,ConditionalSamplingTest){
         MP_model testModel2(new OsiClpSolverInterface());
-        MP_stage T(2);
-        RandomVariable* scenarioValues[1] = { new DiscreteUniformRandomVariable(0,10,1,10)};
-        RandomVariable* scenarioValues1[1] = { new DiscreteUniformRandomVariable(0,10,2,10) };
+        MP_stage T(3);
+        RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,1,10),new DiscreteUniformRandomVariable(0,10,2,10)};
+        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
         MP_random_data rvar(&scenarioValues[0],T);
         MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);

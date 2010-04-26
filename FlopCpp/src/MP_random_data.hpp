@@ -38,6 +38,7 @@ namespace flopc{
         std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
         double getSampledValue(int index) const;
+        void setSampledValues(const std::vector<double>&);
 
         int Stage() const { return stage; }
         void Stage(int val) { stage = val; }
