@@ -61,7 +61,7 @@ namespace {
         //MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);
         MP_constraint con1(T);
-        con1(T) = x(T)*rvar(T) <= 10;//*rvar2(T);
+        con1(T+1) = x(T)*rvar(T+1) <= 10;//*rvar2(T);
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MAXIMIZE);

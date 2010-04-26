@@ -774,6 +774,26 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
         return;
     }
     //Check for ScenarioRandomVariables..
+    if (scenSet.size()){
+        // We have a scenario set: That means we have scenarioRandomVariables and we will not generate random variates
+        return;
+    }
+    //More sophisticated check
+    //bool scenarios = false;
+    //bool independent = false;
+    //for (std::vector<std::set<RandomVariable*> >::iterator it = rv.begin(); it != rv.end();rv++){
+    //    ScenarioRandomVariable* scenVar = dynamic_cast<ScenarioRandomVariable*> &(*it);
+    //    if (scenVar == 0){
+    //        //We do not have a scenarioVar, we have something else, this means:
+    //        independent = true;
+    //    }
+    //    else if (scenVar != 0){ //We have scenarios in here, we do not want this to happen.
+    //        scenarios = true;
+    //    }
+    //}
+    //if (scenarios && independent){
+    //    throw invalid_argument_exception(); //User has to specify what he wants, we can not guess
+    //}
 
 
     typedef std::set<RandomVariable*>::iterator rvIterator;
