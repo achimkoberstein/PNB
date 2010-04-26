@@ -56,15 +56,16 @@ namespace {
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3);
         RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,1,10),new DiscreteUniformRandomVariable(0,10,2,10)};
-        //RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
+        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
         MP_random_data rvar(&scenarioValues[0],T);
-        //MP_random_data rvar2(&scenarioValues1[0],T);
+        MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);
         MP_constraint con1(T);
-        con1(T+1) = x(T)*rvar(T+1) <= 10;//*rvar2(T);
+        con1(T+1) = x(T+1)*(rvar(T+1)+rvar2(T+1)) <= 10;//*rvar2(T);
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
     }
 
      TEST_F(MP_modelTest,InvestmentExampleTest){
