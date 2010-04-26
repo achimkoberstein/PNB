@@ -889,7 +889,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
     int curRVIndex = 0;
     for( int i = 1; i < stage.size(); i++){ // For every stage
        for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){ // For every RandomVariable: Assign values for all scenarios
-           ++curRVIndex;
            // Lambda-Expression? Build std::vector out of values and insert the vector in RV.
            std::vector<double> temp;
            temp.reserve(overallScenarios.size()); //Only reserve space, no initialization.
@@ -897,6 +896,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
                temp.push_back(overallScenarios[j][curRVIndex]);
            }
            (*it)->setSampledValues(temp);
+           ++curRVIndex;
         }//end for rv
     }//end for stage
     //Prepare everything in the model: Set scenario set and add probabilities..
@@ -1129,6 +1129,7 @@ namespace flopc {
         int curStage = 0; //We start at stage 0
         int curScen = 0; //We start with scenario 0
         int scenCounter = 0; //We only need this counter in the very last round.
+        std::vector<double> tempProbabilities(scenSet.size(),0);
 
         //We do the following: Add all subnodes to this node to the subqueue list with their list of scenarios. Then go to the subqueue list and do the same.
         while( !subScenarioQueueVector[curStage].empty()){
@@ -1151,6 +1152,7 @@ namespace flopc {
                     scenarioIndirection[parentScen] = scenCounter++;
                     realOrderingFromVirtualScenario[scenCounter -1] = parentScen;
                     subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin()); //Remove from subsetSet to only contain strict subset in the last stage: This ensures correct probability calculation
+                    tempProbabilities[scenCounter-1] = probabilities[scenCounter-1];
                 }
 
 #pragma region setCoefficients
@@ -1204,8 +1206,8 @@ namespace flopc {
                         tempAncScenVec[*innerIt] = tempAncScenVec[parentScen];
                         scenarioIndirection[*innerIt] = outOfBound;
                         realOrderingFromVirtualScenario[scenCounter] = outOfBound;
-                        probabilities[parentScen] += probabilities[*innerIt]; //add one scenario prob for each added scenario.
-                        probabilities[*innerIt] = 0;
+                        tempProbabilities[parentScen] += probabilities[*innerIt]; //add one scenario prob for each added scenario.
+                        tempProbabilities[*innerIt] = 0;
                         subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     // Define the new scenario subset node for the next stage
@@ -1232,13 +1234,15 @@ namespace flopc {
         //We need to use scenarioIndirection to get correct index for scenario i (natural ordering as expected from smi).
         std::vector<int> ancScenVec(nScen);
         for (int i = 0; i < scenCounter; i++){
-            ancScenVec[i] = realOrderingFromVirtualScenario[tempAncScenVec[scenarioIndirection[i]]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
+            ancScenVec[scenarioIndirection[i]] = tempAncScenVec[scenarioIndirection[i]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
         }
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
         int numOfIrrelevantScen = std::count(branchStageVec.begin(),branchStageVec.end(),outOfBound);
-        for (int i = 0; i < scenCounter; i++){
-            int curScen = scenarioIndirection[i];
+        // scenarios needs to be added in correct ordering, i.e. every scenario that depends on another one can be only inserted after the dependent one.
+        // We need to sort the scenarioIndirection array to get the correct ordering for adding scenarios and we need to keep the old ordering.
+
+        for (int curScen = 0; curScen < scenCounter; curScen++){
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curScen]!=outOfBound){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
                 //We need to convert the CoinPackedMatrix to CoinPackedVectors..
@@ -1248,7 +1252,7 @@ namespace flopc {
                 CoinPackedVector curRloVec(rloVec[curScen]->getVector(0));
                 CoinPackedVector curRupVec(rupVec[curScen]->getVector(0));
 
-                smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[i],probabilities[curScen]);
+                smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[curScen],tempProbabilities[curScen]);
             }
         }
         //TODO: Think about debugging routines or debugging logger..
