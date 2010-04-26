@@ -56,12 +56,12 @@ namespace {
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3);
         RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,1,10),new DiscreteUniformRandomVariable(0,10,2,10)};
-        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
+        //RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
         MP_random_data rvar(&scenarioValues[0],T);
-        MP_random_data rvar2(&scenarioValues1[0],T);
+        //MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);
         MP_constraint con1(T);
-        con1(T) = x(T)*rvar(T) <= 10*rvar2(T);
+        con1(T) = x(T)*rvar(T) <= 10;//*rvar2(T);
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
@@ -487,9 +487,13 @@ namespace {
         double scenarios[10] = {0,1,2,3,4,5,6,7,8,9};
         MP_random_data rvar(&scenarios[0],T);
         MP_variable x;
+        x.lowerLimit = 0;
+        
         MP_variable y(T);
-        MP_constraint constraint1(T);
+        y.lowerLimit = 0;
+        MP_constraint constraint1(T),con2;
         constraint1(T+1) = x()+y(T+1)*(rvar(T+1)+testValue) >= 7;
+        con2 = x() >= 10;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);

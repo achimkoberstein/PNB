@@ -279,6 +279,7 @@ namespace flopc {
         void add(MP_constraint* constraint);
 
         //Sample RandomVariates
+        //TODO: Implement using MultiArray from boost?!
         void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,int sampleSize = 0); 
 
         SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
