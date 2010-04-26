@@ -773,6 +773,9 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
     if (stage.size() <= 1) { //Incorrect stage set, return
         return;
     }
+    //Check for ScenarioRandomVariables..
+
+
     typedef std::set<RandomVariable*>::iterator rvIterator;
 
     std::vector<int> randVarsPerStage(stage.size(),0);
@@ -932,6 +935,12 @@ void MP_model::detach() {
             delete [] rowStage;
             delete [] rowIndirection;
         }
+        ////It might be necessary to do a fresh start..
+        //scenSet = MP_scenario_set(0);
+        //probabilities.clear();
+        //RandomVariables.clear();
+        //Variables.clear();
+        //Constraints.clear();
     }
 
 
@@ -1129,8 +1138,6 @@ namespace flopc {
         int curStage = 0; //We start at stage 0
         int curScen = 0; //We start with scenario 0
         int scenCounter = 0; //We only need this counter in the very last round.
-        std::vector<double> tempProbabilities(scenSet.size(),0);
-
         //We do the following: Add all subnodes to this node to the subqueue list with their list of scenarios. Then go to the subqueue list and do the same.
         while( !subScenarioQueueVector[curStage].empty()){
             //Look at top node and remove it from the queue
@@ -1152,7 +1159,7 @@ namespace flopc {
                     scenarioIndirection[parentScen] = scenCounter++;
                     realOrderingFromVirtualScenario[scenCounter -1] = parentScen;
                     subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin()); //Remove from subsetSet to only contain strict subset in the last stage: This ensures correct probability calculation
-                    tempProbabilities[scenCounter-1] = probabilities[scenCounter-1];
+                    probabilities[scenCounter-1] = probabilities[scenCounter-1];
                 }
 
 #pragma region setCoefficients
@@ -1206,8 +1213,8 @@ namespace flopc {
                         tempAncScenVec[*innerIt] = tempAncScenVec[parentScen];
                         scenarioIndirection[*innerIt] = outOfBound;
                         realOrderingFromVirtualScenario[scenCounter] = outOfBound;
-                        tempProbabilities[parentScen] += probabilities[*innerIt]; //add one scenario prob for each added scenario.
-                        tempProbabilities[*innerIt] = 0;
+                        probabilities[parentScen] += probabilities[*innerIt]; //add one scenario prob for each added scenario.
+                        probabilities[*innerIt] = 0;
                         subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     // Define the new scenario subset node for the next stage
@@ -1252,7 +1259,7 @@ namespace flopc {
                 CoinPackedVector curRloVec(rloVec[curScen]->getVector(0));
                 CoinPackedVector curRupVec(rupVec[curScen]->getVector(0));
 
-                smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[curScen],tempProbabilities[curScen]);
+                smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[curScen],probabilities[curScen]);
             }
         }
         //TODO: Think about debugging routines or debugging logger..

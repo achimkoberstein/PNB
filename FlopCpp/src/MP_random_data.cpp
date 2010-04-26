@@ -317,6 +317,9 @@ namespace flopc{
             return valuesMap;
         }
         if (!values.empty() && valuesMap.empty()){
+            if (defaultSampleSize == 0) //Compute Sample Size
+                defaultSampleSize = values.size();
+                
             //Count number of different elements and store them in the map
             for (int i = 0; i < values.size(); i++){
                 valuesMap[values[i]] = valuesMap[values[i]] + 1.0;
