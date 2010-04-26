@@ -192,9 +192,8 @@ namespace flopc {
             v.insert(V);
         }
 
-        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-         
-        }
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
+
         virtual double getValue(int scenario) const { 
             return 1.0;
         }

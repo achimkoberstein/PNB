@@ -25,7 +25,8 @@ namespace flopc{
     class RandomVariable : boost::noncopyable{
         friend RandomDataRef;
     public:
-        typedef std::vector< std::pair< double, double > > sampleVector;
+
+        typedef std::map<double,double> sampleVector;
         typedef std::vector< std::vector< RandomVariable* > > randVarVector;
 
         RandomVariable();
@@ -34,7 +35,7 @@ namespace flopc{
         //Samples a number of random variates according to the distribution of the RandomVariable
         // It also sorts the variates in ascending order
         virtual void sample(int howMany = 0) = 0;
-        std::vector< std::pair<double,double> > getSampledValuesWithProb() const;
+        std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
         double getSampledValue(int index) const;
 
@@ -84,7 +85,7 @@ namespace flopc{
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from, int to, double stepWidth);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 0);
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
