@@ -83,6 +83,12 @@ namespace flopc {
         return stage;
     }
 
+    void VariableRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+        //Look inside bounds for random data
+        V->lowerLimit->insertRandomVariables(v);
+        V->upperLimit->insertRandomVariables(v);
+    }
+
 
 
     class Expression_constant : public TerminalExpression, public MP {

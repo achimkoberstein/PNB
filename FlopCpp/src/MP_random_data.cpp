@@ -83,7 +83,7 @@ namespace flopc{
                                                 stage = j4;
                                             else if (S5.isStage())
                                                 stage = j5;
-                                            values[f(j1,j2,j3,j4,j5)]->Stage(stage);
+                                            values[f(j1,j2,j3,j4,j5)]->Stage(stage); //FIXME: Stage does not get set via direct assignment. This has to be done also.
                                         }
                                         else
                                             values[f(j1,j2,j3,j4,j5)]->Stage(1); //Otherwise we may have a two stage problem: set to 1
@@ -296,14 +296,33 @@ namespace flopc{
 
     std::vector<double> RandomVariable::getSampledValues() const
     {
-        return values;
+        if (!values.empty() && valuesMap.empty()) { // if we store values without probabilities, everything is fine. Order is important.
+            return values;
+        }
+        if (values.empty() && !valuesMap.empty()){ // Return values computed with probabilities. We do not want that, probably TODO
+            throw not_implemented_error();
+        }
+        return values; //might be empty, might not be empty..
+        
     }
 
-    RandomVariable::sampleVector RandomVariable::getSampledValuesWithProb() const
+    std::map<double,double> RandomVariable::getSampledValuesWithProb()
     {
         //Create vector that stores pairs of value with number of occurences. HashSet is ideal to store that..
-        sampleVector temp;
-        return temp;
+        if (values.empty() && !valuesMap.empty()){
+            return valuesMap;
+        }
+        if (!values.empty() && valuesMap.empty()){
+            //Count number of different elements and store them in the map
+            for (int i = 0; i < values.size(); i++){
+                valuesMap[values[i]] = valuesMap[values[i]] + 1.0;
+            }
+            //Normalize probabilities: Divide occurence counter by defaultSampleSize
+            for ( sampleVector::iterator it = valuesMap.begin(); it != valuesMap.end(); ++it){
+                (*it).second = (*it).second/defaultSampleSize;
+            }
+        }
+        return valuesMap; //Might be empty or not.. we simply do not know
     }
 
     double RandomVariable::getSampledValue(int index) const
@@ -322,6 +341,8 @@ namespace flopc{
         //Initialization stuff common to all methods..
         if (howMany == 0) // If method was called with argument = 0, sample from defaultSampleSize.
             howMany = defaultSampleSize;
+        else
+            defaultSampleSize = howMany;
         values.clear();
         values.reserve(howMany);
     }
@@ -470,11 +491,18 @@ namespace flopc{
 
     void RandomDataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const{
         //Insert all variables available in values** array
+        bool containsRandomVariable = false;
         for (int i = 0; i < RV->size();i++){
             if (RV->values[i] != 0){
+                //TODO: We need to insert correct stage. If Stage is not given, variable is inserted in the wrong stage.
                 v[RV->values[i]->Stage()].insert(RV->values[i]);
+                containsRandomVariable = true;
             }
         }
+        if (!containsRandomVariable) { //We do not have a random variable in this RandomDataRef, so call insert on Constant.
+            RV->c->insertRandomVariables(v);
+        }
+        
     }
 
 
@@ -545,7 +573,7 @@ namespace flopc{
 
 
 
-    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth)
+    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth, int sampleSize ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth)
     { // Ensure correct functionality
         //TODO: Include test for stepWidth
         if (end < start){
@@ -559,6 +587,7 @@ namespace flopc{
         else if (step == 0.0){
             throw invalid_argument_exception();
         }
+        defaultSampleSize = sampleSize;
     }
 
     DiscreteUniformRandomVariable::~DiscreteUniformRandomVariable()
@@ -580,7 +609,7 @@ namespace flopc{
         // Then generate the variates: start+step*random_variate
         typedef boost::uniform_int<> distr_type;
         boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+step*variateGen());
         }
 

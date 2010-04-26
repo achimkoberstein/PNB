@@ -279,7 +279,7 @@ namespace flopc {
         void add(MP_constraint* constraint);
 
         //Sample RandomVariates
-        void sampleRandomVariates(std::vector<std::set<RandomVariable*> > rv,int sampleSize = 0); 
+        void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,int sampleSize = 0); 
 
         SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);

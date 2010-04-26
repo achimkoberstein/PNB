@@ -1,4 +1,9 @@
 //#include <vld.h> uncomment to enable Visual Leak Detector
+
+////TODO: Workaround for iterator container debuggin
+//#define _HAS_ITERATOR_DEBUGGING 0
+//#define _SECURE_SCL             0
+
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
@@ -46,6 +51,21 @@ namespace {
 
         MP_model testModel;
     };
+
+        TEST_F(RandomVariableTest,ConditionalSamplingTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        MP_stage T(2);
+        RandomVariable* scenarioValues[1] = { new DiscreteUniformRandomVariable(0,10,1,10)};
+        RandomVariable* scenarioValues1[1] = { new DiscreteUniformRandomVariable(0,10,2,10) };
+        MP_random_data rvar(&scenarioValues[0],T);
+        MP_random_data rvar2(&scenarioValues1[0],T);
+        MP_variable x(T);
+        MP_constraint con1(T);
+        con1(T) = x(T)*rvar(T) <= 10*rvar2(T);
+        testModel2.setObjective(x(T.last()));
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MAXIMIZE);
+    }
 
      TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
@@ -276,6 +296,8 @@ namespace {
         //Somehow we have to check if the rhs is properly evaluated in the end
     }
 
+
+
     TEST_F(MP_modelTest,RandomBoundsTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
@@ -314,6 +336,7 @@ namespace {
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        //TODO: Test appearance of RandomVariable vector
         EXPECT_EQ(6.5,testModel2->getObjValue());
 
     }
@@ -365,25 +388,25 @@ namespace {
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
     }
 
-    TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
-        MP_stage T(3); //We have three stages
-        MP_random_data rVar(T); //Random Variable depends only on stage
-        MP_random_data rVar2(T);
-        //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
-        rVar(1) = new DiscreteRandomVariable();
-        rVar2(1) = new DiscreteRandomVariable();
-        rVar(2) = new DiscreteRandomVariable();
-        rVar2(2) = new DiscreteRandomVariable();
-        MP_variable x;
-        MP_variable y(T);
-        MP_constraint con1; 
-        MP_constraint con2(T);
-        con1() = x() <= 10;
-        con2(T) = x() + rVar(T)*y(T) <= rVar2(T);
-        testModel.setObjective(y(T.last()));
-        testModel.attach(testModel.Solver);
-        testModel.solve(MP_model::MAXIMIZE);
-    }
+    //TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
+    //    MP_stage T(3); //We have three stages
+    //    MP_random_data rVar(T); //Random Variable depends only on stage
+    //    MP_random_data rVar2(T);
+    //    //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
+    //    rVar(1) = new DiscreteRandomVariable();
+    //    rVar2(1) = new DiscreteRandomVariable();
+    //    rVar(2) = new DiscreteRandomVariable();
+    //    rVar2(2) = new DiscreteRandomVariable();
+    //    MP_variable x;
+    //    MP_variable y(T);
+    //    MP_constraint con1; 
+    //    MP_constraint con2(T);
+    //    con1() = x() <= 10;
+    //    con2(T) = x() + rVar(T)*y(T) <= rVar2(T);
+    //    testModel.setObjective(y(T.last()));
+    //    testModel.attach(testModel.Solver);
+    //    testModel.solve(MP_model::MAXIMIZE);
+    //}
 
     TEST_F(MP_modelTest,RandomVariableInitializationTest){
         // Test RV Usage by Assignment or Initialization.
@@ -504,14 +527,18 @@ namespace {
         MP_random_data rvar(&scenarios[0][0],T); //TODO: Incorrect initialization..
         MP_variable x;
         MP_variable y(T);
+        y.lowerLimit = 1;
         MP_constraint constraint1(T);
         MP_data testData(&testValues[0],T);
         MP_random_data combinedData(T);
         combinedData(T) = testData(T)*rvar(T); // Necessitates an update for index expressions? Indices on the right hand side should store the same index as item on the left hand side, so if left hand side item changes, all other indices change too. This necessitates an index update mechanism, so that they are linked. => Indices need to be stored as pointers. 
-        constraint1(T+1) = x()+y(T+1)*combinedData(T+1) >= 7;
+        constraint1(T+1) = x()-y(T+1)*combinedData(T+1) >= 7;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
+        //TODO: We need to test the results, as otherwise this test is meaningless
+        //EXPECT_EQ(1,testModel2.RandomVariables.size());
+        EXPECT_EQ(34,testModel2->getObjValue());
     }
 
     TEST(UnitTest,OldUnitTest){
