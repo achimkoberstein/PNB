@@ -1084,7 +1084,7 @@ namespace flopc {
         typedef std::vector<boost::shared_ptr<MP::Coef>>::const_iterator randVarIterator;
         //Get basic important values
         int nStages = smiCore->getNumStages();
-        int nScen = this->ScenSet().size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
+        int nScen = scenSet.size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
         std::vector<int> randVarsPerStage(nStages);
         bool count = false;
         if (nScen==0) // We have no specified scenario set, so we rely on the default sample size and count the scenario size afterwards.
@@ -1134,7 +1134,7 @@ namespace flopc {
         tempAncScenVec[0] = 0;
         branchStageVec[0] = 1;
 
-        std::vector<int> scenarioIndirection(nScen,outOfBound);
+        std::vector<int> scenarioIndirection(nScen,outOfBound); //Get virtual (SMI) scenario by real scenario ordering
         std::vector<int> realOrderingFromVirtualScenario(nScen,outOfBound);
         if (probabilities.empty())
             probabilities = std::vector<double>(nScen,1.0/nScen); //If probability set is present, use that, otherwise use equiprobable values.
@@ -1259,9 +1259,10 @@ namespace flopc {
         //Generate scenarios in SMI
         // SMI expects a "correct" scenario tree ordering, so we reorder the scenarios first.
         //We need to use scenarioIndirection to get correct index for scenario i (natural ordering as expected from smi).
-        std::vector<int> ancScenVec(nScen);
-        for (int i = 0; i < scenCounter; i++){
-            ancScenVec[scenarioIndirection[i]] = tempAncScenVec[scenarioIndirection[i]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
+        std::vector<int> ancScenVec(scenCounter);
+        for (int i = 0; i < nScen; i++){
+            if (scenarioIndirection[i] != outOfBound) //If we are out of Bound this scenario is the same as another one.
+                ancScenVec[scenarioIndirection[i]] = tempAncScenVec[scenarioIndirection[i]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
         }
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
@@ -1270,16 +1271,17 @@ namespace flopc {
         // We need to sort the scenarioIndirection array to get the correct ordering for adding scenarios and we need to keep the old ordering.
 
         for (int curScen = 0; curScen < scenCounter; curScen++){
+            int flopScen = realOrderingFromVirtualScenario[curScen];
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curScen]!=outOfBound){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
                 //We need to convert the CoinPackedMatrix to CoinPackedVectors..
-                CoinPackedVector curBloVec(bloVec[curScen]->getVector(0));
-                CoinPackedVector curBupVec(bupVec[curScen]->getVector(0));
-                CoinPackedVector curObjVec(objVec[curScen]->getVector(0));
-                CoinPackedVector curRloVec(rloVec[curScen]->getVector(0));
-                CoinPackedVector curRupVec(rupVec[curScen]->getVector(0));
+                CoinPackedVector curBloVec(bloVec[flopScen]->getVector(0));
+                CoinPackedVector curBupVec(bupVec[flopScen]->getVector(0));
+                CoinPackedVector curObjVec(objVec[flopScen]->getVector(0));
+                CoinPackedVector curRloVec(rloVec[flopScen]->getVector(0));
+                CoinPackedVector curRupVec(rupVec[flopScen]->getVector(0));
 
-                smiModel->generateScenario(smiCore,matrixVec[curScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[curScen],ancScenVec[curScen],probabilities[curScen]);
+                smiModel->generateScenario(smiCore,matrixVec[flopScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[flopScen],ancScenVec[curScen],probabilities[flopScen]);
             }
         }
         //TODO: Think about debugging routines or debugging logger..
