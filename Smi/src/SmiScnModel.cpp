@@ -81,7 +81,7 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 	// If we add the first scenario..
 	if (this->getNumScenarios()==0)
 	{
-		// TODO: warnings if branch and anc are not 0
+	
         assert(anc == 0);
         assert(branch == 0);
 		anc = 0;
