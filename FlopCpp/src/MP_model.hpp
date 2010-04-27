@@ -256,9 +256,10 @@ namespace flopc {
         MP_stage Stage() const { return stage; }
         void Stage(const MP_stage& val) { stage = val; }
         MP_scenario_set ScenSet() const { return scenSet; }
-        void ScenSet(flopc::MP_scenario_set val) { scenSet = val; }
+        void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
         //MP_data Probabilities() const { return probabilities; }
         void Probabilities(const MP_data& prob);
+        void SampleSize(int val) { defaultSampleSize = val; };
 
         OsiSolverInterface* Solver; 
 
@@ -279,8 +280,7 @@ namespace flopc {
         void add(MP_constraint* constraint);
 
         //Sample RandomVariates
-        //TODO: Implement using MultiArray from boost?!
-        void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,int sampleSize = 0); 
+        void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv); 
 
         SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
@@ -295,6 +295,7 @@ namespace flopc {
         set<MP_variable *> Variables;
         std::vector< std::set<RandomVariable*> > RandomVariables;
         std::vector<double> probabilities;
+        int defaultSampleSize;
 
     private:
         int m;

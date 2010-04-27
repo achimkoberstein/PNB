@@ -93,7 +93,7 @@ namespace {
             //    {3,6,9,12},{15,18,21,24} //scen
             //}
         };
-        MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
+        MP_random_data returns(&scenarios[0][0][0],T,assets);
 
 
         MP_variable x(T,assets);
@@ -378,8 +378,7 @@ namespace {
         constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20 + rVar2(T+1);
         constraint2(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) >= rVar3(T+1)*20 + rVar2(T+1);
         //TODO: Test coefficients right hand sides and stuff.. it is REALLY necessary to do so
-        //TODO: This is counterintuitive
-        //TODO: Test of the coefficients get generated in the right manner.
+        //TODO: Test if the coefficients get generated in the right manner.
         testModel.setObjective( 3*x() );
         testModel.attach(testModel.Solver);
         //We need to do some tests here..
@@ -415,7 +414,6 @@ namespace {
         enum {Audi, BMW, Ford, numCars};
         MP_set cars(numCars);
         MP_random_data vars(cars); //Initialize RV with set
-        //TODO: Uncomment if functionality is implemented..
         DiscreteRandomVariable *x,*y,*z;
         x = new DiscreteRandomVariable();
         y = new DiscreteRandomVariable();
@@ -530,7 +528,7 @@ namespace {
         MP_scenario_set scen(10);
         double scenarios[1][10] = {{0,1,2,3,4,5,6,7,8,9}};
         double testValues[2] = {-3,3};
-        MP_random_data rvar(&scenarios[0][0],T); //TODO: Incorrect initialization..
+        MP_random_data rvar(&scenarios[0][0],T);
         MP_variable x;
         MP_variable y(T);
         y.lowerLimit = 1;

@@ -69,7 +69,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-Solver(s),messenger(m),stage(0),scenSet(0),Objective(0), 
+Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0), 
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) {
     MP_model::current_model = this;
@@ -303,22 +303,17 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             (*i)->insertRandomVariables(RandomVariables);
         (*i)->insertVariables(Variables);
     }
-    //Count the number of real variables in the model with the add Method. Variables defined but not used in the model are also counted. 
-    //TODO: How to deal with variables that are only defined but have no coefficient, special bounds, objective function coefficient??
+    //Count the number of real variables in the model with the add Method. 
+    // The variables in the Variables set are inserted from constraints and objective function.
     for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
         add(*j); 
     }// We have number of rows and number of columns at this point
 
     // We need to generate all the values we need at this point, if they are not already present.
-    // For now: Simple Check: All randomVariables are either ScenarioRandomVars OR (exclusive) Independently distributed RandomVars.
-    //TODO: Write that check
-
-
-    // TODO: Sample Values for all variables (independent ones..)
+    // For now: Simple Check: All randomVariables are either ScenarioRandomVars OR (exclusive) Independently distributed RandomVars. (This check is done in sampleRandomVariates method).
+    
     // TODO: We can use more intelligent ways of storing the values (sparse arrays..)?
-    // TODO: We need to calculate the number of scenarios per stage(for one node). With this information we can calculate the rest...
-    // TODO: Think about combining all-against-all (with equal prob or not)
-    sampleRandomVariates(RandomVariables); //Give standard sample size!!
+    sampleRandomVariates(RandomVariables);
 
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
     //At first, generate coefficients for every constraint and store them in coefs vector: Assigns column and row number
@@ -358,9 +353,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             coefs[i]->col = colIndirection[oldCol];
             //If coef is a random coefficient for a variable bound, we want it removed from the coefs array..
         }
-        //Check for empty variables, i.e. variables not assigned in the problem. Maybe we can report that as an error??
+        //Check for empty variables, i.e. variables not assigned in the problem.
+        // This happens for example in constraints using the stage set, but that are used as T+1 to not generate first stage constraints. Such Variables could be removed from the model.
         // Empty Variables have no coefficients assigned, but they increase the variable counter
-        //TODO: How to handle this?
+        //TODO: Write flopc++ presolver to eliminate empty variables in the formulation prior to scenario generation.
         if (j != n){
             assert(j <n);
             std::cout << "We have empty variables in this formulation" << std::endl;
@@ -410,7 +406,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
 
     const double inf = Solver->getInfinity();
-    if (stage.size()){
+
+    // In the stochastic setting.
+    if (stage.size()){ 
         // Set correct Row Stage for every row by iterating over all elements
         // Row Stage is equal to the highest stage of a belonging variable
         for (int i=0; i<nz; i++) { //Set row and column stage in corresponding arrays
@@ -449,48 +447,44 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             coefs[i]->row = rowCount + rowOffset[oldRow]; //compute correct offset
             rowStage[coefs[i]->row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
             rowIndirection[oldRow] = coefs[i]->row;
-            //if (coefs[i]->ptrVar != 0)
-            //    coefs[i]->ptrVar->RowIndex(coefs[i]->row);
         }
     }
     //Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
-    //TODO: Check that
-    // Yes, this is indeed possible and is an error
+    // Yes it is possible. One example: Constraint over stage set T but indexed over T+1 so first stage constraint is empty. 
+    // Handled like this: every time rowIndirection is used we check for outOfBound.
+    //TODO: Write presolver that eliminates empty rows.
     //for (int i = 0; i < m; i++) {
     //    if( rowIndirection[i] == outOfBound) { // We have an empty row. Can we delete that row without messing everything up?!
     //        //Assign row index of an empty row. Not so easy to do..
     //    }
     //}
 
+    // Now we can access the new column/row ordering via colIndirection/rowIndirection from FlopC++ later on.
+    // Coefficients store new ordering.
 
-
-
-    //Now we can access the new column ordering via colIndirection from FlopC++.
-
-    //Create std::vector<RandomVariable> Array from Coefficient Array that stores all RV for a given stage
+    // Initialize vector that stores shared ptrs to Coefs that are result of a combination of random variates.
     vector< vector<boost::shared_ptr<MP::Coef> > > randomCoefs(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
-    //Add all random vars that occur in the Matrix and Right-Hand-Side and Variable bounds? 
-    //TODO: Add Coefficients instead of random vars..
+    //In case of a stage set we need to add all random coefficients to randomCoefs, to cope with them later. 
     if (stage.size()){
-        //In case of random variables in the model we might have random bounds..
-        //Generate random bounds for all variables..
-        // As these bounds were generated in the variables section, the indirection layer is incorrect, this means we have to update that
+        
+        //Generate random bounds for all variables
         for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
             (*j)->bounds(randomCoefs);
         }
+        // As these bounds were generated in the variables section, the columns are wrong. This means we have to update that 
         for (int i = 0; i < randomCoefs.size();i++) {
             for (int j = 0; j < randomCoefs[i].size();j++) {
                 randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
             }
         }
+        // Add all other random coefs to randomCoefs.
         for ( int i = 0; i != coefs.size(); i++){
             if ( !coefs[i]->scenVector.empty() ) { //We have scenario values
                 //We have a random parameter with values
                 randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
             }
         }
-
-    }
+    }//end if stage
 
     // Compute Column Length Array to easily compute start array from there
     for (int j=0; j<=n; j++) {
@@ -528,12 +522,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         Elm = new double[realnz]; 
         Rnr = new int[realnz];    
     }
-        // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
+    // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
     for (int i=0; i<m; i++) {
         bl[i] = 0;
         bu[i] = 0;
     }
     //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
+    // Also compute row bounds on the way (they are stored as rhs).
     for (int i=0; i<nz; i++) {
         int col = coefs[i]->col;
         int row = coefs[i]->row;
@@ -550,10 +545,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
 
 
-    //for (int j=Cst[n]; j<Cst[n+1]; j++) {
-    //    bl[Rnr[j]] = -Elm[j];
-    //    bu[Rnr[j]] = -Elm[j];
-    //}
+
     //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
     //TODO: Empty row handling done here..
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
@@ -653,9 +645,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             coefs[i]->col = colIndirection[coefs[i]->col];
+             //We need to set column information by stage for all columns where it is not yet set
             if (colStage[coefs[i]->col] != coefs[i]->varStage) { // Variable is not present in any expression..
                 assert(colStage[coefs[i]->col] == 0);
-                colStage[coefs[i]->col] = coefs[i]->varStage; //
+                colStage[coefs[i]->col] = coefs[i]->varStage; 
             }
             if (coefs[i]->row == -1) //Objective function 
                 coefs[i]->row = m;
@@ -677,7 +670,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             c[col] = elm;
         }
     } 
-    //We need to set column information by stage for all columns where it is not yet set
+   
 
     // Set integer information..
     std::vector<int> integerIndices;
@@ -769,7 +762,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     messenger->generationTime(CoinCpuTime()-time);
 }
 
-void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv, int sampleSize /* = 0 */ ){
+//TODO: Implement using MultiArray from boost?!
+void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv){
     if (stage.size() <= 1) { //Incorrect stage set, return
         return;
     }
@@ -794,14 +788,14 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
     //if (scenarios && independent){
     //    throw invalid_argument_exception(); //User has to specify what he wants, we can not guess
     //}
-
+    int sampleSize = this->defaultSampleSize;
 
     typedef std::set<RandomVariable*>::iterator rvIterator;
 
     std::vector<int> randVarsPerStage(stage.size(),0);
     //For every stage: We have stage independence. Sample concrete values for this current stage, combine them all-against-all. Insert them in the right places to obtain correct scenario values..
     std::vector< std::vector< std::vector<double> > > scenariosPerStage(stage.size()+1); //Ordering of values via RV ordering.
-    //TODO: We only do conditional sampling if we have independent variables! Scenario-based can be interpreted as empirical distribution.. it is okay to sample from that? I am not sure..
+
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
@@ -821,7 +815,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
         RandomVariable::sampleVector::iterator curIt = iteratorVector[0];
         RandomVariable::sampleVector::iterator nextIt = iteratorVector[1];
         
-        int curVar = 0;
         int nextVar = 1;
         int curElements = randVarsPerStage[i];
         int scenCounter = 0;
@@ -870,8 +863,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv,
     std::vector< std::vector<double> > overallScenarios;
     std::vector< int > curScenario(stage.size()+1);
     int curStage = 1;
-    int curScen = 0;
     int scenCounter = 0;
+    assert(stage.size()>=2);
     while (true){
         //Go to last stage
         while ( curScenario[curStage] != scenariosPerStage[curStage].size() ){ // As long as we have not reached the empty map, everything is fine: Go to the next map.
@@ -1266,7 +1259,7 @@ namespace flopc {
         }
 
         SmiScnModel *smiModel = new SmiScnModel(); //Create new SmiScnModel
-        int numOfIrrelevantScen = std::count(branchStageVec.begin(),branchStageVec.end(),outOfBound);
+        //int numOfIrrelevantScen = std::count(branchStageVec.begin(),branchStageVec.end(),outOfBound);
         // scenarios needs to be added in correct ordering, i.e. every scenario that depends on another one can be only inserted after the dependent one.
         // We need to sort the scenarioIndirection array to get the correct ordering for adding scenarios and we need to keep the old ordering.
 
@@ -1286,6 +1279,7 @@ namespace flopc {
         }
         //TODO: Think about debugging routines or debugging logger..
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
+
 
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
@@ -1312,11 +1306,6 @@ namespace flopc {
         }
         return !identical;
     }
-
-    //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector<flopc::RandomVariable*> >& randomVariableVector, SmiCoreData* smiCore, int scen, int branchStage){
-    //    // Sample values for all variables at this stage
-    //    return 0;
-    //}
 
     void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){
         printf("Print Problem\n");
@@ -1345,12 +1334,6 @@ namespace flopc {
         }
         printf("\nMatrix printed \n");
     }
-
-
-
-
-
-
 
     void Messenger::constraintDebug( string name, const vector<MP::Coef>& cfs )
     {
