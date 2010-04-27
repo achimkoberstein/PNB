@@ -66,6 +66,7 @@ namespace {
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
      TEST_F(MP_modelTest,InvestmentExampleTest){
@@ -116,7 +117,7 @@ namespace {
         //const double* colArray = investmentModel.Solver->getColSolution();
         //Compare solution values.
         EXPECT_DOUBLE_EQ(660,investmentModel.Solver->getObjValue());
-
+        EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
     }
 
     TEST_F(MP_modelTest,DataTest){
@@ -137,7 +138,7 @@ namespace {
         testModel.setObjective(x());
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
-
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
 
     }
 
@@ -190,12 +191,14 @@ namespace {
         
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
-          + sum(R, x(R) * resourceCost(R))
+          - sum(R, x(R) * resourceCost(R))
         );
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE); 
         x.display("x (Resources)");
         cout << "Finished";
+        EXPECT_DOUBLE_EQ(1616.666666666667,dacota->getObjValue());
+        EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
     }
 
 
@@ -218,19 +221,15 @@ namespace {
         MP_random_data rvar(&scenarios[0][0],T);
         MP_random_data rvar2(&scenarios2[0][0],T);
         MP_random_data rvar3(&scenarios3[0][0],T);
-        //MP_data blubb(T);
-        //blubb(T) = rvar(T) +rvar2(T);// + rvar2(T);
         MP_variable x(T);
         MP_constraint constraint1, constraint2(T),constraint3(T),constraint4(T);
         constraint1 = x(0) == 1;
-        //This does not yet work, as rvar is only allowed once..
-        //constraint2(T+1) = x(T+1)*blubb(T) >= x(T);
-        constraint3(T+1) = x(T+1) + rvar2(T+1) <= x(T); 
+        constraint3(T+1) = x(T+1) <= x(T)+ (rvar2(T+1)+3); //TODO: It is necessary to put additive terms in parentheses. This should not be necessary.
         constraint4(T+1) = x(T+1) >= x(T)*(rvar3(T+1)+3); 
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE); 
-
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
     TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
@@ -257,6 +256,7 @@ namespace {
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
         EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
    
@@ -407,6 +407,7 @@ namespace {
     //    testModel.setObjective(y(T.last()));
     //    testModel.attach(testModel.Solver);
     //    testModel.solve(MP_model::MAXIMIZE);
+    //    EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     //}
 
     TEST_F(MP_modelTest,RandomVariableInitializationTest){
@@ -498,6 +499,7 @@ namespace {
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
         //Test for Correctnes 
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
         EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
         EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
@@ -542,6 +544,7 @@ namespace {
         testModel2.solve(MP_model::MINIMIZE);
         //TODO: We need to test the results, as otherwise this test is meaningless
         //EXPECT_EQ(1,testModel2.RandomVariables.size());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(34,testModel2->getObjValue());
     }
 

@@ -1079,9 +1079,8 @@ namespace flopc {
             return os;
     }
 
-    //Make this a member function, so we can look at the arrays we need (row sense for example)
     SmiScnModel* MP_model::generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore){
-        //TODO: Check with own test if scenario generation is correct. I have serious concerns about that..
+        //TODO: Check with own test if scenario generation is correct. It looks like it, but we will never now until we test it.
         typedef std::vector<boost::shared_ptr<MP::Coef>>::const_iterator randVarIterator;
         //Get basic important values
         int nStages = smiCore->getNumStages();
