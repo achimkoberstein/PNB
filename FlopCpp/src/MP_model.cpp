@@ -1278,6 +1278,7 @@ namespace flopc {
             }
         }
         //TODO: Think about debugging routines or debugging logger..
+        //Look at PG or look into boost.
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
 
