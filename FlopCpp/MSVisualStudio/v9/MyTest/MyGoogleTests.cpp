@@ -51,6 +51,16 @@ namespace {
 
         MP_model testModel;
     };
+    TEST_F(RandomVariableTest,ShortTest){
+        enum {numStage=2};
+        enum {numScen=10};
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(numStage); // enum numStage = 2
+        MP_scenario_set scenSet(numScen); //enum numScen=10
+        double scenarioValues[numStage-1][numScen] = { { 1,2,3,4,5,6,7,8,9,10 } };
+        MP_random_data r(&scenarioValues[0][0],T); //Scenario-based 
+
+    }
 
         TEST_F(RandomVariableTest,ConditionalSamplingTest){
         MP_model testModel2(new OsiClpSolverInterface());
@@ -72,51 +82,57 @@ namespace {
      TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
         MP_model investmentModel(new OsiClpSolverInterface());
-        MP_data initialWealth;
+        MP_data initialWealth,goal;
         initialWealth() = 55; //set data
+        goal() = 80;
 
-        enum {numStage=2};
+        enum {numStage=4};
         MP_stage T(numStage); //Time Stages
-        enum {numScen=4};
+        enum {numScen=8};
         MP_scenario_set scen(numScen);
-        enum {asset1,asset2,numAssets=2};
+        enum {asset1,asset2,numAssets};
         MP_set assets(numAssets);
         double scenarios[numStage-1][numAssets][numScen]=
         {//T
-            //{//assets
-            //    {1,2,3,4},{5,6,7,8} //scen
-            //},
             {//assets
-                {2,4,2,4},{10,14,10,14} //scen
+                // stage 2
+                {1.25,1.25,1.25,1.25,1.06,1.06,1.06,1.06},{1.14,1.14,1.14,1.14,1.16,1.16,1.16,1.16} //asset1 to asset1, scen 1 to 8
             },
-            //{//assets
-            //    {3,6,9,12},{15,18,21,24} //scen
-            //}
+            {// stage 3
+                {1.21,1.21,1.07,1.07,1.15,1.15,1.06,1.06},{1.17,1.17,1.12,1.12,1.18,1.18,1.12,1.12} //asset1 to asset1, scen 1 to 8
+            },
+            {// stage 4
+                {1.26,1.07,1.25,1.06,1.05,1.06,1.05,1.06},{1.13,1.14,1.15,1.12,1.17,1.15,1.14,1.12} //asset1 to asset1, scen 1 to 8
+            }
         };
         MP_random_data returns(&scenarios[0][0][0],T,assets);
 
 
         MP_variable x(T,assets);
         MP_variable wealth(T);
+        MP_variable shortage(T), overage(T);
 
         MP_constraint 
             initialWealthConstr,
             returnConstr(T),
             allocationConstr(T),
-            globalTestConstraint(T);
+            goalConstr(T);
 
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-        //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
-        //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
-        investmentModel.setObjective(wealth(T.last()));
+
+        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+        MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
+
+        investmentModel.setObjective( valueFunction );
         investmentModel.attach(investmentModel.Solver);
         investmentModel.solve(MP_model::MAXIMIZE);
+        x.display("buy decisions");
+        wealth.display("wealth per stage");
 
-        //const double* colArray = investmentModel.Solver->getColSolution();
         //Compare solution values.
-        EXPECT_DOUBLE_EQ(660,investmentModel.Solver->getObjValue());
+        EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
         EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
     }
 
@@ -672,6 +688,8 @@ namespace {
         db.display("db");
         bcd1.display("bcd1");
         ocd.display("ocd");
+        oc.display("operation cost");
+        x.display("x");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
         y.upperLimit = m2->getInfinity();

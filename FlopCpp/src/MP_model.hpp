@@ -99,6 +99,7 @@ namespace flopc {
     */
     class MP_model {
         friend class MP_constraint;
+        friend class MP_variable;
     public:
         /// used when calling the solve() method.  
         typedef enum {MINIMIZE=1, MAXIMIZE=-1} MP_direction;

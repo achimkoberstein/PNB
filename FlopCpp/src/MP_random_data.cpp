@@ -33,6 +33,21 @@ namespace flopc{
             const MP_set_base &s5 = MP_set::getEmpty()):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) { 
+                // Identify stage set.
+                //if (MP_model::getCurrentModel()->Stage().size() > 0){
+                //    if (S1.isStage())
+                //        j1i = 1;
+                //    else if (S2.isStage())
+                //        j2i = 1;
+                //    else if (S3.isStage())
+                //        j3i = 1;
+                //    else if (S4.isStage())
+                //        j4i = 1;
+                //    else if (S5.isStage())
+                //        j5i = 1;
+                //    else
+                //        throw invalid_argument_exception();
+                //}
                 initialize();
         }; 
 

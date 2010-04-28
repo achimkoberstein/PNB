@@ -12,6 +12,7 @@ using std::endl;
 #include "MP_domain.hpp" 
 #include "MP_constant.hpp" 
 #include "MP_model.hpp"
+#include "SmiScnModel.hpp"
 using namespace flopc;
 
 
@@ -32,9 +33,14 @@ offset(-1)
 MP_variable::~MP_variable() { }
 
 double MP_variable::level(int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
-    assert(M != 0);
+     assert(M != 0);
     assert(M->Solver != 0);
-    return M->Solver->getColSolution()[offset +  f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)]; 
+
+    if (M->stage.size()) //TODO: This gives solution values for the first stage only..
+        return  M->Solver->getColSolution()[M->colIndirection[offset +  f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)]]; //Gives coefficient in CORE model..
+    else
+        return M->Solver->getColSolution()[offset +  f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)];
+
 }  
 
 void MP_variable::operator()() const {
@@ -43,12 +49,29 @@ void MP_variable::operator()() const {
     if (S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
     if (S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
     if (S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
-    cout<<"  "<< M->Solver->getColSolution()[offset +
+    if (M->stage.size()){ //TODO: Terribly inefficient..
+        int length = 0;
+        double* values = 0;
+        for (int i = 0; i < M->scenSet.size(); i++){
+            values = M->smiModel->getColSolution(i,&length);
+            //TODO: Check length
+            cout<<"  "<< values[M->colIndirection[offset +
+            f(i1.evaluate(),
+            i2.evaluate(),
+            i3.evaluate(),
+            i4.evaluate(),
+            i5.evaluate())]]<<endl;
+            delete[] values; //error, use free as values were malloced
+        }
+    }
+    else
+        cout<<"  "<< M->Solver->getColSolution()[offset +
         f(i1.evaluate(),
         i2.evaluate(),
         i3.evaluate(),
         i4.evaluate(),
         i5.evaluate())]<<endl;
+
 }
 
 void MP_variable::display(const std::string &s) {
