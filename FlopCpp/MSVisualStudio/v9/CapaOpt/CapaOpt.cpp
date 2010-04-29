@@ -59,10 +59,14 @@ int main() {
 
     MP_variable xLS(LS, K); // Fluss (Produktion)
     MP_variable xSM(SM, K); // Fluss (Markt)
+    MP_variable z(M, K); // Fehlmenge
+    
     MP_variable v(L); // Produktionsentscheidung
     MP_variable yKA(L, S); // Kapazitätsentscheidung
     MP_variable yFL(L, K); // Flexibilitätsentscheidung
-    MP_variable z(M, K); // Fehlmenge
+    v.binary();
+    yKA.binary();
+    yFL.binary();
 
     // ----------
     // Parameter

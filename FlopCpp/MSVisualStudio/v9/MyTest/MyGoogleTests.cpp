@@ -127,12 +127,64 @@ namespace {
         investmentModel.setObjective( valueFunction );
         investmentModel.attach(investmentModel.Solver);
         investmentModel.solve(MP_model::MAXIMIZE);
-        x.display("buy decisions");
-        wealth.display("wealth per stage");
+
 
         //Compare solution values.
         EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
         EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+        }
+        
+        
+           TEST_F(MP_modelTest,IntegerTest2){
+        MP_model intModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_scenario_set scen(2);
+        double scenarios[1][2] =
+        { // T
+            {1,2} //scen
+        };
+        MP_random_data rvar(&scenarios[0][0],T);
+        MP_variable y(T), x(T);
+        y.integer();
+        x.integer();
+        MP_constraint constraint1(T);
+        constraint1(T) = y(T) + x(T) >= 1.5 + rvar(T);
+        intModel.setObjective(sum(T, y(T)));
+        intModel.attach(intModel.Solver);
+        intModel.solve(MP_model::MINIMIZE);
+        const double * colSolution = intModel->getColSolution();
+        for (int i = 0; i < intModel->getNumCols(); i++)
+            cout << "Column " << i << ": " << colSolution[i] << endl;
+        y.display("y");
+        x.display("x");
+        cout << "Finished.";
+    }
+
+
+
+        
+            TEST_F(MP_modelTest,IntegerTest){
+        MP_model intModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+
+        MP_scenario_set scen(3);
+        double scenarios[1][3] =
+        { // T
+            {1,2,3} //scen
+        };
+        MP_random_data rvar(&scenarios[0][0],T);
+        MP_variable y(T);
+        y.integer();
+        MP_constraint constraint1(T);
+        constraint1(T) = y(T) >= 1.5 + rvar(T);
+        intModel.setObjective(sum(T, y(T)));
+        intModel.attach(intModel.Solver);
+        intModel.solve(MP_model::MINIMIZE);
+        assert(intModel->getObjValue() == 6);
+        assert(intModel->isInteger(0) == true);
+        assert(intModel->isInteger(1) == true);
+        y.display("y");
+        cout << "Finished.";
     }
 
     TEST_F(MP_modelTest,DataTest){
@@ -201,9 +253,6 @@ namespace {
         demandConstraint(P) = y(T+1,P) <= demand(T+1,P);
         productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R);
         
-        // Ohne diese Restriktion ist das Modell unbeschränkt, obwohl x(R) mit negativen Kosten in ZF eingeht
-        //conR(R) = x(R) <= 100;
-        
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
           - sum(R, x(R) * resourceCost(R))
@@ -211,6 +260,7 @@ namespace {
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE); 
         x.display("x (Resources)");
+        y.display("y (Products)");
         cout << "Finished";
         EXPECT_DOUBLE_EQ(1616.666666666667,dacota->getObjValue());
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
