@@ -708,33 +708,18 @@ SmiScnModel::getColSolution(int ns, int stage, int colIndex)
 	int numcols=0;
 
 	assert( ns < this->getNumScenarios() );
+    assert( stage < this->core_->getNumStages() );
 
-	// start with leaf node
 	SmiScnNode *node = this->getLeafNode(ns);
-	while (node != NULL){
-		// accumulate number of collumns along scenario
-		numcols+=node->getNumCols();
-
+    int curStage = this->core_->getNumStages() - stage-1; // Number of stages
+	while (node != NULL && curStage){ // Go to the correct node. If Stage is reduced to zero we are at the correct node.
 		// get parent of node
 		node = node->getParent();
+        --curStage;
 	}
 
-    return 0;
-
-	// start with leaf node
-	//node = this->getLeafNode(ns);
-	//while (node != NULL){
-	//	// copy entries
-	//	// getColStart returns the starting index of node in OSI model
-	//	for(int j=node->getColStart(); j<node->getColStart()+node->getNumCols(); ++j){
-	//			// getCoreRowIndex returns the corresponding Core index
-	//			// in the original (user's) ordering
-	//			dsoln[node->getCoreColIndex(j)] = osiSoln[j];
-	//	}
-	//	// get parent of node
-	//	node = node->getParent();
-	//}
-	//return dsoln;
+    assert( colIndex < core_->getColStart(stage)+node->getNumCols() && colIndex >= core_->getColStart(stage));
+    return osiSoln[node->getColStart()+colIndex-core_->getColStart(stage)];// Return element in matrix that is at nodeColStart + colIndex for stage. Where to get colIndex for stage?
 }
 
 double *
@@ -745,6 +730,7 @@ SmiScnModel::getRowSolution(int ns, int *length)
 	int numrows=0;
 
 	assert( ns < this->getNumScenarios() );
+
 
 	// start with leaf node
 	SmiScnNode *node = this->getLeafNode(ns);
@@ -777,7 +763,7 @@ SmiScnModel::getRowSolution(int ns, int *length)
 }
 
 double 
-SmiScnModel::getRowSolution(int ns, int stage, int colIndex)
+SmiScnModel::getRowSolution(int ns, int stage, int rowIndex)
 {
 	//CoinPackedVector *soln=new CoinPackedVector();
 	const double * osiSoln = this->getOsiSolverInterface()->getRowActivity();
@@ -785,32 +771,15 @@ SmiScnModel::getRowSolution(int ns, int stage, int colIndex)
     assert( stage < this->core_->getNumStages() );
 	// start with leaf node
 	SmiScnNode *node = this->getLeafNode(ns);
-    int curStage = this->core_->getNumStages() - stage; // Number of stages
+    int curStage = this->core_->getNumStages() - stage-1; // Number of stages
 	while (node != NULL && curStage){ // Go to the correct node. If Stage is reduced to zero we are at the correct node.
 		// get parent of node
 		node = node->getParent();
         --curStage;
 	}
 
-    //get Correct entry of osiSoln
-    //node->getCoreRowIndex(
-
-    return 0;
-
-	// start with leaf node
-	//node = this->getLeafNode(ns);
-	//while (node != NULL){
-	//	// copy entries
-	//	// getRowStart returns the starting index of node in OSI model
-	//	for(int j=node->getRowStart(); j<node->getRowStart()+node->getNumRows(); ++j){
-	//			// getCoreRowIndex returns the corresponding Core index
-	//			// in the original (user's) ordering
-	//			dsoln[node->getCoreRowIndex(j)] = osiSoln[j];
-	//	}
-	//	// get parent of node
-	//	node = node->getParent();
-	//}
-	//return dsoln;
+    assert( rowIndex < core_->getRowStart(stage)+node->getNumRows() && rowIndex >= core_->getRowStart(stage));
+    return osiSoln[node->getRowStart()+rowIndex-core_->getRowStart(stage)];// Return element in matrix that is at nodeColStart + colIndex for stage. Where to get colIndex for stage?
 }
 
 

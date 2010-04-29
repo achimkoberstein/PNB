@@ -28,6 +28,7 @@ S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
 offset(-1)
 {
     type = continuous;
+    setStageSet();
 } 
 
 MP_variable::~MP_variable() { }
@@ -35,13 +36,56 @@ MP_variable::~MP_variable() { }
 double MP_variable::level(int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
      assert(M != 0);
     assert(M->Solver != 0);
-
     if (M->stage.size()) //TODO: This gives solution values for the first stage only..
-        return  M->Solver->getColSolution()[M->colIndirection[offset +  f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)]]; //Gives coefficient in CORE model..
+        throw invalid_argument_exception();
     else
         return M->Solver->getColSolution()[offset +  f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)];
 
+} 
+
+double MP_variable::levelScenario(int scenario, int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
+    assert(M != 0);
+    assert(M->Solver != 0);
+    if (M->colIndirection[offset+f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)] == outOfBound)
+        throw invalid_argument_exception();
+    if (M->stage.size()) //TODO: This gives solution values for the first stage only..
+        return M->smiModel->getColSolution(scenario,getCurrentStage(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5),M->colIndirection[offset+f(lcl_i1,lcl_i2,lcl_i3,lcl_i4,lcl_i5)]);
+    else
+        throw invalid_argument_exception();
+
 }  
+
+void MP_variable::setStageSet(){
+    if (S1->isStage())
+        stageSet = 0;
+    else 
+        if (S2->isStage())
+            stageSet = 1;
+        else 
+            if (S3->isStage())
+                stageSet = 2;
+            else 
+                if (S4->isStage())
+                    stageSet = 3;
+                else 
+                    if (S5->isStage())
+                        stageSet = 4;
+                    else
+                        stageSet = outOfBound;
+}
+
+int MP_variable::getCurrentStage(int i1, int i2, int i3, int i4, int i5){
+    switch (stageSet)
+    {
+    case 0: return i1;
+    case 1: return i2;
+    case 2: return i3;
+    case 3: return i4;
+    case 4: return i5;
+    case outOfBound : return outOfBound;
+    default : return outOfBound;
+    }
+}
 
 void MP_variable::operator()() const {
     if (S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
@@ -54,7 +98,7 @@ void MP_variable::operator()() const {
         double* values = 0;
         for (int i = 0; i < M->scenSet.size(); i++){
             values = M->smiModel->getColSolution(i,&length);
-            //TODO: Check length
+            //TODO: Check length //Check colIndirection for outOfBound..
             cout<<"  "<< values[M->colIndirection[offset +
             f(i1.evaluate(),
             i2.evaluate(),
