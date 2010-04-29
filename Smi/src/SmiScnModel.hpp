@@ -170,7 +170,12 @@ public:
 	int* getBinaryInd(){return binaryInd;}
 	int getBinaryLen(){return binaryLen;}
 
-
+    inline vector<int> getIntIndices() {
+        return intIndices;
+    }
+    inline void addIntIndice(int indice) {
+        intIndices.push_back(indice);
+    }
 
 	// getXXX by scenario
 	double getObjectiveValue(SmiScenarioIndex ns);
@@ -242,6 +247,7 @@ private:
 	int* binaryInd;
 	int binaryLen;
 
+    vector<int> intIndices;
 };
 
 class SmiScnNode

@@ -7,7 +7,7 @@
 
 using namespace std;
 
-SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices)
+SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices):intColsStagewise(nstag,std::vector<int>())
 {	//Copies all values already stored in the Solver..
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -119,6 +119,7 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 	for (i=0;i<nrow_;i++){
 		printf("rowEx2In = %d, rowIn2Ex = %d for index %d",rowEx2In_[i],rowIn2Ex_[i],i);
 	}
+	cout << endl;
 
 	// reset stage pointers
 	stageRowPtr_[0] = 0;
@@ -151,8 +152,20 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 	for (i=0;i<nstag_;i++)
 		stageColPtr_[i+1] = stageColPtr_[i] + nColInStage_[i];
 
-    //TODO: Create Array with length number of columns and containts integer information for every column.
-    // Even better: store list with values of integer columns for cur stage only
+    // store list with values of integer columns for cur stage only
+    int * nColInPrevStages = new int[nstag_];
+    nColInPrevStages[0] = 0;
+    for (i=1; i<nstag_; i++) {
+        nColInPrevStages[i] = nColInPrevStages[i-1] + nColInStage_[i-1];
+    }    
+    for (i=0; i<integerLength_; i++) {
+        int indice = integerIndices[i];
+        int stage = colStage_[indice];
+        intColsStagewise[stage].push_back(indice - nColInPrevStages[stage]);
+    }
+
+
+
 
 
 	// reserve place for nodes holding stage dependent fixed information
