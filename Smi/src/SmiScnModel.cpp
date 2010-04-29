@@ -16,14 +16,26 @@ int
 SmiScnNode::getCoreColIndex(int i)
 {
 	SmiCoreData *core = node_->getCore();
-	return core->getColExternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+	return core->getColInternalIndex(i-coffset_+core->getColStart(node_->getStage()));
 }
+//int
+//SmiScnNode::getSolverColIndex(int i)
+//{
+//	SmiCoreData *core = node_->getCore();
+//	return core->getColExternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+//}
 
 int
 SmiScnNode::getCoreRowIndex(int i){
 	SmiCoreData *core = node_->getCore();
 	return core->getRowExternalIndex(i-roffset_+core->getRowStart(node_->getStage()));
 }
+//int
+//SmiScnNode::getSolverRowIndex(int i)
+//{
+//	SmiCoreData *core = node_->getCore();
+//	return core->getRowInternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+//}
 
 SmiScnModel::~SmiScnModel()
 {
@@ -276,21 +288,21 @@ SmiScnModel::loadOsiSolverData()
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
- //   for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
- //       std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
- //   }
- //   std::cout << std::endl;
-	//for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-	//	printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-	//	for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-	//		printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-	//	}
-	//	printf("<= %g",osiStoch_->getRowUpper()[mi]);
-	//}
-	//printf("\n Matrix printed \n");
-	//for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-	//	printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-	//}
+    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+    }
+    std::cout << std::endl;
+	for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+		printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+		for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+			printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+		}
+		printf("<= %g",osiStoch_->getRowUpper()[mi]);
+	}
+	printf("\n Matrix printed \n");
+	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+		printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+	}
 	return osiStoch_;
 }
 
@@ -688,6 +700,43 @@ SmiScnModel::getColSolution(int ns, int *length)
 	return dsoln;
 }
 
+double 
+SmiScnModel::getColSolution(int ns, int stage, int colIndex)
+{
+	//CoinPackedVector *soln=new CoinPackedVector();
+	const double * osiSoln = this->getOsiSolverInterface()->getColSolution();
+	int numcols=0;
+
+	assert( ns < this->getNumScenarios() );
+
+	// start with leaf node
+	SmiScnNode *node = this->getLeafNode(ns);
+	while (node != NULL){
+		// accumulate number of collumns along scenario
+		numcols+=node->getNumCols();
+
+		// get parent of node
+		node = node->getParent();
+	}
+
+    return 0;
+
+	// start with leaf node
+	//node = this->getLeafNode(ns);
+	//while (node != NULL){
+	//	// copy entries
+	//	// getColStart returns the starting index of node in OSI model
+	//	for(int j=node->getColStart(); j<node->getColStart()+node->getNumCols(); ++j){
+	//			// getCoreRowIndex returns the corresponding Core index
+	//			// in the original (user's) ordering
+	//			dsoln[node->getCoreColIndex(j)] = osiSoln[j];
+	//	}
+	//	// get parent of node
+	//	node = node->getParent();
+	//}
+	//return dsoln;
+}
+
 double *
 SmiScnModel::getRowSolution(int ns, int *length)
 {
@@ -726,6 +775,44 @@ SmiScnModel::getRowSolution(int ns, int *length)
 	*length=numrows;
 	return dsoln;
 }
+
+double 
+SmiScnModel::getRowSolution(int ns, int stage, int colIndex)
+{
+	//CoinPackedVector *soln=new CoinPackedVector();
+	const double * osiSoln = this->getOsiSolverInterface()->getRowActivity();
+	assert( ns < this->getNumScenarios() );
+    assert( stage < this->core_->getNumStages() );
+	// start with leaf node
+	SmiScnNode *node = this->getLeafNode(ns);
+    int curStage = this->core_->getNumStages() - stage; // Number of stages
+	while (node != NULL && curStage){ // Go to the correct node. If Stage is reduced to zero we are at the correct node.
+		// get parent of node
+		node = node->getParent();
+        --curStage;
+	}
+
+    //get Correct entry of osiSoln
+    //node->getCoreRowIndex(
+
+    return 0;
+
+	// start with leaf node
+	//node = this->getLeafNode(ns);
+	//while (node != NULL){
+	//	// copy entries
+	//	// getRowStart returns the starting index of node in OSI model
+	//	for(int j=node->getRowStart(); j<node->getRowStart()+node->getNumRows(); ++j){
+	//			// getCoreRowIndex returns the corresponding Core index
+	//			// in the original (user's) ordering
+	//			dsoln[node->getCoreRowIndex(j)] = osiSoln[j];
+	//	}
+	//	// get parent of node
+	//	node = node->getParent();
+	//}
+	//return dsoln;
+}
+
 
 int
 SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)

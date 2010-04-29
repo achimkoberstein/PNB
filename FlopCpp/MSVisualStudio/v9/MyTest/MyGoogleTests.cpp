@@ -62,7 +62,7 @@ namespace {
 
     }
 
-        TEST_F(RandomVariableTest,ConditionalSamplingTest){
+    TEST_F(RandomVariableTest,ConditionalSamplingTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3);
         RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,1,10),new DiscreteUniformRandomVariable(0,10,2,10)};
@@ -106,7 +106,6 @@ namespace {
             }
         };
         MP_random_data returns(&scenarios[0][0][0],T,assets);
-
 
         MP_variable x(T,assets);
         MP_variable wealth(T);

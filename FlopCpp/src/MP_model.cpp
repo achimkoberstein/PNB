@@ -325,6 +325,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         cfs.erase(cfs.begin(),cfs.end());
     }
     nz = coefs.size();
+    int realn;
 
 
 #pragma region colIndirection;
@@ -357,21 +358,23 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         // This happens for example in constraints using the stage set, but that are used as T+1 to not generate first stage constraints. Such Variables could be removed from the model.
         // Empty Variables have no coefficients assigned, but they increase the variable counter
         //TODO: Write flopc++ presolver to eliminate empty variables in the formulation prior to scenario generation.
+        realn = j;
         if (j != n){
             assert(j <n);
             std::cout << "We have empty variables in this formulation" << std::endl;
             //We need to assign all empty variables to an index which is not used. This is fairly easy: Index j and above are not used..
             for (int count = 0; count < n; count++){
-                if (colIndirection[count] == outOfBound) //We have found an empty variable index
+                if (colIndirection[count] == outOfBound){ //We have found an empty variable index
                     colIndirection[count] = j++;
+                }
             }
             assert(j == n);
         }
 
         //Now we can access the new column ordering via colIndirection from FlopC++.
         //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
-        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessShared);
         //We need to extract all the random Coefficients that belong to the variable bounds and store them in the random coefficients array.
+        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessShared);
   
     }
 #pragma endregion colIndirection;
@@ -385,6 +388,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     //nz should only count number of elements in the matrix and not the RHS also..
     int realnz = nz;
+    //n = realn;
     Cst = new int[n+2];   
     Clg = new int[n+1];   
     if (n>0) {
@@ -543,8 +547,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
         Clg[col]++;
     }
-
-
 
     //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
     //TODO: Empty row handling done here..
