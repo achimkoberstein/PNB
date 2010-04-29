@@ -129,6 +129,11 @@ namespace {
         investmentModel.solve(MP_model::MAXIMIZE);
         x.display("buy decisions");
         wealth.display("wealth per stage");
+        for (int i = 0; i < scen.size();i++){
+            for (int j = 0; j < T.size(); j++){
+                cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
+            }
+        }
 
         //Compare solution values.
         EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
