@@ -176,6 +176,8 @@ public:
 	double getObjectiveValue(SmiScenarioIndex ns);
 	double *getColSolution(SmiScenarioIndex ns, int *length);
 	double *getRowSolution(SmiScenarioIndex ns, int *length);
+    double getColSolution(SmiScenarioIndex ns, int stage, int colIndex);
+	double getRowSolution(SmiScenarioIndex ns, int stage, int colIndex);
 
 	// OsiSolverInterface
 	void setOsiSolverHandle(OsiSolverInterface &osi)

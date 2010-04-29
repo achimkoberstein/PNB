@@ -330,6 +330,10 @@ namespace flopc {
    
     void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
 
+    //TODO: Read back solution values
+    // two possibilities: Read back values so they are stored in the variable
+    // Always use values provided by solver.
+
 } // End of namespace flopc
 
 #endif
