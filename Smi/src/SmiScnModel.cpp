@@ -263,8 +263,6 @@ SmiScnModel::loadOsiSolverData()
 	this->rstrt_[0] = 0;
 	this->nels_max = nels_;
 
-    //TODO: Define std::vector<int> for integer indices
-
 	ncol_=0;
 	nrow_=0;
 	nels_=0;
@@ -282,8 +280,10 @@ SmiScnModel::loadOsiSolverData()
 	// pass data to osiStoch
 	osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
 
-    //TODO: load integer values in solver
-
+    // load integer values in solver
+    for (int i = 0; i < intIndices.size(); i++) {
+        osiStoch_->setInteger(intIndices[i]);
+    }
 
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..
@@ -512,12 +512,6 @@ SmiScnModel::addNode(SmiScnNode *tnode)
 	tnode->setColOffset(ncol_);
 	tnode->setRowOffset(nrow_);
 
-    //TODO: Generate integer information from information given in core node (offset manipulation)
-    // Get index list of integers for current stage
-    // Iterate through list 
-    //    add offset
-    //    add to overall integer list
-
 	if (tnode->isVirtualNode())
 	{
 		// update column count
@@ -531,6 +525,18 @@ SmiScnModel::addNode(SmiScnNode *tnode)
 	// get stage and associated core node 
 	int stg = node->getStage();
 	SmiNodeData *cnode = core->getNode(stg);
+
+    //TODO: Generate integer information from information given in core node (offset manipulation)
+    // Get index list of integers for current stage
+    // Iterate through list 
+    //    add offset
+    //    add to overall integer list
+    cout << "Stage " << stg << endl;
+    vector<int> intCols = core->getIntCols(stg);
+    for (int i = 0; i < intCols.size(); i++) {
+        cout << intCols[i] << " + " << ncol_ << endl;
+        this->addIntIndice(intCols[i] + ncol_);
+    }
 
 	// pretty sure this is an error? //Christian: At a first glance, looks like it..
 	//Christian: Copy and Combine with Core-Arrays to create Arrays for current scenario and stage

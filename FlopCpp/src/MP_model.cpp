@@ -989,7 +989,10 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         Solver = smiModel->loadOsiSolverData();
         Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
         try {
-            Solver->initialSolve();
+            if (isMIP == true)
+                Solver->branchAndBound();
+            else
+                Solver->initialSolve();
         }  catch (CoinError e) {
             cout<<e.message()<<endl;
         }
