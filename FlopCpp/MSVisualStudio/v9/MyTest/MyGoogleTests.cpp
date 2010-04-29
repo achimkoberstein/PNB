@@ -513,9 +513,9 @@ namespace {
         testModel2.solve(MP_model::MINIMIZE);
         //Test for Correctnes 
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
-        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
-        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
-        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
+        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,1));
+        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,2));
+        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,6));
         //testModel2.detach();
         //double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
         //MP_random_data rvar2(&scenarios2[0],T);

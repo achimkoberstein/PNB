@@ -38,7 +38,7 @@ namespace flopc {
         friend class MP_variable;
 
         struct Coef {
-            Coef(int c, int r, double v, int s = 0,int rs = 0,std::vector<double> scen = std::vector<double>()) : 
+            Coef(int c, int r, double v, int s = 0,int rs = 0,const std::vector<double>& scen = std::vector<double>()) : 
         col(c), row(r), varStage(s),randomStage(rs), val(v), scenVector(scen)  {}
         int col, row, varStage,randomStage;
         double val;
@@ -48,18 +48,31 @@ namespace flopc {
         //Stage = Stage of belonging Variable (Column)
         //Val = Coefficient value
         //scenVal = stores random values for given scenarios..
+        bool operator< (const MP::Coef& rhs) {
+            if (this->col < rhs.col) {
+                return true;
+            } else if (this->col == rhs.col && this->row < rhs.row) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
 
         };
 
-        static bool CoefLess (const MP::Coef& a, const MP::Coef& b);
-        static bool CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b);
-        static bool CoefLessWithStageShared  (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b);
-        /*struct CoefLess {
-        bool operator()  const;
+        static bool CoefLess (const MP::Coef& a, const MP::Coef& b) ;
+        static bool CoefLessShared (const boost::shared_ptr<MP::Coef> a, const boost::shared_ptr<MP::Coef> b) ;
+        static bool CoefLessWithStageShared  (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) ;
+    /*    struct CoefLess {
+            bool operator()  const;
         };
 
-        struct CoefLessWithStage {
-        bool operator() (const MP::Coef& a, const MP::Coef& b) const;
+        struct CoefLessShared {
+            bool operator() (const MP::Coef& a, const MP::Coef& b) const;
+        };
+        struct CoefLessWithStageShared {
+            bool operator() (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) const;
         };*/
 
     protected:
