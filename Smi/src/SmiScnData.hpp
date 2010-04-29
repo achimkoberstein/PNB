@@ -217,6 +217,8 @@ public:
 	inline const double * getDenseColUpper(SmiStageIndex t){return cdcup_[t];}
 	inline const double * getDenseObjCoefficients(SmiStageIndex t){return cdobj_[t];}
 
+    inline vector<int> getIntCols(int stage) { return intColsStagewise[stage]; };
+
 	void copyRowLower(double * drlo,SmiStageIndex t );
 	void copyRowUpper(double * drup,SmiStageIndex t);
 	void copyColLower(double * dclo,SmiStageIndex t);
@@ -264,6 +266,7 @@ private:
 	double **cdcup_;
 	vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
 	vector<double *> pDenseRow_; //dense probability vector
+	vector<vector<int>> intColsStagewise; // For each stage separately, it contains the position of every integer column
 };
 
 #endif //#define SmiScnData_HPP
