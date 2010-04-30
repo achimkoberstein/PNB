@@ -858,10 +858,10 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     VLDEnable();
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
-    _CrtMemState memstate;
-    _CrtMemCheckpoint(&memstate);
+    //_CrtMemState memstate;
+    //_CrtMemCheckpoint(&memstate);
     int result = RUN_ALL_TESTS();
-    _CrtMemDumpAllObjectsSince(&memstate);
+    //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();
     return result;
 }
