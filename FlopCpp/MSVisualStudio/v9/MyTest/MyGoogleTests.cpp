@@ -1,8 +1,6 @@
-//#include <vld.h> uncomment to enable Visual Leak Detector
-
-////TODO: Workaround for iterator container debuggin
-//#define _HAS_ITERATOR_DEBUGGING 0
-//#define _SECURE_SCL             0
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -18,18 +16,13 @@
 #include "flopc.hpp"
 //#include "Benders.hpp"
 
-
-
-
-
-//#include <vld.h> //Visual Leak Detector
-
+#include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
-
 
 using namespace flopc;
 namespace {
 
+#pragma region initialization
     class MP_modelTest: public ::testing::Test {
     public:
     protected:
@@ -51,6 +44,81 @@ namespace {
 
         MP_model testModel;
     };
+    
+    //class BendersTest: public ::testing::Test{
+
+    //protected:
+    //    BendersTest(){ }
+    //   
+    //};
+    //
+    //#pragma endregion initialization
+
+    //TEST_F(BendersTest,BendersSolverTest){
+    //    // minimization 
+    //    // model.solve(MP_model::MINIMIZE);
+    //    // call copyModel(smiModel)
+    //    // call copySubModel(smiModel) methods from Benders..
+    //    int maxIt = 100;
+    //    Benders* benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
+
+    //    MP_model investmentModel(new OsiCpxSolverInterface());
+    //    MP_data initialWealth,goal;
+    //    initialWealth() = 55; //set data
+    //    goal() = 60;
+
+    //    enum {numStage=2};
+    //    MP_stage T(numStage); //Time Stages
+    //    enum {numScen=2};
+    //    MP_scenario_set scen(numScen);
+    //    enum {asset1,asset2,numAssets};
+    //    MP_set assets(numAssets);
+    //    double scenarios[numStage-1][numAssets][numScen]=
+    //    {//T
+    //        {//assets
+    //            // stage 2
+    //            {1.25,1.06},{1.14,1.16} //asset1 to asset1, scen 1 to 8
+    //        },
+    //    };
+    //    MP_random_data returns(&scenarios[0][0][0],T,assets);
+
+    //    MP_variable x(T,assets);
+    //    MP_variable wealth(T);
+    //    MP_variable shortage(T), overage(T);
+
+    //    MP_constraint 
+    //        initialWealthConstr,
+    //        returnConstr(T),
+    //        allocationConstr(T),
+    //        goalConstr(T);
+
+    //    initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+    //    allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+    //    returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+
+    //    goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+    //    MP_expression valueFunction( 1.3*shortage(T.last()) - 1.1*overage(T.last()));
+
+    //    investmentModel.setObjective( valueFunction );
+    //   
+    //    investmentModel.attach(investmentModel.Solver);
+    //    investmentModel.solve(MP_model::MAXIMIZE);
+    //    //EXPECT_NEAR(3.784,investmentModel->getObjValue(),0.0001);
+    //    //TODO: Benders can only minimize models
+    //    benders->copyMaster(investmentModel.smiModel);
+    //    benders->copySubmodel(investmentModel.smiModel);
+    //    benders->BendersSolve(0.000001, maxIt );
+    //    //for (int i = 0; i < investmentModel.ScenSet().size();i++){
+    //    //    for (int j = 0; j < T.size(); j++){
+    //    //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
+    //    //    }
+    //    //}
+    //    //EXPECT_NEAR(3.784,benders->osiMaster_->getObjValue(),0.0001);
+    //    //delete benders; //TODO: This leads to errors
+    //}
+
+
+    
     TEST_F(RandomVariableTest,ShortTest){
         enum {numStage=2};
         enum {numScen=10};
@@ -773,7 +841,27 @@ namespace {
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char **argv) {
+    // Get current flag
+    //int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
+
+    //// Turn on leak-checking bit
+    ////tmpFlag |= _CRTDBG_LEAK_CHECK_DF;
+    ////tmpFlag |= _CRTDBG_CHECK_ALWAYS_DF;
+
+    //// Turn off CRT block checking bit
+    ////tmpFlag &= ~_CRTDBG_CHECK_CRT_DF;
+
+    //// Set flag to the new value
+    //_CrtSetDbgFlag( tmpFlag );
+
+    VLDDisable();
     ::testing::InitGoogleTest(&argc, argv);
+    VLDEnable();
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
-    return RUN_ALL_TESTS();
+    _CrtMemState memstate;
+    _CrtMemCheckpoint(&memstate);
+    int result = RUN_ALL_TESTS();
+    _CrtMemDumpAllObjectsSince(&memstate);
+    //_CrtDumpMemoryLeaks();
+    return result;
 }
