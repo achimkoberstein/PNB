@@ -99,6 +99,7 @@ namespace flopc {
     */
     class MP_model {
         friend class MP_constraint;
+        friend class MP_variable;
     public:
         /// used when calling the solve() method.  
         typedef enum {MINIMIZE=1, MAXIMIZE=-1} MP_direction;
@@ -164,6 +165,8 @@ namespace flopc {
         const OsiSolverInterface* operator->() const {
             return Solver;
         }
+
+
 
         /// Adds a constrataint block to the model.
         MP_model& add(MP_constraint& constraint);
@@ -255,10 +258,18 @@ namespace flopc {
 
         MP_stage Stage() const { return stage; }
         void Stage(const MP_stage& val) { stage = val; }
-        flopc::MP_scenario_set ScenSet() const { return scenSet; }
-        void ScenSet(flopc::MP_scenario_set val) { scenSet = val; }
+        MP_scenario_set ScenSet() const { return scenSet; }
+        void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
+        //MP_data Probabilities() const { return probabilities; }
+        void Probabilities(const MP_data& prob);
+        void SampleSize(int val) { defaultSampleSize = val; };
+
+        const SmiScnModel* getSmi() const { return smiModel; }
+        SmiScnModel* getSmi() { return smiModel; }
 
         OsiSolverInterface* Solver; 
+
+
 
     private:
         typedef std::set<MP_variable* >::iterator varIt;
@@ -277,7 +288,7 @@ namespace flopc {
         void add(MP_constraint* constraint);
 
         //Sample RandomVariates
-        void sampleRandomVariates(std::vector<std::set<RandomVariable*> > rv,int sampleSize = 0); 
+        void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv); 
 
         SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
@@ -291,6 +302,8 @@ namespace flopc {
         set<MP_constraint *> Constraints;
         set<MP_variable *> Variables;
         std::vector< std::set<RandomVariable*> > RandomVariables;
+        std::vector<double> probabilities;
+        int defaultSampleSize;
 
     private:
         int m;
@@ -324,6 +337,10 @@ namespace flopc {
 
    
     void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
+
+    //TODO: Read back solution values
+    // two possibilities: Read back values so they are stored in the variable
+    // Always use values provided by solver.
 
 } // End of namespace flopc
 

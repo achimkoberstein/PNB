@@ -7,6 +7,7 @@
 #include "MP_utilities.hpp"
 namespace flopc{
 
+    // Returns true in the case of equality
     bool compareDouble(double x, double y, double absoluteTolerance, double relativeTolerance){
         if ((std::fabs(x-y) <= absoluteTolerance) || std::fabs(x-y) <= relativeTolerance*(std::max(std::fabs(x),std::fabs(y))))
             return true;

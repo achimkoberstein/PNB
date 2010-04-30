@@ -16,14 +16,26 @@ int
 SmiScnNode::getCoreColIndex(int i)
 {
 	SmiCoreData *core = node_->getCore();
-	return core->getColExternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+	return core->getColInternalIndex(i-coffset_+core->getColStart(node_->getStage()));
 }
+//int
+//SmiScnNode::getSolverColIndex(int i)
+//{
+//	SmiCoreData *core = node_->getCore();
+//	return core->getColExternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+//}
 
 int
 SmiScnNode::getCoreRowIndex(int i){
 	SmiCoreData *core = node_->getCore();
 	return core->getRowExternalIndex(i-roffset_+core->getRowStart(node_->getStage()));
 }
+//int
+//SmiScnNode::getSolverRowIndex(int i)
+//{
+//	SmiCoreData *core = node_->getCore();
+//	return core->getRowInternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+//}
 
 SmiScnModel::~SmiScnModel()
 {
@@ -81,7 +93,7 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 	// If we add the first scenario..
 	if (this->getNumScenarios()==0)
 	{
-		// TODO: warnings if branch and anc are not 0
+	
         assert(anc == 0);
         assert(branch == 0);
 		anc = 0;
@@ -251,8 +263,6 @@ SmiScnModel::loadOsiSolverData()
 	this->rstrt_[0] = 0;
 	this->nels_max = nels_;
 
-    //TODO: Define std::vector<int> for integer indices
-
 	ncol_=0;
 	nrow_=0;
 	nels_=0;
@@ -270,8 +280,10 @@ SmiScnModel::loadOsiSolverData()
 	// pass data to osiStoch
 	osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
 
-    //TODO: load integer values in solver
-
+    // load integer values in solver
+    for (int i = 0; i < intIndices.size(); i++) {
+        osiStoch_->setInteger(intIndices[i]);
+    }
 
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..
@@ -500,12 +512,6 @@ SmiScnModel::addNode(SmiScnNode *tnode)
 	tnode->setColOffset(ncol_);
 	tnode->setRowOffset(nrow_);
 
-    //TODO: Generate integer information from information given in core node (offset manipulation)
-    // Get index list of integers for current stage
-    // Iterate through list 
-    //    add offset
-    //    add to overall integer list
-
 	if (tnode->isVirtualNode())
 	{
 		// update column count
@@ -519,6 +525,18 @@ SmiScnModel::addNode(SmiScnNode *tnode)
 	// get stage and associated core node 
 	int stg = node->getStage();
 	SmiNodeData *cnode = core->getNode(stg);
+
+    //TODO: Generate integer information from information given in core node (offset manipulation)
+    // Get index list of integers for current stage
+    // Iterate through list 
+    //    add offset
+    //    add to overall integer list
+    cout << "Stage " << stg << endl;
+    vector<int> intCols = core->getIntCols(stg);
+    for (int i = 0; i < intCols.size(); i++) {
+        cout << intCols[i] << " + " << ncol_ << endl;
+        this->addIntIndice(intCols[i] + ncol_);
+    }
 
 	// pretty sure this is an error? //Christian: At a first glance, looks like it..
 	//Christian: Copy and Combine with Core-Arrays to create Arrays for current scenario and stage
@@ -688,6 +706,28 @@ SmiScnModel::getColSolution(int ns, int *length)
 	return dsoln;
 }
 
+double 
+SmiScnModel::getColSolution(int ns, int stage, int colIndex)
+{
+	//CoinPackedVector *soln=new CoinPackedVector();
+	const double * osiSoln = this->getOsiSolverInterface()->getColSolution();
+	int numcols=0;
+
+	assert( ns < this->getNumScenarios() );
+    assert( stage < this->core_->getNumStages() );
+
+	SmiScnNode *node = this->getLeafNode(ns);
+    int curStage = this->core_->getNumStages() - stage-1; // Number of stages
+	while (node != NULL && curStage){ // Go to the correct node. If Stage is reduced to zero we are at the correct node.
+		// get parent of node
+		node = node->getParent();
+        --curStage;
+	}
+
+    assert( colIndex < core_->getColStart(stage)+node->getNumCols() && colIndex >= core_->getColStart(stage));
+    return osiSoln[node->getColStart()+colIndex-core_->getColStart(stage)];// Return element in matrix that is at nodeColStart + colIndex for stage. Where to get colIndex for stage?
+}
+
 double *
 SmiScnModel::getRowSolution(int ns, int *length)
 {
@@ -696,6 +736,7 @@ SmiScnModel::getRowSolution(int ns, int *length)
 	int numrows=0;
 
 	assert( ns < this->getNumScenarios() );
+
 
 	// start with leaf node
 	SmiScnNode *node = this->getLeafNode(ns);
@@ -726,6 +767,27 @@ SmiScnModel::getRowSolution(int ns, int *length)
 	*length=numrows;
 	return dsoln;
 }
+
+double 
+SmiScnModel::getRowSolution(int ns, int stage, int rowIndex)
+{
+	//CoinPackedVector *soln=new CoinPackedVector();
+	const double * osiSoln = this->getOsiSolverInterface()->getRowActivity();
+	assert( ns < this->getNumScenarios() );
+    assert( stage < this->core_->getNumStages() );
+	// start with leaf node
+	SmiScnNode *node = this->getLeafNode(ns);
+    int curStage = this->core_->getNumStages() - stage-1; // Number of stages
+	while (node != NULL && curStage){ // Go to the correct node. If Stage is reduced to zero we are at the correct node.
+		// get parent of node
+		node = node->getParent();
+        --curStage;
+	}
+
+    assert( rowIndex < core_->getRowStart(stage)+node->getNumRows() && rowIndex >= core_->getRowStart(stage));
+    return osiSoln[node->getRowStart()+rowIndex-core_->getRowStart(stage)];// Return element in matrix that is at nodeColStart + colIndex for stage. Where to get colIndex for stage?
+}
+
 
 int
 SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)

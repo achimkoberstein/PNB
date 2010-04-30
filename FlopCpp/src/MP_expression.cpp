@@ -83,6 +83,12 @@ namespace flopc {
         return stage;
     }
 
+    void VariableRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+        //Look inside bounds for random data
+        V->lowerLimit->insertRandomVariables(v);
+        V->upperLimit->insertRandomVariables(v);
+    }
+
 
 
     class Expression_constant : public TerminalExpression, public MP {
@@ -330,7 +336,7 @@ bool MP::CoefLess (const MP::Coef& a, const MP::Coef& b) {
     }
 }
 
-bool MP::CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) {
+bool MP::CoefLessShared (const boost::shared_ptr<MP::Coef> a, const boost::shared_ptr<MP::Coef> b) {
     if (a->col < b->col) {
         return true;
     } else if (a->col == b->col && a->row < b->row) {

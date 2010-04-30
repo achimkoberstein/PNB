@@ -14,6 +14,7 @@
 #include "MP_set.hpp"
 #include "MP_utilities.hpp"
 
+//TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
 
 namespace flopc{
 
@@ -24,7 +25,8 @@ namespace flopc{
     class RandomVariable : boost::noncopyable{
         friend RandomDataRef;
     public:
-        typedef std::vector< std::pair< double, double > > sampleVector;
+
+        typedef std::map<double,double> sampleVector;
         typedef std::vector< std::vector< RandomVariable* > > randVarVector;
 
         RandomVariable();
@@ -33,9 +35,10 @@ namespace flopc{
         //Samples a number of random variates according to the distribution of the RandomVariable
         // It also sorts the variates in ascending order
         virtual void sample(int howMany = 0) = 0;
-        std::vector< std::pair<double,double> > getSampledValuesWithProb() const;
+        std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
         double getSampledValue(int index) const;
+        void setSampledValues(const std::vector<double>&);
 
         int Stage() const { return stage; }
         void Stage(int val) { stage = val; }
@@ -83,7 +86,7 @@ namespace flopc{
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from, int to, double stepWidth);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 0);
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
