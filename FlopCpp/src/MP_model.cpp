@@ -1287,6 +1287,10 @@ namespace flopc {
         //Look at PG or look into boost.
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
+        if (scenSet.size() != scenCounter){
+            scenSet = MP_scenario_set(scenCounter);
+        }
+
 
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
