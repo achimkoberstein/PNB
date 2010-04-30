@@ -166,6 +166,8 @@ namespace flopc {
             return Solver;
         }
 
+
+
         /// Adds a constrataint block to the model.
         MP_model& add(MP_constraint& constraint);
 
@@ -262,7 +264,12 @@ namespace flopc {
         void Probabilities(const MP_data& prob);
         void SampleSize(int val) { defaultSampleSize = val; };
 
+        const SmiScnModel* getSmi() const { return smiModel; }
+        SmiScnModel* getSmi() { return smiModel; }
+
         OsiSolverInterface* Solver; 
+
+
 
     private:
         typedef std::set<MP_variable* >::iterator varIt;
