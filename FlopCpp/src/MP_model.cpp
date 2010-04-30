@@ -80,11 +80,7 @@ MP_model::~MP_model() {
     if (Solver!=0) { //If solver was not deleted, call detach and therefore delete the Solver
         this->detach();
     }
-    //Delete objective first? I do not know what happens here..
-    //if (stage != 0)
-    //    delete stage;
-    //if (scenSet != 0)
-    //    delete scenSet;
+    assert(Solver == 0);
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
@@ -388,19 +384,25 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         l =   new double[realn];  
         u =   new double[realn];  
         c =  new double[realn]; 
-        colStage = new int[realn+1]; //Col Stage of RHS is not necessary..
+        if (stage.size()){
+            colStage = new int[realn+1]; //Col Stage of RHS is not necessary..
+            for (int i=0; i<realn+1; i++) {
+                colStage[i] = 0;
+            }
+        }
     }
     if (m>0) {
         bl  = new double[m];  
-        bu  = new double[m];  
-        rowStage = new int[m];
+        bu  = new double[m];
+        if (stage.size()){
+            rowStage = new int[m];
+            for (int i=0; i<m; i++) {
+                rowStage[i] = 0;
+            }
+        }
     }
-    for (int i=0; i<m; i++) {
-        rowStage[i] = 0;
-    }
-    for (int i=0; i<realn+1; i++) {
-        colStage[i] = 0;
-    }
+
+
 
     const double inf = Solver->getInfinity();
 
@@ -1298,6 +1300,8 @@ namespace flopc {
             delete objVec[curScen];
             delete rloVec[curScen];
             delete rupVec[curScen];
+            delete bloVec[curScen];
+            delete bupVec[curScen];
         }
         return smiModel;
     }
