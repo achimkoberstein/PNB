@@ -62,6 +62,7 @@ namespace {
 
     }
 
+    //Test if Conditional Sampling works (for seed 0 for every RV. This means values are highly correlated)
     TEST_F(RandomVariableTest,ConditionalSamplingTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3);
@@ -76,6 +77,8 @@ namespace {
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
+        EXPECT_EQ(400,testModel2.ScenSet().size()); //Test if number of scenarios is correctly generated (this is a consequence of the sampled values)
+        EXPECT_EQ(70,testModel2.smiModel->getNumScenarios());
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
