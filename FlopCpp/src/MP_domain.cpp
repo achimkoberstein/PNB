@@ -22,7 +22,7 @@ namespace flopc {
 
     class Functor_conditional : public Functor {
     public:
-        Functor_conditional(const Functor* f, const std::vector<MP_boolean> & condition)
+        Functor_conditional(const Functor* f, const std::vector<MP_boolean>& condition)
             : F(f), Condition(condition) {}
         virtual ~Functor_conditional() {}
         void operator()() const {
@@ -83,13 +83,18 @@ void MP_domain::forall(const Functor& op) const {
     forall(&op);
 }
 void MP_domain::forall(const Functor* op) const {
+    Functor_conditional* fPtr = 0;
     if (condition.size()>0) {
-        last->donext = new Functor_conditional(op,condition);
+        fPtr = new Functor_conditional(op,condition);
+        last->donext = fPtr;
     } else {
         last->donext = op;
     }
     //Iterate over all elements of the domain and call op on them.
     operator->()->operator()();
+    if (fPtr != 0)
+        delete fPtr;
+    
 }
 
 const MP_set_base* MP_domain_set::getSet() const {

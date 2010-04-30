@@ -832,7 +832,6 @@ namespace {
         CoinRelFltEq eq;
         assert( eq(m2->getObjValue(),1566.04218913) );
         assert( eq(m1->getObjValue(),1566.04218913) );
-
         y.display("y second model");
     }
 
