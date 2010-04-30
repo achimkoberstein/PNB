@@ -62,7 +62,7 @@ namespace flopc {
         };
 
         static bool CoefLess (const MP::Coef& a, const MP::Coef& b) ;
-        static bool CoefLessShared (const boost::shared_ptr<MP::Coef> a, const boost::shared_ptr<MP::Coef> b) ;
+        static bool CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) ;
         static bool CoefLessWithStageShared  (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) ;
     /*    struct CoefLess {
             bool operator()  const;
