@@ -919,7 +919,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         }//end for rv
     }//end for stage
     //Prepare everything in the model: Set scenario set and add probabilities..
-    this->scenSet = MP_scenario_set(overallScenarios.size());
+    this->ScenSet(MP_scenario_set(overallScenarios.size()));
     this->probabilities.clear();
     this->probabilities.reserve(overallScenarios.size());
     double sum = 0;
@@ -1287,6 +1287,11 @@ namespace flopc {
         //Look at PG or look into boost.
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
+
+        if (scenCounter != scenSet.size()){
+            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << "." << std::endl;
+            this->ScenSet(MP_scenario_set(scenCounter)); // Update scenario set to shrink to the actual size.
+        }
 
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
