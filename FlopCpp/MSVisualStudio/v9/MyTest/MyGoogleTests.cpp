@@ -1,4 +1,9 @@
 //#include <vld.h> uncomment to enable Visual Leak Detector
+
+////TODO: Workaround for iterator container debuggin
+//#define _HAS_ITERATOR_DEBUGGING 0
+//#define _SECURE_SCL             0
+
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
@@ -47,7 +52,7 @@ namespace {
 
         MP_model testModel;
     };
-
+    
     class BendersTest: public ::testing::Test{
 
     protected:
@@ -59,8 +64,8 @@ namespace {
         }
        
     };
-
-#pragma endregion initialization
+    
+    #pragma endregion initialization
 
     TEST_F(BendersTest,BendersSolverTest){
         //model.solve(MP_model::MINIMIZE);
@@ -114,6 +119,153 @@ namespace {
         benders->BendersSolve(0.000001, maxIt );
     }
 
+
+    
+    
+    TEST_F(RandomVariableTest,ShortTest){
+        enum {numStage=2};
+        enum {numScen=10};
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(numStage); // enum numStage = 2
+        MP_scenario_set scenSet(numScen); //enum numScen=10
+        double scenarioValues[numStage-1][numScen] = { { 1,2,3,4,5,6,7,8,9,10 } };
+        MP_random_data r(&scenarioValues[0][0],T); //Scenario-based 
+
+    }
+
+    //Test if Conditional Sampling works (for seed 0 for every RV. This means values are highly correlated)
+    TEST_F(RandomVariableTest,ConditionalSamplingTest){
+        MP_model testModel2(new OsiClpSolverInterface());
+        MP_stage T(3);
+        RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,1,10),new DiscreteUniformRandomVariable(0,10,2,10)};
+        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
+        MP_random_data rvar(&scenarioValues[0],T);
+        MP_random_data rvar2(&scenarioValues1[0],T);
+        MP_variable x(T);
+        MP_constraint con1(T);
+        con1(T+1) = x(T+1)*(rvar(T+1)+rvar2(T+1)) <= 10;//*rvar2(T);
+        testModel2.setObjective(x(T.last()));
+        testModel2.attach(testModel2.Solver);
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
+        EXPECT_EQ(400,testModel2.ScenSet().size()); //Test if number of scenarios is correctly generated (this is a consequence of the sampled values)
+        EXPECT_EQ(70,testModel2.getSmi()->getNumScenarios());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+    }
+
+    TEST_F(MP_modelTest,InvestmentExampleTest){
+        // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
+        MP_model investmentModel(new OsiClpSolverInterface());
+        MP_data initialWealth,goal;
+        initialWealth() = 55; //set data
+        goal() = 80;
+
+        enum {numStage=4};
+        MP_stage T(numStage); //Time Stages
+        enum {numScen=8};
+        MP_scenario_set scen(numScen);
+        enum {asset1,asset2,numAssets};
+        MP_set assets(numAssets);
+        double scenarios[numStage-1][numAssets][numScen]=
+        {//T
+            {//assets
+                // stage 2
+                {1.25,1.25,1.25,1.25,1.06,1.06,1.06,1.06},{1.14,1.14,1.14,1.14,1.16,1.16,1.16,1.16} //asset1 to asset1, scen 1 to 8
+            },
+            {// stage 3
+                {1.21,1.21,1.07,1.07,1.15,1.15,1.06,1.06},{1.17,1.17,1.12,1.12,1.18,1.18,1.12,1.12} //asset1 to asset1, scen 1 to 8
+            },
+            {// stage 4
+                {1.26,1.07,1.25,1.06,1.05,1.06,1.05,1.06},{1.13,1.14,1.15,1.12,1.17,1.15,1.14,1.12} //asset1 to asset1, scen 1 to 8
+            }
+        };
+        MP_random_data returns(&scenarios[0][0][0],T,assets);
+
+        MP_variable x(T,assets);
+        MP_variable wealth(T);
+        MP_variable shortage(T), overage(T);
+
+        MP_constraint 
+            initialWealthConstr,
+            returnConstr(T),
+            allocationConstr(T),
+            goalConstr(T);
+
+        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+
+        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+        MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
+
+        investmentModel.setObjective( valueFunction );
+        investmentModel.attach(investmentModel.Solver);
+        investmentModel.solve(MP_model::MAXIMIZE);
+
+        for (int i = 0; i < scen.size();i++){
+            for (int j = 0; j < T.size(); j++){
+                cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
+            }
+        }
+
+        //Compare solution values.
+        EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
+        EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+    }
+
+
+    TEST_F(MP_modelTest,IntegerTest2){
+        MP_model intModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_scenario_set scen(2);
+        double scenarios[1][2] =
+        { // T
+            {1,2} //scen
+        };
+        MP_random_data rvar(&scenarios[0][0],T);
+        MP_variable y(T), x(T);
+        y.integer();
+        x.integer();
+        MP_constraint constraint1(T);
+        constraint1(T) = y(T) + x(T) >= 1.5 + rvar(T);
+        intModel.setObjective(sum(T, y(T)));
+        intModel.attach(intModel.Solver);
+        intModel.solve(MP_model::MINIMIZE);
+        const double * colSolution = intModel->getColSolution();
+        for (int i = 0; i < intModel->getNumCols(); i++)
+            cout << "Column " << i << ": " << colSolution[i] << endl;
+        y.display("y");
+        x.display("x");
+        cout << "Finished.";
+        EXPECT_EQ(MP_model::OPTIMAL,intModel.getStatus());
+        EXPECT_EQ(3,x.levelScenario(0,1));
+        EXPECT_EQ(4,x.levelScenario(1,1));
+    }
+
+    TEST_F(MP_modelTest,IntegerTest){
+        MP_model intModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+
+        MP_scenario_set scen(3);
+        double scenarios[1][3] =
+        { // T
+            {1,2,3} //scen
+        };
+        MP_random_data rvar(&scenarios[0][0],T);
+        MP_variable y(T);
+        y.integer();
+        MP_constraint constraint1(T);
+        constraint1(T) = y(T) >= 1.5 + rvar(T);
+        intModel.setObjective(sum(T, y(T)));
+        intModel.attach(intModel.Solver);
+        intModel.solve(MP_model::MINIMIZE);
+        assert(intModel->getObjValue() == 6);
+        assert(intModel->isInteger(0) == true);
+        assert(intModel->isInteger(1) == true);
+        y.display("y");
+        cout << "Finished.";
+    }
+
     TEST_F(MP_modelTest,DataTest){
         MP_data data1;
         MP_data data2;
@@ -132,36 +284,36 @@ namespace {
         testModel.setObjective(x());
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
-
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
 
     }
 
     TEST_F(MP_modelTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
         MP_stage T(2);
-        
+
         enum {low, normal, high, numScenarios};
         MP_scenario_set scen(numScenarios);
-        
+
         enum {desk, table, chair, numProducts};
         MP_set P(numProducts);
-        
+
         enum {lumber, finishing, carpentry, numResources};
         MP_set R(numResources);
-        
+
         MP_data resourceCost(R);
         resourceCost(lumber) = 2;
         resourceCost(finishing) = 4;
         resourceCost(carpentry) = 5.2;
-        
+
         MP_data resourceReq(P, R);
         resourceReq(desk, lumber) = 8;      resourceReq(desk, finishing) = 4;       resourceReq(desk, carpentry) = 2;
         resourceReq(table, lumber) = 6;     resourceReq(table, finishing) = 2;      resourceReq(table, carpentry) = 1.5;
         resourceReq(chair, lumber) = 1;     resourceReq(chair, finishing) = 1.5;    resourceReq(chair, carpentry) = 0.5;
-        
+
         double prices[3] = {60.0, 40.0, 10.0};
         MP_data sellingPrice(&prices[0], P);
-        
+
         double scenDemand[1][numProducts][numScenarios] =
         {
             { // L     M    H
@@ -171,26 +323,26 @@ namespace {
             }
         };
         MP_random_data demand(&scenDemand[0][0][0], T, P);
-        
+
         MP_variable 
             x(R),   // Ressourcenbedarf
             y(T,P); // Produzierte Einheiten
-        
+
         MP_constraint demandConstraint(P), productionConstraint(R), conR(R);
         demandConstraint(P) = y(T+1,P) <= demand(T+1,P);
         productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R);
-        
-        // Ohne diese Restriktion ist das Modell unbeschränkt, obwohl x(R) mit negativen Kosten in ZF eingeht
-        //conR(R) = x(R) <= 100;
-        
+
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
-          + sum(R, x(R) * resourceCost(R))
-        );
+            - sum(R, x(R) * resourceCost(R))
+            );
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE); 
         x.display("x (Resources)");
+        y.display("y (Products)");
         cout << "Finished";
+        EXPECT_DOUBLE_EQ(1616.666666666667,dacota->getObjValue());
+        EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
     }
 
 
@@ -213,19 +365,15 @@ namespace {
         MP_random_data rvar(&scenarios[0][0],T);
         MP_random_data rvar2(&scenarios2[0][0],T);
         MP_random_data rvar3(&scenarios3[0][0],T);
-        //MP_data blubb(T);
-        //blubb(T) = rvar(T) +rvar2(T);// + rvar2(T);
         MP_variable x(T);
         MP_constraint constraint1, constraint2(T),constraint3(T),constraint4(T);
         constraint1 = x(0) == 1;
-        //This does not yet work, as rvar is only allowed once..
-        //constraint2(T+1) = x(T+1)*blubb(T) >= x(T);
-        constraint3(T+1) = x(T+1) + rvar2(T+1) <= x(T); 
+        constraint3(T+1) = x(T+1) <= x(T)+ (rvar2(T+1)+3); //TODO: It is necessary to put additive terms in parentheses. This should not be necessary.
         constraint4(T+1) = x(T+1) >= x(T)*(rvar3(T+1)+3); 
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE); 
-
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
     TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
@@ -252,58 +400,10 @@ namespace {
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
         EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
-    TEST_F(MP_modelTest,InvestmentExampleTest){
-        // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
-        MP_model investmentModel(new OsiClpSolverInterface());
-        MP_data initialWealth;
-        initialWealth() = 55; //set data
 
-        enum {numStage=3};
-        MP_stage T(numStage); //Time Stages
-        enum {numScen=4};
-        MP_scenario_set scen(numScen);
-        enum {asset1,asset2,numAssets=2};
-        MP_set assets(numAssets);
-        double scenarios[numStage-1][numAssets][numScen]=
-        {//T
-            //{//assets
-            //    {1,2,3,4},{5,6,7,8} //scen
-            //},
-            {//assets
-                {2,4,2,4},{10,14,10,14} //scen
-            },
-            {//assets
-                {3,6,9,12},{15,18,21,24} //scen
-            }
-        };
-        MP_random_data returns(&scenarios[0][0][0],T,assets); //TODO: This is stochastic data and needs to get initialized
-
-
-        MP_variable x(T,assets);
-        MP_variable wealth(T);
-
-        MP_constraint 
-            initialWealthConstr,
-            returnConstr(T),
-            allocationConstr(T),
-            globalTestConstraint(T);
-
-        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
-        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-        //globalTestConstraint(T) = sum(assets,x(T,assets)) >= 10; // I want a global constraint here: not generated according to scenario tree.. => we need new construct for that..
-        //investmentModel.setObjective(sum(T,wealth(T))); //Only maximize wealth of last-period..
-        investmentModel.setObjective(wealth(T.last()));
-        investmentModel.attach(investmentModel.Solver);
-        investmentModel.solve(MP_model::MAXIMIZE);
-
-        //const double* colArray = investmentModel.Solver->getColSolution();
-        //Compare solution values.
-        EXPECT_DOUBLE_EQ(13035,investmentModel.Solver->getObjValue());
-
-    }
 
     TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
         //Create RV via double array. 
@@ -341,10 +441,16 @@ namespace {
         //Somehow we have to check if the rhs is properly evaluated in the end
     }
 
+
+
     TEST_F(MP_modelTest,RandomBoundsTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
+        MP_data prob(scen);
+        prob(0) = 0.5;
+        prob(1) = 0.5;
+        testModel2.Probabilities(prob);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
@@ -375,6 +481,7 @@ namespace {
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        //TODO: Test appearance of RandomVariable vector
         EXPECT_EQ(6.5,testModel2->getObjValue());
 
     }
@@ -415,8 +522,7 @@ namespace {
         constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20 + rVar2(T+1);
         constraint2(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) >= rVar3(T+1)*20 + rVar2(T+1);
         //TODO: Test coefficients right hand sides and stuff.. it is REALLY necessary to do so
-        //TODO: This is counterintuitive
-        //TODO: Test of the coefficients get generated in the right manner.
+        //TODO: Test if the coefficients get generated in the right manner.
         testModel.setObjective( 3*x() );
         testModel.attach(testModel.Solver);
         //We need to do some tests here..
@@ -426,32 +532,32 @@ namespace {
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
     }
 
-    TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
-        MP_stage T(3); //We have three stages
-        MP_random_data rVar(T); //Random Variable depends only on stage
-        MP_random_data rVar2(T);
-        //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
-        rVar(1) = new DiscreteRandomVariable();
-        rVar2(1) = new DiscreteRandomVariable();
-        rVar(2) = new DiscreteRandomVariable();
-        rVar2(2) = new DiscreteRandomVariable();
-        MP_variable x;
-        MP_variable y(T);
-        MP_constraint con1; 
-        MP_constraint con2(T);
-        con1() = x() <= 10;
-        con2(T) = x() + rVar(T)*y(T) <= rVar2(T);
-        testModel.setObjective(y(T.last()));
-        testModel.attach(testModel.Solver);
-        testModel.solve(MP_model::MAXIMIZE);
-    }
+    //TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
+    //    MP_stage T(3); //We have three stages
+    //    MP_random_data rVar(T); //Random Variable depends only on stage
+    //    MP_random_data rVar2(T);
+    //    //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
+    //    rVar(1) = new DiscreteRandomVariable();
+    //    rVar2(1) = new DiscreteRandomVariable();
+    //    rVar(2) = new DiscreteRandomVariable();
+    //    rVar2(2) = new DiscreteRandomVariable();
+    //    MP_variable x;
+    //    MP_variable y(T);
+    //    MP_constraint con1; 
+    //    MP_constraint con2(T);
+    //    con1() = x() <= 10;
+    //    con2(T) = x() + rVar(T)*y(T) <= rVar2(T);
+    //    testModel.setObjective(y(T.last()));
+    //    testModel.attach(testModel.Solver);
+    //    testModel.solve(MP_model::MAXIMIZE);
+    //    EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+    //}
 
     TEST_F(MP_modelTest,RandomVariableInitializationTest){
         // Test RV Usage by Assignment or Initialization.
         enum {Audi, BMW, Ford, numCars};
         MP_set cars(numCars);
         MP_random_data vars(cars); //Initialize RV with set
-        //TODO: Uncomment if functionality is implemented..
         DiscreteRandomVariable *x,*y,*z;
         x = new DiscreteRandomVariable();
         y = new DiscreteRandomVariable();
@@ -525,26 +631,30 @@ namespace {
         double scenarios[10] = {0,1,2,3,4,5,6,7,8,9};
         MP_random_data rvar(&scenarios[0],T);
         MP_variable x;
+        x.lowerLimit = 0;
+
         MP_variable y(T);
-        MP_constraint constraint1(T);
+        y.lowerLimit = 0;
+        MP_constraint constraint1(T),con2;
         constraint1(T+1) = x()+y(T+1)*(rvar(T+1)+testValue) >= 7;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
         //Test for Correctnes 
-        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
-        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
-        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
-        testModel2.detach();
-        double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
-        MP_random_data rvar2(&scenarios2[0],T);
-        constraint1(T+1) = x()+y(T+1)*(rvar2(T+1)*testValue) >= 7;
-        testModel2.setObjective(x());
-        testModel2.attach(new OsiClpSolverInterface());
-        testModel2.solve(MP_model::MINIMIZE);
-        EXPECT_EQ(testValue*0,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
-        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
-        EXPECT_EQ(testValue*5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,1));
+        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,2));
+        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,6));
+        //testModel2.detach();
+        //double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
+        //MP_random_data rvar2(&scenarios2[0],T);
+        //constraint1(T+1) = x()+y(T+1)*(rvar2(T+1)*testValue) >= 7;
+        //testModel2.setObjective(x());
+        //testModel2.attach(new OsiClpSolverInterface());
+        //testModel2.solve(MP_model::MINIMIZE);
+        //EXPECT_EQ(testValue*0,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
+        //EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(2,3));
+        //EXPECT_EQ(testValue*5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,7));
         //testModel2.detach();
         //double scenarios3[10] = {0,1,2,3,4,5,6,7,8,9};
         //MP_random_data rvar3(&scenarios2[0],T);
@@ -562,17 +672,22 @@ namespace {
         MP_scenario_set scen(10);
         double scenarios[1][10] = {{0,1,2,3,4,5,6,7,8,9}};
         double testValues[2] = {-3,3};
-        MP_random_data rvar(&scenarios[0][0],T); //TODO: Incorrect initialization..
+        MP_random_data rvar(&scenarios[0][0],T);
         MP_variable x;
         MP_variable y(T);
+        y.lowerLimit = 1;
         MP_constraint constraint1(T);
         MP_data testData(&testValues[0],T);
         MP_random_data combinedData(T);
         combinedData(T) = testData(T)*rvar(T); // Necessitates an update for index expressions? Indices on the right hand side should store the same index as item on the left hand side, so if left hand side item changes, all other indices change too. This necessitates an index update mechanism, so that they are linked. => Indices need to be stored as pointers. 
-        constraint1(T+1) = x()+y(T+1)*combinedData(T+1) >= 7;
+        constraint1(T+1) = x()-y(T+1)*combinedData(T+1) >= 7;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
+        //TODO: We need to test the results, as otherwise this test is meaningless
+        //EXPECT_EQ(1,testModel2.RandomVariables.size());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        EXPECT_EQ(34,testModel2->getObjValue());
     }
 
     TEST(UnitTest,OldUnitTest){
@@ -701,6 +816,8 @@ namespace {
         db.display("db");
         bcd1.display("bcd1");
         ocd.display("ocd");
+        oc.display("operation cost");
+        x.display("x");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
         y.upperLimit = m2->getInfinity();

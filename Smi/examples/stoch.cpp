@@ -346,6 +346,7 @@ void ModelScenario(const char * const name )
 	for (int i = 0; i < lengthOfSolutionForScenario; i++){
 		printf("%g ",colValues[i]);
 	}
+    delete[] colValues;
 
 }
 

@@ -49,6 +49,8 @@ namespace flopc {
 
     /// Returns the value of the variable given the specific index values.
     double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
+    double levelScenario(int scenario = 0,int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
+
 
     /// Convert a MP_variable into a VariableRef
     const VariableRef& operator()(
@@ -87,6 +89,9 @@ namespace flopc {
     //Disabling copy constructor and assignment
     MP_variable(const MP_variable&);
     MP_variable& operator=(const MP_variable&);
+
+    int getCurrentStage(int i1, int i2, int i3, int i4, int i5);
+    void setStageSet();
  
     void operator()() const;
     const MP_set_base *S1, *S2, *S3, *S4, *S5;
@@ -96,6 +101,7 @@ namespace flopc {
     std::vector<VariableRef*> myrefs;
     variableType type;
     int offset;
+    int stageSet;
   };
 
   /** Specialized subclass of MP_variable where the variable is
