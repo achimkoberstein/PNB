@@ -82,7 +82,7 @@ namespace {
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
-     TEST_F(MP_modelTest,InvestmentExampleTest){
+    TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
         MP_model investmentModel(new OsiClpSolverInterface());
         MP_data initialWealth,goal;
@@ -140,10 +140,10 @@ namespace {
         //Compare solution values.
         EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
         EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
-        }
-        
-        
-           TEST_F(MP_modelTest,IntegerTest2){
+    }
+
+
+    TEST_F(MP_modelTest,IntegerTest2){
         MP_model intModel(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
@@ -166,12 +166,12 @@ namespace {
         y.display("y");
         x.display("x");
         cout << "Finished.";
+        EXPECT_EQ(MP_model::OPTIMAL,intModel.getStatus());
+        EXPECT_EQ(3,x.levelScenario(0,1));
+        EXPECT_EQ(4,x.levelScenario(1,1));
     }
 
-
-
-        
-            TEST_F(MP_modelTest,IntegerTest){
+    TEST_F(MP_modelTest,IntegerTest){
         MP_model intModel(new OsiClpSolverInterface());
         MP_stage T(2);
 
@@ -220,29 +220,29 @@ namespace {
     TEST_F(MP_modelTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
         MP_stage T(2);
-        
+
         enum {low, normal, high, numScenarios};
         MP_scenario_set scen(numScenarios);
-        
+
         enum {desk, table, chair, numProducts};
         MP_set P(numProducts);
-        
+
         enum {lumber, finishing, carpentry, numResources};
         MP_set R(numResources);
-        
+
         MP_data resourceCost(R);
         resourceCost(lumber) = 2;
         resourceCost(finishing) = 4;
         resourceCost(carpentry) = 5.2;
-        
+
         MP_data resourceReq(P, R);
         resourceReq(desk, lumber) = 8;      resourceReq(desk, finishing) = 4;       resourceReq(desk, carpentry) = 2;
         resourceReq(table, lumber) = 6;     resourceReq(table, finishing) = 2;      resourceReq(table, carpentry) = 1.5;
         resourceReq(chair, lumber) = 1;     resourceReq(chair, finishing) = 1.5;    resourceReq(chair, carpentry) = 0.5;
-        
+
         double prices[3] = {60.0, 40.0, 10.0};
         MP_data sellingPrice(&prices[0], P);
-        
+
         double scenDemand[1][numProducts][numScenarios] =
         {
             { // L     M    H
@@ -252,19 +252,19 @@ namespace {
             }
         };
         MP_random_data demand(&scenDemand[0][0][0], T, P);
-        
+
         MP_variable 
             x(R),   // Ressourcenbedarf
             y(T,P); // Produzierte Einheiten
-        
+
         MP_constraint demandConstraint(P), productionConstraint(R), conR(R);
         demandConstraint(P) = y(T+1,P) <= demand(T+1,P);
         productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R);
-        
+
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
-          - sum(R, x(R) * resourceCost(R))
-        );
+            - sum(R, x(R) * resourceCost(R))
+            );
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE); 
         x.display("x (Resources)");
@@ -332,7 +332,7 @@ namespace {
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
-   
+
 
     TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
         //Create RV via double array. 
@@ -561,7 +561,7 @@ namespace {
         MP_random_data rvar(&scenarios[0],T);
         MP_variable x;
         x.lowerLimit = 0;
-        
+
         MP_variable y(T);
         y.lowerLimit = 0;
         MP_constraint constraint1(T),con2;
