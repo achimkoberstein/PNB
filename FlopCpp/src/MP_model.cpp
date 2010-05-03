@@ -948,9 +948,9 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
 }
 
 void MP_model::detach() {
-    assert(Solver);
     mSolverState = MP_model::DETACHED;
-    delete Solver;
+    if (Solver)
+        delete Solver;
     Solver = 0;
     //Delete stochastic information. We have this, if we have a time structure AND we have attached a solver.
     if (stage.size() > 0 && smiModel != 0){ 
