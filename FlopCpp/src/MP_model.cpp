@@ -243,6 +243,17 @@ void MP_model::maximize(const MP_expression &obj) {
     }
 }
 
+void MP_model::solveWS(){
+    if (this->getStatus() == MP_model::ATTACHED){
+
+
+    }
+    else {
+        cout << "Model not yet attached" << endl;
+    }
+
+}
+
 void MP_model::minimize() {
     if (Solver!=0) {
         attach(Solver);
@@ -321,7 +332,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         cfs.erase(cfs.begin(),cfs.end());
     }
     nz = coefs.size();
-    int realn = n;
+    realn = n;
 
 #pragma region colIndirection;
     if (stage.size()){
@@ -377,7 +388,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     ////
 
     //nz should only count number of elements in the matrix and not the RHS also..
-    int realnz = nz;
+    realnz = nz;
     Cst = new int[realn+2];   
     Clg = new int[realn+1];   
     if (n>0) {
