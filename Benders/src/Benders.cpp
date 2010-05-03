@@ -3,7 +3,6 @@
 #  pragma warning(disable:4786)
 #endif
 
-#include <vld.h>
 #include "SmiDiscreteDistribution.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiSmpsIO.hpp"
