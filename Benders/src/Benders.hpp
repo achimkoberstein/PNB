@@ -7,6 +7,7 @@
 #endif
 
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiStochasticSolverInterface.hpp"
 
 using namespace std;
 
@@ -528,6 +529,18 @@ public:
 	// Destructor
 	~Benders();
 
+};
+
+class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
+public:
+
+     OsiStochasticBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
+    ~OsiStochasticBendersTwoStageSolverInterface();
+
+    void initialSolve();
+
+private:
+    Benders* benders;
 };
 
 #endif
