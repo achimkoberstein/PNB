@@ -349,9 +349,9 @@ namespace flopc{
 
     double RandomVariable::getSampledValue(int index) const
     {
-        if (index != -1) //Out of bound
+        if (index != -1)
         {
-            return values.at(index);
+            return values[index];
         }
         else {
             return 0; // Is this the correct behaviour?!

@@ -1,10 +1,4 @@
-#include "OsiSolverInterface.hpp"
-#include "SmiScnModel.hpp"
-
 #include "OsiStochasticSolverInterface.hpp"
-
-
-
 
 OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel ): osiSolver(osiSolver),smiModel(smiModel) {}
 
@@ -20,20 +14,19 @@ void OsiStochasticSolverInterface::initialSolve()
 
 }
 
-OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
+OsiStochasticDetEqSolver::OsiStochasticDetEqSolver( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
 : OsiStochasticSolverInterface(osiSolver,smiModel)
 {
 
 }
 
-OsiStochasticDetEqSolverInterface::~OsiStochasticDetEqSolverInterface()
+OsiStochasticDetEqSolver::~OsiStochasticDetEqSolver()
 {
 
 }
 
-void OsiStochasticDetEqSolverInterface::initialSolve()
+void OsiStochasticDetEqSolver::initialSolve()
 {
     osiSolver = smiModel->loadOsiSolverData();
     osiSolver->initialSolve();
 }
-

@@ -218,7 +218,6 @@ namespace flopc {
             const MP_index_exp& i4 = MP_index_exp::getEmpty(), 
             const MP_index_exp& i5 = MP_index_exp::getEmpty()
             )  {
-                // Symbolic check ?
                 I1 = i1; I2 = i2; I3 = i3; I4 = i4; I5 = i5;
                 return *this;
         }
