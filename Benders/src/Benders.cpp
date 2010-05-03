@@ -2647,3 +2647,32 @@ Benders::~Benders(){
     if(comblen_)
         delete [] comblen_;
 }
+
+OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
+: OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
+{
+
+}
+
+OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolverInterface()
+{
+    if (benders)
+        delete benders;
+}
+
+void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
+{
+    //We think that we already have a filled SmiScnModel
+    if (smiModel){
+        //Set params for Benders
+        int maxIt = 1000;
+        benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
+        benders->copyMaster(smiModel);
+        benders->copySubmodel(smiModel);
+        benders->BendersSolve(0.000001, maxIt );
+    }
+    else {
+        std::cout << "SmiScnModel not initialized." << std::endl;
+    }
+   
+}
