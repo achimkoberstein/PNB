@@ -110,7 +110,7 @@ namespace {
         //    }
         //}
         //EXPECT_NEAR(3.784,benders->osiMaster_->getObjValue(),0.0001);
-        //delete benders; //TODO: This leads to errors
+        delete benders; //TODO: This leads to errors
     }
 
 
