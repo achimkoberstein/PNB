@@ -40,7 +40,6 @@ int MP_constraint::row_number() const {
 }
 
 double MP_constraint::price(int i1, int i2, int i3, int i4, int i5) const {
-    // In case of stochastic setting we need indirection here. TODO
     return  M->Solver->getRowPrice()[offset + f(i1,i2,i3,i4,i5)];
 }
 

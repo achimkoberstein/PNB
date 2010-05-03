@@ -22,7 +22,7 @@ namespace flopc {
 
     class Functor_conditional : public Functor {
     public:
-        Functor_conditional(const Functor* f, const std::vector<MP_boolean>& condition)
+        Functor_conditional(const Functor* f, const std::vector<MP_boolean> & condition)
             : F(f), Condition(condition) {}
         virtual ~Functor_conditional() {}
         void operator()() const {
@@ -83,18 +83,13 @@ void MP_domain::forall(const Functor& op) const {
     forall(&op);
 }
 void MP_domain::forall(const Functor* op) const {
-    Functor_conditional* fPtr = 0;
     if (condition.size()>0) {
-        fPtr = new Functor_conditional(op,condition);
-        last->donext = fPtr;
+        last->donext = new Functor_conditional(op,condition);
     } else {
         last->donext = op;
     }
     //Iterate over all elements of the domain and call op on them.
     operator->()->operator()();
-    if (fPtr != 0)
-        delete fPtr;
-    
 }
 
 const MP_set_base* MP_domain_set::getSet() const {
@@ -150,9 +145,9 @@ flopc::MP_domain flopc::operator*(const flopc::MP_domain& a, const flopc::MP_dom
         MP_domain retval = a;
         // Set functor of what a's last pointer currently points to, to MP_domain_base of a to b's MP_domain_base
         retval.last->donext = b.operator->();
-        //Memory Management: increment both counters. Why is this necessary to do it manually?
-        //const_cast<MP_domain&>(b).increment();
-        //const_cast<MP_domain&>(a).increment();
+        //Memory Management: increment both counters
+        const_cast<MP_domain&>(b).increment();
+        const_cast<MP_domain&>(a).increment();
         //Set last pointer of new MP_domain to what b currently points to
         retval.last = b.last;
         //Subsets only: If there are any conditions on b, transfer them to new MP_domain
