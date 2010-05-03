@@ -33,9 +33,6 @@ namespace flopc {
         virtual operator MP_domain() const = 0;
         virtual MP_domain operator()(const MP_index_exp& i) const = 0;
 
-
-
-
         //Check if given integer is valid. If not return outOfBound. In Case of cyclic return i mod size.
         int check(int i) const {
             if ((i>=0) && (i<size())) {

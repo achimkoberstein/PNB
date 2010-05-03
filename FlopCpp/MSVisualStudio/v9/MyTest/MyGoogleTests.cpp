@@ -411,7 +411,8 @@ namespace flopc {
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
-    TEST_F(MP_modelTest,ScenarioTreeGenerationTest){
+    // Test if generation of scenario tree out of scenario fan does work
+    TEST_F(UseCaseTest,ScenarioTreeGenerationTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3); // three stages
         MP_set demands(2); // two different demands
@@ -444,8 +445,8 @@ namespace flopc {
     }
 
 
-
-    TEST_F(MP_modelTest,ScenarioRandomVariableConstructionTest){
+    TEST_F(RandomVariableTest,ScenarioRandomVariableConstructionTest2){
+        MP_model testModel(new OsiClpSolverInterface());
         //Create RV via double array. 
         MP_set autos(4); //We have a set with elements 0 to 3
         enum {numScen = 3};
@@ -463,7 +464,7 @@ namespace flopc {
         EXPECT_DOUBLE_EQ(rvArr[3][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(2) );
     }
 
-
+    // Compile only check
     TEST_F(MP_modelTest,SimpleRandomVariableExpressionParsingTest){
         //Tests RV without sets and some combinations. Compile-Time Test
         MP_random_data rVar1;
@@ -483,6 +484,7 @@ namespace flopc {
 
 
 
+    // Random bounds test
     TEST_F(MP_modelTest,RandomBoundsTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
@@ -506,9 +508,11 @@ namespace flopc {
         EXPECT_EQ(1.5,testModel2->getObjValue());
     }
 
+    // Random bounds
     TEST_F(MP_modelTest,ComplicatedRandomBoundsTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
+        MP_set elm(0);
         MP_scenario_set scen(2);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
@@ -516,7 +520,7 @@ namespace flopc {
         x.lowerLimit() = var(T);
         x.upperLimit() = var(T)+5;
         MP_constraint con1(T);
-        con1(T+1) = x(T+1) <= 200;
+        con1(elm) = x(T+1) <= var(T+1)+2.5;
         testModel2.setObjective(x(T+1));
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
