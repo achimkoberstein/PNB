@@ -12,7 +12,6 @@
 #include "SmiScnModel.hpp"
 #include "Benders.hpp"
 //#include <vld.h> //uncomment to enable Visual Leak Detector
-//TODO: Test about correct colOrdering that is given to the solver..
 
 using namespace flopc;
 namespace flopc {
@@ -75,10 +74,6 @@ namespace flopc {
 
     TEST_F(BendersTest,BendersSolverTest){
         //model.solve(MP_model::MINIMIZE);
-        // call copyModel(smiModel)
-        // call copySubModel(smiModel) methods from Benders..
-        int maxIt = 100;
-        Benders* benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
 
         MP_model investmentModel(new OsiCpxSolverInterface());
         MP_data initialWealth,goal;
@@ -115,24 +110,21 @@ namespace flopc {
         returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
 
         goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
-        MP_expression valueFunction( 1.3*shortage(T.last()) - 1.1*overage(T.last()));
+        MP_expression valueFunction( 1.3*shortage(T.last()) - 1.1*overage(T.last())); //We have a minimization problem..
 
         investmentModel.setObjective( valueFunction );
        
         investmentModel.attach(investmentModel.Solver);
-        investmentModel.solve(MP_model::MAXIMIZE);
-        //EXPECT_NEAR(3.784,investmentModel->getObjValue(),0.0001);
-        //TODO: Benders can only minimize models
-        benders->copyMaster(investmentModel.smiModel);
-        benders->copySubmodel(investmentModel.smiModel);
-        benders->BendersSolve(0.000001, maxIt );
+
+        OsiStochasticBendersTwoStageSolverInterface benders(investmentModel.getSmi());
+        benders.initialSolve();
         //for (int i = 0; i < investmentModel.ScenSet().size();i++){
         //    for (int j = 0; j < T.size(); j++){
         //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
         //    }
         //}
-        //EXPECT_NEAR(3.784,benders->osiMaster_->getObjValue(),0.0001);
-        delete benders; //TODO: This leads to errors
+        EXPECT_NEAR(3.784,-benders.getObjValue(),0.0001);
+
     }
 
 

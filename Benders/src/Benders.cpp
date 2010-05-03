@@ -2648,8 +2648,8 @@ Benders::~Benders(){
         delete [] comblen_;
 }
 
-OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
-: OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
+OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( SmiScnModel* smiModel )
+: OsiStochasticSolverInterface(smiModel),benders(0)
 {
 
 }
@@ -2658,6 +2658,7 @@ OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolver
 {
     if (benders)
         delete benders;
+    benders = 0;
 }
 
 void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
@@ -2674,5 +2675,9 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     else {
         std::cout << "SmiScnModel not initialized." << std::endl;
     }
-   
+ 
+}
+
+double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
+    return benders->LB_;
 }
