@@ -336,7 +336,7 @@ bool MP::CoefLess (const MP::Coef& a, const MP::Coef& b) {
     }
 }
 
-bool MP::CoefLessShared (const boost::shared_ptr<MP::Coef> a, const boost::shared_ptr<MP::Coef> b) {
+bool MP::CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) {
     if (a->col < b->col) {
         return true;
     } else if (a->col == b->col && a->row < b->row) {

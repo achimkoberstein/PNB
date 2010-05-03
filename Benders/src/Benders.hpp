@@ -7,6 +7,7 @@
 #endif
 
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiStochasticSolverInterface.hpp"
 
 using namespace std;
 
@@ -359,7 +360,6 @@ public:
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
 	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.5), tRrateLB_(0.8),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL)
-
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -405,14 +405,15 @@ public:
 	mutdrup_(NULL), scenRupStart_(NULL), mutnSt1_(0), mutSt1dels_(NULL), mutSt1iels_(NULL), 
 	mutSt1rstrt_(NULL), scenMatSt1Start_(NULL), mutnSt1len_(NULL), mutnSt2_(0), mutSt2dels_(NULL), 
 	mutSt2iels_(NULL), mutSt2rstrt_(NULL), scenMatSt2Start_(NULL), mutnSt2len_(NULL), combSt2dels_(NULL), 
-	combSt2iels_(NULL), combSt2rstrt_(NULL), combSt2len_(NULL), combSt2nels_(0), combdobj_(NULL), 
+	combSt2iels_(NULL), combSt2rstrt_(NULL), combSt2len_(NULL), combSt2nels_(0), combdobj_(NULL),
 	INFTYTEST(pow(10.0, 19)), ZEROTEST(pow(10.0, -12)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
 	zSub_(0), combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
 	mutlcup_(0), muticup_(NULL), mutdcup_(NULL), scenCupStart_(NULL), mutlclo_(0),
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
-	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.1), tRrateLB_(0.5)
+	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.1), tRrateLB_(0.5),
+    combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -529,6 +530,7 @@ public:
 	~Benders();
 
 };
+
 
 class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
