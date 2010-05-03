@@ -20,9 +20,10 @@
 //TODO: Test about correct colOrdering that is given to the solver..
 
 using namespace flopc;
-namespace {
+namespace flopc {
 
 #pragma region initialization
+
     class MP_modelTest: public ::testing::Test {
     public:
     protected:
@@ -31,10 +32,28 @@ namespace {
         virtual void SetUp(){}
         virtual void TearDown(){}
 
+        void testCorrectStageAssignment(MP_model& model){
+            int* colStage = model.getColStage();
+            int* rowStage = model.getRowStage();
+            for ( int i = 0; i < model.realn-1; i++){
+                EXPECT_LE(colStage[i],colStage[i+1]);
+            }
+            for (int i = 0; i < model.m-1; i++){
+                EXPECT_LE(rowStage[i],rowStage[i+1]);
+            }
+        }
+
         MP_model testModel; //Attention: Do not rely on testModel for actual testing (includes attachment of solver): Leads to Run-Time Failure #0
     };
 
-    class RandomVariableTest: public ::testing::Test {
+    class UseCaseTest: public MP_modelTest {
+    public:
+    protected:
+        UseCaseTest(){}
+
+    };
+    // Class to test the functionality of random variables
+    class RandomVariableTest: public MP_modelTest {
     public:
     protected:
         RandomVariableTest() :testModel(new OsiClpSolverInterface()){}
@@ -43,6 +62,10 @@ namespace {
         virtual void TearDown(){}
 
         MP_model testModel;
+    };
+
+        // Class to test the functionality of random variables
+    class IntegerTest: public MP_modelTest {
     };
     
     //class BendersTest: public ::testing::Test{
@@ -118,8 +141,8 @@ namespace {
     //}
 
 
-    
-    TEST_F(RandomVariableTest,ShortTest){
+    // Tests if scenario based random variables gets correctly read in.
+    TEST_F(RandomVariableTest,ScenarioBasedRandomVariableInitializationTest){
         enum {numStage=2};
         enum {numScen=10};
         MP_model testModel(new OsiClpSolverInterface());
@@ -127,6 +150,10 @@ namespace {
         MP_scenario_set scenSet(numScen); //enum numScen=10
         double scenarioValues[numStage-1][numScen] = { { 1,2,3,4,5,6,7,8,9,10 } };
         MP_random_data r(&scenarioValues[0][0],T); //Scenario-based 
+        for (int i = 0; i < numScen; i++){
+            EXPECT_EQ(scenarioValues[0][i],r(1)->getSampledValue(i));
+            EXPECT_EQ(scenarioValues[0][i],r(T+1).getRandomVariable()->getSampledValue(i));
+        }
 
     }
 
@@ -143,6 +170,7 @@ namespace {
         con1(T+1) = x(T+1)*(rvar(T+1)+rvar2(T+1)) <= 10;//*rvar2(T);
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
+        this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
         EXPECT_EQ(70,testModel2.ScenSet().size()); //Test if number of scenarios is correctly generated (this is a consequence of the sampled values)
@@ -150,8 +178,9 @@ namespace {
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
-    TEST_F(MP_modelTest,InvestmentExampleTest){
-        // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
+    // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
+    TEST_F(UseCaseTest,InvestmentExampleTest){
+        
         MP_model investmentModel(new OsiClpSolverInterface());
         MP_data initialWealth,goal;
         initialWealth() = 55; //set data
@@ -197,6 +226,7 @@ namespace {
 
         investmentModel.setObjective( valueFunction );
         investmentModel.attach(investmentModel.Solver);
+        this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
 
         for (int i = 0; i < scen.size();i++){
@@ -211,7 +241,8 @@ namespace {
     }
 
 
-    TEST_F(MP_modelTest,IntegerTest2){
+    // Test if integer integration is working correctly (high level)
+    TEST_F(IntegerTest,IntegerTest2){
         MP_model intModel(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
@@ -227,6 +258,7 @@ namespace {
         constraint1(T) = y(T) + x(T) >= 1.5 + rvar(T);
         intModel.setObjective(sum(T, y(T)));
         intModel.attach(intModel.Solver);
+        this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
         const double * colSolution = intModel->getColSolution();
         for (int i = 0; i < intModel->getNumCols(); i++)
@@ -239,7 +271,8 @@ namespace {
         EXPECT_EQ(4,x.levelScenario(1,1));
     }
 
-    TEST_F(MP_modelTest,IntegerTest){
+    // Test if integer integration is working correctly (high level)
+    TEST_F(IntegerTest,IntegerTest){
         MP_model intModel(new OsiClpSolverInterface());
         MP_stage T(2);
 
@@ -255,14 +288,16 @@ namespace {
         constraint1(T) = y(T) >= 1.5 + rvar(T);
         intModel.setObjective(sum(T, y(T)));
         intModel.attach(intModel.Solver);
+        this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
-        assert(intModel->getObjValue() == 6);
-        assert(intModel->isInteger(0) == true);
-        assert(intModel->isInteger(1) == true);
+        EXPECT_EQ(6,intModel->getObjValue());
+        EXPECT_TRUE(intModel->isInteger(0));
+        EXPECT_TRUE(intModel->isInteger(1));
         y.display("y");
         cout << "Finished.";
     }
 
+    // Test several data combining constraints
     TEST_F(MP_modelTest,DataTest){
         MP_data data1;
         MP_data data2;
@@ -282,10 +317,10 @@ namespace {
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-
     }
 
-    TEST_F(MP_modelTest,DacotaModel) {
+    // Dacota test Model
+    TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
         MP_stage T(2);
 
@@ -334,6 +369,7 @@ namespace {
             - sum(R, x(R) * resourceCost(R))
             );
         dacota.attach(dacota.Solver);
+        this->testCorrectStageAssignment(dacota);
         dacota.solve(MP_model::MAXIMIZE); 
         x.display("x (Resources)");
         y.display("y (Products)");
@@ -342,8 +378,8 @@ namespace {
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
     }
 
-
-    TEST_F(MP_modelTest,TimoTest){
+    // Test complex combinations of random variables in constraints
+    TEST_F(UseCaseTest,RandomVariableConstraintCombinationTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
@@ -369,7 +405,9 @@ namespace {
         constraint4(T+1) = x(T+1) >= x(T)*(rvar3(T+1)+3); 
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
+        this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
+        EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
@@ -391,12 +429,17 @@ namespace {
         MP_random_data rvar(&scenarios[0][0][0],T,demands);
         MP_variable x(T,demands);
         MP_variable firstStageVar;
-        MP_constraint constraint1(T);
+        firstStageVar.lowerLimit = 5;
+        firstStageVar.upperLimit = 10;
+        MP_constraint constraint1(T),constraint2(T);
+        //What is with StairCase Structure?!
         constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
+        constraint2(T) = x(T,demands) >= 10;
         testModel2.setObjective(x(T.last(),demands));
         testModel2.attach(testModel2.Solver);
+        this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE);
-        EXPECT_DOUBLE_EQ(0,testModel2.Solver->getObjValue());
+        EXPECT_NEAR(10,testModel2.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 

@@ -34,6 +34,8 @@ namespace flopc {
     class MP_index;
     class MP_set;
 
+    class MP_modelTest;
+
 
 
     /** @brief Inteface for hooking up to internal flopc++ message handling.
@@ -100,6 +102,9 @@ namespace flopc {
     class MP_model {
         friend class MP_constraint;
         friend class MP_variable;
+
+        //For testing purposes
+        friend class MP_modelTest;
     public:
         /// used when calling the solve() method.  
         typedef enum {MINIMIZE=1, MAXIMIZE=-1} MP_direction;
@@ -215,6 +220,10 @@ namespace flopc {
         */
         void detach();
 
+        void solveWS();
+
+        void solveEEV();
+
         /** calls the appropriate solving methods in the OsiSolverInterface.
         @note this is called as a part of minimize(), maximize(), and 
         minimize_max()
@@ -307,8 +316,11 @@ namespace flopc {
 
     private:
         int m;
+        int realm;
         int n;
+        int realn;
         int nz;
+        int realnz;
         int *Cst;
         int *Clg;
         int *Rnr;
