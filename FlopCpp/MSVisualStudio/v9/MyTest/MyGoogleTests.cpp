@@ -7,14 +7,17 @@
 #include <ctime>
 #include <limits>
 
-#include "OsiStochasticSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
 //#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
+#include "SmiScnModel.hpp"
 //#include "Benders.hpp"
+
+#include "OsiSolverInterface.hpp"
+
 
 #include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
@@ -435,12 +438,12 @@ namespace flopc {
         MP_constraint constraint1(T),constraint2(T);
         //What is with StairCase Structure?!
         constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
-        constraint2(T) = x(T,demands) >= 10;
+        //constraint2(T) = x(T,demands) >= 10;
         testModel2.setObjective(x(T.last(),demands));
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE);
-        EXPECT_NEAR(10,testModel2.Solver->getObjValue(),0.000001);
+        EXPECT_NEAR(0,testModel2.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
