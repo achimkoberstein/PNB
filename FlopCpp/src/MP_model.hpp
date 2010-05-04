@@ -296,6 +296,8 @@ namespace flopc {
         //count number of constraints and add offests
         void add(MP_constraint* constraint);
 
+        void attachStochastic();
+
         //Sample RandomVariates
         void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv); 
 
