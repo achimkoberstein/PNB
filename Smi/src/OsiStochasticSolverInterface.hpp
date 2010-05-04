@@ -1,24 +1,26 @@
 #ifndef OsiStochasticSolverInterface_HPP
 #define OsiStochasticSolverInterface_HPP
 
-#include "OsiSolverInterface.hpp"
-#include "SmiScnModel.hpp"
 
-
+//To conform with rest of SMI
+using namespace std;
+//Forward declaration.
+class SmiScnModel;
+class OsiSolverInterface;
 //Inherit from OsiSolverInterface?! Or not?! 
-class OsiStochasticSolverInterface : public OsiSolverInterface {
+class OsiStochasticSolverInterface  {
 
 public:
-    OsiStochasticSolverInterface(OsiSolverInterface* osiSolver, SmiScnModel* smiModel);
+    OsiStochasticSolverInterface( SmiScnModel* smiModel);
 
     ~OsiStochasticSolverInterface();
 
     //What methods are necessary?
     virtual void initialSolve() = 0;
 
-    
+    SmiScnModel* getSmiModel() { return smiModel; }
+
 protected:
-    OsiSolverInterface* osiSolver;
     SmiScnModel* smiModel;
 
 private:
@@ -27,13 +29,16 @@ private:
 
 };
 
-class OsiStochasticDetEqSolver : public OsiStochasticSolverInterface {
+class OsiStochasticDetEqSolverInterface : public OsiStochasticSolverInterface {
 public:
 
-    OsiStochasticDetEqSolver(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
-    ~OsiStochasticDetEqSolver();
+    OsiStochasticDetEqSolverInterface(SmiScnModel* smiModel);
+    ~OsiStochasticDetEqSolverInterface();
 
     void initialSolve();
 };
+
+
+
 
 #endif //OsiStochasticSolverInterface_HPP

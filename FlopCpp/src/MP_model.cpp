@@ -80,11 +80,7 @@ MP_model::~MP_model() {
     if (Solver!=0) { //If solver was not deleted, call detach and therefore delete the Solver
         this->detach();
     }
-    //Delete objective first? I do not know what happens here..
-    //if (stage != 0)
-    //    delete stage;
-    //if (scenSet != 0)
-    //    delete scenSet;
+    assert(Solver == 0);
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
@@ -247,6 +243,17 @@ void MP_model::maximize(const MP_expression &obj) {
     }
 }
 
+void MP_model::solveWS(){
+    if (this->getStatus() == MP_model::ATTACHED){
+
+
+    }
+    else {
+        cout << "Model not yet attached" << endl;
+    }
+
+}
+
 void MP_model::minimize() {
     if (Solver!=0) {
         attach(Solver);
@@ -325,7 +332,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         cfs.erase(cfs.begin(),cfs.end());
     }
     nz = coefs.size();
-    int realn = n;
+    realn = n;
 
 #pragma region colIndirection;
     if (stage.size()){
@@ -381,26 +388,32 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     ////
 
     //nz should only count number of elements in the matrix and not the RHS also..
-    int realnz = nz;
+    realnz = nz;
     Cst = new int[realn+2];   
     Clg = new int[realn+1];   
     if (n>0) {
         l =   new double[realn];  
         u =   new double[realn];  
         c =  new double[realn]; 
-        colStage = new int[realn+1]; //Col Stage of RHS is not necessary..
+        if (stage.size()){
+            colStage = new int[realn+1]; //Col Stage of RHS is not necessary..
+            for (int i=0; i<realn+1; i++) {
+                colStage[i] = 0;
+            }
+        }
     }
     if (m>0) {
         bl  = new double[m];  
-        bu  = new double[m];  
-        rowStage = new int[m];
+        bu  = new double[m];
+        if (stage.size()){
+            rowStage = new int[m];
+            for (int i=0; i<m; i++) {
+                rowStage[i] = 0;
+            }
+        }
     }
-    for (int i=0; i<m; i++) {
-        rowStage[i] = 0;
-    }
-    for (int i=0; i<realn+1; i++) {
-        colStage[i] = 0;
-    }
+
+
 
     const double inf = Solver->getInfinity();
 
@@ -935,9 +948,9 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
 }
 
 void MP_model::detach() {
-    assert(Solver);
     mSolverState = MP_model::DETACHED;
-    delete Solver;
+    if (Solver)
+        delete Solver;
     Solver = 0;
     //Delete stochastic information. We have this, if we have a time structure AND we have attached a solver.
     if (stage.size() > 0 && smiModel != 0){ 
@@ -1287,6 +1300,10 @@ namespace flopc {
         //Look at PG or look into boost.
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
+        if (scenSet.size() != scenCounter){
+            scenSet = MP_scenario_set(scenCounter);
+        }
+
 
         if (scenCounter != scenSet.size()){
             std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << "." << std::endl;
@@ -1299,6 +1316,8 @@ namespace flopc {
             delete objVec[curScen];
             delete rloVec[curScen];
             delete rupVec[curScen];
+            delete bloVec[curScen];
+            delete bupVec[curScen];
         }
         return smiModel;
     }
