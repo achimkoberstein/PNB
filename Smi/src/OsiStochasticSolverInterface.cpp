@@ -1,12 +1,18 @@
+#include "OsiSolverInterface.hpp"
+#include "SmiScnModel.hpp"
+
 #include "OsiStochasticSolverInterface.hpp"
 
-OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel ): osiSolver(osiSolver),smiModel(smiModel) {}
+
+
+
+OsiStochasticSolverInterface::OsiStochasticSolverInterface( SmiScnModel* smiModel ): smiModel(smiModel) {}
 
 OsiStochasticSolverInterface::~OsiStochasticSolverInterface(){
-    if (osiSolver != 0)
-        delete osiSolver;
-    if (smiModel != 0)
-        delete smiModel;
+    //if (smiModel != 0){
+    //    delete smiModel;
+    //    smiModel = 0;
+    //}
 }
 
 void OsiStochasticSolverInterface::initialSolve()
@@ -14,19 +20,20 @@ void OsiStochasticSolverInterface::initialSolve()
 
 }
 
-OsiStochasticDetEqSolver::OsiStochasticDetEqSolver( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
-: OsiStochasticSolverInterface(osiSolver,smiModel)
+OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( SmiScnModel* smiModel )
+: OsiStochasticSolverInterface(smiModel)
 {
 
 }
 
-OsiStochasticDetEqSolver::~OsiStochasticDetEqSolver()
+OsiStochasticDetEqSolverInterface::~OsiStochasticDetEqSolverInterface()
 {
 
 }
 
-void OsiStochasticDetEqSolver::initialSolve()
+void OsiStochasticDetEqSolverInterface::initialSolve()
 {
-    osiSolver = smiModel->loadOsiSolverData();
-    osiSolver->initialSolve();
+    OsiSolverInterface* solver = smiModel->loadOsiSolverData();
+    solver->initialSolve();
 }
+
