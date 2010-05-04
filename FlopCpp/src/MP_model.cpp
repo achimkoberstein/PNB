@@ -243,16 +243,16 @@ void MP_model::maximize(const MP_expression &obj) {
     }
 }
 
-void MP_model::solveWS(){
-    if (this->getStatus() == MP_model::ATTACHED){
-
-
-    }
-    else {
-        cout << "Model not yet attached" << endl;
-    }
-
-}
+//void MP_model::solveWS(){
+//    if (this->getStatus() == MP_model::ATTACHED){
+//
+//
+//    }
+//    else {
+//        cout << "Model not yet attached" << endl;
+//    }
+//
+//}
 
 void MP_model::minimize() {
     if (Solver!=0) {
@@ -272,6 +272,49 @@ void MP_model::minimize(const MP_expression &obj) {
         cout<<"no solver specified"<<endl;
     }
 }
+
+//void MP_model::attachStochastic(){
+//    if (Solver == 0)
+//        throw invalid_argument_exception();
+//
+//    //Assume model is already attached
+//    assert(mSolverState == MP_model::ATTACHED);
+//
+//    // Generate new random coefficients
+//    sampleRandomVariates(RandomVariables);
+//
+//        // Initialize vector that stores shared ptrs to Coefs that are result of a combination of random variates.
+//    vector< vector<boost::shared_ptr<MP::Coef> > > randomCoefs(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
+//    //In case of a stage set we need to add all random coefficients to randomCoefs, to cope with them later. 
+//    if (stage.size()){
+//
+//        //Generate random bounds for all variables
+//        for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
+//            (*j)->bounds(randomCoefs);
+//        }
+//        // As these bounds were generated in the variables section, the columns are wrong. This means we have to update that 
+//        for (int i = 0; i < randomCoefs.size();i++) {
+//            for (int j = 0; j < randomCoefs[i].size();j++) {
+//                assert( colIndirection[randomCoefs[i][j]->col] != outOfBound);
+//                randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
+//            }
+//        }
+//        // Add all other random coefs to randomCoefs.
+//        for ( int i = 0; i != coefs.size(); i++){
+//            if ( !coefs[i]->scenVector.empty() ) { //We have scenario values
+//                //We have a random parameter with values
+//                randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
+//            }
+//        }
+//    }//end if stage
+//
+//
+//
+//
+//    // Feed the random coefficients to a generate Scenario tree method
+//
+//    // Update SMI 
+//}
 
 void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sample-function?!
     if (_solver == 0) {//No solver was given
@@ -499,11 +542,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             rowIndirection[oldRow] = coefs[i]->row;
         }
     }
-    //Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
+    // Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
     // Yes it is possible. One example: Constraint over stage set T but indexed over T+1 so first stage constraint is empty. 
     // Handled like this: every time rowIndirection is used we check for outOfBound.
-    //TODO: Write presolver that eliminates empty rows.
-    //for (int i = 0; i < m; i++) {
+    // TODO: Write presolver that eliminates empty rows.
+    // for (int i = 0; i < m; i++) {
     //    if( rowIndirection[i] == outOfBound) { // We have an empty row. Can we delete that row without messing everything up?!
     //        //Assign row index of an empty row. Not so easy to do..
     //    }
@@ -657,15 +700,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             //Set correct rowIndex and colIndex via colIndirection
             assert(colIndirection[coefs[i]->col] != outOfBound);
             coefs[i]->col = colIndirection[coefs[i]->col];
-            //We need to set column information by stage for all columns where it is not yet set
-            //if (colIndirection[coefs[i]->col] == outOfBound ) { // Variable is not present in any expression.. What do we do now?
-            //    assert( coefs[i]->col >= 0 && coefs[i]->col <= realn);
-            //    assert(colStage[coefs[i]->col] == 0 && colStage[coefs[i]->col] != coefs[i]->varStage);
-            //    colStage[coefs[i]->col] = coefs[i]->varStage; 
-            //    throw invalid_argument_exception();
-            //}
-            if (coefs[i]->row == -1) //Objective function 
+            if (coefs[i]->row == -1){ //Objective function 
                 coefs[i]->row = m;
+            }
+            //Add coefficient to Random Coefficients
+            if ( !coefs[i]->scenVector.empty() ) { //We have scenario values
+                randomCoefs[coefs[i]->randomStage].push_back(coefs[i]);
+            }
         }
     }
     else {
