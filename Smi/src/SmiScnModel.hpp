@@ -72,7 +72,7 @@ public:
 	int readSmps(const char *name,
 		SmiCoreCombineRule *r=NULL );
 
-	//SmiCoreData * getCore() {return core_;}
+	SmiCoreData * getCore() {return core_;}
 
 	/**@name Direct methods.
 
@@ -196,6 +196,7 @@ public:
 	OsiSolverInterface * getOsiSolverInterface();
     // If user wants to delete SmiScnModel but keep OsiSolverInterface
     inline void releaseSolver() {osiStoch_=NULL;}
+    inline void releaseCore() { core_=NULL; }
 
 
 	// constructor
@@ -296,8 +297,11 @@ public:
     {
      	if (node_)
       	{
-       		delete node_;
-       		node_= NULL;
+            //Only delete non-core nodes. Core nodes get deleted via SmiCoreData..
+            if (!node_->isCoreNode()){
+       		    delete node_;
+       		    node_= NULL;
+            }
        	}
     }
 

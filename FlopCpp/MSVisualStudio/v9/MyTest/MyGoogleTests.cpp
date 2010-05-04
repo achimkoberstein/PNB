@@ -140,11 +140,20 @@ namespace {
         MP_constraint con1(T);
         con1(T+1) = x(T+1)*(rvar(T+1)+rvar2(T+1)) <= 10;//*rvar2(T);
         testModel2.setObjective(x(T.last()));
-        testModel2.attach(testModel2.Solver);
+        testModel2.attach();
         testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
         EXPECT_EQ(70,testModel2.ScenSet().size()); //Test if number of scenarios is correctly generated (this is a consequence of the sampled values)
         EXPECT_EQ(70,testModel2.getSmi()->getNumScenarios());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        testModel2.attach();
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        testModel2.attach();
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        testModel2.attach();
+        testModel2.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
@@ -681,6 +690,26 @@ namespace {
         //testModel2.attach(new OsiClpSolverInterface());
         //testModel2.solve(MP_model::MINIMIZE);
 
+    }
+
+    TEST_F(RandomVariableTest,RepeatedSamplingTest){
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+        RandomVariable* randomVars[1] = { new DiscreteUniformRandomVariable(0,10,1,10) };
+        MP_random_data rvar(&randomVars[0],T);
+        MP_variable x(T);
+        MP_constraint con1(T),con2(T);
+        con1(T+1) = x(T+1) <= rvar(T+1);
+        //con2(T+1) = x(T+1) >= x(T);
+        testModel.setObjective(x(T.last()));
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_DOUBLE_EQ(6.7,testModel->getObjValue());
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_DOUBLE_EQ(4.8,testModel->getObjValue());
     }
 
     TEST_F(RandomVariableTest,RandomParamCombinationTest){

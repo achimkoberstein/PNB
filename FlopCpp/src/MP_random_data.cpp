@@ -11,12 +11,20 @@
 #include "MP_model.hpp"
 
 
-namespace flopc{
 
+namespace flopc{
 
     typedef boost::mt19937 base_generator_type; //Set RNG
     typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
 
+
+    // Stores Uniform01Generator, hides implementation from .hpp
+    struct Uniform01Generator {
+        boost::shared_ptr<base_generator_type> rng;
+        boost::shared_ptr<uniform_distr_gen> uniform;
+
+        Uniform01Generator() : rng(),uniform() { };
+    };
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
@@ -281,9 +289,14 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),stage(0),colIndex(0),rowIndex(0) {
+    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),
+        uniform( new Uniform01Generator()),
+        stage(0),colIndex(0),rowIndex(0) {
+            uniform->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed));
+            uniform->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniform->rng ,boost::uniform_01<double>() ));
     } 
 
+    // base_generator_type(seed),uniform_distr_gen(uniform.rng,boost::uniform_01<double>()) 
 
 
 
@@ -361,12 +374,11 @@ namespace flopc{
     void RandomVariable::sample( int howMany /*= 0*/ )
     {
         //Initialization stuff common to all methods..
-        if (howMany == 0) // If method was called with argument = 0, sample from defaultSampleSize.
-            howMany = defaultSampleSize;
-        else
+        if (howMany) // If method was called with argument = 0, sample from defaultSampleSize.
             defaultSampleSize = howMany;
         values.clear();
-        values.reserve(howMany);
+        valuesMap.clear();
+        values.reserve(defaultSampleSize);
     }
 
     //flopc::RandomVariable& RandomVariable::operator=( const flopc::RandomVariable & )
@@ -563,6 +575,9 @@ namespace flopc{
     //}
 
     //Implementation for ContinuousRandomVariable
+
+    ContinuousRandomVariable::ContinuousRandomVariable() : RandomVariable() {}
+
     void ContinuousRandomVariable::sample(int howMany) 
     {
         //call std::sort
@@ -621,20 +636,15 @@ namespace flopc{
     {
         //Initialize data structure
         RandomVariable::sample(howMany);
-        //Define RNG and 01UniformRNG using RNG
-        base_generator_type rng(seed);
-        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
-
         // We want to compute values from start to end with a stepWidth of step (double)
         // So we first compute size of domain : (end-start)*stepWidth
         int domainSize = round((end-start)/step);
         // Then generate the variates: start+step*random_variate
         typedef boost::uniform_int<> distr_type;
-        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
+        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*uniform->uniform,distr_type(0,domainSize));
         for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+step*variateGen());
         }
-
 
     }
 
@@ -657,19 +667,14 @@ namespace flopc{
 
     void ContinuousUniformRandomVariable::sample( int howMany )
     {
-        //Initialize data structures
+        //Initialize data structure
         RandomVariable::sample(howMany);
-        //Define RNG and 01UniformRNG using RNG
-        base_generator_type rng(seed);
-        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
         // Typedef to ease use and allow copy code ;)
         typedef boost::uniform_real<> distr_type;
         double domainSize = end-start;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(0,domainSize));
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*uniform->uniform,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
             values.push_back(start+variateGen());
         }
-        //Ensure ascending order
-        //std::sort(values.begin(),values.end());
     }
 }

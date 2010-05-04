@@ -71,6 +71,7 @@ public:
 	 const int getColLowerLength()   {return getLength(this->getCloStart());}
 	 const int getColUpperLength()   {return getLength(this->getCupStart());}
 	 const int getObjectiveLength()  {return getLength(this->getObjStart());}
+     const bool isCoreNode() { return isCoreNode_; }
 
 	 const int *getRowIndices(int irow){
 		 if (this->has_matrix_)
