@@ -113,7 +113,10 @@ namespace flopc {
         virtual int size() const {
             return cardinality;
         }
-        int last() {
+        MP_index_exp last() {
+            return cardinality-1;
+        }
+        MP_index_exp lastExp() {
             return cardinality-1;
         }
         /// gets the distinct 'empty' MP_set.

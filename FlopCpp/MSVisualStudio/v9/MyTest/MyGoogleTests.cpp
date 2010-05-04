@@ -212,7 +212,7 @@ namespace {
         MP_model testModel(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
-        double prob[2] = { 0.4, 0.6 };
+        double prob[2] = { 0.2, 0.8 };
         MP_data probabilities(&prob[0],scen);
         double scenarios[1][2] = { { 2,6} };
         MP_random_data rvar(&scenarios[0][0],T);
@@ -220,15 +220,15 @@ namespace {
         MP_constraint con1(T);
         con1(T) = x(T) <= 10;
         MP_expression objective;
-        objective = rvar(T.lastExp())*x(T.last());
+        objective = rvar(T.last())*x(T.last());
         testModel.setObjective( objective );
         //If we want other probs, we have to attach them
-        //testModel.Probabilities(prob);
+        testModel.Probabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(40,testModel->getObjValue());
+        EXPECT_DOUBLE_EQ(52,testModel->getObjValue());
     }
 
 

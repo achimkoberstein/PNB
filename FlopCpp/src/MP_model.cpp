@@ -119,6 +119,9 @@ void MP_model::Probabilities(const MP_data& prob){
         if ( !compareDouble(sum,1.0)) //double equal 
             throw invalid_argument_exception(); //Probabilities do not sum up to one
     }
+    else {
+        throw invalid_argument_exception(); // We call Probabilities but no scenario_set is specified for this MP_data prob.
+    }
 }
 
 double MP_model::getInfinity() const {
