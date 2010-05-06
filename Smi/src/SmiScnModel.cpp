@@ -234,7 +234,78 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 }
 
 
-
+//Christian: Generates Deterministic Equivalent (Big Matrix)
+//OsiSolverInterface *
+//SmiScnModel::solveWS()
+//{
+//	osiStoch_->reset();
+//
+//	delete[] dclo_;
+//	delete[] dcup_;
+//	delete[] dobj_;
+//	delete[] drlo_;
+//	delete[] drup_;
+//	delete matrix_;
+//
+//	// initialize arrays
+//	this->dclo_ = new double[this->ncol_];
+//	this->dcup_ = new double[this->ncol_];
+//	this->dobj_ = new double[this->ncol_];
+//	this->drlo_ = new double[this->nrow_];
+//	this->drup_ = new double[this->nrow_];
+//
+//	// initialize row-ordered matrix arrays
+//	this->dels_ = new double[this->nels_+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+//	this->indx_ = new int[this->nels_];
+//	this->rstrt_ = new int[this->nrow_+1];
+//	this->rstrt_[0] = 0;
+//	this->nels_max = nels_;
+//
+//	ncol_=0;
+//	nrow_=0;
+//	nels_=0;
+//
+//	// loop to addNodes
+//    for( int i = 0; i < nScen; i++) {
+//        SmiScnModelAddNode(this);
+//    }
+//
+//
+//    //What happens if no ScenarioTree is present, but a core model is?
+//
+//	matrix_ = new CoinPackedMatrix(false,0,0);
+//	int *len=NULL;
+//	matrix_->assignMatrix(false,ncol_,nrow_,nels_,
+//		dels_,indx_,rstrt_,len);
+//
+//	// pass data to osiStoch
+//	osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
+//
+//    // load integer values in solver
+//    for (int i = 0; i < intIndices.size(); i++) {
+//        osiStoch_->setInteger(intIndices[i]);
+//    }
+//
+//	//Print out Matrix.. if in Debug Mode
+//	//TODO: Define proper Debug Mode..
+//    //TODO: Printout obj-functions
+//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//    }
+//    std::cout << std::endl;
+//	for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//		printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//		for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//			printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//		}
+//		printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//	}
+//	printf("\n Matrix printed \n");
+//	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//		printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//	}
+//	return osiStoch_;
+//}
 
 //Christian: Generates Deterministic Equivalent (Big Matrix)
 OsiSolverInterface *

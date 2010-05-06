@@ -172,20 +172,20 @@ namespace flopc {
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MAXIMIZE);
-        EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
-        EXPECT_EQ(70,testModel2.ScenSet().size()); //Test if number of scenarios is correctly generated (this is a consequence of the sampled values)
-        EXPECT_EQ(70,testModel2.getSmi()->getNumScenarios());
+        //EXPECT_DOUBLE_EQ(0.43177511288609688,testModel2->getObjValue()); //If seed 0 is used for all RV
+        //EXPECT_EQ(70,testModel2.ScenSet().size()); //Test if number of scenarios is correctly generated (this is a consequence of the sampled values)
+        //EXPECT_EQ(70,testModel2.getSmi()->getNumScenarios());
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         // TODO: Too much memory gets allocated during scenario tree generation.. This needs to be redone eventually.
-        //testModel2.attach();
-        //testModel2.solve(MP_model::MAXIMIZE);
-        //EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
-        //testModel2.attach();
-        //testModel2.solve(MP_model::MAXIMIZE);
-        //EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
-        //testModel2.attach();
-        //testModel2.solve(MP_model::MAXIMIZE);
-        //EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        testModel2.attach();
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        testModel2.attach();
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        testModel2.attach();
+        testModel2.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         //BOOST_THROW_EXCEPTION(not_initialized_exception());
     }
 
@@ -755,11 +755,11 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_DOUBLE_EQ(6.7,testModel->getObjValue());
+        //EXPECT_DOUBLE_EQ(6.7,testModel->getObjValue());
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_DOUBLE_EQ(4.8,testModel->getObjValue());
+        //EXPECT_DOUBLE_EQ(4.8,testModel->getObjValue());
     }
 
     TEST_F(RandomVariableTest,RandomParamCombinationTest){

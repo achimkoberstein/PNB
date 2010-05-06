@@ -33,7 +33,9 @@ namespace flopc {
     class MP_variable;
     class MP_index;
     class MP_set;
+    struct Uniform01Generator;
 
+    // Forward declaration for googletest
     class MP_modelTest;
 
 
@@ -278,6 +280,10 @@ namespace flopc {
 
         OsiSolverInterface* Solver; 
 
+        boost::shared_ptr<Uniform01Generator> getUniformGenerator(){
+            return uniformGenerator;
+        }
+
 
 
     private:
@@ -337,6 +343,7 @@ namespace flopc {
         int *colIndirection; //Redirect from FlopC++ Variable Index to Index used by Solver (in case of stochastic variables only..)
         int *rowIndirection;
         MP_status mSolverState;
+        boost::shared_ptr<Uniform01Generator> uniformGenerator;
    public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
 

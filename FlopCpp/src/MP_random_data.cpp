@@ -9,22 +9,11 @@
 
 #include "MP_expression.hpp"
 #include "MP_model.hpp"
+#include "MP_shared_implementation_details.hpp"
 
 
 
 namespace flopc{
-
-    typedef boost::mt19937 base_generator_type; //Set RNG
-    typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
-
-
-    // Stores Uniform01Generator, hides implementation from .hpp
-    struct Uniform01Generator {
-        boost::shared_ptr<base_generator_type> rng;
-        boost::shared_ptr<uniform_distr_gen> uniform;
-
-        Uniform01Generator() : rng(),uniform() { };
-    };
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
@@ -290,10 +279,7 @@ namespace flopc{
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
     RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),
-        uniform( new Uniform01Generator()),
         stage(0),colIndex(0),rowIndex(0) {
-            uniform->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed));
-            uniform->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniform->rng ,boost::uniform_01<double>() ));
     } 
 
     // base_generator_type(seed),uniform_distr_gen(uniform.rng,boost::uniform_01<double>()) 
@@ -641,7 +627,7 @@ namespace flopc{
         int domainSize = round((end-start)/step);
         // Then generate the variates: start+step*random_variate
         typedef boost::uniform_int<> distr_type;
-        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*uniform->uniform,distr_type(0,domainSize));
+        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
         for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+step*variateGen());
         }
@@ -672,7 +658,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::uniform_real<> distr_type;
         double domainSize = end-start;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*uniform->uniform,distr_type(0,domainSize));
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
             values.push_back(start+variateGen());
         }

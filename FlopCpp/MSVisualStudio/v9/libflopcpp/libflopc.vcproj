@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB,_CRT_RAND_S"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -197,6 +197,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\MP_shared_implementation_details.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\MP_utilities.cpp"
 				>
 			</File>
@@ -252,6 +256,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\MP_set.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\MP_shared_implementation_details.hpp"
 				>
 			</File>
 			<File
