@@ -21,7 +21,7 @@ namespace flopc{
 
     class MP_random_data_impl;
     class RandomDataRef;
-    struct Uniform01Generator;
+    
 
     //Class that defines a concrete RandomVariable for one coefficient
     class RandomVariable : boost::noncopyable {
@@ -65,7 +65,6 @@ namespace flopc{
         std::vector<double> values; //All values are equally probable
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
-        boost::shared_ptr<Uniform01Generator> uniform;
 
     private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.

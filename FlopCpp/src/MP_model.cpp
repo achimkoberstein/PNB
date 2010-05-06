@@ -12,11 +12,14 @@ using std::endl;
 #include <queue>
 
 #include "boost/shared_ptr.hpp"
+#include <boost/random.hpp>
 
 #include <CoinTime.hpp>
 #include <CoinPackedMatrix.hpp>
 #include <CoinPackedVector.hpp>
 #include <OsiSolverInterface.hpp>
+
+
 
 #include "SmiScnData.hpp"
 #include "SmiScenarioTree.hpp"
@@ -25,6 +28,7 @@ using std::endl;
 #include "MP_model.hpp"
 #include "MP_variable.hpp"
 #include "MP_constraint.hpp"
+#include "MP_shared_implementation_details.hpp"
 
 
 using namespace flopc;
@@ -71,8 +75,10 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
 Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0), 
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
-mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),smiModel(0) {
+mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGenerator(new Uniform01Generator()),smiModel(0) {
     MP_model::current_model = this;
+    uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(uniformGenerator->seed));
+    uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
 }
 
 MP_model::~MP_model() {
