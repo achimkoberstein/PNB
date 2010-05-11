@@ -100,6 +100,30 @@ namespace flopc{
         double step;
 
     };
+    
+    class DiscreteBernoulliRandomVariable : public DiscreteRandomVariable {
+    public :
+        DiscreteBernoulliRandomVariable(double probability);
+        ~DiscreteBernoulliRandomVariable();
+
+        virtual void sample(int howMany = 0);
+
+    private:
+        double probability;
+
+    };
+    
+    class DiscreteGeometricRandomVariable : public DiscreteRandomVariable {
+    public :
+        DiscreteGeometricRandomVariable(double probability);
+        ~DiscreteGeometricRandomVariable();
+
+        virtual void sample(int howMany = 0);
+
+    private:
+        double probability;
+
+    };
 
     class ScenarioRandomVariable : public DiscreteRandomVariable{
 
@@ -134,10 +158,53 @@ namespace flopc{
         int end;
     };
 
+    class ContinuousLogNormalRandomVariable : public ContinuousRandomVariable {
+    public:
+        ContinuousLogNormalRandomVariable(double mean, double sigma);
+        ~ContinuousLogNormalRandomVariable();
+
+        virtual void sample(int howMany = 0) ;
+
+    private:
+        double mean;
+        double sigma;
+    };
+
+    class ContinuousNormalRandomVariable : public ContinuousRandomVariable {
+    public:
+        ContinuousNormalRandomVariable(double mean, double sigma);
+        ~ContinuousNormalRandomVariable();
+
+        virtual void sample(int howMany = 0) ;
+
+    private:
+        double mean;
+        double sigma;
+    };
+
+    class ContinuousExponentialRandomVariable : public ContinuousRandomVariable {
+    public:
+        ContinuousExponentialRandomVariable(double lambda);
+        ~ContinuousExponentialRandomVariable();
+
+        virtual void sample(int howMany = 0) ;
+
+    private:
+        double lambda;
+    };
     
+    class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
+    public:
+        ContinuousTriangleRandomVariable(double a, double b, double c);
+        ~ContinuousTriangleRandomVariable();
 
+        virtual void sample(int howMany = 0) ;
 
-
+    private:
+        double a;
+        double b;
+        double c;
+    };
 
     //Class that defines indexable random_variables. Contains concrete RandomVariables.
     class MP_random_data : public Functor, public Named //, public boost::enable_shared_from_this //We want to allow names, computation of flattened arrays and functors
