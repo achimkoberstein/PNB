@@ -244,9 +244,13 @@ private:
 							   CoinPackedVector *drlo,
 							   CoinPackedVector *drup,
                                int* integerIndices = 0,int integerLength = 0);
+
+    OsiSolverInterface* generateCoreProblem(OsiSolverInterface* osi);
+
 private:
 	int nrow_;
 	int ncol_;
+    int nz_; // We can count the total number of elements, but I do not if we need this at one point
 	SmiStageIndex nstag_; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 and so on. If the problem is deterministic, nstag_ = 0.
 	int *nColInStage_; //Number of Columns in Stage
 	int *nRowInStage_; //Number of Rows in Stage

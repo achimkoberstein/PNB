@@ -182,7 +182,7 @@ namespace flopc {
     public:
         virtual ~TerminalExpression() {};
 
-        virtual double getValue(int scenario = -1) const = 0; 
+        virtual double getValue(int scenario = getZero) const = 0; 
         virtual int getColumn() const = 0;
         virtual int getStage() const = 0;
         virtual RandomVariable* getRandomVariable() const = 0;

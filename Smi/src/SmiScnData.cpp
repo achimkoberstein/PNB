@@ -53,6 +53,15 @@ SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag)
     delete dobj;
 }
 
+OsiSolverInterface* SmiCoreData::generateCoreProblem(OsiSolverInterface* osi){
+    osi->reset();
+    //Set Matrix
+
+    //Set column, row, objective function
+
+    return osi;
+}
+
 void
 SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 							   int *cstag,int *rstag,

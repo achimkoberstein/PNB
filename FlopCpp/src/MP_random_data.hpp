@@ -41,6 +41,7 @@ namespace flopc{
         std::vector<double> getSampledValues() const;
         double getSampledValue(int index) const;
         void setSampledValues(const std::vector<double>&);
+        virtual double getMeanValue() const; //Do we want the mean value of the distribution or the mean value of the sampled values?
 
         int Stage() const { return stage; }
         void Stage(int val) { stage = val; }
@@ -50,8 +51,7 @@ namespace flopc{
         void RowIndex(int val) { rowIndex = val; }
         int SampleSize() const { return defaultSampleSize; }
         void SampleSize(int val) { defaultSampleSize = val; }
-       bool isRandomVariable() const { return initialized; }
-       
+        bool isRandomVariable() const { return initialized; }
         int Seed() const { return seed; }
         void Seed(int val) { seed = val; }
     protected:
@@ -208,7 +208,8 @@ namespace flopc{
         virtual int getStage() const;
         virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
-        virtual RandomVariable* getRandomVariable() const;
+        virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
+        IndexKeeper getIndices(int k) const;
 
         //Assignment-operators (Not yet defined..)
         const RandomDataRef& operator=(const RandomDataRef& r); 
