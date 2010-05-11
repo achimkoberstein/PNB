@@ -660,8 +660,54 @@ namespace flopc{
         for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+step*variateGen());
         }
+    }
+
+    DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    { 
+    
+    }
+
+    DiscreteGeometricRandomVariable::~DiscreteGeometricRandomVariable()
+    {
 
     }
+
+    void DiscreteGeometricRandomVariable::sample( int howMany )
+    {
+        //Initialize data structure
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::geometric_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    { 
+    
+    }
+
+    DiscreteBernoulliRandomVariable::~DiscreteBernoulliRandomVariable()
+    {
+
+    }
+
+    void DiscreteBernoulliRandomVariable::sample( int howMany )
+    {
+        //Initialize data structure
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::bernoulli_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+
 
 
 
@@ -692,4 +738,98 @@ namespace flopc{
             values.push_back(start+variateGen());
         }
     }
+    
+
+    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    {
+
+    }
+
+    ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
+    {
+
+    }
+
+    void ContinuousLogNormalRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::lognormal_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    
+    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    {
+
+    }
+
+    ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
+    {
+
+    }
+
+    void ContinuousNormalRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::normal_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda)
+    {
+
+    }
+
+    ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
+    {
+
+    }
+
+    void ContinuousExponentialRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::exponential_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(lambda));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c)
+    {
+
+    }
+
+    ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()
+    {
+
+    }
+
+    void ContinuousTriangleRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::triangle_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(a,b,c));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+
 }

@@ -173,9 +173,7 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
         int stage = colStage_[indice];
         intColsStagewise[stage].push_back(indice - nColInPrevStages[stage]);
     }
-
-
-
+    delete nColInPrevStages;
 
 
 	// reserve place for nodes holding stage dependent fixed information
