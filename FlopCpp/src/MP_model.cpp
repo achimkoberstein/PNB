@@ -669,22 +669,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     const double numericInfinity = std::numeric_limits<double>::infinity();
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         for (int k=0; k<(*i)->size(); k++) {
-
+            IndexKeeper temp = (*i)->getIndices(k);
             const DataRef* dPtr;
             if (stage.size()){ //In case of stochastic, we have to obey colIndirection
                 if (colIndirection[(*i)->offset+k] == outOfBound)
                     continue; //go to next round, we have empty variable here
-                dPtr = dynamic_cast<const DataRef*> ((*i)->lowerLimit.operator->());// v[k];
-                if (dPtr == 0)
-                    l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate();
-                else
-                    l[colIndirection[(*i)->offset+k]] = dPtr->D->v[k];
-                dPtr = dynamic_cast<const DataRef*> ((*i)->upperLimit.operator->());
-                if (dPtr == 0)
-                    u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate();
-                else
-                    u[colIndirection[(*i)->offset+k]] = dPtr->D->v[k];
-
+                //Update Index expressions for evaluation
+                (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //Evaluate values to mean value in case of stochastic and to real value in case of normal bounds
+                l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate(outOfBound);
+                u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate(outOfBound);
+                //Update values to solver infinity if we find numeric infinity.
                 if (l[colIndirection[(*i)->offset+k]] == -numericInfinity)
                     l[colIndirection[(*i)->offset+k]] = -inf;
                 if (u[colIndirection[(*i)->offset+k]] == numericInfinity)
@@ -692,20 +688,14 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
             }
             else {
-                dPtr = dynamic_cast<const DataRef*> ((*i)->lowerLimit.operator->());// v[k];
-                if (dPtr == 0)
-                    l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
-                else
-                    l[(*i)->offset+k] = dPtr->D->v[k];
-                dPtr = dynamic_cast<const DataRef*> ((*i)->upperLimit.operator->());
-                if (dPtr == 0)
-                    u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
-                else
-                    u[(*i)->offset+k] = dPtr->D->v[k];
-
-                if (l[(*i)->offset+k] == -numericInfinity)
+               //Update Index expressions for evaluation
+               (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+               (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+               l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
+               u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
+               if (l[(*i)->offset+k] == -numericInfinity)
                     l[(*i)->offset+k] = -inf;
-                if (u[(*i)->offset+k] == numericInfinity)
+               if (u[(*i)->offset+k] == numericInfinity)
                     u[(*i)->offset+k] = inf;
             }
         }

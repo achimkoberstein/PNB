@@ -80,16 +80,27 @@ namespace flopc {
     }
 
     /// Distinct return value on conditions where an index goes out of bounds.
+    const int getZero = -5;
     const int outOfBound = -4;    
     const int lowerBound = -3;   
     const int upperBound = -2;   
 
+    struct IndexKeeper {
+        int i1;
+        int i2;
+        int i3;
+        int i4;
+        int i5;
+    };
+
+    class MP_modelTest;
 
     /** Utility class to flatten multidimensional information into single
     dimentional offset information.
     @ingroup INTERNAL_USE
     */
     class RowMajor {
+        friend class MP_modelTest;
     public:
         int size() const { return size_; }
     protected:
@@ -107,8 +118,23 @@ namespace flopc {
                      return i;
                  } 
              }
+             IndexKeeper getIndices(int k) {
+                 // Compute set of indices which are the basis for the result k
+                 //if (k size5;
+                 IndexKeeper tempKeeper;
+                 tempKeeper.i1 = k/(size5*size4*size3*size2);
+                 tempKeeper.i2 = k/(size5*size4*size3) % size2;
+                 tempKeeper.i3 = k/(size5*size4) % size3;
+                 tempKeeper.i4 = k/(size5) % size4;
+                 tempKeeper.i5 = k % size5;
+                 if (tempKeeper.i1 > size1)
+                     tempKeeper.i1 = outOfBound;
+                 return tempKeeper;
+             }
              int size1,size2,size3,size4,size5,size_;
     };
+
+    
 
     /** @brief Utility interface class for adding a string name onto a
     structure.

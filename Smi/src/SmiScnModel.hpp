@@ -156,6 +156,10 @@ public:
 	OsiSolverInterface * loadOsiSolverData();
 	OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
+    std::vector< std::pair<double,double> > solveWS(double objSense = 1); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
+    double solveEEV(double objSense = 1 );
+    double getWSValue(double objSense = 1);
+
     //Let SmiScnModel own core data
     void Core(SmiCoreData * val) { core_ = val; }
 
@@ -210,7 +214,7 @@ public:
 	// destructor
 	~SmiScnModel();
 	//Christian: this method adds data of current node to big det. eq. problem
-	void addNode(SmiScnNode *node);
+	void addNode(SmiScnNode *node, bool notDetEq = false);
 	void deleteNode(SmiScnNode *tnode);
 private:
 	CoinMessageHandler *handler_;
@@ -276,6 +280,7 @@ public:
 	inline SmiScnNode * getParent(){ return parent_;}
 	inline void setProb(double p){prob_=p;}
 	inline double addProb(double prob){ return prob_+=prob;}
+    inline double getProb() { return prob_; }
 	inline void setParent(SmiScnNode * g) {parent_=g;}
 
 	inline bool isVirtualNode() { return !include_; }
@@ -315,7 +320,6 @@ private:
     //TODO: Changes from Corinna: Find another way..
 public:
 	inline SmiNodeData *getNode() {return node_;}
-    inline double getProb(){return prob_;}
 private:
 	inline void setIncludeOff() { include_=false; }
 	inline void setIncludeOn()  { include_=true; }

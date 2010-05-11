@@ -103,7 +103,7 @@ namespace flopc {
         }
         virtual int getColumn() const { //All Values that get transformed to Expression_constant have no
             //associated variable. Therefore: RHS.
-            return -1; //indicates right hand side column
+            return -1; //indicates right hand side column //Transform to enum
         }
         virtual int getStage() const {
             return C->getStage(); //NB to be changed
@@ -369,7 +369,7 @@ void MP::VariableBoundsFunctor::operator()() const {
         for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
             scenarioValues.push_back(var->V->lowerLimit->evaluate(i));
         }
-        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,0,var->getStage(),var->V->lowerLimit->getStage(),scenarioValues));
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,var->V->lowerLimit->evaluate(outOfBound),var->getStage(),var->V->lowerLimit->getStage(),scenarioValues));
         Coefs[temp->randomStage].push_back(temp);
     }
     if (var->V->upperLimit->getStage()){ //
@@ -377,7 +377,7 @@ void MP::VariableBoundsFunctor::operator()() const {
         for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
             scenarioValues.push_back(var->V->upperLimit->evaluate(i));
         }
-        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,0,var->getStage(),var->V->upperLimit->getStage(),scenarioValues));
+        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,var->V->upperLimit->evaluate(outOfBound),var->getStage(),var->V->upperLimit->getStage(),scenarioValues));
         Coefs[temp->randomStage].push_back(temp);
     }
 }
@@ -426,7 +426,7 @@ void MP::GenerateFunctor::operator()() const {
         assert(C != 0);
         int colNumber = C->getColumn(); //Get Column number.
         if ( colNumber != outOfBound  ) {
-            double val = sideOfConstraint*C->getValue(); //Get Value of Coefficient
+            double val = sideOfConstraint*C->getValue(outOfBound); //Get Value of Coefficient. In case of RV get mean value.
             // Set variable stage.
             int varStage = C->getStage();
             //Now comes the fun part: If varStage > stage this means one of two things:
