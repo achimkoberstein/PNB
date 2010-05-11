@@ -634,9 +634,60 @@ namespace flopc{
         for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+step*variateGen());
         }
+    }
 
+    DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    { 
+    
+    }
+
+    DiscreteGeometricRandomVariable::~DiscreteGeometricRandomVariable()
+    {
 
     }
+
+    void DiscreteGeometricRandomVariable::sample( int howMany )
+    {
+        //Initialize data structure
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::geometric_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(probability));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    { 
+    
+    }
+
+    DiscreteBernoulliRandomVariable::~DiscreteBernoulliRandomVariable()
+    {
+
+    }
+
+    void DiscreteBernoulliRandomVariable::sample( int howMany )
+    {
+        //Initialize data structure
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::bernoulli_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(probability));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+
 
 
 
@@ -672,4 +723,107 @@ namespace flopc{
         //Ensure ascending order
         //std::sort(values.begin(),values.end());
     }
+    
+
+    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    {
+
+    }
+
+    ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
+    {
+
+    }
+
+    void ContinuousLogNormalRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::lognormal_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(mean, sigma));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    
+    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    {
+
+    }
+
+    ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
+    {
+
+    }
+
+    void ContinuousNormalRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::normal_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(mean, sigma));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda)
+    {
+
+    }
+
+    ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
+    {
+
+    }
+
+    void ContinuousExponentialRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::exponential_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(lambda));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c)
+    {
+
+    }
+
+    ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()
+    {
+
+    }
+
+    void ContinuousTriangleRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+        //Define RNG and 01UniformRNG using RNG
+        base_generator_type rng(seed);
+        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::triangle_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(a,b,c));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+
 }
