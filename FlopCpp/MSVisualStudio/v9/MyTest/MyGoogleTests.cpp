@@ -79,7 +79,7 @@ namespace {
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
 
-     TEST_F(MP_modelTest,InvestmentExampleTest){
+    TEST_F(MP_modelTest,InvestmentExampleTest){
         // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
         MP_model investmentModel(new OsiClpSolverInterface());
         MP_data initialWealth,goal;
@@ -135,7 +135,7 @@ namespace {
         }
         
         
-           TEST_F(MP_modelTest,IntegerTest2){
+    TEST_F(MP_modelTest,IntegerTest2){
         MP_model intModel(new OsiClpSolverInterface());
         MP_stage T(2);
         MP_scenario_set scen(2);
@@ -161,9 +161,8 @@ namespace {
     }
 
 
-
         
-            TEST_F(MP_modelTest,IntegerTest){
+    TEST_F(MP_modelTest,IntegerTest){
         MP_model intModel(new OsiClpSolverInterface());
         MP_stage T(2);
 
@@ -216,6 +215,12 @@ namespace {
         enum {low, normal, high, numScenarios};
         MP_scenario_set scen(numScenarios);
         
+        MP_data prob(scen);
+        prob(low)    = 0.3;
+        prob(normal) = 0.4;
+        prob(high)   = 0.3;
+        dacota.Probabilities(prob);
+        
         enum {desk, table, chair, numProducts};
         MP_set P(numProducts);
         
@@ -258,11 +263,11 @@ namespace {
           - sum(R, x(R) * resourceCost(R))
         );
         dacota.attach(dacota.Solver);
-        dacota.solve(MP_model::MAXIMIZE); 
-        x.display("x (Resources)");
-        y.display("y (Products)");
+        dacota.solve(MP_model::MAXIMIZE);
+        x.display("x");
+        y.display("y");
         cout << "Finished";
-        EXPECT_DOUBLE_EQ(1616.666666666667,dacota->getObjValue());
+        EXPECT_DOUBLE_EQ(1730.0,dacota->getObjValue());
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
     }
 
@@ -528,6 +533,58 @@ namespace {
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_EQ(vals[0][i],sampledValues[i]);
         }
+        
+        ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5);
+        rv4->Seed(static_cast<unsigned int>(std::time(0)));
+        rv4->sample(20);
+        sampledValues = rv4->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_GE(sampledValues[i], 0);
+        }
+        
+        ContinuousNormalRandomVariable* rv5 = new ContinuousNormalRandomVariable(0,1);
+        rv5->Seed(static_cast<unsigned int>(std::time(0)));
+        rv5->sample(20);
+        sampledValues = rv5->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_GE(sampledValues[i], -4);
+            EXPECT_LE(sampledValues[i], 4);
+        }
+        
+        ContinuousExponentialRandomVariable* rv6 = new ContinuousExponentialRandomVariable(1);
+        rv6->Seed(static_cast<unsigned int>(std::time(0)));
+        rv6->sample(20);
+        sampledValues = rv6->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_GE(sampledValues[i], 0);
+        }
+        
+        ContinuousTriangleRandomVariable* rv7 = new ContinuousTriangleRandomVariable(0,1,2);
+        rv7->Seed(static_cast<unsigned int>(std::time(0)));
+        rv7->sample(20);
+        sampledValues = rv7->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_GE(sampledValues[i], 0);
+            EXPECT_LE(sampledValues[i], 2);
+        }
+        
+        DiscreteGeometricRandomVariable* rv8 = new DiscreteGeometricRandomVariable(0.5);
+        rv8->Seed(static_cast<unsigned int>(std::time(0)));
+        rv8->sample(20);
+        sampledValues = rv8->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_GE(sampledValues[i], 1);
+        }
+        
+        DiscreteBernoulliRandomVariable* rv9 = new DiscreteBernoulliRandomVariable(0.5);
+        rv9->Seed(static_cast<unsigned int>(std::time(0)));
+        rv9->sample(20);
+        sampledValues = rv9->getSampledValues();
+        for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
+            EXPECT_GE(sampledValues[i], 0);
+            EXPECT_LE(sampledValues[i], 1);
+        }
+        cout << "Finished.";
     }
 
     TEST_F(RandomVariableTest,DoubleComparisonTest){
