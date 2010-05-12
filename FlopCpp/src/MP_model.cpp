@@ -737,7 +737,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
-            assert(colIndirection[coefs[i]->col] != outOfBound);
+            assert(colIndirection[coefs[i]->col] != outOfBound); // Asssert that all variables in the objective function already appear in a constraint.
             coefs[i]->col = colIndirection[coefs[i]->col];
             if (coefs[i]->row == -1){ //Objective function 
                 coefs[i]->row = m;
@@ -803,7 +803,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         // Generate Core ModelMatrix: Need Only the matrix, no rhs, so we need realnz (Elm,Rnr and Cst are too big..)	
         CoinPackedMatrix matrix(true,m,realn,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
         matrix.reverseOrdering(); //Smi needs matrix in row ordered form
-        printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
+        //TODO: Debug switch
+        //printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
         SmiCoreData *osiCore = 0;
@@ -828,7 +829,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
         if (!integerIndices.empty())
             Solver->setInteger(&integerIndices[0],integerIndices.size());
-        printMatrix( const_cast<CoinPackedMatrix*>(Solver->getMatrixByRow()),n,m,l,u,c,bl,bu,colStage,rowStage);
+        //TODO: Debug Switch Statement..
+        //printMatrix( const_cast<CoinPackedMatrix*>(Solver->getMatrixByRow()),n,m,l,u,c,bl,bu,colStage,rowStage);
     }
 
     mSolverState = MP_model::ATTACHED;
