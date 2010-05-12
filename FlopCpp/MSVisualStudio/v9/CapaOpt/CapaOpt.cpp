@@ -600,21 +600,6 @@ int main() {
     SM.insert(S1, M1);
 
     // ----------
-    // Variablen
-    // ----------
-
-    MP_variable xLS(T, LS, K); // Fluss (Produktion)
-    MP_variable xSM(T, SM, K); // Fluss (Markt)
-    MP_variable z(T, M, K); // Fehlmenge
-    
-    MP_variable v(L); // Produktionsentscheidung
-    MP_variable yKA(L, S); // Kapazitätsentscheidung
-    MP_variable yFL(L, K); // Flexibilitätsentscheidung
-    v.binary();
-    yKA.binary();
-    yFL.binary();
-
-    // ----------
     // Parameter
     // ----------
 
@@ -6545,106 +6530,106 @@ int main() {
 
     // Flexibilitätsvorgabe
     MP_data wFLS(K, L);
-    r(K10, L10) = 1;
-    r(K10, L9) = 1;
-    r(K10, L8) = 1;
-    r(K10, L7) = 1;
-    r(K10, L6) = 1;
-    r(K10, L5) = 1;
-    r(K10, L4) = 1;
-    r(K10, L3) = 1;
-    r(K10, L2) = 1;
-    r(K10, L1) = 1;
-    r(K9, L10) = 1;
-    r(K9, L9) = 1;
-    r(K9, L8) = 1;
-    r(K9, L7) = 1;
-    r(K9, L6) = 1;
-    r(K9, L5) = 1;
-    r(K9, L4) = 1;
-    r(K9, L3) = 1;
-    r(K9, L2) = 1;
-    r(K9, L1) = 1;
-    r(K8, L10) = 1;
-    r(K8, L9) = 1;
-    r(K8, L8) = 1;
-    r(K8, L7) = 1;
-    r(K8, L6) = 1;
-    r(K8, L5) = 1;
-    r(K8, L4) = 1;
-    r(K8, L3) = 1;
-    r(K8, L2) = 1;
-    r(K8, L1) = 1;
-    r(K7, L10) = 1;
-    r(K7, L9) = 1;
-    r(K7, L8) = 1;
-    r(K7, L7) = 1;
-    r(K7, L6) = 1;
-    r(K7, L5) = 1;
-    r(K7, L4) = 1;
-    r(K7, L3) = 1;
-    r(K7, L2) = 1;
-    r(K7, L1) = 1;
-    r(K6, L10) = 1;
-    r(K6, L9) = 1;
-    r(K6, L8) = 1;
-    r(K6, L7) = 1;
-    r(K6, L6) = 1;
-    r(K6, L5) = 1;
-    r(K6, L4) = 1;
-    r(K6, L3) = 1;
-    r(K6, L2) = 1;
-    r(K6, L1) = 1;
-    r(K5, L10) = 1;
-    r(K5, L9) = 1;
-    r(K5, L8) = 1;
-    r(K5, L7) = 1;
-    r(K5, L6) = 1;
-    r(K5, L5) = 1;
-    r(K5, L4) = 1;
-    r(K5, L3) = 1;
-    r(K5, L2) = 1;
-    r(K5, L1) = 1;
-    r(K4, L10) = 1;
-    r(K4, L9) = 1;
-    r(K4, L8) = 1;
-    r(K4, L7) = 1;
-    r(K4, L6) = 1;
-    r(K4, L5) = 1;
-    r(K4, L4) = 1;
-    r(K4, L3) = 1;
-    r(K4, L2) = 1;
-    r(K4, L1) = 1;
-    r(K3, L10) = 1;
-    r(K3, L9) = 1;
-    r(K3, L8) = 1;
-    r(K3, L7) = 1;
-    r(K3, L6) = 1;
-    r(K3, L5) = 1;
-    r(K3, L4) = 1;
-    r(K3, L3) = 1;
-    r(K3, L2) = 1;
-    r(K3, L1) = 1;
-    r(K2, L10) = 1;
-    r(K2, L9) = 1;
-    r(K2, L8) = 1;
-    r(K2, L7) = 1;
-    r(K2, L6) = 1;
-    r(K2, L5) = 1;
-    r(K2, L4) = 1;
-    r(K2, L3) = 1;
-    r(K2, L2) = 1;
-    r(K2, L1) = 1;
-    r(K1, L10) = 1;
-    r(K1, L9) = 1;
-    r(K1, L8) = 1;
-    r(K1, L7) = 1;
-    r(K1, L6) = 1;
-    r(K1, L5) = 1;
-    r(K1, L4) = 1;
-    r(K1, L3) = 1;
-    r(K1, L2) = 1;
-    r(K1, L1) = 1;
+    wFLS(K10, L10) = 1;
+    wFLS(K10, L9) = 1;
+    wFLS(K10, L8) = 1;
+    wFLS(K10, L7) = 1;
+    wFLS(K10, L6) = 1;
+    wFLS(K10, L5) = 1;
+    wFLS(K10, L4) = 1;
+    wFLS(K10, L3) = 1;
+    wFLS(K10, L2) = 1;
+    wFLS(K10, L1) = 1;
+    wFLS(K9, L10) = 1;
+    wFLS(K9, L9) = 1;
+    wFLS(K9, L8) = 1;
+    wFLS(K9, L7) = 1;
+    wFLS(K9, L6) = 1;
+    wFLS(K9, L5) = 1;
+    wFLS(K9, L4) = 1;
+    wFLS(K9, L3) = 1;
+    wFLS(K9, L2) = 1;
+    wFLS(K9, L1) = 1;
+    wFLS(K8, L10) = 1;
+    wFLS(K8, L9) = 1;
+    wFLS(K8, L8) = 1;
+    wFLS(K8, L7) = 1;
+    wFLS(K8, L6) = 1;
+    wFLS(K8, L5) = 1;
+    wFLS(K8, L4) = 1;
+    wFLS(K8, L3) = 1;
+    wFLS(K8, L2) = 1;
+    wFLS(K8, L1) = 1;
+    wFLS(K7, L10) = 1;
+    wFLS(K7, L9) = 1;
+    wFLS(K7, L8) = 1;
+    wFLS(K7, L7) = 1;
+    wFLS(K7, L6) = 1;
+    wFLS(K7, L5) = 1;
+    wFLS(K7, L4) = 1;
+    wFLS(K7, L3) = 1;
+    wFLS(K7, L2) = 1;
+    wFLS(K7, L1) = 1;
+    wFLS(K6, L10) = 1;
+    wFLS(K6, L9) = 1;
+    wFLS(K6, L8) = 1;
+    wFLS(K6, L7) = 1;
+    wFLS(K6, L6) = 1;
+    wFLS(K6, L5) = 1;
+    wFLS(K6, L4) = 1;
+    wFLS(K6, L3) = 1;
+    wFLS(K6, L2) = 1;
+    wFLS(K6, L1) = 1;
+    wFLS(K5, L10) = 1;
+    wFLS(K5, L9) = 1;
+    wFLS(K5, L8) = 1;
+    wFLS(K5, L7) = 1;
+    wFLS(K5, L6) = 1;
+    wFLS(K5, L5) = 1;
+    wFLS(K5, L4) = 1;
+    wFLS(K5, L3) = 1;
+    wFLS(K5, L2) = 1;
+    wFLS(K5, L1) = 1;
+    wFLS(K4, L10) = 1;
+    wFLS(K4, L9) = 1;
+    wFLS(K4, L8) = 1;
+    wFLS(K4, L7) = 1;
+    wFLS(K4, L6) = 1;
+    wFLS(K4, L5) = 1;
+    wFLS(K4, L4) = 1;
+    wFLS(K4, L3) = 1;
+    wFLS(K4, L2) = 1;
+    wFLS(K4, L1) = 1;
+    wFLS(K3, L10) = 1;
+    wFLS(K3, L9) = 1;
+    wFLS(K3, L8) = 1;
+    wFLS(K3, L7) = 1;
+    wFLS(K3, L6) = 1;
+    wFLS(K3, L5) = 1;
+    wFLS(K3, L4) = 1;
+    wFLS(K3, L3) = 1;
+    wFLS(K3, L2) = 1;
+    wFLS(K3, L1) = 1;
+    wFLS(K2, L10) = 1;
+    wFLS(K2, L9) = 1;
+    wFLS(K2, L8) = 1;
+    wFLS(K2, L7) = 1;
+    wFLS(K2, L6) = 1;
+    wFLS(K2, L5) = 1;
+    wFLS(K2, L4) = 1;
+    wFLS(K2, L3) = 1;
+    wFLS(K2, L2) = 1;
+    wFLS(K2, L1) = 1;
+    wFLS(K1, L10) = 1;
+    wFLS(K1, L9) = 1;
+    wFLS(K1, L8) = 1;
+    wFLS(K1, L7) = 1;
+    wFLS(K1, L6) = 1;
+    wFLS(K1, L5) = 1;
+    wFLS(K1, L4) = 1;
+    wFLS(K1, L3) = 1;
+    wFLS(K1, L2) = 1;
+    wFLS(K1, L1) = 1;
 
 
     // ----------
@@ -6689,6 +6674,21 @@ int main() {
     };
     MP_random_data d(&demand[0][0][0][0],T,M,K);
 
+        // ----------
+    // Variablen
+    // ----------
+
+    MP_variable xLS(T, LS, K); // Fluss (Produktion)
+    MP_variable xSM(T, SM, K); // Fluss (Markt)
+    MP_variable z(T, M, K); // Fehlmenge
+    
+    MP_variable v(L); // Produktionsentscheidung
+    MP_variable yKA(L, S); // Kapazitätsentscheidung
+    MP_variable yFL(L, K); // Flexibilitätsentscheidung
+    v.binary();
+    yKA.binary();
+    yFL.binary();
+
     // ----------
     // Restriktionen
     // ----------
@@ -6707,7 +6707,7 @@ int main() {
 
     // Stage 0
     
-    /*con33(L) = sum(LS(L,S), yKA(L,S)) == v(L);
+    con33(L) = sum(LS(L,S), yKA(L,S)) == v(L);
 
     con34(L) = sum(K, yFL(L,K)) <= K.size() * v(L);
 
@@ -6718,12 +6718,12 @@ int main() {
     
     // Stage 1
     
-    con39(T+1,S,K) = sum(LS(L,S), xLS(T+1,LS(L,S),K)) == sum(SM(S,M), xSM(T+1,SM(S,M),K));*/
-    
+    con39(T+1,S,K) = sum(LS(L,S), xLS(T+1,LS(L,S),K)) == sum(SM(S,M), xSM(T+1,SM(S,M),K));
+    //
     con40(T+1,M,K) = sum(S, xSM(T+1,SM(S,M),K)) + z(T+1,M,K) >= d(T+1,M,K);
 
     con41(T+1,L,K) = sum(LS(L,S), xLS(T+1,LS(L,S),K)) <= mMax() * yFL(L,K);
-    
+    //
     con42(T+1,L,S) = sum(K, r(K,L) * xLS(T+1,LS(L,S),K)) <= m(S) * yKA(L,S);
     
 
@@ -6732,19 +6732,21 @@ int main() {
     // Optimierung
     // ----------
 
-    /*capa.setObjective(
-        sum(L, sum(K, cFL(L, K) * yFL(L, K)))
-      + sum(L, sum(LS(L,S), cKA(L, S) * yKA(L, S)))
+    capa.setObjective(
+        sum( L*K, cFL(L, K) * yFL(L, K) )
+      + sum( L*LS(L,S), cKA(L, S) * yKA(L, S) )
       + sum(K, sum(L, sum(LS(L,S), qProd(L,S,K) * xLS(T+1,LS(L,S),K))))
       + sum(K, sum(S, sum(M, qTrans(S,M,K) * xSM(T+1,SM(S,M),K))))
       + sum(K, sum(M, h(M,K) * z(T+1,M,K)))
-    );*/
-    capa.setObjective(
-        sum(L, v(L) * 100)
     );
+    //MP_constraint constraintForV(L);
+    //constraintForV(L) = v(L) <= 1;
+    //capa.setObjective(
+    //    sum(L, v(L) * 100)
+    //);
     capa.attach(capa.Solver);
-    //capa.solve(MP_model::MINIMIZE);
-    capa.solve(MP_model::MAXIMIZE);
+    capa.solve(MP_model::MINIMIZE);
+    //capa.solve(MP_model::MAXIMIZE);
 
     //yFL.display("yFL");
     //yKA.display("yKA");

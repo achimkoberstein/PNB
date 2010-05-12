@@ -247,6 +247,7 @@ private:
 
     OsiSolverInterface* generateCoreProblem(OsiSolverInterface* osi);
 
+
 private:
 	int nrow_;
 	int ncol_;
