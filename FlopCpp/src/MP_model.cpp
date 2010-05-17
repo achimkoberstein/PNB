@@ -73,7 +73,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0), 
+Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0),sampleOnly(false),
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGenerator(new Uniform01Generator()),smiModel(0) {
     MP_model::current_model = this;
@@ -865,11 +865,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     if (stage.size() <= 1) { //Incorrect stage set, return
         return;
     }
-    //Check for ScenarioRandomVariables..
-    //if (scenSet.size()){
-    //    // We have a scenario set: That means we have scenarioRandomVariables and we will not generate random variates
-    //    return;
-    //}
     //More sophisticated check
     bool scenarios = false;
     bool independent = false;
@@ -899,6 +894,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     //For every stage: We have stage independence. Sample concrete values for this current stage, combine them all-against-all. Insert them in the right places to obtain correct scenario values..
     std::vector< std::vector< std::vector<double> > > scenariosPerStage(stage.size()+1); //Ordering of values via RV ordering.
 
+    // For every stage: Sample Values for all RV in this stage independently and combine all-against-all to achieve correct behaviour. In case of sampleOnly flag, we just sample and leave it with that.
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
@@ -910,6 +906,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
             sampledValuesOfVars.push_back((*it)->getSampledValuesWithProb());
             iteratorVector.push_back(sampledValuesOfVars.back().begin());
         }
+        if (sampleOnly) //In case of sample only, we do not want to combine all against all.
+            continue;
         //Ensure we have at least two elements
         sampledValuesOfVars.push_back(std::map<double,double>());
         iteratorVector.push_back(sampledValuesOfVars.back().begin());
@@ -960,6 +958,11 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
             }
         } // end while
     } //end for
+    if (sampleOnly){ //If we sampled only, we have equiprobable values and do not have to generate the scenario fan--
+        this->probabilities.clear();
+        this->ScenSet(MP_scenario_set(sampleSize));//Important <- otherwise scenario generation does not work as coefs get initialized without scenario values
+        return;
+    }
     // Now we have all scenarios independent for all RandomVariables..
     // Overall scenario count: for all stage count size of vector scenariosPerStage[stage].size()
     // What we can do now: Generate scenario fan..
@@ -1072,8 +1075,9 @@ int * MP_model::getColStage() {
 
 MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     assert(Solver);
-    assert(mSolverState != MP_model::DETACHED && 
-        mSolverState != MP_model::SOLVER_ONLY);
+    if ( mSolverState == MP_model::DETACHED || mSolverState == MP_model::SOLVER_ONLY )
+        attach();
+    assert(mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY);
     Solver->setObjSense(dir);
     bool isMIP = false;
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
@@ -1395,7 +1399,7 @@ namespace flopc {
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
         if (scenSet.size() != scenCounter){
-            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << "." << std::endl;
+            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << " during scenario tree generation." << std::endl;
             scenSet = MP_scenario_set(scenCounter);
         }
 

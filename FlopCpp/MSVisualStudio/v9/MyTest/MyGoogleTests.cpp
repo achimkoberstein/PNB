@@ -550,6 +550,39 @@ namespace flopc {
         //Somehow we have to check if the rhs is properly evaluated in the end
     }
 
+    TEST_F(UseCaseTest,SampleOnlyTest){
+        MP_model testModel (new OsiClpSolverInterface());
+        enum {bmw,audi,ford,numCars};
+        enum {schwarz,rot,gold,numColors};
+        MP_stage T(2);
+        MP_set cars(numCars);
+        MP_set colors(numColors);
+        RandomVariable* var[1] = { new DiscreteUniformRandomVariable(0,1,1,2) };
+        RandomVariable* var1[1] = { new DiscreteUniformRandomVariable(3,4,1,2) };
+        MP_random_data demand(&var[0],T);
+        MP_random_data price(&var1[0],T);
+
+        MP_variable x(T);
+
+        MP_constraint con1(T);
+        con1(T+1) = x(T+1) >=demand(T+1);
+
+        MP_expression objective = x(T.last())*price(T.last());
+        testModel.setObjective(objective);
+        testModel.attach();
+        testModel.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        
+        testModel.setSampleOnlyScenarioGeneration(true,10);
+        
+        testModel.attach();
+        testModel.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+
+
+
+    }
+
 
 
     // Random bounds test

@@ -79,7 +79,7 @@ namespace flopc{
     class DiscreteRandomVariable : public RandomVariable {
         
     public:
-
+        DiscreteRandomVariable();
         ~DiscreteRandomVariable();
 
         virtual void sample(int howMany = 0);
@@ -88,7 +88,7 @@ namespace flopc{
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 0);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 1);
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);

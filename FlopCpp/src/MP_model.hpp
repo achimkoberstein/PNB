@@ -273,7 +273,9 @@ namespace flopc {
         void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
         //MP_data Probabilities() const { return probabilities; }
         void Probabilities(const MP_data& prob);
+
         void SampleSize(int val) { defaultSampleSize = val; };
+        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0) { this->sampleOnly = sampleOnly; defaultSampleSize = sampleSize; }
 
         const SmiScnModel* getSmi() const { return smiModel; }
         SmiScnModel* getSmi() { return smiModel; }
@@ -321,6 +323,7 @@ namespace flopc {
         std::vector< std::set<RandomVariable*> > RandomVariables;
         std::vector<double> probabilities;
         int defaultSampleSize;
+        bool sampleOnly;
 
     private:
         int m;
@@ -344,7 +347,7 @@ namespace flopc {
         int *rowIndirection;
         MP_status mSolverState;
         boost::shared_ptr<Uniform01Generator> uniformGenerator;
-   public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
+    public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
 
     };
