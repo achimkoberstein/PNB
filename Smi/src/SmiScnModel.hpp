@@ -156,9 +156,9 @@ public:
 	OsiSolverInterface * loadOsiSolverData();
 	OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
-    std::vector< std::pair<double,double> > solveWS(double objSense = 1); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
+    std::vector< std::pair<double,double> > solveWS(double objSense, OsiSolverInterface *osiSolver); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
     double solveEEV(double objSense = 1 );
-    double getWSValue(double objSense = 1);
+    double getWSValue(double objSense, OsiSolverInterface *osiSolver);
 
     //Let SmiScnModel own core data
     void Core(SmiCoreData * val) { core_ = val; }

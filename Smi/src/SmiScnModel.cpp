@@ -232,9 +232,9 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 	return scen;
 
 }
-double SmiScnModel::getWSValue(double objSense /* = 1 */ ){
+double SmiScnModel::getWSValue(double objSense /* = 1 */, OsiSolverInterface *osiSolver){
     //Test if wsValues is empty, if this is the case, run solveWS
-    std::vector< std::pair<double,double> > tempVector = solveWS(objSense);
+    std::vector< std::pair<double,double> > tempVector = solveWS(objSense, osiSolver);
     assert( tempVector.size() == smiTree_.getNumScenarios()); 
     double result = 0;
     for (int i = 0; i < tempVector.size(); i++){
@@ -253,8 +253,10 @@ double SmiScnModel::solveEEV(double objSense /* = 1 */ )
 }
 
 //Christian: Generates Deterministic Equivalent (Big Matrix)
-std::vector< std::pair<double,double> > SmiScnModel::solveWS(double objSense /* = 1 */) 
+std::vector< std::pair<double,double> > SmiScnModel::solveWS(double objSense /* = 1 */, OsiSolverInterface *osiSolver) 
 {
+    this->setOsiSolverHandle(osiSolver);
+
     //Clean up previous stuff.
     delete[] dclo_;
     delete[] dcup_;
@@ -269,7 +271,7 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(double objSense /* 
     this->dobj_ = new double[this->core_->getNumCols()];
     this->drlo_ = new double[this->core_->getNumRows()];
     this->drup_ = new double[this->core_->getNumRows()];
-    int tempNels = nels_ ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
+    int tempNels = 22;//nels_; // ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
 
     std::vector<std::pair<double,double> > solutionValues;
     solutionValues.reserve(this->smiTree_.getNumScenarios());
@@ -753,7 +755,7 @@ SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
 	nrow_ += core->getNumRows(stg);
 
 	// sanity check
-	assert(! ( this->nels_ > this->nels_max ) );
+	//assert(! ( this->nels_ > this->nels_max ) );
 
 }
 
