@@ -278,7 +278,7 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),
+    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(1),
         stage(0),colIndex(0),rowIndex(0) {
     } 
 
@@ -327,10 +327,10 @@ namespace flopc{
     std::map<double,double> RandomVariable::getSampledValuesWithProb()
     {
         //Create vector that stores pairs of value with number of occurences. HashSet is ideal to store that..
-        if (!valuesMap.empty()){
+        if ( !valuesMap.empty() ){
             return valuesMap;
         }
-        if (!values.empty() && valuesMap.empty()){
+        if ( !values.empty() ){
             if (defaultSampleSize == 0) //Compute Sample Size
                 defaultSampleSize = values.size();
                 
@@ -382,7 +382,7 @@ namespace flopc{
     void RandomVariable::sample( int howMany /*= 0*/ )
     {
         //Initialization stuff common to all methods..
-        if (howMany) // If method was called with argument = 0, sample from defaultSampleSize.
+        if (howMany) // If method was called with argument = 0, sample from defaultSampleSize. Else we set defaultSampleSize to howMany.
             defaultSampleSize = howMany;
         values.clear();
         valuesMap.clear();
@@ -608,22 +608,14 @@ namespace flopc{
         //call std::sort
     }
 
+    DiscreteRandomVariable::DiscreteRandomVariable() : RandomVariable()
+    {
+
+    }
     DiscreteRandomVariable::~DiscreteRandomVariable()
     {
 
     }
-
-    //const DiscreteRandomVariable& DiscreteRandomVariable::operator=( const DiscreteRandomVariable& rhs )
-    //{
-    //    if (this == &rhs)
-    //        return *this;
-
-    //    RandomVariable::operator=(rhs);
-    //    return *this;
-
-    //}
-
-
 
     DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth, int sampleSize ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth)
     { // Ensure correct functionality
