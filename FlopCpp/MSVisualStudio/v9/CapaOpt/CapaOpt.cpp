@@ -3,17 +3,17 @@
 #include <ctime>
 #include <limits>
 
-#include "OsiClpSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
-#include "OsiStochasticSolverInterface.hpp"
+
 
 using namespace flopc;
 
 int main() {
 
-    MP_model capa(new OsiClpSolverInterface);
+    MP_model capa(new OsiCpxSolverInterface());
 
     // Stufen
     enum {numStage=2};

@@ -389,10 +389,10 @@ void MP::GenerateFunctor::operator()() const {
     int stage = 0;
     std::vector<double> scenarioValues;
     //TODO: Remove this, debugging only
-    if (multiplicators.size() > 1){
-        cout << multiplicators.size() << endl;
-        cout << "test multiplicator" <<endl;
-    }
+    //if (multiplicators.size() > 1){
+    //    cout << multiplicators.size() << endl;
+    //    cout << "test multiplicator" <<endl;
+    //}
     RandomVariable* ptrRV = 0;
     for (unsigned int i=0; i<multiplicators.size(); i++) {
         //When is more than 1 element in the vector??
