@@ -10,6 +10,7 @@ using std::endl;
 #include <limits>
 #include <map>
 #include <queue>
+#include <ctime>
 
 #include "boost/shared_ptr.hpp"
 #include <boost/random.hpp>
@@ -1086,6 +1087,9 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
             break;
         }
     }
+    // We want to inform the user about wall clock solving time..
+    clock_t startClock = clock();
+    clock_t stochasticClock;
     if (stage.size() > 0 && smiModel != 0) { // We have a time structure AND a smiModel ready. If only timeStructure, there were no RandomVariables specified.
         //OsiClpSolverInterface osiClp;
         //smiModel->setOsiSolverHandle(osiClp);
@@ -1093,6 +1097,8 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
         Solver = smiModel->loadOsiSolverData();
         Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
+        stochasticClock = clock();        
+        std::cout << "Generation of deterministic equivalent took " << diffclock(stochasticClock,startClock) << " ms." << std::endl;
         try {
             if (isMIP == true)
                 Solver->branchAndBound();
@@ -1123,6 +1129,10 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
             }
         }
     }
+    clock_t endClock = clock();
+    std::cout << "Overall wall clock time for solution : " << diffclock(endClock,startClock) << " ms." << std::endl;
+    if (stage.size())
+        std::cout << "Solution time for stochastic programs using deterministic equivalent is: " << diffclock(endClock,stochasticClock) << " ms." << std::endl;
 
     if (Solver->isProvenOptimal() == true) {
         cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
