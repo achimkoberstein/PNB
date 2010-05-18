@@ -6745,6 +6745,8 @@ int main() {
     //capa.setObjective(
     //    sum(L, v(L) * 100)
     //);
+
+    capa.setSampleOnlyScenarioGeneration(true,capa.SampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
     capa.solve(MP_model::MINIMIZE);
     //capa.solve(MP_model::MAXIMIZE);

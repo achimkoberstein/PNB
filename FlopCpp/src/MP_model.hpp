@@ -275,7 +275,8 @@ namespace flopc {
         void Probabilities(const MP_data& prob);
 
         void SampleSize(int val) { defaultSampleSize = val; };
-        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0) { this->sampleOnly = sampleOnly; defaultSampleSize = sampleSize; }
+        int SampleSize() { return defaultSampleSize; };
+        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0) { this->sampleOnly = sampleOnly; if (sampleOnly) defaultSampleSize = sampleSize; }
 
         const SmiScnModel* getSmi() const { return smiModel; }
         SmiScnModel* getSmi() { return smiModel; }
