@@ -274,9 +274,32 @@ namespace flopc {
         //MP_data Probabilities() const { return probabilities; }
         void Probabilities(const MP_data& prob);
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @fn void SampleSize(int val)
+        ///
+        /// @brief  Sample size. 
+        ///
+        /// @author Wolf
+        /// @date   21.05.2010
+        ///
+        /// @param  val The value. 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
         void SampleSize(int val) { defaultSampleSize = val; };
         int SampleSize() { return defaultSampleSize; };
-        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0) { this->sampleOnly = sampleOnly; if (sampleOnly) defaultSampleSize = sampleSize; }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @fn void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0)
+        ///
+        /// @brief  Sets a sample only scenario generation process. No recombining of the sampled values is done. Therefore a default sample size for all random
+        /// variables is necessary.
+        ///
+        /// @author Wolf
+        /// @date   21.05.2010
+        ///
+        /// @param  sampleOnly  true to sample only. 
+        /// @param  sampleSize  Size of the sample. 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize ) { this->sampleOnly = sampleOnly; defaultSampleSize = sampleSize; }
 
         const SmiScnModel* getSmi() const { return smiModel; }
         SmiScnModel* getSmi() { return smiModel; }

@@ -243,6 +243,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTest", "FlopCpp\unitTes
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCpx", "..\..\..\Osi\MSVisualStudio\v9\libOsiCpx\libOsiCpx.vcproj", "{D984CC99-8A07-4EE0-8654-5C03459B2B37}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C4867F15-438D-4FF8-8388-62FBAAA9786C} = {C4867F15-438D-4FF8-8388-62FBAAA9786C}
+		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v9\libOsiGrb\libOsiGrb.vcproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
 EndProject
