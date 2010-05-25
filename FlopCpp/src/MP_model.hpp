@@ -333,9 +333,9 @@ namespace flopc {
         //Sample RandomVariates
         void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv); 
 
-        SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
+        SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore);
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
-        bool differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef>>>& randomVariableVector,int curStage,int curScen,int compareScen);
+        bool differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector,int curStage,int curScen,int compareScen);
 
 
         Messenger* messenger;
