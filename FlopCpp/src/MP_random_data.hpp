@@ -67,7 +67,7 @@ namespace flopc{
 
     //Class that defines a concrete RandomVariable for one coefficient
     class RandomVariable : boost::noncopyable {
-        friend RandomDataRef;
+        friend class RandomDataRef;
     public:
 
         typedef std::map<double,double> sampleVector;

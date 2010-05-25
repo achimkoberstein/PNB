@@ -1194,7 +1194,7 @@ namespace flopc {
 
     SmiScnModel* MP_model::generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore){
         //TODO: Check with own test if scenario generation is correct. It looks like it, but we will never now until we test it.
-        typedef std::vector<boost::shared_ptr<MP::Coef>>::const_iterator randVarIterator;
+        typedef std::vector<boost::shared_ptr<MP::Coef> >::const_iterator randVarIterator;
         //Get basic important values
         int nStages = smiCore->getNumStages();
         int nScen = scenSet.size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
