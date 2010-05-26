@@ -137,7 +137,7 @@ namespace flopc {
        
         investmentModel.attach(investmentModel.Solver);
 
-        OsiStochasticBendersTwoStageSolverInterface benders(investmentModel.getSmi());
+        OsiStochasticBendersTwoStageSolverInterface benders(investmentModel.Solver,investmentModel.getSmi());
         benders.initialSolve();
         //for (int i = 0; i < investmentModel.ScenSet().size();i++){
         //    for (int j = 0; j < T.size(); j++){
