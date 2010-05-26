@@ -28,7 +28,7 @@ namespace flopc {
         friend class Constant;
         friend class Handle<Constant_base*>;
     public:
-        virtual double evaluate(int scenario = -1) const = 0; //get value of constant (must be double)
+        virtual double evaluate(int scenario = getZero) const = 0; //get value of constant (must be double)
 
         virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
             return 0;
@@ -40,9 +40,6 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const = 0;
 
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
-
-
-
 
 
     protected:
@@ -78,7 +75,7 @@ namespace flopc {
         //   private:
         Constant(Constant_base* r) : Handle<Constant_base*>(r) {}
 
-        // Transitional method: Can be removed if all of the flopc++ programs have switched to the new standard..
+        // Transitional method: Can be removed if all of the flopc++ programs have switched to the new standard (for variable bounds?!)
         Constant& operator()() { return *this; };
         Constant& operator()(const MP_index_exp&) { return *this; };
         Constant& operator()(const MP_index_exp&,const MP_index_exp&) { return *this; };

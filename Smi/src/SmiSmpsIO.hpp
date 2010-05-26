@@ -80,7 +80,7 @@ public:
 	int readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c,const char *ext="stoch");
     
 	inline void setCoreCombineRule(SmiCoreCombineRule *r){combineRule_=r; combineRuleSet=true;}
-    inline SmiCoreCombineRule *getCoreCombineRule() { return combineRule_;}
+        inline SmiCoreCombineRule *getCoreCombineRule() { return combineRule_;}
 	inline int getNumStages(){ return nstag_;}
 	inline int *getColumnStages(){ return cstag_;}
 	inline int *getRowStages(){ return rstag_;}	

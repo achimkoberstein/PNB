@@ -295,7 +295,7 @@ public:
 		assert (scenario < (int) leaf_.size());
 		SmiTreeNode<T> * n = leaf_[scenario];
 
-		//		if ( n->getDataPtr()==scen_data[n->depth()] ) return scen_data;
+		//if ( n->getDataPtr()==scen_data[n->depth()] ) return scen_data;
 		//Christian: Why is this necessary? Reason: Number of Stages places should be readily available in the vector, if this is not already the case, do it..
 		//int ns = n->depth() + 1 - scen_data.size();
 		//for (int j = 0; j < ns; j++)

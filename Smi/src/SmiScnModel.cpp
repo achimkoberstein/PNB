@@ -232,9 +232,107 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 	return scen;
 
 }
+double SmiScnModel::getWSValue(double objSense /* = 1 */ ){
+    //Test if wsValues is empty, if this is the case, run solveWS
+    std::vector< std::pair<double,double> > tempVector = solveWS(objSense);
+    assert( tempVector.size() == smiTree_.getNumScenarios()); 
+    double result = 0;
+    for (int i = 0; i < tempVector.size(); i++){
+        result += tempVector[i].first*tempVector[i].second;
+    }
+    return result;
+}
+
+double SmiScnModel::solveEEV(double objSense /* = 1 */ )
+{
+    //We have to solve the coreModel..
+    
+
+    //We have to store the solution values for the first stage variables and reload them for every other scenario and add up the values with correct probability.
+    return 0;
+}
+
+//Christian: Generates Deterministic Equivalent (Big Matrix)
+std::vector< std::pair<double,double> > SmiScnModel::solveWS(double objSense /* = 1 */) 
+{
+    //Clean up previous stuff.
+    delete[] dclo_;
+    delete[] dcup_;
+    delete[] dobj_;
+    delete[] drlo_;
+    delete[] drup_;
+    delete matrix_;
+
+    // initialize arrays
+    this->dclo_ = new double[this->core_->getNumCols()];
+    this->dcup_ = new double[this->core_->getNumCols()];
+    this->dobj_ = new double[this->core_->getNumCols()];
+    this->drlo_ = new double[this->core_->getNumRows()];
+    this->drup_ = new double[this->core_->getNumRows()];
+    int tempNels = nels_ ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
+
+    std::vector<std::pair<double,double> > solutionValues;
+    solutionValues.reserve(this->smiTree_.getNumScenarios());
 
 
+   // loop over all scenarios and solve each of it individually
+    for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
+        // We have an empty model (zero cols,rows,els)
+        ncol_=0;
+        nrow_=0;
+        nels_=0;
+        //TODO: Create a new SolverObject by using the type of osiStoch. Need to load osiCoreData in the newly created osiStoch..
+        osiStoch_->reset();
+        // initialize row-ordered matrix arrays
+        this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+        this->indx_ = new int[tempNels];
+        this->rstrt_ = new int[this->core_->getNumRows()+1];
+        this->rstrt_[0] = 0;
+        // Get all nodes for this scenario
+        std::vector<SmiScnNode*>& nodes = smiTree_.getScenario(i);
+        // Call addNode on all these nodes
+        for (int i = 0; i < nodes.size(); i++)
+            addNode(nodes[i],true);
 
+        matrix_ = new CoinPackedMatrix(false,0,0);
+        int *len=NULL;
+        // Assign values from current arrays (which get nulled thereafter)
+        matrix_->assignMatrix(false,ncol_,nrow_,nels_,
+            dels_,indx_,rstrt_,len);
+        // pass data to osiStoch
+        osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
+
+        // load integer values in solver
+        for (int i = 0; i < intIndices.size(); i++) {
+            osiStoch_->setInteger(intIndices[i]);
+        }
+        //Set objSense
+        osiStoch_->setObjSense(objSense);
+        osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+        solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
+        
+        //Print out Matrix.. if in Debug Mode
+        //TODO: Define proper Debug Mode..
+        //TODO: Printout obj-functions
+        //for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+        //    std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+        //}
+        //std::cout << std::endl;
+        //for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+        //    printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+        //    for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+        //        printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+        //    }
+        //    printf("<= %g",osiStoch_->getRowUpper()[mi]);
+        //}
+        //printf("\n Matrix printed \n");
+        //for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+        //    printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+        //}
+        
+    }
+    return solutionValues;
+}
 
 //Christian: Generates Deterministic Equivalent (Big Matrix)
 OsiSolverInterface *
@@ -271,8 +369,7 @@ SmiScnModel::loadOsiSolverData()
 	for_each(smiTree_.treeBegin(),smiTree_.treeEnd(),SmiScnModelAddNode(this));
 
     //What happens if no ScenarioTree is present, but a core model is?
-
-	matrix_ = new CoinPackedMatrix(false,0,0);
+    matrix_ = new CoinPackedMatrix(false,0,0);
 	int *len=NULL;
 	matrix_->assignMatrix(false,ncol_,nrow_,nels_,
 		dels_,indx_,rstrt_,len);
@@ -288,7 +385,7 @@ SmiScnModel::loadOsiSolverData()
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
-    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+ /*   for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
         std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
     }
     std::cout << std::endl;
@@ -302,7 +399,7 @@ SmiScnModel::loadOsiSolverData()
 	printf("\n Matrix printed \n");
 	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
 		printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-	}
+	}*/
 	return osiStoch_;
 }
 
@@ -503,7 +600,7 @@ SmiScnModel::deleteNode(SmiScnNode *tnode)
 }
 
 void
-SmiScnModel::addNode(SmiScnNode *tnode)
+SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
 {
 
 	SmiNodeData *node = tnode->getNode();
@@ -531,10 +628,10 @@ SmiScnModel::addNode(SmiScnNode *tnode)
     // Iterate through list 
     //    add offset
     //    add to overall integer list
-    cout << "Stage " << stg << endl;
+    //cout << "Stage " << stg << endl;
     vector<int> intCols = core->getIntCols(stg);
     for (int i = 0; i < intCols.size(); i++) {
-        cout << intCols[i] << " + " << ncol_ << endl;
+        //cout << intCols[i] << " + " << ncol_ << endl; // Prints out stage information for given column
         this->addIntIndice(intCols[i] + ncol_);
     }
 
@@ -553,7 +650,7 @@ SmiScnModel::addNode(SmiScnNode *tnode)
 	node->copyRowUpper(drup_+nrow_);
 
 	// multiply obj coeffs by node probability and normalize
-	double prob = tnode->getProb()/this->totalProb_; //Christian: TODO: totalProb_ = Summer aller absoluten W'keiten (am Ende müsste die bei 1 sein..?!)
+    double prob = !notDetEq ? tnode->getProb()/this->totalProb_ : 1; //Christian: TODO: totalProb_ = Summer aller absoluten W'keiten (am Ende müsste die bei 1 sein..?!)
 	tnode->setModelProb(prob);
 
 	for(int j=ncol_; j<ncol_+core->getNumCols(stg); ++j)
@@ -819,6 +916,42 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 		delete smiSmpsIO;
 		return -1;
 	}
+
+    	// Aenderung: IntegerType
+
+	int intLen=0;
+	int binLen=0;
+	const double* colLower = smiSmpsIO->getColLower();
+	const double* colUpper = smiSmpsIO->getColUpper();
+	for(int i=0;i<smiSmpsIO->getNumCols();i++ ){
+		if(smiSmpsIO->isInteger(i)){
+			intLen++;
+			if(colUpper[i]==1&&colLower[i]==0){
+				binLen++;
+			}
+		}
+	}
+	integerLen = intLen;
+	binaryLen = binLen;
+
+
+
+	integerInd = new int[integerLen];
+	binaryInd = new int[binaryLen];
+	int cint = 0;
+	int cbin = 0;
+	for (int i=0; i<smiSmpsIO->getNumCols();i++ ){
+		if(smiSmpsIO->isInteger(i)){
+			integerInd[cint]=i;
+			cint++;
+			if(colUpper[i]==1&&colLower[i]==0){
+				binaryInd[cbin]=i;
+				cbin++;
+			}
+		}
+	}
+	// Aenderung: IntegerType
+
 
     	// Aenderung: IntegerType
 

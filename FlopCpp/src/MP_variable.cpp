@@ -127,7 +127,7 @@ void MP_variable::display(const std::string &s) {
     }
 }
 
-void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef>> >& cfs) {
+void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef> > >& cfs) {
 
     //Store Constant index expressions of upper and lower bound and reset them afterwards?! Just for the moment..
     // Create new MP_index? 

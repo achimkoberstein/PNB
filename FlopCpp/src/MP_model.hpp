@@ -33,7 +33,9 @@ namespace flopc {
     class MP_variable;
     class MP_index;
     class MP_set;
+    struct Uniform01Generator;
 
+    // Forward declaration for googletest
     class MP_modelTest;
 
 
@@ -271,12 +273,42 @@ namespace flopc {
         void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
         //MP_data Probabilities() const { return probabilities; }
         void Probabilities(const MP_data& prob);
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @fn void SampleSize(int val)
+        ///
+        /// @brief  Sample size. 
+        ///
+        /// @author Wolf
+        /// @date   21.05.2010
+        ///
+        /// @param  val The value. 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
         void SampleSize(int val) { defaultSampleSize = val; };
+        int SampleSize() { return defaultSampleSize; };
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// @fn void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0)
+        ///
+        /// @brief  Sets a sample only scenario generation process. No recombining of the sampled values is done. Therefore a default sample size for all random
+        /// variables is necessary.
+        ///
+        /// @author Wolf
+        /// @date   21.05.2010
+        ///
+        /// @param  sampleOnly  true to sample only. 
+        /// @param  sampleSize  Size of the sample. 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize ) { this->sampleOnly = sampleOnly; defaultSampleSize = sampleSize; }
 
         const SmiScnModel* getSmi() const { return smiModel; }
         SmiScnModel* getSmi() { return smiModel; }
 
         OsiSolverInterface* Solver; 
+
+        boost::shared_ptr<Uniform01Generator> getUniformGenerator(){
+            return uniformGenerator;
+        }
 
 
 
@@ -296,12 +328,14 @@ namespace flopc {
         //count number of constraints and add offests
         void add(MP_constraint* constraint);
 
+        void attachStochastic();
+
         //Sample RandomVariates
         void sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv); 
 
-        SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> >>& randomVariableVector, SmiCoreData* smiCore);
+        SmiScnModel* generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore);
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
-        bool differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef>>>& randomVariableVector,int curStage,int curScen,int compareScen);
+        bool differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector,int curStage,int curScen,int compareScen);
 
 
         Messenger* messenger;
@@ -313,6 +347,7 @@ namespace flopc {
         std::vector< std::set<RandomVariable*> > RandomVariables;
         std::vector<double> probabilities;
         int defaultSampleSize;
+        bool sampleOnly;
 
     private:
         int m;
@@ -335,7 +370,8 @@ namespace flopc {
         int *colIndirection; //Redirect from FlopC++ Variable Index to Index used by Solver (in case of stochastic variables only..)
         int *rowIndirection;
         MP_status mSolverState;
-   public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
+        boost::shared_ptr<Uniform01Generator> uniformGenerator;
+    public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
 
     };
