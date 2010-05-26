@@ -952,43 +952,6 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 	}
 	// Aenderung: IntegerType
 
-
-    	// Aenderung: IntegerType
-
-	int intLen=0;
-	int binLen=0;
-	const double* colLower = smiSmpsIO->getColLower();
-	const double* colUpper = smiSmpsIO->getColUpper();
-	for(int i=0;i<smiSmpsIO->getNumCols();i++ ){
-		if(smiSmpsIO->isInteger(i)){
-			intLen++;
-			if(colUpper[i]==1&&colLower[i]==0){
-				binLen++;
-			}
-		}
-	}
-	integerLen = intLen;
-	binaryLen = binLen;
-
-
-
-	integerInd = new int[integerLen];
-	binaryInd = new int[binaryLen];
-	int cint = 0;
-	int cbin = 0;
-	for (int i=0; i<smiSmpsIO->getNumCols();i++ ){
-		if(smiSmpsIO->isInteger(i)){
-			integerInd[cint]=i;
-			cint++;
-			if(colUpper[i]==1&&colLower[i]==0){
-				binaryInd[cbin]=i;
-				cbin++;
-			}
-		}
-	}
-	// Aenderung: IntegerType
-
-
 	SmiCoreData *smiCore = NULL;
 	const char* time_ext[] = {"tim", "time"};
 

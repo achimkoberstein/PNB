@@ -6,7 +6,7 @@
 
 
 
-OsiStochasticSolverInterface::OsiStochasticSolverInterface( SmiScnModel* smiModel ): smiModel(smiModel) {}
+OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel ): osiSolver(osiSolver),smiModel(smiModel) {}
 
 OsiStochasticSolverInterface::~OsiStochasticSolverInterface(){
     //if (smiModel != 0){
@@ -20,8 +20,8 @@ void OsiStochasticSolverInterface::initialSolve()
 
 }
 
-OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( SmiScnModel* smiModel )
-: OsiStochasticSolverInterface(smiModel)
+OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
+: OsiStochasticSolverInterface(osiSolver,smiModel)
 {
 
 }
@@ -33,7 +33,13 @@ OsiStochasticDetEqSolverInterface::~OsiStochasticDetEqSolverInterface()
 
 void OsiStochasticDetEqSolverInterface::initialSolve()
 {
+    //How to set correct solver in smiModel?
+    smiModel->setOsiSolverHandle(osiSolver);
     OsiSolverInterface* solver = smiModel->loadOsiSolverData();
     solver->initialSolve();
 }
 
+double OsiStochasticDetEqSolverInterface::getObjValue()
+{
+    return osiSolver->getObjValue();
+}
