@@ -246,10 +246,9 @@ private:
 	// total probability of added scenarios; used to normalize probability to one
 	double totalProb_;
 	//core model --- used for discrete distributions
-    //TODO: Changes from Corinna
-public:
-	SmiCoreData * core_;
 private:
+    SmiCoreData * core_;
+
     // scenario tree 
 	SmiScenarioTree<SmiScnNode *> smiTree_;
 
