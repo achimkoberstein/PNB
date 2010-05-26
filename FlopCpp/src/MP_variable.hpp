@@ -79,7 +79,7 @@ namespace flopc {
       type = discrete; 
     }
 
-    void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef>> >& v);
+    void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
  
     /// Upper bound on the variable value.
     Constant upperLimit;

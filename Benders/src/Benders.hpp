@@ -538,7 +538,7 @@ public:
 class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
 
-     OsiStochasticBendersTwoStageSolverInterface(SmiScnModel* smiModel);
+     OsiStochasticBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
     ~OsiStochasticBendersTwoStageSolverInterface();
 
     void initialSolve();

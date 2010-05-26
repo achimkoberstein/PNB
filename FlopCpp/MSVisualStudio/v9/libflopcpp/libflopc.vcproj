@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB,_CRT_RAND_S"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -108,7 +108,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;..\..\..\FlopCpp\include&quot;;..\..\..\Cbc\src\;..\..\..\Cgl\src\CglTwomir;..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\Cgl\src\CglFlowCover;..\..\..\Cgl\src\CglClique;..\..\..\Cgl\src\CglOddHole;..\..\..\Cgl\src\CglKnapsackCover;..\..\..\Cgl\src\CglGomory;..\..\..\Cgl\src\CglPreProcess;..\..\..\Cgl\src\CglProbing;..\..\..\Cgl\src;..\..\..\Clp\src;..\..\..\Osi\src\OsiClp;..\..\..\Osi\src;..\..\..\CoinUtils\src;..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB,_CRT_RAND_S"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -197,6 +197,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\MP_shared_implementation_details.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\MP_utilities.cpp"
 				>
 			</File>
@@ -252,6 +256,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\MP_set.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\MP_shared_implementation_details.hpp"
 				>
 			</File>
 			<File

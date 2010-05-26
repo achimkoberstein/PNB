@@ -71,6 +71,7 @@ public:
 	 const int getColLowerLength()   {return getLength(this->getCloStart());}
 	 const int getColUpperLength()   {return getLength(this->getCupStart());}
 	 const int getObjectiveLength()  {return getLength(this->getObjStart());}
+     const bool isCoreNode() { return isCoreNode_; }
 
 	 const int *getRowIndices(int irow){
 		 if (this->has_matrix_)
@@ -243,9 +244,14 @@ private:
 							   CoinPackedVector *drlo,
 							   CoinPackedVector *drup,
                                int* integerIndices = 0,int integerLength = 0);
+
+    OsiSolverInterface* generateCoreProblem(OsiSolverInterface* osi);
+
+
 private:
 	int nrow_;
 	int ncol_;
+    int nz_; // We can count the total number of elements, but I do not if we need this at one point
 	SmiStageIndex nstag_; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 and so on. If the problem is deterministic, nstag_ = 0.
 	int *nColInStage_; //Number of Columns in Stage
 	int *nRowInStage_; //Number of Rows in Stage
@@ -266,7 +272,7 @@ private:
 	double **cdcup_;
 	vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
 	vector<double *> pDenseRow_; //dense probability vector
-	vector<vector<int>> intColsStagewise; // For each stage separately, it contains the position of every integer column
+	vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
 };
 
 #endif //#define SmiScnData_HPP

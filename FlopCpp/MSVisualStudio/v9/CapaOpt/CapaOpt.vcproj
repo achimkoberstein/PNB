@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops;..\..\..\..\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -59,8 +59,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="kernel32.lib $(NoInherit)"
 				LinkIncremental="0"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
@@ -86,7 +86,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="&quot;$(TargetPath)&quot; --gtest_output=xml"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -94,7 +94,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops;..\..\..\..\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -117,7 +117,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				RuntimeLibrary="2"
+				AdditionalIncludeDirectories=""
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -133,6 +134,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

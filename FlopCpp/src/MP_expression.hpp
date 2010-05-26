@@ -107,7 +107,7 @@ namespace flopc {
 
         class VariableBoundsFunctor : public Functor {
         public:
-            VariableBoundsFunctor(const VariableRef* v, std::vector< std::vector< boost::shared_ptr<MP::Coef>> >& cfs): var(v), Coefs(cfs) {}
+            VariableBoundsFunctor(const VariableRef* v, std::vector< std::vector< boost::shared_ptr<MP::Coef> > >& cfs): var(v), Coefs(cfs) {}
             void operator()() const;
         private:
             //Disable copy contructor and assignment operator
@@ -116,7 +116,7 @@ namespace flopc {
 
 
             const VariableRef* var;
-            std::vector<std::vector< boost::shared_ptr<MP::Coef>> >& Coefs;
+            std::vector<std::vector< boost::shared_ptr<MP::Coef> > >& Coefs;
         };
     };
 
@@ -182,7 +182,7 @@ namespace flopc {
     public:
         virtual ~TerminalExpression() {};
 
-        virtual double getValue(int scenario = -1) const = 0; 
+        virtual double getValue(int scenario = getZero) const = 0; 
         virtual int getColumn() const = 0;
         virtual int getStage() const = 0;
         virtual RandomVariable* getRandomVariable() const = 0;

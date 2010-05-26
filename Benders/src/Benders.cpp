@@ -2647,9 +2647,8 @@ Benders::~Benders(){
     if(comblen_)
         delete [] comblen_;
 }
-
-OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( SmiScnModel* smiModel )
-: OsiStochasticSolverInterface(smiModel),benders(0)
+OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
+: OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
 {
 
 }

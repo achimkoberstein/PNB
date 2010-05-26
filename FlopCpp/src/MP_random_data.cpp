@@ -9,14 +9,11 @@
 
 #include "MP_expression.hpp"
 #include "MP_model.hpp"
+#include "MP_shared_implementation_details.hpp"
+
 
 
 namespace flopc{
-
-
-    typedef boost::mt19937 base_generator_type; //Set RNG
-    typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
-
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
@@ -87,7 +84,7 @@ namespace flopc{
                                         values[f(j1,j2,j3,j4,j5)] = array[f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i)];
                                         // Set current stage to random variable
                                         if (j1i+j2i+j3i+j4i+j5i == 1){
-                                            int stage;
+                                            int stage = 0;
                                             if (S1.isStage())
                                                 stage = j1;
                                             else if (S2.isStage())
@@ -146,7 +143,7 @@ namespace flopc{
                                         createRandomVariableFromIndices(array,f(j1-j1i,j2-j2i,j3-j3i,j4-j4i,j5-j5i),f(j1,j2,j3,j4,j5),scen);
                                         // Set current stage to random variable
                                         if (j1i+j2i+j3i+j4i+j5i == 1){
-                                            int stage;
+                                            int stage = 0;
                                             if (S1.isStage())
                                                 stage = j1;
                                             else if (S2.isStage())
@@ -281,9 +278,11 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),stage(0),colIndex(0),rowIndex(0) {
+    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(1),
+        stage(0),colIndex(0),rowIndex(0) {
     } 
 
+    // base_generator_type(seed),uniform_distr_gen(uniform.rng,boost::uniform_01<double>()) 
 
 
 
@@ -328,10 +327,10 @@ namespace flopc{
     std::map<double,double> RandomVariable::getSampledValuesWithProb()
     {
         //Create vector that stores pairs of value with number of occurences. HashSet is ideal to store that..
-        if (!valuesMap.empty()){
+        if ( !valuesMap.empty() ){
             return valuesMap;
         }
-        if (!values.empty() && valuesMap.empty()){
+        if ( !values.empty() ){
             if (defaultSampleSize == 0) //Compute Sample Size
                 defaultSampleSize = values.size();
                 
@@ -349,24 +348,45 @@ namespace flopc{
 
     double RandomVariable::getSampledValue(int index) const
     {
-        if (index != -1) //Out of bound
+        if (index != getZero && index != outOfBound)
         {
-            return values.at(index);
+            return values[index];
         }
-        else {
+        else { // In case of outOfBound we return 0
             return 0; // Is this the correct behaviour?!
         }
+    }
+
+    double RandomVariable::getMeanValue() const
+    {
+        if (!values.empty()){
+            //Compute mean of values and return it
+            double mean = 0;
+            for (int i = 0; i < values.size(); i++) {
+                // What about probabilities? We assume equal probabilities
+                mean += values[i];
+            }
+            return mean/values.size();
+        }
+        if (!valuesMap.empty()){
+            //Compute mean of values and return it
+            double mean = 0;
+            for (std::map<double,double>::const_iterator it = valuesMap.begin(); it != valuesMap.end();++it) {
+                mean += (*it).first*(*it).second;
+            }
+            return mean;            
+        }
+        return outOfBound; //In case nothing works, return outOfBound (at least core node has an entry..)
     }
 
     void RandomVariable::sample( int howMany /*= 0*/ )
     {
         //Initialization stuff common to all methods..
-        if (howMany == 0) // If method was called with argument = 0, sample from defaultSampleSize.
-            howMany = defaultSampleSize;
-        else
+        if (howMany) // If method was called with argument = 0, sample from defaultSampleSize. Else we set defaultSampleSize to howMany.
             defaultSampleSize = howMany;
         values.clear();
-        values.reserve(howMany);
+        valuesMap.clear();
+        values.reserve(defaultSampleSize);
     }
 
     //flopc::RandomVariable& RandomVariable::operator=( const flopc::RandomVariable & )
@@ -441,8 +461,9 @@ namespace flopc{
 
     double RandomDataRef::evaluate(int scenario) const
     {
-        if (scenario == -1) //This call happens in case we are not aware of scenarios: Coefficient generation: getValue
-            return 0;
+        //If scenario is outOfBound this call happens in case we are not aware of scenarios: Coefficient generation: getValue
+        // We can set Expected Value here, as otherwise we would have a propagated scenario index.
+
         //Check for sanity of indices
         int i1 = RV->S1.check(I1->evaluate());
         int i2 = RV->S2.check(I2->evaluate());
@@ -456,28 +477,34 @@ namespace flopc{
             return 0;
         } else {
             if (RV->values[i] != 0) // MP_random_data is a random variable
-                return RV->values[i]->getSampledValue(scenario);
+                return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
                 return RV->c->evaluate(scenario);
         }
     }
 
-    RandomVariable* RandomDataRef::getRandomVariable() const
-    {
-        //Check for sanity of indices
-        int i1 = RV->S1.check(I1->evaluate());
-        int i2 = RV->S2.check(I2->evaluate());
-        int i3 = RV->S3.check(I3->evaluate());
-        int i4 = RV->S4.check(I4->evaluate());
-        int i5 = RV->S5.check(I5->evaluate());	
-        // Compute index in flattened multidimensional array
-        int i = RV->f(i1,i2,i3,i4,i5);
+    RandomVariable* RandomDataRef::getRandomVariable(int index) const
+    {   //If index has default value of outOfBound we return the RV in the "normal" way: By evaluating the indices
+        if (index == outOfBound) {
+            //Check for sanity of indices
+            int i1 = RV->S1.check(I1->evaluate());
+            int i2 = RV->S2.check(I2->evaluate());
+            int i3 = RV->S3.check(I3->evaluate());
+            int i4 = RV->S4.check(I4->evaluate());
+            int i5 = RV->S5.check(I5->evaluate());	
+            // Compute index in flattened multidimensional array
+            index = RV->f(i1,i2,i3,i4,i5);
+        }
         // Return value
-        if ( i ==  outOfBound ) {
+        if ( index == outOfBound || index > RV->size() ) {
             return 0;
         } else {
-            return RV->values[i]; 
+            return RV->values[index]; 
         }
+    }
+
+    IndexKeeper RandomDataRef::getIndices(int k) const {
+        return RV->getIndices(k);
     }
 
     RandomDataRef& RandomDataRef::such_that( const MP_boolean& b )
@@ -563,6 +590,9 @@ namespace flopc{
     //}
 
     //Implementation for ContinuousRandomVariable
+
+    ContinuousRandomVariable::ContinuousRandomVariable() : RandomVariable() {}
+
     void ContinuousRandomVariable::sample(int howMany) 
     {
         //call std::sort
@@ -578,22 +608,14 @@ namespace flopc{
         //call std::sort
     }
 
+    DiscreteRandomVariable::DiscreteRandomVariable() : RandomVariable()
+    {
+
+    }
     DiscreteRandomVariable::~DiscreteRandomVariable()
     {
 
     }
-
-    //const DiscreteRandomVariable& DiscreteRandomVariable::operator=( const DiscreteRandomVariable& rhs )
-    //{
-    //    if (this == &rhs)
-    //        return *this;
-
-    //    RandomVariable::operator=(rhs);
-    //    return *this;
-
-    //}
-
-
 
     DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth, int sampleSize ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth)
     { // Ensure correct functionality
@@ -621,22 +643,63 @@ namespace flopc{
     {
         //Initialize data structure
         RandomVariable::sample(howMany);
-        //Define RNG and 01UniformRNG using RNG
-        base_generator_type rng(seed);
-        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
-
         // We want to compute values from start to end with a stepWidth of step (double)
         // So we first compute size of domain : (end-start)*stepWidth
         int domainSize = round((end-start)/step);
         // Then generate the variates: start+step*random_variate
         typedef boost::uniform_int<> distr_type;
-        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(uniform_01_generator,distr_type(0,domainSize));
+        boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
         for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+step*variateGen());
         }
+    }
 
+    DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    { 
+    
+    }
+
+    DiscreteGeometricRandomVariable::~DiscreteGeometricRandomVariable()
+    {
 
     }
+
+    void DiscreteGeometricRandomVariable::sample( int howMany )
+    {
+        //Initialize data structure
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::geometric_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    { 
+    
+    }
+
+    DiscreteBernoulliRandomVariable::~DiscreteBernoulliRandomVariable()
+    {
+
+    }
+
+    void DiscreteBernoulliRandomVariable::sample( int howMany )
+    {
+        //Initialize data structure
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::bernoulli_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+
 
 
 
@@ -657,19 +720,108 @@ namespace flopc{
 
     void ContinuousUniformRandomVariable::sample( int howMany )
     {
-        //Initialize data structures
+        //Initialize data structure
         RandomVariable::sample(howMany);
-        //Define RNG and 01UniformRNG using RNG
-        base_generator_type rng(seed);
-        uniform_distr_gen uniform_01_generator(rng,boost::uniform_01<double>() );
         // Typedef to ease use and allow copy code ;)
         typedef boost::uniform_real<> distr_type;
         double domainSize = end-start;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_01_generator,distr_type(0,domainSize));
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
         for (int i = 0; i < howMany; ++i){
             values.push_back(start+variateGen());
         }
-        //Ensure ascending order
-        //std::sort(values.begin(),values.end());
     }
+    
+
+    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    {
+
+    }
+
+    ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
+    {
+
+    }
+
+    void ContinuousLogNormalRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::lognormal_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    
+    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    {
+
+    }
+
+    ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
+    {
+
+    }
+
+    void ContinuousNormalRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::normal_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda)
+    {
+
+    }
+
+    ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
+    {
+
+    }
+
+    void ContinuousExponentialRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::exponential_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(lambda));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+    
+    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c)
+    {
+
+    }
+
+    ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()
+    {
+
+    }
+
+    void ContinuousTriangleRandomVariable::sample( int howMany )
+    {
+        //Initialize data structures
+        RandomVariable::sample(howMany);
+
+        // Typedef to ease use and allow copy code ;)
+        typedef boost::triangle_distribution<> distr_type;
+        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(a,b,c));
+        for (int i = 0; i < howMany; ++i){
+            values.push_back(variateGen());
+        }
+    }
+
 }

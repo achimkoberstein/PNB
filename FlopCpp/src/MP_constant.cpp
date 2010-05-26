@@ -33,7 +33,7 @@ namespace flopc {
 
     class Constant_random_variable : public Constant_base{
         friend class Constant;
-    private:
+    public:
         Constant_random_variable(const RandomDataRef& r): r(r){}
 
         virtual double evaluate(int scenario) const {
@@ -50,7 +50,7 @@ namespace flopc {
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             r.propagateIndexExpression(d1,d2,d3,d4,d5);
         }
-                       virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             r.insertRandomVariables(v);
             
         }  
