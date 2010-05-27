@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MsVisualStudio\v9\IncludeFiles.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\ILOG\CPLEX110\include\ilcplex;../../../../Osi/src/OsiCpx"
+				AdditionalIncludeDirectories="../../../../Osi/src/OsiCpx"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -81,7 +81,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MsVisualStudio\v9\IncludeFiles.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
