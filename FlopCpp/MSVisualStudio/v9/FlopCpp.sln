@@ -284,10 +284,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exampleFlopCppAKSTampl", ".
 		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\gtest\msvc\gtest.vcproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest_main", "..\..\..\gtest\msvc\gtest_main.vcproj", "{3AF54C8A-10BF-4332-9147-F68ED9862032}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Benders", "..\..\..\Benders\MSVisualStudio\v9\Benders\Benders.vcproj", "{E2474F0B-C3BB-46D0-9E00-791C63207AA7}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C4867F15-438D-4FF8-8388-62FBAAA9786C} = {C4867F15-438D-4FF8-8388-62FBAAA9786C}
@@ -322,6 +318,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CapaOpt", "CapaOpt\CapaOpt.
 		{D984CC99-8A07-4EE0-8654-5C03459B2B37} = {D984CC99-8A07-4EE0-8654-5C03459B2B37}
 		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\ThirdParty\gtest\msvc\gtest.vcproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -457,14 +455,6 @@ Global
 		{B2602503-D11A-40F1-B6F8-C1C0B9278832}.Debug|Win32.Build.0 = Debug|Win32
 		{B2602503-D11A-40F1-B6F8-C1C0B9278832}.Release|Win32.ActiveCfg = Release|Win32
 		{B2602503-D11A-40F1-B6F8-C1C0B9278832}.Release|Win32.Build.0 = Release|Win32
-		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Debug|Win32.Build.0 = Debug|Win32
-		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Release|Win32.ActiveCfg = Release|Win32
-		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Release|Win32.Build.0 = Release|Win32
-		{3AF54C8A-10BF-4332-9147-F68ED9862032}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3AF54C8A-10BF-4332-9147-F68ED9862032}.Debug|Win32.Build.0 = Debug|Win32
-		{3AF54C8A-10BF-4332-9147-F68ED9862032}.Release|Win32.ActiveCfg = Release|Win32
-		{3AF54C8A-10BF-4332-9147-F68ED9862032}.Release|Win32.Build.0 = Release|Win32
 		{E2474F0B-C3BB-46D0-9E00-791C63207AA7}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E2474F0B-C3BB-46D0-9E00-791C63207AA7}.Debug|Win32.Build.0 = Debug|Win32
 		{E2474F0B-C3BB-46D0-9E00-791C63207AA7}.Release|Win32.ActiveCfg = Release|Win32
@@ -481,6 +471,10 @@ Global
 		{8A7B8D96-8264-4B1F-AAF0-688525A865CF}.Debug|Win32.Build.0 = Debug|Win32
 		{8A7B8D96-8264-4B1F-AAF0-688525A865CF}.Release|Win32.ActiveCfg = Release|Win32
 		{8A7B8D96-8264-4B1F-AAF0-688525A865CF}.Release|Win32.Build.0 = Release|Win32
+		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Debug|Win32.Build.0 = Debug|Win32
+		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Release|Win32.ActiveCfg = Release|Win32
+		{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
