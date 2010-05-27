@@ -6,6 +6,9 @@
 #define _CRT_RAND_S
 #endif 
 #include <stdlib.h>
+#else
+#include <stdio.h>
+#include <fcntl.h>
 #endif
 //Linux: Call /dev/urandom to generate a seed
 
