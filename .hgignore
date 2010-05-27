@@ -10,7 +10,7 @@ gtest\
 doxydoc\
 test_detail.xml
 SmiBenders\
-
+autom4te.cache\
 *.*.*
 *.ncb
 *.suo

@@ -64,6 +64,7 @@ AC_COIN_HAS_PROJECT(CoinUtils)
 AC_COIN_HAS_PROJECT(DyLP)
 AC_COIN_HAS_PROJECT(Osi)
 AC_COIN_HAS_PROJECT(Sym)
+AC_COIN_HAS_PROJECT(Smi)
 
 # ToDo: find out when CBC_HAS_CLP should be defined!  For now, I
 # replaced all CBC_USE by COIN_HAS #ifdef's
@@ -86,7 +87,7 @@ case $cbc_default_solver in
     AC_DEFINE([CBC_DEFAULT_SOLVER],"dylp")
     ;;
   *)
-    AC_MSG_ERROR([Unknown solver $cbc_default_solver chosen as CBC's default solver])
+    AC_MSG_ERROR([Unknown solver $cbc_default_solver chosen as CBCs default solver])
     ;;
 esac
 
@@ -113,6 +114,15 @@ AC_COIN_HAS_GLPK(Glpk)
 # Ampl Solver library
 # AC_COIN_HAS_ASL
 
+# Boost libraries: Header only, user has to supply arguments..
+AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
+
+# gtest library. Should be already compiled at this stage. Where do we get the environment variables?
+GTESTINCDIR="$srcdir"/../ThirdParty/gtest/include
+GTESTLIB="$FLOPCPPOBJDIR"./ThirdParty/gtest/lib
+AC_COIN_HAS_USER_LIBRARY([gtest],[GTEST],[gtest/gtest.h])
+
+
 ##############################################################################
 #                   VPATH links for example input files                      #
 ##############################################################################
@@ -133,7 +143,7 @@ AC_CONFIG_FILES([Makefile
                  examples/Makefile
                  src/Makefile
                  test/Makefile
-		 flopcpp_addlibs.txt])
+                 flopcpp_addlibs.txt])
 
 # Here put the location and name of the configuration header file
 AC_CONFIG_HEADER([inc/config_flopcpp.h])
