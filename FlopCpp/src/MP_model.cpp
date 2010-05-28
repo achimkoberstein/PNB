@@ -131,6 +131,11 @@ void MP_model::Probabilities(const MP_data& prob){
     }
 }
 
+std::vector<double> MP_model::Probabilities(){
+    // set probabilities
+    return probabilities;
+}
+
 double MP_model::getInfinity() const {
     if (Solver==0) {
         return std::numeric_limits<double>::infinity();
@@ -884,8 +889,13 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     if (scenarios && independent){
         throw invalid_argument_exception(); //User has to specify what he wants, we can not guess
     }
-    if (scenarios && !independent) //In case of scenarios, we return as we have nothing to do here
+    if (scenarios && !independent){ //In case of scenarios, we return as we have nothing to do here. But: We assure that probabilities are set in a correct way, if not already done by the user.
+        if (probabilities.empty()){ //If probabilities are not of the correct size, we are wrong, probably a user error (assert)
+           probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
+        }
+        assert(probabilities.size() == scenSet.size());
         return;
+    }
 
     int sampleSize = this->defaultSampleSize;
 
@@ -959,9 +969,10 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
             }
         } // end while
     } //end for
-    if (sampleOnly){ //If we sampled only, we have equiprobable values and do not have to generate the scenario fan--
+    if (sampleOnly){ //If we sampled only, we have equiprobable values and do not have to generate the scenario fan => resampling with preset probabilities does not makes sense..
         this->probabilities.clear();
         this->ScenSet(MP_scenario_set(sampleSize));//Important <- otherwise scenario generation does not work as coefs get initialized without scenario values
+        probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
         return;
     }
     // Now we have all scenarios independent for all RandomVariables..
