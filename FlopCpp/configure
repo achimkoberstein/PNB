@@ -22248,8 +22248,14 @@ fi
 # AC_COIN_HAS_ASL
 
 # Boost libraries: Header only, user has to supply arguments..
-BOOSTINCDIR="$abs_top_srcdir"/ThirdParty/boost
-BOOSTLIB="$abs_top_srcdir"/ThirdParty/boost
+# taken from the COIN_HAS_LIBRARY macro
+
+
+
+
+BOOSTINCDIR=`cd $srcdir/../ThirdParty/boost; pwd`
+BOOSTLIB=`cd $srcdir/../ThirdParty/boost; pwd`
+
 
   echo "$as_me:$LINENO: checking if user provides library for boost" >&5
 echo $ECHO_N "checking if user provides library for boost... $ECHO_C" >&6
@@ -22357,8 +22363,11 @@ fi
 
 
 # gtest library. Should be already compiled at this stage. Where do we get the environment variables?
-GTESTINCDIR="$srcdir"/../ThirdParty/gtest/include
-GTESTLIB="$FLOPCPPOBJDIR"./ThirdParty/gtest/lib
+
+
+GTESTINCDIR=`cd $srcdir/../ThirdParty/gtest/include; pwd`
+GTESTLIB=`pwd`/../ThirdParty/gtest
+
 
   echo "$as_me:$LINENO: checking if user provides library for gtest" >&5
 echo $ECHO_N "checking if user provides library for gtest... $ECHO_C" >&6
