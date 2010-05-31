@@ -14,8 +14,6 @@ AC_PREREQ(2.59)
 
 AC_INIT([FlopCpp],[1.0stable],[flopcpp@list.coin-or.org])
 
-#LT_INIT
-
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
 All Rights Reserved.
@@ -23,8 +21,6 @@ This file is part of the open source package Coin which is distributed
 under the Common Public License.])
 
 AC_REVISION(0.9)
-
-AC_CONFIG_MACRO_DIR([m4])
 
 # List one file in the package so that the configure script can test
 # whether the package is actually there
