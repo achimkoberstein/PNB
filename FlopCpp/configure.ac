@@ -115,6 +115,8 @@ AC_COIN_HAS_GLPK(Glpk)
 # AC_COIN_HAS_ASL
 
 # Boost libraries: Header only, user has to supply arguments..
+BOOSTINCDIR="$abs_top_srcdir"/ThirdParty/boost
+BOOSTLIB="$abs_top_srcdir"/ThirdParty/boost
 AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
 
 # gtest library. Should be already compiled at this stage. Where do we get the environment variables?

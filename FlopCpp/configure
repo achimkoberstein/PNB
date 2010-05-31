@@ -22248,6 +22248,8 @@ fi
 # AC_COIN_HAS_ASL
 
 # Boost libraries: Header only, user has to supply arguments..
+BOOSTINCDIR="$abs_top_srcdir"/ThirdParty/boost
+BOOSTLIB="$abs_top_srcdir"/ThirdParty/boost
 
   echo "$as_me:$LINENO: checking if user provides library for boost" >&5
 echo $ECHO_N "checking if user provides library for boost... $ECHO_C" >&6
