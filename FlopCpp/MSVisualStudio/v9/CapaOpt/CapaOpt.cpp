@@ -3,11 +3,15 @@
 #include <ctime>
 #include <limits>
 
+#include "OsiClpSolverInterface.hpp"
+#include "OsiCbcSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
+
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
-
+#include "SmiScnModel.hpp"
+#include "Benders.hpp"
 
 using namespace flopc;
 
@@ -6740,27 +6744,12 @@ int main() {
       + sum(K, sum(S, sum(M, qTrans(S,M,K) * xSM(T+1,SM(S,M),K))))
       + sum(K, sum(M, h(M,K) * z(T+1,M,K)))
     );
-    //MP_constraint constraintForV(L);
-    //constraintForV(L) = v(L) <= 1;
-    //capa.setObjective(
-    //    sum(L, v(L) * 100)
-    //);
 
     capa.setSampleOnlyScenarioGeneration(true,capa.SampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
-    capa.solve(MP_model::MINIMIZE);
-    //capa.solve(MP_model::MAXIMIZE);
-
-    //yFL.display("yFL");
-    //yKA.display("yKA");
-    
-
-    cout << "-----------------------------------------" << endl;
-    
-    //xLS.display("xLS");
-    //xSM.display("xSM");*/
-    z.display("z (Fehlmenge)");
-    v.display("v");
+    //capa.solve(MP_model::MINIMIZE);
+    OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+    benders.initialSolve();
 
     cout << "\n Finished.";
 
