@@ -129,7 +129,7 @@ AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
 AC_SUBST(GTESTINCDIR)
 AC_SUBST(GTESTLIB)
 GTESTINCDIR=`cd $srcdir/../ThirdParty/gtest/include; pwd`
-GTESTLIB=`pwd`/../ThirdParty/gtest
+GTESTLIB=`pwd`/../ThirdParty/gtest/lib
 
 AC_COIN_HAS_USER_LIBRARY([gtest],[GTEST],[gtest/gtest.h])
 
