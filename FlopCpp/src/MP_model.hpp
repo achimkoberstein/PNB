@@ -272,7 +272,7 @@ namespace flopc {
         MP_scenario_set ScenSet() const { return scenSet; }
         void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
         void Probabilities(const MP_data& prob);
-        std::vector<double> MP_model::Probabilities();
+        std::vector<double> Probabilities();
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @fn void SampleSize(int val)
         ///
