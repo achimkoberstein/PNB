@@ -10,7 +10,7 @@ if test ! $wgetcount = 1; then
   exit -1
 fi
 echo "Downloading gtest source code"
-wget http://googletest.googlecode.com/files/gtest-1.5.0.tar.gz
+$wgetcmd http://googletest.googlecode.com/files/gtest-1.5.0.tar.gz
 
 echo "Uncompressing tarball.."
 tar -xzf gtest-1.5.0.tar.gz
