@@ -37,3 +37,4 @@ Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
 
             std::cout << "Seed is: " << seed << std::endl;
         };
+

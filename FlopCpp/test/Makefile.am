@@ -15,7 +15,7 @@ AUTOMAKE_OPTIONS = foreign
 noinst_PROGRAMS = unitTest MyTest
 
 unitTest_SOURCES = unitTest.cpp
-MyTest_SOURCES = MyTest.cpp
+MyTest_SOURCES = MyTests.cpp
 
 # List libraries of COIN projects
 unitTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la

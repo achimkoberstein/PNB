@@ -291,7 +291,7 @@ ac_subdirs_all="$ac_subdirs_all Cgl"
 ac_subdirs_all="$ac_subdirs_all Cbc"
 ac_subdirs_all="$ac_subdirs_all Smi"
 ac_subdirs_all="$ac_subdirs_all FlopCpp"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE subdirs ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE BOOSTINCDIR BOOSTLIB COIN_HAS_BOOST_TRUE COIN_HAS_BOOST_FALSE COIN_SKIP_PROJECTS LN_S LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE subdirs BOOSTINCDIR BOOSTLIB ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE COIN_HAS_BOOST_TRUE COIN_HAS_BOOST_FALSE GTESTINCDIR GTESTLIB COIN_SKIP_PROJECTS LN_S LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -2192,6 +2192,10 @@ fi
 #AC_COIN_THIRDPARTY_SUBDIRS([Boost],[ThirdParty/boost],[boost/shared_ptr.hpp])
 #AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
 ## User has to give third party librarys
+
+
+BOOSTINCDIR=`cd $srcdir/ThirdParty/boost; pwd`
+BOOSTLIB=`cd $srcdir/ThirdParty/boost; pwd`
 # Initialize the ADDLIBS variable
 ADDLIBS="-lm $LIBS"
 
@@ -2326,6 +2330,10 @@ else
 fi
 
 
+
+
+GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
+GTESTLIB=`pwd/ThirdParty/gtest`
 echo "$as_me:$LINENO: checking whether code for third party package gtest is available" >&5
 echo $ECHO_N "checking whether code for third party package gtest is available... $ECHO_C" >&6
 coin_skip=no
@@ -3412,14 +3420,16 @@ s,@abs_bin_dir@,$abs_bin_dir,;t t
 s,@HAVE_EXTERNALS_TRUE@,$HAVE_EXTERNALS_TRUE,;t t
 s,@HAVE_EXTERNALS_FALSE@,$HAVE_EXTERNALS_FALSE,;t t
 s,@subdirs@,$subdirs,;t t
+s,@BOOSTINCDIR@,$BOOSTINCDIR,;t t
+s,@BOOSTLIB@,$BOOSTLIB,;t t
 s,@ADDLIBS@,$ADDLIBS,;t t
 s,@FADDLIBS@,$FADDLIBS,;t t
 s,@ALWAYS_FALSE_TRUE@,$ALWAYS_FALSE_TRUE,;t t
 s,@ALWAYS_FALSE_FALSE@,$ALWAYS_FALSE_FALSE,;t t
-s,@BOOSTINCDIR@,$BOOSTINCDIR,;t t
-s,@BOOSTLIB@,$BOOSTLIB,;t t
 s,@COIN_HAS_BOOST_TRUE@,$COIN_HAS_BOOST_TRUE,;t t
 s,@COIN_HAS_BOOST_FALSE@,$COIN_HAS_BOOST_FALSE,;t t
+s,@GTESTINCDIR@,$GTESTINCDIR,;t t
+s,@GTESTLIB@,$GTESTLIB,;t t
 s,@COIN_SKIP_PROJECTS@,$COIN_SKIP_PROJECTS,;t t
 s,@LN_S@,$LN_S,;t t
 s,@LIBEXT@,$LIBEXT,;t t

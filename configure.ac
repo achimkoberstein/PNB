@@ -47,7 +47,15 @@ AC_COIN_THIRDPARTY_SUBDIRS([ASL],[ThirdParty/ASL],[solvers/asl.h])
 #AC_COIN_THIRDPARTY_SUBDIRS([Boost],[ThirdParty/boost],[boost/shared_ptr.hpp])
 #AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
 ## User has to give third party librarys
+AC_SUBST(BOOSTINCDIR)
+AC_SUBST(BOOSTLIB)
+BOOSTINCDIR=`cd $srcdir/ThirdParty/boost; pwd`
+BOOSTLIB=`cd $srcdir/ThirdParty/boost; pwd`
 AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
+AC_SUBST(GTESTINCDIR)
+AC_SUBST(GTESTLIB)
+GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
+GTESTLIB=`pwd/ThirdParty/gtest`
 AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
 
 #############################################################################
