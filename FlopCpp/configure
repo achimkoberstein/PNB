@@ -22366,7 +22366,7 @@ fi
 
 
 GTESTINCDIR=`cd $srcdir/../ThirdParty/gtest/include; pwd`
-GTESTLIB=`pwd`/../ThirdParty/gtest
+GTESTLIB=`pwd`/../ThirdParty/gtest/lib
 
 
   echo "$as_me:$LINENO: checking if user provides library for gtest" >&5
