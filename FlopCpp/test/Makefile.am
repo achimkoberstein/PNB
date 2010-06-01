@@ -20,6 +20,8 @@ MyTest_SOURCES = MyTests.cpp
 # List libraries of COIN projects
 unitTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la
 MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la $(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la
+# Add pthread library for googletest
+MyTest_LDFLAGS = -lpthread
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
@@ -151,8 +153,9 @@ LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt`\
 	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt`
 #	$(ADDLIBS)
 
-test: unitTest$(EXEEXT) 
+test: unitTest$(EXEEXT) MyTest$(EXEEXT)
 	./unitTest$(EXEEXT)
+	./MyTest$(EXEEXT)
 
 googleTest: MyTest$(EXEEXT)
 	./MyTest$(EXEEXT)

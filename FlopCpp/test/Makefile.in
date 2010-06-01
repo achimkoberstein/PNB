@@ -438,6 +438,8 @@ MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
 	$(am__append_14) $(am__append_17) $(am__append_21) \
 	$(am__append_24) $(am__append_27) $(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
+# Add pthread library for googletest
+MyTest_LDFLAGS = -lpthread
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
@@ -719,8 +721,9 @@ uninstall-am: uninstall-info-am
 
 #	$(ADDLIBS)
 
-test: unitTest$(EXEEXT) 
+test: unitTest$(EXEEXT) MyTest$(EXEEXT)
 	./unitTest$(EXEEXT)
+	./MyTest$(EXEEXT)
 
 googleTest: MyTest$(EXEEXT)
 	./MyTest$(EXEEXT)
