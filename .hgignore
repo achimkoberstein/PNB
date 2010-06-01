@@ -12,7 +12,7 @@ test_detail.xml
 SmiBenders\
 autom4te.cache
 *.m4
-config.orig
+configure.orig
 *.*.*
 *.ncb
 *.suo
