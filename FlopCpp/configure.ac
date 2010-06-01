@@ -47,6 +47,7 @@ AC_COIN_PROJECTDIR_INIT
 AC_COIN_DEBUG_COMPILE(FlopCpp)
 
 # Get the name of the C++ compiler and appropriate compiler options
+coin_skip_warn_cxxflags=yes
 AC_COIN_PROG_CXX
 
 # Initialize automake and libtool

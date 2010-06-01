@@ -921,15 +921,15 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         if (sampleOnly) //In case of sample only, we do not want to combine all against all.
             continue;
         std::vector< RandomVariable::sampleVector::iterator > iteratorVector(randVarsPerStage[i]+1); //We need one more as we add an iterator to an empty map later on.
-        // Now we prepare the iterator vector for linux..
-        for (int j = 0; j < randVarsPerStage[i]; j++){
-            iteratorVector[j] = sampledValuesOfVars[j].begin();
-        }
         //Ensure we have at least two random variables, otherwise a combine all against all does not makes sense..
         sampledValuesOfVars.push_back(std::map<double,double>());
-        iteratorVector[randVarsPerStage[i]] = sampledValuesOfVars[randVarsPerStage[i]].begin();
-        assert(iteratorVector.size() == sampledValuesOfVars.size());
 
+        // Now we prepare the iterator vector. We do it here as otherwise we ould invalidate the previous iterators
+	std::cout << randVarsPerStage[i] << std::endl;
+        for (int j = 0; j < randVarsPerStage[i]+1; j++){
+            iteratorVector[j] = sampledValuesOfVars[j].begin();
+        }
+        assert(iteratorVector.size() == sampledValuesOfVars.size());
 
         int nextVar = 1;
         int curElements = randVarsPerStage[i];
