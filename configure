@@ -2333,7 +2333,7 @@ fi
 
 
 GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
-GTESTLIB=`pwd/ThirdParty/gtest`
+GTESTLIB=`pwd/ThirdParty/gtest/lib`
 echo "$as_me:$LINENO: checking whether code for third party package gtest is available" >&5
 echo $ECHO_N "checking whether code for third party package gtest is available... $ECHO_C" >&6
 coin_skip=no
