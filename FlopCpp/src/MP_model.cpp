@@ -11,6 +11,7 @@ using std::endl;
 #include <map>
 #include <queue>
 #include <ctime>
+#include <iterator>
 
 #include "boost/shared_ptr.hpp"
 #include <boost/random.hpp>
@@ -916,7 +917,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
             sampledValuesOfVars.push_back((*it)->getSampledValuesWithProb());
-            iteratorVector.push_back(sampledValuesOfVars.back().begin());
+            iteratorVector.push_back(sampledValuesOfVars[randVarsPerStage[i]-1].begin());
         }
         if (sampleOnly) //In case of sample only, we do not want to combine all against all.
             continue;
@@ -924,7 +925,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         assert(iteratorVector.size() == sampledValuesOfVars.size());
    
         sampledValuesOfVars.push_back(std::map<double,double>());
-        iteratorVector.push_back(sampledValuesOfVars.back().begin());
+        iteratorVector.push_back(sampledValuesOfVars[randVarsPerStage[i]].begin());
 
 
         int nextVar = 1;
@@ -935,15 +936,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         
         // Combine all-against-all for this stage. Include probabilities of previous stages
         // At first we go the first value where the current value and the next sampled Value differ
-        // Temporary only: Store end iterators for all random vars of this stage
-        std::vector< RandomVariable::sampleVector::iterator > iterators;
-        for (int j = 0; j < sampledValuesOfVars.size(); j++)
-            iterators.push_back(sampledValuesOfVars[j].end());
-
         while (true){
             while ( iteratorVector[nextVar] != sampledValuesOfVars[nextVar].end() ){ // As long as we have not reached the empty map, everything is fine: Go to the next map.
-                if ( iteratorVector[nextVar] == iterators[nextVar])
-                    break;
                 ++nextVar;
             }
             // we reached the end..
