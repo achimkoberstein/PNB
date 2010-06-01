@@ -911,21 +911,24 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
-        std::vector< RandomVariable::sampleVector::iterator > iteratorVector; 
+        
         assert(!rv[i].empty()); //Assume we have random variables in every stage.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
             sampledValuesOfVars.push_back((*it)->getSampledValuesWithProb());
-            iteratorVector.push_back(sampledValuesOfVars[randVarsPerStage[i]-1].begin());
         }
         if (sampleOnly) //In case of sample only, we do not want to combine all against all.
             continue;
+        std::vector< RandomVariable::sampleVector::iterator > iteratorVector(randVarsPerStage[i]+1); //We need one more as we add an iterator to an empty map later on.
+        // Now we prepare the iterator vector for linux..
+        for (int j = 0; j < randVarsPerStage[i]; j++){
+            iteratorVector[j] = sampledValuesOfVars[j].begin();
+        }
         //Ensure we have at least two random variables, otherwise a combine all against all does not makes sense..
-        assert(iteratorVector.size() == sampledValuesOfVars.size());
-   
         sampledValuesOfVars.push_back(std::map<double,double>());
-        iteratorVector.push_back(sampledValuesOfVars[randVarsPerStage[i]].begin());
+        iteratorVector[randVarsPerStage[i]] = sampledValuesOfVars[randVarsPerStage[i]].begin();
+        assert(iteratorVector.size() == sampledValuesOfVars.size());
 
 
         int nextVar = 1;
