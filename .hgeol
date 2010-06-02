@@ -1,0 +1,15 @@
+[patterns]
+**.vcproj = CRLF
+**.txt = native
+**.cpp = native
+**.hpp = native
+**.c = native
+**.h = native
+Makefile = LF
+Makefile** = LF
+configure** = LF
+**.pdf = BIN
+**.jpg = BIN
+
+[repository]
+native = LF
