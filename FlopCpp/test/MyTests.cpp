@@ -1091,32 +1091,22 @@ namespace flopc {
 } //end namespace
 
 //TODO: Write Tests for right-hand-side with RV and constant term
-int main(int argc, char **argv) {
-    google::InitGoogleLogging(argv[0]);
-    // Get current flag
-    //int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
-
-    //// Turn on leak-checking bit
-    ////tmpFlag |= _CRTDBG_LEAK_CHECK_DF;
-    ////tmpFlag |= _CRTDBG_CHECK_ALWAYS_DF;
-
-    //// Turn off CRT block checking bit
-    ////tmpFlag &= ~_CRTDBG_CHECK_CRT_DF;
-
-    //// Set flag to the new value
-    //_CrtSetDbgFlag( tmpFlag );
-
+int main(int argc, char *argv[]) {
     //VLDDisable();
     ::testing::InitGoogleTest(&argc, argv);
     //VLDEnable();
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
     //_CrtMemState memstate;
     //_CrtMemCheckpoint(&memstate);
-    LOG(INFO) << "Logging Test";
+
+    google::InitGoogleLogging(argv[0]);
+#ifndef _MSC_VER
+    google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
+#endif
+    google::SetStderrLogging(0);
     int result = RUN_ALL_TESTS();
     //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();
-    DLOG(INFO) << "Nur im Debug Mode";
     return result;
 }
 
