@@ -10,6 +10,8 @@ using std::endl;
 #include <limits>
 #include <map>
 #include <queue>
+#include <ctime>
+#include <iterator>
 
 #include "boost/shared_ptr.hpp"
 #include <boost/random.hpp>
@@ -73,7 +75,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
-Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0), 
+Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0),sampleOnly(false),
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGenerator(new Uniform01Generator()),smiModel(0) {
     MP_model::current_model = this;
@@ -128,6 +130,11 @@ void MP_model::Probabilities(const MP_data& prob){
     else {
         throw invalid_argument_exception(); // We call Probabilities but no scenario_set is specified for this MP_data prob.
     }
+}
+
+std::vector<double> MP_model::Probabilities(){
+    // set probabilities
+    return probabilities;
 }
 
 double MP_model::getInfinity() const {
@@ -865,11 +872,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     if (stage.size() <= 1) { //Incorrect stage set, return
         return;
     }
-    //Check for ScenarioRandomVariables..
-    //if (scenSet.size()){
-    //    // We have a scenario set: That means we have scenarioRandomVariables and we will not generate random variates
-    //    return;
-    //}
     //More sophisticated check
     bool scenarios = false;
     bool independent = false;
@@ -886,54 +888,68 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         }
     }
     if (scenarios && independent){
+        std::cout << "ScenarioRandomVariables and normal RandomVariables where specified. We do not know how to handle this." << std::endl;
         throw invalid_argument_exception(); //User has to specify what he wants, we can not guess
     }
-    if (scenarios && !independent) //In case of scenarios, we return as we have nothing to do here
+    if (scenarios && !independent){ //In case of scenarios, we return as we have nothing to do here. But: We assure that probabilities are set in a correct way, if not already done by the user.
+        if (probabilities.empty()){ //If probabilities are not of the correct size, we are wrong, probably a user error (assert)
+           probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
+        }
+        assert(probabilities.size() == scenSet.size());
         return;
+    }
 
+    // Set sample size common to all random variables.
     int sampleSize = this->defaultSampleSize;
-
     typedef std::set<RandomVariable*>::iterator rvIterator;
 
     std::vector<int> randVarsPerStage(stage.size(),0);
     //For every stage: We have stage independence. Sample concrete values for this current stage, combine them all-against-all. Insert them in the right places to obtain correct scenario values..
     std::vector< std::vector< std::vector<double> > > scenariosPerStage(stage.size()+1); //Ordering of values via RV ordering.
 
+    // For every stage: Sample Values for all RV in this stage independently and combine all-against-all to achieve correct behaviour. In case of sampleOnly flag, we just sample and leave it with that.
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
-        std::vector< RandomVariable::sampleVector::iterator > iteratorVector; 
+        
         assert(!rv[i].empty()); //Assume we have random variables in every stage.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
             sampledValuesOfVars.push_back((*it)->getSampledValuesWithProb());
-            iteratorVector.push_back(sampledValuesOfVars.back().begin());
         }
-        //Ensure we have at least two elements
+        if (sampleOnly) //In case of sample only, we do not want to combine all against all.
+            continue;
+        std::vector< RandomVariable::sampleVector::iterator > iteratorVector(randVarsPerStage[i]+1); //We need one more as we add an iterator to an empty map later on.
+        //Ensure we have at least two random variables, otherwise a combine all against all does not makes sense..
         sampledValuesOfVars.push_back(std::map<double,double>());
-        iteratorVector.push_back(sampledValuesOfVars.back().begin());
 
-        //Initialize iterators
-        RandomVariable::sampleVector::iterator curIt = iteratorVector[0];
-        RandomVariable::sampleVector::iterator nextIt = iteratorVector[1];
+        // Now we prepare the iterator vector. We do it here as otherwise we ould invalidate the previous iterators
+	std::cout << randVarsPerStage[i] << std::endl;
+        for (int j = 0; j < randVarsPerStage[i]+1; j++){
+            iteratorVector[j] = sampledValuesOfVars[j].begin();
+        }
+        assert(iteratorVector.size() == sampledValuesOfVars.size());
 
         int nextVar = 1;
         int curElements = randVarsPerStage[i];
         int scenCounter = 0;
-        // Push back empty vector to scenariosPerStage[i]
+        // Push back empty vector to scenariosPerStage[i] to store scenario probabilities in there
         scenariosPerStage[i] = std::vector< std::vector<double> >();
+        
+        // Combine all-against-all for this stage. Include probabilities of previous stages
+        // At first we go the first value where the current value and the next sampled Value differ
         while (true){
             while ( iteratorVector[nextVar] != sampledValuesOfVars[nextVar].end() ){ // As long as we have not reached the empty map, everything is fine: Go to the next map.
-                nextVar++;
+                ++nextVar;
             }
             // we reached the end..
 
-            nextVar = nextVar-1; //We incremented nextVar one too much, so go to correct value.
+            --nextVar; //We incremented nextVar one too much, so go to correct value.
             //Do computational stuff only at the end
             if (nextVar == curElements-1){
 
-                // Computation start
+                // Computation start: Compute probability of the given scenario and store scenario values
                 scenariosPerStage[i].push_back(std::vector<double>(randVarsPerStage[i]+1));
                 //Insert values
                 double prob = 1.0;
@@ -948,7 +964,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
 
                 // Increment iterator
                 ++iteratorVector[nextVar];
-
             }
             else { //we reached the end of the iteration but we are not at the last map => Increment previous map and restart current map. Check in the next round with previous map.
                 if (nextVar == -1)
@@ -956,10 +971,15 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
                 // iteratorVector[nextVar] == sampledValuesOfVars[nextVar].end() holds 
                 iteratorVector[nextVar+1] = sampledValuesOfVars[nextVar+1].begin();
                 ++iteratorVector[nextVar];
-
             }
         } // end while
     } //end for
+    if (sampleOnly){ //If we sampled only, we have equiprobable values and do not have to generate the scenario fan => resampling with preset probabilities does not makes sense..
+        this->probabilities.clear();
+        this->ScenSet(MP_scenario_set(sampleSize));//Important <- otherwise scenario generation does not work as coefs get initialized without scenario values
+        probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
+        return;
+    }
     // Now we have all scenarios independent for all RandomVariables..
     // Overall scenario count: for all stage count size of vector scenariosPerStage[stage].size()
     // What we can do now: Generate scenario fan..
@@ -1030,8 +1050,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     //Check for consistency
     if ( !compareDouble(sum,1.0)) //double equal 
         throw invalid_argument_exception(); //Probabilities do not sum up to one
-
-
 }
 
 void MP_model::detach() {
@@ -1072,8 +1090,9 @@ int * MP_model::getColStage() {
 
 MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     assert(Solver);
-    assert(mSolverState != MP_model::DETACHED && 
-        mSolverState != MP_model::SOLVER_ONLY);
+    if ( mSolverState == MP_model::DETACHED || mSolverState == MP_model::SOLVER_ONLY )
+        attach();
+    assert(mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY);
     Solver->setObjSense(dir);
     bool isMIP = false;
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
@@ -1082,6 +1101,9 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
             break;
         }
     }
+    // We want to inform the user about wall clock solving time..
+    clock_t startClock = clock();
+    clock_t stochasticClock;
     if (stage.size() > 0 && smiModel != 0) { // We have a time structure AND a smiModel ready. If only timeStructure, there were no RandomVariables specified.
         //OsiClpSolverInterface osiClp;
         //smiModel->setOsiSolverHandle(osiClp);
@@ -1089,6 +1111,8 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
         Solver = smiModel->loadOsiSolverData();
         Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
+        stochasticClock = clock();        
+        std::cout << "Generation of deterministic equivalent took " << diffclock(stochasticClock,startClock) << " ms." << std::endl;
         try {
             if (isMIP == true)
                 Solver->branchAndBound();
@@ -1119,6 +1143,10 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
             }
         }
     }
+    clock_t endClock = clock();
+    std::cout << "Overall wall clock time for solution : " << diffclock(endClock,startClock) << " ms." << std::endl;
+    if (stage.size())
+        std::cout << "Solution time for stochastic programs using deterministic equivalent is: " << diffclock(endClock,stochasticClock) << " ms." << std::endl;
 
     if (Solver->isProvenOptimal() == true) {
         cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
@@ -1180,7 +1208,7 @@ namespace flopc {
 
     SmiScnModel* MP_model::generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore){
         //TODO: Check with own test if scenario generation is correct. It looks like it, but we will never now until we test it.
-        typedef std::vector<boost::shared_ptr<MP::Coef>>::const_iterator randVarIterator;
+        typedef std::vector<boost::shared_ptr<MP::Coef> >::const_iterator randVarIterator;
         //Get basic important values
         int nStages = smiCore->getNumStages();
         int nScen = scenSet.size(); //If nScen is not set, curStage.e. equal to 0, we need to count number of Scenarios 
@@ -1395,7 +1423,7 @@ namespace flopc {
         std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
 
         if (scenSet.size() != scenCounter){
-            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << "." << std::endl;
+            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << " during scenario tree generation." << std::endl;
             scenSet = MP_scenario_set(scenCounter);
         }
 

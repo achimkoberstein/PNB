@@ -12,12 +12,16 @@ AUTOMAKE_OPTIONS = foreign
 #                         unitTest for FlopCpp                         #
 ########################################################################
 
-noinst_PROGRAMS = unitTest
+noinst_PROGRAMS = unitTest MyTest
 
 unitTest_SOURCES = unitTest.cpp
+MyTest_SOURCES = MyTests.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD = ../src/libFlopCpp.la
+unitTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la
+MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la $(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la
+# Add pthread library for googletest
+MyTest_LDFLAGS = -lpthread
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
@@ -26,6 +30,10 @@ AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src` \
 	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(SMISRCDIR)/src` \
+	-I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(BOOSTINCDIR)` \
+	-I`$(CYGPATH_W) $(GTESTINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src` 
 
 # This line is necessary to allow VPATH compilation with MS compilers
@@ -44,6 +52,8 @@ if COIN_HAS_CBC
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiCbc`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiCbc/libOsiCbc.la \
 	$(CBCOBJDIR)/src/libCbc.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiCbc/libOsiCbc.la \
+	$(CBCOBJDIR)/src/libCbc.la
   LIBS += `cat $(CBCOBJDIR)/cbc_addlibs.txt`
 endif
 
@@ -53,11 +63,14 @@ if COIN_HAS_CLP
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiClp`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiClp/libOsiClp.la \
 	$(CLPOBJDIR)/src/libClp.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiClp/libOsiClp.la \
+	$(CLPOBJDIR)/src/libClp.la
   LIBS  += `cat $(CLPOBJDIR)/clp_addlibs.txt`
 endif
 
 if COIN_HAS_CGL
   unitTest_LDADD += $(CGLOBJDIR)/src/libCgl.la
+  MyTest_LDADD += $(CGLOBJDIR)/src/libCgl.la
   LIBS += `cat $(CGLOBJDIR)/cgl_addlibs.txt`
 endif
 
@@ -65,6 +78,7 @@ if COIN_HAS_CPX
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(CPXINCDIR)` \
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiCpx`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiCpx/libOsiCpx.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiCpx/libOsiCpx.la
 endif
 
 if COIN_HAS_DYLP
@@ -74,24 +88,29 @@ if COIN_HAS_DYLP
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiDylp`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiDylp/libOsiDylp.la \
 	$(DYLPOBJDIR)/src/Dylp/libDylp.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiDylp/libOsiDylp.la \
+	$(DYLPOBJDIR)/src/Dylp/libDylp.la
   LIBS += `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
 endif
 
 if COIN_HAS_FMP
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiFmp`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiFmp/libOsiFmp.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiFmp/libOsiFmp.la
 endif
 
 if COIN_HAS_GLPK
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(GLPKINCDIR)` \
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiGlpk`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiGlpk/libOsiGlpk.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiGlpk/libOsiGlpk.la
 endif
 
 if COIN_HAS_MSK
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(MSKINCDIR)` \
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src/OsiMsk`
   unitTest_LDADD += $(OSIOBJDIR)/src/OsiMsk/libOsiMsk.la
+  MyTest_LDADD += $(OSIOBJDIR)/src/OsiMsk/libOsiMsk.la
 endif
 
 if COIN_HAS_OSL
@@ -125,13 +144,21 @@ unitTest_LDADD += \
 	$(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 
+MyTest_LDADD += \
+	$(OSIOBJDIR)/src/libOsi.la \
+	$(COINUTILSOBJDIR)/src/libCoinUtils.la
+
 # List additional libraries
 LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt`\
-	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` \
-	$(ADDLIBS)
+	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt`
+#	$(ADDLIBS)
 
-test: unitTest$(EXEEXT)
+test: unitTest$(EXEEXT) MyTest$(EXEEXT)
 	./unitTest$(EXEEXT)
+	./MyTest$(EXEEXT)
+
+googleTest: MyTest$(EXEEXT)
+	./MyTest$(EXEEXT)
 
 .PHONY: test
 

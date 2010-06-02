@@ -5,12 +5,14 @@ stable
 .svn
 Debug\
 Release\
-boost\
-gtest\
+boost
+gtest
 doxydoc\
 test_detail.xml
 SmiBenders\
-
+autom4te.cache
+*.m4
+configure.orig
 *.*.*
 *.ncb
 *.suo

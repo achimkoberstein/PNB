@@ -7,12 +7,15 @@
 
 #include <cassert>
 #include <string>
+#include <ctime>
 using std::string;
 
 #include <vector>
 using std::vector;
 
 #include <boost/exception/all.hpp>
+#include <glog/logging.h>
+
 
 namespace flopc {
 
@@ -30,6 +33,9 @@ namespace flopc {
 
     bool compareDouble(double x, double y, double absoluteTolerance = flopc::absoluteTolerance, double relativeTolerance = flopc::relativeTolerance);
     int round(double x);
+
+    // Returns time in miliseconds between two clock events.
+    double diffclock(clock_t clock1,clock_t clock2);
 
 
     /** @file This file contains several different useful utilities which are

@@ -19,13 +19,55 @@
 
 namespace flopc{
 
+    //Forward declaration
     class MP_random_data_impl;
-    class RandomDataRef;
+
+    class RandomDataRef : public Constant_base,public Functor, public Coin::ReferencedObject { //Are we really a constant_base object?
+        friend class MP_random_data_impl;
+    public:
+
+        RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
+            const MP_index_exp& i1,
+            const MP_index_exp& i2,
+            const MP_index_exp& i3,
+            const MP_index_exp& i4,
+            const MP_index_exp& i5);
+
+
+        ~RandomDataRef() {} 
+        RandomDataRef& such_that(const MP_boolean& b);
+
+        //Get Value via current settings for MP_index_exp
+        virtual double evaluate(int scenario) const;
+        virtual int getStage() const;
+        virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
+        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
+        virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
+        IndexKeeper getIndices(int k) const;
+
+        //Assignment-operators (Not yet defined..)
+        const RandomDataRef& operator=(const RandomDataRef& r); 
+        const RandomDataRef& operator=(const Constant& c);
+
+        //Copy Constructor (needed in initialization of Constant_random_variable
+        RandomDataRef(const RandomDataRef&);
+
+        //Set value via current MP_index_exp 
+        //void evaluate_lhs(const RandomVariable &v) const;
+        virtual void operator()() const;
+
+
+    private:
+        boost::shared_ptr<MP_random_data_impl> RV;
+        mutable MP_index_exp I1,I2,I3,I4,I5;
+        Constant C;
+        MP_boolean B;
+    };
     
 
     //Class that defines a concrete RandomVariable for one coefficient
     class RandomVariable : boost::noncopyable {
-        friend RandomDataRef;
+        friend class RandomDataRef;
     public:
 
         typedef std::map<double,double> sampleVector;
@@ -79,7 +121,7 @@ namespace flopc{
     class DiscreteRandomVariable : public RandomVariable {
         
     public:
-
+        DiscreteRandomVariable();
         ~DiscreteRandomVariable();
 
         virtual void sample(int howMany = 0);
@@ -88,7 +130,7 @@ namespace flopc{
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 0);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 1);
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
@@ -133,7 +175,7 @@ namespace flopc{
 
         ~ScenarioRandomVariable();
         virtual void sample(int howMany = 0) ;
-
+        virtual double getMeanValue();
     };
 
     class ContinuousRandomVariable : public RandomVariable {
@@ -255,52 +297,11 @@ namespace flopc{
 
     };
 
-    class RandomDataRef : public Constant_base,public Functor, public Coin::ReferencedObject { //Are we really a constant_base object?
-        friend class MP_random_data_impl;
-    public:
-
-        RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
-            const MP_index_exp& i1,
-            const MP_index_exp& i2,
-            const MP_index_exp& i3,
-            const MP_index_exp& i4,
-            const MP_index_exp& i5);
-
-
-        ~RandomDataRef() {} 
-        RandomDataRef& such_that(const MP_boolean& b);
-
-        //Get Value via current settings for MP_index_exp
-        virtual double evaluate(int scenario) const;
-        virtual int getStage() const;
-        virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
-        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
-        virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
-        IndexKeeper getIndices(int k) const;
-
-        //Assignment-operators (Not yet defined..)
-        const RandomDataRef& operator=(const RandomDataRef& r); 
-        const RandomDataRef& operator=(const Constant& c);
-        
-        //Copy Constructor (needed in initialization of Constant_random_variable
-        RandomDataRef(const RandomDataRef&);
-
-        //Set value via current MP_index_exp 
-        //void evaluate_lhs(const RandomVariable &v) const;
-        virtual void operator()() const;
-        
-
-    private:
-        boost::shared_ptr<MP_random_data_impl> RV;
-        mutable MP_index_exp I1,I2,I3,I4,I5;
-        Constant C;
-        MP_boolean B;
-    };
+    
 
     //non-member non-friend functions
     std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;
 
 }
 
-
-#endif 
+#endif
