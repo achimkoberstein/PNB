@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops;..\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="C:\ILOG\CPLEX110\include\ilcplex"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -59,8 +59,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="cplex110.lib"
 				LinkIncremental="0"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="C:\ILOG\CPLEX110\lib\x86_windows_vs2008\stat_mta"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"

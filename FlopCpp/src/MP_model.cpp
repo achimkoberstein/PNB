@@ -1429,6 +1429,11 @@ namespace flopc {
             scenSet = MP_scenario_set(scenCounter);
         }
 
+
+        if (scenCounter != scenSet.size()){
+            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << "." << std::endl;
+            this->ScenSet(MP_scenario_set(scenCounter)); // Update scenario set to shrink to the actual size.
+        }
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
             delete matrixVec[curScen];
