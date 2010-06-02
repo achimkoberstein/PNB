@@ -1,6 +1,6 @@
 #!/bin/sh
 # This script just executes the scripts to get boost and googletes
 cd boost
-./get.boost
+/bin/sh get.boost
 cd ../gtest
-./get.gtest
+/bin/sh get.gtest
