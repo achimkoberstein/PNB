@@ -3,12 +3,11 @@
 #include <ctime>
 #include <limits>
 
+#include <glog/logging.h>
+
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-
-
 #include "CoinFloatEqual.hpp"
-
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
@@ -1092,6 +1091,7 @@ namespace flopc {
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char **argv) {
+    google::InitGoogleLogging(argv[0]);
     // Get current flag
     //int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
 
@@ -1111,9 +1111,11 @@ int main(int argc, char **argv) {
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
     //_CrtMemState memstate;
     //_CrtMemCheckpoint(&memstate);
+    LOG(INFO) << "Logging Test";
     int result = RUN_ALL_TESTS();
     //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();
+    DLOG(INFO) << "Nur im Debug Mode";
     return result;
 }
 
