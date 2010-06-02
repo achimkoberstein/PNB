@@ -44,6 +44,19 @@ AC_COIN_INIT_AUTOMAKE
 #############################################################################
 
 AC_COIN_THIRDPARTY_SUBDIRS([ASL],[ThirdParty/ASL],[solvers/asl.h])
+#AC_COIN_THIRDPARTY_SUBDIRS([Boost],[ThirdParty/boost],[boost/shared_ptr.hpp])
+#AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
+## User has to give third party librarys
+AC_SUBST(BOOSTINCDIR)
+AC_SUBST(BOOSTLIB)
+BOOSTINCDIR=`cd $srcdir/ThirdParty/boost; pwd`
+BOOSTLIB=`cd $srcdir/ThirdParty/boost; pwd`
+AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
+AC_SUBST(GTESTINCDIR)
+AC_SUBST(GTESTLIB)
+GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
+GTESTLIB=`pwd`/ThirdParty/gtest/lib
+AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
 
 #############################################################################
 #                  Check which subprojects are there                        #
@@ -54,6 +67,7 @@ AC_COIN_MAIN_SUBDIRS(Clp)
 AC_COIN_MAIN_SUBDIRS(Osi)
 AC_COIN_MAIN_SUBDIRS(Cgl)
 AC_COIN_MAIN_SUBDIRS(Cbc)
+AC_COIN_MAIN_SUBDIRS(Smi)
 AC_COIN_MAIN_SUBDIRS(FlopCpp)
 
 ##############################################################################

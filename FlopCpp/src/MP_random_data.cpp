@@ -574,6 +574,22 @@ namespace flopc{
 
     }
 
+    double ScenarioRandomVariable::getMeanValue(){
+        // We need the number of scenarios to equal the values we got here. Otherwise something seems to be wrong
+        int scenarioSize = MP_model::getCurrentModel()->ScenSet().size();
+        std::vector<double> probs = MP_model::getCurrentModel()->Probabilities();
+        assert(scenarioSize == probs.size()); // We have correct probabilities for current scenario set.
+        assert(scenarioSize == values.size()); // We have same number of values as number of scenarios.
+        //Compute mean of values and return it
+        double mean = 0;
+        for (int i = 0; i < values.size(); i++) {
+            // What about probabilities? We assume equal probabilities
+            mean += values[i]*probs[i];
+        }
+        return mean;
+
+    }
+
     ScenarioRandomVariable::~ScenarioRandomVariable()
     {
 

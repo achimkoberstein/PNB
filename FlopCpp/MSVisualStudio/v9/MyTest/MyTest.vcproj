@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops;..\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -95,7 +95,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -172,7 +172,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\MyGoogleTests.cpp"
+				RelativePath="..\..\..\test\MyTests.cpp"
 				>
 			</File>
 		</Filter>
