@@ -7,10 +7,15 @@
 #endif
 
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiStochasticSolverInterface.hpp"
 
 using namespace std;
 
+class OsiStochasticBendersTwoStageSolverInterface;
+
+
 class Benders{
+    friend class OsiStochasticBendersTwoStageSolverInterface;
 
 private:
 
@@ -528,6 +533,20 @@ public:
 	// Destructor
 	~Benders();
 
+};
+
+class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
+public:
+
+     OsiStochasticBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
+    ~OsiStochasticBendersTwoStageSolverInterface();
+
+    void initialSolve();
+
+    double getObjValue();
+
+private:
+    Benders* benders;
 };
 
 #endif
