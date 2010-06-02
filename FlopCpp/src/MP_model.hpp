@@ -271,9 +271,8 @@ namespace flopc {
         void Stage(const MP_stage& val) { stage = val; }
         MP_scenario_set ScenSet() const { return scenSet; }
         void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
-        //MP_data Probabilities() const { return probabilities; }
         void Probabilities(const MP_data& prob);
-
+        std::vector<double> Probabilities();
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @fn void SampleSize(int val)
         ///

@@ -30,7 +30,9 @@ libFlopCpp_la_SOURCES = \
 	MP_model.cpp MP_model.hpp \
 	MP_set.cpp MP_set.hpp \
 	MP_utilities.cpp MP_utilities.hpp \
-	MP_variable.cpp MP_variable.hpp 
+	MP_variable.cpp MP_variable.hpp \
+	MP_random_data.cpp MP_random_data.hpp \
+	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp
 
 # This is for libtool (on Windows)
 #libFlopCpp_la_LDFLAGS = $(LT_LDFLAGS)
@@ -191,23 +193,13 @@ AM_CPPFLAGS =
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 AM_CPPFLAGS += \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglClique` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglDuplicateRow` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglFlowCover` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglGomory` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglKnapsackCover` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglMixedIntegerRounding` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglMixedIntegerRounding2` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglOddHole` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglPreProcess` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglProbing` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglRedSplit` \
-	-I`$(CYGPATH_W) $(CGLSRCDIR)/src/CglTwomir` \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(OSISRCDIR)/src` \
-	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc`
+	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(SMISRCDIR)/src` \
+	-I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(BOOSTINCDIR)`
 
 # List additional defines
 AM_CPPFLAGS += -DCOIN_NO_CLP_MESSAGE -DUSE_FLOPCPPCONFIG
@@ -236,7 +228,8 @@ includecoin_HEADERS = \
 	MP_model.hpp \
 	MP_set.hpp \
 	MP_utilities.hpp \
-	MP_variable.hpp
+	MP_variable.hpp \
+	MP_random_data.hpp
 
 #############################################################################
 # Create the Config.h file that always defines HAVE_CONFIG_H and install it #

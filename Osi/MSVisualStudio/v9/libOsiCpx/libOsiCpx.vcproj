@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops;..\..\..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MsVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MsVisualStudio\v9\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -81,7 +81,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops;..\..\..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MsVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MsVisualStudio\v9\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>

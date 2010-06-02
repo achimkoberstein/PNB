@@ -39,6 +39,9 @@ test: all
 
 unitTest: test
 
+googleTest: all
+	cd test; make googleTest
+
 clean-local:
 	if test -r test/Makefile; then cd test; make clean; fi
 

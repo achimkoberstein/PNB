@@ -147,3 +147,4 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
 
  void DataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
     }  
+
