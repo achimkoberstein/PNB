@@ -3,17 +3,17 @@
 #include <ctime>
 #include <limits>
 
-#include "OsiClpSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 
 #include "flopc.hpp"
-#include "OsiStochasticSolverInterface.hpp"
+
 
 using namespace flopc;
 
 int main() {
 
-    MP_model capa(new OsiClpSolverInterface);
+    MP_model capa(new OsiCpxSolverInterface());
 
     // Stufen
     enum {numStage=2};
@@ -21,7 +21,8 @@ int main() {
 
     // Szenarien
     enum {numScen=2};
-    MP_scenario_set scen(numScen);
+    capa.SampleSize(numScen);
+    //MP_scenario_set scen(numScen);
 
     // ----------
     // Mengen
@@ -6637,42 +6638,42 @@ int main() {
     // ----------
 
     // Bedarfe
-    double demand[numStage-1][numM][numK][numScen] =
+    RandomVariable* demand[numStage-1][numM][numK] =
     {//T
         {//M
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             },
             {//K
-                {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}, {10, 5}
+                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
             }
         }
     };
-    MP_random_data d(&demand[0][0][0][0],T,M,K);
+    MP_random_data d(&demand[0][0][0],T,M,K);
 
         // ----------
     // Variablen
@@ -6744,6 +6745,8 @@ int main() {
     //capa.setObjective(
     //    sum(L, v(L) * 100)
     //);
+
+    capa.setSampleOnlyScenarioGeneration(true,capa.SampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
     capa.solve(MP_model::MINIMIZE);
     //capa.solve(MP_model::MAXIMIZE);

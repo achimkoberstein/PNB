@@ -272,7 +272,7 @@ private:
 	double **cdcup_;
 	vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
 	vector<double *> pDenseRow_; //dense probability vector
-	vector<vector<int>> intColsStagewise; // For each stage separately, it contains the position of every integer column
+	vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
 };
 
 #endif //#define SmiScnData_HPP

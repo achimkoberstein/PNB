@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\ILOG\CPLEX110\include\ilcplex"
+				AdditionalIncludeDirectories=""
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -59,9 +59,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cplex110.lib"
 				LinkIncremental="0"
-				AdditionalLibraryDirectories="C:\ILOG\CPLEX110\lib\x86_windows_vs2008\stat_mta"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
@@ -95,7 +94,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -172,7 +171,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\MyGoogleTests.cpp"
+				RelativePath="..\..\..\test\MyTests.cpp"
 				>
 			</File>
 		</Filter>

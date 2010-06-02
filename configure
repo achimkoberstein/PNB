@@ -283,13 +283,15 @@ PACKAGE_BUGREPORT='flopcpp@list.coin-or.org'
 ac_unique_file="configure.ac"
 ac_default_prefix=`pwd`
 ac_subdirs_all="$ac_subdirs_all ThirdParty/ASL"
+ac_subdirs_all="$ac_subdirs_all ThirdParty/gtest"
 ac_subdirs_all="$ac_subdirs_all CoinUtils"
 ac_subdirs_all="$ac_subdirs_all Clp"
 ac_subdirs_all="$ac_subdirs_all Osi"
 ac_subdirs_all="$ac_subdirs_all Cgl"
 ac_subdirs_all="$ac_subdirs_all Cbc"
+ac_subdirs_all="$ac_subdirs_all Smi"
 ac_subdirs_all="$ac_subdirs_all FlopCpp"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE subdirs COIN_SKIP_PROJECTS LN_S LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE subdirs BOOSTINCDIR BOOSTLIB ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE COIN_HAS_BOOST_TRUE COIN_HAS_BOOST_FALSE GTESTINCDIR GTESTLIB COIN_SKIP_PROJECTS LN_S LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -813,6 +815,14 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-maintainer-mode  enable make rules and dependencies not useful
 			  (and sometimes confusing) to the casual installer
+  --enable-boost-libcheck use disable-boost-libcheck to skip the
+                          link check at configuration time
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-boost-incdir specify the header file directory for library boost
+  --with-boost-lib specify the flags used to link with the library boost
 
 Some influential environment variables:
   COIN_SKIP_PROJECTS
@@ -911,7 +921,7 @@ esac
     else
       echo "$as_me: WARNING: no configuration information is in $ac_dir" >&2
     fi
-    cd $ac_popdir
+    cd "$ac_popdir"
   done
 fi
 
@@ -2179,6 +2189,185 @@ echo "${ECHO_T}no" >&6
   fi
 fi
 
+#AC_COIN_THIRDPARTY_SUBDIRS([Boost],[ThirdParty/boost],[boost/shared_ptr.hpp])
+#AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
+## User has to give third party librarys
+
+
+BOOSTINCDIR=`cd $srcdir/ThirdParty/boost; pwd`
+BOOSTLIB=`cd $srcdir/ThirdParty/boost; pwd`
+# Initialize the ADDLIBS variable
+ADDLIBS="-lm $LIBS"
+
+
+# As backup, we make sure we don't loose an FLIBS if it has been set
+# by the user
+save_FLIBS="$FLIBS"
+
+# Initialize the FADDLIBS variable (which is to be used with a fortran
+# compiler and will not include FLIBS)
+FADDLIBS="$LIBS"
+
+
+# A useful makefile conditional that is always false
+
+
+if false; then
+  ALWAYS_FALSE_TRUE=
+  ALWAYS_FALSE_FALSE='#'
+else
+  ALWAYS_FALSE_TRUE='#'
+  ALWAYS_FALSE_FALSE=
+fi
+
+
+# We set the following variable so that we know later in AC_COIN_FINALIZE
+# that we are in a project main directory
+coin_projectdir=yes
+
+
+  echo "$as_me:$LINENO: checking if user provides library for boost" >&5
+echo $ECHO_N "checking if user provides library for boost... $ECHO_C" >&6
+
+# Check for header file directory
+
+
+# Check whether --with-boost-incdir or --without-boost-incdir was given.
+if test "${with_boost_incdir+set}" = set; then
+  withval="$with_boost_incdir"
+  BOOSTINCDIR=`cd $withval; pwd`
+fi;
+
+# Check for library directory
+
+
+# Check whether --with-boost-lib or --without-boost-lib was given.
+if test "${with_boost_lib+set}" = set; then
+  withval="$with_boost_lib"
+  BOOSTLIB=$withval
+fi;
+
+# Switch to disable library check if requested
+
+  # Check whether --enable-boost-libcheck or --disable-boost-libcheck was given.
+if test "${enable_boost_libcheck+set}" = set; then
+  enableval="$enable_boost_libcheck"
+  boost_libcheck=$enableval
+else
+  boost_libcheck=yes
+fi;
+
+# At this point, if we're going to use the library, both LBRYINCDIR and
+# LBRYLIB must be defined and not empty.
+
+  if test x"$BOOSTINCDIR" != x || test x"$BOOSTLIB" != x; then
+    if test x"$BOOSTINCDIR" = x || test x"$BOOSTLIB" = x; then
+      { { echo "$as_me:$LINENO: error: You need to specify both an include directory and link flags to use library boost. Use --with-boost-incdir of environment variable $BOOSTINCDIR to specify the include directory. Use --with-boost-lib or environment variable $BOOSTLIB to specify link flags." >&5
+echo "$as_me: error: You need to specify both an include directory and link flags to use library boost. Use --with-boost-incdir of environment variable $BOOSTINCDIR to specify the include directory. Use --with-boost-lib or environment variable $BOOSTLIB to specify link flags." >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    coin_has_boost=true
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+  else
+    coin_has_boost=false
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+  fi
+
+# If we have instructions for use, consider header and link checks.
+
+  if test $coin_has_boost = true; then
+
+# If argument 3 (file) is given, check for the file. Typically this will be a
+# header file, but that's not assumed.
+
+    if test -r $BOOSTINCDIR/boost/shared_ptr.hpp; then
+
+  :
+else
+  { { echo "$as_me:$LINENO: error: Cannot find file boost/shared_ptr.hpp in $BOOSTINCDIR" >&5
+echo "$as_me: error: Cannot find file boost/shared_ptr.hpp in $BOOSTINCDIR" >&2;}
+   { (exit 1); exit 1; }; }
+  :
+fi
+
+
+# Now see if we can link the function. There are arguments for and against
+# assuming argument 3 is a header file declaring the function. A correct
+# function declaration is the main argument in favour. Having to cope with
+# possible dependencies or other oddities are the main arguments against.
+# Force the use of C as the best single choice amongst C++, C, and Fortran.
+# Obviously, this has limits.
+
+
+
+# If we make it this far, we've verified the file and linked the function. Add
+# the necessary link flags to ADDLIBS and define the preprocessor symbol
+# COIN_HAS_LBRY.
+
+    ADDLIBS="$BOOSTLIB $ADDLIBS"
+
+cat >>confdefs.h <<\_ACEOF
+#define COIN_HAS_BOOST 1
+_ACEOF
+
+  fi
+
+# Arrange for configure to substitute LBRYINCDIR and LBRYLIB and create the
+# automake conditional. These actions must occur unconditionally.
+
+
+
+
+
+if test $coin_has_boost = true; then
+  COIN_HAS_BOOST_TRUE=
+  COIN_HAS_BOOST_FALSE='#'
+else
+  COIN_HAS_BOOST_TRUE='#'
+  COIN_HAS_BOOST_FALSE=
+fi
+
+
+
+
+GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
+GTESTLIB=`pwd`/ThirdParty/gtest/lib
+echo "$as_me:$LINENO: checking whether code for third party package gtest is available" >&5
+echo $ECHO_N "checking whether code for third party package gtest is available... $ECHO_C" >&6
+coin_skip=no
+if test x"$COIN_SKIP_PROJECTS" != x; then
+  for dir in $COIN_SKIP_PROJECTS; do
+    if test $dir = ThirdParty/gtest; then
+      coin_skip=yes
+    fi
+  done
+fi
+if test $coin_skip = yes; then
+  echo "$as_me:$LINENO: result: skipping" >&5
+echo "${ECHO_T}skipping" >&6
+else
+  coin_tmp=`echo $srcdir/ThirdParty/gtest/include/gtest/gtest.h`
+  # There is probably a more elegant way to get the first thing out here...
+  for i in $coin_tmp; do
+    coin_tmp2=$i
+    #break 1
+  done
+  if test -r $coin_tmp2; then
+    coin_subdirs="$coin_subdirs ThirdParty/gtest"
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+
+subdirs="$subdirs ThirdParty/gtest"
+
+  else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+  fi
+fi
+
 
 #############################################################################
 #                  Check which subprojects are there                        #
@@ -2358,6 +2547,44 @@ echo "${ECHO_T}yes" >&6
 
 
 subdirs="$subdirs Cbc"
+
+                else
+                  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+                fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+echo "$as_me:$LINENO: checking whether directory Smi is available" >&5
+echo $ECHO_N "checking whether directory Smi is available... $ECHO_C" >&6
+                coin_skip=no
+                if test x"$COIN_SKIP_PROJECTS" != x; then
+                  for dir in $COIN_SKIP_PROJECTS; do
+                    if test $dir = Smi; then
+                      coin_skip=yes
+                    fi
+                  done
+                fi
+                if test $coin_skip = yes; then
+                  echo "$as_me:$LINENO: result: skipping" >&5
+echo "${ECHO_T}skipping" >&6
+                elif test -r $srcdir/Smi/configure; then
+                  coin_subdirs="$coin_subdirs Smi"
+                  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+
+subdirs="$subdirs Smi"
 
                 else
                   echo "$as_me:$LINENO: result: no" >&5
@@ -2624,6 +2851,20 @@ if test -z "${HAVE_EXTERNALS_TRUE}" && test -z "${HAVE_EXTERNALS_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"HAVE_EXTERNALS\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"HAVE_EXTERNALS\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${ALWAYS_FALSE_TRUE}" && test -z "${ALWAYS_FALSE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"ALWAYS_FALSE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"ALWAYS_FALSE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${COIN_HAS_BOOST_TRUE}" && test -z "${COIN_HAS_BOOST_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"COIN_HAS_BOOST\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"COIN_HAS_BOOST\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -3179,6 +3420,16 @@ s,@abs_bin_dir@,$abs_bin_dir,;t t
 s,@HAVE_EXTERNALS_TRUE@,$HAVE_EXTERNALS_TRUE,;t t
 s,@HAVE_EXTERNALS_FALSE@,$HAVE_EXTERNALS_FALSE,;t t
 s,@subdirs@,$subdirs,;t t
+s,@BOOSTINCDIR@,$BOOSTINCDIR,;t t
+s,@BOOSTLIB@,$BOOSTLIB,;t t
+s,@ADDLIBS@,$ADDLIBS,;t t
+s,@FADDLIBS@,$FADDLIBS,;t t
+s,@ALWAYS_FALSE_TRUE@,$ALWAYS_FALSE_TRUE,;t t
+s,@ALWAYS_FALSE_FALSE@,$ALWAYS_FALSE_FALSE,;t t
+s,@COIN_HAS_BOOST_TRUE@,$COIN_HAS_BOOST_TRUE,;t t
+s,@COIN_HAS_BOOST_FALSE@,$COIN_HAS_BOOST_FALSE,;t t
+s,@GTESTINCDIR@,$GTESTINCDIR,;t t
+s,@GTESTLIB@,$GTESTLIB,;t t
 s,@COIN_SKIP_PROJECTS@,$COIN_SKIP_PROJECTS,;t t
 s,@LN_S@,$LN_S,;t t
 s,@LIBEXT@,$LIBEXT,;t t
@@ -3351,11 +3602,6 @@ esac
   *) ac_INSTALL=$ac_top_builddir$INSTALL ;;
   esac
 
-  if test x"$ac_file" != x-; then
-    { echo "$as_me:$LINENO: creating $ac_file" >&5
-echo "$as_me: creating $ac_file" >&6;}
-    rm -f "$ac_file"
-  fi
   # Let's still pretend it is `configure' which instantiates (i.e., don't
   # use $as_me), people would be surprised to read:
   #    /* config.h.  Generated by config.status.  */
@@ -3394,6 +3640,12 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
 	 fi;;
       esac
     done` || { (exit 1); exit 1; }
+
+  if test x"$ac_file" != x-; then
+    { echo "$as_me:$LINENO: creating $ac_file" >&5
+echo "$as_me: creating $ac_file" >&6;}
+    rm -f "$ac_file"
+  fi
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF
   sed "$ac_vpsub
@@ -3626,7 +3878,7 @@ echo "$as_me: error: $ac_sub_configure failed for $ac_dir" >&2;}
    { (exit 1); exit 1; }; }
     fi
 
-    cd $ac_popdir
+    cd "$ac_popdir"
   done
 fi
 
