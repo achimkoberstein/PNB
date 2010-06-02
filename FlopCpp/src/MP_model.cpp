@@ -11,6 +11,7 @@ using std::endl;
 #include <map>
 #include <queue>
 #include <ctime>
+#include <iterator>
 
 #include "boost/shared_ptr.hpp"
 #include <boost/random.hpp>
@@ -887,6 +888,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         }
     }
     if (scenarios && independent){
+        std::cout << "ScenarioRandomVariables and normal RandomVariables where specified. We do not know how to handle this." << std::endl;
         throw invalid_argument_exception(); //User has to specify what he wants, we can not guess
     }
     if (scenarios && !independent){ //In case of scenarios, we return as we have nothing to do here. But: We assure that probabilities are set in a correct way, if not already done by the user.
@@ -897,8 +899,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         return;
     }
 
+    // Set sample size common to all random variables.
     int sampleSize = this->defaultSampleSize;
-
     typedef std::set<RandomVariable*>::iterator rvIterator;
 
     std::vector<int> randVarsPerStage(stage.size(),0);
@@ -909,40 +911,45 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
-        std::vector< RandomVariable::sampleVector::iterator > iteratorVector; 
+        
         assert(!rv[i].empty()); //Assume we have random variables in every stage.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
             sampledValuesOfVars.push_back((*it)->getSampledValuesWithProb());
-            iteratorVector.push_back(sampledValuesOfVars.back().begin());
         }
         if (sampleOnly) //In case of sample only, we do not want to combine all against all.
             continue;
-        //Ensure we have at least two elements
+        std::vector< RandomVariable::sampleVector::iterator > iteratorVector(randVarsPerStage[i]+1); //We need one more as we add an iterator to an empty map later on.
+        //Ensure we have at least two random variables, otherwise a combine all against all does not makes sense..
         sampledValuesOfVars.push_back(std::map<double,double>());
-        iteratorVector.push_back(sampledValuesOfVars.back().begin());
 
-        //Initialize iterators
-        RandomVariable::sampleVector::iterator curIt = iteratorVector[0];
-        RandomVariable::sampleVector::iterator nextIt = iteratorVector[1];
+        // Now we prepare the iterator vector. We do it here as otherwise we ould invalidate the previous iterators
+	std::cout << randVarsPerStage[i] << std::endl;
+        for (int j = 0; j < randVarsPerStage[i]+1; j++){
+            iteratorVector[j] = sampledValuesOfVars[j].begin();
+        }
+        assert(iteratorVector.size() == sampledValuesOfVars.size());
 
         int nextVar = 1;
         int curElements = randVarsPerStage[i];
         int scenCounter = 0;
-        // Push back empty vector to scenariosPerStage[i]
+        // Push back empty vector to scenariosPerStage[i] to store scenario probabilities in there
         scenariosPerStage[i] = std::vector< std::vector<double> >();
+        
+        // Combine all-against-all for this stage. Include probabilities of previous stages
+        // At first we go the first value where the current value and the next sampled Value differ
         while (true){
             while ( iteratorVector[nextVar] != sampledValuesOfVars[nextVar].end() ){ // As long as we have not reached the empty map, everything is fine: Go to the next map.
-                nextVar++;
+                ++nextVar;
             }
             // we reached the end..
 
-            nextVar = nextVar-1; //We incremented nextVar one too much, so go to correct value.
+            --nextVar; //We incremented nextVar one too much, so go to correct value.
             //Do computational stuff only at the end
             if (nextVar == curElements-1){
 
-                // Computation start
+                // Computation start: Compute probability of the given scenario and store scenario values
                 scenariosPerStage[i].push_back(std::vector<double>(randVarsPerStage[i]+1));
                 //Insert values
                 double prob = 1.0;
@@ -957,7 +964,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
 
                 // Increment iterator
                 ++iteratorVector[nextVar];
-
             }
             else { //we reached the end of the iteration but we are not at the last map => Increment previous map and restart current map. Check in the next round with previous map.
                 if (nextVar == -1)
@@ -965,7 +971,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
                 // iteratorVector[nextVar] == sampledValuesOfVars[nextVar].end() holds 
                 iteratorVector[nextVar+1] = sampledValuesOfVars[nextVar+1].begin();
                 ++iteratorVector[nextVar];
-
             }
         } // end while
     } //end for
