@@ -28,9 +28,7 @@ int main() {
     capa.SampleSize(numScen);
     //MP_scenario_set scen(numScen);
 
-    // ----------
-    // Mengen
-    // ----------
+#pragma region sets
 
     // Produktionslinien
     enum {L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, numL};
@@ -604,9 +602,9 @@ int main() {
     SM.insert(S1, M2);
     SM.insert(S1, M1);
 
-    // ----------
-    // Parameter
-    // ----------
+#pragma endregion sets
+
+#pragma region params
 
     // Flexibilitätskosten
     MP_data cFL(L, K);
@@ -6636,10 +6634,10 @@ int main() {
     wFLS(K1, L2) = 1;
     wFLS(K1, L1) = 1;
 
+#pragma endregion params
 
-    // ----------
-    // Stochastischer Teil
-    // ----------
+
+#pragma region stochasticDemand
 
     // Bedarfe
     RandomVariable* demand[numStage-1][numM][numK] =
@@ -6679,9 +6677,10 @@ int main() {
     };
     MP_random_data d(&demand[0][0][0],T,M,K);
 
-        // ----------
-    // Variablen
-    // ----------
+#pragma endregion sochasticDemand
+
+
+#pragma region variables
 
     MP_variable xLS(T, LS, K); // Fluss (Produktion)
     MP_variable xSM(T, SM, K); // Fluss (Markt)
@@ -6694,9 +6693,10 @@ int main() {
     yKA.binary();
     yFL.binary();
 
-    // ----------
-    // Restriktionen
-    // ----------
+#pragma endregion variables
+
+
+#pragma region restrictions
 
     MP_constraint 
         con33(L),
@@ -6731,11 +6731,10 @@ int main() {
     //
     con42(T+1,L,S) = sum(K, r(K,L) * xLS(T+1,LS(L,S),K)) <= m(S) * yKA(L,S);
     
+#pragma endregion restrictions
 
 
-    // ----------
-    // Optimierung
-    // ----------
+#pragma region optimization
 
     capa.setObjective(
         sum( L*K, cFL(L, K) * yFL(L, K) )
@@ -6750,6 +6749,8 @@ int main() {
     //capa.solve(MP_model::MINIMIZE);
     OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
     benders.initialSolve();
+
+#pragma endregion optimization
 
     cout << "\n Finished.";
 
