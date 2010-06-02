@@ -1045,8 +1045,6 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     //Check for consistency
     if ( !compareDouble(sum,1.0)) //double equal 
         throw invalid_argument_exception(); //Probabilities do not sum up to one
-
-
 }
 
 void MP_model::detach() {
