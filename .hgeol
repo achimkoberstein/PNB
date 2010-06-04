@@ -5,9 +5,9 @@
 **.hpp = native
 **.c = native
 **.h = native
-Makefile = LF
-Makefile** = LF
-configure** = LF
+**Makefile = LF
+**Makefile.* = LF
+**configure* = LF
 **.pdf = BIN
 **.jpg = BIN
 
