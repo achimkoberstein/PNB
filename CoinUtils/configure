@@ -34323,7 +34323,7 @@ fi
 
 # Here list all the files that configure should create (except for the
 # configuration header file)
-ac_config_files="$ac_config_files Makefile src/Makefile test/Makefile coinutils_addlibs.txt"
+ac_config_files="$ac_config_files Makefile src/Makefile test/Makefile coinutils_addlibs.txt"
 
 
 # Here put the location and name of the configuration header file
@@ -35091,9 +35091,9 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-    "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
+    "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "coinutils_addlibs.txt") CONFIG_FILES="$CONFIG_FILES coinutils_addlibs.txt" ;;
     "inc/config_coinutils.h") CONFIG_HEADERS="$CONFIG_HEADERS inc/config_coinutils.h" ;;
 
