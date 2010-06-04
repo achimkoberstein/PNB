@@ -156,11 +156,11 @@ MyTest_OBJECTS = $(am_MyTest_OBJECTS)
 @COIN_HAS_MSK_TRUE@	$(OSIOBJDIR)/src/OsiMsk/libOsiMsk.la
 MyTest_DEPENDENCIES = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
 	$(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
-	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
-	$(am__DEPENDENCIES_7) $(am__DEPENDENCIES_8) \
-	$(OSIOBJDIR)/src/libOsi.la \
+	$(GLOGLIB)/libglog.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
+	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5) \
+	$(am__DEPENDENCIES_6) $(am__DEPENDENCIES_7) \
+	$(am__DEPENDENCIES_8) $(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 am_unitTest_OBJECTS = unitTest.$(OBJEXT)
 unitTest_OBJECTS = $(am_unitTest_OBJECTS)
@@ -174,13 +174,13 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_12 =  \
 @COIN_HAS_XPR_TRUE@	$(OSIOBJDIR)/src/OsiXpr/libOsiXpr.la
 unitTest_DEPENDENCIES = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
-	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
-	$(am__DEPENDENCIES_7) $(am__DEPENDENCIES_8) \
-	$(am__DEPENDENCIES_9) $(am__DEPENDENCIES_10) \
-	$(am__DEPENDENCIES_11) $(am__DEPENDENCIES_12) \
-	$(OSIOBJDIR)/src/libOsi.la \
+	$(GLOGLIB)/libglog.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
+	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5) \
+	$(am__DEPENDENCIES_6) $(am__DEPENDENCIES_7) \
+	$(am__DEPENDENCIES_8) $(am__DEPENDENCIES_9) \
+	$(am__DEPENDENCIES_10) $(am__DEPENDENCIES_11) \
+	$(am__DEPENDENCIES_12) $(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
@@ -251,6 +251,8 @@ COIN_HAS_FLOPCPP_FALSE = @COIN_HAS_FLOPCPP_FALSE@
 COIN_HAS_FLOPCPP_TRUE = @COIN_HAS_FLOPCPP_TRUE@
 COIN_HAS_FMP_FALSE = @COIN_HAS_FMP_FALSE@
 COIN_HAS_FMP_TRUE = @COIN_HAS_FMP_TRUE@
+COIN_HAS_GLOG_FALSE = @COIN_HAS_GLOG_FALSE@
+COIN_HAS_GLOG_TRUE = @COIN_HAS_GLOG_TRUE@
 COIN_HAS_GLPK_FALSE = @COIN_HAS_GLPK_FALSE@
 COIN_HAS_GLPK_TRUE = @COIN_HAS_GLPK_TRUE@
 COIN_HAS_GTEST_FALSE = @COIN_HAS_GTEST_FALSE@
@@ -301,6 +303,8 @@ FLOPCPPOBJDIR = @FLOPCPPOBJDIR@
 FLOPCPPSRCDIR = @FLOPCPPSRCDIR@
 FMPINCDIR = @FMPINCDIR@
 FMPLIB = @FMPLIB@
+GLOGINCDIR = @GLOGINCDIR@
+GLOGLIB = @GLOGLIB@
 GLPKINCDIR = @GLPKINCDIR@
 GLPKLIB = @GLPKLIB@
 GLPKOBJDIR = @GLPKOBJDIR@
@@ -434,17 +438,18 @@ MyTest_SOURCES = MyTests.cpp
 
 # Finally the Coin library (many of the above need it)
 unitTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
-	$(am__append_2) $(am__append_6) $(am__append_9) \
-	$(am__append_13) $(am__append_16) $(am__append_20) \
-	$(am__append_23) $(am__append_26) $(am__append_29) \
-	$(am__append_31) $(am__append_33) $(am__append_36) \
-	$(OSIOBJDIR)/src/libOsi.la \
+	$(GLOGLIB)/libglog.la $(am__append_2) $(am__append_6) \
+	$(am__append_9) $(am__append_13) $(am__append_16) \
+	$(am__append_20) $(am__append_23) $(am__append_26) \
+	$(am__append_29) $(am__append_31) $(am__append_33) \
+	$(am__append_36) $(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
 	$(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la \
-	$(am__append_3) $(am__append_7) $(am__append_10) \
-	$(am__append_14) $(am__append_17) $(am__append_21) \
-	$(am__append_24) $(am__append_27) $(OSIOBJDIR)/src/libOsi.la \
+	$(GLOGLIB)/libglog.la $(am__append_3) $(am__append_7) \
+	$(am__append_10) $(am__append_14) $(am__append_17) \
+	$(am__append_21) $(am__append_24) $(am__append_27) \
+	$(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 # Add pthread library for googletest
 MyTest_LDFLAGS = -lpthread
@@ -456,11 +461,11 @@ AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
 	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc` -I`$(CYGPATH_W) \
 	$(SMISRCDIR)/src` -I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(BOOSTINCDIR)` -I`$(CYGPATH_W) \
-	$(GTESTINCDIR)` -I`$(CYGPATH_W) $(srcdir)/../src` \
-	$(am__append_1) $(am__append_5) $(am__append_12) \
-	$(am__append_15) $(am__append_19) $(am__append_22) \
-	$(am__append_25) $(am__append_28) $(am__append_30) \
-	$(am__append_32) $(am__append_35)
+	$(GTESTINCDIR)` -I`$(CYGPATH_W) $(GLOGINCDIR)` -I`$(CYGPATH_W) \
+	$(srcdir)/../src` $(am__append_1) $(am__append_5) \
+	$(am__append_12) $(am__append_15) $(am__append_19) \
+	$(am__append_22) $(am__append_25) $(am__append_28) \
+	$(am__append_30) $(am__append_32) $(am__append_35)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

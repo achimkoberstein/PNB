@@ -57,6 +57,11 @@ AC_SUBST(GTESTLIB)
 GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
 GTESTLIB=`pwd`/ThirdParty/gtest/lib
 AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
+AC_SUBST(GLOGINCDIR)
+AC_SUBST(GLOGLIB)
+GLOGINCDIR=`cd $srcdir/ThirdParty/glog/src; pwd`
+GLOGLIB=`pwd`/ThirdParty/glog
+AC_COIN_THIRDPARTY_SUBDIRS([glog],[ThirdParty/glog],[src/googletest.h])
 
 #############################################################################
 #                  Check which subprojects are there                        #

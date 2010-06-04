@@ -123,7 +123,6 @@ AC_SUBST(BOOSTINCDIR)
 AC_SUBST(BOOSTLIB)
 BOOSTINCDIR=`cd $srcdir/../ThirdParty/boost; pwd`
 BOOSTLIB=`cd $srcdir/../ThirdParty/boost; pwd`
-
 AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
 
 # gtest library. Should be already compiled at this stage. Where do we get the environment variables?
@@ -131,8 +130,13 @@ AC_SUBST(GTESTINCDIR)
 AC_SUBST(GTESTLIB)
 GTESTINCDIR=`cd $srcdir/../ThirdParty/gtest/include; pwd`
 GTESTLIB=`pwd`/../ThirdParty/gtest/lib
-
 AC_COIN_HAS_USER_LIBRARY([gtest],[GTEST],[gtest/gtest.h])
+
+AC_SUBST(GLOGINCDIR)
+AC_SUBST(GLOGLIB)
+GLOGINCDIR=`cd $srcdir/../ThirdParty/glog/include; pwd`
+GLOGLIB=`cd $srcdir/../ThirdParty/glog/lib; pwd`
+AC_COIN_HAS_USER_LIBRARY([glog],[GLOG],[glog/logging.h])
 
 
 ##############################################################################
