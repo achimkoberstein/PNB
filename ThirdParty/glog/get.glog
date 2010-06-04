@@ -21,3 +21,12 @@ mv glog-0.3.0/* ./
 echo "Cleaning up"
 rmdir glog-0.3.0
 rm glog-0.3.0.tar.gz
+
+echo "Configuring glog"
+./configure prefix=`pwd`
+
+echo "Building glog"
+make
+
+echo "Installing glog in current directory"
+make install

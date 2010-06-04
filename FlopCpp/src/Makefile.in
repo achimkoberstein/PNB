@@ -63,7 +63,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libFlopCpp_la_LIBADD =
+libFlopCpp_la_DEPENDENCIES = $(GLOGLIB)/libglog.la
 am_libFlopCpp_la_OBJECTS = MP_boolean.lo MP_constant.lo \
 	MP_constraint.lo MP_data.lo MP_domain.lo MP_expression.lo \
 	MP_index.lo MP_model.lo MP_set.lo MP_utilities.lo \
@@ -149,6 +149,8 @@ COIN_HAS_FLOPCPP_FALSE = @COIN_HAS_FLOPCPP_FALSE@
 COIN_HAS_FLOPCPP_TRUE = @COIN_HAS_FLOPCPP_TRUE@
 COIN_HAS_FMP_FALSE = @COIN_HAS_FMP_FALSE@
 COIN_HAS_FMP_TRUE = @COIN_HAS_FMP_TRUE@
+COIN_HAS_GLOG_FALSE = @COIN_HAS_GLOG_FALSE@
+COIN_HAS_GLOG_TRUE = @COIN_HAS_GLOG_TRUE@
 COIN_HAS_GLPK_FALSE = @COIN_HAS_GLPK_FALSE@
 COIN_HAS_GLPK_TRUE = @COIN_HAS_GLPK_TRUE@
 COIN_HAS_GTEST_FALSE = @COIN_HAS_GTEST_FALSE@
@@ -199,6 +201,8 @@ FLOPCPPOBJDIR = @FLOPCPPOBJDIR@
 FLOPCPPSRCDIR = @FLOPCPPSRCDIR@
 FMPINCDIR = @FMPINCDIR@
 FMPLIB = @FMPLIB@
+GLOGINCDIR = @GLOGINCDIR@
+GLOGLIB = @GLOGLIB@
 GLPKINCDIR = @GLPKINCDIR@
 GLPKLIB = @GLPKLIB@
 GLPKOBJDIR = @GLPKOBJDIR@
@@ -347,6 +351,8 @@ libFlopCpp_la_SOURCES = \
 	MP_random_data.cpp MP_random_data.hpp \
 	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp
 
+libFlopCpp_la_LIBADD = $(GLOGLIB)/libglog.la 
+# this is not necessary: libFlopCpp_la_LDFLAGS = -lglog
 
 # This is for libtool (on Windows)
 #libFlopCpp_la_LDFLAGS = $(LT_LDFLAGS)
@@ -511,8 +517,8 @@ AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
 	$(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) $(OSISRCDIR)/src` \
 	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc` -I`$(CYGPATH_W) \
 	$(SMISRCDIR)/src` -I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(BOOSTINCDIR)` -DCOIN_NO_CLP_MESSAGE \
-	-DUSE_FLOPCPPCONFIG
+	-I`$(CYGPATH_W) $(BOOSTINCDIR)` -I`$(CYGPATH_W) $(GLOGINCDIR)` \
+	-DCOIN_NO_CLP_MESSAGE -DUSE_FLOPCPPCONFIG
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

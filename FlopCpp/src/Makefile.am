@@ -34,6 +34,9 @@ libFlopCpp_la_SOURCES = \
 	MP_random_data.cpp MP_random_data.hpp \
 	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp
 
+libFlopCpp_la_LIBADD = $(GLOGLIB)/libglog.la 
+# this is not necessary: libFlopCpp_la_LDFLAGS = -lglog
+
 # This is for libtool (on Windows)
 #libFlopCpp_la_LDFLAGS = $(LT_LDFLAGS)
 
@@ -199,7 +202,8 @@ AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(SMISRCDIR)/src` \
 	-I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(BOOSTINCDIR)`
+	-I`$(CYGPATH_W) $(BOOSTINCDIR)` \
+	-I`$(CYGPATH_W) $(GLOGINCDIR)`
 
 # List additional defines
 AM_CPPFLAGS += -DCOIN_NO_CLP_MESSAGE -DUSE_FLOPCPPCONFIG

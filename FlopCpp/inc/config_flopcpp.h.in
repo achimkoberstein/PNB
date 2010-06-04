@@ -37,6 +37,9 @@
 /* Define to 1 if the FortMP package is available */
 #undef COIN_HAS_FMP
 
+/* Define to 1 if the glog package is available */
+#undef COIN_HAS_GLOG
+
 /* Define to 1 if Glpk package is available */
 #undef COIN_HAS_GLPK
 
