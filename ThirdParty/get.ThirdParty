@@ -4,3 +4,5 @@ cd boost
 /bin/sh get.boost
 cd ../gtest
 /bin/sh get.gtest
+cd ../glog
+/bin/sh get.glog
