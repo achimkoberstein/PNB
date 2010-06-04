@@ -6762,6 +6762,12 @@ int main() {
     z.display("z (Fehlmenge)");
     v.display("v");
 
+    /*for (int i = 0; i < capa->getNumCols(); i++) {
+        if (capa->getColSolution()[i] > 0) {
+            cout << "Column " << i << ": " << capa->getColSolution()[i] << endl;
+        }
+    }*/
+
     cout << "\n Finished.";
 
     return 0;

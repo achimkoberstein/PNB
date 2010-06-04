@@ -156,9 +156,10 @@ public:
 	OsiSolverInterface * loadOsiSolverData();
 	OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
-    std::vector< std::pair<double,double> > solveWS(double objSense = 1); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
-    double solveEEV(double objSense = 1 );
-    double getWSValue(double objSense = 1);
+    std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
+    double solveEV(OsiSolverInterface *osiSolver, double objSense);
+    double solveEEV(OsiSolverInterface *osiSolver, double objSense);
+    double getWSValue(OsiSolverInterface *osiSolver, double objSense);
 
     //Let SmiScnModel own core data
     void Core(SmiCoreData * val) { core_ = val; }
@@ -205,7 +206,7 @@ public:
 
 	// constructor
 	SmiScnModel():
-		handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
+		handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),maxNelsPerScenInStage(NULL),
 		drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
         dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
 		solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0)
@@ -216,6 +217,8 @@ public:
 	//Christian: this method adds data of current node to big det. eq. problem
 	void addNode(SmiScnNode *node, bool notDetEq = false);
 	void deleteNode(SmiScnNode *tnode);
+	
+	void addNode(SmiNodeData *node);
 private:
 	CoinMessageHandler *handler_;
 	SmiMessage *messages_;
@@ -258,6 +261,7 @@ private:
 	int binaryLen;
 
     vector<int> intIndices;
+    int* maxNelsPerScenInStage;
 };
 
 class SmiScnNode

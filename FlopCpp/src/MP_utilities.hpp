@@ -14,6 +14,8 @@ using std::string;
 using std::vector;
 
 #include <boost/exception/all.hpp>
+#include <glog/logging.h>
+
 
 namespace flopc {
 

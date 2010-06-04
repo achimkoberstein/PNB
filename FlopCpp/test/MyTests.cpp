@@ -3,12 +3,11 @@
 #include <ctime>
 #include <limits>
 
+#include <glog/logging.h>
+
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-
-
 #include "CoinFloatEqual.hpp"
-
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
@@ -256,21 +255,21 @@ namespace flopc {
 
         investmentModel.setObjective( valueFunction );
         investmentModel.attach(investmentModel.Solver);
-        this->testCorrectStageAssignment(investmentModel);
-        investmentModel.solve(MP_model::MAXIMIZE);
+        //this->testCorrectStageAssignment(investmentModel);
+        //investmentModel.solve(MP_model::MAXIMIZE);
 
-        for (int i = 0; i < scen.size();i++){
-            for (int j = 0; j < T.size(); j++){
-                cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
-            }
-        }
+        //for (int i = 0; i < scen.size();i++){
+        //    for (int j = 0; j < T.size(); j++){
+        //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
+        //    }
+        //}
 
-        //Compare solution values.
-        EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
-        EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
-        std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(MP_model::MAXIMIZE);
+        ////Compare solution values.
+        //EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
+        //EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+        std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(numScen,wsResults.size());
-        double result = investmentModel.smiModel->getWSValue(MP_model::MAXIMIZE);
+        double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
         // Compute result by hand
         double tempResult = 0;
         for (int i = 0; i < numScen; i++) {
@@ -438,12 +437,13 @@ namespace flopc {
             );
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
-        dacota.solve(MP_model::MAXIMIZE);
-        x.display("x");
-        y.display("y");
+        double eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
+        cout << "EEV: " << eev;
+        //dacota.solve(MP_model::MAXIMIZE);
+        //EXPECT_DOUBLE_EQ(1730.0,dacota->getObjValue());
+        //EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
+        //double result = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
         cout << "Finished";
-        EXPECT_DOUBLE_EQ(1730.0,dacota->getObjValue());
-        EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
     }
 
     // Test complex combinations of random variables in constraints
@@ -1091,26 +1091,19 @@ namespace flopc {
 } //end namespace
 
 //TODO: Write Tests for right-hand-side with RV and constant term
-int main(int argc, char **argv) {
-    // Get current flag
-    //int tmpFlag = _CrtSetDbgFlag( _CRTDBG_REPORT_FLAG );
-
-    //// Turn on leak-checking bit
-    ////tmpFlag |= _CRTDBG_LEAK_CHECK_DF;
-    ////tmpFlag |= _CRTDBG_CHECK_ALWAYS_DF;
-
-    //// Turn off CRT block checking bit
-    ////tmpFlag &= ~_CRTDBG_CHECK_CRT_DF;
-
-    //// Set flag to the new value
-    //_CrtSetDbgFlag( tmpFlag );
-
+int main(int argc, char *argv[]) {
     //VLDDisable();
     ::testing::InitGoogleTest(&argc, argv);
     //VLDEnable();
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
     //_CrtMemState memstate;
     //_CrtMemCheckpoint(&memstate);
+
+    google::InitGoogleLogging(argv[0]);
+#ifndef _MSC_VER
+    google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
+#endif
+    google::SetStderrLogging(0);
     int result = RUN_ALL_TESTS();
     //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();
