@@ -1669,8 +1669,8 @@ Optional Packages:
                           compilation, or "no" for disabling AMPL)
   --with-cbc-generic      specify whether to build cbc-generic (default: no)
   --with-cbc-generic-solver
-                          specify default solver for cbc-generic in lower
-                          case letters (if not given, clp is assumed)
+                          specify default solver for cbc-generic in lower case
+                          letters (if not given, clp is assumed)
 
 Some influential environment variables:
   CDEFS       Additional -D flags to be used when compiling C code.
@@ -23917,7 +23917,7 @@ fi
 
 # Here list all the files that configure should create (except for the
 # configuration header file)
-ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile test/Makefile cbc_addlibs.txt"
+ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile test/Makefile cbc_addlibs.txt"
 
 
 # Here put the location and name of the configuration header file
@@ -24727,10 +24727,10 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-    "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
-    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
+    "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
+    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "cbc_addlibs.txt") CONFIG_FILES="$CONFIG_FILES cbc_addlibs.txt" ;;
     "inc/config_cbc.h") CONFIG_HEADERS="$CONFIG_HEADERS inc/config_cbc.h" ;;
 

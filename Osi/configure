@@ -24081,7 +24081,7 @@ fi
 
 # Here list all the files that configure should create (except for the
 # configuration header file)
-ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile src/OsiCbc/Makefile src/OsiClp/Makefile src/OsiCpx/Makefile src/OsiDylp/Makefile src/OsiFmp/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiOsl/Makefile src/OsiSpx/Makefile src/OsiSym/Makefile src/OsiVol/Makefile src/OsiXpr/Makefile test/Makefile osi_addlibs.txt"
+ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile src/OsiCbc/Makefile src/OsiClp/Makefile src/OsiCpx/Makefile src/OsiDylp/Makefile src/OsiFmp/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiOsl/Makefile src/OsiSpx/Makefile src/OsiSym/Makefile src/OsiVol/Makefile src/OsiXpr/Makefile test/Makefile osi_addlibs.txt"
 
 
 # Here put the location and name of the configuration header file
@@ -24954,22 +24954,22 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-    "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
-    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "src/OsiCbc/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiCbc/Makefile" ;;
-    "src/OsiClp/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiClp/Makefile" ;;
-    "src/OsiCpx/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiCpx/Makefile" ;;
-    "src/OsiDylp/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiDylp/Makefile" ;;
-    "src/OsiFmp/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiFmp/Makefile" ;;
-    "src/OsiGlpk/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiGlpk/Makefile" ;;
-    "src/OsiMsk/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiMsk/Makefile" ;;
-    "src/OsiOsl/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiOsl/Makefile" ;;
-    "src/OsiSpx/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiSpx/Makefile" ;;
-    "src/OsiSym/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiSym/Makefile" ;;
-    "src/OsiVol/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiVol/Makefile" ;;
-    "src/OsiXpr/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiXpr/Makefile" ;;
-    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
+    "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+    "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
+    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "src/OsiCbc/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiCbc/Makefile" ;;
+    "src/OsiClp/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiClp/Makefile" ;;
+    "src/OsiCpx/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiCpx/Makefile" ;;
+    "src/OsiDylp/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiDylp/Makefile" ;;
+    "src/OsiFmp/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiFmp/Makefile" ;;
+    "src/OsiGlpk/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiGlpk/Makefile" ;;
+    "src/OsiMsk/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiMsk/Makefile" ;;
+    "src/OsiOsl/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiOsl/Makefile" ;;
+    "src/OsiSpx/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiSpx/Makefile" ;;
+    "src/OsiSym/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiSym/Makefile" ;;
+    "src/OsiVol/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiVol/Makefile" ;;
+    "src/OsiXpr/Makefile") CONFIG_FILES="$CONFIG_FILES src/OsiXpr/Makefile" ;;
+    "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "osi_addlibs.txt") CONFIG_FILES="$CONFIG_FILES osi_addlibs.txt" ;;
     "inc/config_osi.h") CONFIG_HEADERS="$CONFIG_HEADERS inc/config_osi.h" ;;
 
