@@ -21,3 +21,4 @@ mv gtest-1.5.0/* ./
 echo "Cleaning up"
 rmdir gtest-1.5.0
 rm gtest-1.5.0.tar.gz
+
