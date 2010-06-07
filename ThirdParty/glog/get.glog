@@ -30,3 +30,6 @@ make
 
 echo "Installing glog in current directory"
 make install
+
+echo "Cleaning up to allow configure from source directory"
+make distclean
