@@ -20,7 +20,7 @@ namespace flopc {
         const MP_index_exp& i3,
         const MP_index_exp& i4,
         const MP_index_exp& i5) :
-    V(v),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5) { 
+    V(v),offset(0),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5) { 
         assert(v != 0);
         offset = v->offset; 
     }
@@ -384,7 +384,7 @@ void MP::VariableBoundsFunctor::operator()() const {
 
 //This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
-    assert(M==-1 || M==1);
+  assert(M==-1 or M==1);
     double sideOfConstraint = M; //LHS (=1) or RHS (=-1)?
     int stage = 0;
     std::vector<double> scenarioValues;

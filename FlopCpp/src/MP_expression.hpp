@@ -196,6 +196,10 @@ namespace flopc {
         friend class MP_variable;
     public:
 
+    //Disable copy constructor and assignment operator
+    VariableRef(const VariableRef&);
+    VariableRef& operator=(const VariableRef&);
+
         virtual ~VariableRef();
 
         virtual int getColumn() const;

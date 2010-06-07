@@ -23,11 +23,15 @@ namespace flopc {
     @ingroup INTERNAL_USE
     @note FOR INTERNAL USE: This is not normally used directly by the calling code.
     */
-    class MP_set_base : public MP_index , public Named {
+  class MP_set_base : public MP_index , private Named {
     public:
         MP_set_base() : Cyclic(false) {}
 
         virtual ~MP_set_base() {} //TODO: This destructor needed? Base Class Destructor is virtual, so i suppose no..?
+
+        using Named::setName;
+        using Named::getName;
+
 
         virtual int size() const = 0;
         virtual operator MP_domain() const = 0;
@@ -87,9 +91,7 @@ namespace flopc {
         into the set.
         @todo is the internal use?
         */
-
         //virtual ~MP_set(); //TODO: Is this destructor needed? If public, clients complain (maybe because baseclass destructor is protected?
-
         virtual MP_domain operator()(const MP_index_exp& i) const {
             return i->getDomain(const_cast<MP_set*>(this));
         }
@@ -261,7 +263,6 @@ namespace flopc {
         void insert(int i1, int i2=0, int i3=0, int i4=0, int i5=0) {
             insert(makeVector<nbr>(i1, i2, i3, i4, i5));
         }
-
         const InsertFunctor<nbr>& insert(MP_index_exp i1, 
             MP_index_exp i2=MP_index_exp::getEmpty(), 
             MP_index_exp i3=MP_index_exp::getEmpty(), 
@@ -272,7 +273,6 @@ namespace flopc {
         virtual int size() const {
             return elements.size();
         }
-
 
     private:
         vector<const MP_set*> S; 
