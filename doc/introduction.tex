@@ -1,0 +1,210 @@
+\documentclass[a4paper,10pt,pdftex]{scrartcl}
+\usepackage[utf8]{inputenc} % utf8 eingabe
+\usepackage[T1]{fontenc} %T1 schriften
+\usepackage[english]{babel} % deutsche silbentrennung
+%\usepackage{scrhack} %ändert andere pakete, die veraltete befehle verwenden..
+\usepackage{fixltx2e}
+\usepackage{% 
+  ellipsis, % Korrigiert den Weißraum um Auslassungspunkte
+%  ragged2e, % Ermöglicht Flattersatz mit Silbentrennung
+}
+\usepackage{amsmath,amsfonts}    % Mathematik
+\usepackage{varioref}   % vref für Referenzen mit Seitenangabe
+\usepackage{listings}
+\lstset{ %
+language=C++,     % choose the language of the code
+basicstyle=\footnotesize,       % the size of the fonts that are used for the code
+numbers=left,   % where to put the line-numbers
+numberstyle=\footnotesize,      % the size of the fonts that are used for the line-numbers
+stepnumber=1,   % the step between two line-numbers. If it's 1 each line will be numbered
+%numbersep=5pt,  % how far the line-numbers are from the code
+backgroundcolor=\color{white},  % choose the background color. You must add \usepackage{color}
+showspaces=false,       % show spaces adding particular underscores
+showstringspaces=false, % underline spaces within strings
+showtabs=false, % show tabs within strings adding particular underscores
+frame=single,  % adds a frame around the code
+tabsize=2,    % sets default tabsize to 2 spaces
+captionpos=b,   % sets the caption-position to bottom
+breaklines=true,% sets automatic line breaking
+breakatwhitespace=false,% sets if automatic breaks should only happen at whitespace
+escapeinside={\%*}{*)}  % if you want to add a comment within your code
+}
+
+\usepackage{eurosym}
+\usepackage{graphicx}  % Einbinden von Graphiken
+\usepackage{rotating} % Bilder im Querformat einbinden
+\usepackage{bm} %bold font für griechische buchstabe
+\usepackage[nolist]{acronym}    % akronyme
+\usepackage[numbers]{natbib} %bibliography
+\usepackage{booktabs} % more possibilites for tabulars..
+%\usepackage{tabularx}
+%\usepackage{xtab}
+\usepackage{ltablex}  %tables that can go over one page.. 
+\usepackage{subfigure}
+%\usepackage{listings} %quelltext
+\usepackage[tracking=false]{microtype}
+%\DeclareMicrotypeSet*[tracking]{my}% 
+%  { font = */*/*/sc/* }% 
+%\SetTracking{ encoding = *, shape = sc }{ 45 }% Hier wird festgelegt,
+    % dass alle Passagen in Kapitälchen automatisch leicht
+    % gesperrt werden. Das Paket soul, das ich früher empfohlen
+    % habe ist damit für diese Zwecke nicht mehr nötig.
+
+% \usepackage{libertine} % use Linux Libertine fonts..
+
+% always load last
+\usepackage[unicode,breaklinks,colorlinks=true,linkcolor=black,citecolor=black,filecolor=black,urlcolor=black]{hyperref}
+% use \texorpdfstring{TeXString}{PDFString}
+
+
+% koma-script options for captions, siehe koma-script doku
+\setkomafont{captionlabel}{\sffamily\bfseries}
+\setcapindent{1em}
+%\setkomafont{pagehead}{\normalcolor\small}
+\author{Christian Wolf}
+\title{Introduction to stochastic modelling with FlopC++}
+\begin{document}
+ \section{Introduction}
+  FlopC++ is a modelling language for linear and mixed-integer programming written in the general programming language C++. With the stochastic extensions to FlopC++ it is also possible to model stochastic programs with recourse. It supports independent random variable based and scenario based stochastic programs. The website can be found at \url{https://projects.coin-or.org/FlopC++}. Information about the use of FlopC++ to model linear and mixed-integer programs is available at the website. This document is concerned with the use of FlopC++ to model stochastic programs with recourse. Knowledge about the use of FlopC++ is desirable but not necessary. Basic knowledge about stochastic programming is required.
+
+ \section{Installation}
+ You have several options to install FlopC++.
+ \subsection{Linux}
+Under Linux just follow these steps to compile FlopC++ to obtain a library.
+\begin{enumerate}
+\item svn co https://projects.coin-or.org/svn/FlopC++/stable/1.0 coin-FlopCpp 
+\item cd coin-FlopCpp/ThirdParty
+\item ./get.ThirdParty
+\item cd .. 
+\item ./configure 
+\item make 
+\item make test 
+\item make install
+\end{enumerate}
+
+Step 1 issues the subversion command to obtain the source code. Besides FLOPC++, the sources of \href{thttps://projects.coin-or.org/FlopC++/browser/trunk/Externals?format=raw}{these} required Coin projects will also be retrieved. 
+
+Step 3 gets the ThirdParty libraries \href{http://www.boost.org/}{boost}, \href{http://code.google.com/p/googletest/}{googletest} and \href{http://code.google.com/p/google-glog/}{google-glog} from the web and unpacks them.
+
+Step 5 runs a configure script that generates the make file. 
+
+Step 6 builds the libraries of all the required Coin-OR projects, the external libraries and the FLOPC++ library. 
+
+Step 7 builds and runs the FLOPC++ unit test program. 
+
+Step 8 installs libraries, executables and header files in directories coin-FlopCpp/lib, coin-FlopCpp/bin and coin-FlopCpp/include.
+
+ \subsection{Windows}
+If you have Visual Studio 2008 installed, you can use the solution file FlopCpp/MsVisualStudio/v9/FlopCpp.sln to load the solution. Then you can start a new C++ project and set a project dependency on libflopcpp.
+ \subsection{Bleeding Edge}
+You can download the current development version with mercurial at \href{https://dsor-development.upb.de}{https://dsor-development.upb.de}.
+You have to enter the username ``anonymous''. A password is not required.
+
+\subsection{Troubleshooting}
+This section covers some errors that are likely to happen on different architectures.
+
+\paragraph{Linux}
+The compiler stops with an error about long long constants. Solution: Solved. Removed -pedantic-errors switch for FlopC++ project.
+
+make install does not work for googletest. Solution: Remove ThirdParty/gtest from subdirs variable in the Makefile before typing make install.
+
+
+
+\section{An illustrative example}
+An investment problem \cite{Kaut2008} illustrates the use of FlopC++ to model multistage stochastic programs with recourse, that uses scenarios. The program is used to maximize the wealth of an investor after a given number of periods. In each period the investor has to buy assets with his available money. In the next period his investments return some money which must then be reinvested. An initial wealth level and a goal are given up front. An excess of the goal is encouraged in the objective function but a shortage is penalized. In the following all the important statements get explained one by one. 
+
+Line \ref{listing:model} defines a \lstinline|MP_model| with an associated solver, in this case an instance of \href{https://projects.coin-or.org/Clp}{Clp}. Every program should start with an explicit \lstinline|MP_model| so that you can reference it easily later on, instead of relying on the global default model. The parameters for initialWealth and the goal are defined in the lines \ref{listing:initialWealth} to \ref{listing:endInitialWealth}. The number of stages is defined via the so called  \href{http://www.linuxtopia.org/online_books/programming_books/thinking_in_c++/Chapter08_023.html}{enum hack} in line \ref{listing:stage}. 
+The stage set is defined in line \ref{listing:endStage}. The same technique is used to define the scenario set and the set of assets. The array that holds the scenario values for all the eight scenarios and the four stage (three stages actually, as there are never random variables in the first stage) is declared in line \ref{listing:scenarios}. The values for the returns of the investments in the second stage are given in line \ref{listing:stage2asset1} for the first asset and in line \ref{listing:stage2asset2} for the second asset. This is repeated for the third and fourth stage. 
+The array that holds the stochastic values is then given to the random parameter \emph{returns} in line \ref{listing:returns}. The \lstinline|MP_random_data| expects a pointer to a double array, therefore one has to take the adress of the first element of the array with the \& operator. The constraints of the model are declared first in the lines \ref{listing:constraints} to \ref{listing:endConstraints}. 
+All the constraints without the stage set T are pure first stage constraints. The \lstinline|allocationConstr| in line \ref{listing:allocationConstraint} is a constraint that holds at every stage, it is therefore indexed over T. The constraint \lstinline|returnConstr| on the other hand is a constraint that does not hold for the first stage. 
+Therefore it is indexed over T+1, so the first stage is left out. Notice that you have to use the T+1 also as the index on the right side, if you want to index variables with the same stage as the constraint. It makes no sense to adress variables in a constraint with a greater stage than the constraint stage. 
+As you can see from this example you can still access earlier stages by reducing the index expression. Most often you connect variables from two adjacent stages, like it is the case with the \lstinline|returnConstr| in line \ref{listing:returnConstraint}.
+
+The shortage and overage variables are connected in constraint \lstinline|goalConstr| on line \ref{listing:goal}. This constraint only holds in the last stage, therefore it is indexed using \lstinline|T.last()|. The same holds for the objective in line \ref{listing:objective} which is set in line \ref{listing:setObjective}.
+From this statement on the model knows the objective. The direction of the optimization is not known at this point but has to be provided when the \lstinline|solve()| method gets called, in line \ref{listing:solve}. If the model is not attached to the solver when you call the \lstinline|solve()| method, it gets attached automatically, so the statement in line \ref{listing:attach} is not needed, unless you intend to solve the model again (with a new set of sampled random variates if you use random variables in your formulation). 
+
+
+
+\lstset{escapeinside={(*}{*)}}
+\begin{figure}[htbp]
+\begin{lstlisting}[caption={Investment Example in FlopC++},label={list:investment}]
+MP_model investmentModel(new OsiClpSolverInterface()); (* \label{listing:model} *)
+MP_data initialWealth,goal; (* \label{listing:initialWealth} *)
+initialWealth() = 55; //set initial data
+goal() = 80; (* \label{listing:endInitialWealth} *)
+
+enum {numStage=4}; (* \label{listing:stage} *)
+MP_stage T(numStage); (* \label{listing:endStage} *)
+enum {numScen=8};
+MP_scenario_set scen(numScen); 
+enum {asset1,asset2,numAssets=2};
+MP_set assets(numAssets); 
+double scenarios[numStage-1][numAssets][numScen]= (* \label{listing:scenarios} *)
+{//T
+    {//assets
+     // stage 2
+        {1.25,1.25,1.25,1.25,1.06,1.06,1.06,1.06}, //asset1, scen 1 to 8  (* \label{listing:stage2asset1} *)
+        {1.14,1.14,1.14,1.14,1.16,1.16,1.16,1.16}  //asset2, scen 1 to 8  (* \label{listing:stage2asset2} *)
+    },
+    {// stage 3
+        {1.21,1.21,1.07,1.07,1.15,1.15,1.06,1.06},
+        {1.17,1.17,1.12,1.12,1.18,1.18,1.12,1.12} 
+    },
+    {// stage 4
+        {1.26,1.07,1.25,1.06,1.05,1.06,1.05,1.06},
+        {1.13,1.14,1.15,1.12,1.17,1.15,1.14,1.12} 
+    }
+};
+MP_random_data returns(&scenarios[0][0][0],T,assets); //create random parameter "returns" (* \label{listing:returns} *)
+
+MP_variable x(T,assets); (* \label{listing:variables} *)
+MP_variable wealth(T);
+MP_variable shortage(T), overage(T); //only needed in last stage (* \label{listing:endVariables} *)
+
+MP_constraint  (* \label{listing:constraints} *)
+    initialWealthConstr,
+    returnConstr(T),
+    allocationConstr(T),
+    goalConstr(T);  (* \label{listing:endConstraints} *)
+
+initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth(); 
+allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T); (* \label{listing:allocationConstraint} *)
+returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1); // only valid for stage 2 to 4 (* \label{listing:returnConstraint} *)
+
+goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); // only valid in last stage (* \label{listing:goal} *)
+MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last())); (* \label{listing:objective} *)
+
+investmentModel.setObjective( valueFunction ); (* \label{listing:setObjective}  *)
+investmentModel.attach(investmentModel.Solver); (* \label{listing:attach}  *)
+investmentModel.solve(MP_model::MAXIMIZE); (* \label{listing:solve}  *)
+\end{lstlisting}
+\end{figure}
+
+\section{A more advanced example}
+To be done. Contains usage of random variables.
+
+\section{Classes and methods}
+ \subsection{Language constructs}
+The C++ classes necessary for the formulation of stochastic programs are described in the following.
+\begin{description}
+ \item[MP\_stage] A special set that enumerates the available stages of the model.
+ \item[MP\_scenario\_set] A special set that enumerates all available scenarios. It is only specified in the case of a scenario based problem. It is never used anywhere else by the user expect for indexing an array that holds values for the probabilities for the scenarios.
+ \item[MP\_random\_data] An indexable entity that contains either \lstinline|RandomVariable|'s or the result of an algebraic function applied on \lstinline|MP_data| and \lstinline|MP_random_data|. If the user wants to model a scenario based problem it can be feed directly with an array of double arrays, where the values for each scenario are stored.  
+\end{description}
+\subsection{Random variable hierarchy}
+There are some predefined random variables present in FlopC++ that cover some important distributions like the normal, lognormal, exponential and continuous distributions. It is fairly easy to add own random distributions, by looking at the implementation of these predefined distributions.
+You can take a look at the doxygen documentation to see what random variables are already available to you.
+
+\subsection{Methods}
+The following methods can be called on the \lstinline|MP_model| to enforce a specific behaviour.
+\begin{description}
+ \item[setSampleOnlyScenarioGeneration(bool sampleOnly, int defaultSampleSize)] If the user does not want a combine all-against-all approach for independent random variables in the scenario generation process, but instead only wants to sample from every random variable exactly \emph{defaultSampleSize} many variates, then this method should be called with \emph{sampleSize} = \lstinline|true|. This allows the user to precisely define the number of scenarios, given random variables with distributions.
+\end{description}
+
+
+
+\section{Bibliography}
+\bibliographystyle{plainnat}
+\bibliography{library}
+\end{document}
+
