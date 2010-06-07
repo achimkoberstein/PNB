@@ -54,17 +54,17 @@ void NormalMessenger::generationTime(double t) {
 }
 
 void NormalMessenger::solutionStatus(const OsiSolverInterface* Solver) {
-  if (Solver->isProvenOptimal()) {
-    cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
-    cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
-      Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
-  } else if (Solver->isProvenPrimalInfeasible()) {
-    cout<<"FlopCpp: Problem is primal infeasible."<<endl;
-  } else if (Solver->isProvenDualInfeasible()) {
-    cout<<"FlopCpp: Problem is dual infeasible."<<endl;
-  } else {
-    cout<<"FlopCpp: Solution process abandoned."<<endl;
-  }
+    if (Solver->isProvenOptimal()) {
+        cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
+        cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
+            Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
+    } else if (Solver->isProvenPrimalInfeasible()) {
+        cout<<"FlopCpp: Problem is primal infeasible."<<endl;
+    } else if (Solver->isProvenDualInfeasible()) {
+        cout<<"FlopCpp: Problem is dual infeasible."<<endl;
+    } else {
+        cout<<"FlopCpp: Solution process abandoned."<<endl;
+    }
 }
 
 void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) const {
@@ -116,7 +116,7 @@ MP_model& MP_model::add(MP_constraint& constraint) {
 }
 
 void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in this model and sets correct offsets
-  assert(constraint != 0);
+    assert(constraint != 0);
     constraint->M = this;
     if (constraint->left.isDefined() && constraint->right.isDefined()) {
         constraint->offset = m;
@@ -191,7 +191,7 @@ void MP_model::addRow(const Constraint& constraint) {
     double local_bl = -rhs;
     double local_bu = -rhs;
 
-  assert(Solver);
+    assert(Solver);
     double inf = Solver->getInfinity();
     switch (constraint->sense) {
       case LE:
@@ -478,7 +478,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
         //Check for empty variables, i.e. variables not assigned in the problem.
         //TODO: Write flopc++ presolver to eliminate empty variables in the formulation prior to scenario generation.
-        
+
         if (j != n){
             assert(j <n);
             realn = j;
@@ -534,7 +534,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (int j=0; j<=realn; j++) {
         Clg[j] = 0;
     }
-  Clg[n] = 0;
     // Treat right hand side as n'th column
     for (int j=0; j<=realn; j++) {
         Clg[j] = 0;
@@ -708,14 +707,14 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
             }
             else {
-               //Update Index expressions for evaluation
-               (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-               (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-               l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
-               u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
-               if (l[(*i)->offset+k] == -numericInfinity)
+                //Update Index expressions for evaluation
+                (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
+                u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
+                if (l[(*i)->offset+k] == -numericInfinity)
                     l[(*i)->offset+k] = -inf;
-               if (u[(*i)->offset+k] == numericInfinity)
+                if (u[(*i)->offset+k] == numericInfinity)
                     u[(*i)->offset+k] = inf;
             }
         }
@@ -906,7 +905,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     }
     if (scenarios && !independent){ //In case of scenarios, we return as we have nothing to do here. But: We assure that probabilities are set in a correct way, if not already done by the user.
         if (probabilities.empty()){ //If probabilities are not of the correct size, we are wrong, probably a user error (assert)
-           probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
+            probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
         }
         assert(probabilities.size() == scenSet.size());
         return;
@@ -924,7 +923,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     for( int i = 1; i < stage.size(); i++){
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
-        
+
         assert(!rv[i].empty()); //Assume we have random variables in every stage.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
@@ -938,7 +937,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         sampledValuesOfVars.push_back(std::map<double,double>());
 
         // Now we prepare the iterator vector. We do it here as otherwise we ould invalidate the previous iterators
-	std::cout << randVarsPerStage[i] << std::endl;
+        std::cout << randVarsPerStage[i] << std::endl;
         for (int j = 0; j < randVarsPerStage[i]+1; j++){
             iteratorVector[j] = sampledValuesOfVars[j].begin();
         }
@@ -949,7 +948,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         int scenCounter = 0;
         // Push back empty vector to scenariosPerStage[i] to store scenario probabilities in there
         scenariosPerStage[i] = std::vector< std::vector<double> >();
-        
+
         // Combine all-against-all for this stage. Include probabilities of previous stages
         // At first we go the first value where the current value and the next sampled Value differ
         while (true){
@@ -1161,26 +1160,19 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     if (stage.size())
         std::cout << "Solution time for stochastic programs using deterministic equivalent is: " << diffclock(endClock,stochasticClock) << " ms." << std::endl;
 
-  messenger->solutionStatus(Solver);
-  
+    messenger->solutionStatus(Solver);
+
     if (Solver->isProvenOptimal() == true) {
-    cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
-    cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
+        return mSolverState=MP_model::OPTIMAL;
     } else if (Solver->isProvenPrimalInfeasible() == true) {
-        cout<<"FlopCpp: Problem is primal infeasible."<<endl;
         return mSolverState=MP_model::PRIMAL_INFEASIBLE;
 
     } else if (Solver->isProvenDualInfeasible() == true) {
-        cout<<"FlopCpp: Problem is dual infeasible."<<endl;
         return mSolverState=MP_model::DUAL_INFEASIBLE;
 
     } else {
-        cout<<"FlopCpp: Solution process abandoned."<<endl;
         return mSolverState=MP_model::ABANDONED;
-
     }
-    return mSolverState=MP_model::OPTIMAL;
-
 }
 
 namespace flopc {
@@ -1495,26 +1487,6 @@ namespace flopc {
             cout << endl;
         }
         printf("\nMatrix printed \n");
-    }
-
-    void Messenger::constraintDebug( string name, const vector<MP::Coef>& cfs )
-    {
-
-    }
-
-    void Messenger::objectiveDebug( const vector<MP::Coef>& cfs )
-    {
-
-    }
-
-    void Messenger::statistics( int bm, int m, int bn, int n, int nz )
-    {
-
-    }
-
-    void Messenger::generationTime( double t )
-    {
-
     }
 
     void Messenger::logMessage( int level, const char * const msg )
