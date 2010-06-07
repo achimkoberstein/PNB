@@ -204,7 +204,7 @@ public:
     inline void releaseCore() { core_=NULL; }
 
 
-	// constructor
+	// constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
 	SmiScnModel():
 		handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),maxNelsPerScenInStage(NULL),
 		drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
