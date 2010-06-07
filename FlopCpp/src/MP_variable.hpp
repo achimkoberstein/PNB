@@ -48,9 +48,6 @@ namespace flopc {
     using Named::setName;
     using Named::getName;
 
-    ~MP_variable() {
-    }
-
     /// Returns the value of the variable given the specific index values.
     double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
     double levelScenario(int scenario = 0,int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);

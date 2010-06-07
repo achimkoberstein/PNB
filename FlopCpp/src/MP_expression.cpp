@@ -384,7 +384,7 @@ void MP::VariableBoundsFunctor::operator()() const {
 
 //This Function adds a coefficient to the Coefs Array
 void MP::GenerateFunctor::operator()() const {
-  assert(M==-1 or M==1);
+    assert(M==-1 || M==1);
     double sideOfConstraint = M; //LHS (=1) or RHS (=-1)?
     int stage = 0;
     std::vector<double> scenarioValues;
