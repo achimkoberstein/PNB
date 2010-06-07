@@ -117,6 +117,7 @@ SmiScnModel::generateScenario(SmiCoreData *core,
         if (this->maxNelsPerScenInStage)
             delete[] maxNelsPerScenInStage;
         this->maxNelsPerScenInStage = new int[this->core_->getNumStages()];
+        std::fill_n(maxNelsPerScenInStage, this->core_->getNumStages(), 0); //Initialize before using it. 
         this->maxNelsPerScenInStage[0] = this->nels_;
 	}
 	else
