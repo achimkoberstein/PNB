@@ -114,6 +114,8 @@ SmiScnModel::generateScenario(SmiCoreData *core,
 		this->nels_ = node->getNumMatrixElements();
 
         // prepare array for counting max nels per stage and scenario
+        if (this->maxNelsPerScenInStage)
+            delete[] maxNelsPerScenInStage;
         this->maxNelsPerScenInStage = new int[this->core_->getNumStages()];
         this->maxNelsPerScenInStage[0] = this->nels_;
 	}
@@ -268,7 +270,7 @@ double SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense = 1)
     this->drup_ = new double[this->core_->getNumRows()];
     
     int tempNels = 0; //= nels_ ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
-    for (int i = 0; i < this->core_->getNumStages(); i++)
+    for (int i = 0; i < this->core_->getNumStages(); i++) //Store this value in Core..
         tempNels += this->maxNelsPerScenInStage[i];
         
     // We have an empty model (zero cols,rows,els)
@@ -467,7 +469,7 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
         //TODO: Create a new SolverObject by using the type of osiStoch. Need to load osiCoreData in the newly created osiStoch..
         osiStoch_->reset();
         // initialize row-ordered matrix arrays
-        this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+        this->dels_ = new double[tempNels]; 
         this->indx_ = new int[tempNels];
         this->rstrt_ = new int[this->core_->getNumRows()+1];
         this->rstrt_[0] = 0;

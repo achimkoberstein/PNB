@@ -124,7 +124,7 @@ namespace flopc{
         DiscreteRandomVariable();
         ~DiscreteRandomVariable();
 
-        virtual void sample(int howMany = 0);
+        virtual void sample(int howMany = 0) = 0;
 
     };
 
@@ -184,7 +184,7 @@ namespace flopc{
         ContinuousRandomVariable();
         ~ContinuousRandomVariable();
 
-        virtual void sample(int howMany = 0) ;
+        virtual void sample(int howMany = 0) = 0;
 
     };
 
