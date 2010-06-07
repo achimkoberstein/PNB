@@ -23,15 +23,18 @@ namespace flopc {
     @ingroup INTERNAL_USE
     @note FOR INTERNAL USE: This is not normally used directly by the calling code.
 */
-  class MP_set_base : public MP_index , public Named {
+  class MP_set_base : public MP_index , private Named {
   public:
     MP_set_base() : Cyclic(false) {}
+
+    using Named::setName;
+    using Named::getName;
 
     virtual int size() const = 0;
     virtual operator MP_domain() const = 0;
     virtual MP_domain operator()(const MP_index_exp& i) const = 0;
  
-    int check(int i) const {
+    int check(const int i) const {
       if ((i>=0) && (i<size())) {
         return i;
       } else {
@@ -80,9 +83,6 @@ namespace flopc {
         into the set.
         @todo is the internal use?
     */
-
-//	virtual ~MP_set(); TODO: Is this destructor needed?
-
     MP_domain operator()(const MP_index_exp& i) const {
       return i->getDomain(const_cast<MP_set*>(this));
     }
@@ -122,14 +122,6 @@ namespace flopc {
       return 1;
     }
   };
-
-  class MP_scenario_set : public MP_set { //set that stores the number of scenarios
-  public:
-	  MP_scenario_set(int nScen = 0): MP_set(nScen) {}
-	  virtual int isStage() const {
-		  return 1;
-		  }
-	  };
 
   template <int nbr> class MP_subset;
 
@@ -248,8 +240,7 @@ namespace flopc {
     void insert(int i1, int i2=0, int i3=0, int i4=0, int i5=0) {
       insert(makeVector<nbr>(i1, i2, i3, i4, i5));
     }
-
-const InsertFunctor<nbr>& insert(MP_index_exp i1, 
+    const InsertFunctor<nbr>& insert(MP_index_exp i1, 
                                      MP_index_exp i2=MP_index_exp::getEmpty(), 
                                      MP_index_exp i3=MP_index_exp::getEmpty(), 
                                      MP_index_exp i4=MP_index_exp::getEmpty(), 
@@ -259,7 +250,6 @@ const InsertFunctor<nbr>& insert(MP_index_exp i1,
     virtual int size() const {
       return elements.size();
     }
-
 
   private:
     vector<const MP_set*> S; 

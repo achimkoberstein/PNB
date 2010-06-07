@@ -34,10 +34,11 @@ namespace flopc {
     virtual void logMessage(int level, const char * const msg){}
     friend class MP_model;
   private:
-    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) {}
-    virtual void objectiveDebug(const vector<MP::Coef>& cfs) {}
+    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const {}
+    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const {}
+    virtual void solutionStatus(const OsiSolverInterface* Solver) {}
     virtual void statistics(int bm, int m, int bn, int n, int nz) {}
-	virtual void generationTime(double t) {}
+    virtual void generationTime(double t) {}
   protected:
     virtual ~Messenger() {}
   };
@@ -50,6 +51,7 @@ namespace flopc {
   private:
     virtual void statistics(int bm, int m, int bn, int n, int nz);
     virtual void generationTime(double t);
+    virtual void solutionStatus(const OsiSolverInterface* Solver);
   };
 
   /** Internal use: used when Verbose output is selected. Uses cout.
@@ -58,8 +60,8 @@ namespace flopc {
   class VerboseMessenger : public NormalMessenger {
     friend class MP_model;
   private:
-    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs);
-    virtual void objectiveDebug(const vector<MP::Coef>& cfs);
+    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
+    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
   };
 
   /** @brief This is the anchor point for all constructs in a FlopC++ model.
@@ -201,10 +203,6 @@ namespace flopc {
         direction is to be specified.
         @todo should the direction be defaulted?
     */ 
-    int * getRowStage();
-    
-    int * getColStage();
- 
     MP_model::MP_status solve(const MP_model::MP_direction &dir);
     /** Accessors for the results after a call to maximize()/minimize()
         @todo should these be private with accessors?  What if not set yet?
@@ -233,18 +231,6 @@ namespace flopc {
     Messenger *getMessenger(){ 
       return messenger;
     }
-
-	
-
-	MP_scenario_set getScenarioSet() const { return ScenarioSet; } //TODO: Object or reference, what is needed?
-	void setScenarioSet(const MP_scenario_set& val){ ScenarioSet = val; }
-
-	MP_stage getStage() const { return Stage; }
-	void setStage(const MP_stage& val) { Stage = val; }
-
-	MP_set getProbabilities() const { return Probabilities; }
-	void setProbabilities(const MP_set& val) { Probabilities = val; }
-
   private:
     typedef std::set<MP_variable* >::iterator varIt;
     typedef std::set<MP_constraint* >::iterator conIt;
@@ -259,9 +245,6 @@ namespace flopc {
     static void assemble(vector<MP::Coef>& v, vector<MP::Coef>& av);
     void add(MP_constraint* constraint);
     MP_expression Objective;
-	MP_scenario_set ScenarioSet;
-	MP_stage Stage;
-	MP_set Probabilities;
     set<MP_constraint *> Constraints;
     set<MP_variable *> Variables;
   public:
@@ -280,8 +263,6 @@ namespace flopc {
     double *c;
     double *l;
     double *u;
-    int *colStage;
-    int *rowStage;
     MP_status mSolverState;
 
   };

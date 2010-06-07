@@ -36,11 +36,6 @@ namespace flopc {
         col(c), row(r), stage(s), val(v)  {}
       int col, row, stage;
       double val;
-	  //TODO: Christian: enhance this
-	  //int scenario = 0;
-	  //double* val = {v} and int valLength = 1(or vector)
-	  //If StochasticData should get inserted, the val array needs to be set accordingly
-	  //Use Properties to handle implementation of get/set transparent from the user..
     };
     
     struct CoefLess {
@@ -151,6 +146,10 @@ namespace flopc {
                 const MP_index_exp& i3,
                 const MP_index_exp& i4,
                 const MP_index_exp& i5);
+
+    //Disable copy constructor and assignment operator
+    VariableRef(const VariableRef&);
+    VariableRef& operator=(const VariableRef&);
 
     double level() const;
 

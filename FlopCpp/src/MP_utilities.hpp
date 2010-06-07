@@ -21,7 +21,7 @@ namespace flopc {
 
   /** @brief Function object.  Often used
       @ingroup INTERNAL_USE
-      @note is the base class for passing a function object around.
+      @note is the base class for passing a fucntion object around.
   */
   class Functor {
   public:
