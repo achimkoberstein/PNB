@@ -714,15 +714,15 @@ namespace flopc {
         MP_set cars(numCars);
         MP_set trains(numTrains);
         MP_random_data vars(cars); //Initialize RV with set
-        DiscreteRandomVariable *x,*y,*z;
-        x = new DiscreteRandomVariable();
-        y = new DiscreteRandomVariable();
-        z = new DiscreteRandomVariable();
+        DiscreteUniformRandomVariable *x,*y,*z;
+        x = new DiscreteUniformRandomVariable();
+        y = new DiscreteUniformRandomVariable();
+        z = new DiscreteUniformRandomVariable();
         vars(BMW) = x; 
         vars(Audi) = y;
         vars(Ford) = z;
         MP_variable test(cars,trains);
-        RandomVariable* varsArr[3] = { new DiscreteRandomVariable(),new DiscreteRandomVariable(),new DiscreteRandomVariable() }; //Initialize RV with Array of RV
+        RandomVariable* varsArr[3] = { new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable() }; //Initialize RV with Array of RV
         // Need to delete Array as RV does not take ownership..
         // Maybe store boost::shared_ptr<> to RV?
         // Then the values assigned to the RV get managed by the RV and released too
