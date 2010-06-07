@@ -20,8 +20,8 @@ using namespace flopc;
 
 MP_model& MP_model::default_model = *new MP_model(0);
 MP_model* MP_model::current_model = &MP_model::default_model;
-MP_model &MP_model::getDefaultModel() { return default_model;}
-MP_model *MP_model::getCurrentModel() { return current_model;}
+MP_model& MP_model::getDefaultModel() { return default_model;}
+MP_model* MP_model::getCurrentModel() { return current_model;}
 
 void NormalMessenger::statistics(int bm, int m, int bn, int n, int nz) {
   cout<<"FlopCpp: Number of constraint blocks: " <<bm<<endl;
@@ -35,7 +35,21 @@ void NormalMessenger::generationTime(double t) {
   cout<<"FlopCpp: Generation time: "<<t<<endl;
 }
 
-void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) {
+void NormalMessenger::solutionStatus(const OsiSolverInterface* Solver) {
+  if (Solver->isProvenOptimal()) {
+    cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
+    cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
+      Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
+  } else if (Solver->isProvenPrimalInfeasible()) {
+    cout<<"FlopCpp: Problem is primal infeasible."<<endl;
+  } else if (Solver->isProvenDualInfeasible()) {
+    cout<<"FlopCpp: Problem is dual infeasible."<<endl;
+  } else {
+    cout<<"FlopCpp: Solution process abandoned."<<endl;
+  }
+}
+
+void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) const {
   cout<<"FlopCpp: Constraint "<<name<<endl;
   for (unsigned int j=0; j<cfs.size(); j++) {
     int col=cfs[j].col;
@@ -46,7 +60,7 @@ void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs)
   }
 }
 
-void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
+void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) const {
   cout<<"Objective "<<endl;
   for (unsigned int j=0; j<cfs.size(); j++) {
     int col=cfs[j].col;
@@ -65,9 +79,10 @@ MP_model::MP_model(OsiSolverInterface* s, Messenger* m) :
 
 MP_model::~MP_model() {
   delete messenger;
-  if (Solver!=0) {
+  //if (Solver!=0) {
     delete Solver;
-  }
+    //}
+  MP_model::current_model = &MP_model::default_model;
 }
 
 
@@ -77,6 +92,7 @@ MP_model& MP_model::add(MP_constraint& constraint) {
 }
 
 void MP_model::add(MP_constraint* constraint) {
+  assert(constraint != 0);
   constraint->M = this;
   if (constraint->left.isDefined() && constraint->right.isDefined()) {
     constraint->offset = m;
@@ -123,6 +139,7 @@ void MP_model::addRow(const Constraint& constraint) {
   double local_bl = -rhs;
   double local_bu = -rhs;
 
+  assert(Solver);
   double inf = Solver->getInfinity();
   switch (constraint->sense) {
       case LE:
@@ -163,8 +180,6 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<MP::Coef>& av) {
     val = i->val;
     s = i->stage;
     i++;
-	//TODO: If coefficient belongs also to higher stage, return coefficient for highest stage?!
-	//What is this good for?
     while (i!=v.end() && c==i->col && r==i->row) {
       val += i->val;
       if (i->stage>s) {
@@ -235,10 +250,7 @@ void MP_model::attach(OsiSolverInterface *_solver) {
   typedef std::set<MP_variable* >::iterator varIt;
   typedef std::set<MP_constraint* >::iterator conIt;
     
-  //Insert decision variables into list of variables
   Objective->insertVariables(Variables);
-  //Count number of columns and rows in the add methods. 
-  //Insert the remaining variables not in the objective to the list of variables
   for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
     add(*i);
     (*i)->insertVariables(Variables);
@@ -268,83 +280,36 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     l =   new double[n];  
     u =   new double[n];  
     c =  new double[n]; 
-	colStage = new int[n];
   }
   if (m>0) {
     bl  = new double[m];  
     bu  = new double[m];  
-	rowStage = new int[m];
   }
   const double inf = Solver->getInfinity();
 
-  // Set correct Row Stage for every row by iterating over all elements
-  // Row Stage is equal to the highest stage of a belonging coefficient
-  for (int i=0; i<m; i++) {
-	  rowStage[i] = 0;
-	  }
-  for (int i=0; i<nz; i++) {
-	  int s = coefs[i].stage;
-	  int row = coefs[i].row;
-	  if ( s > rowStage[row] )  {
-		  rowStage[row] = s;
-		  }
-	  }
-
-  int maxStage = 0; // change to get from the actual model
-  for (int i=0; i<nz; i++) {
-	  int s = coefs[i].stage;
-	  if (s > maxStage) maxStage = s;
-	  }
-
-
-  // Set correct Column stage for every column by iterating over all elements
-  // Column Stage is equal to the lowest stage of a belonging coefficient
   for (int j=0; j<n; j++) {
-	  colStage[j] = maxStage;
-	  }
-  for (int i=0; i<nz; i++) {
-	  int col = coefs[i].col;
-	  int s = coefs[i].stage;
-	  if ( s > 0 && s-1 < colStage[col] )  { //TODO: Why is this done? I do not quite get it, see eMail Hultberg-King
-		  colStage[col] = s-1;
-		  }
-	  }
-
-  //   cout<<"RowStages"<<endl;
-  //   for (int i=0; i<m; i++) {
-  //     cout<<i<<" "<<rowStage[i]<<endl;
-  //   }
-
-  //   cout<<"ColStages"<<endl;
-  //   for (int j=0; j<n; j++) {
-  //     cout<<j<<" "<<colStage[j]<<endl;
-  //   }
-
-// Compute Column Length Array
-  for (int j=0; j<=n; j++) {
     Clg[j] = 0;
   }
+  Clg[n] = 0;
     
   // Treat right hand side as n'th column
   for (int j=0; j<=n; j++) {
     Clg[j] = 0;
   }
-  for (int i=0; i<nz; i++) { //count occurence of a variable (in how many rows is a variable present?
+  for (int i=0; i<nz; i++) {
     int col = coefs[i].col;
-    if (col == -1)  { //If col is -1 it is the right hand side, and inserted to column
+    if (col == -1)  {
       col = n;
     }
     Clg[col]++;
   }
-  //Compute Column Start Array
-  Cst[0]=0; //count number of non-zero-elements up to column i: cst[n+1] = anzahl an nicht-null-elementen
+  Cst[0]=0;
   for (int j=0; j<=n; j++) {
     Cst[j+1]=Cst[j]+Clg[j]; 
   }
-  for (int i=0; i<=n; i++) { //Reset column occurence counter
+  for (int i=0; i<=n; i++) {
     Clg[i]=0;
   }
-  //Compute Element and Index Array (to which row does this coefficient belong) with aid of the column-start and the column lengths
   for (int i=0; i<nz; i++) {
     int col = coefs[i].col;
     if (col==-1) {
@@ -357,7 +322,7 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     Clg[col]++;
   }
 
-  // Compute row bounds, that are explicitly stored in the elements array as the right-hand-side
+  // Row bounds
   for (int i=0; i<m; i++) {
     bl[i] = 0;
     bu[i] = 0;
@@ -366,7 +331,7 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     bl[Rnr[j]] = -Elm[j];
     bu[Rnr[j]] = -Elm[j];
   }
-  //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
+
   for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
     if ((*i)->left.isDefined() && (*i)->right.isDefined() ) {
       int begin = (*i)->offset;
@@ -407,11 +372,12 @@ void MP_model::attach(OsiSolverInterface *_solver) {
     c[col] = elm;
   } 
 
-  // Compute column bounds 
+  // Column bounds
   for (int j=0; j<n; j++) {
     l[j] = 0.0;
     u[j] = inf;
   }
+
   for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
     for (int k=0; k<(*i)->size(); k++) {
       l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
@@ -455,21 +421,7 @@ void MP_model::detach() {
   mSolverState = MP_model::DETACHED;
   delete Solver;
   Solver = 0;
-  if (n>0) {
-	  delete [] colStage;   
-	  }
-  if (m>0) {
-	  delete [] rowStage;  
-	  }  
 }
-
-int * MP_model::getRowStage() {
-	return rowStage;
-	}
-
-int * MP_model::getColStage() {
-	return colStage;
-	}
 
 MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
   assert(Solver);
@@ -502,20 +454,21 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
       cout<<e.message()<<endl;
     }
   }
-     
+  
+  messenger->solutionStatus(Solver);
+  
   if (Solver->isProvenOptimal() == true) {
-    cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
-    cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
-      Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
+    //cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
+    //cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
   } else if (Solver->isProvenPrimalInfeasible() == true) {
     return mSolverState=MP_model::PRIMAL_INFEASIBLE;
-    cout<<"FlopCpp: Problem is primal infeasible."<<endl;
+    //cout<<"FlopCpp: Problem is primal infeasible."<<endl;
   } else if (Solver->isProvenDualInfeasible() == true) {
     return mSolverState=MP_model::DUAL_INFEASIBLE;
-    cout<<"FlopCpp: Problem is dual infeasible."<<endl;
+    //cout<<"FlopCpp: Problem is dual infeasible."<<endl;
   } else {
     return mSolverState=MP_model::ABANDONED;
-    cout<<"FlopCpp: Solution process abandoned."<<endl;
+    //cout<<"FlopCpp: Solution process abandoned."<<endl;
   }
   return mSolverState=MP_model::OPTIMAL;
 }
