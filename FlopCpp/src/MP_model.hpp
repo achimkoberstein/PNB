@@ -52,10 +52,11 @@ namespace flopc {
         virtual void logMessage(int level, const char * const msg);
         friend class MP_model;
     private:
-        virtual void constraintDebug(string name, const vector<MP::Coef>& cfs);
-        virtual void objectiveDebug(const vector<MP::Coef>& cfs);
-        virtual void statistics(int bm, int m, int bn, int n, int nz);
-        virtual void generationTime(double t);
+    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const {}
+    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const {}
+    virtual void solutionStatus(const OsiSolverInterface* Solver) {}
+    virtual void statistics(int bm, int m, int bn, int n, int nz) {}
+    virtual void generationTime(double t) {}
     protected:
         virtual ~Messenger() {}
     };
@@ -68,6 +69,7 @@ namespace flopc {
     private:
         virtual void statistics(int bm, int m, int bn, int n, int nz);
         virtual void generationTime(double t);
+    virtual void solutionStatus(const OsiSolverInterface* Solver);
     };
 
     /** Internal use: used when Verbose output is selected. Uses cout.
@@ -76,8 +78,8 @@ namespace flopc {
     class VerboseMessenger : public NormalMessenger {
         friend class MP_model;
     private:
-        virtual void constraintDebug(string name, const vector<MP::Coef>& cfs);
-        virtual void objectiveDebug(const vector<MP::Coef>& cfs);
+    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
+    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
     };
 
     /** @brief This is the anchor point for all constructs in a FlopC++ model.
@@ -265,8 +267,6 @@ namespace flopc {
         Messenger *getMessenger(){ 
             return messenger;
         }
-
-
         MP_stage Stage() const { return stage; }
         void Stage(const MP_stage& val) { stage = val; }
         MP_scenario_set ScenSet() const { return scenSet; }
@@ -308,9 +308,6 @@ namespace flopc {
         boost::shared_ptr<Uniform01Generator> getUniformGenerator(){
             return uniformGenerator;
         }
-
-
-
     private:
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;

@@ -38,8 +38,8 @@ using namespace flopc;
 const std::string MP_model::stageString("StageSet");
 MP_model& MP_model::default_model = *new MP_model(0);
 MP_model* MP_model::current_model = &MP_model::default_model;
-MP_model &MP_model::getDefaultModel() { return default_model;}
-MP_model *MP_model::getCurrentModel() { return current_model;}
+MP_model& MP_model::getDefaultModel() { return default_model;}
+MP_model* MP_model::getCurrentModel() { return current_model;}
 
 void NormalMessenger::statistics(int bm, int m, int bn, int n, int nz) {
     cout<<"FlopCpp: Number of constraint blocks: " <<bm<<endl;
@@ -53,7 +53,21 @@ void NormalMessenger::generationTime(double t) {
     cout<<"FlopCpp: Generation time: "<<t<<endl;
 }
 
-void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) {
+void NormalMessenger::solutionStatus(const OsiSolverInterface* Solver) {
+  if (Solver->isProvenOptimal()) {
+    cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
+    cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
+      Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
+  } else if (Solver->isProvenPrimalInfeasible()) {
+    cout<<"FlopCpp: Problem is primal infeasible."<<endl;
+  } else if (Solver->isProvenDualInfeasible()) {
+    cout<<"FlopCpp: Problem is dual infeasible."<<endl;
+  } else {
+    cout<<"FlopCpp: Solution process abandoned."<<endl;
+  }
+}
+
+void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) const {
     cout<<"FlopCpp: Constraint "<<name<<endl;
     for (unsigned int j=0; j<cfs.size(); j++) {
         int col=cfs[j].col;
@@ -64,7 +78,7 @@ void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs)
     }
 }
 
-void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) {
+void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) const {
     cout<<"Objective "<<endl;
     for (unsigned int j=0; j<cfs.size(); j++) {
         int col=cfs[j].col;
@@ -102,6 +116,7 @@ MP_model& MP_model::add(MP_constraint& constraint) {
 }
 
 void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in this model and sets correct offsets
+  assert(constraint != 0);
     constraint->M = this;
     if (constraint->left.isDefined() && constraint->right.isDefined()) {
         constraint->offset = m;
@@ -176,6 +191,7 @@ void MP_model::addRow(const Constraint& constraint) {
     double local_bl = -rhs;
     double local_bu = -rhs;
 
+  assert(Solver);
     double inf = Solver->getInfinity();
     switch (constraint->sense) {
       case LE:
@@ -513,15 +529,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             }
         }
     }
-
-
-
     const double inf = Solver->getInfinity();
-
     // Compute Column Length Array to easily compute start array from there
     for (int j=0; j<=realn; j++) {
         Clg[j] = 0;
     }
+  Clg[n] = 0;
     // Treat right hand side as n'th column
     for (int j=0; j<=realn; j++) {
         Clg[j] = 0;
@@ -1148,10 +1161,11 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     if (stage.size())
         std::cout << "Solution time for stochastic programs using deterministic equivalent is: " << diffclock(endClock,stochasticClock) << " ms." << std::endl;
 
+  messenger->solutionStatus(Solver);
+  
     if (Solver->isProvenOptimal() == true) {
-        cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
-        cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
-            Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
+    cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
+    cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
     } else if (Solver->isProvenPrimalInfeasible() == true) {
         cout<<"FlopCpp: Problem is primal infeasible."<<endl;
         return mSolverState=MP_model::PRIMAL_INFEASIBLE;
