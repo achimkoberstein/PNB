@@ -82,7 +82,7 @@ Under Linux just follow these steps to compile FlopC++ to obtain a library.
 \item make install
 \end{enumerate}
 
-Step 1 issues the subversion command to obtain the source code. Besides FLOPC++, the sources of \href{thttps://projects.coin-or.org/FlopC++/browser/trunk/Externals?format=raw}{these} required Coin projects will also be retrieved. 
+Step 1 issues the subversion command to obtain the source code and store it in the directory \emph{coin-FlopCpp}. Besides FLOPC++, the sources of \href{thttps://projects.coin-or.org/FlopC++/browser/trunk/Externals?format=raw}{these} required Coin projects will also be retrieved. 
 
 Step 3 gets the ThirdParty libraries \href{http://www.boost.org/}{boost}, \href{http://code.google.com/p/googletest/}{googletest} and \href{http://code.google.com/p/google-glog/}{google-glog} from the web and unpacks them.
 
@@ -92,7 +92,7 @@ Step 6 builds the libraries of all the required Coin-OR projects, the external l
 
 Step 7 builds and runs the FLOPC++ unit test program. 
 
-Step 8 installs libraries, executables and header files in directories coin-FlopCpp/lib, coin-FlopCpp/bin and coin-FlopCpp/include.
+Step 8 installs libraries, executables and header files in the directories \emph{coin-FlopCpp/lib}, \emph{coin-FlopCpp/bin} and \emph{coin-FlopCpp/include}.
 
  \subsection{Windows}
 If you have Visual Studio 2008 installed, you can use the solution file FlopCpp/MsVisualStudio/v9/FlopCpp.sln to load the solution. Then you can start a new C++ project and set a project dependency on libflopcpp.
