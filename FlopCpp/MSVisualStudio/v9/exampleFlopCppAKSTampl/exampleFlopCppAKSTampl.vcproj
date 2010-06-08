@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\IncludeFiles.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -93,6 +94,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\IncludeFiles.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -172,7 +174,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\examples\akstampl2.cpp"
+				RelativePath="..\..\..\examples\akstampl2.cpp"
 				>
 			</File>
 		</Filter>

@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\examples\IncludeFilesExamples.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -97,6 +98,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\examples\IncludeFilesExamples.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
