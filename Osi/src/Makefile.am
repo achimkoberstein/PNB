@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1409 2009-10-04 10:44:25Z stefan $
+## $Id: Makefile.am 1416 2009-10-07 10:12:30Z stefan $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -88,6 +88,9 @@ if COIN_HAS_VOL
 endif
 if COIN_HAS_XPR
   SUBDIRS += OsiXpr
+endif
+if COIN_HAS_GRB
+  SUBDIRS += OsiGrb
 endif
 
 ########################################################################

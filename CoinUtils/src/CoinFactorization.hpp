@@ -1,3 +1,4 @@
+/* $Id: CoinFactorization.hpp 1277 2010-04-21 20:19:32Z forrest $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
@@ -368,7 +369,8 @@ public:
   int replaceColumn ( CoinIndexedVector * regionSparse,
 		      int pivotRow,
 		      double pivotCheck ,
-		      bool checkBeforeModifying=false);
+		      bool checkBeforeModifying=false,
+		      double acceptablePivot=1.0e-8);
   /** Combines BtranU and delete elements
       If deleted is NULL then delete elements
       otherwise store where elements are
@@ -701,7 +703,6 @@ protected:
 	  CoinBigIndex pivotColumnPosition,
 	  CoinFactorizationDouble work[],
 	  unsigned int workArea2[],
-	  int increment,
 	  int increment2,
 	  T markRow[] ,
 	  int largeInteger)
@@ -992,6 +993,7 @@ protected:
 
       if ( absValue > tolerance ) {
 	work[j] = 0.0;
+	assert (put<lengthAreaU_); 
 	elementU[put] = value;
 	indexRowU[put] = indexL[j];
 	if ( absValue > largest ) {

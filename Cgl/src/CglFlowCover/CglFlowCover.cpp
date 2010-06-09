@@ -1,4 +1,4 @@
-// $Id: CglFlowCover.cpp 816 2009-12-08 20:12:02Z tkr $
+// $Id: CglFlowCover.cpp 806 2009-12-02 20:01:20Z forrest $
 //-----------------------------------------------------------------------------
 // name:     Cgl Lifted Simple Generalized Flow Cover Cut Generator
 // author:   Yan Xu                email: yan.xu@sas.com
@@ -1037,7 +1037,7 @@ CglFlowCover::generateOneFlowCut( const OsiSolverInterface & si,
 	xCoef[i] = -estX;
 	yCoef[i] = estY;
 	if(CGLFLOW_DEBUG) {
-	  if (lifted == true) {
+	  if (lifted) {
 	    printf("Success: Lifted col %i (up_i=%f,yCoef[i]=%f,xCoef[i]=%f) in N+\\C+\n", 
 		   ind[i], up[i], yCoef[i], xCoef[i]);
 	  }

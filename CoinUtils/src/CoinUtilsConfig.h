@@ -1,3 +1,4 @@
+/* $Id: CoinUtilsConfig.h 1215 2009-11-05 11:03:04Z forrest $ */
 /*
  * Include file for the configuration of CoinUtils.
  *

@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: configure.ac 1446 2009-10-06 16:41:47Z stefan $
+## $Id: configure.ac 1555 2010-05-28 00:13:34Z lou $
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Clp],[1.10stable],[coin-clp@list.coin-or.org])
+AC_INIT([Clp],[1.12],[coin-clp@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -93,6 +93,12 @@ if test "$use_wsmp" != "no"; then
   AC_DEFINE_UNQUOTED([WSSMP_BARRIER], [$defval],
                      [Define to 2 if wssmp_ is available, and to 3 if wssmp is available])
 fi
+
+#############################################################################
+#                           CLP version number                              #
+#############################################################################
+
+AC_DEFINE_UNQUOTED(CLP_VERSION, "$PACKAGE_VERSION", "Version of Clp")
 
 #############################################################################
 #                             Other dependencies                            #

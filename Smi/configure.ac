@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: configure.ac 254 2008-06-16 21:47:18Z kingaj $
+## $Id: configure.ac 103 2007-01-22 22:57:06Z kingaj $
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Smi],[0.91.0],[coin-smi@list.coin-or.org])
+AC_INIT([Smi],[0.1],[coin-smi@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -56,13 +56,10 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN components                              #
 #############################################################################
 
-AC_COIN_HAS_PROJECT(Smi)
 AC_COIN_HAS_PROJECT(CoinUtils)
 AC_COIN_HAS_PROJECT(Clp)
-AC_COIN_HAS_PROJECT(Cgl)
-AC_COIN_HAS_PROJECT(Cbc)
 AC_COIN_HAS_PROJECT(Osi)
-AC_COIN_HAS_PROJECT(FlopCpp)
+AC_COIN_HAS_PROJECT(Smi)
 
 #############################################################################
 #                             Other dependencies                            #
@@ -73,16 +70,6 @@ AC_COIN_CHECK_GNU_READLINE
 ##############################################################################
 #                   VPATH links for example input files                      #
 ##############################################################################
-
-AC_COIN_VPATH_LINK(test/SmiTestData/bug.cor)
-AC_COIN_VPATH_LINK(test/SmiTestData/bug.stoch)
-AC_COIN_VPATH_LINK(test/SmiTestData/bug.time)
-AC_COIN_VPATH_LINK(test/SmiTestData/app0110.cor)
-AC_COIN_VPATH_LINK(test/SmiTestData/app0110.stoch)
-AC_COIN_VPATH_LINK(test/SmiTestData/app0110.time)
-AC_COIN_VPATH_LINK(test/SmiTestData/app0110R.cor)
-AC_COIN_VPATH_LINK(test/SmiTestData/app0110R.stoch)
-AC_COIN_VPATH_LINK(test/SmiTestData/app0110R.time)
 
 # In case this is a VPATH configuration we need to make sure that the
 # input files for the examples are available in the VPATH directory.

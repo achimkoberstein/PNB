@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1238 2009-12-08 20:03:04Z tkr $
+## $Id: Makefile.am 1215 2009-11-05 11:03:04Z forrest $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -41,6 +41,11 @@ libCoinUtils_la_SOURCES = \
 	CoinSimpFactorization.cpp \
 	CoinDenseFactorization.hpp \
 	CoinDenseFactorization.cpp \
+	CoinOslFactorization.hpp \
+	CoinOslFactorization.cpp \
+	CoinOslFactorization2.cpp \
+	CoinOslFactorization3.cpp \
+	CoinOslC.h \
 	CoinFileIO.cpp CoinFileIO.hpp \
 	CoinFinite.hpp \
 	CoinFloatEqual.hpp \
@@ -132,6 +137,7 @@ includecoin_HEADERS = \
 	CoinFactorization.hpp \
 	CoinSimpFactorization.hpp \
 	CoinDenseFactorization.hpp \
+	CoinOslFactorization.hpp \
 	CoinFileIO.hpp \
 	CoinFinite.hpp \
 	CoinFloatEqual.hpp \

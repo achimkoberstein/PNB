@@ -1,3 +1,4 @@
+/* $Id: CoinWarmStartBasis.cpp 1291 2010-05-13 14:37:11Z forrest $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #if defined(_MSC_VER)
@@ -274,7 +275,7 @@ CoinWarmStartBasis::deleteRows (int rawTgtCnt, const int *rawTgts)
     int *endUnique ;
     std::sort(first,last) ;
     endUnique = std::unique(first,last) ;
-    int tgtCnt = endUnique-first ;
+    int tgtCnt = static_cast<int>(endUnique-first) ;
     compressRows(tgtCnt,tgts) ;
     delete [] tgts ;
   }
@@ -373,6 +374,8 @@ void CoinWarmStartBasis::mergeBasis (const CoinWarmStartBasis *src,
     { int srcNdx = (*xferSpec).first ;
       int tgtNdx = (*xferSpec).second ;
       int runLen = (*xferSpec).third ;
+      // adjust in case Pierre has changed size
+      runLen=CoinMin(runLen,srcRows-srcNdx);
       assert(srcNdx >= 0 && srcNdx+runLen <= srcRows) ;
       assert(tgtNdx >= 0 && tgtNdx+runLen <= getNumArtificial()) ;
       for (int i = 0 ; i < runLen ; i++)

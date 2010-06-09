@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: configure.ac 1206 2009-10-06 16:11:25Z stefan $
+## $Id: configure.ac 1294 2010-05-21 09:26:15Z stefan $
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([CoinUtils],[2.5stable],[http://projects.coin-or.org/CoinUtils])
+AC_INIT([CoinUtils],[2.6],[http://projects.coin-or.org/CoinUtils])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.

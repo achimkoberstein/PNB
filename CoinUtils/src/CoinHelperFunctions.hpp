@@ -1,3 +1,4 @@
+/* $Id: CoinHelperFunctions.hpp 1240 2009-12-10 17:07:20Z ladanyi $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
@@ -28,9 +29,11 @@ CoinCopyN(register const T* from, const int size, register T* to)
     if (size == 0 || from == to)
 	return;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("trying to copy negative number of entries",
 			"CoinCopyN", "");
+#endif
 
     register int n = (size + 7) / 8;
     if (to > from) {
@@ -94,9 +97,11 @@ CoinDisjointCopyN(register const T* from, const int size, register T* to)
     if (size == 0 || from == to)
 	return;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("trying to copy negative number of entries",
 			"CoinDisjointCopyN", "");
+#endif
 
 #if 0
     /* There is no point to do this test. If to and from are from different
@@ -253,9 +258,11 @@ CoinMemcpyN(register const T* from, const int size, register T* to)
     if (size == 0 || from == to)
 	return;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("trying to copy negative number of entries",
 			"CoinMemcpyN", "");
+#endif
 
 #if 0
     /* There is no point to do this test. If to and from are from different
@@ -333,10 +340,11 @@ CoinFillN(register T* to, const int size, register const T value)
     if (size == 0)
 	return;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("trying to fill negative number of entries",
 			"CoinFillN", "");
-
+#endif
 #if 1
     for (register int n = size / 8; n > 0; --n, to += 8) {
 	to[0] = value;
@@ -411,9 +419,11 @@ CoinZeroN(register T* to, const int size)
     if (size == 0)
 	return;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("trying to fill negative number of entries",
 			"CoinZeroN", "");
+#endif
 #if 1
     for (register int n = size / 8; n > 0; --n, to += 8) {
 	to[0] = 0;
@@ -550,9 +560,10 @@ CoinIsSorted(register const T* first, const int size)
     if (size == 0)
 	return true;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("negative number of entries", "CoinIsSorted", "");
-
+#endif
 #if 1
     // size1 is the number of comparisons to be made
     const int size1 = size  - 1;
@@ -609,9 +620,10 @@ CoinIotaN(register T* first, const int size, register T init)
     if (size == 0)
 	return;
 
+#ifndef NDEBUG
     if (size < 0)
 	throw CoinError("negative number of entries", "CoinIotaN", "");
-
+#endif
 #if 1
     for (register int n = size / 8; n > 0; --n, first += 8, init += 8) {
 	first[0] = init;
@@ -820,15 +832,17 @@ template <class T> inline void CoinSwap (T &x, T &y)
     Returns 0 if OK, 1 if bad write.
 */
 
+/* FIXME64 */
+
 template <class T> inline int
 CoinToFile( const T* array, int size, FILE * fp)
 {
-    int numberWritten;
+    size_t numberWritten;
     if (array&&size) {
 	numberWritten = fwrite(&size,sizeof(int),1,fp);
 	if (numberWritten!=1)
 	    return 1;
-	numberWritten = fwrite(array,sizeof(T),size,fp);
+	numberWritten = fwrite(array,sizeof(T),size_t(size),fp);
 	if (numberWritten!=size)
 	    return 1;
     } else {
@@ -848,10 +862,12 @@ CoinToFile( const T* array, int size, FILE * fp)
     Returns 0 if OK, 1 if bad read, 2 if size did not match.
 */
 
+/* FIXME64 */
+
 template <class T> inline int
 CoinFromFile( T* &array, int size, FILE * fp,int & newSize)
 {
-    int numberRead;
+    size_t numberRead;
     numberRead = fread(&newSize,sizeof(int),1,fp);
     if (numberRead!=1)
 	return 1;
@@ -860,7 +876,7 @@ CoinFromFile( T* &array, int size, FILE * fp,int & newSize)
 	returnCode=2;
     if (newSize) {
 	array = new T [newSize];
-	numberRead = fread(array,sizeof(T),newSize,fp);
+	numberRead = fread(array,sizeof(T),size_t(newSize),fp);
 	if (numberRead!=newSize)
 	    returnCode=1;
     } else {
@@ -880,6 +896,17 @@ inline double CoinCbrt(double x)
     return cbrt(x);
 #endif
 }
+//-----------------------------------------------------------------------------
+
+/// This helper returns "sizeof" as an int 
+#define CoinSizeofAsInt(type) (static_cast<int>(sizeof(type)))
+/// This helper returns "strlen" as an int 
+inline int
+CoinStrlenAsInt(const char * string)
+{
+    return static_cast<int>(strlen(string));
+}
+
 /** Class for thread specific random numbers
 */
 #if defined COIN_OWN_RANDOM_32
@@ -919,6 +946,11 @@ public:
   inline void setSeed(int seed)
   { 
     seed_ = seed;
+  }
+  /** Get seed. */
+  inline unsigned int getSeed() const
+  { 
+    return seed_;
   }
   /// return a random number
   inline double randomDouble() const

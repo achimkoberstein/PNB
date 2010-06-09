@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1312 2008-10-10 00:26:32Z lou $
+## $Id: Makefile.am 1496 2010-04-27 03:09:41Z tkr $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -30,7 +30,7 @@ unitTest_LDADD =
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = \
+AM_CPPFLAGS = $(MSKCXXFLAGS) \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/../src`
@@ -69,7 +69,8 @@ endif
 if COIN_HAS_SYMPHONY
   unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym` \
+	-I`$(CYGPATH_W) $(SYMPHONYOBJDIR)/include`
   unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
 	$(SYMPHONYOBJDIR)/src/libSym.la
   LIBS += `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
@@ -146,6 +147,13 @@ if COIN_HAS_XPR
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(XPRINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
+endif
+
+if COIN_HAS_GRB
+  unitTest_SOURCES += OsiGrbSolverInterfaceTest.cpp
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(GRBINCDIR)` \
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
+  unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
 endif
 
 # Finally the Coin library (many of the above need it)

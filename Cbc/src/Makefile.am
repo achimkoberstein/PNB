@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1132 2009-03-16 10:30:25Z forrest $
+## $Id: Makefile.am 1455 2010-06-01 17:31:09Z lou $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -20,20 +20,42 @@ lib_LTLIBRARIES = libCbc.la libCbcSolver.la
 libCbc_la_SOURCES = \
 	Cbc_C_Interface.cpp Cbc_C_Interface.h \
 	CbcConfig.h \
-	CbcBranchActual.cpp CbcBranchActual.hpp \
-	CbcBranchBase.cpp CbcBranchBase.hpp \
+	CbcBranchActual.hpp \
+	CbcBranchAllDifferent.cpp CbcBranchAllDifferent.hpp \
+	CbcBranchBase.hpp \
 	CbcBranchCut.cpp CbcBranchCut.hpp \
+	CbcBranchDecision.cpp CbcBranchDecision.hpp \
+	CbcBranchDefaultDecision.cpp CbcBranchDefaultDecision.hpp \
 	CbcBranchDynamic.cpp CbcBranchDynamic.hpp \
+	CbcBranchingObject.cpp CbcBranchingObject.hpp \
 	CbcBranchLotsize.cpp CbcBranchLotsize.hpp \
-	CbcCompareActual.cpp CbcCompareActual.hpp \
+	CbcBranchToFixLots.cpp CbcBranchToFixLots.hpp \
+	CbcCompareActual.hpp \
 	CbcCompareBase.hpp \
+	CbcCompareDefault.cpp CbcCompareDefault.hpp \
+	CbcCompareDepth.cpp CbcCompareDepth.hpp \
+	CbcCompareEstimate.cpp CbcCompareEstimate.hpp \
+	CbcCompareObjective.cpp CbcCompareObjective.hpp \
+	CbcConsequence.cpp CbcConsequence.hpp \
+	CbcChooseVariable.hpp \
+	CbcClique.cpp CbcClique.hpp \
+	CbcCompare.hpp \
 	CbcCountRowCut.cpp CbcCountRowCut.hpp \
 	CbcCutGenerator.cpp CbcCutGenerator.hpp \
+	CbcCutModifier.cpp CbcCutModifier.hpp \
+	CbcCutSubsetModifier.cpp CbcCutSubsetModifier.hpp \
+	CbcDummyBranchingObject.cpp CbcDummyBranchingObject.hpp \
 	CbcEventHandler.cpp CbcEventHandler.hpp \
 	CbcFathom.cpp CbcFathom.hpp \
 	CbcFathomDynamicProgramming.cpp CbcFathomDynamicProgramming.hpp \
 	CbcFeasibilityBase.hpp \
+	CbcFixVariable.cpp CbcFixVariable.hpp \
+	CbcFullNodeInfo.cpp CbcFullNodeInfo.hpp \
+	CbcFollowOn.cpp CbcFollowOn.hpp \
+	CbcGeneral.cpp CbcGeneral.hpp \
+	CbcGeneralDepth.cpp CbcGeneralDepth.hpp \
 	CbcHeuristic.cpp CbcHeuristic.hpp \
+	CbcHeuristicDINS.cpp CbcHeuristicDINS.hpp \
 	CbcHeuristicDive.cpp CbcHeuristicDive.hpp \
 	CbcHeuristicDiveCoefficient.cpp CbcHeuristicDiveCoefficient.hpp \
 	CbcHeuristicDiveFractional.cpp CbcHeuristicDiveFractional.hpp \
@@ -46,21 +68,39 @@ libCbc_la_SOURCES = \
 	CbcHeuristicLocal.cpp CbcHeuristicLocal.hpp \
 	CbcHeuristicPivotAndFix.cpp CbcHeuristicPivotAndFix.hpp \
 	CbcHeuristicRandRound.cpp CbcHeuristicRandRound.hpp \
+	CbcHeuristicRENS.cpp CbcHeuristicRENS.hpp \
 	CbcHeuristicRINS.cpp CbcHeuristicRINS.hpp \
+	CbcHeuristicVND.cpp CbcHeuristicVND.hpp \
 	CbcMessage.cpp CbcMessage.hpp \
 	CbcModel.cpp CbcModel.hpp \
 	CbcNode.cpp CbcNode.hpp \
+	CbcNodeInfo.cpp CbcNodeInfo.hpp \
+	CbcNWay.cpp CbcNWay.hpp \
+	CbcObject.cpp CbcObject.hpp \
+	CbcObjectUpdateData.cpp CbcObjectUpdateData.hpp \
+	CbcPartialNodeInfo.cpp CbcPartialNodeInfo.hpp \
+	CbcSimpleInteger.cpp CbcSimpleInteger.hpp \
+	CbcSimpleIntegerDynamicPseudoCost.cpp \
+        CbcSimpleIntegerDynamicPseudoCost.hpp \
+	CbcSimpleIntegerPseudoCost.cpp \
+        CbcSimpleIntegerPseudoCost.hpp \
+	CbcSOS.cpp CbcSOS.hpp \
 	CbcStatistics.cpp CbcStatistics.hpp \
 	CbcStrategy.cpp CbcStrategy.hpp \
+	CbcSubProblem.cpp CbcSubProblem.hpp \
+	CbcThread.cpp CbcThread.hpp \
 	CbcTree.cpp CbcTree.hpp \
 	CbcTreeLocal.cpp CbcTreeLocal.hpp
+
 
 libCbcSolver_la_SOURCES = \
 	CbcCbcParam.cpp \
 	Cbc_ampl.cpp Cbc_ampl.h \
-	ClpConstraintAmpl.hpp ClpAmplObjective.hpp ClpAmplStuff.cpp \
-	CbcLinked.cpp CbcLinked.hpp \
-	unitTestClp.cpp CbcSolver.cpp 
+	CbcLinked.cpp CbcLinked.hpp CbcLinkedUtils.cpp \
+	unitTestClp.cpp CbcSolver.cpp \
+	CbcSolverHeuristics.cpp CbcSolverHeuristics.hpp \
+	CbcSolverAnalyze.cpp CbcSolverAnalyze.hpp \
+	CbcSolverExpandKnapsack.cpp CbcSolverExpandKnapsack.hpp
 
 #Stefan: added unitTestClp.cpp because CbcSolver defines reference to it
 
@@ -307,17 +347,39 @@ includecoin_HEADERS = \
 	../inc/config_cbc.h \
 	Cbc_C_Interface.h \
 	CbcBranchActual.hpp \
+	CbcBranchAllDifferent.hpp \
 	CbcBranchBase.hpp \
 	CbcBranchDynamic.hpp \
-	CbcBranchLotsize.hpp \
 	CbcBranchCut.hpp \
+        CbcBranchDecision.hpp \
+	CbcBranchDefaultDecision.hpp \
+	CbcBranchingObject.hpp \
+	CbcBranchLotsize.hpp \
+	CbcBranchToFixLots.hpp \
 	CbcCompareActual.hpp \
 	CbcCompareBase.hpp \
+	CbcCompareDefault.hpp \
+	CbcCompareDepth.hpp \
+	CbcCompareEstimate.hpp \
+	CbcCompareObjective.hpp \
+	CbcConsequence.hpp \
+	CbcChooseVariable.hpp \
+	CbcClique.hpp \
+	CbcCompare.hpp \
 	CbcCutGenerator.hpp \
+	CbcCutModifier.hpp \
+	CbcCutSubsetModifier.hpp \
+	CbcDummyBranchingObject.hpp \
 	CbcFathom.hpp \
 	CbcEventHandler.hpp \
 	CbcFeasibilityBase.hpp \
+	CbcFixVariable.hpp \
+	CbcFollowOn.hpp \
+	CbcFullNodeInfo.hpp \
+	CbcGeneral.hpp \
+	CbcGeneralDepth.hpp \
 	CbcHeuristic.hpp \
+	CbcHeuristicDINS.hpp \
 	CbcHeuristicDive.hpp \
 	CbcHeuristicDiveCoefficient.hpp \
 	CbcHeuristicDiveFractional.hpp \
@@ -330,12 +392,24 @@ includecoin_HEADERS = \
 	CbcHeuristicLocal.hpp \
 	CbcHeuristicPivotAndFix.hpp \
 	CbcHeuristicRandRound.hpp \
+	CbcHeuristicRENS.hpp \
 	CbcHeuristicRINS.hpp \
+	CbcHeuristicVND.hpp \
 	CbcMessage.hpp \
 	CbcModel.hpp \
 	CbcNode.hpp \
+	CbcNodeInfo.hpp \
+	CbcNWay.hpp \
+        CbcObject.hpp \
+	CbcObjectUpdateData.hpp \
+	CbcPartialNodeInfo.hpp \
+	CbcSimpleInteger.hpp \
+	CbcSimpleIntegerDynamicPseudoCost.hpp \
+	CbcSimpleIntegerPseudoCost.hpp \
 	CbcStrategy.hpp \
 	CbcSolver.hpp \
+	CbcSOS.hpp \
+	CbcSubProblem.hpp \
 	CbcTree.hpp \
 	CbcLinked.hpp \
 	CbcTreeLocal.hpp \
