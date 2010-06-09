@@ -31,7 +31,7 @@ namespace flopc {
       parametersof construction are MP_set s which specify the indexes
       over which the variable is defined.
   */
-  class MP_variable : public RowMajor, public Functor , public Named {
+  class MP_variable : public RowMajor, public Functor , private Named {
     friend class MP_model;
     friend class DisplayVariable;
     friend class VariableRef;
@@ -43,9 +43,10 @@ namespace flopc {
                 const MP_set_base &s5 = MP_set::getEmpty());
 
     ~MP_variable();
-
-	void display(const std::string &s = "");  
-
+    void display(const std::string &s = "");  
+    
+    using Named::setName;
+    using Named::getName;
 
     /// Returns the value of the variable given the specific index values.
     double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
@@ -66,6 +67,8 @@ namespace flopc {
       return *myrefs.back(); //TODO: possible Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
     }
     
+    //void display(string s = "");  
+
     /// Call this method to turn the variable into a binary variable
     void binary() { 
       //upperLimit.initialize(1);

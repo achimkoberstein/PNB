@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="xbsl"
 	ProjectGUID="{1D514246-2CF0-4845-A495-DC6EC96A1024}"
 	RootNamespace="xbsl"
@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -96,6 +97,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>

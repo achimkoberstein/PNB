@@ -16,3 +16,10 @@ configure.orig
 *.*.*
 *.ncb
 *.suo
+
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.*~
