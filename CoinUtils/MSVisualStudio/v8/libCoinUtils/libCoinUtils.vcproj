@@ -169,31 +169,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.cpp"
 				>
 				<FileConfiguration
@@ -617,6 +592,18 @@
 						BasicRuntimeChecks="3"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CoinOslFactorization.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CoinOslFactorization2.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CoinOslFactorization3.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.cpp"
@@ -1231,7 +1218,82 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartVector.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartPrimalDual.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1285,10 +1347,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.hpp"
-				>
-			</File>
 			<File
 				RelativePath="..\..\..\..\CoinUtils\src\Coin_C_defines.h"
 				>
@@ -1363,6 +1421,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CoinOslFactorization.hpp"
 				>
 			</File>
 			<File
@@ -1466,6 +1528,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinStructuredModel.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp"
 				>
 			</File>
@@ -1487,6 +1553,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartVector.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartPrimalDual.hpp"
 				>
 			</File>
 			<File

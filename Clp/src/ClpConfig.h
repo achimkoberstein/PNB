@@ -1,3 +1,4 @@
+/* $Id: ClpConfig.h 1555 2010-05-28 00:13:34Z lou $ */
 /*
  * Include file for the configuration of Clp.
  *
@@ -18,6 +19,7 @@
  */
 
 #ifndef __CLPCONFIG_H__
+#define __CLPCONFIG_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config_clp.h"
@@ -56,6 +58,8 @@
 /* Define to 1 if readline is available */
 /* #undef COIN_HAS_READLINE */
 
+#define CLP_VERSION "1.12"
+
 #endif /* HAVE_CONFIG_H */
 
-#endif /*__HAVE_COINUTILS_CONFIG_H__*/
+#endif /*__CLPCONFIG_H__ */

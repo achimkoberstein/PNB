@@ -1,3 +1,4 @@
+/* $Id: CbcConfig.h 1459 2010-06-02 22:14:32Z lou $ */
 /*
  * Include file for the configuration of Cbc.
  *
@@ -93,6 +94,8 @@
 /* Define to 1 if the Xpress package is used */
 /* #undef COIN_HAS_XPR */
 
+#define CBC_VERSION "2.5"
+
 #endif /* HAVE_CONFIG_H */
 
-#endif /*__HAVE_COINUTILS_CONFIG_H__*/
+#endif /* __CBCCONFIG_H__ */

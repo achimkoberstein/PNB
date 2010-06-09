@@ -69,10 +69,12 @@ am_libCoinUtils_la_OBJECTS = CoinAlloc.lo CoinBuild.lo \
 	CoinDenseVector.lo CoinError.lo CoinFactorization1.lo \
 	CoinFactorization2.lo CoinFactorization3.lo \
 	CoinFactorization4.lo CoinSimpFactorization.lo \
-	CoinDenseFactorization.lo CoinFileIO.lo CoinIndexedVector.lo \
-	CoinLpIO.lo CoinMessage.lo CoinMessageHandler.lo CoinModel.lo \
-	CoinStructuredModel.lo CoinModelUseful.lo CoinModelUseful2.lo \
-	CoinMpsIO.lo CoinPackedMatrix.lo CoinPackedVector.lo \
+	CoinDenseFactorization.lo CoinOslFactorization.lo \
+	CoinOslFactorization2.lo CoinOslFactorization3.lo \
+	CoinFileIO.lo CoinIndexedVector.lo CoinLpIO.lo CoinMessage.lo \
+	CoinMessageHandler.lo CoinModel.lo CoinStructuredModel.lo \
+	CoinModelUseful.lo CoinModelUseful2.lo CoinMpsIO.lo \
+	CoinPackedMatrix.lo CoinPackedVector.lo \
 	CoinPackedVectorBase.lo CoinParam.lo CoinParamUtils.lo \
 	CoinPostsolveMatrix.lo CoinPrePostsolveMatrix.lo \
 	CoinPresolveDoubleton.lo CoinPresolveDual.lo \
@@ -171,7 +173,6 @@ DBG_CXXFLAGS = @DBG_CXXFLAGS@
 DBG_FFLAGS = @DBG_FFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
-DSYMUTIL = @DSYMUTIL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -185,7 +186,6 @@ FLIBS = @FLIBS@
 GMPLINCDIR = @GMPLINCDIR@
 GMPLLIB = @GMPLLIB@
 GMPLOBJDIR = @GMPLOBJDIR@
-GREP = @GREP@
 HAVE_EXTERNALS_FALSE = @HAVE_EXTERNALS_FALSE@
 HAVE_EXTERNALS_TRUE = @HAVE_EXTERNALS_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -214,7 +214,6 @@ MAKEINFO = @MAKEINFO@
 MPICC = @MPICC@
 MPICXX = @MPICXX@
 MPIF77 = @MPIF77@
-NMEDIT = @NMEDIT@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
@@ -228,7 +227,6 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
 RPATH_FLAGS = @RPATH_FLAGS@
-SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -239,9 +237,12 @@ abs_include_dir = @abs_include_dir@
 abs_lib_dir = @abs_lib_dir@
 abs_source_dir = @abs_source_dir@
 ac_c_preproc_warn_flag = @ac_c_preproc_warn_flag@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_RANLIB = @ac_ct_RANLIB@
+ac_ct_STRIP = @ac_ct_STRIP@
 ac_cxx_preproc_warn_flag = @ac_cxx_preproc_warn_flag@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
@@ -259,9 +260,6 @@ build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
-datarootdir = @datarootdir@
-docdir = @docdir@
-dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 have_autoconf = @have_autoconf@
 have_automake = @have_automake@
@@ -271,21 +269,17 @@ host_alias = @host_alias@
 host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
-htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
-localedir = @localedir@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
-pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
-psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sol_cc_compiler = @sol_cc_compiler@
@@ -319,6 +313,11 @@ libCoinUtils_la_SOURCES = \
 	CoinSimpFactorization.cpp \
 	CoinDenseFactorization.hpp \
 	CoinDenseFactorization.cpp \
+	CoinOslFactorization.hpp \
+	CoinOslFactorization.cpp \
+	CoinOslFactorization2.cpp \
+	CoinOslFactorization3.cpp \
+	CoinOslC.h \
 	CoinFileIO.cpp CoinFileIO.hpp \
 	CoinFinite.hpp \
 	CoinFloatEqual.hpp \
@@ -407,6 +406,7 @@ includecoin_HEADERS = \
 	CoinFactorization.hpp \
 	CoinSimpFactorization.hpp \
 	CoinDenseFactorization.hpp \
+	CoinOslFactorization.hpp \
 	CoinFileIO.hpp \
 	CoinFinite.hpp \
 	CoinFloatEqual.hpp \
@@ -549,6 +549,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinModelUseful.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinModelUseful2.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinMpsIO.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinOslFactorization.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinOslFactorization2.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinOslFactorization3.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinPackedMatrix.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinPackedVector.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/CoinPackedVectorBase.Plo@am__quote@

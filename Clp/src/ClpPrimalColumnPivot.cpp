@@ -1,3 +1,4 @@
+/* $Id: ClpPrimalColumnPivot.cpp 1525 2010-02-26 17:27:59Z mjs $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
@@ -11,29 +12,29 @@
 //#############################################################################
 
 //-------------------------------------------------------------------
-// Default Constructor 
+// Default Constructor
 //-------------------------------------------------------------------
 ClpPrimalColumnPivot::ClpPrimalColumnPivot () :
-  model_(NULL), 
-  type_(-1),
-  looksOptimal_(false)
+     model_(NULL),
+     type_(-1),
+     looksOptimal_(false)
 {
 
 }
 
 //-------------------------------------------------------------------
-// Copy constructor 
+// Copy constructor
 //-------------------------------------------------------------------
 ClpPrimalColumnPivot::ClpPrimalColumnPivot (const ClpPrimalColumnPivot & source) :
-  model_(source.model_),
-  type_(source.type_),
-  looksOptimal_(source.looksOptimal_)
-{  
+     model_(source.model_),
+     type_(source.type_),
+     looksOptimal_(source.looksOptimal_)
+{
 
 }
 
 //-------------------------------------------------------------------
-// Destructor 
+// Destructor
 //-------------------------------------------------------------------
 ClpPrimalColumnPivot::~ClpPrimalColumnPivot ()
 {
@@ -41,45 +42,45 @@ ClpPrimalColumnPivot::~ClpPrimalColumnPivot ()
 }
 
 //----------------------------------------------------------------
-// Assignment operator 
+// Assignment operator
 //-------------------------------------------------------------------
 ClpPrimalColumnPivot &
 ClpPrimalColumnPivot::operator=(const ClpPrimalColumnPivot& rhs)
 {
-  if (this != &rhs) {
-    type_ = rhs.type_;
-    model_ = rhs.model_;
-    looksOptimal_ = rhs.looksOptimal_;
-  }
-  return *this;
+     if (this != &rhs) {
+          type_ = rhs.type_;
+          model_ = rhs.model_;
+          looksOptimal_ = rhs.looksOptimal_;
+     }
+     return *this;
 }
-void 
-ClpPrimalColumnPivot::saveWeights(ClpSimplex * model,int mode)
+void
+ClpPrimalColumnPivot::saveWeights(ClpSimplex * model, int )
 {
-  model_=model;
+     model_ = model;
 }
 // checks accuracy and may re-initialize (may be empty)
 
-void 
-ClpPrimalColumnPivot::updateWeights(CoinIndexedVector * input)
+void
+ClpPrimalColumnPivot::updateWeights(CoinIndexedVector *)
 {
 }
 
 // Gets rid of all arrays
-void 
+void
 ClpPrimalColumnPivot::clearArrays()
 {
 }
 /* Returns number of extra columns for sprint algorithm - 0 means off.
    Also number of iterations before recompute
 */
-int 
-ClpPrimalColumnPivot::numberSprintColumns(int & numberIterations) const
+int
+ClpPrimalColumnPivot::numberSprintColumns(int & ) const
 {
-  return 0;
+     return 0;
 }
 // Switch off sprint idea
-void 
+void
 ClpPrimalColumnPivot::switchOffSprint()
 {
 }

@@ -13,7 +13,7 @@
 
 /*
   sccs: @(#)OsiDylpWarmStartBasis.hpp	1.5	09/16/04
-  cvs: $Id: OsiDylpWarmStartBasis.hpp 1409 2009-10-04 10:44:25Z stefan $
+  cvs: $Id: OsiDylpWarmStartBasis.hpp 1408 2009-10-04 10:27:59Z stefan $
 */
 
 #include "CoinWarmStartBasis.hpp"

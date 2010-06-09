@@ -1,3 +1,4 @@
+/* $Id: CoinMessageHandler.hpp 1239 2009-12-10 16:16:11Z ladanyi $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #ifndef CoinMessageHandler_H
@@ -166,8 +167,8 @@ public:
   inline Language language() const
   {return language_;}
   /** Set language */
-  void setLanguage(Language language)
-  {language_ = language;}
+  void setLanguage(Language newlanguage)
+  {language_ = newlanguage;}
   /// Change detail level for one message
   void setDetailMessage(int newLevel, int messageNumber);
   /** \brief Change detail level for several messages
@@ -569,7 +570,7 @@ protected:
   //@{
   /// values in message
   std::vector<double> doubleValue_;
-  std::vector<long> longValue_;
+  std::vector<int> longValue_;
   std::vector<char> charValue_;
   std::vector<std::string> stringValue_;
   /// Log level

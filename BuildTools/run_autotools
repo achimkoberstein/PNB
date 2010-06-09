@@ -5,24 +5,21 @@
 # This file is distributed under the Common Public License.
 # It is part of the BuildTools project in COIN-OR (www.coin-or.org)
 #
-## $Id: run_autotools 1189 2008-09-17 16:32:51Z ladanyi $
+## $Id: run_autotools 1363 2009-07-21 17:55:10Z tkr $
 #
 # Author: Andreas Waechter     IBM      2006-04-14
 
 # Make sure we bail out if there is an error
 set -e
 
-#ver_autoconf='2.59'
-#ver_automake='1.9.6'
-#ver_libtool='1.5.22'
-ver_autoconf='2.61'
+ver_autoconf='2.59'
 ver_automake='1.9.6'
-ver_libtool='1.5.26'
+ver_libtool='1.5.22'
 EGREP='grep -E'
 
 # Check if the correct version of the autotools is used
 if test x$AUTOTOOLS_DIR = x; then
-    AUTOTOOLS_DIR=/usr
+  AUTOTOOLS_DIR=$HOME
 fi
 
 grep_version=`echo  $ver_autoconf | sed -e 's/\\./\\\\\\./g'`

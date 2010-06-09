@@ -1,3 +1,4 @@
+/* $Id: CoinDenseVector.cpp 1215 2009-11-05 11:03:04Z forrest $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Resized.
 #if defined(_MSC_VER)

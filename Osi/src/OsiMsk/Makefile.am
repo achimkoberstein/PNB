@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1152 2007-12-28 03:59:07Z andreasw $
+## $Id: Makefile.am 1405 2009-10-03 18:27:42Z stefan $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -26,7 +26,7 @@ libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
+AM_CPPFLAGS = $(MSKCXXFLAGS) \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(MSKINCDIR)` \
