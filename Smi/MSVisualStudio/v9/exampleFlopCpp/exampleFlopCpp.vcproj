@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -93,6 +94,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>

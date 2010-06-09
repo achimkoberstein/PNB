@@ -90,7 +90,7 @@ namespace flopc {
         virtual Functor* makeInsertFunctor() const;
         virtual MP_index* getIndex() const = 0;
         virtual const MP_set_base* getSet() const = 0;
-        void display()const;
+        void display() const;
         virtual size_t size() const ;
         //   const Functor* donext;
     private:

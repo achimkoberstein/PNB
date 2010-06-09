@@ -19,8 +19,10 @@ Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
             //Windows
             errno_t err;
             err = rand_s(&seed);
-            if (err != 0)
+            if (err != 0){
                 std::cerr << "Error occured during seed generation: " << err << std::endl;
+                // We need to abort here TODO
+            }
             #endif
             //So we are not compiling using windows compiler, so we have /dev/urandom
             #ifndef _MSC_VER

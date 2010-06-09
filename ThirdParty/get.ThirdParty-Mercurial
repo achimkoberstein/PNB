@@ -1,0 +1,10 @@
+#!/bin/sh
+# This script just executes the scripts to get boost and googletes
+rm -rf boost gtest glog
+hg revert boost/get.boost gtest/get.gtest glog/get.glog
+cd boost
+/bin/sh get.boost
+cd ../gtest
+/bin/sh get.gtest
+cd ../glog
+/bin/sh get.glog

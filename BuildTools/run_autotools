@@ -12,12 +12,12 @@
 # Make sure we bail out if there is an error
 set -e
 
-ver_autoconf='2.59'
-ver_automake='1.9.6'
-ver_libtool='1.5.22'
-#ver_autoconf='2.64'
+#ver_autoconf='2.59'
 #ver_automake='1.9.6'
-#ver_libtool='2.2.6'
+#ver_libtool='1.5.22'
+ver_autoconf='2.61'
+ver_automake='1.9.6'
+ver_libtool='1.5.26'
 EGREP='grep -E'
 
 # Check if the correct version of the autotools is used

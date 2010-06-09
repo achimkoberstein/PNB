@@ -64,15 +64,15 @@ namespace flopc {
         static bool CoefLess (const MP::Coef& a, const MP::Coef& b) ;
         static bool CoefLessShared (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) ;
         static bool CoefLessWithStageShared  (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) ;
-    /*    struct CoefLess {
-            bool operator()  const;
+        /*    struct CoefLess {
+        bool operator()  const;
         };
 
         struct CoefLessShared {
-            bool operator() (const MP::Coef& a, const MP::Coef& b) const;
+        bool operator() (const MP::Coef& a, const MP::Coef& b) const;
         };
         struct CoefLessWithStageShared {
-            bool operator() (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) const;
+        bool operator() (const boost::shared_ptr<MP::Coef>& a, const boost::shared_ptr<MP::Coef>& b) const;
         };*/
 
     protected:
@@ -227,6 +227,10 @@ namespace flopc {
             const MP_index_exp& i5);
 
         //VariableRef& operator=(const &VariableRef); Why is there a compiler warning about assignment operator can not be generated? due to the private constructor?
+
+        //Disable copy constructor and assignment operator ? 
+        VariableRef(const VariableRef&);
+        VariableRef& operator=(const VariableRef&);
 
         void generate(const MP_domain& domain,
             vector<Constant> multiplicators,
