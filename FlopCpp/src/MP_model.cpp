@@ -99,10 +99,11 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
 
 MP_model::~MP_model() {
     delete messenger;
-    if (Solver!=0) { //If solver was not deleted, call detach and therefore delete the Solver
+    if (Solver) { //If solver was not deleted, call detach and therefore delete the Solver and smiModel
         this->detach();
     }
     assert(Solver == 0);
+    assert(smiModel == 0);
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
@@ -1073,6 +1074,7 @@ void MP_model::detach() {
     if (stage.size() > 0 && smiModel != 0){ 
         smiModel->releaseSolver(); //TODO: This can be deleted, if stochasticSolverInterface is ready.
         delete smiModel;
+        smiModel = 0;
         if (n > 0){
             delete [] colStage;
             delete [] colIndirection;
