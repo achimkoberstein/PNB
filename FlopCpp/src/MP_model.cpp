@@ -12,6 +12,7 @@ using std::endl;
 #include <queue>
 #include <ctime>
 #include <iterator>
+#include <omp.h>
 
 #include "boost/shared_ptr.hpp"
 #include <boost/random.hpp>
@@ -88,12 +89,12 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) const {
     }
 }
 
-MP_model::MP_model(OsiSolverInterface* s, Messenger* m) : 
+MP_model::MP_model(OsiSolverInterface* s, Messenger* m, int seed ) : 
 Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0),sampleOnly(false),
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGenerator(new Uniform01Generator()),smiModel(0) {
     MP_model::current_model = this;
-    uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(uniformGenerator->seed));
+    uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
 }
 
@@ -235,7 +236,7 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<boost::shared_ptr<MP::Coef> 
         s = i->varStage;
         rs = i->randomStage;
         scenVector = i->scenVector;
-        i++;
+        ++i;
         //In case of RHS with a constant term consisting of more than one constant
         //These values were added one after another, otherwise this does not make sense.
         while (i!=v.end() && c==i->col && r==i->row) {
@@ -250,7 +251,7 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<boost::shared_ptr<MP::Coef> 
                     scenVector[j] = scenVector[j] + (i->scenVector)[j];
                 }
             }
-            i++;
+            ++i;
         }
         boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
         av.push_back(temp);
@@ -405,8 +406,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     double time = CoinCpuTime();
     m=0;
     n=0;
-    vector<boost::shared_ptr<MP::Coef> > coefs;
-    vector<MP::Coef> cfs;
 
     typedef std::set<MP_variable* >::iterator varIt;
     typedef std::set<MP_constraint* >::iterator conIt;
@@ -421,7 +420,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
     //Count number of columns and rows in the add methods. 
     //Insert the remaining variables not in the objective to the list of variables stored in container Variables.
-    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); ++i) {
         add(*i);
         if (stage.size()) // if stochastic insert Random Variables
             (*i)->insertRandomVariables(RandomVariables);
@@ -429,7 +428,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
     //Count the number of real variables in the model with the add Method. 
     // The variables in the Variables set are inserted from constraints and objective function.
-    for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
+    for (varIt j=Variables.begin(); j!=Variables.end(); ++j) {
         add(*j); 
     }// We have number of rows and number of columns at this point
 
@@ -441,13 +440,21 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
     //At first, generate coefficients for every constraint and store them in coefs vector: Assigns column and row number
-    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
-        (*i)->coefficients(cfs);
-        messenger->constraintDebug((*i)->getName(),cfs);
+    vector<boost::shared_ptr<MP::Coef> > coefs;
+    vector<MP::Coef> cfs;
+    conIt it;
+ //   #pragma omp parallel for private(it,cfs,coefs)
+
+    for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
+        (*it)->coefficients(cfs);
+        messenger->constraintDebug((*it)->getName(),cfs);
         //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
-        assemble(cfs,coefs);
-        cfs.erase(cfs.begin(),cfs.end());
-    }
+  //      #pragma omp critical 
+        {
+            assemble(cfs,coefs);
+        }
+        cfs.clear();
+    }//End parallel
     nz = coefs.size();
     realn = n;
 
