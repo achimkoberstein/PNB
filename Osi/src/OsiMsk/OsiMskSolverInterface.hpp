@@ -1,21 +1,18 @@
-// Osi interface for Mosek ver. 3.1 
+// Osi interface for Mosek ver. 5.0
 // Lower versions are not supported
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for MOSEK
 // author:   Bo Jensen
-//           
-//           email: bo.jensen@MOSEK.com
-// date:     ?
+// email:    support@MOSEK.com
 //-----------------------------------------------------------------------------
 
 #ifndef OsiMskSolverInterface_H
 #define OsiMskSolverInterface_H
 
-#include "mosek.h"
-#include <string>
 #include "OsiSolverInterface.hpp"
-#include "CoinPackedMatrix.hpp"
-#include "CoinWarmStartBasis.hpp"  
+
+typedef void* MSKtask_t;
+typedef void* MSKenv_t;
 
 /* MOSEK Solver Interface
    Instantiation of OsiMskSolverInterface for MOSEK
@@ -97,8 +94,7 @@ public:
     to provide a way to give a client a warm start basis object of the
     appropriate type, which can resized and modified as desired.
   */
-  inline CoinWarmStart *getEmptyWarmStart () const
-  { return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
+  CoinWarmStart* getEmptyWarmStart () const;
 
   //@{
     /// Get warmstarting information
@@ -569,6 +565,16 @@ public:
                           double objSense=0.0) const;
   //@}
 
+    /**@name Message handling */
+    //@{
+    /** Pass in a message handler
+        It is the client's responsibility to destroy a message handler installed
+        by this routine; it will not be destroyed when the solver interface is
+        destroyed. 
+     */
+    void passInMessageHandler(CoinMessageHandler * handler);
+    //@}
+
   //---------------------------------------------------------------------------
 
   /**@name MOSEK specific public interfaces */
@@ -641,7 +647,9 @@ public:
   /**@name Constructors and destructor */
   //@{
   /// Default Constructor
-  OsiMskSolverInterface(); 
+  /// optional argument mskenv can be used to reach in an initialized user environment
+  /// OsiMsk assumes membership of mskenv, so it will be freed when the last instanciation of OsiMsk is deleted
+  OsiMskSolverInterface(MSKenv_t mskenv = NULL); 
   
   /// Clone
   virtual OsiSolverInterface * clone(bool copyData = true) const;
@@ -705,6 +713,7 @@ private:
   
   int Mskerr;
   int MSKsolverused_;
+  double ObjOffset_;
 
   int InitialSolver;
 

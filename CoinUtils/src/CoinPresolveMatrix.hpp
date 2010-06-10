@@ -1,3 +1,4 @@
+/* $Id: CoinPresolveMatrix.hpp 1269 2010-04-02 17:15:06Z forrest $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #ifndef CoinPresolveMatrix_H
@@ -54,10 +55,10 @@ inline void DIE(const char *s)	{ std::cout<<s; abort(); }
 
 #else
 
-#define PRESOLVEASSERT(x) 
-#define	PRESOLVE_STMT(s)
+#define PRESOLVEASSERT(x) {} 
+#define	PRESOLVE_STMT(s) {}
 
-inline void DIE(const char *s)	{}
+inline void DIE(const char *)	{}
 
 #endif
 
@@ -947,7 +948,7 @@ class CoinPresolveMatrix : public CoinPrePostsolveMatrix
   #endif
     if (change_amount)
       PRESOLVE_STMT(printf("changing bias by %g to %g\n",
-		      change_amount, dobias_));  
+			    change_amount, dobias_));
   }
 
   /*! \name Row-major representation
@@ -1081,6 +1082,7 @@ class CoinPresolveMatrix : public CoinPrePostsolveMatrix
       4 set to inhibit x+y+z=1 mods
       8 not used
       16 set to allow stuff which won't unroll easily 
+      0x80000000 set by presolve to say dupcol_action compressed columns
   */
   int presolveOptions_;
   /*! Flag to say if any rows or columns are marked as prohibited
@@ -1423,7 +1425,7 @@ class CoinPostsolveMatrix : public CoinPrePostsolveMatrix
     \brief Initialise linked list for major vector order in bulk storage
 */
 
-void presolve_make_memlists(CoinBigIndex *starts, int *lengths,
+void presolve_make_memlists(/*CoinBigIndex *starts,*/ int *lengths,
 			    presolvehlink *link, int n);
 
 /*! \relates CoinPrePostsolveMatrix
@@ -1670,7 +1672,7 @@ inline void presolve_delete_from_row(int row, int col,
 */
 void presolve_delete_from_major2 (int majndx, int minndx,
 				  CoinBigIndex *majstrts, int *majlens,
-				  int *minndxs, double *els, int *majlinks,
+				  int *minndxs, /*double *els,*/ int *majlinks,
 				   CoinBigIndex *free_listp) ;
 
 /*! \relates CoinPostsolveMatrix
@@ -1685,9 +1687,9 @@ void presolve_delete_from_major2 (int majndx, int minndx,
 */
 inline void presolve_delete_from_col2(int row, int col, CoinBigIndex *mcstrt,
 				      int *hincol, int *hrow,
-				      double *colels, int *clinks,
+				      /*double *colels,*/ int *clinks,
 				      CoinBigIndex *free_listp)
-{ presolve_delete_from_major2(col,row,mcstrt,hincol,hrow,colels,clinks,
+{ presolve_delete_from_major2(col,row,mcstrt,hincol,hrow,/*colels,*/clinks,
 			      free_listp) ; }
 
 //@}

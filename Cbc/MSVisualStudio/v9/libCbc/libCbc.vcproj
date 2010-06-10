@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="libCbc"
 	ProjectGUID="{363BA154-FEC9-4E1E-BC23-93CEC58AB785}"
 	RootNamespace="libCbc"
@@ -44,13 +44,13 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE"
+				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
-				WarningLevel="0"
+				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				CompileAs="0"
@@ -115,8 +115,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE"
+				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
+				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -166,54 +166,8 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcBranchActual.cpp"
+				RelativePath="..\..\..\src\CbcBranchAllDifferent.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcBranchBase.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcBranchCut.cpp"
@@ -241,6 +195,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcBranchDecision.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcBranchDefaultDecision.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcBranchDynamic.cpp"
 				>
 				<FileConfiguration
@@ -266,29 +228,16 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcBranchLotsize.cpp"
+				RelativePath="..\..\..\src\CbcBranchingObject.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcBranchLotsize.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcBranchToFixLots.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcCbcParam.cpp"
@@ -316,29 +265,28 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcCompareActual.cpp"
+				RelativePath="..\..\..\src\CbcClique.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareDefault.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareDepth.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareEstimate.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareObjective.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcConsequence.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcCountRowCut.cpp"
@@ -389,6 +337,18 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCutModifier.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCutSubsetModifier.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcDummyBranchingObject.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcEventHandler.cpp"
@@ -466,10 +426,23 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcFixVariable.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcFollowOn.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcFullNodeInfo.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\CbcGenCtlBlk.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -481,6 +454,7 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -491,10 +465,19 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcGeneral.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcGeneralDepth.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\CbcGenMessages.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -506,6 +489,7 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -539,6 +523,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcHeuristicDINS.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\CbcHeuristicDive.cpp"
@@ -757,6 +745,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcHeuristicRENS.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcHeuristicRINS.cpp"
 				>
 				<FileConfiguration
@@ -782,6 +774,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcHeuristicVND.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\CbcLinked.cpp"
 				>
 				<FileConfiguration
@@ -805,6 +801,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcLinkedUtils.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcMessage.cpp"
@@ -882,6 +882,22 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcNodeInfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcNWay.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcObjectUpdateData.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcParam.cpp"
 				>
 				<FileConfiguration
@@ -907,7 +923,39 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcPartialNodeInfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSimpleInteger.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSimpleIntegerDynamicPseudoCost.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSimpleIntegerPseudoCost.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\CbcSolver.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSolverAnalyze.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSolverExpandKnapsack.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSolverHeuristics.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSOS.cpp"
 				>
 			</File>
 			<File
@@ -961,6 +1009,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcSubProblem.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcThread.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcTree.cpp"
 				>
 				<FileConfiguration
@@ -1010,10 +1066,6 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath="..\..\..\src\ClpAmplStuff.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -1028,6 +1080,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcBranchAllDifferent.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcBranchBase.hpp"
 				>
 			</File>
@@ -1036,11 +1092,39 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcBranchDecision.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcBranchDefaultDecision.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcBranchDynamic.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcBranchLotsize.hpp"
+				RelativePath="..\..\..\src\CbcBranchingObject.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcBranchLotsize.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcBranchToFixLots.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcChooseVariable.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcClique.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompare.hpp"
 				>
 			</File>
 			<File
@@ -1052,7 +1136,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcCompareDefault.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareDepth.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareEstimate.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCompareObjective.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcConfig.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcConsequence.hpp"
 				>
 			</File>
 			<File
@@ -1061,6 +1165,18 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcCutGenerator.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCutModifier.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcCutSubsetModifier.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcDummyBranchingObject.hpp"
 				>
 			</File>
 			<File
@@ -1080,11 +1196,35 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcFixVariable.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcFollowOn.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcFullNodeInfo.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\CbcGenCtlBlk.hpp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcGeneral.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcGeneralDepth.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcHeuristic.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcHeuristicDINS.hpp"
 				>
 			</File>
 			<File
@@ -1136,7 +1276,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcHeuristicRENS.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcHeuristicRINS.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcHeuristicVND.hpp"
 				>
 			</File>
 			<File
@@ -1156,6 +1304,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcNodeInfo.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcNWay.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcObject.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcObjectUpdateData.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Clp\src\CbcOrClpParam.hpp"
 				>
 			</File>
@@ -1164,11 +1328,51 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\CbcPartialNodeInfo.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSimpleInteger.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSimpleIntegerDynamicPseudoCost.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSimpleIntegerPseudoCost.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSolverAnalyze.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSolverExpandKnapsack.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSolverHeuristics.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSOS.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcStatistics.hpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcStrategy.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcSubProblem.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\CbcThread.hpp"
 				>
 			</File>
 			<File

@@ -1,3 +1,4 @@
+/* $Id: CoinUtility.hpp 1215 2009-11-05 11:03:04Z forrest $ */
 #ifndef CoinUtility_h_
 #define CoinUtility_h_
 
