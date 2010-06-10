@@ -443,18 +443,24 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     vector<boost::shared_ptr<MP::Coef> > coefs;
     vector<MP::Coef> cfs;
     conIt it;
- //   #pragma omp parallel for private(it,cfs,coefs)
+    //We can do this in different ways, according to which system we use..
+    //#pragma omp parallel private(it,cfs,coefs)
 
+    //{
+        //#pragma omp for 
+    double curTime = CoinCpuTime();
     for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
         (*it)->coefficients(cfs);
         messenger->constraintDebug((*it)->getName(),cfs);
         //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
-  //      #pragma omp critical 
-        {
-            assemble(cfs,coefs);
-        }
+        //#pragma omp critical 
+        //{
+        assemble(cfs,coefs);
+        //}
         cfs.clear();
-    }//End parallel
+        //}//End parallel
+    }
+    DLOG(INFO) << "Zeit zum Generieren der Koeffizienten" << CoinCpuTime()-curTime;
     nz = coefs.size();
     realn = n;
 
