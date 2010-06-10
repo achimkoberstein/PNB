@@ -1,3 +1,4 @@
+/* $Id: CoinPackedVectorBase.cpp 1239 2009-12-10 16:16:11Z ladanyi $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
@@ -124,7 +125,7 @@ int
 CoinPackedVectorBase::findIndex(int i) const
 {   
    const int * inds = getIndices();
-   int retVal = std::find(inds, inds + getNumElements(), i) - inds;
+   int retVal = static_cast<int>(std::find(inds, inds + getNumElements(), i) - inds);
    if (retVal == getNumElements() ) retVal = -1;
    return retVal;
 }

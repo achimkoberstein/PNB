@@ -1,3 +1,4 @@
+/* $Id: CoinIndexedVector.cpp 1239 2009-12-10 16:16:11Z ladanyi $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #if defined(_MSC_VER)
@@ -1579,7 +1580,7 @@ CoinArrayWithLength::conditionalNew(long sizeWanted)
     setCapacity();
     if (sizeWanted>size_) {
       freeArray(array_);
-      size_ = static_cast<int> (sizeWanted*1.01)+64;
+      size_ = static_cast<int> (sizeWanted*101/100)+64;
       // round to multiple of 16
       size_ -= size_%16;
       array_ = mallocArray(size_);

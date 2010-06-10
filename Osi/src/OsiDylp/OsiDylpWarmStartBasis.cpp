@@ -62,7 +62,7 @@
 
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.7	11/06/04" ;
-  char cvsid[] UNUSED = "$Id: OsiDylpWarmStartBasis.cpp 1409 2009-10-04 10:44:25Z stefan $" ;
+  char cvsid[] UNUSED = "$Id: OsiDylpWarmStartBasis.cpp 1408 2009-10-04 10:27:59Z stefan $" ;
 }
 
 using std::vector ;

@@ -1,3 +1,4 @@
+/* $Id: CoinLpIO.hpp 1215 2009-11-05 11:03:04Z forrest $ */
 // Last edit: 11/5/08
 //
 // Name:     CoinLpIO.hpp; Support for Lp files

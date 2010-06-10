@@ -1,169 +1,119 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="7.10"
 	Name="libOsi"
-	ProjectGUID="{59EBCEDA-5685-4483-B9CE-97AA8E3FEA08}"
-	TargetFrameworkVersion="131072"
-	>
+	SccProjectName=""
+	SccLocalPath="">
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
+			Name="Win32"/>
 	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				RuntimeTypeInfo="true"
-				UsePrecompiledHeader="0"
+				RuntimeLibrary="5"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Debug/libOsi.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
-				CompileAs="0"
-			/>
+				CompileAs="0"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile=".\Debug\libOsi.lib"
-				SuppressStartupBanner="true"
-			/>
+				SuppressStartupBanner="TRUE"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="1033"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				StringPooling="true"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				RuntimeTypeInfo="true"
-				UsePrecompiledHeader="0"
+				StringPooling="TRUE"
+				RuntimeLibrary="4"
+				EnableFunctionLevelLinking="TRUE"
+				RuntimeTypeInfo="TRUE"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Release/libOsi.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
-			/>
+				SuppressStartupBanner="TRUE"
+				CompileAs="0"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile=".\Release\libOsi.lib"
-				SuppressStartupBanner="true"
-			/>
+				SuppressStartupBanner="TRUE"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="1033"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -171,482 +121,375 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
-			>
+			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiAuxInfo.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiAuxInfo.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiBranchingObject.cpp"
-				>
+				RelativePath="..\..\..\src\OsiBranchingObject.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiChooseVariable.cpp"
-				>
+				RelativePath="..\..\..\src\OsiChooseVariable.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiColCut.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiColCut.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCut.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiCut.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCuts.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiCuts.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiNames.cpp"
-				>
+				RelativePath="..\..\..\src\OsiNames.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiOpbdpSolve.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiOpbdpSolve.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiPresolve.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiPresolve.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiRowCut.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiRowCut.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiRowCutDebugger.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiRowCutDebugger.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverBranch.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiSolverBranch.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverInterface.cpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiSolverInterface.cpp">
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
+						BasicRuntimeChecks="3"/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl"
-			>
+			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDistance.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinDistance.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinError.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinError.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFinite.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFinite.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFloatEqual.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinFloatEqual.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinHelperFunctions.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinHelperFunctions.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinLpIO.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinLpIO.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPragma.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPragma.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinSort.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinSort.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStart.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStart.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp"
-				>
+				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiAuxInfo.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiAuxInfo.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiBranchingObject.hpp"
-				>
+				RelativePath="..\..\..\src\OsiBranchingObject.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiChooseVariable.hpp"
-				>
+				RelativePath="..\..\..\src\OsiChooseVariable.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiColCut.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiColCut.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCollections.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiCollections.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiConfig.h"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiConfig.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCut.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiCut.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCuts.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiCuts.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiPresolve.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiPresolve.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiRowCut.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiRowCut.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiRowCutDebugger.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiRowCutDebugger.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverBranch.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiSolverBranch.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverInterface.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiSolverInterface.hpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverParameters.hpp"
-				>
+				RelativePath="..\..\..\..\Osi\src\OsiSolverParameters.hpp">
 			</File>
 		</Filter>
 	</Files>

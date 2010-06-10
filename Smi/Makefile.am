@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 254 2008-06-16 21:47:18Z kingaj $
+## $Id: Makefile.am 105 2007-02-01 21:43:23Z andreasw $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -31,16 +31,7 @@ endif
 EXTRA_DIST = \
 	examples/Makefile.in \
 	examples/README \
-	examples/stoch.cpp \
-        test/SmiTestData/app0110.stoch \
-        test/SmiTestData/app0110.cor \
-        test/SmiTestData/app0110.time \
-        test/SmiTestData/app0110R.stoch \
-        test/SmiTestData/app0110R.cor \
-        test/SmiTestData/app0110R.time \
-        test/SmiTestData/bug.stoch \
-        test/SmiTestData/bug.cor \
-        test/SmiTestData/bug.time 
+	examples/stoch.cpp
 
 ########################################################################
 #                           Extra Targets                              #
@@ -56,10 +47,6 @@ clean-local:
 
 distclean-local:
 	if test -r test/Makefile; then cd test; $(MAKE) distclean; fi
-
-install-exec-local: install-doc
-
-uninstall-local: uninstall-doc
 
 .PHONY: test unitTest clean-test distclean-test
 

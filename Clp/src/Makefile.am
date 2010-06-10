@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1404 2009-07-28 12:25:35Z tkr $
+## $Id: Makefile.am 1344 2009-03-16 10:25:57Z forrest $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -161,13 +161,11 @@ includecoin_HEADERS = \
 	ClpPrimalColumnSteepest.hpp \
 	ClpQuadraticObjective.hpp \
 	ClpSimplex.hpp \
-	ClpSimplexDual.hpp \
 	ClpSimplexNonlinear.hpp \
 	ClpSimplexOther.hpp \
 	ClpSimplexPrimal.hpp \
 	ClpSolve.hpp \
 	CbcOrClpParam.hpp \
-	CbcOrClpParam.cpp \
 	Idiot.hpp
 
 #############################################################################
