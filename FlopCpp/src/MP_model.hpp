@@ -137,7 +137,7 @@ namespace flopc {
         static const std::string stageString;
 
         /// Constructs an MP_model from an OsiSolverInterface *.
-        MP_model(OsiSolverInterface* s, Messenger* m = new NormalMessenger);
+        MP_model(OsiSolverInterface* s, Messenger* m = new NormalMessenger, int seed = 0);
 
         ~MP_model();
 
