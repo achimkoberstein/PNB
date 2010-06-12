@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\ILOG\CPLEX110\include\ilcplex;../../../../Benders/src"
+				AdditionalIncludeDirectories="../../../../Benders/src"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -60,7 +60,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="0"
-				AdditionalLibraryDirectories="C:\ILOG\CPLEX110\lib\x86_windows_vs2008\stat_mta"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="../../../../Benders/src"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
