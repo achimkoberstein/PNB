@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makemain.inc 927 2008-01-30 21:03:18Z andreasw $
+## $Id: Makemain.inc 1363 2009-07-21 17:55:10Z tkr $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 

@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: configure.ac 1245 2009-10-06 18:42:57Z stefan $
+## $Id: configure.ac 1459 2010-06-02 22:14:32Z lou $
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Cbc],[2.3stable],[coin-cbc@list.coin-or.org])
+AC_INIT([Cbc],[2.5],[coin-cbc@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -132,7 +132,7 @@ case $cbc_default_solver in
 esac
 AC_DEFINE_UNQUOTED([CBC_DEFAULT_SOLVER],"$cbc_default_solver",
   [Define to the name of the default solver to be used in cbc-generic in small letters])
-AC_DEFINE_UNQUOTED(CBCVERSION, "$PACKAGE_VERSION", "Version of Cbc")
+AC_DEFINE_UNQUOTED(CBC_VERSION, "$PACKAGE_VERSION", "Version of Cbc")
 
 
 #############################################################################

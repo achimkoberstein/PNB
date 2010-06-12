@@ -872,3 +872,20 @@ void OsiCbcSolverInterface::setColName (int ndx, std::string name)
 { 
   modelPtr_->solver()->setColName(ndx,name) ;
 }
+// Pass in Message handler (not deleted at end)
+void 
+OsiCbcSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
+{
+  OsiSolverInterface::passInMessageHandler(handler);
+  if (modelPtr_)
+    modelPtr_->passInMessageHandler(handler);
+}
+// So unit test can find out if NDEBUG set
+bool OsiCbcHasNDEBUG() 
+{
+#ifdef NDEBUG
+  return true;
+#else
+  return false;
+#endif
+}
