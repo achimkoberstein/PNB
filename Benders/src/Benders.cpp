@@ -2665,7 +2665,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     //We think that we already have a filled SmiScnModel
     if (smiModel){
         //Set params for Benders
-        int maxIt = 1000;
+        int maxIt = 10000;
         benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
@@ -2679,4 +2679,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 
 double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
     return benders->LB_;
+}
+
+int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){
+    return benders->nIter_;
 }

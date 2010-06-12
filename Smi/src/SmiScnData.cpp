@@ -153,9 +153,9 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 		stageColPtr_[colStage_[i]]++;
 	}
 
-    for (i=0;i<ncol_;i++){
-		printf("colEx2In = %d, colIn2Ex = %d for index %d\n",colEx2In_[i],colIn2Ex_[i],i);
-	}
+    //for (i=0;i<ncol_;i++){
+	//	printf("colEx2In = %d, colIn2Ex = %d for index %d\n",colEx2In_[i],colIn2Ex_[i],i);
+	//}
 
 	// reset stage pointers
 	stageColPtr_[0] = 0;
