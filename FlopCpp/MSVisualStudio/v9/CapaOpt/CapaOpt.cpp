@@ -1,5 +1,6 @@
 // $Id$
 #include <iostream>
+#include <fstream>
 #include <ctime>
 #include <limits>
 
@@ -8,6 +9,7 @@
 #include "OsiCpxSolverInterface.hpp"
 
 #include "CoinFloatEqual.hpp"
+#include "CoinTime.hpp"
 
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
@@ -6748,15 +6750,19 @@ int main() {
     capa.attach(capa.Solver);
     //capa.solve(MP_model::MINIMIZE);
     OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+	double begin = CoinCpuTime();
     benders.initialSolve();
-
+	double duration = CoinCpuTime() - begin;
+	
+	ofstream ofs;
+	ofs.open("CapaOpt_Benders.txt", std::ios::app);
+	ofs << "Sample size: " << capa.SampleSize() << endl;
+	ofs << "Obj. Value: " << benders.getObjValue() << endl;
+	ofs << "Iterations: " << benders.getNumIterations() << endl;
+	ofs << "Duration (secs): " << duration << endl;
+	ofs << "-------------------------" << endl;
+	ofs.close();
 #pragma endregion optimization
-
-    /*for (int i = 0; i < capa->getNumCols(); i++) {
-        if (capa->getColSolution()[i] > 0) {
-            cout << "Column " << i << ": " << capa->getColSolution()[i] << endl;
-        }
-    }*/
 
     cout << "\n Finished.";
 

@@ -544,7 +544,11 @@ public:
     void initialSolve();
 
     double getObjValue();
+	int getNumIterations();
 
+	void writeSolutionFileBenders(const char * path, double time ){
+		benders->writeSolutionFileBenders(path, time );
+	}
 private:
     Benders* benders;
 };
