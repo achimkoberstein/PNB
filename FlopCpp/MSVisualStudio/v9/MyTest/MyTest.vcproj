@@ -65,6 +65,7 @@
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
+				Profile="true"
 				CLRThreadAttribute="0"
 			/>
 			<Tool

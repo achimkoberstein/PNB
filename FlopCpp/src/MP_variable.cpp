@@ -105,7 +105,7 @@ void MP_variable::operator()() const {
             i3.evaluate(),
             i4.evaluate(),
             i5.evaluate())]]<<endl;
-            delete[] values; //error, use free as values were malloced
+            free(values); //we need to use free, as smi callocs the values..
         }
     }
     else

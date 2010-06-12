@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1187 2008-02-14 22:30:58Z tkr $
+## $Id: Makefile.am 1464 2010-02-07 16:25:01Z stefan $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -29,7 +29,6 @@ endif
 # Here we need include all files that are not mentioned in other Makefiles
 
 EXTRA_DIST = \
-	TODO \
 	examples/basic2.cpp \
 	examples/basic.cpp \
 	examples/build.cpp \

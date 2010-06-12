@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: Makefile.am 1176 2008-01-17 00:12:48Z lou $
+## $Id: Makefile.am 1509 2010-06-01 17:11:10Z lou $
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
@@ -27,13 +27,16 @@ libOsiCbc_la_LDFLAGS = $(LT_LDFLAGS)
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 
-# Needed by any OsiCbc configuration.
+# Needed by any OsiCbc configuration. Clp is inextricably wired into Cbc,
+# hence OsiCbc always needs the Clp include directories. -- lh, 100601 --
 
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 # Plus the appropriate include directories for the default solver. The
