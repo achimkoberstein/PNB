@@ -219,6 +219,8 @@ public:
 	inline const double * getDenseObjCoefficients(SmiStageIndex t){return cdobj_[t];}
 
     inline vector<int> getIntCols(int stage) { return intColsStagewise[stage]; };
+	inline int* getIntegerIndices() { return integerIndices_; } //indices of integer variables
+	inline int getIntegerLength() { return integerLength_; }
 
 	void copyRowLower(double * drlo,SmiStageIndex t );
 	void copyRowUpper(double * drup,SmiStageIndex t);

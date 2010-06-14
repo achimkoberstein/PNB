@@ -170,8 +170,8 @@ public:
 	SmiScnNode * getLeafNode(SmiScenarioIndex i){ return smiTree_.getLeaf(i)->getDataPtr(); }
 	SmiScnNode * getRootNode(){ return smiTree_.getRoot()->getDataPtr(); }
 
-    int* getIntegerInd(){return integerInd;}
-	int getIntegerLen(){return integerLen;}
+	int* getIntegerInd(){ return core_->getIntegerIndices();}
+	int getIntegerLen(){return core_->getIntegerLength(); }
 	int* getBinaryInd(){return binaryInd;}
 	int getBinaryLen(){return binaryLen;}
 

@@ -17,18 +17,34 @@
 
 using namespace flopc;
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    MP_model capa(new OsiCpxSolverInterface());
+	if (argc < 3) {
+		cout << "CapaOpt.exe b(enders)/c(plex) numScen seed" << endl;
+		return -1;
+	}
+
+	bool solveWithBenders = true;
+	if (!strcmp(argv[1], "c"))
+		solveWithBenders = false;
+
+	unsigned int seed = 0;
+	if (argc == 4)
+		seed = (int) strtoul(argv[3], 0, 0);
+
+    MP_model capa(new OsiCpxSolverInterface(), new NormalMessenger(), seed);
 
     // Stufen
     enum {numStage=2};
     MP_stage T(numStage);
 
     // Szenarien
-    enum {numScen=2};
+    //enum {numScen=2};
+	int numScen = 2;
+	if (argc >= 3)
+		numScen = (int) strtoul(argv[2], 0, 0);
     capa.SampleSize(numScen);
-    //MP_scenario_set scen(numScen);
+
 
 #pragma region sets
 
@@ -6748,20 +6764,38 @@ int main() {
 
     capa.setSampleOnlyScenarioGeneration(true,capa.SampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
-    //capa.solve(MP_model::MINIMIZE);
-    OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
-	double begin = CoinCpuTime();
-    benders.initialSolve();
-	double duration = CoinCpuTime() - begin;
-	
-	ofstream ofs;
-	ofs.open("CapaOpt_Benders.txt", std::ios::app);
-	ofs << "Sample size: " << capa.SampleSize() << endl;
-	ofs << "Obj. Value: " << benders.getObjValue() << endl;
-	ofs << "Iterations: " << benders.getNumIterations() << endl;
-	ofs << "Duration (secs): " << duration << endl;
-	ofs << "-------------------------" << endl;
-	ofs.close();
+    
+	if (solveWithBenders) {
+		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+		double begin = CoinCpuTime();
+		benders.initialSolve();
+		double duration = CoinCpuTime() - begin;
+
+		ofstream ofs;
+		ofs.open("CapaOpt_Benders.txt", std::ios::app);
+		ofs << "Sample size: " << capa.SampleSize() << endl;
+		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
+		ofs << "Obj. Value: " << benders.getObjValue() << endl;
+		ofs << "Iterations: " << benders.getNumIterations() << endl;
+		ofs << "Duration (secs): " << duration << endl;
+		ofs << "-------------------------" << endl;
+		ofs.close();
+	} else {
+		double begin = CoinCpuTime();
+		capa.solve(MP_model::MINIMIZE);
+		double duration = CoinCpuTime() - begin;
+
+		ofstream ofs;
+		ofs.open("CapaOpt_DetEq.txt", std::ios::app);
+		ofs << "Sample size: " << capa.SampleSize() << endl;
+		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
+		ofs << "Obj. Value: " << capa->getObjValue() << endl;
+		ofs << "Iterations: " << capa->getIterationCount() << endl;
+		ofs << "Duration (secs): " << duration << endl;
+		ofs << "-------------------------" << endl;
+		ofs.close();
+	}
+
 #pragma endregion optimization
 
     cout << "\n Finished.";
