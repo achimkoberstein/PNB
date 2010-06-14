@@ -137,7 +137,7 @@ namespace flopc {
         static const std::string stageString;
 
         /// Constructs an MP_model from an OsiSolverInterface *.
-        MP_model(OsiSolverInterface* s, Messenger* m = new NormalMessenger, int seed = 0);
+        MP_model(OsiSolverInterface* s, Messenger* m = new NormalMessenger, unsigned int seed = 0);
 
         ~MP_model();
 
@@ -308,6 +308,8 @@ namespace flopc {
         boost::shared_ptr<Uniform01Generator> getUniformGenerator(){
             return uniformGenerator;
         }
+
+		unsigned int getSeed();
     private:
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;

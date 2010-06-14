@@ -1,32 +1,52 @@
 // $Id$
 #include <iostream>
+#include <fstream>
 #include <ctime>
 #include <limits>
 
+#include "OsiClpSolverInterface.hpp"
+#include "OsiCbcSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
+
 #include "CoinFloatEqual.hpp"
+#include "CoinTime.hpp"
 
 #include "flopc.hpp"
-
+#include "SmiScnModel.hpp"
+#include "Benders.hpp"
 
 using namespace flopc;
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    MP_model capa(new OsiCpxSolverInterface());
+	if (argc < 3) {
+		cout << "CapaOpt.exe b(enders)/c(plex) numScen seed" << endl;
+		return -1;
+	}
+
+	bool solveWithBenders = true;
+	if (!strcmp(argv[1], "c"))
+		solveWithBenders = false;
+
+	unsigned int seed = 0;
+	if (argc == 4)
+		seed = (int) strtoul(argv[3], 0, 0);
+
+    MP_model capa(new OsiCpxSolverInterface(), new NormalMessenger(), seed);
 
     // Stufen
     enum {numStage=2};
     MP_stage T(numStage);
 
     // Szenarien
-    enum {numScen=2};
+    //enum {numScen=2};
+	int numScen = 2;
+	if (argc >= 3)
+		numScen = (int) strtoul(argv[2], 0, 0);
     capa.SampleSize(numScen);
-    //MP_scenario_set scen(numScen);
 
-    // ----------
-    // Mengen
-    // ----------
+
+#pragma region sets
 
     // Produktionslinien
     enum {L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, numL};
@@ -600,9 +620,9 @@ int main() {
     SM.insert(S1, M2);
     SM.insert(S1, M1);
 
-    // ----------
-    // Parameter
-    // ----------
+#pragma endregion sets
+
+#pragma region params
 
     // Flexibilitätskosten
     MP_data cFL(L, K);
@@ -6632,10 +6652,10 @@ int main() {
     wFLS(K1, L2) = 1;
     wFLS(K1, L1) = 1;
 
+#pragma endregion params
 
-    // ----------
-    // Stochastischer Teil
-    // ----------
+
+#pragma region stochasticDemand
 
     // Bedarfe
     RandomVariable* demand[numStage-1][numM][numK] =
@@ -6675,9 +6695,10 @@ int main() {
     };
     MP_random_data d(&demand[0][0][0],T,M,K);
 
-        // ----------
-    // Variablen
-    // ----------
+#pragma endregion sochasticDemand
+
+
+#pragma region variables
 
     MP_variable xLS(T, LS, K); // Fluss (Produktion)
     MP_variable xSM(T, SM, K); // Fluss (Markt)
@@ -6690,9 +6711,10 @@ int main() {
     yKA.binary();
     yFL.binary();
 
-    // ----------
-    // Restriktionen
-    // ----------
+#pragma endregion variables
+
+
+#pragma region restrictions
 
     MP_constraint 
         con33(L),
@@ -6727,11 +6749,10 @@ int main() {
     //
     con42(T+1,L,S) = sum(K, r(K,L) * xLS(T+1,LS(L,S),K)) <= m(S) * yKA(L,S);
     
+#pragma endregion restrictions
 
 
-    // ----------
-    // Optimierung
-    // ----------
+#pragma region optimization
 
     capa.setObjective(
         sum( L*K, cFL(L, K) * yFL(L, K) )
@@ -6740,33 +6761,42 @@ int main() {
       + sum(K, sum(S, sum(M, qTrans(S,M,K) * xSM(T+1,SM(S,M),K))))
       + sum(K, sum(M, h(M,K) * z(T+1,M,K)))
     );
-    //MP_constraint constraintForV(L);
-    //constraintForV(L) = v(L) <= 1;
-    //capa.setObjective(
-    //    sum(L, v(L) * 100)
-    //);
 
     capa.setSampleOnlyScenarioGeneration(true,capa.SampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
-    capa.solve(MP_model::MINIMIZE);
-    //capa.solve(MP_model::MAXIMIZE);
-
-    //yFL.display("yFL");
-    //yKA.display("yKA");
     
+	if (solveWithBenders) {
+		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+		double begin = CoinCpuTime();
+		benders.initialSolve();
+		double duration = CoinCpuTime() - begin;
 
-    cout << "-----------------------------------------" << endl;
-    
-    //xLS.display("xLS");
-    //xSM.display("xSM");*/
-    z.display("z (Fehlmenge)");
-    v.display("v");
+		ofstream ofs;
+		ofs.open("CapaOpt_Benders.txt", std::ios::app);
+		ofs << "Sample size: " << capa.SampleSize() << endl;
+		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
+		ofs << "Obj. Value: " << benders.getObjValue() << endl;
+		ofs << "Iterations: " << benders.getNumIterations() << endl;
+		ofs << "Duration (secs): " << duration << endl;
+		ofs << "-------------------------" << endl;
+		ofs.close();
+	} else {
+		double begin = CoinCpuTime();
+		capa.solve(MP_model::MINIMIZE);
+		double duration = CoinCpuTime() - begin;
 
-    /*for (int i = 0; i < capa->getNumCols(); i++) {
-        if (capa->getColSolution()[i] > 0) {
-            cout << "Column " << i << ": " << capa->getColSolution()[i] << endl;
-        }
-    }*/
+		ofstream ofs;
+		ofs.open("CapaOpt_DetEq.txt", std::ios::app);
+		ofs << "Sample size: " << capa.SampleSize() << endl;
+		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
+		ofs << "Obj. Value: " << capa->getObjValue() << endl;
+		ofs << "Iterations: " << capa->getIterationCount() << endl;
+		ofs << "Duration (secs): " << duration << endl;
+		ofs << "-------------------------" << endl;
+		ofs.close();
+	}
+
+#pragma endregion optimization
 
     cout << "\n Finished.";
 

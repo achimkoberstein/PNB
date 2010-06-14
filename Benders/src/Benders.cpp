@@ -382,9 +382,9 @@ void Benders::copyMaster(SmiScnModel * smi){
     // Copy data of the master problem from SMPS files
 
     // Number of rows 
-    mnrow_ = smi->core_->getNumRows(0);
+    mnrow_ = smi->getCore()->getNumRows(0);
     // Number of columns
-    mncol_ = smi->core_->getNumCols(0);
+    mncol_ = smi->getCore()->getNumCols(0);
     // Number of scenarios
     nScen_ = smi->getNumScenarios();
     // If single cut is chosen the counter zSub is set to 1; if 
@@ -406,23 +406,23 @@ void Benders::copyMaster(SmiScnModel * smi){
         mdobj_[scen_] = 0;
     }
     // Coefficients of objective function
-    memcpy(mdobj_, smi->core_->getNode(0)->getObjectiveElements(), sizeof(double)*mncol_);
+    memcpy(mdobj_, smi->getCore()->getNode(0)->getObjectiveElements(), sizeof(double)*mncol_);
     // Coefficients of LHS
     mdrlo_ = new double[mnrow_];
-    memcpy(mdrlo_, smi->core_->getNode(0)->getRowLowerElements(), sizeof(double)*mnrow_);
+    memcpy(mdrlo_, smi->getCore()->getNode(0)->getRowLowerElements(), sizeof(double)*mnrow_);
     // Coefficients of RHS
     mdrup_ = new double[mnrow_];
-    memcpy(mdrup_, smi->core_->getNode(0)->getRowUpperElements(), sizeof(double)*mnrow_);
+    memcpy(mdrup_, smi->getCore()->getNode(0)->getRowUpperElements(), sizeof(double)*mnrow_);
     // Coefficients of lower bounds
     mdclo_ = new double[mncol_+zSub_];
-    memcpy(mdclo_, smi->core_->getNode(0)->getColLowerElements(), sizeof(double)*mncol_);
+    memcpy(mdclo_, smi->getCore()->getNode(0)->getColLowerElements(), sizeof(double)*mncol_);
     // Coefficients for the additional variables are set to minus infinity
     for(int scen_=mncol_; scen_< mncol_+zSub_; scen_++){
         mdclo_[scen_] = -infty_;
     }
     // Coefficients of upper bounds
     mdcup_ = new double[mncol_+zSub_];
-    memcpy(mdcup_, smi->core_->getNode(0)->getColUpperElements(), sizeof(double)*mncol_);
+    memcpy(mdcup_, smi->getCore()->getNode(0)->getColUpperElements(), sizeof(double)*mncol_);
     // Coefficients for the additional variables are set to plus infinity
     for(int scen_=mncol_; scen_< mncol_+zSub_; scen_++){
         mdcup_[scen_] = infty_;
@@ -430,7 +430,7 @@ void Benders::copyMaster(SmiScnModel * smi){
 
     // Coefficients of matrix
     // Number of non-zeros of matrix 
-    mnels_ = smi->core_->getNode(0)->getNumMatrixElements();
+    mnels_ = smi->getCore()->getNode(0)->getNumMatrixElements();
     // Coefficients of matrix
     mdels_ = new double[mnels_];
     // Indices of the matrix elements
@@ -443,13 +443,13 @@ void Benders::copyMaster(SmiScnModel * smi){
     // Copy matrix coefficients, indices, row start and row length
     for(int i=0; i<mnrow_; i++){
         // Length of row i
-        mlen_[i] = smi->core_->getNode(0)->getRowLength(i);
+        mlen_[i] = smi->getCore()->getNode(0)->getRowLength(i);
         // Copy row start
         mrstrt_[i+1] = mrstrt_[i]+mlen_[i];
         // Copy matrix coefficients
-        memcpy(mdels_+mrstrt_[i], smi->core_->getNode(0)->getRowElements(i), mlen_[i]*sizeof(double));
+        memcpy(mdels_+mrstrt_[i], smi->getCore()->getNode(0)->getRowElements(i), mlen_[i]*sizeof(double));
         // Copy indices of matrix elements
-        memcpy(miels_+mrstrt_[i], smi->core_->getNode(0)->getRowIndices(i), mlen_[i]*sizeof(int));
+        memcpy(miels_+mrstrt_[i], smi->getCore()->getNode(0)->getRowIndices(i), mlen_[i]*sizeof(int));
     }
     // All optimality cuts are saved in one array for each iteration, therefore 
     // declare several arrays:
@@ -526,21 +526,21 @@ void Benders::copySubmodel(SmiScnModel* smi){
     // Copy data of the subproblem from SMPS files
 
     // Number of rows
-    snrow_ = smi->core_->getNumRows(1);
+    snrow_ = smi->getCore()->getNumRows(1);
     // Number of columns
-    sncol_ = smi->core_->getNumCols(1);
+    sncol_ = smi->getCore()->getNumCols(1);
     // Declaration of an array for coefficients of objective function
     sdobj_ = new double[sncol_];
     // Copy coefficients of the objective function
-    memcpy(sdobj_, smi->core_->getNode(1)->getObjectiveElements(), sizeof(double)*sncol_);
+    memcpy(sdobj_, smi->getCore()->getNode(1)->getObjectiveElements(), sizeof(double)*sncol_);
     // Declaration of an array for coefficients of LHS
     sdrlo_ = new double[snrow_];
     // Copy coefficients of LHS
-    memcpy(sdrlo_, smi->core_->getNode(1)->getRowLowerElements(), sizeof(double)*snrow_);
+    memcpy(sdrlo_, smi->getCore()->getNode(1)->getRowLowerElements(), sizeof(double)*snrow_);
     // Declaration of an array for coefficients of RHS
     sdrup_ = new double[snrow_];
     // Copy coefficients of RHS
-    memcpy(sdrup_, smi->core_->getNode(1)->getRowUpperElements(), sizeof(double)*snrow_);
+    memcpy(sdrup_, smi->getCore()->getNode(1)->getRowUpperElements(), sizeof(double)*snrow_);
     // LHS and RHS are saved after they were combined with the deterministic
     // and the stochastic data. So the cut coefficients can be calculated
     // with this constant LHS and RHS.
@@ -551,14 +551,14 @@ void Benders::copySubmodel(SmiScnModel* smi){
     // Declaration of an array for coefficients of lower bounds
     sdclo_ = new double[sncol_];
     // Copy coefficients of lower bounds
-    memcpy(sdclo_, smi->core_->getNode(1)->getColLowerElements(), sizeof(double)*sncol_);
+    memcpy(sdclo_, smi->getCore()->getNode(1)->getColLowerElements(), sizeof(double)*sncol_);
     // Declaration of an array for coefficients of upper bounds
     sdcup_ = new double[sncol_];
     // Copy coefficients of upper bounds
-    memcpy(sdcup_, smi->core_->getNode(1)->getColUpperElements(), sizeof(double)*sncol_);
+    memcpy(sdcup_, smi->getCore()->getNode(1)->getColUpperElements(), sizeof(double)*sncol_);
 
     // Number of non-zeros in matrix
-    snels_ = smi->core_->getNode(1)->getNumMatrixElements();
+    snels_ = smi->getCore()->getNode(1)->getNumMatrixElements();
 
     // This part is only needed for the deterministic equivalent
     if(benders_==false){
@@ -577,12 +577,12 @@ void Benders::copySubmodel(SmiScnModel* smi){
         // Cycle over all stage 2 rows
         for(int i=mnrow_; i<snrow_+mnrow_; i++){
             // Copy length
-            slen_[i-mnrow_]=smi->core_->getNode(1)->getRowLength(i);
+            slen_[i-mnrow_]=smi->getCore()->getNode(1)->getRowLength(i);
             // Copy coefficients
-            memcpy(sdels_+srstrt_[i-mnrow_],smi->core_->getNode(1)->getRowElements(i), 
+            memcpy(sdels_+srstrt_[i-mnrow_],smi->getCore()->getNode(1)->getRowElements(i), 
                 sizeof(double)*slen_[i-mnrow_]);
             // Copy indices
-            memcpy(siels_+srstrt_[i-mnrow_],smi->core_->getNode(1)->getRowIndices(i), 
+            memcpy(siels_+srstrt_[i-mnrow_],smi->getCore()->getNode(1)->getRowIndices(i), 
                 sizeof(int)*slen_[i-mnrow_]);
             // Copy start array
             srstrt_[i-mnrow_+1]=srstrt_[i-mnrow_]+slen_[i-mnrow_];		
@@ -599,8 +599,8 @@ void Benders::copySubmodel(SmiScnModel* smi){
     // Counting of stage 1 and stage 2 coefficients
     for(int i=mnrow_; i<snrow_+mnrow_; i++){ 
         // Indices per row i
-        const int* siels_count = smi->core_->getNode(1)->getRowIndices(i);
-        int rowLength = smi->core_->getNode(1)->getRowLength(i);
+        const int* siels_count = smi->getCore()->getNode(1)->getRowIndices(i);
+        int rowLength = smi->getCore()->getNode(1)->getRowLength(i);
         // Counter for while loop
         int j = 0;
         while(j < rowLength){
@@ -618,7 +618,7 @@ void Benders::copySubmodel(SmiScnModel* smi){
         // Set number of stage 1 coefficients per row
         snSt1len_[i-mnrow_] = j;
         // Set number of stage 2 coefficients per row
-        snSt2len_[i-mnrow_] = smi->core_->getNode(1)->getRowLength(i)-j;
+        snSt2len_[i-mnrow_] = smi->getCore()->getNode(1)->getRowLength(i)-j;
     }
     // Calculate number of stage 2 coefficients
     snSt2_ = snels_-snSt1_;
@@ -643,25 +643,25 @@ void Benders::copySubmodel(SmiScnModel* smi){
         // Set start array for stage 1
         sSt1rstrt_[i+1-mnrow_] = sSt1rstrt_[i-mnrow_]+snSt1len_[i-mnrow_];
         // Copy coefficients of stage 1
-        memcpy(sSt1dels_+sSt1rstrt_[i-mnrow_], smi->core_->getNode(1)->getRowElements(i), 
+        memcpy(sSt1dels_+sSt1rstrt_[i-mnrow_], smi->getCore()->getNode(1)->getRowElements(i), 
             (snSt1len_[i-mnrow_])*sizeof(double));
         // Copy indices of stage 1 		
-        memcpy(sSt1iels_+sSt1rstrt_[i-mnrow_], smi->core_->getNode(1)->getRowIndices(i), 
+        memcpy(sSt1iels_+sSt1rstrt_[i-mnrow_], smi->getCore()->getNode(1)->getRowIndices(i), 
             (snSt1len_[i-mnrow_])*sizeof(int));	
         // Set start array for stage 2
         sSt2rstrt_[i+1-mnrow_] = sSt2rstrt_[i-mnrow_]+snSt2len_[i-mnrow_];
         // Copy coefficients of stage 2
         memcpy(sSt2dels_+sSt2rstrt_[i-mnrow_], 
-            smi->core_->getNode(1)->getRowElements(i)+snSt1len_[i-mnrow_], 
+            smi->getCore()->getNode(1)->getRowElements(i)+snSt1len_[i-mnrow_], 
             (snSt2len_[i-mnrow_])*sizeof(double));
         // To copy stage 2 indices there have to be a temporary array
         // in which the indices are copied 
-        int* rowIndex_Temp = new int[smi->core_->getNode(1)->getRowLength(i)];
-        memcpy(rowIndex_Temp, smi->core_->getNode(1)->getRowIndices(i), 
-            smi->core_->getNode(1)->getRowLength(i)*sizeof(int));
+        int* rowIndex_Temp = new int[smi->getCore()->getNode(1)->getRowLength(i)];
+        memcpy(rowIndex_Temp, smi->getCore()->getNode(1)->getRowIndices(i), 
+            smi->getCore()->getNode(1)->getRowLength(i)*sizeof(int));
         // Shift indizes, therefore subtract the number of 
         // stage 1 variables from the current index
-        for(int j=0; j< smi->core_->getNode(1)->getRowLength(i);j++){
+        for(int j=0; j< smi->getCore()->getNode(1)->getRowLength(i);j++){
             rowIndex_Temp[j]-= mncol_;
         }	
         // Now copy indices of stage 2
@@ -2646,4 +2646,59 @@ Benders::~Benders(){
         delete [] combrstrt_;
     if(comblen_)
         delete [] comblen_;
+}
+OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
+: OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
+{
+
+}
+
+OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolverInterface()
+{
+    if (benders)
+        delete benders;
+    benders = 0;
+}
+
+void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
+{
+    //We think that we already have a filled SmiScnModel
+    if (smiModel){
+        //Set params for Benders
+        int maxIt = 10000;
+		double tolerance = 0.000001;
+		bool useBenders = true;
+		//	// Input parameters:
+//	// #1: Maximal Iterations
+//	// #2: Single/multi: s m
+//	// #3: Warmstart: +wsI +wsS -ws
+//	// #4: Knapsack Inequalities: +ki -ki
+//	// #5: TrustRegion: +tr -tr
+//	// #6: Benders or detEq: +ben -ben
+//	// #7: Problem Path
+//	// #8: Solution Path
+		if (useBenders)
+			benders = new Benders("s", "+ws", "+ki", "-tr", "-ben"); //WarmStart is indeed usefull
+		else 
+			benders = new Benders("s", "-ws", "-ki", "-tr", "-ben"); //WarmStart is indeed usefull
+        benders->copyMaster(smiModel);
+        benders->copySubmodel(smiModel);
+		// 
+		if (useBenders)
+			benders->BendersSolve(tolerance, maxIt );
+		else
+			benders->detEq();
+    }
+    else {
+        std::cout << "SmiScnModel not initialized." << std::endl;
+    }
+ 
+}
+
+double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
+    return benders->LB_;
+}
+
+int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){
+    return benders->nIter_;
 }
