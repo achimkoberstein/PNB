@@ -11,16 +11,18 @@ class OsiSolverInterface;
 class OsiStochasticSolverInterface  {
 
 public:
-    OsiStochasticSolverInterface( SmiScnModel* smiModel);
+    OsiStochasticSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel);
 
     ~OsiStochasticSolverInterface();
 
     //What methods are necessary?
     virtual void initialSolve() = 0;
+    virtual double getObjValue() = 0;
 
     SmiScnModel* getSmiModel() { return smiModel; }
 
 protected:
+    OsiSolverInterface* osiSolver;
     SmiScnModel* smiModel;
 
 private:
@@ -32,10 +34,11 @@ private:
 class OsiStochasticDetEqSolverInterface : public OsiStochasticSolverInterface {
 public:
 
-    OsiStochasticDetEqSolverInterface(SmiScnModel* smiModel);
+    OsiStochasticDetEqSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
     ~OsiStochasticDetEqSolverInterface();
 
     void initialSolve();
+    double getObjValue();
 };
 
 

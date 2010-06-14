@@ -7,7 +7,7 @@
 
 using namespace std;
 
-SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices):intColsStagewise(nstag,std::vector<int>())
+SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices):intColsStagewise(nstag,std::vector<int>()),integerIndices_(0),integerLength_(0)
 {	//Copies all values already stored in the Solver..
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -30,7 +30,7 @@ SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag
     delete dobj;
 }
 
-SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag)
+SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag):integerIndices_(0),integerLength_(0)
 {
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -78,7 +78,7 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 	ncol_ = ncol;
     integerIndices_ = new int[integerIndicesLength];
     integerLength_ = integerIndicesLength;
-    memcpy(integerIndices_,integerIndices,integerIndicesLength);
+    memcpy(integerIndices_,integerIndices,sizeof(int)*integerIndicesLength);
 
 	// store number stages
 	nstag_ = nstag;
@@ -153,9 +153,9 @@ SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
 		stageColPtr_[colStage_[i]]++;
 	}
 
-    for (i=0;i<ncol_;i++){
-		printf("colEx2In = %d, colIn2Ex = %d for index %d\n",colEx2In_[i],colIn2Ex_[i],i);
-	}
+    //for (i=0;i<ncol_;i++){
+	//	printf("colEx2In = %d, colIn2Ex = %d for index %d\n",colEx2In_[i],colIn2Ex_[i],i);
+	//}
 
 	// reset stage pointers
 	stageColPtr_[0] = 0;

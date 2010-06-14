@@ -1195,7 +1195,6 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 	}
 	// Aenderung: IntegerType
 
-
 	SmiCoreData *smiCore = NULL;
 	const char* time_ext[] = {"tim", "time"};
 
