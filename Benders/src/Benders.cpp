@@ -2666,10 +2666,28 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     if (smiModel){
         //Set params for Benders
         int maxIt = 10000;
-        benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
+		double tolerance = 0.000001;
+		bool useBenders = true;
+		//	// Input parameters:
+//	// #1: Maximal Iterations
+//	// #2: Single/multi: s m
+//	// #3: Warmstart: +wsI +wsS -ws
+//	// #4: Knapsack Inequalities: +ki -ki
+//	// #5: TrustRegion: +tr -tr
+//	// #6: Benders or detEq: +ben -ben
+//	// #7: Problem Path
+//	// #8: Solution Path
+		if (useBenders)
+			benders = new Benders("s", "+ws", "+ki", "-tr", "-ben"); //WarmStart is indeed usefull
+		else 
+			benders = new Benders("s", "-ws", "-ki", "-tr", "-ben"); //WarmStart is indeed usefull
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
-        benders->BendersSolve(0.000001, maxIt );
+		// 
+		if (useBenders)
+			benders->BendersSolve(tolerance, maxIt );
+		else
+			benders->detEq();
     }
     else {
         std::cout << "SmiScnModel not initialized." << std::endl;
