@@ -1117,8 +1117,8 @@ int Benders::solveMaster(){
             }
             // Else an emtpy warmstart object is created
             else{
-                warmStartEmptyMaster_=true;
                 warmStartMaster_ = osiMaster_->getEmptyWarmStart();
+                warmStartEmptyMaster_ = true;
             }	
         }
     }
@@ -2592,8 +2592,10 @@ Benders::~Benders(){
     if(iTrans_)
         delete [] iTrans_;
     if(warmStart_ ){
-        if(warmStartMaster_ && warmStartEmptyMaster_ == false)
+        if(warmStartMaster_ && warmStartEmptyMaster_ == false){
             delete warmStartMaster_;
+            warmStartMaster_ = 0;
+        }
         for(int scen_=0; scen_<nScen_; scen_++){
             if(warmStartSub_[scen_] && warmStartEmptySub_[scen_]==false){
                 delete warmStartSub_[scen_];
@@ -2601,14 +2603,16 @@ Benders::~Benders(){
         }
         if(warmStartSub_)
             delete [] warmStartSub_;
-        if(warmStartEmptySub_)
+        if(warmStartEmptySub_){
             delete [] warmStartEmptySub_;
+            warmStartEmptySub_ = 0;
+        }
     }
     if(warmStartFol_){
         if(warmStartMaster_ && warmStartEmptyMaster_ == false)
             delete warmStartMaster_;
         if(warmStartSubFol_)
-            delete [] warmStartSubFol_;
+            delete warmStartSubFol_;
         if(warmStartEmptySub_)
             delete [] warmStartEmptySub_;
     }
