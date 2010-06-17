@@ -133,6 +133,21 @@ using namespace std;
 //	// End: main
 //	// ###################################################################################
 //}
+bool Benders::computeRelativeGap(double ub, double lb, double eps){
+	if (ub == infty_ || lb == -infty_)
+		return true;
+	if (lb == 0) //we do not divide by zero
+		return true;
+	if (ub == 0) // We have no meaningful comparison
+		return true;
+	if (ub > 0 && lb < 0) //in this case we do not want relative difference, instead we want absolute difference..
+		return true;
+	if (ub > 0)
+		return ub/lb > 1+eps;
+	else
+		return lb/ub > 1+eps;
+
+}
 
 void Benders::BendersSolve(double eps, int maxIter){
     // ###################################################################################
@@ -160,8 +175,8 @@ void Benders::BendersSolve(double eps, int maxIter){
     int nFeas = 0;
     // While the gap between upper and lower bound is larger than epsilon
     // repeat the benders decomposition method. Also continue if maximal 
-    // number of iterations isn't reached.
-    while(abs(UB_-LB_)>eps  && maxIter > nIter_){ 
+    // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
+    while(abs(UB_-LB_)>eps && computeRelativeGap(UB_,LB_,eps) && maxIter > nIter_){ 
         // At the beginning of each iteration set counter of optimality
         // cuts to zero
         oCut = 0;
@@ -2682,9 +2697,9 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 //	// #7: Problem Path
 //	// #8: Solution Path
 		if (useBenders)
-			benders = new Benders("s", "+ws", "+ki", "-tr", "-ben"); //WarmStart is indeed usefull
+			benders = new Benders("s", "+ws", "-ki", "+tr", "+ben"); //WarmStart is indeed usefull
 		else 
-			benders = new Benders("s", "-ws", "-ki", "-tr", "-ben"); //WarmStart is indeed usefull
+			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); //WarmStart is indeed usefull
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
 		// 

@@ -533,6 +533,9 @@ public:
 	// Destructor
 	~Benders();
 
+	private:
+		bool computeRelativeGap(double,double,double);
+
 };
 
 class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
