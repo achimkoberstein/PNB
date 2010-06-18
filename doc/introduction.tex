@@ -98,7 +98,7 @@ Step 8 installs libraries, executables and header files in the directories \emph
 If you have Visual Studio 2008 installed, you can use the solution file FlopCpp/MsVisualStudio/v9/FlopCpp.sln to load the solution. Then you can start a new C++ project and set a project dependency on libflopcpp.
  \subsection{Bleeding Edge}
 You can download the current development version with mercurial at \href{https://dsor-development.upb.de}{https://dsor-development.upb.de}.
-You have to enter the username ``anonymous''. A password is not required.
+You have to enter the username ``anonymous''. Password is also ``anonymous''.
 
 \subsection{Troubleshooting}
 This section covers some errors that are likely to happen on different architectures.
@@ -111,7 +111,7 @@ make install does not work for googletest. Solution: Remove ThirdParty/gtest fro
 
 
 \section{An illustrative example}
-An investment problem \cite{Kaut2008} illustrates the use of FlopC++ to model multistage stochastic programs with recourse, that uses scenarios. The program is used to maximize the wealth of an investor after a given number of periods. In each period the investor has to buy assets with his available money. In the next period his investments return some money which must then be reinvested. An initial wealth level and a goal are given up front. An excess of the goal is encouraged in the objective function but a shortage is penalized. In the following all the important statements get explained one by one. 
+An investment problem with four stages and eight scenarios, originally taken from the book by \cite{Birge1997a} and also used by \cite{Kaut2008}, illustrates the use of FlopC++ to model multistage stochastic programs with recourse, that uses scenarios. The program is used to maximize the wealth of an investor after a given number of periods. In each period the investor has to buy assets with his available money. In the next period his investments return some money which must then be reinvested. An initial wealth level and a goal are given up front. An excess of the goal is encouraged in the objective function but a shortage is penalized. In the following all the important statements get explained one by one. 
 
 Line \ref{listing:model} defines a \lstinline|MP_model| with an associated solver, in this case an instance of \href{https://projects.coin-or.org/Clp}{Clp}. Every program should start with an explicit \lstinline|MP_model| so that you can reference it easily later on, instead of relying on the global default model. The parameters for initialWealth and the goal are defined in the lines \ref{listing:initialWealth} to \ref{listing:endInitialWealth}. The number of stages is defined via the so called  \href{http://www.linuxtopia.org/online_books/programming_books/thinking_in_c++/Chapter08_023.html}{enum hack} in line \ref{listing:stage}. 
 The stage set is defined in line \ref{listing:endStage}. The same technique is used to define the scenario set and the set of assets. The array that holds the scenario values for all the eight scenarios and the four stage (three stages actually, as there are never random variables in the first stage) is declared in line \ref{listing:scenarios}. The values for the returns of the investments in the second stage are given in line \ref{listing:stage2asset1} for the first asset and in line \ref{listing:stage2asset2} for the second asset. This is repeated for the third and fourth stage. 
