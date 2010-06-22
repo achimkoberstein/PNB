@@ -286,7 +286,7 @@ double SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense = 1)
     this->rstrt_ = new int[this->core_->getNumRows()+1];
     this->rstrt_[0] = 0;
 
-    // Call addNode on all these nodes
+    // Call addNode on all the core nodes
     for (int t = 0; t < this->core_->getNumStages(); t++) {
         addNode(this->core_->getNode(t));
     }
@@ -331,15 +331,15 @@ double SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense = 1)
 
 double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
 {
+    // solve the expected value problem
     solveEV(osiSolver, objSense);
 
-    // save the column solution for stage-1-columns
+    // save the column solution for stage-1-columns of the evp
     int numStage1Cols = core_->getColStart(1);
     double * colSolution = new double[numStage1Cols];
     memcpy(colSolution, osiStoch_->getColSolution(), (numStage1Cols * sizeof(double)));
 
-#pragma region EEVP
-     double eev = 0; // the value of the EEVP
+    double eev = 0; // the value of the EEVP
 
     //Clean up previous stuff.
     delete[] dclo_;
@@ -373,6 +373,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
         this->indx_ = new int[tempNels];
         this->rstrt_ = new int[this->core_->getNumRows()+1];
         this->rstrt_[0] = 0;
+        
         // Get all nodes for this scenario
         std::vector<SmiScnNode*>& nodes = smiTree_.getScenario(i);
         // Call addNode on all these nodes
@@ -427,7 +428,6 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
         }
         printf("\n");
     }
-#pragma endregion EEVP;
     
     delete [] colSolution;
     
@@ -461,7 +461,7 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
     solutionValues.reserve(this->smiTree_.getNumScenarios());
 
 
-   // loop over all scenarios and solve each of it individually
+    // loop over all scenarios and solve each of it individually
     for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
         // We have an empty model (zero cols,rows,els)
         ncol_=0;
@@ -958,7 +958,7 @@ SmiScnModel::addNode(SmiNodeData *node)
         this->addIntIndice(intCols[i] + ncol_);
     }
 
-
+    // copy dara (no combination needed)
 	core->copyRowLower(drlo_+nrow_,stg);
 	core->copyRowUpper(drup_+nrow_,stg);
 	core->copyColLower(dclo_+ncol_,stg);
