@@ -477,6 +477,8 @@ namespace flopc{
             return 0;
         } else {
             if (RV->values[i] != 0) // MP_random_data is a random variable
+                // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
+                // getMeanValue() is called for RandomVariable, not ScenarioRandomVariable
                 return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
                 return RV->c->evaluate(scenario);

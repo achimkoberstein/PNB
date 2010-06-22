@@ -380,7 +380,7 @@ namespace flopc {
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
     }
 
-    // Dacota test Model
+    // Dacota  Model to test the EV-, EEV- and WS-Problems
     TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
         MP_stage T(2);
@@ -433,16 +433,31 @@ namespace flopc {
 
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
-            - sum(R, x(R) * resourceCost(R))
-            );
+          - sum(R, x(R) * resourceCost(R))
+        );
+        
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
-        double eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
-        cout << "EEV: " << eev;
-        //dacota.solve(MP_model::MAXIMIZE);
-        //EXPECT_DOUBLE_EQ(1730.0,dacota->getObjValue());
-        //EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
-        //double result = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
+        
+        // solve EV-, EEV-, WS- and here-and-now-Problem
+        double ev, eev, ws, hereAndNow;
+        
+        ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE);
+        //EXPECT_EQ(ev, 4165);
+        
+        eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
+        //EXPECT_NEAR(eev, 1545, 0.0001);
+        
+        ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
+        //EXPECT_EQ(ws, 4165);
+        
+        dacota.attach(dacota.Solver);
+        dacota.solve(MP_model::MAXIMIZE);
+        hereAndNow = dacota->getObjValue();
+        EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
+        EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
+        
+        
         cout << "Finished";
     }
 
