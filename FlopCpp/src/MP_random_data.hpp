@@ -175,7 +175,7 @@ namespace flopc{
 
         ~ScenarioRandomVariable();
         virtual void sample(int howMany = 0) ;
-        virtual double getMeanValue();
+        virtual double getMeanValue() const;
     };
 
     class ContinuousRandomVariable : public RandomVariable {
