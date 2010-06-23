@@ -443,14 +443,15 @@ namespace flopc {
         double ev, eev, ws, hereAndNow;
         
         ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE);
-        //EXPECT_EQ(ev, 4165);
+        EXPECT_EQ(ev, 4165);
         
         eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
-        //EXPECT_NEAR(eev, 1545, 0.0001);
+        EXPECT_NEAR(eev, 1545, 0.0001);
         
         ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
-        //EXPECT_EQ(ws, 4165);
+        EXPECT_EQ(ws, 4165);
         
+        // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE);
         hereAndNow = dacota->getObjValue();

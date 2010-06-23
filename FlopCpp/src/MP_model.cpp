@@ -43,49 +43,49 @@ MP_model& MP_model::getDefaultModel() { return default_model;}
 MP_model* MP_model::getCurrentModel() { return current_model;}
 
 void NormalMessenger::statistics(int bm, int m, int bn, int n, int nz) {
-    cout<<"FlopCpp: Number of constraint blocks: " <<bm<<endl;
-    cout<<"FlopCpp: Number of individual constraints: " <<m<<endl;
-    cout<<"FlopCpp: Number of variable blocks: " <<bn<<endl;
-    cout<<"FlopCpp: Number of individual variables: " <<n<<endl;
-    cout<<"FlopCpp: Number of non-zeroes (including rhs): " <<nz<<endl;
+    DLOG(INFO) <<"FlopCpp: Number of constraint blocks: " <<bm<<endl;
+    DLOG(INFO) <<"FlopCpp: Number of individual constraints: " <<m<<endl;
+    DLOG(INFO) <<"FlopCpp: Number of variable blocks: " <<bn<<endl;
+    DLOG(INFO) <<"FlopCpp: Number of individual variables: " <<n<<endl;
+    DLOG(INFO) <<"FlopCpp: Number of non-zeroes (including rhs): " <<nz<<endl;
 }
 
 void NormalMessenger::generationTime(double t) {
-    cout<<"FlopCpp: Generation time: "<<t<<endl;
+    DLOG(INFO) <<"FlopCpp: Generation time: "<<t<<endl;
 }
 
 void NormalMessenger::solutionStatus(const OsiSolverInterface* Solver) {
     if (Solver->isProvenOptimal()) {
-        cout<<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
-        cout<<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
+        DLOG(INFO) <<"FlopCpp: Optimal obj. value = "<<Solver->getObjValue()<<endl;
+        DLOG(INFO) <<"FlopCpp: Solver(m, n, nz) = "<<Solver->getNumRows()<<"  "<<
             Solver->getNumCols()<<"  "<<Solver->getNumElements()<<endl;
     } else if (Solver->isProvenPrimalInfeasible()) {
-        cout<<"FlopCpp: Problem is primal infeasible."<<endl;
+        DLOG(INFO) <<"FlopCpp: Problem is primal infeasible."<<endl;
     } else if (Solver->isProvenDualInfeasible()) {
-        cout<<"FlopCpp: Problem is dual infeasible."<<endl;
+        DLOG(INFO) <<"FlopCpp: Problem is dual infeasible."<<endl;
     } else {
-        cout<<"FlopCpp: Solution process abandoned."<<endl;
+        DLOG(INFO) <<"FlopCpp: Solution process abandoned."<<endl;
     }
 }
 
 void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) const {
-    cout<<"FlopCpp: Constraint "<<name<<endl;
+    DLOG(INFO) <<"FlopCpp: Constraint "<<name<<endl;
     for (unsigned int j=0; j<cfs.size(); j++) {
         int col=cfs[j].col;
         int row=cfs[j].row;
         double elm=cfs[j].val;
         int stage=cfs[j].varStage;
-        cout<<row<<"   "<<col<<"  "<<elm<<"  "<<stage<<endl;
+        DLOG(INFO) <<row<<"   "<<col<<"  "<<elm<<"  "<<stage<<endl;
     }
 }
 
 void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) const {
-    cout<<"Objective "<<endl;
+    DLOG(INFO) <<"Objective "<<endl;
     for (unsigned int j=0; j<cfs.size(); j++) {
         int col=cfs[j].col;
         int row=cfs[j].row;
         double elm=cfs[j].val;
-        cout<<row<<"   "<<col<<"  "<<elm<<endl;
+        DLOG(INFO) <<row<<"   "<<col<<"  "<<elm<<endl;
     }
 }
 
@@ -266,7 +266,7 @@ void MP_model::maximize() {
         attach(Solver);
         solve(MP_model::MAXIMIZE);
     } else {
-        cout<<"no solver specified"<<endl;
+        DLOG(WARNING) <<"no solver specified"<<endl;
     }
 }
 
@@ -276,7 +276,7 @@ void MP_model::maximize(const MP_expression &obj) {
         attach(Solver);
         solve(MP_model::MAXIMIZE);
     } else {
-        cout<<"no solver specified"<<endl;
+        DLOG(WARNING) <<"no solver specified"<<endl;
     }
 }
 
@@ -296,7 +296,7 @@ void MP_model::minimize() {
         attach(Solver);
         solve(MP_model::MINIMIZE);
     } else {
-        cout<<"no solver specified"<<endl;
+        DLOG(WARNING) <<"no solver specified"<<endl;
     }
 }
 
@@ -306,7 +306,7 @@ void MP_model::minimize(const MP_expression &obj) {
         attach(Solver);
         solve(MP_model::MINIMIZE);
     } else {
-        cout<<"no solver specified"<<endl;
+        DLOG(WARNING) <<"no solver specified"<<endl;
     }
 }
 
@@ -451,7 +451,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     //{
         //#pragma omp for 
-    double curTime = CoinCpuTime();
+    double timeBegin = CoinCpuTime();
     for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
         (*it)->coefficients(cfs);
         messenger->constraintDebug((*it)->getName(),cfs);
@@ -463,7 +463,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         cfs.clear();
         //}//End parallel
     }
-    DLOG(INFO) << "Zeit zum Generieren der Koeffizienten" << CoinCpuTime()-curTime;
+    DLOG(INFO) << "Zeit zum Generieren der Koeffizienten: " << CoinCpuTime()-timeBegin << "s";
     nz = coefs.size();
     realn = n;
 
@@ -500,7 +500,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             assert(j <n);
             realn = j;
             colIndirection[n] = realn; // Set correct new index for RHS
-            std::cout << "We have empty variables in this formulation" << std::endl;
+            DLOG(INFO) << "We have empty variables in this formulation";
             // We have to g
 
             //assert(j == n);
@@ -917,7 +917,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         }
     }
     if (scenarios && independent){
-        std::cout << "ScenarioRandomVariables and normal RandomVariables where specified. We do not know how to handle this." << std::endl;
+        DLOG(INFO) << "ScenarioRandomVariables and normal RandomVariables where specified. We do not know how to handle this.";
         throw invalid_argument_exception(); //User has to specify what he wants, we can not guess
     }
     if (scenarios && !independent){ //In case of scenarios, we return as we have nothing to do here. But: We assure that probabilities are set in a correct way, if not already done by the user.
@@ -953,8 +953,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         //Ensure we have at least two random variables, otherwise a combine all against all does not makes sense..
         sampledValuesOfVars.push_back(std::map<double,double>());
 
-        // Now we prepare the iterator vector. We do it here as otherwise we ould invalidate the previous iterators
-        std::cout << randVarsPerStage[i] << std::endl;
+        // Now we prepare the iterator vector. We do it here as otherwise we would invalidate the previous iterators
+        DLOG(INFO) << randVarsPerStage[i] << std::endl;
         for (int j = 0; j < randVarsPerStage[i]+1; j++){
             iteratorVector[j] = sampledValuesOfVars[j].begin();
         }
@@ -1132,8 +1132,8 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         }
     }
     // We want to inform the user about wall clock solving time..
-    clock_t startClock = clock();
-    clock_t stochasticClock;
+    double startClock = CoinCpuTime();
+    double stochasticClock = 0;
     if (stage.size() > 0 && smiModel != 0) { // We have a time structure AND a smiModel ready. If only timeStructure, there were no RandomVariables specified.
         //OsiClpSolverInterface osiClp;
         //smiModel->setOsiSolverHandle(osiClp);
@@ -1141,15 +1141,15 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
         Solver = smiModel->loadOsiSolverData();
         Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
-        stochasticClock = clock();        
-        std::cout << "Generation of deterministic equivalent took " << diffclock(stochasticClock,startClock) << " ms." << std::endl;
+        stochasticClock = CoinCpuTime();        
+        DLOG(INFO) << "Generation of deterministic equivalent took " << CoinCpuTime()-startClock << "s";
         try {
             if (isMIP == true)
                 Solver->branchAndBound();
             else
                 Solver->initialSolve();
         }  catch (CoinError e) {
-            cout<<e.message()<<endl;
+            DLOG(ERROR) << e.message();
         }
     }
     else {
@@ -1157,26 +1157,25 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
             try {
                 Solver->branchAndBound();
             } catch  (CoinError e) {
-                cout<<e.message()<<endl;
-                cout<<"Solving the LP relaxation instead."<<endl;
+                DLOG(ERROR) << e.message();
+                DLOG(INFO) << "Solving the LP relaxation instead.";
                 try {
                     Solver->initialSolve();
                 } catch (CoinError e) {
-                    cout<<e.message()<<endl;
+                    DLOG(ERROR) << e.message();
                 }
             }
         } else {
             try {
                 Solver->initialSolve();
             }  catch (CoinError e) {
-                cout<<e.message()<<endl;
+                DLOG(ERROR) << e.message();
             }
         }
     }
-    clock_t endClock = clock();
-    std::cout << "Overall wall clock time for solution : " << diffclock(endClock,startClock) << " ms." << std::endl;
+    DLOG(INFO) << "Overall wall clock time for solution : " << CoinCpuTime()-startClock << "s";
     if (stage.size())
-        std::cout << "Solution time for stochastic programs using deterministic equivalent is: " << diffclock(endClock,stochasticClock) << " ms." << std::endl;
+        DLOG(INFO) << "Solution time for stochastic programs using deterministic equivalent: " << CoinCpuTime()-stochasticClock << "s";
 
     messenger->solutionStatus(Solver);
 
@@ -1442,18 +1441,16 @@ namespace flopc {
                 smiModel->generateScenario(smiCore,matrixVec[flopScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[flopScen],ancScenVec[curScen],probabilities[flopScen]);
             }
         }
-        //TODO: Think about debugging routines or debugging logger..
-        //Look at PG or look into boost.
-        std::cout << "Generated " << scenCounter << " scenarios." << std::endl;
+        DLOG(INFO) << "Generated " << scenCounter << " scenarios.";
 
         if (scenSet.size() != scenCounter){
-            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << " during scenario tree generation." << std::endl;
+            DLOG(INFO) << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << " during scenario tree generation.";
             scenSet = MP_scenario_set(scenCounter);
         }
 
 
         if (scenCounter != scenSet.size()){
-            std::cout << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << "." << std::endl;
+            DLOG(INFO) << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << ".";
             this->ScenSet(MP_scenario_set(scenCounter)); // Update scenario set to shrink to the actual size.
         }
         //Delete temporary variables
