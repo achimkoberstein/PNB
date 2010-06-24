@@ -1099,7 +1099,7 @@ int main(int argc, char *argv[]) {
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
 #endif
-    google::SetStderrLogging(0);
+    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     int result = RUN_ALL_TESTS();
     //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();

@@ -363,7 +363,9 @@ public:
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
 	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.5), tRrateLB_(0.8),
-	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL)
+    snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
+    mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
+	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -417,7 +419,9 @@ public:
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
 	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.1), tRrateLB_(0.5),
-    combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL)
+    snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
+    mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
+	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
