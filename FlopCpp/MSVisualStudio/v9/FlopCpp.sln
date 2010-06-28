@@ -329,6 +329,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CapaOpt", "CapaOpt\CapaOpt.
 		{D984CC99-8A07-4EE0-8654-5C03459B2B37} = {D984CC99-8A07-4EE0-8654-5C03459B2B37}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SAPHIR", "SAPHIR\SAPHIR.vcproj", "{7D9437D0-1C48-49EF-95F1-E6040AF3EE89}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -475,6 +477,10 @@ Global
 		{8A7B8D96-8264-4B1F-AAF0-688525A865CF}.Debug|Win32.Build.0 = Debug|Win32
 		{8A7B8D96-8264-4B1F-AAF0-688525A865CF}.Release|Win32.ActiveCfg = Release|Win32
 		{8A7B8D96-8264-4B1F-AAF0-688525A865CF}.Release|Win32.Build.0 = Release|Win32
+		{7D9437D0-1C48-49EF-95F1-E6040AF3EE89}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7D9437D0-1C48-49EF-95F1-E6040AF3EE89}.Debug|Win32.Build.0 = Debug|Win32
+		{7D9437D0-1C48-49EF-95F1-E6040AF3EE89}.Release|Win32.ActiveCfg = Release|Win32
+		{7D9437D0-1C48-49EF-95F1-E6040AF3EE89}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
