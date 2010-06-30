@@ -221,6 +221,8 @@ public:
     inline vector<int> getIntCols(int stage) { return intColsStagewise[stage]; };
 	inline int* getIntegerIndices() { return integerIndices_; } //indices of integer variables
 	inline int getIntegerLength() { return integerLength_; }
+    inline int* getBinaryIndices() { return binaryIndices_; } //indices of binary variables
+    inline int getBinaryLength() { return binaryLength_; }
 
 	void copyRowLower(double * drlo,SmiStageIndex t );
 	void copyRowUpper(double * drup,SmiStageIndex t);
@@ -229,23 +231,16 @@ public:
 	void copyObjective(double * dobj,SmiStageIndex t);
 
 	inline SmiNodeData * getNode(SmiStageIndex t){return nodes_[t];}
-    SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0);
-	SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag);
+    SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
+    SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
+	
 	~SmiCoreData();
 
 private:
 
 	//Christian: Creates SmiCoreData for whole tree from deterministic core model and information about stages. Splits
 	// rows and columns into nstag stages, given by cstag and rstag. Creates a core node for every stage.
-	void gutsOfConstructor(int nrow,int ncol,int nstag,
-							   int *cstag,int *rstag,
-							   CoinPackedMatrix *matrix,
-							   CoinPackedVector *dclo,
-							   CoinPackedVector *dcup,
-							   CoinPackedVector *dobj,
-							   CoinPackedVector *drlo,
-							   CoinPackedVector *drup,
-                               int* integerIndices = 0,int integerLength = 0);
+    void gutsOfConstructor(int nrow,int ncol,int nstag, int *cstag,int *rstag, CoinPackedMatrix *matrix, CoinPackedVector *dclo, CoinPackedVector *dcup, CoinPackedVector *dobj, CoinPackedVector *drlo, CoinPackedVector *drup, int* integerIndices = 0,int integerLength = 0,int* binaryIndices = 0,int binaryLength = 0);
 
     OsiSolverInterface* generateCoreProblem(OsiSolverInterface* osi);
 
@@ -267,6 +262,8 @@ private:
 	int *rowIn2Ex_; // Not clear yet
     int *integerIndices_; //indices of integer variables
     int integerLength_; //number of integer variables
+    int *binaryIndices_; //indices of binary variables
+    int binaryLength_; //number of binary variables
 	double **cdrlo_;
 	double **cdrup_;
 	double **cdobj_;

@@ -805,22 +805,29 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     // Set integer information..
     std::vector<int> integerIndices;
+    std::vector<int> binaryIndices; // Contains only binary information..
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         int begin = (*i)->offset;
         int end = (*i)->offset+(*i)->size();
-        if ((*i)->type == discrete) {
+        if ((*i)->type == (flopc::variableType::discrete || flopc::variableType::binary) ) {
             for (int k=begin; k<end; k++) {
                 if (stage.size()){
-                    if (colIndirection[k] != outOfBound)
+                    if (colIndirection[k] != outOfBound){
                         integerIndices.push_back(colIndirection[k]);
+                        if ( (*i)->type == flopc::variableType::binary)
+                            binaryIndices.push_back(colIndirection[k]);
+                    }
                 }
                 else{
                     integerIndices.push_back(k);
+                    if ( (*i)->type == flopc::variableType::binary)
+                        binaryIndices.push_back(k);
                 }
             }
         }
     }
     std::sort(integerIndices.begin(),integerIndices.end()); //Sort indices in ascending order
+    std::sort(binaryIndices.begin(),binaryIndices.end()); //Sort indices in ascending order
 
     ////
     // Core Model generated..
@@ -843,10 +850,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
-        SmiCoreData *osiCore = 0;
-        if (!integerIndices.empty()){
+        SmiCoreData *osiCore = 0; //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+        if (!integerIndices.empty()){ //suffices, because every binary is also an integer
             Solver->setInteger(&integerIndices[0],integerIndices.size());
-            osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0]); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+            if (!binaryIndices.empty())
+                osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0],integerIndices.size(), &binaryIndices[0],binaryIndices.size()); 
+            else
+                osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0],integerIndices.size()); 
         }
         else {
             osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.

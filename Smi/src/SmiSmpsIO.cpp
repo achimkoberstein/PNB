@@ -136,8 +136,37 @@ SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
 
 	}
 
+    // Aenderung: IntegerType
+    int intLen=0;
+    int binLen=0;
+    const double* colLower = this->getColLower();
+    const double* colUpper = this->getColUpper();
+    for(int i=0;i<this->getNumCols();i++ ){
+        if(this->isInteger(i)){
+            intLen++;
+            if(colUpper[i]==1&&colLower[i]==0){
+                binLen++;
+            }
+        }
+    }
+    int* intInd = new int[intLen];
+    int* binInd = new int[binLen];
+    int cint = 0;
+    int cbin = 0;
+    for (int i=0; i<this->getNumCols();i++ ){
+        if(this->isInteger(i)){
+            intInd[cint]=i;
+            cint++;
+            if(colUpper[i]==1&&colLower[i]==0){
+                binInd[cbin]=i;
+                cbin++;
+            }
+        }
+    }
+    // Aenderung: IntegerType
 
-	SmiCoreData *smiCoreData = new SmiCoreData(this,nstag_+1,cstag_,rstag_);
+
+	SmiCoreData *smiCoreData = new SmiCoreData(this,nstag_+1,cstag_,rstag_,intInd,intLen,binInd,binLen);
 	return smiCoreData;
 
 }
