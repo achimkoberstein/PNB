@@ -19,7 +19,7 @@ namespace flopc {
   /** @brief Enumeration for indicating variable type
       @ingroup INTERNAL_USE
   */
-  enum variableType {continuous, discrete};
+  enum variableType {continuous, discrete, binary};
 
   class MP_model;
   class MP_variable;
@@ -74,12 +74,12 @@ namespace flopc {
       //upperLimit.initialize(1);
         lowerLimit = Constant(0);
         upperLimit = Constant(1);
-        type = discrete; 
+        type = variableType::binary; 
     }
 
     /// Call this method to turn the MP_variable into an integer variable
     void integer() { 
-      type = discrete; 
+        type = variableType::discrete; 
     }
 
     void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
