@@ -7,7 +7,7 @@
 
 using namespace std;
 
-SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices):intColsStagewise(nstag,std::vector<int>()),integerIndices_(0),integerLength_(0)
+SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):intColsStagewise(nstag,std::vector<int>()),integerIndices_(0),integerLength_(0),binaryIndices_(0),binaryLength_(0)
 {	//Copies all values already stored in the Solver..
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -20,7 +20,7 @@ SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag
     CoinPackedMatrix *matrix = new CoinPackedMatrix(*osi->getMatrixByRow());
     matrix->eliminateDuplicates(0.0);
 
-    gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup,integerIndices,osi->getNumIntegers());
+    gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup,integerIndices,integerLength,binaryIndices,binaryLength);
 
     delete matrix;
     delete drlo;
@@ -30,7 +30,7 @@ SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag
     delete dobj;
 }
 
-SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag):integerIndices_(0),integerLength_(0)
+SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag,int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):intColsStagewise(nstag,std::vector<int>()),integerIndices_(0),integerLength_(0),binaryIndices_(0),binaryLength_(0)
 {
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -42,8 +42,8 @@ SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag):integer
 
     CoinPackedMatrix *matrix = new CoinPackedMatrix(*osi->getMatrixByRow());
     matrix->eliminateDuplicates(0.0);
-
-    gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup);
+    
+    gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup,integerIndices,integerLength,binaryIndices,binaryLength);
 
     delete matrix;
     delete drlo;
@@ -62,23 +62,19 @@ OsiSolverInterface* SmiCoreData::generateCoreProblem(OsiSolverInterface* osi){
     return osi;
 }
 
-void
-SmiCoreData::gutsOfConstructor(int nrow,int ncol,int nstag,
-							   int *cstag,int *rstag,
-							   CoinPackedMatrix *matrix,
-							   CoinPackedVector *dclo,
-							   CoinPackedVector *dcup,
-							   CoinPackedVector *dobj,
-							   CoinPackedVector *drlo,
-							   CoinPackedVector *drup,
-                               int* integerIndices, int integerIndicesLength)
+void SmiCoreData::gutsOfConstructor( int nrow,int ncol,int nstag, int *cstag,int *rstag, CoinPackedMatrix *matrix, CoinPackedVector *dclo, CoinPackedVector *dcup, CoinPackedVector *dobj, CoinPackedVector *drlo, CoinPackedVector *drup, int* integerIndices /*= 0*/,int integerLength /*= 0*/,int* binaryIndices /*= 0*/,int binaryLength /*= 0*/ )
 {
 	int i;
 	nrow_ = nrow;
 	ncol_ = ncol;
-    integerIndices_ = new int[integerIndicesLength];
-    integerLength_ = integerIndicesLength;
-    memcpy(integerIndices_,integerIndices,sizeof(int)*integerIndicesLength);
+    integerIndices_ = new int[integerLength];
+    integerLength_ = integerLength;
+    memcpy(integerIndices_,integerIndices,sizeof(int)*integerLength);
+    binaryIndices_ = new int[binaryLength];
+    binaryLength_ = binaryLength;
+    memcpy(binaryIndices_,binaryIndices,sizeof(int)*binaryLength);
+
+
 
 	// store number stages
 	nstag_ = nstag;

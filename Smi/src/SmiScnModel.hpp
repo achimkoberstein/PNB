@@ -172,8 +172,8 @@ public:
 
 	int* getIntegerInd(){ return core_->getIntegerIndices();}
 	int getIntegerLen(){return core_->getIntegerLength(); }
-	int* getBinaryInd(){return binaryInd;}
-	int getBinaryLen(){return binaryLen;}
+	int* getBinaryInd(){return core_->getBinaryIndices();}
+	int getBinaryLen(){return core_->getBinaryLength();}
 
     inline vector<int> getIntIndices() {
         return intIndices;
