@@ -21,8 +21,13 @@ int main(int argc, char* argv[]) {
 
     MP_model saphir(new OsiCpxSolverInterface());
     
+    // Stages
     enum {numST=2};
     MP_stage ST(numST);
+    
+    // Scenarios
+    enum {numR=1};
+    MP_scenario_set R(numR);
     
 #pragma region sets
 
@@ -42,10 +47,6 @@ int main(int argc, char* argv[]) {
             TM.insert(t,m);
         }
     }
-
-    // Stochastic szenarios
-    enum {numR=1};
-    MP_set R(numR);
 
     // Nodes (virtual trading points, national entry points)
     enum {Entry_2, EE_Speicher, Exit_1, Entry_1, NetConnect, numN};
@@ -670,9 +671,13 @@ int main(int argc, char* argv[]) {
         46982.2876076530,
         70126.6916172821
     };
-    MP_data LOAD(SC,T,R);
-    for (int t = 0; t < numT; t++) LOAD(Lecker_Gas,t,0) = valLOAD_Lecker_Gas[t];
-    forall(T, LOAD(COLOGNE_NATURE,T,0) = 0);
+    MP_random_data LOAD(SC,T,R);
+    double dnull = 0.0;
+    ScenarioRandomVariable* nullSRV = new ScenarioRandomVariable(&dnull, 1);
+    for (int t = 0; t < numT; t++) {
+        LOAD(Lecker_Gas,t,0) = new ScenarioRandomVariable(&valLOAD_Lecker_Gas[t],1);
+        LOAD(COLOGNE_NATURE,t,0) = nullSRV;
+    }
     
     //<--- Sale
     
