@@ -671,12 +671,12 @@ int main(int argc, char* argv[]) {
         46982.2876076530,
         70126.6916172821
     };
-    MP_random_data LOAD(SC,T,R);
+    MP_random_data LOAD(ST,SC,T,R);
     double dnull = 0.0;
     ScenarioRandomVariable* nullSRV = new ScenarioRandomVariable(&dnull, 1);
     for (int t = 0; t < numT; t++) {
-        LOAD(Lecker_Gas,t,0) = new ScenarioRandomVariable(&valLOAD_Lecker_Gas[t],1);
-        LOAD(COLOGNE_NATURE,t,0) = nullSRV;
+        LOAD(1,Lecker_Gas,t,0) = new ScenarioRandomVariable(&valLOAD_Lecker_Gas[t],1);
+        LOAD(1,COLOGNE_NATURE,t,0) = nullSRV;
     }
     
     //<--- Sale
@@ -782,7 +782,7 @@ int main(int argc, char* argv[]) {
     
     KostenGasbezug(ST+1,R) = 
         gasbezugskostengesamt(ST+1,R) ==   sum(MBC(BC,M), EPRICEBC(MBC) * DELTAM(M) * pbcp(MBC)) 
-                                         + sum(R, PR(R) * sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST+1,OC,T,R) + PPRICEOC(OC) * pmaxoc(OC)));
+                                         + sum(R, PR(R) * sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST+1,TOC(OC,T),R) + PPRICEOC(OC) * pmaxoc(OC)));
     
     SpeicherkostenGesamt(ST+1,R) =
         speicherkostengesamt(ST+1,R) == sum(R, PR(R) * sum(S, SCF(S) + SCV(S) * emaxs(S) + PPRICEINJ(S) * pmaxinj(S) + PPRICEEXT(S) * pmaxext(S) + sum(T, SCC(S) * DELTAT(T) * pinj(ST+1,S,T,R))));
@@ -832,13 +832,13 @@ int main(int argc, char* argv[]) {
 
     PUseNotMoreThanExistBaseLoad(ST+1,MBC(BC,M),R) = pbcu(ST+1,MBC,R) <= pbcp(MBC);
     
-    EMinOpenContract(ST+1,OC,R) = EMINOC(OC) * oc_use(OC) <= sum(TOC(OC,T), DELTAT(T) * poc(ST+1,OC,T,R));
-    EMaxOpenContract(ST+1,OC,R) = sum(TOC(OC,T), DELTAT(T) * poc(ST+1,OC,T,R)) <= EMAXOC(OC) * oc_use(OC);
+    EMinOpenContract(ST+1,OC,R) = EMINOC(OC) * oc_use(OC) <= sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T),R));
+    EMaxOpenContract(ST+1,OC,R) = sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T),R)) <= EMAXOC(OC) * oc_use(OC);
     
     PMaxOpenConstact(ST+1,TOC(OC,T),R) = poc(ST+1,T,R) <= pmaxoc(OC);
 
-    PMinOpenContractLimit(ST+1,OC,T,R) = PMINOC(OC,T) * oc_use(OC) <= poc(ST+1,OC,T,R);
-    PMaxOpenContractLimit(ST+1,OC,T,R) = poc(ST+1,OC,T,R) <= PMAXOC(OC,T) * oc_use(OC);
+    PMinOpenContractLimit(ST+1,TOC(OC,T),R) = PMINOC(TOC) * oc_use(OC) <= poc(ST+1,TOC,R);
+    PMaxOpenContractLimit(ST+1,TOC(OC,T),R) = poc(ST+1,TOC,R) <= PMAXOC(TOC) * oc_use(OC);
 
     //<--- Purchase
     
@@ -860,8 +860,8 @@ int main(int argc, char* argv[]) {
     
     // !(S == Slack) - Slack oder SlackStorage??? SlackStorage, wie es in MOPS Studio steht, gibt es garnicht
     EBeginngingStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,0,R) == emaxs(S) + DELTAT(0) * (pinj(ST+1,S,0,R) - pext(ST+1,S,0,R));
-    EStorage(ST+1,S,T,R) = es(ST+1,S,T,R) == es(ST+1,S,T-1,R) + DELTAT(T) * (pinj(ST+1,S,T,R) - pext(ST+1,S,T,R));
-    EEndStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,numT,R) >= emaxs(S) * STCOND;
+    EStorage(ST+1,S,T,R).such_that(T > 0) = es(ST+1,S,T,R) == es(ST+1,S,T-1,R) + DELTAT(T) * (pinj(ST+1,S,T,R) - pext(ST+1,S,T,R));
+    EEndStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,numT-1,R) >= emaxs(S) * STCOND;
     
     EMinMaxStorage0a(ST+1,S,T,R) = (0*es(ST+1,S,T,R)) <= es(ST+1,S,T,R) ; // wieso geht "0 <= ..." nicht?
     EMinMaxStorage0b(ST+1,S,T,R) =  es(ST+1,S,T,R) <= EMAXST(S,T);
@@ -886,11 +886,11 @@ int main(int argc, char* argv[]) {
     PMaxNetwork(ST,L,T,R) = pl(ST+1,L,T,R) <= pmaxl(L);
     
     Flow(ST+1,N,T,R) =
-           sum(BC.such_that(NBC(BC,N)) * M.such_that(TM(T,M) && MBC(BC,M)), pbcu(BC,T,R)) 
-        +  sum(OC.such_that(NOC(OC,N) && TOC(OC,T)), poc(ST+1,OC,T,R))
+           sum(BC.such_that(NBC(BC,N)) * M.such_that(TM(T,M) && MBC(BC,M)), pbcu(ST+1,MBC(BC,M),R)) 
+        +  sum(OC.such_that(NOC(OC,N) && TOC(OC,T)), poc(ST+1,TOC(OC,T),R))
         +  sum(S.such_that(NS(S,N)),  pext(ST+1,S,T,R) - pinj(ST+1,S,T,R))
         +  sum(L(N2,N), pl(ST+1,L,T,R)) - sum(L(N,N2), pl(ST+1,L,T,R))
-        == sum(SC.such_that(NSC(SC,N)), LOAD(N,T,R));
+        == sum(SC.such_that(NSC(SC,N)), LOAD(ST+1,N,T,R));
     
     //<--- Network
     
@@ -900,9 +900,9 @@ int main(int argc, char* argv[]) {
         Returns(ST,SC,T,R),
         Sales(ST,R);
     
-    Returns(ST+1,SC,T,R) = revenues(ST+1,S,T,R) == EPRICESC(S,T) * DELTAT(T) * LOAD(S,T,R);
+    Returns(ST+1,SC,T,R) = revenues(ST+1,SC,T,R) == EPRICESC(S,T) * DELTAT(T) * LOAD(ST+1,S,T,R);
     
-    Sales(ST+1,R) = gain(ST+1,R) == sum(SC*T, EPRICESC(S,T) * DELTAT(T) * LOAD(S,T,R));
+    Sales(ST+1,R) = gain(ST+1,R) == sum(SC*T, EPRICESC(S,T) * DELTAT(T) * LOAD(ST+1,S,T,R));
     
     //<--- Sale
     
@@ -915,8 +915,9 @@ int main(int argc, char* argv[]) {
     );
     
     saphir.attach(saphir.Solver);    
-    saphir.solve(MP_model::MAXIMIZE);
     
+    saphir.solve(MP_model::MAXIMIZE);
+
     //OsiStochasticBendersTwoStageSolverInterface benders(saphir.Solver,saphir.getSmi());
     //benders.initialSolve();
 
