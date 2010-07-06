@@ -156,6 +156,39 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    TEST_F(UseCaseTest,RandomWalkTest){ //Seed: 1015576855 im vergleich zu 1106783986
+        const int numStage = 3;
+        unsigned int seed = 2013598861;
+        MP_model testModel(new OsiClpSolverInterface(),new NormalMessenger(),seed);
+
+        MP_stage T(numStage);
+
+        RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(0,1,1,2), new DiscreteUniformRandomVariable(0,1,1,1) };
+        MP_random_data randomWalkVar(&randomVars[0],T);
+        MP_random_data sumR(T);
+        MP_data blubb(T);
+        blubb(0) = 5;
+        blubb(1) = 10;
+        blubb(2) = 20;
+        //sumR(0) = 0;
+        //sumR(T+1) = blubb(T) + randomWalkVar(T+1);
+        
+
+        MP_variable x(T);
+        MP_variable y(T);
+
+        MP_constraint firstConstraint(T);
+        firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
+        //MP_constraint secondConstraint(T);
+        //secondConstraint(T+1) = 2*y(T+1) + x(T+1) <= randomWalkVar(T+1);
+        MP_expression objective( x(T.last()) );
+
+        testModel.setObjective(objective);
+        testModel.solve(MP_model::MAXIMIZE);
+        //sumR.display("RandomValues?");
+        x.display("Werte");
+
+    }
 
     // Tests if scenario based random variables gets correctly read in.
     TEST_F(RandomVariableTest,ScenarioBasedRandomVariableInitializationTest){
@@ -172,6 +205,8 @@ namespace flopc {
         }
 
     }
+
+
 
     //Test if Conditional Sampling works (for seed 0 for every RV. This means values are highly correlated)
     TEST_F(RandomVariableTest,DISABLED_ConditionalSamplingTest){
@@ -588,13 +623,43 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        
+        demand.display("Demand");
+        price.display("Price");
+        std::vector<double> sampledValues = var[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(0,sampledValues[i]);
+            EXPECT_GE(1,sampledValues[i]);
+        }
+        sampledValues = var1[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(3,sampledValues[i]);
+            EXPECT_GE(4,sampledValues[i]);
+        }
         testModel.setSampleOnlyScenarioGeneration(true,10);
         
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-
+        demand.display("Demand");
+        price.display("Price");
+        sampledValues = var[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(0,sampledValues[i]);
+            EXPECT_GE(1,sampledValues[i]);
+        }
+        sampledValues = var1[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(3,sampledValues[i]);
+            EXPECT_GE(4,sampledValues[i]);
+        }
+        std::vector<double> prob = testModel.Probabilities();
+        double sum = 0;
+        for (int i = 0 ; i < testModel.ScenSet().size(); i++){
+            std::cout << " Sc." << i << ": " << prob[i];
+            sum += prob[i];
+        }
+        std::cout << std::endl;
+        EXPECT_DOUBLE_EQ(1,sum);
 
 
     }

@@ -572,7 +572,8 @@ SmiScnModel::loadOsiSolverData()
 	//Print out Matrix.. if in Debug Mode
 	//TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
- /*   for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+#ifndef NDEBUG 
+    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
         std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
     }
     std::cout << std::endl;
@@ -582,11 +583,13 @@ SmiScnModel::loadOsiSolverData()
 			printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
 		}
 		printf("<= %g",osiStoch_->getRowUpper()[mi]);
+        //printf(" %g",this->core_->getRowStage(mi)); //We have to transform indices back to core model..
 	}
 	printf("\n Matrix printed \n");
 	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
 		printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-	}*/
+	}
+#endif
 	return osiStoch_;
 }
 
