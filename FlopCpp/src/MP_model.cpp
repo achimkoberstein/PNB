@@ -438,7 +438,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     // We need to generate all the values we need at this point, if they are not already present.
     // For now: Simple Check: All randomVariables are either ScenarioRandomVars OR (exclusive) Independently distributed RandomVars. (This check is done in sampleRandomVariates method).
 
-    // TODO: We can use more intelligent ways of storing the values (sparse arrays..)?
+    // TODO: Can we use more intelligent ways of storing the values (sparse arrays..)?
     sampleRandomVariates(RandomVariables);
 
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
@@ -847,7 +847,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         CoinPackedMatrix matrix(true,m,realn,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
         matrix.reverseOrdering(); //Smi needs matrix in row ordered form
         //TODO: Debug switch
-        //printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
+        
+        DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
+        
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
         SmiCoreData *osiCore = 0; //Create CoreData Node. Needs to be deleted in case of stochastic solver.
@@ -965,7 +967,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         sampledValuesOfVars.push_back(std::map<double,double>());
 
         // Now we prepare the iterator vector. We do it here as otherwise we would invalidate the previous iterators
-        DLOG(INFO) << randVarsPerStage[i] << std::endl;
+        DLOG(INFO) << "Random Variable in Stage " << i << " : " << randVarsPerStage[i] << std::endl;
         for (int j = 0; j < randVarsPerStage[i]+1; j++){
             iteratorVector[j] = sampledValuesOfVars[j].begin();
         }
@@ -978,7 +980,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         scenariosPerStage[i] = std::vector< std::vector<double> >();
 
         // Combine all-against-all for this stage. Include probabilities of previous stages
-        // At first we go the first value where the current value and the next sampled Value differ
+        // At first we go to the first value where the current value and the next sampled Value differ
         while (true){
             while ( iteratorVector[nextVar] != sampledValuesOfVars[nextVar].end() ){ // As long as we have not reached the empty map, everything is fine: Go to the next map.
                 ++nextVar;
@@ -1044,7 +1046,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
             ////Compute probability and insert values per randomvar to form a scenario.
             overallScenarios.push_back(std::vector<double>()); //TODO: Reserve some space?
             for (int j = 1; j < stage.size();j++){ // For all stages
-                overallScenarios.back().insert(overallScenarios.back().begin(),scenariosPerStage[j][curScenario[j]].begin(),--scenariosPerStage[j][curScenario[j]].end()); //Insert values for all RV in order from iterator given above, but do not insert probability of scenario.
+
+                overallScenarios.back().insert(overallScenarios.back().end(),scenariosPerStage[j][curScenario[j]].begin(),--scenariosPerStage[j][curScenario[j]].end()); //Insert values for all RV in order from iterator given above, but do not insert probability of scenario.
                 prob *= scenariosPerStage[j][curScenario[j]].back();
 
             }
@@ -1074,7 +1077,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
             for (int j = 0; j < overallScenarios.size(); j++) {
                 temp.push_back(overallScenarios[j][curRVIndex]);
             }
-            (*it)->setSampledValues(temp);
+            (*it)->setScenarioValues(temp);
             ++curRVIndex;
         }//end for rv
     }//end for stage
@@ -1240,7 +1243,7 @@ namespace flopc {
             return os;
     }
 
-    SmiScnModel* MP_model::generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector, SmiCoreData* smiCore){
+    SmiScnModel* MP_model::generateScenarioTree(const std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& randomCoefficientVector, SmiCoreData* smiCore){
         //TODO: Check with own test if scenario generation is correct. It looks like it, but we will never now until we test it.
         typedef std::vector<boost::shared_ptr<MP::Coef> >::const_iterator randVarIterator;
         //Get basic important values
@@ -1251,7 +1254,7 @@ namespace flopc {
         if (nScen==0) // We have no specified scenario set, so we rely on the default sample size and count the scenario size afterwards.
             count = true;
         for (int curStage = 1; curStage < nStages; curStage++){ //Count number of random coefficients for each stage..
-            for (randVarIterator it = randomVariableVector[curStage].begin(); it != randomVariableVector[curStage].end();++it){
+            for (randVarIterator it = randomCoefficientVector[curStage].begin(); it != randomCoefficientVector[curStage].end();++it){
                 randVarsPerStage[curStage]++;
             }
         }
@@ -1347,7 +1350,7 @@ namespace flopc {
                 //Do the real stuff: Add values for the current scenario.
                 //Add all random coefficients to corresponding places
                 for (int j = 0; j < randVarsPerStage[curStage];j++){  //Values differ 
-                    boost::shared_ptr<MP::Coef> it = randomVariableVector[curStage][j];
+                    boost::shared_ptr<MP::Coef> it = randomCoefficientVector[curStage][j];
                     double coefficient = it->scenVector[parentScen];
                     int colIndex = it->col;
                     int rowIndex = it->row;
@@ -1399,7 +1402,7 @@ namespace flopc {
                         subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     // Define the new scenario subset node for the next stage
-                    else if (!differFromPrevious(randomVariableVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
+                    else if (!differFromPrevious(randomCoefficientVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
                         //Add to scenario subset heap of next stage node and scenario
                         subScenariosPerStageAndScenario[curStage+1][parentScen].insert(*innerIt); //debug this statement
                         //Erase from subsetHeap, so that this subset scenario does not form a new node in a subsequent run of the while loop
@@ -1438,8 +1441,10 @@ namespace flopc {
         // scenarios needs to be added in correct ordering, i.e. every scenario that depends on another one can be only inserted after the dependent one.
         // We need to sort the scenarioIndirection array to get the correct ordering for adding scenarios and we need to keep the old ordering.
 
+        std::vector<double> newProbs(scenCounter);
         for (int curScen = 0; curScen < scenCounter; curScen++){
             int flopScen = realOrderingFromVirtualScenario[curScen];
+            newProbs[curScen] = probabilities[flopScen];
             //If ancScen of an arbitrary scenario is not set the data is such that the number of Scenarios reduces by this scenario, as it does not differ from another one.
             if (ancScenVec[curScen]!=outOfBound){ //If ancScen is set, we can generate a scenario, otherwise, we won't.
                 //We need to convert the CoinPackedMatrix to CoinPackedVectors..
@@ -1452,18 +1457,15 @@ namespace flopc {
                 smiModel->generateScenario(smiCore,matrixVec[flopScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[flopScen],ancScenVec[curScen],probabilities[flopScen]);
             }
         }
-        DLOG(INFO) << "Generated " << scenCounter << " scenarios.";
 
+        DLOG(INFO) << "Generated " << scenCounter << " scenarios.";
         if (scenSet.size() != scenCounter){
             DLOG(INFO) << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << " during scenario tree generation.";
             scenSet = MP_scenario_set(scenCounter);
+            probabilities = newProbs;
+            
         }
 
-
-        if (scenCounter != scenSet.size()){
-            DLOG(INFO) << "We changed scenario set size from " << scenSet.size() << " to " << scenCounter << ".";
-            this->ScenSet(MP_scenario_set(scenCounter)); // Update scenario set to shrink to the actual size.
-        }
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
             delete matrixVec[curScen];
@@ -1492,7 +1494,7 @@ namespace flopc {
         return !identical;
     }
 
-    void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){
+    std::string printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){
         printf("Print Problem\n");
         printf("Objective: ");
         for (int i = 0; i < n;i++){
@@ -1518,6 +1520,7 @@ namespace flopc {
             cout << endl;
         }
         printf("\nMatrix printed \n");
+        return "";
     }
 
     void Messenger::logMessage( int level, const char * const msg )
