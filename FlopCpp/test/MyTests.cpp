@@ -177,8 +177,14 @@ namespace flopc {
         MP_variable x(T);
         MP_variable y(T);
 
-        MP_constraint firstConstraint(T);
-        firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
+        MP_constraint firstConstraint(T),secondConstraint(T);
+        MP_constraint thirdConstraint;
+        //firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
+        
+        secondConstraint(T+1) = y(T+1) == randomWalkVar(T+1) + y(T);
+        firstConstraint(T+1) = x(T+1) <= y(T+1);
+        thirdConstraint() = y(0) <= Constant(0);
+      
         //MP_constraint secondConstraint(T);
         //secondConstraint(T+1) = 2*y(T+1) + x(T+1) <= randomWalkVar(T+1);
         MP_expression objective( x(T.last()) );
@@ -187,6 +193,8 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
         //sumR.display("RandomValues?");
         x.display("Werte");
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_DOUBLE_EQ(1.5,testModel.Solver->getObjValue());
 
     }
 
@@ -290,8 +298,8 @@ namespace flopc {
 
         investmentModel.setObjective( valueFunction );
         investmentModel.attach(investmentModel.Solver);
-        //this->testCorrectStageAssignment(investmentModel);
-        //investmentModel.solve(MP_model::MAXIMIZE);
+        this->testCorrectStageAssignment(investmentModel);
+        investmentModel.solve(MP_model::MAXIMIZE);
 
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
@@ -300,8 +308,8 @@ namespace flopc {
         //}
 
         ////Compare solution values.
-        //EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
-        //EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+        EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
+        EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
         std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(numScen,wsResults.size());
         double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
