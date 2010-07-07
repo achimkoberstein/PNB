@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     // Months on which Baseload Contracts are available
     MP_subset<2> MBC(BC,M);
     forall(BC*M, MBC.insert(BC,M));
-    
+   
     // Winter Months Baseload Contracts
     MP_subset<2> WMBC(BC,M);
     for (int i = 1; i <= 5; i++) WMBC.insert(EON_RG, i);
@@ -197,8 +197,8 @@ int main(int argc, char* argv[]) {
     
     // Maximal Power per Month for every Baseload Contract
     MP_data PMAXBC(MBC);
-    forall(M, PMINBC(EON_RG,M) = 10000000);
-    forall(M, PMINBC(Shell,M)  = 10000000); 
+    forall(M, PMAXBC(EON_RG,M) = 10000000);
+    forall(M, PMAXBC(Shell,M)  = 10000000); 
     
     // Minimal Energy on Summer
     double valEMINSOMMER[numBC] = {0, 1100000000};
@@ -693,16 +693,16 @@ int main(int argc, char* argv[]) {
     MP_variable pbcu(ST,MBC,R);    	//Baseload Contracts Usage
     pbcu.lowerLimit = 0;
     
-    MP_variable pmaxbc(BC);			//Maximal Baseload Contracts Power
+    MP_variable pmaxbc(ST,BC);		//Maximal Baseload Contracts Power
     pmaxbc.lowerLimit = 0;
     
-    MP_variable pminbc(BC);			//Minimal Baseload Contracts Power
+    MP_variable pminbc(ST,BC);		//Minimal Baseload Contracts Power
     pminbc.lowerLimit = 0;
     
     MP_variable poc(ST,TOC,R);	    //Open Contracts Usage
     poc.lowerLimit = 0;
     
-    MP_variable pmaxoc(OC);			//Maximal Open Contracts Power
+    MP_variable pmaxoc(ST,OC);		//Maximal Open Contracts Power
     pmaxoc.lowerLimit = 0;
     
     MP_variable gasbezugskostengesamt(ST,R);	//Check Variable for Purchase Contacts Costs
@@ -721,7 +721,7 @@ int main(int argc, char* argv[]) {
     MP_variable es(ST,S,T,R);	//Amount of Energy stored in Storages (fill level)
     es.lowerLimit = 0;
     
-    MP_variable emaxs(S);		//Maximal Amount of Energy stored in Storage
+    MP_variable emaxs(ST,S);	//Maximal Amount of Energy stored in Storage
     emaxs.lowerLimit = 0;
     
     MP_variable pinj(ST,S,T,R);	//Injection Power for every Time Period
@@ -730,10 +730,10 @@ int main(int argc, char* argv[]) {
     MP_variable pext(ST,S,T,R);	//Extraction Power for every Time Period
     pext.lowerLimit = 0;
     
-    MP_variable pmaxinj(S);		//Maximal used Injection Power by each Storage
+    MP_variable pmaxinj(ST,S);	//Maximal used Injection Power by each Storage
     pmaxinj.lowerLimit = 0;
     
-    MP_variable pmaxext(S);		//Maximal used Extraction Power by each Storage
+    MP_variable pmaxext(ST,S);	//Maximal used Extraction Power by each Storage
     pmaxext.lowerLimit = 0;
     
     MP_variable speicherkostengesamt(ST,R);	//Check Variable for Storage Costs
@@ -747,10 +747,10 @@ int main(int argc, char* argv[]) {
     //---> Network
     MP_variable pl(ST,L,T,R);   //Power Level on Links (can be negative)
     
-    MP_variable pminl(L);		//Minimal Power Level on Links
+    MP_variable pminl(ST,L);	//Minimal Power Level on Links
     pminl.upperLimit = 0;
     
-    MP_variable pmaxl(L);		//Maximal Power Level on Links
+    MP_variable pmaxl(ST,L);	//Maximal Power Level on Links
     pmaxl.lowerLimit = 0;
     
     MP_variable netzkostengesamt(ST,R);	//Check Variable for Network Costs
@@ -782,13 +782,13 @@ int main(int argc, char* argv[]) {
     
     KostenGasbezug(ST+1,R) = 
         gasbezugskostengesamt(ST+1,R) ==   sum(MBC(BC,M), EPRICEBC(MBC) * DELTAM(M) * pbcp(MBC)) 
-                                         + sum(R, PR(R) * sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST+1,TOC(OC,T),R) + PPRICEOC(OC) * pmaxoc(OC)));
+                                         + sum(R, PR(R) * sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST+1,TOC(OC,T),R) + PPRICEOC(OC) * pmaxoc(ST+1,OC)));
     
     SpeicherkostenGesamt(ST+1,R) =
-        speicherkostengesamt(ST+1,R) == sum(R, PR(R) * sum(S, SCF(S) + SCV(S) * emaxs(S) + PPRICEINJ(S) * pmaxinj(S) + PPRICEEXT(S) * pmaxext(S) + sum(T, SCC(S) * DELTAT(T) * pinj(ST+1,S,T,R))));
+        speicherkostengesamt(ST+1,R) == sum(R, PR(R) * sum(S, SCF(S) + SCV(S) * emaxs(ST+1,S) + PPRICEINJ(S) * pmaxinj(ST+1,S) + PPRICEEXT(S) * pmaxext(ST+1,S) + sum(T, SCC(S) * DELTAT(T) * pinj(ST+1,S,T,R))));
         
     NetzkostenGesamt(ST+1,R) =
-        netzkostengesamt(ST+1,R) == sum(R, PR(R) * sum(LMA, CENTRY(LMA) * pmaxl(LMA) - CEXIT(LMA) * pminl(LMA)));
+        netzkostengesamt(ST+1,R) == sum(R, PR(R) * sum(LMA, CENTRY(LMA) * pmaxl(ST+1,LMA) - CEXIT(LMA) * pminl(ST+1,LMA)));
 
     //---> Purchase
     
@@ -801,9 +801,9 @@ int main(int argc, char* argv[]) {
         EMinSommer(BC),
         PMinBaseLoadLimit(MBC),
         PMaxBaseLoadLimit(MBC),
-        PMinBaseLoad(MBC),
-        PMaxBaseLoad(MBC),
-        BASELOADYEAR1(BC),
+        PMinBaseLoad(ST,MBC),
+        PMaxBaseLoad(ST,MBC),
+        BASELOADYEAR1(ST,BC),
         BASELOADQUATER(MBC),
         PUseNotMoreThanExistBaseLoad(ST,MBC,R),
         EMinOpenContract(ST,OC,R),
@@ -824,10 +824,10 @@ int main(int argc, char* argv[]) {
     PMinBaseLoadLimit(MBC(BC,M)) = PMINBC(MBC) * bc_use(BC) <= pbcp(MBC);
     PMaxBaseLoadLimit(MBC(BC,M)) = pbcp(MBC) <= PMAXBC(MBC) * bc_use(BC);
     
-    PMinBaseLoad(MBC(BC,M)) = pminbc(BC) <= pbcp(MBC);
-    PMaxBaseLoad(MBC(BC,M)) = pbcp(MBC) <= pmaxbc(BC);
+    PMinBaseLoad(ST+1,MBC(BC,M)) = pminbc(ST+1,BC) <= pbcp(MBC);
+    PMaxBaseLoad(ST+1,MBC(BC,M)) = pbcp(MBC) <= pmaxbc(ST+1,BC);
     
-    BASELOADYEAR1(BC).such_that(BCTYP(BC) < 1) = pmaxbc(BC) <= pminbc(BC); // "== 0" geht nicht, "== 1" jedoch schon...
+    BASELOADYEAR1(ST+1,BC).such_that(BCTYP(BC) < 1) = pmaxbc(ST+1,BC) <= pminbc(ST+1,BC); // "== 0" geht nicht, "== 1" jedoch schon...
     BASELOADQUATER(MBC(BC,M)).such_that(M > 0 && BCTYP(BC) == 1 && MQ(M) == MQ(M-1)) = pbcp(MBC) == pbcp(MBC(BC,M-1));
 
     PUseNotMoreThanExistBaseLoad(ST+1,MBC(BC,M),R) = pbcu(ST+1,MBC,R) <= pbcp(MBC);
@@ -835,7 +835,7 @@ int main(int argc, char* argv[]) {
     EMinOpenContract(ST+1,OC,R) = EMINOC(OC) * oc_use(OC) <= sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T),R));
     EMaxOpenContract(ST+1,OC,R) = sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T),R)) <= EMAXOC(OC) * oc_use(OC);
     
-    PMaxOpenConstact(ST+1,TOC(OC,T),R) = poc(ST+1,T,R) <= pmaxoc(OC);
+    PMaxOpenConstact(ST+1,TOC(OC,T),R) = poc(ST+1,T,R) <= pmaxoc(ST+1,OC);
 
     PMinOpenContractLimit(ST+1,TOC(OC,T),R) = PMINOC(TOC) * oc_use(OC) <= poc(ST+1,TOC,R);
     PMaxOpenContractLimit(ST+1,TOC(OC,T),R) = poc(ST+1,TOC,R) <= PMAXOC(TOC) * oc_use(OC);
@@ -859,17 +859,17 @@ int main(int argc, char* argv[]) {
         PMaxExtConstant(ST,S,T,R);
     
     // !(S == Slack) - Slack oder SlackStorage??? SlackStorage, wie es in MOPS Studio steht, gibt es garnicht
-    EBeginngingStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,0,R) == emaxs(S) + DELTAT(0) * (pinj(ST+1,S,0,R) - pext(ST+1,S,0,R));
+    EBeginngingStorage(ST+1,R,S) = es(ST+1,S,0,R) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0,R) - pext(ST+1,S,0,R)); //EBeginngingStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,0,R) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0,R) - pext(ST+1,S,0,R));
     EStorage(ST+1,S,T,R).such_that(T > 0) = es(ST+1,S,T,R) == es(ST+1,S,T-1,R) + DELTAT(T) * (pinj(ST+1,S,T,R) - pext(ST+1,S,T,R));
-    EEndStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,numT-1,R) >= emaxs(S) * STCOND;
+    EEndStorage(ST+1,R,S) = es(ST+1,S,numT-1,R) >= emaxs(ST+1,S) * STCOND; //EEndStorage(ST+1,R,S).such_that(!(S == Slack)) = es(ST+1,S,numT-1,R) >= emaxs(ST+1,S) * STCOND;
     
     EMinMaxStorage0a(ST+1,S,T,R) = (0*es(ST+1,S,T,R)) <= es(ST+1,S,T,R) ; // wieso geht "0 <= ..." nicht?
     EMinMaxStorage0b(ST+1,S,T,R) =  es(ST+1,S,T,R) <= EMAXST(S,T);
-    EMinMaxStorage1(ST+1,S,T,R) = es(ST+1,S,T,R) <= emaxs(S);
-    EMinMaxStorage3(ST+1,S,T,R).such_that(!(S == Slack)) = es(ST+1,S,T,R) <= EMAXST(S,T) * s_use(S);
-    EMinMaxStorage4(ST+1,S,T,R).such_that(!(S == Slack)) = es(ST+1,S,T,R) >= EMINST(S,T) * s_use(S);
-    PMaxInj(ST+1,S,T,R) = pinj(ST+1,S,T,R) <= pmaxinj(S);
-    PMaxExt(ST+1,S,T,R) = pext(ST+1,S,T,R) <= pmaxext(S);
+    EMinMaxStorage1(ST+1,S,T,R) = es(ST+1,S,T,R) <= emaxs(ST+1,S);
+    EMinMaxStorage3(ST+1,S,T,R) = es(ST+1,S,T,R) <= EMAXST(S,T) * s_use(S); //EMinMaxStorage3(ST+1,S,T,R).such_that(!(S == Slack)) = es(ST+1,S,T,R) <= EMAXST(S,T) * s_use(S);
+    EMinMaxStorage4(ST+1,S,T,R) = es(ST+1,S,T,R) >= EMINST(S,T) * s_use(S); //EMinMaxStorage4(ST+1,S,T,R).such_that(!(S == Slack)) = es(ST+1,S,T,R) >= EMINST(S,T) * s_use(S);
+    PMaxInj(ST+1,S,T,R) = pinj(ST+1,S,T,R) <= pmaxinj(ST+1,S);
+    PMaxExt(ST+1,S,T,R) = pext(ST+1,S,T,R) <= pmaxext(ST+1,S);
     PMaxInjConstant(ST+1,S,T,R) = pinj(ST+1,S,T,R) <= PMAXINJ(S,T);
     PMaxExtConstant(ST+1,S,T,R) = pext(ST+1,S,T,R) <= PMAXEXT(S,T);    
     
@@ -882,15 +882,15 @@ int main(int argc, char* argv[]) {
         PMaxNetwork(ST,L,T,R),
         Flow(ST,N,T,R);
     
-    PMinNetwork(ST+1,L,T,R) = pminl(L) <= pl(ST+1,L,T,R);
-    PMaxNetwork(ST,L,T,R) = pl(ST+1,L,T,R) <= pmaxl(L);
+    PMinNetwork(ST+1,L,T,R) = pminl(ST+1,L) <= pl(ST+1,L,T,R);
+    PMaxNetwork(ST+1,L,T,R) = pl(ST+1,L,T,R) <= pmaxl(ST+1,L);
     
     Flow(ST+1,N,T,R) =
            sum(BC.such_that(NBC(BC,N)) * M.such_that(TM(T,M) && MBC(BC,M)), pbcu(ST+1,MBC(BC,M),R)) 
         +  sum(OC.such_that(NOC(OC,N) && TOC(OC,T)), poc(ST+1,TOC(OC,T),R))
         +  sum(S.such_that(NS(S,N)),  pext(ST+1,S,T,R) - pinj(ST+1,S,T,R))
         +  sum(L(N2,N), pl(ST+1,L,T,R)) - sum(L(N,N2), pl(ST+1,L,T,R))
-        == sum(SC.such_that(NSC(SC,N)), LOAD(ST+1,N,T,R));
+        == sum(SC.such_that(NSC(SC,N)), LOAD(ST+1,SC,T,R));
     
     //<--- Network
     
@@ -900,9 +900,9 @@ int main(int argc, char* argv[]) {
         Returns(ST,SC,T,R),
         Sales(ST,R);
     
-    Returns(ST+1,SC,T,R) = revenues(ST+1,SC,T,R) == EPRICESC(S,T) * DELTAT(T) * LOAD(ST+1,S,T,R);
+    Returns(ST+1,SC,T,R) = revenues(ST+1,SC,T,R) == EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T,R);
     
-    Sales(ST+1,R) = gain(ST+1,R) == sum(SC*T, EPRICESC(S,T) * DELTAT(T) * LOAD(ST+1,S,T,R));
+    Sales(ST+1,R) = gain(ST+1,R) == sum(SC*T, EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T,R));
     
     //<--- Sale
     
@@ -910,14 +910,23 @@ int main(int argc, char* argv[]) {
 
 #pragma region optimization
 
+
     saphir.setObjective(
         sum(R, PR(R) * (gain(ST+1,R) - gasbezugskostengesamt(ST+1,R) - speicherkostengesamt(ST+1,R) - netzkostengesamt(ST+1,R)))
     );
     
     saphir.attach(saphir.Solver);    
-    
+
     saphir.solve(MP_model::MAXIMIZE);
 
+    gain.display("gain");
+    gasbezugskostengesamt.display("gasbezugskostengesamt");
+    speicherkostengesamt.display("speicherkostengesamt");
+    netzkostengesamt.display("netzkostengesamt");
+
+    pbcp.display("pbcp");
+    bc_use.display("bc_use");
+    
     //OsiStochasticBendersTwoStageSolverInterface benders(saphir.Solver,saphir.getSmi());
     //benders.initialSolve();
 
