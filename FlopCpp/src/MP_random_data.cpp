@@ -200,13 +200,14 @@ namespace flopc{
             const MP_index_exp& d3,
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
-                Coin::SmartPtr<RandomDataRef> tempPtr(new RandomDataRef(this->shared_from_this(), d1, d2, d3, d4, d5));
                 c->propagateIndexExpression(d1,d2,d3,d4,d5);
+                Coin::SmartPtr<RandomDataRef> tempPtr(new RandomDataRef(this->shared_from_this(), d1, d2, d3, d4, d5));
                 myrefs.push_back(tempPtr);
                 return *tempPtr; 
 
         }
 
+        void display(const std::string& s, int scenario);
 
 
 
@@ -258,16 +259,37 @@ namespace flopc{
     {
 
     }
-    //Implementation for MP_random_data_impl
-    void MP_random_data_impl::operator ()() const {
+
+    void MP_random_data::display( const std::string& s /*= ""*/, int scenario )
+    {
+        ptrImpl->display(s,scenario);
+    }
+
+    //Implementation for MP_random_data_impl TODO: Store values to reduce computational burden
+    void MP_random_data_impl::operator ()() const { //Called by display method indirectly via functor evaluation
         if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
         if (&S2!=&MP_set::getEmpty()) cout << i2.evaluate() << " ";
         if (&S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
         if (&S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
         if (&S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
-        cout<<"  "<< values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
-            i4.evaluate(),i5.evaluate())] << endl;
+        if (values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
+            i4.evaluate(),i5.evaluate())] != NULL){
+                for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
+                    std::cout << " Sc." << i << ": " << values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
+                    i4.evaluate(),i5.evaluate())]->getSampledValue(i) << " ";
+                std::cout << std::endl;
 
+        }
+        else {
+            for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
+                std::cout << " Sc." << i << ": " << c->evaluate(i) << " "; 
+            std::cout << std::endl;
+        }
+    }
+
+    void MP_random_data_impl::display(const std::string& s,int scenario){
+        std::cout << s << std::endl;
+        ((S1)(i1)*(S2)(i2)*(S3)(i3)*(S4)(i4)*(S5)(i5)).forall(this);
     }
 
     void MP_random_data_impl::initialize() //TODO: How to do that in a better way? Think about that..
@@ -279,7 +301,7 @@ namespace flopc{
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
     RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(1),
-        stage(0),colIndex(0),rowIndex(0) {
+        stage(0) {
     } 
 
     // base_generator_type(seed),uniform_distr_gen(uniform.rng,boost::uniform_01<double>()) 
@@ -308,7 +330,7 @@ namespace flopc{
 
     }
 
-    void RandomVariable::setSampledValues(const std::vector<double>& v){
+    void RandomVariable::setScenarioValues(const std::vector<double>& v){
         values = v;
     }
 
@@ -348,12 +370,12 @@ namespace flopc{
 
     double RandomVariable::getSampledValue(int index) const
     {
-        if (index != getZero && index != outOfBound)
+        if (index != getZero && index != outOfBound && index < values.size())
         {
             return values[index];
         }
         else { // In case of outOfBound we return 0
-            return 0; // Is this the correct behaviour?!
+            return std::numeric_limits<double>::infinity(); // Is this the correct behaviour?!
         }
     }
 
@@ -401,7 +423,7 @@ namespace flopc{
         const MP_index_exp& i3,
         const MP_index_exp& i4,
         const MP_index_exp& i5) :
-    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c) {
+    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c),visited(false) {
 
     }
 
@@ -414,7 +436,8 @@ namespace flopc{
         I4(ref.I4),
         I5(ref.I5),
         C(ref.C),
-        B(ref.B)
+        B(ref.B),
+        visited(ref.visited)
     {}
 
     void RandomDataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const {
@@ -432,6 +455,7 @@ namespace flopc{
         RV->c = c;
         //((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
         // We need to update all index expression to point to the index expression used in this RandomDataRef..
+        // We really need to update ..
         return *this;
     }
 
@@ -477,9 +501,11 @@ namespace flopc{
             return 0;
         } else {
             if (RV->values[i] != 0) // MP_random_data is a random variable
+                // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
+                // getMeanValue() is called for RandomVariable, not ScenarioRandomVariable
                 return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
-                return RV->c->evaluate(scenario);
+                return C->evaluate(scenario);
         }
     }
 
@@ -543,17 +569,19 @@ namespace flopc{
         bool containsRandomVariable = false;
         for (int i = 0; i < RV->size();i++){
             if (RV->values[i] != 0){
-                //TODO: We need to insert correct stage. If Stage is not given, variable is inserted in the wrong stage.
                 v[RV->values[i]->Stage()].insert(RV->values[i]);
                 containsRandomVariable = true;
             }
         }
-        if (!containsRandomVariable) { //We do not have a random variable in this RandomDataRef, so call insert on Constant.
+        if (!containsRandomVariable) { //We do not have a random variable in this RandomDataRef, so call insert on Constant. This is exclusive-or.
+            // TODO: Break recursion..
+            if (visited == true) //We already visited this variable.. this means we have a recursion.
+                return;
+            visited = true;
             RV->c->insertRandomVariables(v);
         }
         
     }
-
 
     //Implementation for ScenarioRandomVariable
     ScenarioRandomVariable::ScenarioRandomVariable( double* scenValues,int length)
@@ -574,7 +602,7 @@ namespace flopc{
 
     }
 
-    double ScenarioRandomVariable::getMeanValue(){
+    double ScenarioRandomVariable::getMeanValue() const {
         // We need the number of scenarios to equal the values we got here. Otherwise something seems to be wrong
         int scenarioSize = MP_model::getCurrentModel()->ScenSet().size();
         std::vector<double> probs = MP_model::getCurrentModel()->Probabilities();
@@ -583,7 +611,6 @@ namespace flopc{
         //Compute mean of values and return it
         double mean = 0;
         for (int i = 0; i < values.size(); i++) {
-            // What about probabilities? We assume equal probabilities
             mean += values[i]*probs[i];
         }
         return mean;
@@ -670,6 +697,17 @@ namespace flopc{
         }
     }
 
+    double DiscreteUniformRandomVariable::getMeanValue() const {
+        // We can compute it by sampled values or we can compute mean value for distribution
+        int count = 0;
+        int sum = 0;
+        for (int i = start; i <= end; i+=step){
+            sum += i;
+            count++;
+        }
+        return (double)sum /count;
+    }
+
     DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
     { 
     
@@ -692,7 +730,12 @@ namespace flopc{
             values.push_back(variateGen());
         }
     }
-    
+
+    double DiscreteGeometricRandomVariable::getMeanValue() const
+    {
+        return 1.0/probability;
+    }
+
     DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
     { 
     
@@ -716,6 +759,10 @@ namespace flopc{
         }
     }
 
+    double DiscreteBernoulliRandomVariable::getMeanValue() const
+    {
+        return probability;
+    }
 
 
 
@@ -746,7 +793,12 @@ namespace flopc{
             values.push_back(start+variateGen());
         }
     }
-    
+
+    double ContinuousUniformRandomVariable::getMeanValue() const
+    {
+        return start + (end-start)/2;
+    }
+
 
     ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
     {
@@ -770,7 +822,12 @@ namespace flopc{
             values.push_back(variateGen());
         }
     }
-    
+
+    double ContinuousLogNormalRandomVariable::getMeanValue() const
+    {
+        return mean;
+    }
+
     
     ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
     {
@@ -793,7 +850,12 @@ namespace flopc{
             values.push_back(variateGen());
         }
     }
-    
+
+    double ContinuousNormalRandomVariable::getMeanValue() const
+    {
+        return mean;
+    }
+
     ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda)
     {
 
@@ -816,7 +878,12 @@ namespace flopc{
             values.push_back(variateGen());
         }
     }
-    
+
+    double ContinuousExponentialRandomVariable::getMeanValue() const
+    {
+        return 1.0/lambda;
+    }
+
     ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c)
     {
 
@@ -840,4 +907,8 @@ namespace flopc{
         }
     }
 
+    double ContinuousTriangleRandomVariable::getMeanValue() const
+    {   
+        throw not_implemented_error();
+    }
 }

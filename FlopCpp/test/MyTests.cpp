@@ -7,12 +7,14 @@
 
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-#include "OsiCpxSolverInterface.hpp"
 #include "CoinFloatEqual.hpp"
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
-#include "Benders.hpp"
+//#include "OsiStochasticSolverInterface.hpp"
+
+
 //#include <vld.h> //uncomment to enable Visual Leak Detector
+//TODO: Test about correct colOrdering that is given to the solver..
 
 
 //using namespace flopc;
@@ -68,10 +70,6 @@ namespace flopc {
         UseCaseTest(){}
 
     };
-
-    class IntegerTest: public MP_modelTest {
-    };
-
     // Class to test the functionality of random variables
     class RandomVariableTest: public MP_modelTest {
     public:
@@ -83,75 +81,122 @@ namespace flopc {
 
         MP_model testModel;
     };
+
+        // Class to test the functionality of random variables
+    class IntegerTest: public MP_modelTest {
+    };
     
     class BendersTest: public ::testing::Test{
-
     protected:
         BendersTest(){ }
-       
     };
     
     #pragma endregion initialization
 
-    TEST_F(BendersTest,BendersSolverTest){
+    //TEST_F(BendersTest,BendersSolverTest){
+    //    // minimization 
+    //    // model.solve(MP_model::MINIMIZE);
+    //    // call copyModel(smiModel)
+    //    // call copySubModel(smiModel) methods from Benders..
+    //    int maxIt = 100;
+    //    Benders* benders = new Benders("s", "-ws", "-ki", "-tr", "-ben");
 
-        MP_model investmentModel(new OsiCpxSolverInterface());
-        MP_data initialWealth,goal;
-        initialWealth() = 55; //set data
-        goal() = 60;
+    //    MP_model investmentModel(new OsiCpxSolverInterface());
+    //    MP_data initialWealth,goal;
+    //    initialWealth() = 55; //set data
+    //    goal() = 60;
 
-        enum {numStage=2};
-        MP_stage T(numStage); //Time Stages
-        enum {numScen=2};
-        MP_scenario_set scen(numScen);
-        enum {asset1,asset2,numAssets};
-        MP_set assets(numAssets);
-        double scenarios[numStage-1][numAssets][numScen]=
-        {//T
-            {//assets
-                // stage 2
-                {1.25,1.06},{1.14,1.16} //asset1 to asset1, scen 1 to 8
-            },
-        };
-        MP_random_data returns(&scenarios[0][0][0],T,assets);
+    //    enum {numStage=2};
+    //    MP_stage T(numStage); //Time Stages
+    //    enum {numScen=2};
+    //    MP_scenario_set scen(numScen);
+    //    enum {asset1,asset2,numAssets};
+    //    MP_set assets(numAssets);
+    //    double scenarios[numStage-1][numAssets][numScen]=
+    //    {//T
+    //        {//assets
+    //            // stage 2
+    //            {1.25,1.06},{1.14,1.16} //asset1 to asset1, scen 1 to 8
+    //        },
+    //    };
+    //    MP_random_data returns(&scenarios[0][0][0],T,assets);
 
-        MP_variable x(T,assets);
-        MP_variable wealth(T);
-        MP_variable shortage(T), overage(T);
+    //    MP_variable x(T,assets);
+    //    MP_variable wealth(T);
+    //    MP_variable shortage(T), overage(T);
 
-        MP_constraint 
-            initialWealthConstr,
-            returnConstr(T),
-            allocationConstr(T),
-            goalConstr(T);
+    //    MP_constraint 
+    //        initialWealthConstr,
+    //        returnConstr(T),
+    //        allocationConstr(T),
+    //        goalConstr(T);
 
-        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
-        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+    //    initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+    //    allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+    //    returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
 
-        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
-        MP_expression valueFunction( 1.3*shortage(T.last()) - 1.1*overage(T.last())); //We have a minimization problem..
+    //    goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+    //    MP_expression valueFunction( 1.3*shortage(T.last()) - 1.1*overage(T.last()));
 
-        investmentModel.setObjective( valueFunction );
-       
-        investmentModel.attach(investmentModel.Solver);
-
-        OsiStochasticBendersTwoStageSolverInterface benders(investmentModel.Solver,investmentModel.getSmi());
-        benders.initialSolve();
-        //for (int i = 0; i < investmentModel.ScenSet().size();i++){
-        //    for (int j = 0; j < T.size(); j++){
-        //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
-        //    }
-        //}
-        EXPECT_NEAR(3.784,-benders.getObjValue(),0.0001);
-
-    }
-
-
-    
+    //    investmentModel.setObjective( valueFunction );
+    //   
+    //    investmentModel.attach(investmentModel.Solver);
+    //    investmentModel.solve(MP_model::MAXIMIZE);
+    //    //EXPECT_NEAR(3.784,investmentModel->getObjValue(),0.0001);
+    //    //TODO: Benders can only minimize models
+    //    benders->copyMaster(investmentModel.smiModel);
+    //    benders->copySubmodel(investmentModel.smiModel);
+    //    benders->BendersSolve(0.000001, maxIt );
+    //    //for (int i = 0; i < investmentModel.ScenSet().size();i++){
+    //    //    for (int j = 0; j < T.size(); j++){
+    //    //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
+    //    //    }
+    //    //}
+    //    //EXPECT_NEAR(3.784,benders->osiMaster_->getObjValue(),0.0001);
     //    delete benders; //TODO: This leads to errors
     //}
 
+    TEST_F(UseCaseTest,RandomWalkTest){ //Seed: 1015576855 im vergleich zu 1106783986
+        const int numStage = 3;
+        unsigned int seed = 2013598861;
+        MP_model testModel(new OsiClpSolverInterface(),new NormalMessenger(),seed);
+
+        MP_stage T(numStage);
+
+        RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(0,1,1,2), new DiscreteUniformRandomVariable(0,1,1,1) };
+        MP_random_data randomWalkVar(&randomVars[0],T);
+        MP_random_data sumR(T);
+        MP_data blubb(T);
+        blubb(0) = 5;
+        blubb(1) = 10;
+        blubb(2) = 20;
+        //sumR(0) = 0;
+        //sumR(T+1) = blubb(T) + randomWalkVar(T+1);
+        
+
+        MP_variable x(T);
+        MP_variable y(T);
+
+        MP_constraint firstConstraint(T),secondConstraint(T);
+        MP_constraint thirdConstraint;
+        //firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
+        
+        secondConstraint(T+1) = y(T+1) == randomWalkVar(T+1) + y(T);
+        firstConstraint(T+1) = x(T+1) <= y(T+1);
+        thirdConstraint() = y(0) <= Constant(0);
+      
+        //MP_constraint secondConstraint(T);
+        //secondConstraint(T+1) = 2*y(T+1) + x(T+1) <= randomWalkVar(T+1);
+        MP_expression objective( x(T.last()) );
+
+        testModel.setObjective(objective);
+        testModel.solve(MP_model::MAXIMIZE);
+        //sumR.display("RandomValues?");
+        x.display("Werte");
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_DOUBLE_EQ(1.5,testModel.Solver->getObjValue());
+
+    }
 
     // Tests if scenario based random variables gets correctly read in.
     TEST_F(RandomVariableTest,ScenarioBasedRandomVariableInitializationTest){
@@ -253,8 +298,8 @@ namespace flopc {
 
         investmentModel.setObjective( valueFunction );
         investmentModel.attach(investmentModel.Solver);
-        //this->testCorrectStageAssignment(investmentModel);
-        //investmentModel.solve(MP_model::MAXIMIZE);
+        this->testCorrectStageAssignment(investmentModel);
+        investmentModel.solve(MP_model::MAXIMIZE);
 
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
@@ -263,8 +308,8 @@ namespace flopc {
         //}
 
         ////Compare solution values.
-        //EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.00000001);
-        //EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+        EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
+        EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
         std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(numScen,wsResults.size());
         double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
@@ -378,7 +423,7 @@ namespace flopc {
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
     }
 
-    // Dacota test Model
+    // Dacota  Model to test the EV-, EEV- and WS-Problems
     TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
         MP_stage T(2);
@@ -431,16 +476,32 @@ namespace flopc {
 
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
-            - sum(R, x(R) * resourceCost(R))
-            );
+          - sum(R, x(R) * resourceCost(R))
+        );
+        
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
-        double eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
-        cout << "EEV: " << eev;
-        //dacota.solve(MP_model::MAXIMIZE);
-        //EXPECT_DOUBLE_EQ(1730.0,dacota->getObjValue());
-        //EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
-        //double result = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
+        
+        // solve EV-, EEV-, WS- and here-and-now-Problem
+        double ev, eev, ws, hereAndNow;
+        
+        ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE);
+        EXPECT_EQ(ev, 4165);
+        
+        eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
+        EXPECT_NEAR(eev, 1545, 0.0001);
+        
+        ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
+        EXPECT_EQ(ws, 4165);
+        
+        // we have to attach the solver again, otherwise the program crashes
+        dacota.attach(dacota.Solver);
+        dacota.solve(MP_model::MAXIMIZE);
+        hereAndNow = dacota->getObjValue();
+        EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
+        EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
+        
+        
         cout << "Finished";
     }
 
@@ -570,13 +631,43 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        
+        demand.display("Demand");
+        price.display("Price");
+        std::vector<double> sampledValues = var[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(0,sampledValues[i]);
+            EXPECT_GE(1,sampledValues[i]);
+        }
+        sampledValues = var1[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(3,sampledValues[i]);
+            EXPECT_GE(4,sampledValues[i]);
+        }
         testModel.setSampleOnlyScenarioGeneration(true,10);
         
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-
+        demand.display("Demand");
+        price.display("Price");
+        sampledValues = var[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(0,sampledValues[i]);
+            EXPECT_GE(1,sampledValues[i]);
+        }
+        sampledValues = var1[0]->getSampledValues();
+        for (int i = 0; i < sampledValues.size(); i++){
+            EXPECT_LE(3,sampledValues[i]);
+            EXPECT_GE(4,sampledValues[i]);
+        }
+        std::vector<double> prob = testModel.Probabilities();
+        double sum = 0;
+        for (int i = 0 ; i < testModel.ScenSet().size(); i++){
+            std::cout << " Sc." << i << ": " << prob[i];
+            sum += prob[i];
+        }
+        std::cout << std::endl;
+        EXPECT_DOUBLE_EQ(1,sum);
 
 
     }

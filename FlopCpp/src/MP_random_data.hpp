@@ -62,10 +62,12 @@ namespace flopc{
         mutable MP_index_exp I1,I2,I3,I4,I5;
         Constant C;
         MP_boolean B;
+        mutable bool visited;
+        
     };
     
 
-    //Class that defines a concrete RandomVariable for one coefficient
+    //Class that defines a concrete RandomVariable 
     class RandomVariable : boost::noncopyable {
         friend class RandomDataRef;
     public:
@@ -81,16 +83,13 @@ namespace flopc{
         virtual void sample(int howMany = 0) = 0;
         std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
+        void setScenarioValues(const std::vector<double>&);
         double getSampledValue(int index) const;
-        void setSampledValues(const std::vector<double>&);
-        virtual double getMeanValue() const; //Do we want the mean value of the distribution or the mean value of the sampled values?
+        
+        virtual double getMeanValue() const = 0; //Usually we want mean of distribution. Sample mean only for scenario/empirical distributions.
 
         int Stage() const { return stage; }
         void Stage(int val) { stage = val; }
-        int ColIndex() const { return colIndex; }
-        void ColIndex(int val) { colIndex = val; }
-        int RowIndex() const { return rowIndex; }
-        void RowIndex(int val) { rowIndex = val; }
         int SampleSize() const { return defaultSampleSize; }
         void SampleSize(int val) { defaultSampleSize = val; }
         bool isRandomVariable() const { return initialized; }
@@ -110,10 +109,6 @@ namespace flopc{
 
     private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
-        int colIndex;
-        int rowIndex;
-        
-
         //flopc::RandomVariable& operator=(const flopc::RandomVariable &);
 
     };
@@ -125,6 +120,7 @@ namespace flopc{
         ~DiscreteRandomVariable();
 
         virtual void sample(int howMany = 0) = 0;
+        virtual double getMeanValue() const = 0;
 
     };
 
@@ -134,6 +130,7 @@ namespace flopc{
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
+        virtual double getMeanValue() const;
 
     private:
         //Params for DiscreteUniformDistribution: [start,end] in steps of step
@@ -149,18 +146,21 @@ namespace flopc{
         ~DiscreteBernoulliRandomVariable();
 
         virtual void sample(int howMany = 0);
+        virtual double getMeanValue() const;
 
     private:
         double probability;
 
     };
     
+    // Shifted geometric Distribution
     class DiscreteGeometricRandomVariable : public DiscreteRandomVariable {
     public :
         DiscreteGeometricRandomVariable(double probability);
         ~DiscreteGeometricRandomVariable();
 
         virtual void sample(int howMany = 0);
+        virtual double getMeanValue() const;
 
     private:
         double probability;
@@ -175,7 +175,7 @@ namespace flopc{
 
         ~ScenarioRandomVariable();
         virtual void sample(int howMany = 0) ;
-        virtual double getMeanValue();
+        virtual double getMeanValue() const;
     };
 
     class ContinuousRandomVariable : public RandomVariable {
@@ -185,6 +185,7 @@ namespace flopc{
         ~ContinuousRandomVariable();
 
         virtual void sample(int howMany = 0) = 0;
+        virtual double getMeanValue() const = 0;
 
     };
 
@@ -194,6 +195,7 @@ namespace flopc{
         ~ContinuousUniformRandomVariable();
 
         virtual void sample(int howMany = 0) ;
+        virtual double getMeanValue() const;
 
     private:
         int start;
@@ -206,6 +208,7 @@ namespace flopc{
         ~ContinuousLogNormalRandomVariable();
 
         virtual void sample(int howMany = 0) ;
+        virtual double getMeanValue() const;
 
     private:
         double mean;
@@ -218,6 +221,7 @@ namespace flopc{
         ~ContinuousNormalRandomVariable();
 
         virtual void sample(int howMany = 0) ;
+        virtual double getMeanValue() const;
 
     private:
         double mean;
@@ -230,6 +234,7 @@ namespace flopc{
         ~ContinuousExponentialRandomVariable();
 
         virtual void sample(int howMany = 0) ;
+        virtual double getMeanValue() const;
 
     private:
         double lambda;
@@ -241,6 +246,7 @@ namespace flopc{
         ~ContinuousTriangleRandomVariable();
 
         virtual void sample(int howMany = 0) ;
+        virtual double getMeanValue() const;
 
     private:
         double a;
@@ -283,6 +289,9 @@ namespace flopc{
             const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d5 = MP_index_exp::getEmpty()
             );
+
+        /// For displaying data in a human readable format.
+        void display(const std::string& s = "", int scenario = 0); //TODO: Eventually we can remove scenario
 
     protected:
 
