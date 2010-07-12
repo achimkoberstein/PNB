@@ -2697,7 +2697,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 //	// #7: Problem Path
 //	// #8: Solution Path
 		if (useBenders)
-			benders = new Benders("s", "+ws", "-ki", "+tr", "+ben"); //WarmStart is indeed usefull
+			benders = new Benders("m", "+ws", "-ki", "-tr", "+ben"); //WarmStart is indeed usefull
 		else 
 			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); //WarmStart is indeed usefull
         benders->copyMaster(smiModel);
