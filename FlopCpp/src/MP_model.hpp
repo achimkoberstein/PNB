@@ -382,7 +382,7 @@ namespace flopc {
         const MP_model::MP_direction &direction);
 
    
-    void printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
+    std::string printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup,int* colStage,int* rowStage);
 
     //TODO: Read back solution values
     // two possibilities: Read back values so they are stored in the variable
