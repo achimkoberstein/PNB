@@ -43,8 +43,6 @@ namespace flopc {
         const DataRef& operator=(const DataRef& r); 
         const DataRef& operator=(const Constant& c);
 
-        //Get RandomVariable
-        virtual RandomVariable* getRandomVariable() const;
 
         //Set value in D via current MP_index_exp
         void evaluate_lhs(double v) const;

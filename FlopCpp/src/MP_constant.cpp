@@ -44,9 +44,6 @@ namespace flopc {
             return r.getStage();
         }
 
-        virtual RandomVariable* getRandomVariable() const {
-            return r.getRandomVariable();
-        }
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             r.propagateIndexExpression(d1,d2,d3,d4,d5);
         }
@@ -65,9 +62,6 @@ namespace flopc {
             return D; 
         }
         int getStage() const {
-            return 0;
-        }
-        RandomVariable* getRandomVariable() const {
             return 0;
         }
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
@@ -183,10 +177,6 @@ namespace flopc {
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
-        virtual RandomVariable* getRandomVariable() const { //RandomVariable is always on the left of a Constant_exp expression
-            RandomVariable* ptrA = left->getRandomVariable();
-            return ptrA;
-        }
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
             left->propagateIndexExpression(d1,d2,d3,d4,d5);
             right->propagateIndexExpression(d1,d2,d3,d4,d5);
@@ -242,13 +232,6 @@ namespace flopc {
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
-        virtual RandomVariable* getRandomVariable() const { 
-            RandomVariable* ptrA = left->getRandomVariable();
-            if (ptrA != 0)
-                return ptrA;
-            else 
-                return right->getRandomVariable();
-        }
 
     };
 
@@ -273,13 +256,6 @@ namespace flopc {
 
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
-        }
-        virtual RandomVariable* getRandomVariable() const { 
-            RandomVariable* ptrA = left->getRandomVariable();
-            if (ptrA != 0)
-                return ptrA;
-            else 
-                return right->getRandomVariable();
         }
     };
 
@@ -330,13 +306,7 @@ namespace flopc {
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
-        virtual RandomVariable* getRandomVariable() const { 
-            RandomVariable* ptrA = left->getRandomVariable();
-            if (ptrA != 0)
-                return ptrA;
-            else 
-                return right->getRandomVariable();
-        }
+
     };
 
     Constant operator*(const Constant& a, const Constant& b) {
@@ -354,13 +324,7 @@ namespace flopc {
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
-        virtual RandomVariable* getRandomVariable() const { 
-            RandomVariable* ptrA = left->getRandomVariable();
-            if (ptrA != 0)
-                return ptrA;
-            else 
-                return right->getRandomVariable();
-        }
+
     };
 
     Constant operator/(const Constant& a, const Constant& b) {

@@ -59,6 +59,7 @@ namespace flopc{
 
     private:
         boost::shared_ptr<MP_random_data_impl> RV;
+        //const MP_set_base &S1,&S2,&S3,&S4,&S5;
         mutable MP_index_exp I1,I2,I3,I4,I5;
         Constant C;
         MP_boolean B;

@@ -134,17 +134,22 @@ namespace flopc {
     public:
         MP_expression_base() : count(0) {}
 
-        //TODO: Comments needed. What do these methods do?
+        // Return values
         virtual double level() const = 0; 
+
+        // Generate coefficients for current expression
         virtual void generate(const MP_domain& domain,
             vector<Constant> multiplicators,
             MP::GenerateFunctor &f,
             double m) const = 0;
 
+        // Insert variables available in this expression in v
         virtual void insertVariables(set<MP_variable *>& v) const = 0; //Insert given Variables to the Model?!
 
+        // Insert random variables available in this expression in v
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
 
+        // Destruct this MP_expression_base, virtual due to virtual inheritance hierarchy with polymorphism..
         virtual ~MP_expression_base() {}
     };
 
@@ -171,8 +176,7 @@ namespace flopc {
         MP_expression(MP_expression_base* r) : Handle<MP_expression_base*>(r) {}
     };
 
-
-    /** @brief The base class for all expressions.
+    /** @brief The base class for all terminal expressions, i.e. expressions that lead to a certain value for a given column/row.
     @ingroup INTERNAL_USE
     @note FOR INTERNAL USE: This is not normally used directly by the
     calling code.
@@ -185,7 +189,20 @@ namespace flopc {
         virtual double getValue(int scenario = getZero) const = 0; 
         virtual int getColumn() const = 0;
         virtual int getStage() const = 0;
-        virtual RandomVariable* getRandomVariable() const = 0;
+    };
+
+    class Expression_random : public TerminalExpression {
+    public:
+        virtual ~Expression_random() {};
+
+        // Return value of this expression for current random variable
+        virtual double getValue(int scenario) const; 
+        // Return column to which this expression belongs
+        virtual int getColumn() const;
+        // Return stage to which this expression belongs
+        virtual int getStage() const;
+        // Return one of the random variable present in this random expression
+        
     };
 
     /** Semantic representation of a variable in a Math Program
@@ -211,12 +228,6 @@ namespace flopc {
             return 1.0;
         }
         virtual int getStage() const;
-
-        virtual RandomVariable* getRandomVariable() const {
-            return 0;
-        }
-
-
 
     private:
         VariableRef(MP_variable* v, 
@@ -244,12 +255,6 @@ namespace flopc {
         const MP_index_exp I1,I2,I3,I4,I5;
     };
 
-
-
-    /** Semantic representation of a random variable in a Math Program
-    @ingroup INTERNAL_USE
-    @see MP_variable for a public interface.
-    */
 
 
     /// @ingroup PublicInterface

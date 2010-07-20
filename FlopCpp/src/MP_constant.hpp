@@ -33,9 +33,6 @@ namespace flopc {
         virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
             return 0;
         }
-        virtual RandomVariable* getRandomVariable() const {
-            return 0; // If we want to get a RandomVariable, but no subclass returns one, return 0 to indicate there is no RandomVariable present..
-        }
 
         virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const = 0;
 
