@@ -52,7 +52,7 @@ namespace flopc {
     }
 
     void VariableRef::generate(const MP_domain& domain,
-        vector<Constant > multiplicators,
+        vector<TerminalExpression* > multiplicators,
         MP::GenerateFunctor& f,
         double m)  const {
             //Set temporary values of Functor to previously computed ones and apply functor with these
@@ -85,14 +85,21 @@ namespace flopc {
 
     void VariableRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
         //Look inside bounds for random data
-        V->lowerLimit->insertRandomVariables(v);
-        V->upperLimit->insertRandomVariables(v);
+        //TODO: We need to look at the bounds..
+        //V->lowerLimit->insertRandomVariables(v);
+        //V->upperLimit->insertRandomVariables(v);
     }
 
+    double VariableRef::getValue( int scenario ) const
+    {
+        return 1.0;
+    }
 
 
     class Expression_constant : public TerminalExpression, public MP {
         friend class MP_expression;
+        friend class Expression_mult;
+        friend class Expression_div;
     private:
         Expression_constant(const Constant& c) : C(c) {}
         double level() const { 
@@ -109,7 +116,7 @@ namespace flopc {
             return C->getStage(); //NB to be changed
         }
         void generate(const MP_domain& domain,
-            vector<Constant> multiplicators,
+            vector<TerminalExpression*> multiplicators,
             MP::GenerateFunctor& f,
             double m) const {
                 f.setMultiplicator(multiplicators,m);
@@ -119,7 +126,7 @@ namespace flopc {
         void insertVariables(set<MP_variable*>& v) const {}
 
         void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-         C->insertRandomVariables(v);
+         
         }
 
         Constant C;
@@ -155,7 +162,7 @@ namespace flopc {
                return left->level()+right->level(); 
            }
            void generate(const MP_domain& domain,
-               vector<Constant> multiplicators,
+               vector<TerminalExpression *> multiplicators,
                MP::GenerateFunctor& f,
                double m) const { 
                    left->generate(domain, multiplicators, f, m);
@@ -174,7 +181,7 @@ namespace flopc {
                return left->level()-right->level(); 
            }
            void generate(const MP_domain& domain,
-               vector<Constant> multiplicators,
+               vector<TerminalExpression *> multiplicators,
                MP::GenerateFunctor& f,
                double m) const {
                    left->generate(domain, multiplicators, f, m);
@@ -185,6 +192,8 @@ namespace flopc {
     class Expression_mult : public MP_expression_base,  MP  {
         friend MP_expression operator*(const Constant& e1, const MP_expression& e2); 
         friend MP_expression operator*(const MP_expression& e1, const Constant& e2);
+        //friend MP_expression operator*(const RandomDataRef& e1, const MP_expression& e2);
+        //friend MP_expression operator*(const MP_expression& e1, const RandomDataRef& e2);
 
     private:
         Expression_mult(const Constant& e1, const MP_expression& e2) : 
@@ -193,24 +202,27 @@ namespace flopc {
                return left->evaluate()*right->level(); 
            }
            void generate(const MP_domain& domain,
-               vector<Constant> multiplicators,
+               vector<TerminalExpression *> multiplicators,
                MP::GenerateFunctor& f,
                double m) const {
-                   multiplicators.push_back(left);
+                   multiplicators.push_back(new Expression_constant(left));
                    right->generate(domain, multiplicators, f, m);
+   
            }
            void insertVariables(set<MP_variable*>& v) const {
                right->insertVariables(v);
            }
            void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-               left->insertRandomVariables(v);
+               right->insertRandomVariables(v);
            }
-           Constant left;
+          Constant left;
            MP_expression right;
     };
 
     class Expression_div : public MP_expression_base, MP  {
         friend MP_expression operator/(const MP_expression& e1, const Constant& e2);
+        //friend MP_expression operator/(const RandomDataRef& e1, const MP_expression& e2);
+        //friend MP_expression operator/(const MP_expression& e1, const RandomDataRef& e2);
     private:
         Expression_div(const MP_expression& e, const Constant& c) : 
            left(e), right(c) {}
@@ -218,17 +230,17 @@ namespace flopc {
                return left->level()/right->evaluate(); 
            }
            void generate(const MP_domain& domain,
-               vector<Constant> multiplicators,
+               vector<TerminalExpression *> multiplicators,
                MP::GenerateFunctor& f,
                double m) const {
-                   multiplicators.push_back(1/right);
+                   multiplicators.push_back(new Expression_constant(1/right));
                    left->generate(domain, multiplicators, f, m);
            }
            void insertVariables(set<MP_variable*>& v) const {
                left->insertVariables(v);
            }
            void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-               right->insertRandomVariables(v);
+               left->insertRandomVariables(v);
            }
            MP_expression left;
            Constant right;
@@ -245,7 +257,7 @@ namespace flopc {
             return SF.the_sum;
         } 
         void generate(const MP_domain& domain,
-            vector<Constant> multiplicators,
+            vector<TerminalExpression *> multiplicators,
             MP::GenerateFunctor& f,
             double m) const {
                 // The order, D*domain (NOT domain*D), is important for efficiency! 
@@ -300,10 +312,28 @@ namespace flopc {
         return new Expression_mult(e2, e1);
     }
 
+    //MP_expression operator*( const MP_expression& e1, const RandomDataRef& e2 )
+    //{
+    //    return new Expression_mult(e2,e1);
+    //}
+
+    //MP_expression operator*( const RandomDataRef& e1, const MP_expression& e2 )
+    //{
+    //    return new Expression_mult(e1,e2);
+    //}
     MP_expression operator/(const MP_expression& e1, const Constant& e2) {
         return new Expression_div(e1, e2);
     }
 
+    //flopc::MP_expression operator/( const MP_expression& e1, const RandomDataRef& e2 )
+    //{
+    //    return new Expression_div(e1,e2);
+    //}
+
+    //flopc::MP_expression operator/( const RandomDataRef& e1, const MP_expression& e2 )
+    //{
+    //    return new Expression_div(e1,e2);
+    //}
     MP_expression sum(const MP_domain& d, const MP_expression& e) {
         return new Expression_sum(d, e);  
     }
@@ -313,12 +343,15 @@ namespace flopc {
 
 using namespace flopc;
 
-
+//Allow transformation of Constant, VariableRef and RandomDataRef to TerminalExpression..
 MP_expression::MP_expression(const Constant &c) :
 Handle<MP_expression_base*>(new Expression_constant(c)) {} 
 
 MP_expression::MP_expression(const VariableRef &v) : 
 Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) {} 
+
+//MP_expression::MP_expression(const RandomDataRef &r) :
+//Handle<MP_expression_base*>(const_cast<RandomDataRef*>(&r)) {}
 
 
 //bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
@@ -397,7 +430,7 @@ void MP::GenerateFunctor::operator()() const {
             stage = multiplicators[i]->getStage();
             //ptrRV = multiplicators[i]->getRandomVariable();
             for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){
-                double temp = sideOfConstraint*(multiplicators[i]->evaluate(j));
+                double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
                 scenarioValues.push_back(temp);
             }
             //if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
@@ -406,7 +439,7 @@ void MP::GenerateFunctor::operator()() const {
             //}
         }
         else {
-            sideOfConstraint *= multiplicators[i]->evaluate();
+            sideOfConstraint *= multiplicators[i]->getValue();
         }
         
     }

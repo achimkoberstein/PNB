@@ -156,6 +156,21 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    TEST_F(MP_modelTest,SimpleTestThatHasToBeRenamed){
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_data a;
+        a() = 10;
+
+        MP_variable x;
+        MP_variable y;
+
+        MP_constraint firstConstraint,secondConstraint;
+        firstConstraint() = a()*x() <= 20;
+        secondConstraint() = y()*x() <= 10;
+        testModel.setObjective(x());
+        testModel.solve(MP_model::MAXIMIZE);
+    }
+
     TEST_F(UseCaseTest,RandomWalkTest){ //Seed: 1015576855 im vergleich zu 1106783986
         const int numStage = 3;
         unsigned int seed = 2013598861;
