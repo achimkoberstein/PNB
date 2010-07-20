@@ -267,16 +267,16 @@ namespace flopc{
 
     //Implementation for MP_random_data_impl TODO: Store values to reduce computational burden
     void MP_random_data_impl::operator ()() const { //Called by display method indirectly via functor evaluation
-        if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
-        if (&S2!=&MP_set::getEmpty()) cout << i2.evaluate() << " ";
-        if (&S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
-        if (&S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
-        if (&S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
-        if (values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
-            i4.evaluate(),i5.evaluate())] != NULL){
+        if (&S1!=&MP_set::getEmpty()) cout << i1->evaluate() << " ";
+        if (&S2!=&MP_set::getEmpty()) cout << i2->evaluate() << " ";
+        if (&S3!=&MP_set::getEmpty()) cout << i3->evaluate() << " ";
+        if (&S4!=&MP_set::getEmpty()) cout << i4->evaluate() << " ";
+        if (&S5!=&MP_set::getEmpty()) cout << i5->evaluate() << " ";
+        if (values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
+            i4->evaluate(),i5->evaluate())] != NULL){
                 for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
-                    std::cout << " Sc." << i << ": " << values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
-                    i4.evaluate(),i5.evaluate())]->getSampledValue(i) << " ";
+                    std::cout << " Sc." << i << ": " << values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
+                    i4->evaluate(),i5->evaluate())]->getSampledValue(i) << " ";
                 std::cout << std::endl;
 
         }
