@@ -809,7 +809,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         int begin = (*i)->offset;
         int end = (*i)->offset+(*i)->size();
-        if ((*i)->type == (flopc::variableType::discrete || flopc::variableType::binary) ) {
+        if ( (*i)->type == flopc::variableType::discrete || (*i)->type == flopc::variableType::binary ) {
             for (int k=begin; k<end; k++) {
                 if (stage.size()){
                     if (colIndirection[k] != outOfBound){

@@ -216,6 +216,8 @@ namespace flopc {
 
 
 
+
+
     //Test if Conditional Sampling works (for seed 0 for every RV. This means values are highly correlated)
     TEST_F(RandomVariableTest,DISABLED_ConditionalSamplingTest){
         MP_model testModel2(new OsiClpSolverInterface());
