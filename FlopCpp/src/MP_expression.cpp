@@ -122,10 +122,6 @@ namespace flopc {
          C->insertRandomVariables(v);
         }
 
-        virtual RandomVariable* getRandomVariable() const {
-            return C->getRandomVariable();
-        }
-
         Constant C;
     };
 

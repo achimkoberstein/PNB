@@ -225,7 +225,7 @@ namespace flopc{
 
 
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        MP_index i1,i2,i3,i4,i5;
+        MP_index_exp i1,i2,i3,i4,i5;
         Constant c; //This constant gets set by corresponding RandomDataRef
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this

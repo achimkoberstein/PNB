@@ -48,9 +48,6 @@ DataRef& DataRef::such_that(const MP_boolean& b) {
     return *this;
 }
 
-RandomVariable* DataRef::getRandomVariable() const {
-    return C->getRandomVariable();
-}
 
 
 
