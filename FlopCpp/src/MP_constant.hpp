@@ -14,10 +14,8 @@ namespace flopc {
 
     //Forward Declaration for Constant Class
     class RandomVariable;
-    class Constant_random_variable;
     class MP_index_exp;
     class MP_random_data;
-    class RandomVariable;
 
     /** @brief Base class for all "constant" types of data.
     @ingroup INTERNAL_USE
@@ -34,11 +32,7 @@ namespace flopc {
             return 0;
         }
 
-        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const = 0;
-
-        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
-
-
+    
     protected:
         Constant_base() : count(0) {}
         virtual ~Constant_base() {}
@@ -48,7 +42,6 @@ namespace flopc {
 
     //forward declarations
     class DataRef;
-    class RandomDataRef;
     class MP_domain;
    
 
@@ -64,7 +57,6 @@ namespace flopc {
     class Constant : public Handle<Constant_base*> {
     public:
         Constant(const MP_index_exp& i);
-        Constant(const RandomDataRef& r);
         Constant(const DataRef& d);
         Constant(double d);
         Constant(int d);

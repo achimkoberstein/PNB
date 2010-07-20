@@ -174,7 +174,7 @@ void MP_model::add(MP_variable* v) { //Counts total number of variables in this 
 
 void MP_model::addRow(const Constraint& constraint) {
     vector<MP::Coef> cfs;
-    vector<Constant> v;
+    vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     constraint->left->generate(MP_domain::getEmpty(),v,f,1.0);
     constraint->right->generate(MP_domain::getEmpty(),v,f,-1.0);
@@ -360,7 +360,7 @@ void MP_model::attachStochastic(){
     }//end if stage
 
     // Generate objective function coefficients
-    vector<Constant> v;
+    vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     coefs.erase(coefs.begin(),coefs.end());
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
@@ -710,9 +710,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             if (stage.size()){ //In case of stochastic, we have to obey colIndirection
                 if (colIndirection[(*i)->offset+k] == outOfBound)
                     continue; //go to next round, we have empty variable here
-                //Update Index expressions for evaluation
-                (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //Update Index expressions for evaluation TODO
+                //(*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //(*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 //Evaluate values to mean value in case of stochastic and to real value in case of normal bounds
                 l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate(outOfBound);
                 u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate(outOfBound);
@@ -724,9 +724,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
             }
             else {
-                //Update Index expressions for evaluation
-                (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //Update Index expressions for evaluation TODO
+                //(*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //(*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
                 u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
                 if (l[(*i)->offset+k] == -numericInfinity)
@@ -763,7 +763,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }//end if stage
 
     // Generate objective function coefficients
-    vector<Constant> v;
+    vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     coefs.erase(coefs.begin(),coefs.end());
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
@@ -1524,6 +1524,26 @@ namespace flopc {
     }
 
     void Messenger::logMessage( int level, const char * const msg )
+    {
+
+    }
+
+    void Messenger::solutionStatus( const OsiSolverInterface* Solver )
+    {
+
+    }
+
+    void Messenger::statistics( int bm, int m, int bn, int n, int nz )
+    {
+
+    }
+
+    void Messenger::objectiveDebug( const vector<MP::Coef>& cfs ) const
+    {
+
+    }
+
+    void Messenger::constraintDebug( string name, const vector<MP::Coef>& cfs ) const
     {
 
     }

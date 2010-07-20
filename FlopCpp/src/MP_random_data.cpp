@@ -8,12 +8,15 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include "MP_expression.hpp"
+#include "MP_random_constant.hpp"
 #include "MP_model.hpp"
 #include "MP_shared_implementation_details.hpp"
 
 
 
 namespace flopc{
+
+    class RandomDataRef;
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
@@ -194,14 +197,13 @@ namespace flopc{
             }
         }
 
-        RandomDataRef& operator()(
+        const RandomDataRef& operator()(
             const MP_index_exp& d1, 
             const MP_index_exp& d2, 
             const MP_index_exp& d3,
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
-                c->propagateIndexExpression(d1,d2,d3,d4,d5);
-                Coin::SmartPtr<RandomDataRef> tempPtr(new RandomDataRef(this->shared_from_this(), d1, d2, d3, d4, d5));
+                boost::shared_ptr<RandomDataRef> tempPtr(new RandomDataRef(this->shared_from_this(), d1, d2, d3, d4, d5));
                 myrefs.push_back(tempPtr);
                 return *tempPtr; 
 
@@ -229,7 +231,7 @@ namespace flopc{
         Constant c; //This constant gets set by corresponding RandomDataRef
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
-        std::vector<Coin::SmartPtr<RandomDataRef> > myrefs;
+        std::vector<boost::shared_ptr<RandomDataRef> > myrefs;
         bool manageData;
     };
 
@@ -250,7 +252,7 @@ namespace flopc{
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
-    RandomDataRef& MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
+    const RandomDataRef& MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
     {
         return ptrImpl->operator()(d1,d2,d3,d4,d5);
     }
@@ -440,74 +442,22 @@ namespace flopc{
         visited(ref.visited)
     {}
 
-    void RandomDataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const {
-        //Delete old index expression and set new one afterwards?!
-        I1 = i1;
-        I2 = i2;
-        I3 = i3;
-        I4 = i4;
-        I5 = i5;
-    }
-
-    const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
-        //TODO: Delete current values of this RandomDataRef.. 
-        // Set Constant to RV
-        RV->c = c;
-        //((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
-        // We need to update all index expression to point to the index expression used in this RandomDataRef..
-        // We really need to update ..
-        return *this;
-    }
-
-    const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
-        //Check for assignment to self
-        if (this == &r)
-            return *this;
-        return operator=(Constant(r)); //TODO: Do not do this, it is evil..
-    }
-
-
-    //void RandomDataRef::evaluate_lhs( const RandomVariable &rv ) const
-    //{
-    //    //Check sanity of indices
-    //    int i1 = RV->S1.check(I1->evaluate());
-    //    int i2 = RV->S2.check(I2->evaluate());
-    //    int i3 = RV->S3.check(I3->evaluate());
-    //    int i4 = RV->S4.check(I4->evaluate());
-    //    int i5 = RV->S5.check(I5->evaluate());
-    //    //Compute index in flattened multidimensional array
-    //    int i = RV->f(i1,i2,i3,i4,i5);
-    //    // Set Value at computed index to v
-    //    if (i != outOfBound) { //evaluate_lhs: When is this function actually called?
-    //        *RV->values[i] = rv;
-    //    }
+    //    const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
+    //    //TODO: Delete current values of this RandomDataRef.. 
+    //    // Set Constant to RV
+    //    RV->c = c;
+    //    //((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
+    //    // We need to update all index expression to point to the index expression used in this RandomDataRef..
+    //    // We really need to update ..
+    //    return *this;
     //}
 
-    double RandomDataRef::evaluate(int scenario) const
-    {
-        //If scenario is outOfBound this call happens in case we are not aware of scenarios: Coefficient generation: getValue
-        // We can set Expected Value here, as otherwise we would have a propagated scenario index.
-
-        //Check for sanity of indices
-        int i1 = RV->S1.check(I1->evaluate());
-        int i2 = RV->S2.check(I2->evaluate());
-        int i3 = RV->S3.check(I3->evaluate());
-        int i4 = RV->S4.check(I4->evaluate());
-        int i5 = RV->S5.check(I5->evaluate());	
-        // Compute index in flattened multidimensional array
-        int i = RV->f(i1,i2,i3,i4,i5);
-        // Return value
-        if ( i ==  outOfBound ) {
-            return 0;
-        } else {
-            if (RV->values[i] != 0) // MP_random_data is a random variable
-                // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
-                // getMeanValue() is called for RandomVariable, not ScenarioRandomVariable
-                return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
-            else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
-                return C->evaluate(scenario);
-        }
-    }
+    //const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
+    //    //Check for assignment to self
+    //    if (this == &r)
+    //        return *this;
+    //    return operator=(Constant(r)); //TODO: Do not do this, it is evil..
+    //}
 
     RandomVariable* RandomDataRef::getRandomVariable(int index) const
     {   //If index has default value of outOfBound we return the RV in the "normal" way: By evaluating the indices
@@ -527,10 +477,6 @@ namespace flopc{
         } else {
             return RV->values[index]; 
         }
-    }
-
-    IndexKeeper RandomDataRef::getIndices(int k) const {
-        return RV->getIndices(k);
     }
 
     RandomDataRef& RandomDataRef::such_that( const MP_boolean& b )
@@ -557,13 +503,6 @@ namespace flopc{
     }
 
 
-    void RandomDataRef::operator()() const
-    {
-        throw not_implemented_error();
-        //TODO: If C is not a constant_random_variable, something went wrong. Obviously
-        //evaluate_lhs(C->evaluate());
-    }
-
     void RandomDataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const{
         //Insert all variables available in values** array
         bool containsRandomVariable = false;
@@ -578,10 +517,44 @@ namespace flopc{
             if (visited == true) //We already visited this variable.. this means we have a recursion.
                 return;
             visited = true;
-            RV->c->insertRandomVariables(v);
+            //TODO: Look at this method again..
         }
         
     }
+
+    double RandomDataRef::evaluate( int scenario ) const
+    {
+        //If scenario is outOfBound this call happens in case we are not aware of scenarios: Coefficient generation: getValue
+        // We can set Expected Value here, as otherwise we would have a propagated scenario index.
+
+        //Check for sanity of indices
+        int i1 = RV->S1.check(I1->evaluate());
+        int i2 = RV->S2.check(I2->evaluate());
+        int i3 = RV->S3.check(I3->evaluate());
+        int i4 = RV->S4.check(I4->evaluate());
+        int i5 = RV->S5.check(I5->evaluate());	
+        // Compute index in flattened multidimensional array
+        int i = RV->f(i1,i2,i3,i4,i5);
+        // Return value
+        if ( i ==  outOfBound ) {
+            return 0;
+        } else {
+            if (RV->values[i] != 0) // MP_random_data is a random variable
+                // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
+                // getMeanValue() is called for RandomVariable, not ScenarioRandomVariable
+                return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
+            else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
+                return C->evaluate(scenario);
+        }
+    }
+
+    //void RandomDataRef::generate( const MP_domain& domain, vector<TerminalExpression *> multiplicators, MP::GenerateFunctor& f, double m ) const
+    //{
+    //    // We need to go over all elements and "generate" the values..
+    //    f.setMultiplicator(multiplicators,m);
+    //    f.setTerminalExpression(this);
+    //    domain.forall(&f);
+    //}
 
     //Implementation for ScenarioRandomVariable
     ScenarioRandomVariable::ScenarioRandomVariable( double* scenValues,int length)
@@ -700,12 +673,12 @@ namespace flopc{
     double DiscreteUniformRandomVariable::getMeanValue() const {
         // We can compute it by sampled values or we can compute mean value for distribution
         int count = 0;
-        int sum = 0;
-        for (int i = start; i <= end; i+=step){
+        double sum = 0;
+        for (double i = start; i <= end+std::numeric_limits<double>::epsilon(); i+=step){ //double as for counting.. not so good i suppose
             sum += i;
             count++;
         }
-        return (double)sum /count;
+        return sum /count;
     }
 
     DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
