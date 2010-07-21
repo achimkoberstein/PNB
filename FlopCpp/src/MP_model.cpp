@@ -956,7 +956,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
 
-        assert(!rv[i].empty()); //Assume we have random variables in every stage.
+        assert(!rv[i].empty()); //Assume we have random variables in every stage. If not specifying a stage set does not make sense.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;

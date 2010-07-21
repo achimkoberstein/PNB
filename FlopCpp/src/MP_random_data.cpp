@@ -161,8 +161,16 @@ namespace flopc{
             if (i == outOfBound) {
                 throw std::out_of_range("Index is not valid"); //Nothrow guarantee?
             } else {
+                //TODO: Change to reference and copy instead of copying pointers..
+                //switch(stage){
+                //    case 0: values[i]->Stage(lcli1); break;
+                //    case 1: values[i]->Stage(lcli2); break;
+                //    case 2: values[i]->Stage(lcli3); break;
+                //    case 3: values[i]->Stage(lcli4); break;
+                //    case 4: values[i]->Stage(lcli5); break;
+                //}
                 return values[i];
-            }
+            } //We need to set the stage of the RV afterwards, somehow.. 
         }
 
         RandomDataRef& operator()(
@@ -171,9 +179,9 @@ namespace flopc{
             const MP_index_exp& d3,
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
-                boost::shared_ptr<RandomDataRef> tempPtr( new RandomDataRef(this, d1, d2, d3, d4, d5));
+                RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
                 i1 = d1; i2 = d2; i3 = d3; i4 = d4; i5 = d5;
-                myrefs.push_back(tempPtr);
+                //myrefs.push_back(tempPtr);
                 return *tempPtr; 
         }
 
@@ -215,7 +223,7 @@ namespace flopc{
                 stage = 3;
             else if (S5.isStage())
                 stage = 4;
-            else
+            else //As long as we only support recourse formulations, we need to adress a stage to a RV
                 throw invalid_argument_exception();
 
         }
@@ -888,6 +896,8 @@ namespace flopc{
 
     const RandomDataRef& RandomDataRef::operator=( const RandomDataRef& c )
     { //TODO: What about bool, B, index_exp ?
+        if (this == &c)
+            return *this;
         RV->c = c;
         return *this;
     }
