@@ -81,9 +81,9 @@ namespace flopc {
     void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
  
     /// Upper bound on the variable value.
-    RandomConstant upperLimit;
+    MP_data upperLimit;
     /// Lower bound on the variable value.
-    RandomConstant lowerLimit;
+    MP_data lowerLimit;
   private:
     //Disabling copy constructor and assignment
     MP_variable(const MP_variable&);

@@ -502,5 +502,24 @@ namespace flopc {
     //{
     //    return *this;
     //}
+
+
+
+    //int RandomDataRef::getColumn() const
+    //{
+    //    return -1; //RHS
+    //}
+
+    //void RandomDataRef::insertVariables( std::set<MP_variable*>& v ) const
+    //{
+    //    //Do nothing as there are no variables in a RandomDataRef
+    //}
+
+
+
+    RandomDataRef::~RandomDataRef()
+    {
+
+    }
 } // End of namespace flopc
 

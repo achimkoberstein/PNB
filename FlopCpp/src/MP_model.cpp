@@ -714,8 +714,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 //(*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 //(*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 //Evaluate values to mean value in case of stochastic and to real value in case of normal bounds
-                l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate(outOfBound);
-                u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate(outOfBound);
+                //TODO: Reenstate lower/upperbounds
+                //l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate(outOfBound);
+                //u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate(outOfBound);
                 //Update values to solver infinity if we find numeric infinity.
                 if (l[colIndirection[(*i)->offset+k]] == -numericInfinity)
                     l[colIndirection[(*i)->offset+k]] = -inf;
@@ -727,8 +728,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 //Update Index expressions for evaluation TODO
                 //(*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 //(*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
-                u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
+                // TODO: Reenable upper/lower bounds
+                //l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
+                //u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
                 if (l[(*i)->offset+k] == -numericInfinity)
                     l[(*i)->offset+k] = -inf;
                 if (u[(*i)->offset+k] == numericInfinity)

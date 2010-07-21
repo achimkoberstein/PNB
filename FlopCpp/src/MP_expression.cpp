@@ -165,7 +165,7 @@ namespace flopc {
             C->insertRandomVariables(v);
 
         }
-        RandomConstant C;
+        const RandomConstant& C;
     };
 
 
@@ -255,10 +255,10 @@ namespace flopc {
                right->insertVariables(v);
            }
            void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-               right->insertRandomVariables(v);
+               left->insertRandomVariables(v);
            }
           RandomConstant left;
-           MP_expression right;
+          MP_expression right;
     };
 
     class Expression_div : public MP_expression_base, MP  {
@@ -285,7 +285,7 @@ namespace flopc {
                left->insertVariables(v);
            }
            void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-               left->insertRandomVariables(v);
+               right->insertRandomVariables(v);
            }
            MP_expression left;
            RandomConstant right;
@@ -312,7 +312,7 @@ namespace flopc {
             exp->insertVariables(v);
         }
         void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-               exp->insertRandomVariables(v);
+            exp->insertRandomVariables(v);
         }
 
         class SumFunctor : public Functor {
@@ -369,15 +369,15 @@ namespace flopc {
         return new Expression_mult(e2, e1);
     }
 
-    //MP_expression operator*( const MP_expression& e1, const RandomDataRef& e2 )
-    //{
-    //    return new Expression_mult(e2,e1);
-    //}
+    MP_expression operator*( const MP_expression& e1, const RandomConstant& e2 )
+    {
+        return new Expression_mult(e2,e1);
+    }
 
-    //MP_expression operator*( const RandomDataRef& e1, const MP_expression& e2 )
-    //{
-    //    return new Expression_mult(e1,e2);
-    //}
+    MP_expression operator*( const RandomConstant& e1, const MP_expression& e2 )
+    {
+        return new Expression_mult(e1,e2);
+    }
     MP_expression operator/(const MP_expression& e1, const Constant& e2) {
         return new Expression_div(e1, e2);
     }

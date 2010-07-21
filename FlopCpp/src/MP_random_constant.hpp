@@ -25,6 +25,7 @@ namespace flopc {
     class MP_random_data;
     class MP_variable;
     class RandomDataRef;
+    class MP_random_data_impl;
 
     /** @brief Base class for all "RandomConstant" types of data.
     @ingroup INTERNAL_USE
@@ -63,21 +64,13 @@ namespace flopc {
         RandomConstant(RandomConstant_base* r) : Handle<RandomConstant_base*>(r) {}
         RandomConstant(const Constant& c); //Allows transformation of Constant to a RandomConstant by default
 
-        // Transitional method: Can be removed if all of the flopc++ programs have switched to the new standard (for variable bounds?!)
-        /*   RandomConstant& operator()() { return *this; };
-        RandomConstant& operator()(const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };*/
-
     };
 
     class RandomDataRef : public RandomConstant_base { 
         friend class MP_random_data_impl;
     public:
 
-        RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
+        RandomDataRef(MP_random_data_impl * const, 
             const MP_index_exp& i1,
             const MP_index_exp& i2,
             const MP_index_exp& i3,
@@ -85,25 +78,25 @@ namespace flopc {
             const MP_index_exp& i5);
 
 
-        ~RandomDataRef() {} 
+        virtual ~RandomDataRef();
         RandomDataRef& such_that(const MP_boolean& b);
 
-        virtual int getColumn() const;
-        double level() const;
+        //virtual int getColumn() const;
+        //double level() const;
         virtual int getStage() const;
         virtual double evaluate(int scenario) const;
-        virtual void insertVariables(std::set<MP_variable*>& v) const;
+        //virtual void insertVariables(std::set<MP_variable*>& v) const;
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
         //TODO: See if this methods is still needed
         virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
 
     
-        //Copy constructors to allow assignment in the model
-        const RandomDataRef& operator=(const RandomDataRef& r); 
-        const RandomDataRef& operator=(const Constant& c);
+        //Assignment operators to allow assignment in the model
+        const RandomDataRef& operator=(const RandomDataRef& c);
         const RandomDataRef& operator=(const RandomConstant& c);
-        //const RandomDataRef& operator=(Constant c);
-        //const RandomDataRef& operator=(RandomConstant c);
+        const RandomDataRef& operator=( RandomVariable* c);
+        
+        
 private:
         //Copy Constructor (needed in initialization of Constant_random_variable
         RandomDataRef(const RandomDataRef&);
@@ -111,13 +104,12 @@ private:
 
         //void generate(const MP_domain& domain,
         //    vector<TerminalExpression *> multiplicators,
-        //    MP::GenerateFunctor& f,
+        //    MP::GenerateFunctor& f,*this
         //    double m) const;
 
-        boost::shared_ptr<MP_random_data_impl> RV;
+        MP_random_data_impl* const RV;
         //const MP_set_base &S1,&S2,&S3,&S4,&S5;
         mutable MP_index_exp I1,I2,I3,I4,I5;
-        RandomConstant C;
         MP_boolean B;
         mutable bool visited;
 

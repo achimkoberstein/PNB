@@ -20,63 +20,40 @@ namespace flopc{
 
     //Class that stores a description of a random variable. Still needs to be defined
     //TODO: Do that
-    class MP_random_data_impl : public RowMajor, public Functor , public Named, public boost::enable_shared_from_this<MP_random_data_impl> {
+    class MP_random_data_impl : public RowMajor, public Functor , public Named{
         friend class RandomDataRef;
 
     public:
         //If we use this constructor, we need to delete values in the end.
         // This is only necessary if we actually add random_variables to this MP_random_data
-        MP_random_data_impl(const MP_set_base &s1 = MP_set::getEmpty(), 
-            const MP_set_base &s2 = MP_set::getEmpty(), 
-            const MP_set_base &s3 = MP_set::getEmpty(),
-            const MP_set_base &s4 = MP_set::getEmpty(), 
-            const MP_set_base &s5 = MP_set::getEmpty()):
+        MP_random_data_impl(const MP_set_base &s1, const MP_set_base &s2, const MP_set_base &s3,
+            const MP_set_base &s4, const MP_set_base &s5):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) { 
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) { 
                 // Identify stage set.
-                //if (MP_model::getCurrentModel()->Stage().size() > 0){
-                //    if (S1.isStage())
-                //        j1i = 1;
-                //    else if (S2.isStage())
-                //        j2i = 1;
-                //    else if (S3.isStage())
-                //        j3i = 1;
-                //    else if (S4.isStage())
-                //        j4i = 1;
-                //    else if (S5.isStage())
-                //        j5i = 1;
-                //    else
-                //        throw invalid_argument_exception();
-                //}
+                findStageSet();
                 initialize();
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
-        MP_random_data_impl(RandomVariable** array, const MP_set_base &s1 = MP_set::getEmpty(), 
-            const MP_set_base &s2 = MP_set::getEmpty(), 
-            const MP_set_base &s3 = MP_set::getEmpty(),
-            const MP_set_base &s4 = MP_set::getEmpty(), 
-            const MP_set_base &s5 = MP_set::getEmpty()):
+        MP_random_data_impl(RandomVariable** array, const MP_set_base &s1, const MP_set_base &s2,                const MP_set_base &s3, const MP_set_base &s4, const MP_set_base &s5):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) {  //Consistency check?
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
                 initialize();
                 // Very ugly code..
                 // What is done here: Arrays stage index is one less than normal stage index because first stage needs no RV. 
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
-                if (MP_model::getCurrentModel()->Stage().size() > 0){
-                    if (S1.isStage())
-                        j1i = 1;
-                    else if (S2.isStage())
-                        j2i = 1;
-                    else if (S3.isStage())
-                        j3i = 1;
-                    else if (S4.isStage())
-                        j4i = 1;
-                    else if (S5.isStage())
-                        j5i = 1;
-                    else
-                        throw invalid_argument_exception();
+                findStageSet();
+                switch (stage)
+                {
+                    case 0: j1i = 1; break;
+                    case 1: j2i = 1; break;
+                    case 2: j3i = 1; break;
+                    case 3: j4i = 1; break;
+                    case 4: j5i = 1; break;
+                    default : throw invalid_argument_exception();
+
                 }
                 for (int j1 = j1i; j1 < S1.size();j1++)
                     for (int j2 = j2i; j2 < S2.size(); j2++)
@@ -109,34 +86,26 @@ namespace flopc{
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do want to delete the created RandomVariables
-        MP_random_data_impl(double* array, const MP_set_base &s1 = MP_set::getEmpty(), 
-            const MP_set_base &s2 = MP_set::getEmpty(), 
-            const MP_set_base &s3 = MP_set::getEmpty(),
-            const MP_set_base &s4 = MP_set::getEmpty(), 
-            const MP_set_base &s5 = MP_set::getEmpty()):
+        MP_random_data_impl(double* array, const MP_set_base &s1, const MP_set_base &s2, const                   MP_set_base &s3, const MP_set_base &s4, const MP_set_base &s5):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true) {  //Consistency check?
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
                 initialize();
                 int scen = MP_model::getCurrentModel()->ScenSet().size();
                 //Identify stage set: The set with getStage > 0 is the stage set.
                 //If there is no stage set: No Problem ;)
                 int j1i,j2i,j3i,j4i,j5i;
                 j1i =j2i = j3i = j4i = j5i = 0;
-                if (MP_model::getCurrentModel()->Stage().size()){
-                    if (S1.isStage())
-                        j1i = 1;
-                    else if (S2.isStage())
-                        j2i = 1;
-                    else if (S3.isStage())
-                        j3i = 1;
-                    else if (S4.isStage())
-                        j4i = 1;
-                    else if (S5.isStage())
-                        j5i = 1;
-                    else
-                        throw invalid_argument_exception();
-                }
+                findStageSet();
+                switch (stage)
+                {
+                case 0: j1i = 1; break;
+                case 1: j2i = 1; break;
+                case 2: j3i = 1; break;
+                case 3: j4i = 1; break;
+                case 4: j5i = 1; break;
+                default : throw invalid_argument_exception();
 
+                }
                 for (int j1 = j1i; j1 < S1.size();j1++)
                     for (int j2 = j2i; j2 < S2.size(); j2++)
                         for (int j3 = j3i; j3 < S3.size(); j3++)
@@ -174,7 +143,6 @@ namespace flopc{
                     delete values[i];
                 delete [] values;
             }
-
         };
 
         //initialize data members 
@@ -197,19 +165,31 @@ namespace flopc{
             }
         }
 
-        const RandomDataRef& operator()(
+        RandomDataRef& operator()(
             const MP_index_exp& d1, 
             const MP_index_exp& d2, 
             const MP_index_exp& d3,
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
-                boost::shared_ptr<RandomDataRef> tempPtr(new RandomDataRef(this->shared_from_this(), d1, d2, d3, d4, d5));
+                boost::shared_ptr<RandomDataRef> tempPtr( new RandomDataRef(this, d1, d2, d3, d4, d5));
+                i1 = d1; i2 = d2; i3 = d3; i4 = d4; i5 = d5;
                 myrefs.push_back(tempPtr);
                 return *tempPtr; 
-
         }
 
         void display(const std::string& s, int scenario);
+
+        int getCurrentStageIndex(){
+            switch (stage)
+            {
+            case 0: return i1->evaluate(); 
+            case 1: return i1->evaluate(); 
+            case 2: return i1->evaluate(); 
+            case 3: return i1->evaluate(); 
+            case 4: return i1->evaluate();
+            default: throw invalid_argument_exception();
+            }
+        }
 
 
 
@@ -224,6 +204,22 @@ namespace flopc{
             delete [] tempArray;
         }
 
+        void findStageSet(){
+            if (S1.isStage())
+                stage = 0;
+            else if (S2.isStage())
+                stage = 1;
+            else if (S3.isStage())
+                stage = 2;
+            else if (S4.isStage())
+                stage = 3;
+            else if (S5.isStage())
+                stage = 4;
+            else
+                throw invalid_argument_exception();
+
+        }
+
 
         
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
@@ -233,6 +229,7 @@ namespace flopc{
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
         std::vector<boost::shared_ptr<RandomDataRef> > myrefs;
         bool manageData;
+        int stage; // Can be one of 0 to 4
     };
 
 
@@ -252,7 +249,7 @@ namespace flopc{
         return ptrImpl->operator()(lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
-    const RandomDataRef& MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
+    RandomDataRef& MP_random_data::operator()( const MP_index_exp& d1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& d5 /*= MP_index_exp::getEmpty() */ )
     {
         return ptrImpl->operator()(d1,d2,d3,d4,d5);
     }
@@ -302,9 +299,7 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(1),
-        stage(0) {
-    } 
+    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(1),stage(0) { } 
 
     // base_generator_type(seed),uniform_distr_gen(uniform.rng,boost::uniform_01<double>()) 
 
@@ -419,13 +414,13 @@ namespace flopc{
     //}
     //Implementation for RandomDataRef.
 
-    RandomDataRef::RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
+    RandomDataRef::RandomDataRef(MP_random_data_impl * const rv, 
         const MP_index_exp& i1,
         const MP_index_exp& i2,
         const MP_index_exp& i3,
         const MP_index_exp& i4,
         const MP_index_exp& i5) :
-    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c),visited(false) {}
+    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),visited(false) {}
 
     RandomDataRef::RandomDataRef( const RandomDataRef& ref)
         :
@@ -435,14 +430,13 @@ namespace flopc{
         I3(ref.I3),
         I4(ref.I4),
         I5(ref.I5),
-        C(ref.C),
         B(ref.B),
         visited(ref.visited)
     {}
 
-    const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
-        return operator=(c);
-    }
+    //const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
+    //    return operator=(c);
+    //}
 
     //const RandomDataRef& RandomDataRef::operator=(const RandomConstant& c) {
     //    RV->c = RandomConstant(c);
@@ -451,12 +445,12 @@ namespace flopc{
     //    return operator=(RandomConstant(c));
     //}
 
-    const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
-        //Check for assignment to self
-        if (this == &r)
-            return *this;
-        return operator=(RandomConstant(r)); //TODO: Do not do this, it is evil..
-    }
+    //const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
+    //    //Check for assignment to self
+    //    if (this == &r)
+    //        return *this;
+    //    return operator=(RandomConstant(r)); //TODO: Do not do this, it is evil..
+    //}
 
     RandomVariable* RandomDataRef::getRandomVariable(int index) const
     {   //If index has default value of outOfBound we return the RV in the "normal" way: By evaluating the indices
@@ -543,7 +537,9 @@ namespace flopc{
                 // getMeanValue() is called for RandomVariable, not ScenarioRandomVariable
                 return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
-                return C->evaluate(scenario);
+                if (!RV->c.isDefined())
+                    throw not_implemented_error();
+                return RV->c->evaluate(scenario);
         }
     }
 
@@ -882,5 +878,34 @@ namespace flopc{
     double ContinuousTriangleRandomVariable::getMeanValue() const
     {   
         throw not_implemented_error();
+    }
+
+    const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
+    { //TODO: What about bool, B, index_exp ?
+        RV->c = c;
+        return *this;
+    }
+
+    const RandomDataRef& RandomDataRef::operator=( const RandomDataRef& c )
+    { //TODO: What about bool, B, index_exp ?
+        RV->c = c;
+        return *this;
+    }
+
+    const RandomDataRef& RandomDataRef::operator=( RandomVariable* c )
+    { // Ist das so sinnvoll? Normalerweise eher weniger.. aber für den Einzelfall geeignet
+        if (RV->c.isDefined())
+            throw not_implemented_error(); //UseCase: We already have a Constant, this should not be the case..
+        RV->operator()( (int)RV->i1->evaluate(),(int)RV->i2->evaluate(),(int)RV->i3->evaluate(),(int)RV->i4->evaluate(),(int)RV->i5->evaluate() ) = c; 
+        // Set correct stage for variable.
+        //Set stage to correct value
+        switch (RV->stage){
+            case 0: c->Stage((int)RV->i1->evaluate() ); break;
+            case 1: c->Stage((int)RV->i2->evaluate() ); break;
+            case 2: c->Stage((int)RV->i3->evaluate() ); break;
+            case 3: c->Stage((int)RV->i4->evaluate() ); break;
+            case 4: c->Stage((int)RV->i5->evaluate() ); break;
+        }
+        return *this;
     }
 }
