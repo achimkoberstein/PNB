@@ -158,6 +158,7 @@ namespace flopc {
                 f.setMultiplicator(multiplicators,m);
                 f.setTerminalExpression(this);
                 domain.forall(&f);
+                //We somehow have to evaluate everything for every scenario.. or at least we should do so
         }
         void insertVariables(set<MP_variable*>& v) const {}
 
@@ -165,7 +166,7 @@ namespace flopc {
             C->insertRandomVariables(v);
 
         }
-        const RandomConstant& C;
+        const RandomConstant C;
     };
 
 

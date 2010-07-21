@@ -825,29 +825,31 @@ namespace flopc {
         // Test RV Usage by Assignment or Initialization.
         enum {Audi, BMW, Ford, numCars};
         enum {DB,EuroBahn,numTrains};
+        MP_stage T(2);
         MP_set cars(numCars);
         MP_set trains(numTrains);
-        MP_random_data vars(cars); //Initialize RV with set
+        MP_random_data vars(cars,T); //Initialize RV with set
         DiscreteUniformRandomVariable *x,*y,*z;
         x = new DiscreteUniformRandomVariable();
         y = new DiscreteUniformRandomVariable();
         z = new DiscreteUniformRandomVariable();
-        vars(BMW) = x; 
-        vars(Audi) = y;
-        vars(Ford) = z;
+        vars(BMW,1) = x; 
+        vars(Audi,1) = y;
+        vars(Ford,1) = z;
+        //Stage setting is not yet supported, TODO
         MP_variable test(cars,trains);
-        RandomVariable* varsArr[3] = { new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable() }; //Initialize RV with Array of RV
+        RandomVariable* varsArr[1][3] = {{ new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable() }}; //Initialize RV with Array of RV
         // Need to delete Array as RV does not take ownership..
         // Maybe store boost::shared_ptr<> to RV?
         // Then the values assigned to the RV get managed by the RV and released too
         // No Deletion of array values necessary afterwards..
-        MP_random_data vars2(&varsArr[0],cars);
+        MP_random_data vars2(&varsArr[0][0],T,cars);
         //Check if vars2 contains these random variables
-        EXPECT_EQ(varsArr[0],vars2(0)); //only checks pointer
-        EXPECT_EQ(varsArr[1],vars2(1));
-        EXPECT_EQ(varsArr[2],vars2(2));
-        MP_constraint constraint1(trains);
-        constraint1(trains) = sum(cars,test(cars,trains)) <= 20;
+        EXPECT_EQ(varsArr[0][0],vars2(1,0)); //only checks pointer
+        EXPECT_EQ(varsArr[0][1],vars2(1,1));
+        EXPECT_EQ(varsArr[0][2],vars2(1,2));
+        MP_constraint constraint1(trains,T);
+        constraint1(trains,T+1) = sum(cars,test(cars,trains)) <= sum(cars,vars2(cars,T+1));
         testModel.setObjective( sum(cars*trains,test(cars,trains)) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
