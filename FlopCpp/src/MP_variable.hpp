@@ -13,6 +13,8 @@
 #include "MP_domain.hpp"
 #include "MP_data.hpp"
 #include "MP_constant.hpp"
+#include "MP_random_constant.hpp"
+#include "MP_random_data.hpp"
 
 namespace flopc {
 
@@ -71,24 +73,17 @@ namespace flopc {
     //void display(string s = "");  
 
     /// Call this method to turn the variable into a binary variable
-    void binary() { 
-      //upperLimit.initialize(1);
-        lowerLimit = Constant(0);
-        upperLimit = Constant(1);
-        type = variableType::binary; 
-    }
+    void binary();
 
     /// Call this method to turn the MP_variable into an integer variable
-    void integer() { 
-        type = variableType::discrete; 
-    }
+    void integer();
 
     void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
  
     /// Upper bound on the variable value.
-    Constant upperLimit;
+    RandomConstant upperLimit;
     /// Lower bound on the variable value.
-    Constant lowerLimit;
+    RandomConstant lowerLimit;
   private:
     //Disabling copy constructor and assignment
     MP_variable(const MP_variable&);

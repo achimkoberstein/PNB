@@ -23,6 +23,7 @@ namespace flopc {
     class MP_variable;
     class VariableRef;
     class RandomDataRef;
+    class RandomConstant;
 
     class MP {
         friend class MP_expression;
@@ -174,7 +175,7 @@ namespace flopc {
         /// Constructor which (silently) converts a VariableRef to a MP_expression
         MP_expression(const VariableRef& v);
         /// Constructor which (silently) converts a RandomDataRef to a MP_expression
-        MP_expression(const RandomDataRef &r);
+        MP_expression(const RandomConstant &r);
         MP_expression(MP_expression_base* r) : Handle<MP_expression_base*>(r) {}
         
     };
@@ -263,15 +264,27 @@ namespace flopc {
     /// @ingroup PublicInterface
     MP_expression operator+(const MP_expression& e1, const MP_expression& e2);
     /// @ingroup PublicInterface
+    MP_expression operator+(const MP_expression& e1, const RandomConstant& e2);
+    /// @ingroup PublicInterface
+    MP_expression operator+(const RandomConstant& e1, const MP_expression& e2);
+    /// @ingroup PublicInterface
     MP_expression operator+(const MP_expression& e1, const Constant& e2);
     /// @ingroup PublicInterface
     MP_expression operator+(const Constant& e1, const MP_expression& e2);
     /// @ingroup PublicInterface
     MP_expression operator-(const MP_expression& e1, const MP_expression& e2);
     /// @ingroup PublicInterface
+    MP_expression operator-(const MP_expression& e1, const RandomConstant& e2);
+    /// @ingroup PublicInterface
+    MP_expression operator-(const RandomConstant& e1, const MP_expression& e2);
+    /// @ingroup PublicInterface
     MP_expression operator-(const MP_expression& e1, const Constant& e2);
     /// @ingroup PublicInterface
     MP_expression operator-(const Constant& e1, const MP_expression& e2);
+    /// @ingroup PublicInterface
+    MP_expression operator*(const RandomConstant& e1, const MP_expression& e2); 
+    /// @ingroup PublicInterface
+    MP_expression operator*(const MP_expression& e1, const RandomConstant& e2);
     /// @ingroup PublicInterface
     MP_expression operator*(const Constant& e1, const MP_expression& e2); 
     /// @ingroup PublicInterface
@@ -280,6 +293,8 @@ namespace flopc {
     //MP_expression operator*(const RandomDataRef& e1, const MP_expression& e2); 
     ///// @ingroup PublicInterface
     //MP_expression operator*(const MP_expression& e1, const RandomDataRef& e2); 
+    /// @ingroup PublicInterface
+    MP_expression operator/(const MP_expression& e1, const RandomConstant& e2);
     /// @ingroup PublicInterface
     MP_expression operator/(const MP_expression& e1, const Constant& e2);
     /// @ingroup PublicInterface

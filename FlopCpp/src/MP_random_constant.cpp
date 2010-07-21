@@ -13,42 +13,25 @@
 
 namespace flopc {
 
-    class RandomConstant_index : public RandomConstant_base {
-        friend class RandomConstant;
+    class RandomConstant_constant : public RandomConstant_base {
+        //friend RandomConstant abs(const RandomConstant& c);
+    public:
+        RandomConstant_constant(const Constant& c) : C(c) {}
+
     private:
-        RandomConstant_index(const MP_index_exp& i) : I(i) {}
+
         virtual double evaluate(int scenario) const {
-            return I->evaluate(); 
+            return fabs(C->evaluate());
         }
-        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        }
-        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-
-
-        }  
-
-        const MP_index_exp I;
-    };
-
-    class RandomConstant_double : public RandomConstant_base {
-        friend class RandomConstant;
-    private:
-        RandomConstant_double(double d) : D(d) {}
-        virtual double evaluate(int scenario) const { 
-            return D; 
-        }
-        int getStage() const {
-            return 0;
-        }
-        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-
+        virtual int getStage() const {
+            return 0; //Constants alway have stage 0
         }
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
 
-
         }  
-        double D;
+        Constant C;
     };
+
 
     class RandomConstant_abs : public RandomConstant_base {
         friend RandomConstant abs(const RandomConstant& c);
@@ -60,12 +43,8 @@ namespace flopc {
         virtual int getStage() const {
             return C->getStage();
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    C->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-
         }  
         RandomConstant C;
     };
@@ -88,12 +67,8 @@ namespace flopc {
         int getStage() const {
             return C->getStage();
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    C->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-
         }  
         RandomConstant C;
     };
@@ -111,12 +86,8 @@ namespace flopc {
         virtual int getStage() const {
             return C->getStage();
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    C->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-
         }  
         RandomConstant C;
     };
@@ -134,12 +105,9 @@ namespace flopc {
         virtual int getStage() const {
             return C->getStage();
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    C->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
+
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-
         }  
         RandomConstant C;
     };
@@ -153,10 +121,6 @@ namespace flopc {
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    left->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //    right->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             left->insertRandomVariables(v);
             right->insertRandomVariables(v);
@@ -164,10 +128,15 @@ namespace flopc {
         RandomConstant left, right;
     };
 
+
     class RandomConstant_min_2 : public RandomConstant_exp {
         friend RandomConstant minimum(const RandomConstant& a, const RandomConstant& b);
+        friend RandomConstant minimum(const Constant& a, const RandomConstant& b);
+        friend RandomConstant minimum(const RandomConstant& a, const Constant& b);
     private:
         RandomConstant_min_2(const RandomConstant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_min_2(const Constant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_min_2(const RandomConstant& i, const Constant& j) : RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
             return std::min(left->evaluate(scenario),right->evaluate(scenario));
         }
@@ -179,11 +148,21 @@ namespace flopc {
     RandomConstant minimum(const RandomConstant& a, const RandomConstant& b) {
         return new RandomConstant_min_2(a,b);
     }
+    RandomConstant minimum(const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_min_2(a,b);
+    }
+    RandomConstant minimum(const RandomConstant& a, const Constant& b) {
+        return new RandomConstant_min_2(a,b);
+    }
 
     class RandomConstant_max_2 : public RandomConstant_exp {
         friend RandomConstant maximum(const RandomConstant& a, const RandomConstant& b);
+        friend RandomConstant maximum(const Constant& a, const RandomConstant& b);
+        friend RandomConstant maximum(const RandomConstant& a, const Constant& b);
     private:
         RandomConstant_max_2(const RandomConstant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_max_2(const Constant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_max_2(const RandomConstant& i, const Constant& j) : RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
             return std::max(left->evaluate(scenario),right->evaluate(scenario));
         }
@@ -195,11 +174,21 @@ namespace flopc {
     RandomConstant maximum(const RandomConstant& a, const RandomConstant& b) {
         return new RandomConstant_max_2(a,b);
     }
+    RandomConstant maximum(const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_max_2(a,b);
+    }
+    RandomConstant maximum(const RandomConstant& a, const Constant& b) {
+        return new RandomConstant_max_2(a,b);
+    }
 
     class RandomConstant_plus : public RandomConstant_exp {
         friend RandomConstant operator+(const RandomConstant& a, const RandomConstant& b);
+        friend RandomConstant operator+(const Constant& a, const RandomConstant& b);
+        friend RandomConstant operator+(const RandomConstant& a, const Constant& b);
     private:
         RandomConstant_plus(const RandomConstant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_plus(const Constant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_plus(const RandomConstant& i, const Constant& j) : RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
             return left->evaluate(scenario)+right->evaluate(scenario);
         }
@@ -213,12 +202,22 @@ namespace flopc {
     RandomConstant operator+(const RandomConstant& a, const RandomConstant& b) {
         return new RandomConstant_plus(a,b);
     }
+    RandomConstant operator+(const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_plus(a,b);
+    }
+    RandomConstant operator+(const RandomConstant& a, const Constant& b) {
+        return new RandomConstant_plus(a,b);
+    }
 
 
     class RandomConstant_minus : public RandomConstant_exp {
         friend RandomConstant operator-(const RandomConstant& a, const RandomConstant& b);
+        friend RandomConstant operator-(const Constant& a, const RandomConstant& b);
+        friend RandomConstant operator-(const RandomConstant& a, const Constant& b);
     private:
         RandomConstant_minus(const RandomConstant& i, const RandomConstant& j): RandomConstant_exp(i,j) {}
+        RandomConstant_minus(const Constant& i, const RandomConstant& j): RandomConstant_exp(i,j) {}
+        RandomConstant_minus(const RandomConstant& i, const Constant& j): RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
             return left->evaluate(scenario)-right->evaluate(scenario); 
         }
@@ -229,6 +228,12 @@ namespace flopc {
     };
 
     RandomConstant operator-(const RandomConstant& a, const RandomConstant& b) {
+        return new RandomConstant_minus(a,b);
+    }
+    RandomConstant operator-(const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_minus(a,b);
+    }
+    RandomConstant operator-(const RandomConstant& a, const Constant& b) {
         return new RandomConstant_minus(a,b);
     }
 
@@ -243,9 +248,6 @@ namespace flopc {
         virtual int getStage() const {
             return left->getStage();
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    left->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             left->insertRandomVariables(v);
         }
@@ -257,8 +259,12 @@ namespace flopc {
 
     class RandomConstant_mult : public RandomConstant_exp {
         friend RandomConstant operator*(const RandomConstant& a, const RandomConstant& b);
+        friend RandomConstant operator*(const Constant& a, const RandomConstant& b);
+        friend RandomConstant operator*(const RandomConstant& a, const Constant& b);
     private:
         RandomConstant_mult(const RandomConstant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_mult(const Constant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_mult(const RandomConstant& i, const Constant& j) : RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
             return left->evaluate(scenario)*right->evaluate(scenario); 
         }
@@ -272,11 +278,21 @@ namespace flopc {
     RandomConstant operator*(const RandomConstant& a, const RandomConstant& b) {
         return new RandomConstant_mult(a,b);
     }
+    RandomConstant operator*(const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_mult(a,b);
+    }
+    RandomConstant operator*(const RandomConstant& a, const Constant& b) {
+        return new RandomConstant_mult(a,b);
+    }
 
     class RandomConstant_div : public RandomConstant_exp {
         friend RandomConstant operator/(const RandomConstant& a, const RandomConstant& b); 
+        friend RandomConstant operator/(const Constant& a, const RandomConstant& b); 
+        friend RandomConstant operator/(const RandomConstant& a, const Constant& b); 
     private:
         RandomConstant_div(const RandomConstant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_div(const Constant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
+        RandomConstant_div(const RandomConstant& i, const Constant& j) : RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
             return left->evaluate(scenario)/right->evaluate(scenario); 
         }
@@ -288,6 +304,12 @@ namespace flopc {
     };
 
     RandomConstant operator/(const RandomConstant& a, const RandomConstant& b) {
+        return new RandomConstant_div(a,b);
+    }
+    RandomConstant operator/(const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_div(a,b);
+    }
+    RandomConstant operator/(const RandomConstant& a, const Constant& b) {
         return new RandomConstant_div(a,b);
     }
 
@@ -464,6 +486,21 @@ namespace flopc {
     RandomConstant::RandomConstant(const RandomDataRef& d) : 
     Handle<RandomConstant_base*>(const_cast<RandomDataRef*>(&d)) {}
 
+    RandomConstant::RandomConstant(const Constant& c) :
+    Handle<RandomConstant_base*>(new RandomConstant_constant(c)) {}
 
+
+
+
+
+    //const RandomDataRef& RandomDataRef::operator=(  Constant c )
+    //{
+    //    return *this;
+    //}
+
+    //const RandomDataRef& RandomDataRef::operator=( RandomConstant c )
+    //{
+    //    return *this;
+    //}
 } // End of namespace flopc
 

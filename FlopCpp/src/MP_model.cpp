@@ -1547,4 +1547,9 @@ namespace flopc {
     {
 
     }
+
+    void Messenger::generationTime( double t )
+    {
+
+    }
 }

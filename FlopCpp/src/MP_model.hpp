@@ -57,7 +57,7 @@ namespace flopc {
     virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
     virtual void solutionStatus(const OsiSolverInterface* Solver);
     virtual void statistics(int bm, int m, int bn, int n, int nz);
-    virtual void generationTime(double t) {}
+    virtual void generationTime(double t);
     protected:
         virtual ~Messenger() {}
     };

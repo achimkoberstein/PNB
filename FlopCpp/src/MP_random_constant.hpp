@@ -37,14 +37,10 @@ namespace flopc {
         friend class Handle<RandomConstant_base*>;
     public:
         virtual double evaluate(int scenario = getZero) const = 0; //get value of RandomConstant (must be double)
-
-        virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
-            return 0;
-        }
-
+        virtual int getStage() const = 0;
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
 
-       
+
     protected:
         RandomConstant_base() : count(0) {}
         virtual ~RandomConstant_base() {}
@@ -53,7 +49,30 @@ namespace flopc {
     };
     //forward declarations
     class MP_domain;
-   
+
+    /** @brief Reference counted class for all "RandomConstant" types of data.
+    @ingroup INTERNAL_USE
+    @note FOR INTERNAL USE: This is not normally used directly by the calling 
+    code.
+    This contains counters to RandomConstantBase pointers.
+    These pointers may be of any of the RandomConstant_base * type.  
+    */
+    class RandomConstant : public Handle<RandomConstant_base*> {
+    public:
+        RandomConstant(const RandomDataRef& d);
+        RandomConstant(RandomConstant_base* r) : Handle<RandomConstant_base*>(r) {}
+        RandomConstant(const Constant& c); //Allows transformation of Constant to a RandomConstant by default
+
+        // Transitional method: Can be removed if all of the flopc++ programs have switched to the new standard (for variable bounds?!)
+        /*   RandomConstant& operator()() { return *this; };
+        RandomConstant& operator()(const MP_index_exp&) { return *this; };
+        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&) { return *this; };
+        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
+        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
+        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };*/
+
+    };
+
     class RandomDataRef : public RandomConstant_base { 
         friend class MP_random_data_impl;
     public:
@@ -78,13 +97,17 @@ namespace flopc {
         //TODO: See if this methods is still needed
         virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
 
-    private:
-        //Disable assignment and copy constructors..
+    
+        //Copy constructors to allow assignment in the model
         const RandomDataRef& operator=(const RandomDataRef& r); 
         const RandomDataRef& operator=(const Constant& c);
-
+        const RandomDataRef& operator=(const RandomConstant& c);
+        //const RandomDataRef& operator=(Constant c);
+        //const RandomDataRef& operator=(RandomConstant c);
+private:
         //Copy Constructor (needed in initialization of Constant_random_variable
         RandomDataRef(const RandomDataRef&);
+        
 
         //void generate(const MP_domain& domain,
         //    vector<TerminalExpression *> multiplicators,
@@ -94,38 +117,13 @@ namespace flopc {
         boost::shared_ptr<MP_random_data_impl> RV;
         //const MP_set_base &S1,&S2,&S3,&S4,&S5;
         mutable MP_index_exp I1,I2,I3,I4,I5;
-        Constant C;
+        RandomConstant C;
         MP_boolean B;
         mutable bool visited;
 
     };
 
-
-
-    /** @brief Reference counted class for all "RandomConstant" types of data.
-    @ingroup INTERNAL_USE
-    @note FOR INTERNAL USE: This is not normally used directly by the calling 
-    code.
-    This contains counters to RandomConstantBase pointers.
-    These pointers may be of any of the RandomConstant_base * type.  
-    */
-    class RandomConstant : public Handle<RandomConstant_base*> {
-    public:
-        RandomConstant(const RandomDataRef& d);
-        RandomConstant(RandomConstant_base* r) : Handle<RandomConstant_base*>(r) {}
-
-        // Transitional method: Can be removed if all of the flopc++ programs have switched to the new standard (for variable bounds?!)
-     /*   RandomConstant& operator()() { return *this; };
-        RandomConstant& operator()(const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };
-        RandomConstant& operator()(const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&,const MP_index_exp&) { return *this; };*/
-
-    };
-
     RandomConstant operator-(const RandomConstant& a);
-
     /** @brief for computing the absolute value of a RandomConstant value.
     @ingroup PublicInterface
     This is used in the normal formation of an expression such as abs(-5)
@@ -170,6 +168,8 @@ namespace flopc {
     @li minimum(3.6,3.7) evaluates to 3.6
     */
     RandomConstant minimum(const RandomConstant& a, const RandomConstant& b);
+    RandomConstant minimum(const Constant& a, const RandomConstant& b);
+    RandomConstant minimum(const RandomConstant& a, const Constant& b);
     /** @brief Returns the larger of two RandomConstants.
     @ingroup PublicInterface
     This is used in the formation of an expression.  
@@ -179,6 +179,8 @@ namespace flopc {
     @li maximum(3.6,3.7) evaluates to 3.7
     */
     RandomConstant maximum(const RandomConstant& a, const RandomConstant& b);
+    RandomConstant maximum(const Constant& a, const RandomConstant& b);
+    RandomConstant maximum(const RandomConstant& a, const Constant& b);
     /** @brief Returns the sum of two RandomConstants.
     @ingroup PublicInterface
     This is used in the formation of an expression.  
@@ -187,6 +189,8 @@ namespace flopc {
     @return the sum of the RandomConstants.
     */
     RandomConstant operator+(const RandomConstant& a, const RandomConstant& b);
+    RandomConstant operator+(const Constant& a, const RandomConstant& b);
+    RandomConstant operator+(const RandomConstant& a, const Constant& b);
     /** @brief Returns the difference of two RandomConstants.
     @ingroup PublicInterface
     This is used in the formation of an expression.  
@@ -195,6 +199,8 @@ namespace flopc {
     @return the difference between the RandomConstants.
     */
     RandomConstant operator-(const RandomConstant& a, const RandomConstant& b);
+    RandomConstant operator-(const Constant& a, const RandomConstant& b);
+    RandomConstant operator-(const RandomConstant& a, const Constant& b);
     /** @brief Returns the product of two RandomConstants.
     @ingroup PublicInterface
     This is used in the formation of an expression.  
@@ -203,6 +209,8 @@ namespace flopc {
     @return the result of multiplying the RandomConstants.
     */
     RandomConstant operator*(const RandomConstant& a, const RandomConstant& b);
+    RandomConstant operator*(const Constant& a, const RandomConstant& b);
+    RandomConstant operator*(const RandomConstant& a, const Constant& b);
     /** @brief Returns the quotient of two RandomConstants.
     @ingroup PublicInterface
     This is used in the formation of an expression.  
@@ -211,6 +219,8 @@ namespace flopc {
     @return the result of dividing the first parameter by the second.
     */
     RandomConstant operator/(const RandomConstant& a, const RandomConstant& b);
+    RandomConstant operator/(const Constant& a, const RandomConstant& b);
+    RandomConstant operator/(const RandomConstant& a, const Constant& b);
 
     class MP_boolean;
     RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const RandomConstant& b);

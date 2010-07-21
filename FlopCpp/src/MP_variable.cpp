@@ -23,7 +23,7 @@ MP_variable::MP_variable(const MP_set_base &s1,
                          const MP_set_base &s5) :
 RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 upperLimit(MP_model::getCurrentModel()->getInfinity()),
-lowerLimit(0),
+lowerLimit(Constant(0)),
 S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
 offset(-1)
 {
@@ -139,4 +139,17 @@ void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef> > >
     ((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(&f);
     delete myrefs.back();
     myrefs.pop_back();
+}
+
+void flopc::MP_variable::integer()
+{
+    type = variableType::discrete;
+}
+
+void flopc::MP_variable::binary()
+{
+    //upperLimit.initialize(1);
+    lowerLimit = Constant(0);
+    upperLimit = Constant(1);
+    type = variableType::binary;
 }
