@@ -2,7 +2,6 @@
 #define _MP_random_data_hpp_
 
 #include <vector>
-#include <set>
 #include <map>
 
 #include <boost/shared_ptr.hpp>
@@ -14,8 +13,6 @@
 #include "MP_set.hpp"
 #include "MP_domain.hpp"
 #include "MP_utilities.hpp"
-//#include "MP_random_constant.hpp"
-
 
 //TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
 
@@ -24,9 +21,7 @@ namespace flopc{
 
     //Forward declaration
     class MP_random_data_impl;
-
-
-    
+    class RandomDataRef;    
 
     //Class that defines a concrete RandomVariable 
     class RandomVariable : boost::noncopyable {
@@ -243,7 +238,7 @@ namespace flopc{
         //Needs virtual assignment operators hierarchy that might look ugly
         RandomVariable*& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0);
 
-        const RandomDataRef& operator()( 
+        RandomDataRef& operator()( 
             const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d2 = MP_index_exp::getEmpty(), 
             const MP_index_exp& d3 = MP_index_exp::getEmpty(),
