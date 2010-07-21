@@ -10,6 +10,7 @@
 #include "MP_set.hpp"
 #include "MP_variable.hpp"
 #include "MP_model.hpp"
+#include "MP_random_constant.hpp"
 #include <OsiSolverInterface.hpp>
 
 namespace flopc {
@@ -128,8 +129,43 @@ namespace flopc {
         void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
          
         }
-
         Constant C;
+    };
+
+    class Expression_random_constant : public TerminalExpression, public MP {
+        friend class MP_expression;
+        friend class Expression_mult;
+        friend class Expression_div;
+    private:
+        Expression_random_constant(const RandomConstant& c) : C(c) {}
+        double level() const { 
+            return C->evaluate(); 
+        }
+        double getValue(int scenario) const {
+            return C->evaluate(scenario);
+        }
+        virtual int getColumn() const { 
+            return -1; //RHS if coefficient is without variable
+        }
+        virtual int getStage() const {
+            return C->getStage(); //NB to be changed
+        }
+        //TODO: Generate function, take a look at it
+        void generate(const MP_domain& domain,
+            vector<TerminalExpression*> multiplicators,
+            MP::GenerateFunctor& f,
+            double m) const {
+                f.setMultiplicator(multiplicators,m);
+                f.setTerminalExpression(this);
+                domain.forall(&f);
+        }
+        void insertVariables(set<MP_variable*>& v) const {}
+
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+            C->insertRandomVariables(v);
+
+        }
+        RandomConstant C;
     };
 
 
@@ -154,7 +190,9 @@ namespace flopc {
     class Expression_plus : public Expression_operator {
         friend MP_expression operator+(const MP_expression& e1, const MP_expression& e2);
         friend MP_expression operator+(const MP_expression& e1, const Constant& e2);
-        friend MP_expression operator+(const Constant& e1, const MP_expression& e2);	
+        friend MP_expression operator+(const Constant& e1, const MP_expression& e2);
+        friend MP_expression operator+(const MP_expression& e1, const RandomConstant& e2);
+        friend MP_expression operator+(const RandomConstant& e1, const MP_expression& e2);
     private:
         Expression_plus(const MP_expression& e1, const MP_expression& e2) : 
            Expression_operator(e1,e2) {}
@@ -174,6 +212,8 @@ namespace flopc {
         friend MP_expression operator-(const MP_expression& e1, const MP_expression& e2);
         friend MP_expression operator-(const MP_expression& e1, const Constant& e2); 
         friend MP_expression operator-(const Constant& e1, const MP_expression& e2);
+        friend MP_expression operator-(const MP_expression& e1, const RandomConstant& e2); 
+        friend MP_expression operator-(const RandomConstant& e1, const MP_expression& e2);
     private:
         Expression_minus(const MP_expression& e1, const MP_expression& e2) : 
            Expression_operator(e1,e2) {}
@@ -192,11 +232,13 @@ namespace flopc {
     class Expression_mult : public MP_expression_base,  MP  {
         friend MP_expression operator*(const Constant& e1, const MP_expression& e2); 
         friend MP_expression operator*(const MP_expression& e1, const Constant& e2);
+        friend MP_expression operator*(const RandomConstant& e1, const MP_expression& e2);
+        friend MP_expression operator*(const MP_expression& e1, const RandomConstant& e2);
         //friend MP_expression operator*(const RandomDataRef& e1, const MP_expression& e2);
         //friend MP_expression operator*(const MP_expression& e1, const RandomDataRef& e2);
 
     private:
-        Expression_mult(const Constant& e1, const MP_expression& e2) : 
+        Expression_mult(const RandomConstant& e1, const MP_expression& e2) : 
            left(e1), right(e2) {}
            double level() const { 
                return left->evaluate()*right->level(); 
@@ -205,7 +247,7 @@ namespace flopc {
                vector<TerminalExpression *> multiplicators,
                MP::GenerateFunctor& f,
                double m) const {
-                   multiplicators.push_back(new Expression_constant(left));
+                   multiplicators.push_back(new Expression_random_constant(left));
                    right->generate(domain, multiplicators, f, m);
    
            }
@@ -215,16 +257,19 @@ namespace flopc {
            void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
                right->insertRandomVariables(v);
            }
-          Constant left;
+          RandomConstant left;
            MP_expression right;
     };
 
     class Expression_div : public MP_expression_base, MP  {
         friend MP_expression operator/(const MP_expression& e1, const Constant& e2);
+                friend MP_expression operator/(const MP_expression& e1, const RandomConstant& e2);
         //friend MP_expression operator/(const RandomDataRef& e1, const MP_expression& e2);
         //friend MP_expression operator/(const MP_expression& e1, const RandomDataRef& e2);
     private:
         Expression_div(const MP_expression& e, const Constant& c) : 
+           left(e), right(c) {}
+           Expression_div(const MP_expression& e, const RandomConstant& c) : 
            left(e), right(c) {}
            double level() const { 
                return left->level()/right->evaluate(); 
@@ -233,7 +278,7 @@ namespace flopc {
                vector<TerminalExpression *> multiplicators,
                MP::GenerateFunctor& f,
                double m) const {
-                   multiplicators.push_back(new Expression_constant(1/right));
+                   multiplicators.push_back(new Expression_random_constant(1/right));
                    left->generate(domain, multiplicators, f, m);
            }
            void insertVariables(set<MP_variable*>& v) const {
@@ -243,7 +288,7 @@ namespace flopc {
                left->insertRandomVariables(v);
            }
            MP_expression left;
-           Constant right;
+           RandomConstant right;
     };
 
     class Expression_sum : public MP_expression_base, public MP  {
@@ -294,6 +339,12 @@ namespace flopc {
     MP_expression operator+(const Constant& e1, const MP_expression& e2) {
         return new Expression_plus(e1, e2);
     }
+    MP_expression operator+(const MP_expression& e1, const RandomConstant& e2) {
+        return new Expression_plus(e1, e2);
+    }
+    MP_expression operator+(const RandomConstant& e1, const MP_expression& e2) {
+        return new Expression_plus(e1, e2);
+    }
 
     MP_expression operator-(const MP_expression& e1, const MP_expression& e2) {  
         return new Expression_minus(e1, e2);
@@ -302,6 +353,12 @@ namespace flopc {
         return new Expression_minus(e1, e2);
     }
     MP_expression operator-(const Constant& e1, const MP_expression& e2) {
+        return new Expression_minus(e1, e2);
+    }
+    MP_expression operator-(const MP_expression& e1, const RandomConstant& e2) {
+        return new Expression_minus(e1, e2);
+    }
+    MP_expression operator-(const RandomConstant& e1, const MP_expression& e2) {
         return new Expression_minus(e1, e2);
     }
 
@@ -338,7 +395,6 @@ namespace flopc {
         return new Expression_sum(d, e);  
     }
 
-
 } // End of namespace flopc
 
 using namespace flopc;
@@ -350,8 +406,8 @@ Handle<MP_expression_base*>(new Expression_constant(c)) {}
 MP_expression::MP_expression(const VariableRef &v) : 
 Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) {} 
 
-//MP_expression::MP_expression(const RandomDataRef &r) :
-//Handle<MP_expression_base*>(const_cast<RandomDataRef*>(&r)) {}
+MP_expression::MP_expression(const RandomConstant &r) :
+Handle<MP_expression_base*>(new Expression_random_constant(r)) {}
 
 
 //bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {
@@ -392,23 +448,23 @@ void MP::VariableBoundsFunctor::operator()() const {
  //Generate Coefficient for random bounds only.. we have to take a look at the variables bounds
     //TODO: Evaluate lower limit and upper limit for every scenario, IF they contain a RandomVariable (that is a stage dependent random variable..)
     //if (var->V->lowerLimit)
-    std::vector<double> scenarioValues;
-    if (var->V->lowerLimit->getStage()){ //
-        scenarioValues.clear();
-        for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
-            scenarioValues.push_back(var->V->lowerLimit->evaluate(i));
-        }
-        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,var->V->lowerLimit->evaluate(outOfBound),var->getStage(),var->V->lowerLimit->getStage(),scenarioValues));
-        Coefs[temp->randomStage].push_back(temp);
-    }
-    if (var->V->upperLimit->getStage()){ //
-        scenarioValues.clear();
-        for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
-            scenarioValues.push_back(var->V->upperLimit->evaluate(i));
-        }
-        boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,var->V->upperLimit->evaluate(outOfBound),var->getStage(),var->V->upperLimit->getStage(),scenarioValues));
-        Coefs[temp->randomStage].push_back(temp);
-    }
+    //std::vector<double> scenarioValues;
+    //if (var->V->lowerLimit->getStage()){ //
+    //    scenarioValues.clear();
+    //    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+    //        scenarioValues.push_back(var->V->lowerLimit.evaluate(i));
+    //    }
+    //    boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,var->V->lowerLimit.evaluate(outOfBound),var->getStage(),var->V->lowerLimit.getStage(),scenarioValues));
+    //    Coefs[temp->randomStage].push_back(temp);
+    //}
+    //if (var->V->upperLimit->getStage()){ //
+    //    scenarioValues.clear();
+    //    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+    //        scenarioValues.push_back(var->V->upperLimit.evaluate(i));
+    //    }
+    //    boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,var->V->upperLimit.evaluate(outOfBound),var->getStage(),var->V->upperLimit.getStage(),scenarioValues));
+    //    Coefs[temp->randomStage].push_back(temp);
+    //}
 }
 
 //This Function adds a coefficient to the Coefs Array

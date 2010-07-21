@@ -159,14 +159,16 @@ namespace flopc {
     TEST_F(MP_modelTest,SimpleTestThatHasToBeRenamed){
         MP_model testModel(new OsiClpSolverInterface());
         MP_data a;
+        MP_random_data b;
         a() = 10;
 
         MP_variable x;
         MP_variable y;
 
-        MP_constraint firstConstraint,secondConstraint;
+        MP_constraint firstConstraint,secondConstraint,thirdConstraint;
         firstConstraint() = a()*x() <= 20;
         secondConstraint() = y()*x() <= 10;
+        thirdConstraint() = b()*x() <= y();
         testModel.setObjective(x());
         testModel.solve(MP_model::MAXIMIZE);
     }
@@ -708,8 +710,8 @@ namespace flopc {
         MP_constraint con2(T);
         con1(T) = x(T) <= var(T);
         con2(T) = y(T) >= var(T);
-        y.lowerLimit(T) = var(T);
-        x.lowerLimit(T) = var(T); //Set different lower limits
+        y.lowerLimit = var(T);
+        x.lowerLimit = var(T); //Set different lower limits
         MP_expression objective;
         objective = x(T+1);
         testModel2.setObjective(objective);
@@ -1020,7 +1022,7 @@ namespace flopc {
         MP_random_data rvar(&scenarios[0][0],T);
         MP_variable x;
         MP_variable y(T);
-        y.lowerLimit = 1;
+        y.lowerLimit = Constant(1);
         MP_constraint constraint1(T),constraint2;
         MP_data testData(&testValues[0],T);
         MP_random_data combinedData(T);
@@ -1154,7 +1156,7 @@ namespace flopc {
 
         MP_model m1(new OsiCbcSolverInterface), m2(new OsiCbcSolverInterface);
 
-        y.upperLimit(j,h) = deltb(j,h);
+        y.upperLimit = deltb(j,h);
 
         //y.upperLimit.display("y upper");
 
@@ -1175,7 +1177,7 @@ namespace flopc {
         x.display("x");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
-        y.upperLimit = m2->getInfinity();
+        y.upperLimit = Constant(m2->getInfinity());
 
         m2.minimize(oc() + bc());
 

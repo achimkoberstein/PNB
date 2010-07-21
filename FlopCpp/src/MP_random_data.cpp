@@ -225,10 +225,10 @@ namespace flopc{
         }
 
 
-
+        
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
         MP_index_exp i1,i2,i3,i4,i5;
-        Constant c; //This constant gets set by corresponding RandomDataRef
+        RandomConstant c;
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
         std::vector<boost::shared_ptr<RandomDataRef> > myrefs;
@@ -425,9 +425,7 @@ namespace flopc{
         const MP_index_exp& i3,
         const MP_index_exp& i4,
         const MP_index_exp& i5) :
-    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c),visited(false) {
-
-    }
+    RV(rv),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),C(rv->c),visited(false) {}
 
     RandomDataRef::RandomDataRef( const RandomDataRef& ref)
         :
@@ -442,22 +440,23 @@ namespace flopc{
         visited(ref.visited)
     {}
 
-    //    const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
-    //    //TODO: Delete current values of this RandomDataRef.. 
-    //    // Set Constant to RV
-    //    RV->c = c;
-    //    //((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
+    const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
+        return operator=(c);
+    }
+
+    //const RandomDataRef& RandomDataRef::operator=(const RandomConstant& c) {
+    //    RV->c = RandomConstant(c);
     //    // We need to update all index expression to point to the index expression used in this RandomDataRef..
     //    // We really need to update ..
-    //    return *this;
+    //    return operator=(RandomConstant(c));
     //}
 
-    //const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
-    //    //Check for assignment to self
-    //    if (this == &r)
-    //        return *this;
-    //    return operator=(Constant(r)); //TODO: Do not do this, it is evil..
-    //}
+    const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
+        //Check for assignment to self
+        if (this == &r)
+            return *this;
+        return operator=(RandomConstant(r)); //TODO: Do not do this, it is evil..
+    }
 
     RandomVariable* RandomDataRef::getRandomVariable(int index) const
     {   //If index has default value of outOfBound we return the RV in the "normal" way: By evaluating the indices
