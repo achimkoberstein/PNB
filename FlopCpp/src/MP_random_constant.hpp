@@ -40,6 +40,7 @@ namespace flopc {
         virtual double evaluate(int scenario = getZero) const = 0; //get value of RandomConstant (must be double)
         virtual int getStage() const = 0;
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const = 0;
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5) = 0;
 
 
     protected:
@@ -70,7 +71,7 @@ namespace flopc {
         friend class MP_random_data_impl;
     public:
 
-        RandomDataRef(MP_random_data_impl * const, 
+        RandomDataRef(MP_random_data_impl * const rv, 
             const MP_index_exp& i1,
             const MP_index_exp& i2,
             const MP_index_exp& i3,
@@ -109,7 +110,7 @@ private:
 
         MP_random_data_impl* const RV;
         //const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        mutable MP_index_exp I1,I2,I3,I4,I5;
+        const MP_index_exp I1,I2,I3,I4,I5;
         MP_boolean B;
         mutable bool visited;
 

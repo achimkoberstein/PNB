@@ -148,7 +148,6 @@ namespace flopc{
         //initialize data members 
         void initialize(); 
 
-
         virtual void operator()() const;
 
         RandomVariable*& operator()(int lcli1, int lcli2=0, int lcli3=0, int lcli4=0, int lcli5=0)  { 
@@ -180,7 +179,8 @@ namespace flopc{
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
-                i1 = d1; i2 = d2; i3 = d3; i4 = d4; i5 = d5;
+                //i1 = d1; i2 = d2; i3 = d3; i4 = d4; i5 = d5;
+                // What can we do? Store the correct indices for every RandomDataRef and refer to these?
                 //myrefs.push_back(tempPtr);
                 return *tempPtr; 
         }
@@ -225,7 +225,6 @@ namespace flopc{
                 stage = 4;
             else //As long as we only support recourse formulations, we need to adress a stage to a RV
                 throw invalid_argument_exception();
-
         }
 
 
@@ -282,12 +281,11 @@ namespace flopc{
         if (values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
             i4->evaluate(),i5->evaluate())] != NULL){
                 for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
-                    std::cout << " Sc." << i << ": " << values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
-                    i4->evaluate(),i5->evaluate())]->getSampledValue(i) << " ";
+                    std::cout << " Sc." << i << ": " << values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(), i4->evaluate(),i5->evaluate())]->getSampledValue(i) << " ";
                 std::cout << std::endl;
 
         }
-        else {
+        else if (c.isDefined()){ // There is no variable at this point, so we can skip it.
             for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
                 std::cout << " Sc." << i << ": " << c->evaluate(i) << " "; 
             std::cout << std::endl;
@@ -302,7 +300,7 @@ namespace flopc{
     void MP_random_data_impl::initialize() //TODO: How to do that in a better way? Think about that..
     {
         for (int i = 0; i < size(); i++)
-            values[i] = 0;
+            values[i] = NULL;
     }
 
 
@@ -488,19 +486,27 @@ namespace flopc{
 
     int RandomDataRef::getStage() const
     {	//We do not know which of these sets is the stage set, so we have to check all (but could abort after we found one)
-        int i1 = RV->S1.checkStage(I1->evaluate());
-        int i2 = RV->S2.checkStage(I2->evaluate());
-        int i3 = RV->S3.checkStage(I3->evaluate());
-        int i4 = RV->S4.checkStage(I4->evaluate());
-        int i5 = RV->S5.checkStage(I5->evaluate());
+        switch (RV->stage){
+            case 0 : return I1->evaluate();
+            case 1 : return I2->evaluate();
+            case 2 : return I3->evaluate();
+            case 3 : return I4->evaluate();
+            case 4 : return I5->evaluate();
+            default: invalid_argument_exception();
+        }
+        //int i1 = RV->S1.checkStage(I1->evaluate());
+        //int i2 = RV->S2.checkStage(I2->evaluate());
+        //int i3 = RV->S3.checkStage(I3->evaluate());
+        //int i4 = RV->S4.checkStage(I4->evaluate());
+        //int i5 = RV->S5.checkStage(I5->evaluate());
 
-        int stage = 0; //Set stage to the correct value. Only one int should be larger than 0.
-        if (i1>stage) stage = i1;
-        else if (i2>stage) stage = i2;
-        else if (i3>stage) stage = i3;
-        else if (i4>stage) stage = i4;
-        else if (i5>stage) stage = i5;
-        return stage;
+        //int stage = 0; //Set stage to the correct value. Only one int should be larger than 0.
+        //if (i1>stage) stage = i1;
+        //else if (i2>stage) stage = i2;
+        //else if (i3>stage) stage = i3;
+        //else if (i4>stage) stage = i4;
+        //else if (i5>stage) stage = i5;
+        //return stage;
     }
 
 
@@ -514,6 +520,7 @@ namespace flopc{
             }
         }
         if (!containsRandomVariable) { //We do not have a random variable in this RandomDataRef, so call insert on Constant. This is exclusive-or.
+            RV->c->insertRandomVariables(v);
             // TODO: Break recursion..
             if (visited == true) //We already visited this variable.. this means we have a recursion.
                 return;
@@ -527,7 +534,6 @@ namespace flopc{
     {
         //If scenario is outOfBound this call happens in case we are not aware of scenarios: Coefficient generation: getValue
         // We can set Expected Value here, as otherwise we would have a propagated scenario index.
-
         //Check for sanity of indices
         int i1 = RV->S1.check(I1->evaluate());
         int i2 = RV->S2.check(I2->evaluate());
@@ -542,7 +548,6 @@ namespace flopc{
         } else {
             if (RV->values[i] != 0) // MP_random_data is a random variable
                 // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
-                // getMeanValue() is called for RandomVariable, not ScenarioRandomVariable
                 return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
                 if (!RV->c.isDefined())
@@ -890,6 +895,7 @@ namespace flopc{
 
     const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
     { //TODO: What about bool, B, index_exp ?
+        // We have to propagate the Indices stored within the DataRefs or RandomDataRefs to update the corresponding indices
         RV->c = c;
         return *this;
     }
@@ -906,15 +912,15 @@ namespace flopc{
     { // Ist das so sinnvoll? Normalerweise eher weniger.. aber für den Einzelfall geeignet
         if (RV->c.isDefined())
             throw not_implemented_error(); //UseCase: We already have a Constant, this should not be the case..
-        RV->operator()( (int)RV->i1->evaluate(),(int)RV->i2->evaluate(),(int)RV->i3->evaluate(),(int)RV->i4->evaluate(),(int)RV->i5->evaluate() ) = c; 
+        RV->operator()( I1->evaluate(),(int)I2->evaluate(),I3->evaluate(),(int)I4->evaluate(),(int)I5->evaluate() ) = c; 
         // Set correct stage for variable.
         //Set stage to correct value
         switch (RV->stage){
-            case 0: c->Stage((int)RV->i1->evaluate() ); break;
-            case 1: c->Stage((int)RV->i2->evaluate() ); break;
-            case 2: c->Stage((int)RV->i3->evaluate() ); break;
-            case 3: c->Stage((int)RV->i4->evaluate() ); break;
-            case 4: c->Stage((int)RV->i5->evaluate() ); break;
+            case 0: c->Stage((int)I1->evaluate() ); break;
+            case 1: c->Stage((int)I2->evaluate() ); break;
+            case 2: c->Stage((int)I3->evaluate() ); break;
+            case 3: c->Stage((int)I4->evaluate() ); break;
+            case 4: c->Stage((int)I5->evaluate() ); break;
         }
         return *this;
     }

@@ -474,47 +474,35 @@ void MP::GenerateFunctor::operator()() const {
     double sideOfConstraint = M; //LHS (=1) or RHS (=-1)?
     int stage = 0;
     std::vector<double> scenarioValues;
-    //TODO: Remove this, debugging only
-    //if (multiplicators.size() > 1){
-    //    cout << multiplicators.size() << endl;
-    //    cout << "test multiplicator" <<endl;
-    //}
     RandomVariable* ptrRV = 0;
     for (unsigned int i=0; i<multiplicators.size(); i++) {
-        //When is more than 1 element in the vector??
-        if (multiplicators[i]->getStage() > stage) { //TODO: There must be only one stage..
+        if (multiplicators[i]->getStage() > stage) {
             // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
-            stage = multiplicators[i]->getStage();
-            //ptrRV = multiplicators[i]->getRandomVariable();
+            stage = std::max(stage,multiplicators[i]->getStage());
+            // Copy values for every scenario to coefficient
             for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){
                 double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
                 scenarioValues.push_back(temp);
             }
-            //if (ptrRV == 0){ // current Constant does not contain a random Var, so we skip this 
-            //    //continue; //Go to next loop
-            //    throw not_implemented_error(); //TODO: Do this until problem is resolved. Problem: random_param should be able to interact with normal AML statements..
-            //}
+            // Store mean value
+            sideOfConstraint *= multiplicators[i]->getValue(outOfBound);
         }
         else {
             sideOfConstraint *= multiplicators[i]->getValue();
         }
-        
     }
-    //If ptrRV!= 0, we have a RandomVariable and not a double coefficient
-    //I still need to find out why multiplicators can be of size > 0? Maybe for rhs?
-
-    // If objective, rowNumber is -1
+    // If rowNumber is -1 after call to row_number we have an objective function coefficient
     int rowNumber = -1;
     if (R != 0) { //If we are at a normal constraint get correct rowNumber
         rowNumber = R->row_number();
     }
     if (rowNumber != outOfBound) { //C 
         assert(C != 0);
-        int colNumber = C->getColumn(); //Get Column number.
+        int colNumber = C->getColumn(); //Get Column number. -1 for RHS
         if ( colNumber != outOfBound  ) {
             double val = sideOfConstraint*C->getValue(outOfBound); //Get Value of Coefficient. In case of RV get mean value.
             // Set variable stage.
-            int varStage = C->getStage();
+            int varStage = C->getStage(); //equal to 0 for constant value
             //Now comes the fun part: If varStage > stage this means one of two things:
             //1: VariableRef with fixed Coefficient
             //2: We added a RandomVariable without a variable
@@ -523,12 +511,11 @@ void MP::GenerateFunctor::operator()() const {
             if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
                 stage = varStage;
                 //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
-                const Expression_constant* ePtr = dynamic_cast<const Expression_constant*> (C);
+                const Expression_random_constant* ePtr = dynamic_cast<const Expression_random_constant*> (C);
                 if (ePtr != 0)
                     for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
-
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
            
