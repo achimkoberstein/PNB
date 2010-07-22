@@ -17,6 +17,7 @@
 
 #include "MP_expression.hpp"
 #include "MP_constraint.hpp"
+#include "MP_random_data.hpp"
 
 
 using std::vector;
@@ -52,11 +53,11 @@ namespace flopc {
         virtual void logMessage(int level, const char * const msg);
         friend class MP_model;
     private:
-    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const {}
-    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const {}
-    virtual void solutionStatus(const OsiSolverInterface* Solver) {}
-    virtual void statistics(int bm, int m, int bn, int n, int nz) {}
-    virtual void generationTime(double t) {}
+    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
+    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
+    virtual void solutionStatus(const OsiSolverInterface* Solver);
+    virtual void statistics(int bm, int m, int bn, int n, int nz);
+    virtual void generationTime(double t);
     protected:
         virtual ~Messenger() {}
     };

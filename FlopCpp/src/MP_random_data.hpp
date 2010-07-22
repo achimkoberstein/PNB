@@ -2,16 +2,16 @@
 #define _MP_random_data_hpp_
 
 #include <vector>
-#include <set>
 #include <map>
 
 #include <boost/shared_ptr.hpp>
-#include <CoinSmartPtr.hpp>
 #include <boost/utility.hpp>
 
+#include "MP_expression.hpp"
 #include "MP_data.hpp"
 #include "MP_index.hpp"
 #include "MP_set.hpp"
+#include "MP_domain.hpp"
 #include "MP_utilities.hpp"
 
 //TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
@@ -21,52 +21,7 @@ namespace flopc{
 
     //Forward declaration
     class MP_random_data_impl;
-
-    class RandomDataRef : public Constant_base,public Functor, public Coin::ReferencedObject { //Are we really a constant_base object?
-        friend class MP_random_data_impl;
-    public:
-
-        RandomDataRef(boost::shared_ptr<MP_random_data_impl> rv, 
-            const MP_index_exp& i1,
-            const MP_index_exp& i2,
-            const MP_index_exp& i3,
-            const MP_index_exp& i4,
-            const MP_index_exp& i5);
-
-
-        ~RandomDataRef() {} 
-        RandomDataRef& such_that(const MP_boolean& b);
-
-        //Get Value via current settings for MP_index_exp
-        virtual double evaluate(int scenario) const;
-        virtual int getStage() const;
-        virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
-        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
-        virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
-        IndexKeeper getIndices(int k) const;
-
-        //Assignment-operators (Not yet defined..)
-        const RandomDataRef& operator=(const RandomDataRef& r); 
-        const RandomDataRef& operator=(const Constant& c);
-
-        //Copy Constructor (needed in initialization of Constant_random_variable
-        RandomDataRef(const RandomDataRef&);
-
-        //Set value via current MP_index_exp 
-        //void evaluate_lhs(const RandomVariable &v) const;
-        virtual void operator()() const;
-
-
-    private:
-        boost::shared_ptr<MP_random_data_impl> RV;
-        //const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        mutable MP_index_exp I1,I2,I3,I4,I5;
-        Constant C;
-        MP_boolean B;
-        mutable bool visited;
-        
-    };
-    
+    class RandomDataRef;    
 
     //Class that defines a concrete RandomVariable 
     class RandomVariable : boost::noncopyable {
