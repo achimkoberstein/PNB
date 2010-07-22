@@ -1186,7 +1186,7 @@ namespace flopc {
         x.display("x");
 
         m2.add(ab).add(yd).add(bd).add(bcd2).add(ocd);
-        y.upperLimit() = m2->getInfinity();
+        y.upperLimit(j,h) = m2->getInfinity();
 
         m2.minimize(oc() + bc());
 
@@ -1196,10 +1196,11 @@ namespace flopc {
 
         // Optimal objective value m1: 1566.04218913
         // Optimal objective value m2: 1566.04218913 (like m1)
-        assert(m2->getObjValue()>=1566.03 && m2->getObjValue()<=1566.05);
+        EXPECT_GE(m2->getObjValue(),1566.03);
+        EXPECT_LE(m2->getObjValue(),1566.05);
 
-        EXPECT_DOUBLE_EQ( 1566.04218913,m2->getObjValue());
-        EXPECT_DOUBLE_EQ( 1566.04218913,m1->getObjValue());
+        EXPECT_DOUBLE_EQ( 1566.042189132706,m2->getObjValue());
+        EXPECT_DOUBLE_EQ( 1566.0421891327067,m1->getObjValue());
         y.display("y second model");
     }
 
