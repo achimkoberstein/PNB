@@ -711,8 +711,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 if (colIndirection[(*i)->offset+k] == outOfBound)
                     continue; //go to next round, we have empty variable here
                 //Update Index expressions for evaluation TODO
-                //(*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                //(*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //(*i)->lowerLimit->propagateIndexExpressions(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //(*i)->upperLimit->propagateIndexExpressions(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 //Evaluate values to mean value in case of stochastic and to real value in case of normal bounds
                 //TODO: Reenstate lower/upperbounds
                 //l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate(outOfBound);
@@ -726,8 +726,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             }
             else {
                 //Update Index expressions for evaluation TODO
-                //(*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                //(*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //(*i)->lowerLimit->propagateIndexExpressions(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
+                //(*i)->upperLimit->propagateIndexExpressions(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 // TODO: Reenable upper/lower bounds
                 //l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
                 //u[(*i)->offset+k] = (*i)->upperLimit->evaluate();

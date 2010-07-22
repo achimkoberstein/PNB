@@ -21,7 +21,7 @@ namespace flopc {
     private:
 
         virtual double evaluate(int scenario) const {
-            return fabs(C->evaluate());
+            return C->evaluate();
         }
         virtual int getStage() const {
             return 0; //Constants alway have stage 0
@@ -30,7 +30,7 @@ namespace flopc {
 
         }
         virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
-           /* C->propagateIndexExpressions(i1,i2,i3,i4,i5);*/
+           C->propagateIndexExpressions(i1,i2,i3,i4,i5);
         }
         Constant C;
     };
@@ -372,8 +372,8 @@ namespace flopc {
             d.forall(MF);
             return MF.the_max;
         }
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    exp->propagateIndexExpression(d1,d2,d3,d4,d5);
+        //virtual void propagateIndexExpressions(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
+        //    exp->propagateIndexExpressions(d1,d2,d3,d4,d5);
         //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             exp->insertRandomVariables(v);
