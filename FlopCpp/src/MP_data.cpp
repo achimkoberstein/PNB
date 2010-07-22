@@ -134,7 +134,7 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
 
 }
 
-    void DataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const{
+    void DataRef::propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
         I1 = i1;
         I2 = i2;
         I3 = i3;
@@ -142,6 +142,5 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
         I5 = i5;
     }
 
- void DataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-    }  
+
 

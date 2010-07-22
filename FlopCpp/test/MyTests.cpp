@@ -1033,20 +1033,20 @@ namespace flopc {
         MP_variable x;
         MP_variable y(T);
         y.lowerLimit(T) = 1;
-        MP_constraint constraint1(T),constraint2;
+        MP_constraint constraint1(T),constraint2(T);
         MP_data testData(&testValues[0],T);
         MP_random_data combinedData(T);
         combinedData(T) = testData(T)*rvar(T); // Necessitates an update for index expressions? Indices on the right hand side should store the same index as item on the left hand side, so if left hand side item changes, all other indices change too. This necessitates an index update mechanism, so that they are linked. => Indices need to be stored as pointers. 
         constraint1(T+1) = x()-y(T+1)*combinedData(T+1) >= 7;
         // This Constraint does not hold for all recourse variables (aka global constraint), but for each scenario individually.
-        //constraint2() = sum(T,y(T)) <= 20;
+        constraint2(T) = y(T) >= 20;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
         //TODO: We need to test the results, as otherwise this test is meaningless
         //EXPECT_EQ(1,testModel2.RandomVariables.size());
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
-        EXPECT_EQ(34,testModel2->getObjValue());
+        EXPECT_EQ(547,testModel2->getObjValue());
     }
 
     TEST_F(MP_modelTest,InvalidArgumentTest){
@@ -1198,7 +1198,6 @@ namespace flopc {
         // Optimal objective value m2: 1566.04218913 (like m1)
         assert(m2->getObjValue()>=1566.03 && m2->getObjValue()<=1566.05);
 
-        CoinRelFltEq eq;
         EXPECT_DOUBLE_EQ( 1566.04218913,m2->getObjValue());
         EXPECT_DOUBLE_EQ( 1566.04218913,m1->getObjValue());
         y.display("y second model");

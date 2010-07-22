@@ -31,6 +31,9 @@ namespace flopc {
         virtual int getStage() const { //get Stage. If no stochastic variables are present, i.e. no MP_stage defined and assigned, return 0.
             return 0;
         }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5) = 0;
+
+
 
     
     protected:

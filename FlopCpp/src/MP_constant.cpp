@@ -20,13 +20,8 @@ namespace flopc {
         virtual double evaluate(int scenario) const {
             return I->evaluate(); 
         }
-        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        }
-        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-
-
-        }  
-
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+        }        
         const MP_index_exp I;
     };
 
@@ -40,9 +35,8 @@ namespace flopc {
         int getStage() const {
             return 0;
         }
-        virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-
-        }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+        } 
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
 
 
@@ -60,6 +54,9 @@ namespace flopc {
         virtual int getStage() const {
             return C->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        } 
 
         Constant C;
     };
@@ -82,6 +79,9 @@ namespace flopc {
         int getStage() const {
             return C->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        } 
         Constant C;
     };
     Constant pos(const Constant& c) {
@@ -98,6 +98,9 @@ namespace flopc {
         virtual int getStage() const {
             return C->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        } 
 
         Constant C;
     };
@@ -115,6 +118,9 @@ namespace flopc {
         virtual int getStage() const {
             return C->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        } 
 
         Constant C;
     };
@@ -128,6 +134,10 @@ namespace flopc {
         int getStage() const {
             return std::max(left->getStage(),right->getStage());
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            left->propagateIndexExpressions(i1,i2,i3,i4,i5);
+             right->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        } 
 
         Constant left, right;
     };
@@ -220,6 +230,9 @@ namespace flopc {
         virtual int getStage() const {
             return left->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            left->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
 
         Constant left;
     };
@@ -304,6 +317,9 @@ namespace flopc {
         virtual int getStage() const{
             return exp->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         class MaxFunctor : public Functor {
         public:
             MaxFunctor(Constant exp) : C(exp), the_max(DBL_MIN),scenario(-1) {}
@@ -341,6 +357,9 @@ namespace flopc {
         virtual int getStage() const{
             return exp->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
 
 
         MP_domain d;
@@ -365,6 +384,9 @@ namespace flopc {
         virtual int getStage() const {
             return exp->getStage();
         }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
 
 
         MP_domain d;
@@ -388,6 +410,9 @@ namespace flopc {
         }
         virtual int getStage() const {
             return exp->getStage();
+        }
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
         }
 
 
