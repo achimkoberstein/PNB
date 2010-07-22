@@ -1174,7 +1174,8 @@ namespace flopc {
         assert(m1->getNumRows()==11);
         assert(m1->getNumCols()==47);
         assert(m1->getNumElements()==96);
-        assert(m1->getObjValue()>=1566.03 && m1->getObjValue()<=1566.05);
+        EXPECT_GE(m1->getObjValue(),1566.03);
+        EXPECT_LE(m1->getObjValue(),1566.05);
 
         y.display("y first model");
         ab.display("ab");
@@ -1198,8 +1199,8 @@ namespace flopc {
         assert(m2->getObjValue()>=1566.03 && m2->getObjValue()<=1566.05);
 
         CoinRelFltEq eq;
-        assert( eq(m2->getObjValue(),1566.04218913) );
-        assert( eq(m1->getObjValue(),1566.04218913) );
+        EXPECT_DOUBLE_EQ( 1566.04218913,m2->getObjValue());
+        EXPECT_DOUBLE_EQ( 1566.04218913,m1->getObjValue());
         y.display("y second model");
     }
 
