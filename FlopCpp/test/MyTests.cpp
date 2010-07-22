@@ -596,21 +596,22 @@ namespace flopc {
 
     TEST_F(RandomVariableTest,ScenarioRandomVariableConstructionTest2){
         MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(2);
         //Create RV via double array. 
         MP_set autos(4); //We have a set with elements 0 to 3
         enum {numScen = 3};
         MP_scenario_set scen(numScen);
-        double rvArr[4][numScen] = { {1,2,3},{4,5,6},{7,8,9},{10,11,12} };
-        MP_random_data rvar1;
-        MP_random_data rvar2(&rvArr[0][0],autos);
+        double rvArr[1][4][numScen] = {{ {1,2,3},{4,5,6},{7,8,9},{10,11,12} }};
+        ASSERT_THROW(MP_random_data rvar1,invalid_argument_exception);
+        MP_random_data rvar2(&rvArr[0][0][0],T,autos);
         //Expect invalid argument exception
         //EXPECT_THROW(MP_random_data rvar2(&rvArr[0][0],autos),invalid_argument_exception);
-        EXPECT_DOUBLE_EQ(rvArr[0][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(0) );
-        EXPECT_DOUBLE_EQ(rvArr[0][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(1) );
-        EXPECT_DOUBLE_EQ(rvArr[0][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(0)) )->getSampledValue(2) );
-        EXPECT_DOUBLE_EQ(rvArr[3][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(0) );
-        EXPECT_DOUBLE_EQ(rvArr[3][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(1) );
-        EXPECT_DOUBLE_EQ(rvArr[3][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(3)) )->getSampledValue(2) );
+        EXPECT_DOUBLE_EQ(rvArr[0][0][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(1,0)) )->getSampledValue(0) );
+        EXPECT_DOUBLE_EQ(rvArr[0][0][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(1,0)) )->getSampledValue(1) );
+        EXPECT_DOUBLE_EQ(rvArr[0][0][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(1,0)) )->getSampledValue(2) );
+        EXPECT_DOUBLE_EQ(rvArr[0][3][0], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(1,3)) )->getSampledValue(0) );
+        EXPECT_DOUBLE_EQ(rvArr[0][3][1], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(1,3)) )->getSampledValue(1) );
+        EXPECT_DOUBLE_EQ(rvArr[0][3][2], ( dynamic_cast<ScenarioRandomVariable* > (rvar2(1,3)) )->getSampledValue(2) );
     }
 
     // Compile only check: Uncomment to detect ill-formed programs
@@ -828,17 +829,17 @@ namespace flopc {
         MP_stage T(2);
         MP_set cars(numCars);
         MP_set trains(numTrains);
-        MP_random_data vars(cars,T); //Initialize RV with set
+        MP_random_data vars(T,cars); //Initialize RV with set
         DiscreteUniformRandomVariable *x,*y,*z;
         x = new DiscreteUniformRandomVariable();
         y = new DiscreteUniformRandomVariable();
         z = new DiscreteUniformRandomVariable();
-        vars(BMW,1) = x; 
-        vars(Audi,1) = y;
-        vars(Ford,1) = z;
+        vars(1,BMW) = x; 
+        vars(1,Audi) = y;
+        vars(1,Ford) = z;
         //Stage setting is not yet supported, TODO
         MP_variable test(cars,trains);
-        RandomVariable* varsArr[1][3] = {{ new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable(),new DiscreteUniformRandomVariable() }}; //Initialize RV with Array of RV
+        RandomVariable* varsArr[1][3] = {{ new DiscreteUniformRandomVariable(0,2,1),new DiscreteUniformRandomVariable(0,3,1),new DiscreteUniformRandomVariable(0,4,1) }}; //Initialize RV with Array of RV
         // Need to delete Array as RV does not take ownership..
         // Maybe store boost::shared_ptr<> to RV?
         // Then the values assigned to the RV get managed by the RV and released too
@@ -849,7 +850,7 @@ namespace flopc {
         EXPECT_EQ(varsArr[0][1],vars2(1,1));
         EXPECT_EQ(varsArr[0][2],vars2(1,2));
         MP_constraint constraint1(trains,T);
-        constraint1(trains,T+1) = sum(cars,test(cars,trains)) <= sum(cars,vars2(cars,T+1));
+        constraint1(trains,T+1) = sum(cars,test(cars,trains)) <= sum(cars,vars2(T+1,cars));
         testModel.setObjective( sum(cars*trains,test(cars,trains)) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
@@ -859,9 +860,10 @@ namespace flopc {
     //RandomVariable Sampling Tests..
     TEST_F(RandomVariableTest,RandomVariableSamplingTest){
         MP_scenario_set scenSet(3);
-        double vals[4][3] = { {4, 3, 2},{2,1,5},{7,3,2},{1,5,7} };
+        MP_stage T(2);
+        double vals[1][4][3] = {{ {4, 3, 2},{2,1,5},{7,3,2},{1,5,7} }};
         MP_set testSet(4);
-        MP_random_data rVarScenario(&vals[0][0],testSet);
+        MP_random_data rVarScenario(&vals[0][0][0],T,testSet);
         //MP_random_data rVarDiscrete;
         //MP_random_data rVarContinuous;
         DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,1.0/2);
@@ -880,11 +882,11 @@ namespace flopc {
             EXPECT_GE(sampledValues[i],-2);
             EXPECT_LE(sampledValues[i],2);
         }
-        ScenarioRandomVariable* rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(0));
+        ScenarioRandomVariable* rv3 = dynamic_cast<ScenarioRandomVariable*>(rVarScenario(1,0));
         rv3->sample();
         sampledValues = rv3->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
-            EXPECT_EQ(vals[0][i],sampledValues[i]);
+            EXPECT_EQ(vals[0][0][i],sampledValues[i]);
         }
         
         ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5);
@@ -1037,7 +1039,7 @@ namespace flopc {
         combinedData(T) = testData(T)*rvar(T); // Necessitates an update for index expressions? Indices on the right hand side should store the same index as item on the left hand side, so if left hand side item changes, all other indices change too. This necessitates an index update mechanism, so that they are linked. => Indices need to be stored as pointers. 
         constraint1(T+1) = x()-y(T+1)*combinedData(T+1) >= 7;
         // This Constraint does not hold for all recourse variables (aka global constraint), but for each scenario individually.
-        constraint2() = sum(T,y(T)) <= 20;
+        //constraint2() = sum(T,y(T)) <= 20;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
@@ -1049,9 +1051,7 @@ namespace flopc {
 
     TEST_F(MP_modelTest,InvalidArgumentTest){
         MP_model testModel(new OsiClpSolverInterface()); // Without Solver
-        
-        
-        MP_random_data();
+        ASSERT_THROW(MP_random_data();,invalid_argument_exception);
 
     }
 
