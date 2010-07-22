@@ -179,9 +179,9 @@ namespace flopc{
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
-                //i1 = d1; i2 = d2; i3 = d3; i4 = d4; i5 = d5;
-                // What can we do? Store the correct indices for every RandomDataRef and refer to these?
-                //myrefs.push_back(tempPtr);
+                // The current indices must be forwarded to the stored indices in the "algebraic formula", if there is any
+                if (c.isDefined())
+                    this->c->propagateIndexExpressions(d1,d2,d3,d4,d5);
                 return *tempPtr; 
         }
 
@@ -550,8 +550,19 @@ namespace flopc{
                 // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
                 return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
-                if (!RV->c.isDefined())
-                    throw not_implemented_error();
+                if (!RV->c.isDefined()){ // We have no algebraic manipulation. This leads to two things
+                    // First: User made an error while typing the model. If this is the case we throw an invalid argument exception.
+                    // Second: User used a random parameter in the first stage, we can check for that.
+                    switch ( RV->stage){
+                        case 0: if ( i1 == 0) return 0; break;
+                        case 1: if ( i2 == 0) return 0; break;
+                        case 2: if ( i3 == 0) return 0; break;
+                        case 3: if ( i4 == 0) return 0; break;
+                        case 4: if ( i5 == 0) return 0; break;
+                        // We have either no stage defined (which throws an exception earlier) or we are not in the first stage.
+                        default : throw invalid_argument_exception();
+                    }
+                }
                 return RV->c->evaluate(scenario);
         }
     }
@@ -923,5 +934,14 @@ namespace flopc{
             case 4: c->Stage((int)I5->evaluate() ); break;
         }
         return *this;
+    }
+
+    void RandomDataRef::propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5 )
+    {
+        //TODO: We have to inspect the indices to keep correct ordering in case we mixed something up..
+        I1 = i1; I2 = i2; I3 = i3; I4 = i4; I5 = i5;
+        // Check for RandomConstant in corresponding RV..
+        if (RV->c.isDefined())
+            RV->c->propagateIndexExpressions(i1,i2,i3,i4,i5);
     }
 }

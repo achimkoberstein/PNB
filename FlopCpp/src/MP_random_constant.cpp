@@ -28,7 +28,10 @@ namespace flopc {
         }
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
 
-        }  
+        }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+           /* C->propagateIndexExpressions(i1,i2,i3,i4,i5);*/
+        }
         Constant C;
     };
 
@@ -45,7 +48,10 @@ namespace flopc {
         }
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-        }  
+        }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         RandomConstant C;
     };
     RandomConstant abs(const RandomConstant& c) {
@@ -69,7 +75,10 @@ namespace flopc {
         }
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-        }  
+        }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         RandomConstant C;
     };
     RandomConstant pos(const RandomConstant& c) {
@@ -89,6 +98,9 @@ namespace flopc {
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
         }  
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         RandomConstant C;
     };
     RandomConstant ceil(const RandomConstant& c) {
@@ -109,6 +121,9 @@ namespace flopc {
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
         }  
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            C->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         RandomConstant C;
     };
     RandomConstant floor(const RandomConstant& c) {
@@ -124,6 +139,10 @@ namespace flopc {
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             left->insertRandomVariables(v);
             right->insertRandomVariables(v);
+        }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            left->propagateIndexExpressions(i1,i2,i3,i4,i5);
+            right->propagateIndexExpressions(i1,i2,i3,i4,i5);
         }
         RandomConstant left, right;
     };
@@ -251,6 +270,9 @@ namespace flopc {
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             left->insertRandomVariables(v);
         }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            left->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         RandomConstant left;
     };
     RandomConstant operator-(const RandomConstant& a) {
@@ -359,6 +381,9 @@ namespace flopc {
         virtual int getStage() const{
             return exp->getStage();
         }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
         class MaxFunctor : public Functor {
         public:
             MaxFunctor(RandomConstant exp) : C(exp), the_max(DBL_MIN),scenario(-1) {}
@@ -396,10 +421,10 @@ namespace flopc {
         virtual int getStage() const{
             return exp->getStage();
         }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
 
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    exp->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             exp->insertRandomVariables(v);
         }
@@ -426,10 +451,10 @@ namespace flopc {
         virtual int getStage() const {
             return exp->getStage();
         }
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
 
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    exp->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             exp->insertRandomVariables(v);
         }
@@ -457,9 +482,10 @@ namespace flopc {
             return exp->getStage();
         }
 
-        //virtual void propagateIndexExpression(const MP_index_exp& d1,const MP_index_exp& d2,const MP_index_exp& d3,const MP_index_exp& d4,const MP_index_exp& d5) const{
-        //    exp->propagateIndexExpression(d1,d2,d3,d4,d5);
-        //}
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5){
+            exp->propagateIndexExpressions(i1,i2,i3,i4,i5);
+        }
+
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             exp->insertRandomVariables(v);
         }
@@ -521,5 +547,6 @@ namespace flopc {
     {
 
     }
+
 } // End of namespace flopc
 

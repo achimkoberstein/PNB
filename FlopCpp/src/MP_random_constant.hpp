@@ -86,8 +86,8 @@ namespace flopc {
         //double level() const;
         virtual int getStage() const;
         virtual double evaluate(int scenario) const;
-        //virtual void insertVariables(std::set<MP_variable*>& v) const;
         virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const;
+        virtual void propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5);
         //TODO: See if this methods is still needed
         virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
 
@@ -110,7 +110,7 @@ private:
 
         MP_random_data_impl* const RV;
         //const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        const MP_index_exp I1,I2,I3,I4,I5;
+        MP_index_exp I1,I2,I3,I4,I5;
         MP_boolean B;
         mutable bool visited;
 
