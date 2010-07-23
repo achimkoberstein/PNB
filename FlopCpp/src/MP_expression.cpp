@@ -3,6 +3,7 @@
 //****************************************************************************
 
 #include <sstream>
+#include "MP_index.hpp"
 #include "MP_expression.hpp"
 #include "MP_constant.hpp"
 #include "MP_boolean.hpp"
@@ -136,6 +137,7 @@ namespace flopc {
         friend class MP_expression;
         friend class Expression_mult;
         friend class Expression_div;
+        friend class MP;
     private:
         Expression_random_constant(const RandomConstant& c) : C(c) {}
         double level() const { 
@@ -155,6 +157,7 @@ namespace flopc {
             vector<TerminalExpression*> multiplicators,
             MP::GenerateFunctor& f,
             double m) const {
+                C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
                 f.setMultiplicator(multiplicators,m);
                 f.setTerminalExpression(this);
                 domain.forall(&f);
@@ -166,7 +169,7 @@ namespace flopc {
             C->insertRandomVariables(v);
 
         }
-        const RandomConstant C;
+        RandomConstant C;
     };
 
 
@@ -477,7 +480,10 @@ void MP::GenerateFunctor::operator()() const {
     RandomVariable* ptrRV = 0;
     for (unsigned int i=0; i<multiplicators.size(); i++) {
         if (multiplicators[i]->getStage() > stage) {
-            // If we have a stage, we are in a stochastic setting. This does not necessarily mean that every Constant is random.
+            // If we have a stage, we have a Expression_random_constant
+            // At this moment we have to ensure that correct indexation is used in the subexpressions
+            Expression_random_constant* ePtr = dynamic_cast<Expression_random_constant*>(multiplicators[i]);
+            ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = std::max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient
             for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){

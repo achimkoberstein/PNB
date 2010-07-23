@@ -135,11 +135,14 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
 }
 
     void DataRef::propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
-        I1 = i1;
-        I2 = i2;
-        I3 = i3;
-        I4 = i4;
-        I5 = i5;
+        //TODO: Test for correct assignments of indices
+        if (&i1 != &MP_index_exp::getEmpty()){ //We have no empty indices, so we can update our values
+            I1 = i1;
+            I2 = i2;
+            I3 = i3;
+            I4 = i4;
+            I5 = i5;
+        }
     }
 
 

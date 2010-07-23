@@ -180,26 +180,12 @@ namespace flopc{
             const MP_index_exp& d5) {
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
                 // The current indices must be forwarded to the stored indices in the "algebraic formula", if there is any
-                if (c.isDefined())
-                    this->c->propagateIndexExpressions(d1,d2,d3,d4,d5);
+                //if (c.isDefined())
+                //    this->c->propagateIndexExpressions(d1,d2,d3,d4,d5);
                 return *tempPtr; 
         }
 
         void display(const std::string& s, int scenario);
-
-        int getCurrentStageIndex(){
-            switch (stage)
-            {
-            case 0: return i1->evaluate(); 
-            case 1: return i1->evaluate(); 
-            case 2: return i1->evaluate(); 
-            case 3: return i1->evaluate(); 
-            case 4: return i1->evaluate();
-            default: throw invalid_argument_exception();
-            }
-        }
-
-
 
     private:
         void createRandomVariableFromIndices(double* arr,int indexForArr,int indexForValues, int scen){
@@ -230,7 +216,7 @@ namespace flopc{
 
         
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        MP_index_exp i1,i2,i3,i4,i5;
+        MP_index i1,i2,i3,i4,i5;// MP_index. Used to iterate over the sets in the display method
         RandomConstant c;
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
@@ -273,15 +259,15 @@ namespace flopc{
 
     //Implementation for MP_random_data_impl TODO: Store values to reduce computational burden
     void MP_random_data_impl::operator ()() const { //Called by display method indirectly via functor evaluation
-        if (&S1!=&MP_set::getEmpty()) cout << i1->evaluate() << " ";
-        if (&S2!=&MP_set::getEmpty()) cout << i2->evaluate() << " ";
-        if (&S3!=&MP_set::getEmpty()) cout << i3->evaluate() << " ";
-        if (&S4!=&MP_set::getEmpty()) cout << i4->evaluate() << " ";
-        if (&S5!=&MP_set::getEmpty()) cout << i5->evaluate() << " ";
-        if (values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
-            i4->evaluate(),i5->evaluate())] != NULL){
+        if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
+        if (&S2!=&MP_set::getEmpty()) cout << i2.evaluate() << " ";
+        if (&S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
+        if (&S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
+        if (&S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
+        if (values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
+            i4.evaluate(),i5.evaluate())] != NULL){
                 for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
-                    std::cout << " Sc." << i << ": " << values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(), i4->evaluate(),i5->evaluate())]->getSampledValue(i) << " ";
+                    std::cout << " Sc." << i << ": " << values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(), i4.evaluate(),i5.evaluate())]->getSampledValue(i) << " ";
                 std::cout << std::endl;
 
         }
@@ -590,8 +576,6 @@ namespace flopc{
 
     void ScenarioRandomVariable::sample(int howMany) 
     {
-        //Apply the constant values to every element.
-
     }
 
     double ScenarioRandomVariable::getMeanValue() const {
@@ -718,7 +702,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::geometric_distribution<> distr_type;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(variateGen());
         }
     }
@@ -746,7 +730,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::bernoulli_distribution<> distr_type;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(variateGen());
         }
     }
@@ -781,7 +765,7 @@ namespace flopc{
         typedef boost::uniform_real<> distr_type;
         double domainSize = end-start;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(start+variateGen());
         }
     }
@@ -810,7 +794,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::lognormal_distribution<> distr_type;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(variateGen());
         }
     }
@@ -838,7 +822,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::normal_distribution<> distr_type;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(variateGen());
         }
     }
@@ -866,7 +850,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::exponential_distribution<> distr_type;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(lambda));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(variateGen());
         }
     }
@@ -894,7 +878,7 @@ namespace flopc{
         // Typedef to ease use and allow copy code ;)
         typedef boost::triangle_distribution<> distr_type;
         boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(a,b,c));
-        for (int i = 0; i < howMany; ++i){
+        for (int i = 0; i < defaultSampleSize; ++i){
             values.push_back(variateGen());
         }
     }
@@ -939,9 +923,20 @@ namespace flopc{
     void RandomDataRef::propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5 )
     {
         //TODO: We have to inspect the indices to keep correct ordering in case we mixed something up..
-        I1 = i1; I2 = i2; I3 = i3; I4 = i4; I5 = i5;
-        // Check for RandomConstant in corresponding RV..
-        if (RV->c.isDefined())
-            RV->c->propagateIndexExpressions(i1,i2,i3,i4,i5);
+                // If we are asked to propagate IndexExpressions with EmptyIndices, we propagate our stored indices
+        if (RV->c.isDefined()){
+            if (&i1 == &MP_index_exp::getEmpty()){
+                RV->c->propagateIndexExpressions(I1,I2,I3,I4,I5);
+            }
+            else {
+                RV->c->propagateIndexExpressions(i1,i2,i3,i4,i5);
+            }
+        }
+        else { // We should have RandomVariables associated with us.
+            if (&i1 != &MP_index_exp::getEmpty()){ // NO empty indices, update indices
+                I1 = i1; I2 = i2; I3 = i3; I4 = i4; I5 = i5;
+            }
+        }
+        
     }
 }

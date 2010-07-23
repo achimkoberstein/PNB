@@ -156,6 +156,39 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    TEST_F(MP_modelTest,CoefficientGeneration){
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger(),837234979);
+        // Enable stochastic elements to allow matrix printing
+        MP_stage T(3);
+        MP_random_data rVar(T);
+        //rVar(0) = new DiscreteBernoulliRandomVariable();
+        rVar(1) = new DiscreteUniformRandomVariable(-2,-1,1,1);
+        rVar(1)->Stage(1);
+        rVar(2) = new DiscreteUniformRandomVariable(1,2,1,1);
+        rVar(2)->Stage(2);
+        MP_data A(T);
+        A(0) = 15;
+        A(1) = 10;
+        A(2) = 5;
+        MP_random_data combined(T);
+        combined(T) = A(T) + rVar(T);
+        MP_variable y(T);
+        MP_constraint randomConstraint1(T),randomConstraint2(T),randomConstraint3(T);
+        randomConstraint1(T) = y(T) <= combined(T);
+        randomConstraint3(T+2) = y(T+2) <= combined(T+2)+rVar(T+1);
+        randomConstraint2(T+1) = y(T+1) <= combined(T+1);
+        testModel.setObjective(y(T.last()));
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_EQ(5,testModel.Solver->getObjValue());
+        y.display("y");
+        rVar.display("RandomVars");
+        combined.display("CombinedData");
+        
+
+    }
+
     TEST_F(MP_modelTest,SimpleTestThatHasToBeRenamed){
         MP_model testModel(new OsiClpSolverInterface());
         MP_stage T(2);
@@ -183,7 +216,7 @@ namespace flopc {
 
         MP_stage T(numStage);
 
-        RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(0,1,1,2), new DiscreteUniformRandomVariable(0,1,1,1) };
+        RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(-1,1,1,2), new DiscreteUniformRandomVariable(4,5,1,2) };
         MP_random_data randomWalkVar(&randomVars[0],T);
         MP_random_data sumR(T);
         MP_data blubb(T);
@@ -191,9 +224,8 @@ namespace flopc {
         blubb(1) = 10;
         blubb(2) = 20;
         //sumR(0) = 0;
-        //sumR(T+1) = blubb(T) + randomWalkVar(T+1);
+        sumR(T) = blubb(T) + randomWalkVar(T);
         
-
         MP_variable x(T);
         MP_variable y(T);
 
@@ -201,7 +233,7 @@ namespace flopc {
         MP_constraint thirdConstraint;
         //firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
         
-        secondConstraint(T+1) = y(T+1) == randomWalkVar(T+1) + y(T);
+        secondConstraint(T+1) = y(T+1) == sumR(T+1) + y(T);
         firstConstraint(T+1) = x(T+1) <= y(T+1);
         thirdConstraint() = y(0) <= Constant(0);
       
@@ -210,6 +242,11 @@ namespace flopc {
         MP_expression objective( x(T.last()) );
 
         testModel.setObjective(objective);
+        testModel.attach();
+        blubb.display("Blubb");
+        sumR.display("SumR");
+        randomWalkVar.display("RandomWalkVar");
+        std::cout << std::endl;
         testModel.solve(MP_model::MAXIMIZE);
         //sumR.display("RandomValues?");
         x.display("Werte");
