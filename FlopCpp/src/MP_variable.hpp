@@ -70,8 +70,6 @@ namespace flopc {
       return *myrefs.back(); //TODO: possible Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
     }
     
-    //void display(string s = "");  
-
     /// Call this method to turn the variable into a binary variable
     void binary();
 

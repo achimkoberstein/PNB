@@ -250,6 +250,7 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
         //sumR.display("RandomValues?");
         x.display("Werte");
+        sumR.display("SumR");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(35,testModel.Solver->getObjValue());
 
