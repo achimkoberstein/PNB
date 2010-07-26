@@ -216,7 +216,7 @@ namespace flopc{
 
         
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        MP_index i1,i2,i3,i4,i5;// MP_index. Used to iterate over the sets in the display method
+        mutable MP_index i1,i2,i3,i4,i5;// MP_index. Used to iterate over the sets in the display method
         RandomConstant c;
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
@@ -272,6 +272,7 @@ namespace flopc{
 
         }
         else if (c.isDefined()){ // There is no variable at this point, so we can skip it.
+            c->propagateIndexExpressions(i1,i2,i3,i4,i5);
             for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
                 std::cout << " Sc." << i << ": " << c->evaluate(i) << " "; 
             std::cout << std::endl;
@@ -280,6 +281,7 @@ namespace flopc{
 
     void MP_random_data_impl::display(const std::string& s,int scenario){
         std::cout << s << std::endl;
+        //RandomDataRef& rdr = this->operator()(const_cast<MP_set_base&>(S1),const_cast<MP_set_base&>(S2),const_cast<MP_set_base&>(S3),const_cast<MP_set_base&>(S4),const_cast<MP_set_base&>(S5));
         ((S1)(i1)*(S2)(i2)*(S3)(i3)*(S4)(i4)*(S5)(i5)).forall(this);
     }
 
