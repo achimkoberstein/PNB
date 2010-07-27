@@ -162,9 +162,9 @@ namespace flopc {
         MP_stage T(3);
         MP_random_data rVar(T);
         //rVar(0) = new DiscreteBernoulliRandomVariable();
-        rVar(1) = new DiscreteUniformRandomVariable(-2,-1,1,1);
+        rVar(1) = new DiscreteUniformRandomVariable(-2,-1,1,3);
         rVar(1)->Stage(1);
-        rVar(2) = new DiscreteUniformRandomVariable(1,2,1,1);
+        rVar(2) = new DiscreteUniformRandomVariable(1,2,1,3);
         rVar(2)->Stage(2);
         MP_data A(T);
         A(0) = 15;
@@ -185,8 +185,37 @@ namespace flopc {
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
-        
+    }
 
+    TEST_F(MP_modelTest,ExtendedCoefficientGeneration){
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger(),837234979);
+        // Enable stochastic elements to allow matrix printing
+        MP_stage T(3);
+        MP_random_data rVar(T);
+        //rVar(0) = new DiscreteBernoulliRandomVariable();
+        rVar(1) = new DiscreteUniformRandomVariable(-2,-1,1,3);
+        rVar(1)->Stage(1);
+        rVar(2) = new DiscreteUniformRandomVariable(1,2,1,3);
+        rVar(2)->Stage(2);
+        MP_data A(T);
+        A(0) = 15;
+        A(1) = 10;
+        A(2) = 5;
+        MP_random_data combined(T);
+        combined(T+1) = A(T) + rVar(T+1);
+        MP_variable y(T);
+        MP_constraint randomConstraint1(T),randomConstraint2(T),randomConstraint3(T);
+        //randomConstraint1(T) = y(T) <= combined(T);
+        //randomConstraint3(T+2) = y(T+2) <= combined(T+2)+rVar(T+1);
+        randomConstraint2(T+1) = y(T+1) <= combined(T+1);
+        testModel.setObjective(y(T.last()));
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_EQ(5,testModel.Solver->getObjValue());
+        y.display("y");
+        rVar.display("RandomVars");
+        combined.display("CombinedData");
     }
 
     TEST_F(MP_modelTest,SimpleTestThatHasToBeRenamed){

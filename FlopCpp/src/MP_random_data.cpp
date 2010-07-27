@@ -179,9 +179,6 @@ namespace flopc{
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
-                // The current indices must be forwarded to the stored indices in the "algebraic formula", if there is any
-                //if (c.isDefined())
-                //    this->c->propagateIndexExpressions(d1,d2,d3,d4,d5);
                 return *tempPtr; 
         }
 
@@ -268,15 +265,13 @@ namespace flopc{
             i4.evaluate(),i5.evaluate())] != NULL){
                 for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
                     std::cout << " Sc." << i << ": " << values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(), i4.evaluate(),i5.evaluate())]->getSampledValue(i) << " ";
-                std::cout << std::endl;
-
         }
         else if (c.isDefined()){ // There is no variable at this point, so we can skip it.
             c->propagateIndexExpressions(i1,i2,i3,i4,i5);
             for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
                 std::cout << " Sc." << i << ": " << c->evaluate(i) << " "; 
-            std::cout << std::endl;
         }
+        std::cout << std::endl;
     }
 
     void MP_random_data_impl::display(const std::string& s,int scenario){
@@ -402,6 +397,12 @@ namespace flopc{
         values.reserve(defaultSampleSize);
     }
 
+    void RandomVariable::setScenarioValuesWithProb( const std::map<double,double>& scenValues)
+    {
+        valuesMap = scenValues;
+        //TODO: Check for probability 1
+    }
+
     //flopc::RandomVariable& RandomVariable::operator=( const flopc::RandomVariable & )
     //{
     //    return *this;
@@ -428,23 +429,60 @@ namespace flopc{
         visited(ref.visited)
     {}
 
-    //const RandomDataRef& RandomDataRef::operator=(const Constant& c) {
-    //    return operator=(c);
-    //}
+     const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
+    { //TODO: What about bool, B, index_exp ?
 
-    //const RandomDataRef& RandomDataRef::operator=(const RandomConstant& c) {
-    //    RV->c = RandomConstant(c);
-    //    // We need to update all index expression to point to the index expression used in this RandomDataRef..
-    //    // We really need to update ..
-    //    return operator=(RandomConstant(c));
-    //}
+        RV->c = c;
+        return *this;
+    }
 
-    //const RandomDataRef& RandomDataRef::operator=(const RandomDataRef& r) { 
-    //    //Check for assignment to self
-    //    if (this == &r)
-    //        return *this;
-    //    return operator=(RandomConstant(r)); //TODO: Do not do this, it is evil..
-    //}
+    const RandomDataRef& RandomDataRef::operator=( const RandomDataRef& c )
+    { //TODO: What about bool, B, index_exp ?
+        if (this == &c)
+            return *this;
+        RV->c = c;
+        return *this;
+    }
+
+    const RandomDataRef& RandomDataRef::operator=( RandomVariable* c )
+    { // Ist das so sinnvoll? Normalerweise eher weniger.. aber für den Einzelfall geeignet
+        if (RV->c.isDefined())
+            throw not_implemented_error(); //UseCase: We already have a Constant, this should not be the case..
+        RV->operator()( I1->evaluate(),(int)I2->evaluate(),I3->evaluate(),(int)I4->evaluate(),(int)I5->evaluate() ) = c; 
+        // Set correct stage for variable.
+        //Set stage to correct value
+        switch (RV->stage){
+            case 0: c->Stage((int)I1->evaluate() ); break;
+            case 1: c->Stage((int)I2->evaluate() ); break;
+            case 2: c->Stage((int)I3->evaluate() ); break;
+            case 3: c->Stage((int)I4->evaluate() ); break;
+            case 4: c->Stage((int)I5->evaluate() ); break;
+        }
+        return *this;
+    }
+
+    void RandomDataRef::propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5 )
+    {
+        //TODO: We have to inspect the indices to keep correct ordering in case we mixed something up..
+        // If we are asked to propagate IndexExpressions with EmptyIndices, we propagate our stored indices
+        if (RV->c.isDefined()){ // We do not store RV, so we are more a container that holds an algebraic formula involving random data. Propagate Indices downwards.
+            if (&i1 == &MP_index_exp::getEmpty()){ // If the sets are empty
+                RV->c->propagateIndexExpressions(I1,I2,I3,I4,I5);
+            }
+            else {
+                // Replace own indices with the given ones. TODO: What is with the nested case?
+                RV->c->propagateIndexExpressions(i1,i2,i3,i4,i5);
+            }
+        }
+        else { // We should have RandomVariables associated with us.
+            if (&i1 != &MP_index_exp::getEmpty()){ // NO empty indices, update indices
+                // TODO: Take care here. We do not want to simply replace the indices but transform them.
+                //I1->insertIndice(i1,i2,i3,i4,i5);
+                I1 = i1; I2 = i2; I3 = i3; I4 = i4; I5 = i5;
+            }
+        }
+
+    }
 
     RandomVariable* RandomDataRef::getRandomVariable(int index) const
     {   //If index has default value of outOfBound we return the RV in the "normal" way: By evaluating the indices
@@ -595,38 +633,37 @@ namespace flopc{
 
     }
 
+    double ScenarioRandomVariable::pdf( double x ) const
+    {
+        //return boost::math::pdf(distribution,x);
+        return 0;
+    }
+
+    double ScenarioRandomVariable::cdf( double x ) const
+    {
+        //return boost::math::cdf(distribution,x);
+        return 0;
+    }
+
+    double ScenarioRandomVariable::quantile( double p ) const
+    {
+        //return boost::math::quantile(distribution,p);
+        return 0;
+    }
+
     ScenarioRandomVariable::~ScenarioRandomVariable()
     {
 
     }
 
-    //const ScenarioRandomVariable& ScenarioRandomVariable::operator=( const ScenarioRandomVariable& rhs )
-    //{
-    //    if( this == &rhs)
-    //        return *this;
-    //    //Copy all values
-    //    //Copy base class
-    //    DiscreteRandomVariable::operator=(rhs);
-    //    return *this;
-    //}
 
     //Implementation for ContinuousRandomVariable
 
     ContinuousRandomVariable::ContinuousRandomVariable() : RandomVariable() {}
 
-    void ContinuousRandomVariable::sample(int howMany) 
-    {
-        //call std::sort
-    }
-
-    ContinuousRandomVariable::~ContinuousRandomVariable()
+     ContinuousRandomVariable::~ContinuousRandomVariable()
     {
 
-    }
-    //Implementation for DiscreteRandomVariable
-    void DiscreteRandomVariable::sample(int howMany)
-    {
-        //call std::sort
     }
 
     DiscreteRandomVariable::DiscreteRandomVariable() : RandomVariable()
@@ -638,7 +675,7 @@ namespace flopc{
 
     }
 
-    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth, int sampleSize ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth)
+    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, double stepWidth, int sampleSize ): DiscreteRandomVariable(),start(from),end(to),step(stepWidth),distribution(from,to)
     { // Ensure correct functionality
         //TODO: Include test for stepWidth
         if (end < start){
@@ -684,6 +721,21 @@ namespace flopc{
             count++;
         }
         return sum /count;
+    }
+
+    double DiscreteUniformRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
+
+    double DiscreteUniformRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double DiscreteUniformRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
     }
 
     DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
@@ -890,55 +942,23 @@ namespace flopc{
         throw not_implemented_error();
     }
 
-    const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
-    { //TODO: What about bool, B, index_exp ?
-        // We have to propagate the Indices stored within the DataRefs or RandomDataRefs to update the corresponding indices
-        RV->c = c;
-        return *this;
-    }
 
-    const RandomDataRef& RandomDataRef::operator=( const RandomDataRef& c )
-    { //TODO: What about bool, B, index_exp ?
-        if (this == &c)
-            return *this;
-        RV->c = c;
-        return *this;
-    }
 
-    const RandomDataRef& RandomDataRef::operator=( RandomVariable* c )
-    { // Ist das so sinnvoll? Normalerweise eher weniger.. aber für den Einzelfall geeignet
-        if (RV->c.isDefined())
-            throw not_implemented_error(); //UseCase: We already have a Constant, this should not be the case..
-        RV->operator()( I1->evaluate(),(int)I2->evaluate(),I3->evaluate(),(int)I4->evaluate(),(int)I5->evaluate() ) = c; 
-        // Set correct stage for variable.
-        //Set stage to correct value
-        switch (RV->stage){
-            case 0: c->Stage((int)I1->evaluate() ); break;
-            case 1: c->Stage((int)I2->evaluate() ); break;
-            case 2: c->Stage((int)I3->evaluate() ); break;
-            case 3: c->Stage((int)I4->evaluate() ); break;
-            case 4: c->Stage((int)I5->evaluate() ); break;
-        }
-        return *this;
-    }
-
-    void RandomDataRef::propagateIndexExpressions( const MP_index_exp& i1, const MP_index_exp& i2,const MP_index_exp& i3, const MP_index_exp& i4,const MP_index_exp& i5 )
+    DiscretizationMethod::DiscretizationMethod(): rvarPtr(0)
     {
-        //TODO: We have to inspect the indices to keep correct ordering in case we mixed something up..
-                // If we are asked to propagate IndexExpressions with EmptyIndices, we propagate our stored indices
-        if (RV->c.isDefined()){
-            if (&i1 == &MP_index_exp::getEmpty()){
-                RV->c->propagateIndexExpressions(I1,I2,I3,I4,I5);
-            }
-            else {
-                RV->c->propagateIndexExpressions(i1,i2,i3,i4,i5);
-            }
-        }
-        else { // We should have RandomVariables associated with us.
-            if (&i1 != &MP_index_exp::getEmpty()){ // NO empty indices, update indices
-                I1 = i1; I2 = i2; I3 = i3; I4 = i4; I5 = i5;
-            }
-        }
-        
+    
+    }
+
+    DiscretizationMethod::~DiscretizationMethod()
+    {
+
+    }
+
+
+    // 
+    void BracketMeanDiscretization::generateDiscreteDistribution()
+    {
+        //rvarPtr
+
     }
 }
