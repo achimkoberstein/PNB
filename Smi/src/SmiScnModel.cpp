@@ -424,6 +424,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
         printf("\n Matrix printed \n");
         for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
             printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+            
         }
         printf("\n");
     }
@@ -587,7 +588,7 @@ SmiScnModel::loadOsiSolverData()
 	}
 	printf("\n Matrix printed \n");
 	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-		printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+        printf("\n%g <= %d <= %g : stage %d",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi], core_->getColStage(mi) );
 	}
 #endif
 	return osiStoch_;

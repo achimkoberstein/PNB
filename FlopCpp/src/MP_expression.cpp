@@ -157,6 +157,7 @@ namespace flopc {
             vector<TerminalExpression*> multiplicators,
             MP::GenerateFunctor& f,
             double m) const {
+                // If we generate coefficients we need correct indices, i.e. the ones stored in the RandomDataRef. Therefore empty indices should be propagated, as the function can then decide to either propagate the given indices or use the already stored indices.
                 C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
                 f.setMultiplicator(multiplicators,m);
                 f.setTerminalExpression(this);
@@ -483,6 +484,7 @@ void MP::GenerateFunctor::operator()() const {
             // If we have a stage, we have a Expression_random_constant
             // At this moment we have to ensure that correct indexation is used in the subexpressions
             Expression_random_constant* ePtr = dynamic_cast<Expression_random_constant*>(multiplicators[i]);
+            // Propagate correct indices, i.e. use the ones defined during assignment phase for MP_random_data. Therefore we have to call the function with empty indices to signal this.
             ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = std::max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient

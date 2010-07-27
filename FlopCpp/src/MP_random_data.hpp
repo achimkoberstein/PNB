@@ -6,6 +6,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
+#include <boost/math/distributions.hpp>
 
 #include "MP_expression.hpp"
 #include "MP_data.hpp"
@@ -15,13 +16,30 @@
 #include "MP_utilities.hpp"
 
 //TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
-
+using boost::math::uniform;
 
 namespace flopc{
 
     //Forward declaration
     class MP_random_data_impl;
-    class RandomDataRef;    
+    class RandomDataRef;
+    class RandomVariable;
+
+    // This class is a virtual base class
+    class DiscretizationMethod {
+    public:
+
+        DiscretizationMethod();
+        virtual ~DiscretizationMethod();
+
+        inline void setRandomVariable(RandomVariable* ptr){
+            rvarPtr = ptr;
+        }
+        virtual void generateDiscreteDistribution() = 0;
+
+    protected:
+        RandomVariable* rvarPtr;
+    };
 
     //Class that defines a concrete RandomVariable 
     class RandomVariable : boost::noncopyable {
@@ -40,9 +58,14 @@ namespace flopc{
         std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
         void setScenarioValues(const std::vector<double>&);
+        void setScenarioValuesWithProb(const std::map<double,double>&);
         double getSampledValue(int index) const;
         
         virtual double getMeanValue() const = 0; //Usually we want mean of distribution. Sample mean only for scenario/empirical distributions.
+        virtual double pdf(double x) const = 0;
+        virtual double cdf(double x) const = 0;
+        virtual double quantile(double p) const = 0;
+        //virtual double complementcdf(double x) const = 0;
 
         int Stage() const { return stage; }
         void Stage(int val) { stage = val; }
@@ -51,6 +74,9 @@ namespace flopc{
         bool isRandomVariable() const { return initialized; }
         int Seed() const { return seed; }
         void Seed(int val) { seed = val; }
+
+
+
     protected:
 
         //Boost::random number generator? Needs seed
@@ -62,6 +88,8 @@ namespace flopc{
         std::vector<double> values; //All values are equally probable
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
+        boost::shared_ptr<DiscretizationMethod> dm;
+
 
     private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
@@ -69,15 +97,20 @@ namespace flopc{
 
     };
 
+
+
+    class BracketMeanDiscretization : public DiscretizationMethod {
+    public:
+
+        void generateDiscreteDistribution();
+    };
+
+
     class DiscreteRandomVariable : public RandomVariable {
         
     public:
         DiscreteRandomVariable();
         ~DiscreteRandomVariable();
-
-        virtual void sample(int howMany = 0) = 0;
-        virtual double getMeanValue() const = 0;
-
     };
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
@@ -87,12 +120,17 @@ namespace flopc{
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const = 0;
+        virtual double cdf(double x) const = 0;
+        virtual double quantile(double p) const = 0;
 
     private:
         //Params for DiscreteUniformDistribution: [start,end] in steps of step
         int start;
         int end;
         double step;
+        uniform distribution;
+
 
     };
     
@@ -132,6 +170,11 @@ namespace flopc{
         ~ScenarioRandomVariable();
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
+
+
     };
 
     class ContinuousRandomVariable : public RandomVariable {
@@ -139,9 +182,6 @@ namespace flopc{
 
         ContinuousRandomVariable();
         ~ContinuousRandomVariable();
-
-        virtual void sample(int howMany = 0) = 0;
-        virtual double getMeanValue() const = 0;
 
     };
 
