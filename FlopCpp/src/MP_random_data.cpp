@@ -518,7 +518,7 @@ namespace flopc{
             case 2 : return I3->evaluate();
             case 3 : return I4->evaluate();
             case 4 : return I5->evaluate();
-            default: invalid_argument_exception();
+            default: throw invalid_argument_exception();
         }
         //int i1 = RV->S1.checkStage(I1->evaluate());
         //int i2 = RV->S2.checkStage(I2->evaluate());
@@ -738,7 +738,7 @@ namespace flopc{
         return boost::math::quantile(distribution,p);
     }
 
-    DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability),distribution(probability)
     { 
     
     }
@@ -766,7 +766,25 @@ namespace flopc{
         return 1.0/probability;
     }
 
-    DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability)
+    double DiscreteGeometricRandomVariable::pdf( double x ) const
+    {
+        //return boost::math::pdf(distribution,x);
+        return 0;
+    }
+
+    double DiscreteGeometricRandomVariable::cdf( double x ) const
+    {
+        //return boost::math::cdf(distribution,x);
+        return 0;
+    }
+
+    double DiscreteGeometricRandomVariable::quantile( double p ) const
+    {
+        //return boost::math::quantile(distribution,p);
+        return 0;
+    }
+
+    DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability),distribution(probability)
     { 
     
     }
@@ -793,10 +811,24 @@ namespace flopc{
     {
         return probability;
     }
+    double DiscreteBernoulliRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
+
+    double DiscreteBernoulliRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double DiscreteBernoulliRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
+    }
 
 
 
-    ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to ) : ContinuousRandomVariable(),start(from),end(to)
+    ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to ) : ContinuousRandomVariable(),start(from),end(to),distribution(from,to)
     {
         if (end < start){
             int temp = start;
@@ -828,9 +860,23 @@ namespace flopc{
     {
         return start + (end-start)/2;
     }
+    double ContinuousUniformRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
+
+    double ContinuousUniformRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double ContinuousUniformRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
+    }
 
 
-    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
     {
 
     }
@@ -857,9 +903,23 @@ namespace flopc{
     {
         return mean;
     }
+    double ContinuousLogNormalRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
+
+    double ContinuousLogNormalRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double ContinuousLogNormalRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
+    }
 
     
-    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma)
+    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
     {
 
     }
@@ -885,8 +945,22 @@ namespace flopc{
     {
         return mean;
     }
+    double ContinuousNormalRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
 
-    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda)
+    double ContinuousNormalRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double ContinuousNormalRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
+    }
+
+    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda),distribution(lambda)
     {
 
     }
@@ -913,8 +987,22 @@ namespace flopc{
     {
         return 1.0/lambda;
     }
+    double ContinuousExponentialRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
 
-    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c)
+    double ContinuousExponentialRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double ContinuousExponentialRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
+    }
+
+    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c), distribution(a,b,c)
     {
 
     }
@@ -940,6 +1028,20 @@ namespace flopc{
     double ContinuousTriangleRandomVariable::getMeanValue() const
     {   
         throw not_implemented_error();
+    }
+    double ContinuousTriangleRandomVariable::pdf( double x ) const
+    {
+        return boost::math::pdf(distribution,x);
+    }
+
+    double ContinuousTriangleRandomVariable::cdf( double x ) const
+    {
+        return boost::math::cdf(distribution,x);
+    }
+
+    double ContinuousTriangleRandomVariable::quantile( double p ) const
+    {
+        return boost::math::quantile(distribution,p);
     }
 
 
