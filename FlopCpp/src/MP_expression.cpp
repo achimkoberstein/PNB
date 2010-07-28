@@ -484,6 +484,8 @@ void MP::GenerateFunctor::operator()() const {
             // If we have a stage, we have a Expression_random_constant
             // At this moment we have to ensure that correct indexation is used in the subexpressions
             Expression_random_constant* ePtr = dynamic_cast<Expression_random_constant*>(multiplicators[i]);
+            if (ePtr == 0)
+                throw invalid_argument_exception();
             // Propagate correct indices, i.e. use the ones defined during assignment phase for MP_random_data. Therefore we have to call the function with empty indices to signal this.
             ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = std::max(stage,multiplicators[i]->getStage());

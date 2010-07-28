@@ -43,6 +43,16 @@ namespace flopc{
         RandomVariable* rvarPtr;
     };
 
+    class DoubleDiscretization : public DiscretizationMethod {
+    public:
+        void generateDiscreteDistribution();
+    };
+
+    class EmpiricalDiscretization : public DiscretizationMethod {
+    public:
+        void generateDiscreteDistribution();
+    };
+
     class BracketMeanDiscretization : public DiscretizationMethod {
     public:
         void generateDiscreteDistribution();
@@ -79,13 +89,17 @@ namespace flopc{
         virtual double quantile(double p) const = 0;
         //virtual double complementcdf(double x) const = 0;
 
-        int Stage() const { return stage; }
-        void Stage(int val) { stage = val; }
+        int getStage() const { return stage; }
+        void setStage(int val) { stage = val; }
         int SampleSize() const { return defaultSampleSize; }
         void SampleSize(int val) { defaultSampleSize = val; }
         bool isRandomVariable() const { return initialized; }
         int Seed() const { return seed; }
         void Seed(int val) { seed = val; }
+        boost::shared_ptr<DiscretizationMethod> getDiscretizationMethod() const { return dm; }
+        void setDiscretizationMethod(boost::shared_ptr<DiscretizationMethod> val) { dm = val; dm->setRandomVariable(this); }
+        sampleVector getDiscreteDistribution() { return discreteDistribution;  }
+        void setDiscreteDistribution(const sampleVector& map) { discreteDistribution = map; }
 
 
 
@@ -101,6 +115,8 @@ namespace flopc{
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
         boost::shared_ptr<DiscretizationMethod> dm;
+        sampleVector discreteDistribution;
+
 
 
     private:
@@ -123,7 +139,7 @@ namespace flopc{
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 1);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2);
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
@@ -198,6 +214,11 @@ namespace flopc{
 
         ContinuousRandomVariable();
         ~ContinuousRandomVariable();
+
+
+
+    protected:
+        
 
     };
 
