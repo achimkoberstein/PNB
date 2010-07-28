@@ -4,10 +4,9 @@
 #include <vector>
 #include <map>
 
+#include <boost/math/distributions.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
-#include <boost/math/distributions.hpp>
-using namespace boost::math;
 
 #include "MP_expression.hpp"
 #include "MP_data.hpp"
@@ -18,11 +17,6 @@ using namespace boost::math;
 
 //TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
 
-
-
-
-
-
 namespace flopc{
 
     
@@ -31,6 +25,7 @@ namespace flopc{
     class MP_random_data_impl;
     class RandomDataRef;
     class RandomVariable;
+    
 
     // This class is a virtual base class
     class DiscretizationMethod {
@@ -46,6 +41,16 @@ namespace flopc{
 
     protected:
         RandomVariable* rvarPtr;
+    };
+
+    class BracketMeanDiscretization : public DiscretizationMethod {
+    public:
+        void generateDiscreteDistribution();
+    };
+
+    class BracketMedianDiscretization : public DiscretizationMethod {
+    public:
+        void generateDiscreteDistribution();
     };
 
     //Class that defines a concrete RandomVariable 
@@ -106,11 +111,7 @@ namespace flopc{
 
 
 
-    class BracketMeanDiscretization : public DiscretizationMethod {
-    public:
 
-        void generateDiscreteDistribution();
-    };
 
 
     class DiscreteRandomVariable : public RandomVariable {
@@ -136,7 +137,7 @@ namespace flopc{
         int start;
         int end;
         double step;
-        uniform distribution;
+        boost::math::uniform distribution;
 
 
     };
@@ -154,7 +155,7 @@ namespace flopc{
 
     private:
         double probability;
-        bernoulli distribution;
+        boost::math::bernoulli distribution;
 
     };
     
@@ -172,7 +173,7 @@ namespace flopc{
 
     private:
         double probability;
-        bernoulli distribution;
+        boost::math::bernoulli distribution;
 
     };
 
@@ -214,7 +215,7 @@ namespace flopc{
     private:
         int start;
         int end;
-        uniform distribution;
+        boost::math::uniform distribution;
     };
 
     class ContinuousLogNormalRandomVariable : public ContinuousRandomVariable {
@@ -231,7 +232,7 @@ namespace flopc{
     private:
         double mean;
         double sigma;
-        lognormal distribution;
+        boost::math::lognormal distribution;
     };
 
     class ContinuousNormalRandomVariable : public ContinuousRandomVariable {
@@ -248,7 +249,7 @@ namespace flopc{
     private:
         double mean;
         double sigma;
-        normal distribution;
+        boost::math::normal distribution;
     };
 
     class ContinuousExponentialRandomVariable : public ContinuousRandomVariable {
@@ -264,7 +265,7 @@ namespace flopc{
 
     private:
         double lambda;
-        exponential distribution;
+        boost::math::exponential distribution;
     };
     
     class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
@@ -282,7 +283,7 @@ namespace flopc{
         double a;
         double b;
         double c;
-        triangular distribution;
+        boost::math::triangular distribution;
     };
 
     //Class that defines indexable random_variables. Contains concrete RandomVariables.

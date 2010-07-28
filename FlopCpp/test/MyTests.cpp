@@ -1,3 +1,4 @@
+#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
