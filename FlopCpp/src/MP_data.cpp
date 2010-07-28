@@ -48,9 +48,6 @@ DataRef& DataRef::such_that(const MP_boolean& b) {
     return *this;
 }
 
-RandomVariable* DataRef::getRandomVariable() const {
-    return C->getRandomVariable();
-}
 
 
 
@@ -137,14 +134,16 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
 
 }
 
-    void DataRef::propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const{
-        I1 = i1;
-        I2 = i2;
-        I3 = i3;
-        I4 = i4;
-        I5 = i5;
+    void DataRef::propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) {
+        //TODO: Test for correct assignments of indices
+        if (&i1 != &MP_index_exp::getEmpty()){ //We have no empty indices, so we can update our values
+            I1 = i1;
+            I2 = i2;
+            I3 = i3;
+            I4 = i4;
+            I5 = i5;
+        }
     }
 
- void DataRef::insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
-    }  
+
 

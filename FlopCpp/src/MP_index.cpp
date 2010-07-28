@@ -81,7 +81,7 @@ using namespace flopc;
 
 
 MP_domain MP_index::getDomain(MP_set* s) const{
-    return new MP_domain_set(s,const_cast<MP_index*>(this)) ; //TODO: possible memory leak
+    return new MP_domain_set(s,const_cast<MP_index*>(this)) ; 
 }
 
 MP_domain MP_index_mult::getDomain(MP_set* s) const{
@@ -109,5 +109,5 @@ MP_index_exp::MP_index_exp(MP_index& i) : //Create MP_index_exp from MP_index re
 Handle<MP_index_base*>(&i) { operator->()->count++; }
 
 MP_index_exp::MP_index_exp(const MP_index_exp &other): //Create a MP_index_expression from another one by using this cast?!
-Handle<MP_index_base*>((const Handle<MP_index_base*> &)other) {}
+Handle<MP_index_base*>((const Handle<MP_index_base*> &)other) { }
 

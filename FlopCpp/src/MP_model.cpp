@@ -174,7 +174,7 @@ void MP_model::add(MP_variable* v) { //Counts total number of variables in this 
 
 void MP_model::addRow(const Constraint& constraint) {
     vector<MP::Coef> cfs;
-    vector<Constant> v;
+    vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     constraint->left->generate(MP_domain::getEmpty(),v,f,1.0);
     constraint->right->generate(MP_domain::getEmpty(),v,f,-1.0);
@@ -334,10 +334,10 @@ void MP_model::attachStochastic(){
     //In case of a stage set we need to add all random coefficients to randomCoefs, to cope with them later. 
     if (stage.size()){
 
-        //Generate random bounds for all variables
-        for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
-            (*j)->bounds(randomCoefs);
-        }
+        //Generate random bounds for all variables TODO
+        //for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
+        //    (*j)->bounds(randomCoefs);
+        //}
         // Add all other random coefs to randomCoefs.
         for ( int i = 0; i != coefs.size(); i++){
             if ( !coefs[i]->scenVector.empty() ) { //We have scenario values
@@ -360,7 +360,7 @@ void MP_model::attachStochastic(){
     }//end if stage
 
     // Generate objective function coefficients
-    vector<Constant> v;
+    vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     coefs.erase(coefs.begin(),coefs.end());
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
@@ -502,7 +502,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             colIndirection[n] = realn; // Set correct new index for RHS
             DLOG(INFO) << "We have empty variables in this formulation";
             // We have to g
-
             //assert(j == n);
         }
 
@@ -705,17 +704,12 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     const double numericInfinity = std::numeric_limits<double>::infinity();
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         for (int k=0; k<(*i)->size(); k++) {
-            IndexKeeper temp = (*i)->getIndices(k);
-            const DataRef* dPtr;
             if (stage.size()){ //In case of stochastic, we have to obey colIndirection
                 if (colIndirection[(*i)->offset+k] == outOfBound)
                     continue; //go to next round, we have empty variable here
-                //Update Index expressions for evaluation
-                (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
                 //Evaluate values to mean value in case of stochastic and to real value in case of normal bounds
-                l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit->evaluate(outOfBound);
-                u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit->evaluate(outOfBound);
+                l[colIndirection[(*i)->offset+k]] = (*i)->lowerLimit.v[k];
+                u[colIndirection[(*i)->offset+k]] = (*i)->upperLimit.v[k];
                 //Update values to solver infinity if we find numeric infinity.
                 if (l[colIndirection[(*i)->offset+k]] == -numericInfinity)
                     l[colIndirection[(*i)->offset+k]] = -inf;
@@ -724,11 +718,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
             }
             else {
-                //Update Index expressions for evaluation
-                (*i)->lowerLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                (*i)->upperLimit->propagateIndexExpression(temp.i1,temp.i2,temp.i3,temp.i4,temp.i5);
-                l[(*i)->offset+k] = (*i)->lowerLimit->evaluate();
-                u[(*i)->offset+k] = (*i)->upperLimit->evaluate();
+                l[(*i)->offset+k] = (*i)->lowerLimit.v[k];
+                u[(*i)->offset+k] = (*i)->upperLimit.v[k];
                 if (l[(*i)->offset+k] == -numericInfinity)
                     l[(*i)->offset+k] = -inf;
                 if (u[(*i)->offset+k] == numericInfinity)
@@ -742,10 +733,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     //In case of a stage set we need to add all random coefficients to randomCoefs, to cope with them later. 
     if (stage.size()){
 
-        //Generate random bounds for all variables
-        for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
-            (*j)->bounds(randomCoefs);
-        }
+        //TODO Generate random bounds for all variables
+        //for (varIt j=Variables.begin(); j!=Variables.end(); j++) {
+        //    (*j)->bounds(randomCoefs);
+        //}
         // As these bounds were generated in the variables section, the columns are wrong. This means we have to update that 
         for (int i = 0; i < randomCoefs.size();i++) {
             for (int j = 0; j < randomCoefs[i].size();j++) {
@@ -763,7 +754,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }//end if stage
 
     // Generate objective function coefficients
-    vector<Constant> v;
+    vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     coefs.erase(coefs.begin(),coefs.end());
     Objective->generate(MP_domain::getEmpty(), v, f, 1.0);
@@ -953,7 +944,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
 
-        assert(!rv[i].empty()); //Assume we have random variables in every stage.
+        assert(!rv[i].empty()); //Assume we have random variables in every stage. If not specifying a stage set does not make sense.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);
             randVarsPerStage[i]++;
@@ -1523,6 +1514,31 @@ namespace flopc {
     }
 
     void Messenger::logMessage( int level, const char * const msg )
+    {
+
+    }
+
+    void Messenger::solutionStatus( const OsiSolverInterface* Solver )
+    {
+
+    }
+
+    void Messenger::statistics( int bm, int m, int bn, int n, int nz )
+    {
+
+    }
+
+    void Messenger::objectiveDebug( const vector<MP::Coef>& cfs ) const
+    {
+
+    }
+
+    void Messenger::constraintDebug( string name, const vector<MP::Coef>& cfs ) const
+    {
+
+    }
+
+    void Messenger::generationTime( double t )
     {
 
     }

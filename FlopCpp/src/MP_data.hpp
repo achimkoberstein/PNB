@@ -37,14 +37,11 @@ namespace flopc {
         //Get Value via current settings for MP_index_exp
         virtual double evaluate(int scenario) const;
         virtual int getStage() const;
-        virtual void propagateIndexExpression(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5) const;
-        virtual void insertRandomVariables(std::vector< std::set<RandomVariable*> >&v) const;
-
+        virtual void propagateIndexExpressions(const MP_index_exp& i1,const MP_index_exp& i2,const MP_index_exp& i3,const MP_index_exp& i4,const MP_index_exp& i5);
+        
         const DataRef& operator=(const DataRef& r); 
         const DataRef& operator=(const Constant& c);
 
-        //Get RandomVariable
-        virtual RandomVariable* getRandomVariable() const;
 
         //Set value in D via current MP_index_exp
         void evaluate_lhs(double v) const;
