@@ -22,12 +22,14 @@ MP_variable::MP_variable(const MP_set_base &s1,
                          const MP_set_base &s4, 
                          const MP_set_base &s5) :
 RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-upperLimit(MP_model::getCurrentModel()->getInfinity()),
-lowerLimit(0),
+upperLimit(s1,s2,s3,s4,s5),
+lowerLimit(s1,s2,s3,s4,s5),
 S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
 offset(-1)
 {
     type = continuous;
+    lowerLimit.initialize(0);
+    upperLimit.initialize(MP_model::getCurrentModel()->getInfinity());
     setStageSet();
 } 
 
@@ -99,14 +101,15 @@ void MP_variable::operator()() const {
         for (int i = 0; i < M->scenSet.size(); i++){
             values = M->smiModel->getColSolution(i,&length);
             //TODO: Check length //Check colIndirection for outOfBound..
-            cout<<"  "<< values[M->colIndirection[offset +
+            cout<< " Sc. " << i << " " << values[M->colIndirection[offset +
             f(i1.evaluate(),
             i2.evaluate(),
             i3.evaluate(),
             i4.evaluate(),
-            i5.evaluate())]]<<endl;
+            i5.evaluate())]];
             free(values); //we need to use free, as smi callocs the values..
         }
+        cout << endl;
     }
     else
         cout<<"  "<< M->Solver->getColSolution()[offset +
@@ -139,4 +142,17 @@ void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef> > >
     ((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(&f);
     delete myrefs.back();
     myrefs.pop_back();
+}
+
+void flopc::MP_variable::integer()
+{
+    type = variableType::discrete;
+}
+
+void flopc::MP_variable::binary()
+{
+    //upperLimit.initialize(1);
+    lowerLimit.initialize(0);
+    upperLimit.initialize(1);
+    type = variableType::binary;
 }
