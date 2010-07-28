@@ -1060,7 +1060,28 @@ namespace flopc{
     // 
     void BracketMeanDiscretization::generateDiscreteDistribution()
     {
-        //rvarPtr
+        // At first we compute the intervals, number is given by sampleSize.
+        // We should start with the end-points
+        double epsilon = std::numeric_limits<double>::epsilon();
+        double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
+        double upperEnd = rvarPtr->cdf(1-epsilon);
+        int intervals = rvarPtr->SampleSize();
+        std::vector<double> intervalPoints(intervals+1);
+        intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
+        double increment = (upperEnd-lowerEnd)/intervals;
+        for (int i = 1; i < intervals; i++){
+            intervalPoints[i] = intervalPoints[i-1]+increment;
+        }
 
+        // Now we compute the mean of each interval.
+        std::map<double,double> bracketMeans;
+        for (int i = 0; i < intervals; i++){
+            // Probability of interval is CDF right bracket - CDF left bracket
+            double prob = (rvarPtr->cdf(intervalPoints[i+1])-rvarPtr->cdf(intervalPoints[i]))/2;
+            // Bracket mean is value that corresponds to mean probability of that interval
+            double bracketMean = rvarPtr->quantile(intervalPoints[i]+prob/2);
+            bracketMeans.insert(std::pair<double,double>(bracketMean,prob));
+        }
+        rvarPtr->setScenarioValuesWithProb(bracketMeans);
     }
 }
