@@ -701,25 +701,25 @@ int main(int argc, char* argv[]) {
     //---> Purchase
     
     MP_variable pbcp(MBC);			//Baseload Contracts Power to be ordered
-    pbcp.lowerLimit = 0;
+    pbcp.lowerLimit.initialize(0);
     
     MP_variable pbcu(ST,MBC,R);    	//Baseload Contracts Usage
-    pbcu.lowerLimit = 0;
+    pbcu.lowerLimit.initialize(0);
     
     MP_variable pmaxbc(ST,BC);		//Maximal Baseload Contracts Power
-    pmaxbc.lowerLimit = 0;
+    pmaxbc.lowerLimit.initialize(0);
     
     MP_variable pminbc(ST,BC);		//Minimal Baseload Contracts Power
-    pminbc.lowerLimit = 0;
+    pminbc.lowerLimit.initialize(0);
     
     MP_variable poc(ST,TOC,R);	    //Open Contracts Usage
-    poc.lowerLimit = 0;
+    poc.lowerLimit.initialize(0);
     
     MP_variable pmaxoc(OC);		//Maximal Open Contracts Power
-    pmaxoc.lowerLimit = 0;
+    pmaxoc.lowerLimit.initialize(0);
     
     MP_variable gasbezugskostengesamt(ST,R);	//Check Variable for Purchase Contacts Costs
-    gasbezugskostengesamt.lowerLimit = 0;
+    gasbezugskostengesamt.lowerLimit.initialize(0);
     
     MP_variable bc_use(BC);			//Indicator if Baseload Contracts will be used in Optimization
     bc_use.binary();
@@ -732,28 +732,28 @@ int main(int argc, char* argv[]) {
     //---> Storage
     
     MP_variable es(ST,S,T,R);	//Amount of Energy stored in Storages (fill level)
-    es.lowerLimit = 0;
+    es.lowerLimit.initialize(0);
     
     MP_variable emaxs(ST,S);	//Maximal Amount of Energy stored in Storage
-    emaxs.lowerLimit = 0;
+    emaxs.lowerLimit.initialize(0);
     
     MP_variable pinj(ST,S,T,R);	//Injection Power for every Time Period
-    pinj.lowerLimit = 0;
+    pinj.lowerLimit.initialize(0);
     
     MP_variable pext(ST,S,T,R);	//Extraction Power for every Time Period
-    pext.lowerLimit = 0;
+    pext.lowerLimit.initialize(0);
     
     MP_variable pmaxinj(ST,S);	//Maximal used Injection Power by each Storage
-    pmaxinj.lowerLimit = 0;
+    pmaxinj.lowerLimit.initialize(0);
     
     MP_variable pmaxext(ST,S);	//Maximal used Extraction Power by each Storage
-    pmaxext.lowerLimit = 0;
+    pmaxext.lowerLimit.initialize(0);
     
     MP_variable speicherkostengesamt(ST,R);	//Check Variable for Storage Costs
-    speicherkostengesamt.lowerLimit = 0;
+    speicherkostengesamt.lowerLimit.initialize(0);
     
     MP_variable s_use(S);		//Indicator if Storage will be used in Optimization
-    //s_use.binary();
+    s_use.binary();
     
     //<--- Storage
     
@@ -761,13 +761,13 @@ int main(int argc, char* argv[]) {
     MP_variable pl(ST,L,T,R);   //Power Level on Links (can be negative)
     
     MP_variable pminl(ST,L);	//Minimal Power Level on Links
-    pminl.upperLimit = 0;
+    pminl.upperLimit.initialize(0);
     
     MP_variable pmaxl(ST,L);	//Maximal Power Level on Links
-    pmaxl.lowerLimit = 0;
+    pmaxl.lowerLimit.initialize(0);
     
     MP_variable netzkostengesamt(ST,R);	//Check Variable for Network Costs
-    netzkostengesamt.lowerLimit = 0;
+    netzkostengesamt.lowerLimit.initialize(0);
     
     //<--- Network
     
@@ -903,7 +903,7 @@ int main(int argc, char* argv[]) {
           sum(N2.such_that(L(N2,N)), pl(ST+1,L(N2,N),T,R)) 
         - sum(N2.such_that(L(N,N2)), pl(ST+1,L(N,N2),T,R))
         >= sum(SC.such_that(NSC(SC,N)), LOAD(ST+1,SC,T,R));
-
+      // =
     
     //<--- Network
     
