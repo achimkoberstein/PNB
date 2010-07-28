@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <boost/math/distributions.hpp>
+using namespace boost::math;
 
 #include "MP_expression.hpp"
 #include "MP_data.hpp"
@@ -16,9 +17,15 @@
 #include "MP_utilities.hpp"
 
 //TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
-using boost::math::uniform;
+
+
+
+
+
 
 namespace flopc{
+
+    
 
     //Forward declaration
     class MP_random_data_impl;
@@ -120,9 +127,9 @@ namespace flopc{
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
-        virtual double pdf(double x) const = 0;
-        virtual double cdf(double x) const = 0;
-        virtual double quantile(double p) const = 0;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         //Params for DiscreteUniformDistribution: [start,end] in steps of step
@@ -141,9 +148,13 @@ namespace flopc{
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double probability;
+        bernoulli distribution;
 
     };
     
@@ -155,9 +166,13 @@ namespace flopc{
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double probability;
+        bernoulli distribution;
 
     };
 
@@ -192,10 +207,14 @@ namespace flopc{
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         int start;
         int end;
+        uniform distribution;
     };
 
     class ContinuousLogNormalRandomVariable : public ContinuousRandomVariable {
@@ -205,10 +224,14 @@ namespace flopc{
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double mean;
         double sigma;
+        lognormal distribution;
     };
 
     class ContinuousNormalRandomVariable : public ContinuousRandomVariable {
@@ -218,10 +241,14 @@ namespace flopc{
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double mean;
         double sigma;
+        normal distribution;
     };
 
     class ContinuousExponentialRandomVariable : public ContinuousRandomVariable {
@@ -231,23 +258,31 @@ namespace flopc{
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double lambda;
+        exponential distribution;
     };
     
     class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousTriangleRandomVariable(double a, double b, double c);
+        ContinuousTriangleRandomVariable(double a = -1, double b = 0, double c = 1);
         ~ContinuousTriangleRandomVariable();
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double a;
         double b;
         double c;
+        triangular distribution;
     };
 
     //Class that defines indexable random_variables. Contains concrete RandomVariables.
@@ -304,6 +339,7 @@ namespace flopc{
 
     //non-member non-friend functions
     std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;
+
 
 }
 
