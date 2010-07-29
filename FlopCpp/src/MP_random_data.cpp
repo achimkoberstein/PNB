@@ -896,13 +896,14 @@ namespace flopc{
 
 
 
-    ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to ) : ContinuousRandomVariable(),start(from),end(to),distribution(from,to)
+    ContinuousUniformRandomVariable::ContinuousUniformRandomVariable( int from, int to , DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),start(from),end(to),distribution(from,to)
     {
         if (end < start){
             int temp = start;
             start = end;
             end = temp;
         }
+        dm = dmPtr;
 
     }
 
@@ -946,9 +947,9 @@ namespace flopc{
     }
 
 
-    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
+    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
     {
-
+        dm = dmPtr;
     }
 
     ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
@@ -990,9 +991,9 @@ namespace flopc{
     }
 
     
-    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
+    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
     {
-
+        dm = dmPtr
     }
 
     ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
@@ -1033,9 +1034,9 @@ namespace flopc{
         return boost::math::quantile(distribution,p);
     }
 
-    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda) : ContinuousRandomVariable(),lambda(lambda),distribution(lambda)
+    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),lambda(lambda),distribution(lambda)
     {
-
+        dm = dmPtr;
     }
 
     ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
@@ -1076,9 +1077,9 @@ namespace flopc{
         return boost::math::quantile(distribution,p);
     }
 
-    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c) : ContinuousRandomVariable(),a(a),b(b),c(c), distribution(a,b,c)
+    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),a(a),b(b),c(c), distribution(a,b,c)
     {
-
+        dm = dmPtr;
     }
 
     ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()

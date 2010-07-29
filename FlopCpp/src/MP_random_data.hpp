@@ -205,8 +205,6 @@ namespace flopc{
         virtual double pdf(double x) const;
         virtual double cdf(double x) const;
         virtual double quantile(double p) const;
-
-
     };
 
     class ContinuousRandomVariable : public RandomVariable {
@@ -224,7 +222,7 @@ namespace flopc{
 
     class ContinuousUniformRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousUniformRandomVariable(int from, int to);
+        ContinuousUniformRandomVariable(int from, int to, DiscretizationMethod* dmPtr);
         ~ContinuousUniformRandomVariable();
 
         virtual void sample(int howMany = 0) ;
@@ -241,7 +239,7 @@ namespace flopc{
 
     class ContinuousLogNormalRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousLogNormalRandomVariable(double mean, double sigma);
+        ContinuousLogNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr);
         ~ContinuousLogNormalRandomVariable();
 
         virtual void sample(int howMany = 0) ;
@@ -258,7 +256,7 @@ namespace flopc{
 
     class ContinuousNormalRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousNormalRandomVariable(double mean, double sigma);
+        ContinuousNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr);
         ~ContinuousNormalRandomVariable();
 
         virtual void sample(int howMany = 0) ;
@@ -275,7 +273,7 @@ namespace flopc{
 
     class ContinuousExponentialRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousExponentialRandomVariable(double lambda);
+        ContinuousExponentialRandomVariable(double lambda, DiscretizationMethod* dmPtr);
         ~ContinuousExponentialRandomVariable();
 
         virtual void sample(int howMany = 0) ;
@@ -291,7 +289,7 @@ namespace flopc{
     
     class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousTriangleRandomVariable(double a = -1, double b = 0, double c = 1);
+        ContinuousTriangleRandomVariable(double a = -1, double b = 0, double c = 1, DiscretizationMethod* dmPtr);
         ~ContinuousTriangleRandomVariable();
 
         virtual void sample(int howMany = 0) ;
