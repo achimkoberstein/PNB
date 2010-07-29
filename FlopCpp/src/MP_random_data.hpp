@@ -31,35 +31,43 @@ namespace flopc{
     class DiscretizationMethod {
     public:
 
-        DiscretizationMethod();
+        DiscretizationMethod(int samples);
         virtual ~DiscretizationMethod();
 
-        inline void setRandomVariable(RandomVariable* ptr){
-            rvarPtr = ptr;
-        }
+        void setRandomVariable(RandomVariable* ptr);
         virtual void generateDiscreteDistribution() = 0;
 
     protected:
+        int samples;
         RandomVariable* rvarPtr;
     };
 
     class DoubleDiscretization : public DiscretizationMethod {
+        
     public:
+DoubleDiscretization(int samples);
+
         void generateDiscreteDistribution();
     };
 
     class EmpiricalDiscretization : public DiscretizationMethod {
+      
     public:
+          EmpiricalDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
     class BracketMeanDiscretization : public DiscretizationMethod {
+    
     public:
+            BracketMeanDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
     class BracketMedianDiscretization : public DiscretizationMethod {
+
     public:
+                BracketMedianDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
@@ -289,7 +297,7 @@ namespace flopc{
     
     class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousTriangleRandomVariable(double a = -1, double b = 0, double c = 1, DiscretizationMethod* dmPtr);
+        ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr);
         ~ContinuousTriangleRandomVariable();
 
         virtual void sample(int howMany = 0) ;
