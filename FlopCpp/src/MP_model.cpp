@@ -316,6 +316,13 @@ void MP_model::attachStochastic(){
     if (Solver == 0)
         throw invalid_argument_exception();
 
+    // Maybe we have changed RandomVariables, so we have to empty the RV set and fill it again
+    for (int i = 0; i < RandomVariables.size(); i++){
+        RandomVariables[i].clear();
+    }
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); ++i)
+        (*i)->insertRandomVariables(RandomVariables);
+
     // Resample values
     sampleRandomVariates(RandomVariables);
 
@@ -354,7 +361,8 @@ void MP_model::attachStochastic(){
                 if (randomCoefs[i][j]->col == -1)
                     randomCoefs[i][j]->col = n; //This is not very consistent with realn..
                 assert( colIndirection[randomCoefs[i][j]->col] != outOfBound);
-                randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
+                if (colIndirection[randomCoefs[i][j]->col] != -1 ) //In case of RHS?!
+                    randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
             }
         }
     }//end if stage

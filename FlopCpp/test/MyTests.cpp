@@ -161,15 +161,26 @@ namespace flopc {
         MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
         MP_stage T(2);
         MP_random_data rvar(T);
-        rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMeanDiscretization());
+        rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMeanDiscretization(10));
         rvar(1)->setStage(1);
-        rvar(1)->SampleSize(5);
+        //rvar2(1) = new ContinuousNormalRandomVariable(0,1, new BracketMedianDiscretization(5));
+        //rvar2(1)->setStage(1);
         MP_variable x(T);
         MP_constraint con(T);
         con(T) = x(T) <= rvar(T);
-
         testModel.setObjective( x(T.last()) );
         testModel.solve(MP_model::MAXIMIZE);
+        rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMedianDiscretization(10));
+        rvar(1)->setStage(1);
+        testModel.setObjective( x(T.last()) );
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        rvar(1) = new ContinuousExponentialRandomVariable(1, new BracketMedianDiscretization(10));
+        rvar(1)->setStage(1);
+        testModel.setObjective( x(T.last()) );
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+
 
     }
 
@@ -951,16 +962,14 @@ namespace flopc {
         //MP_random_data rVarDiscrete;
         //MP_random_data rVarContinuous;
         DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,6);
-        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2); 
+        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2, new BracketMeanDiscretization(20)); 
         rv->Seed(static_cast<unsigned int>(std::time(0)));
-        rv->sample(5);
         std::vector<double> sampledValues = rv->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i],-3);
             EXPECT_LE(sampledValues[i],2);
         }
         rv2->Seed(static_cast<unsigned int>(std::time(0)));
-        rv2->sample(20);
         sampledValues = rv2->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i],-2);
@@ -973,34 +982,30 @@ namespace flopc {
             EXPECT_EQ(vals[0][0][i],sampledValues[i]);
         }
         
-        ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5);
+        ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5, new BracketMeanDiscretization(20) );
         rv4->Seed(static_cast<unsigned int>(std::time(0)));
-        rv4->sample(20);
         sampledValues = rv4->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
         }
         
-        ContinuousNormalRandomVariable* rv5 = new ContinuousNormalRandomVariable(0,1);
+        ContinuousNormalRandomVariable* rv5 = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
         rv5->Seed(static_cast<unsigned int>(std::time(0)));
-        rv5->sample(20);
         sampledValues = rv5->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], -4);
             EXPECT_LE(sampledValues[i], 4);
         }
         
-        ContinuousExponentialRandomVariable* rv6 = new ContinuousExponentialRandomVariable(1);
+        ContinuousExponentialRandomVariable* rv6 = new ContinuousExponentialRandomVariable(1,new BracketMeanDiscretization(20));
         rv6->Seed(static_cast<unsigned int>(std::time(0)));
-        rv6->sample(20);
         sampledValues = rv6->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
         }
         
-        ContinuousTriangleRandomVariable* rv7 = new ContinuousTriangleRandomVariable(0,1,2);
+        ContinuousTriangleRandomVariable* rv7 = new ContinuousTriangleRandomVariable(0,1,2,new BracketMeanDiscretization(20));
         rv7->Seed(static_cast<unsigned int>(std::time(0)));
-        rv7->sample(20);
         sampledValues = rv7->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
@@ -1009,7 +1014,7 @@ namespace flopc {
         
         DiscreteGeometricRandomVariable* rv8 = new DiscreteGeometricRandomVariable(0.5);
         rv8->Seed(static_cast<unsigned int>(std::time(0)));
-        rv8->sample(20);
+        //rv8->sample(20);
         sampledValues = rv8->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 1);
@@ -1017,7 +1022,7 @@ namespace flopc {
         
         DiscreteBernoulliRandomVariable* rv9 = new DiscreteBernoulliRandomVariable(0.5);
         rv9->Seed(static_cast<unsigned int>(std::time(0)));
-        rv9->sample(20);
+        //rv9->sample(20);
         sampledValues = rv9->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);

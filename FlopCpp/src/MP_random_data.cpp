@@ -289,7 +289,7 @@ namespace flopc{
 
 
     //Implementation for RandomVariable: Think about these constructors.. are they necessary?
-    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),stage(0),dm(new DoubleDiscretization),discreteDistribution() { } 
+    RandomVariable::RandomVariable() : initialized(false),seed(0),values(),valuesMap(),defaultSampleSize(0),stage(0),dm(new DoubleDiscretization(0)),discreteDistribution() { } 
 
     // base_generator_type(seed),uniform_distr_gen(uniform.rng,boost::uniform_01<double>()) 
 
@@ -740,7 +740,7 @@ namespace flopc{
         }
         step = double(end-start)/sampleSize;
         defaultSampleSize = sampleSize;
-        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization());
+        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization(sampleSize));
         dm->setRandomVariable(this);
     }
 
@@ -804,7 +804,7 @@ namespace flopc{
 
     DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability),distribution(probability)
     { 
-        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization());
+        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization(1));
         dm->setRandomVariable(this);
     }
 
@@ -852,7 +852,7 @@ namespace flopc{
 
     DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability),distribution(probability)
     {     
-        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization());
+        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization(1));
         dm->setRandomVariable(this);
     }
 
@@ -903,7 +903,8 @@ namespace flopc{
             start = end;
             end = temp;
         }
-        dm = dmPtr;
+        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+        dm->setRandomVariable(this);
 
     }
 
@@ -949,7 +950,8 @@ namespace flopc{
 
     ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
     {
-        dm = dmPtr;
+        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+        dm->setRandomVariable(this);
     }
 
     ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
@@ -993,7 +995,8 @@ namespace flopc{
     
     ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
     {
-        dm = dmPtr
+        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+        dm->setRandomVariable(this);
     }
 
     ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
@@ -1036,7 +1039,8 @@ namespace flopc{
 
     ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),lambda(lambda),distribution(lambda)
     {
-        dm = dmPtr;
+        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+        dm->setRandomVariable(this);
     }
 
     ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
@@ -1079,7 +1083,8 @@ namespace flopc{
 
     ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),a(a),b(b),c(c), distribution(a,b,c)
     {
-        dm = dmPtr;
+        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+        dm->setRandomVariable(this);
     }
 
     ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()
@@ -1122,7 +1127,7 @@ namespace flopc{
 
 
 
-    DiscretizationMethod::DiscretizationMethod(): rvarPtr(0)
+    DiscretizationMethod::DiscretizationMethod(int samples): samples(samples),rvarPtr(0)
     {
     
     }
@@ -1132,8 +1137,18 @@ namespace flopc{
 
     }
 
+    void DiscretizationMethod::setRandomVariable( RandomVariable* ptr )
+    {
+        rvarPtr = ptr;
+        rvarPtr->SampleSize(samples);
+    }
 
-    // 
+    BracketMeanDiscretization::BracketMeanDiscretization(int samples): DiscretizationMethod(samples)
+    {
+
+    }
+    
+    
     void BracketMeanDiscretization::generateDiscreteDistribution()
     {
         // At first we compute the intervals, number is given by sampleSize.
@@ -1156,7 +1171,7 @@ namespace flopc{
             // Probability of interval is CDF right bracket - CDF left bracket
             double prob = (rvarPtr->cdf(intervalPoints[i+1])-rvarPtr->cdf(intervalPoints[i]));
             // Bracket mean is value that corresponds to mean probability of that interval
-            double bracketMean = rvarPtr->quantile(rvarPtr->cdf(intervalPoints[i])+prob/2);
+            double bracketMean = intervalPoints[i]+increment/2;
             bracketMeans.insert(std::pair<double,double>(bracketMean,prob));
             probSum += prob;
         }
@@ -1174,19 +1189,20 @@ namespace flopc{
         int intervals = rvarPtr->SampleSize();
         std::vector<double> intervalPoints(intervals+1);
         intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
-        double increment = (upperEnd-lowerEnd)/intervals;
+
+        double increment = (1-2*epsilon)/intervals;
         for (int i = 1; i < intervals; i++){
-            intervalPoints[i] = intervalPoints[i-1]+increment;
+            intervalPoints[i] = rvarPtr->quantile(0+epsilon+increment*i);
         }
 
-        // Now we compute the mean of each interval.
+        // Now we compute the median of each interval.
         std::map<double,double> bracketMedians;
         double probSum = 0;
-        for (int i = 0; i < intervals; i++){
-            // Probability of interval is CDF right bracket - CDF left bracket
-            double prob = (rvarPtr->cdf(intervalPoints[i+1])-rvarPtr->cdf(intervalPoints[i]));
-            // Bracket mean is value that corresponds to mean probability of that interval
-            double median = intervalPoints[i] + increment/2;         
+        for (int i = 1; i <= intervals; i++){
+            // Probability of interval is 1 / #intervals
+            double prob = 1.0/intervals;
+            // Bracket median is quantil of intervalStartProb+increment/2
+            double median = rvarPtr->quantile(0 + epsilon + increment*(i-1)+ increment/2);         
             bracketMedians.insert(std::pair<double,double>(median,prob));
             probSum += prob;
         }
@@ -1194,13 +1210,26 @@ namespace flopc{
         rvarPtr->setDiscreteDistribution(bracketMedians);
     }
 
+    BracketMedianDiscretization::BracketMedianDiscretization( int samples ): DiscretizationMethod(samples)
+    {
+
+    }
     void DoubleDiscretization::generateDiscreteDistribution()
     {
         // We do nothing. This allows sampling from a double discretized distribution.. (not so useful.. most likely)
     }
 
+    DoubleDiscretization::DoubleDiscretization( int samples ): DiscretizationMethod(samples)
+    {
+
+    }
     void EmpiricalDiscretization::generateDiscreteDistribution()
     {
         // We do nothing.
+    }
+
+    EmpiricalDiscretization::EmpiricalDiscretization( int samples ): DiscretizationMethod(samples)
+    {
+
     }
 }
