@@ -266,6 +266,46 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
     }
 
+    TEST_F(MP_modelTest,SuchThatTest){
+        MP_model testModel(new OsiClpSolverInterface());
+
+        MP_set A(2);
+        MP_set B(2);
+        MP_set C(2);
+        MP_set D(2);
+        
+        MP_subset<2> AB(A,B);
+        AB.insert(0,0);
+        AB.insert(1,1);
+        
+        MP_subset<2> CD(C,D);
+        CD.insert(0,0);
+        
+        MP_subset<2> BC(B,C);
+        BC.insert(0,0);
+        
+        MP_data dA(A);
+        
+        dA(0) = 1;
+        dA(1) = 10;
+        
+        MP_variable x1(A), x2(A);
+        
+        MP_constraint constr1(A), constr2(A);
+        constr1(A) = sum(B.such_that(AB(A,B)) * C.such_that(BC(B,C)), dA(A)) <= x1(A);
+        constr2(AB(A,B)) = dA(A) <= x2(A); //constr(AB) = dA(A) <= x2(A); doenst work
+        
+        testModel.setObjective(sum(A, x1(A) + x2(A)));
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MINIMIZE);
+        
+        x1.display();
+	x2.display();
+        
+	EXPECT_EQ(12,testModel->getObjValue());
+    }
+
+    
     TEST_F(UseCaseTest,RandomWalkTest){ //Seed: 1015576855 im vergleich zu 1106783986
         const int numStage = 3;
         unsigned int seed = 2013598861;
