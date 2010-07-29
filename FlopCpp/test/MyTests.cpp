@@ -161,10 +161,9 @@ namespace flopc {
         MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
         MP_stage T(2);
         MP_random_data rvar(T);
-        rvar(1) = new ContinuousNormalRandomVariable(0,1);
+        rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMeanDiscretization());
         rvar(1)->setStage(1);
         rvar(1)->SampleSize(5);
-        rvar(1)->setDiscretizationMethod(boost::shared_ptr<DiscretizationMethod>(new BracketMeanDiscretization()));
         MP_variable x(T);
         MP_constraint con(T);
         con(T) = x(T) <= rvar(T);
