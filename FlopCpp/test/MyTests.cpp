@@ -199,7 +199,7 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(5,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(5,testModel.Solver->getObjValue());
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
@@ -230,7 +230,7 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(5,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(6.5,testModel.Solver->getObjValue());
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
@@ -299,7 +299,7 @@ namespace flopc {
         x.display("Werte");
         sumR.display("SumR");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_DOUBLE_EQ(35,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(34.5,testModel.Solver->getObjValue());
 
     }
 
