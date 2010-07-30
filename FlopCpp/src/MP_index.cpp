@@ -21,6 +21,12 @@ namespace flopc {
         return Empty;
     }
 
+    flopc::MP_index_exp MP_index_exp::deepCopyIndexExpression() const
+    {
+        // Create new MP_index_exp?
+        return MP_index_exp(0);
+    }
+
     class MP_index_constant : public MP_index_base {
         friend class MP_index_exp;
     public:

@@ -26,6 +26,7 @@ namespace flopc {
         virtual int evaluate() const = 0;
         virtual MP_index* getIndex() const = 0;
         virtual MP_domain getDomain(MP_set* s) const = 0;
+        //virtual MP_index_base deepCopy() const = 0;
         //	virtual void display()const;
     protected:
         MP_index_base() : count(0) {}
@@ -154,6 +155,10 @@ namespace flopc {
         virtual ~MP_index_exp() {}
         /// Return the unique empty expression.
         static const MP_index_exp &getEmpty();
+        
+        MP_index_exp deepCopyIndexExpression() const;
+
+
     };
 
     /** @brief Internal representation of an index expression
