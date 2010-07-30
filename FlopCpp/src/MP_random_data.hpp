@@ -71,6 +71,12 @@ DoubleDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
+    class ExtendedPearsonTukeyDiscretization : public DiscretizationMethod {
+    public:
+        ExtendedPearsonTukeyDiscretization();
+        void generateDiscreteDistribution();
+    };
+
     //Class that defines a concrete RandomVariable 
     class RandomVariable : boost::noncopyable {
         friend class RandomDataRef;

@@ -157,6 +157,16 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    TEST_F(MP_modelTest,ComplicatedExpressionsTest){
+        MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
+        MP_stage T(2);
+        
+        MP_random_data a(T);
+        a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(10));
+        a(1)->setStage(1);
+
+    }
+
     TEST_F(MP_modelTest,DiscretizationTest){
         MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
         MP_stage T(2);
@@ -230,7 +240,7 @@ namespace flopc {
         A(1) = 10;
         A(2) = 5;
         MP_random_data combined(T);
-        combined(T+1) = A(T) + rVar(T+1);
+        combined(T) = A(T-1) + rVar(T);
         MP_variable y(T);
         MP_constraint randomConstraint1(T),randomConstraint2(T),randomConstraint3(T);
         //randomConstraint1(T) = y(T) <= combined(T);
@@ -240,10 +250,11 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_DOUBLE_EQ(6.5,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(8.5,testModel.Solver->getObjValue());
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
+        // We should have a better way to check for certain values.. (like the level command)
     }
 
     TEST_F(MP_modelTest,SimpleTestThatHasToBeRenamed){

@@ -1232,4 +1232,22 @@ namespace flopc{
     {
 
     }
+
+    ExtendedPearsonTukeyDiscretization::ExtendedPearsonTukeyDiscretization() : DiscretizationMethod(3)
+    {
+
+    }
+
+    void ExtendedPearsonTukeyDiscretization::generateDiscreteDistribution()
+    {
+        // ExtendedPearson-Tukey: Generate discrete approximation of 5,50,and 95 percent quantile.
+        double lowerQuantile = rvarPtr->quantile(0.05); // 0.185 %
+        double upperQuantile = rvarPtr->quantile(0.95); // 0.630 %
+        double medianQuantile = rvarPtr->quantile(0.5); // 0.185 %
+        std::map<double,double> discretizedDistribution;
+        discretizedDistribution.insert(std::pair<double,double>(lowerQuantile,0.185));
+        discretizedDistribution.insert(std::pair<double,double>(medianQuantile,0.630));
+        discretizedDistribution.insert(std::pair<double,double>(upperQuantile,0.185));
+        rvarPtr->setDiscreteDistribution(discretizedDistribution);
+    }
 }
