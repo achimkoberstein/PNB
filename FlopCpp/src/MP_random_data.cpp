@@ -39,7 +39,7 @@ namespace flopc{
         //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
         MP_random_data_impl(RandomVariable** array, const MP_set_base &s1, const MP_set_base &s2,                const MP_set_base &s3, const MP_set_base &s4, const MP_set_base &s5):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),i1(const_cast<MP_set_base*>(&s1)),i2(const_cast<MP_set_base*>(&s2)),i3(const_cast<MP_set_base*>(&s3)),i4(const_cast<MP_set_base*>(&s4)),i5(const_cast<MP_set_base*>(&s5)),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
                 initialize();
                 // Very ugly code..
                 // What is done here: Arrays stage index is one less than normal stage index because first stage needs no RV. 
@@ -214,7 +214,7 @@ namespace flopc{
 
         
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
-        mutable MP_index i1,i2,i3,i4,i5;// MP_index. Used to iterate over the sets in the display method
+        mutable MP_index_exp i1,i2,i3,i4,i5;// MP_index. Used to iterate over the sets in the display method
         RandomConstant c;
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
@@ -257,18 +257,18 @@ namespace flopc{
 
     //Implementation for MP_random_data_impl TODO: Store values to reduce computational burden
     void MP_random_data_impl::operator ()() const { //Called by display method indirectly via functor evaluation
-        if (&S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
-        if (&S2!=&MP_set::getEmpty()) cout << i2.evaluate() << " ";
-        if (&S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
-        if (&S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
-        if (&S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
-        if (values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(),
-            i4.evaluate(),i5.evaluate())] != NULL){
+        if (&S1!=&MP_set::getEmpty()) cout << i1->evaluate() << " ";
+        if (&S2!=&MP_set::getEmpty()) cout << i2->evaluate() << " ";
+        if (&S3!=&MP_set::getEmpty()) cout << i3->evaluate() << " ";
+        if (&S4!=&MP_set::getEmpty()) cout << i4->evaluate() << " ";
+        if (&S5!=&MP_set::getEmpty()) cout << i5->evaluate() << " ";
+        if (values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
+            i4->evaluate(),i5->evaluate())] != NULL){
                 for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
-                    std::cout << " Sc." << i << ": " << values[f(i1.evaluate(),i2.evaluate(),i3.evaluate(), i4.evaluate(),i5.evaluate())]->getSampledValue(i) << " ";
+                    std::cout << " Sc." << i << ": " << values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(), i4->evaluate(),i5->evaluate())]->getSampledValue(i) << " ";
         }
         else if (c.isDefined()){ // There is no variable at this point, so we can skip it.
-            c->propagateIndexExpressions(i1,i2,i3,i4,i5);
+            //c->propagateIndexExpressions(i1,i2,i3,i4,i5);
             for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
                 std::cout << " Sc." << i << ": " << c->evaluate(i) << " "; 
         }
@@ -278,7 +278,8 @@ namespace flopc{
     void MP_random_data_impl::display(const std::string& s,int scenario){
         std::cout << s << std::endl;
         //RandomDataRef& rdr = this->operator()(const_cast<MP_set_base&>(S1),const_cast<MP_set_base&>(S2),const_cast<MP_set_base&>(S3),const_cast<MP_set_base&>(S4),const_cast<MP_set_base&>(S5));
-        ((S1)(i1)*(S2)(i2)*(S3)(i3)*(S4)(i4)*(S5)(i5)).forall(this);
+        //((S1)(i1)*(S2)(i2)*(S3)(i3)*(S4)(i4)*(S5)(i5)).forall(this);
+        (S1(i1)*S2(i2)*S3(i3)*S4(i4)*S5(i5)).forall(this);
     }
 
     void MP_random_data_impl::initialize() //TODO: How to do that in a better way? Think about that..
@@ -480,7 +481,6 @@ namespace flopc{
 
      const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
     { //TODO: What about bool, B, index_exp ?
-
         RV->c = c;
         return *this;
     }
@@ -519,8 +519,24 @@ namespace flopc{
                 RV->c->propagateIndexExpressions(I1,I2,I3,I4,I5);
             }
             else {
-                // Replace own indices with the given ones. TODO: What is with the nested case?
-                RV->c->propagateIndexExpressions(i1,i2,i3,i4,i5);
+                // Replace own indices with the given ones. 
+                // Make deep copys of all indices
+                MP_index_exp copy1(I1.deepCopyIndexExpression());
+                MP_index_exp copy2(I2.deepCopyIndexExpression());
+                MP_index_exp copy3(I3.deepCopyIndexExpression());
+                MP_index_exp copy4(I4.deepCopyIndexExpression());
+                MP_index_exp copy5(I5.deepCopyIndexExpression());
+                I1->insertIndexExpr(i1);
+                I2->insertIndexExpr(i2);
+                I3->insertIndexExpr(i3);
+                I4->insertIndexExpr(i4);
+                I5->insertIndexExpr(i5);
+                RV->c->propagateIndexExpressions(I1,I2,I3,I4,I5);
+                I1 = copy1;
+                I2 = copy2;
+                I3 = copy3;
+                I4 = copy4;
+                I5 = copy5;
             }
         }
         else { // We should have RandomVariables associated with us.

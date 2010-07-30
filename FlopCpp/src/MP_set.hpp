@@ -293,6 +293,8 @@ namespace flopc {
         virtual MP_index* getIndex() const;
         virtual MP_domain getDomain(MP_set* s) const;
         virtual int evaluate() const;
+        virtual MP_index_base* deepCopy() const;
+        virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr);
     };
 
     /** @brief Internal representation of a "set" 
