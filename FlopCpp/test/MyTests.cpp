@@ -250,7 +250,7 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_DOUBLE_EQ(8.5,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(11.5,testModel.Solver->getObjValue());
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
@@ -935,14 +935,17 @@ namespace flopc {
         MP_stage T(2);
         MP_set cars(numCars);
         MP_set trains(numTrains);
-        //MP_random_data vars(T,cars); //Initialize RV with set
-        //DiscreteUniformRandomVariable *x,*y,*z;
-        //x = new DiscreteUniformRandomVariable();
-        //y = new DiscreteUniformRandomVariable();
-        //z = new DiscreteUniformRandomVariable();
-        //vars(1,BMW) = x; 
-        //vars(1,Audi) = y;
-        //vars(1,Ford) = z;
+        MP_random_data vars(T,cars); //Initialize RV with set
+        DiscreteUniformRandomVariable *x,*y,*z;
+        x = new DiscreteUniformRandomVariable();
+        y = new DiscreteUniformRandomVariable();
+        z = new DiscreteUniformRandomVariable();
+        vars(1,BMW) = x; 
+        vars(1,Audi) = y;
+        vars(1,Ford) = z;
+        vars(1,BMW)->setStage(1);
+        vars(1,Audi)->setStage(1);
+        vars(1,Ford)->setStage(1);
         //Stage setting is not yet supported, TODO
         MP_variable test(cars,trains);
         RandomVariable* varsArr[1][3] = {{ new DiscreteUniformRandomVariable(0,2,1),new DiscreteUniformRandomVariable(0,3,1),new DiscreteUniformRandomVariable(0,4,1) }}; //Initialize RV with Array of RV
