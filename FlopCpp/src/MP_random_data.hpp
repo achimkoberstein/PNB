@@ -37,8 +37,12 @@ namespace flopc{
         void setRandomVariable(RandomVariable* ptr);
         virtual void generateDiscreteDistribution() = 0;
 
+        int getSampleNumber() const { return samples; }
+        void setSampleNumber(int val) { samples = val; }
+
     protected:
         int samples;
+
         RandomVariable* rvarPtr;
     };
 
@@ -153,7 +157,7 @@ DoubleDiscretization(int samples);
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2, DiscretizationMethod* dmPtr = new EmpiricalDiscretization(2));
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);

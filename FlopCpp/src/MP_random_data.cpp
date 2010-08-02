@@ -39,7 +39,7 @@ namespace flopc{
         //Do a shallow copy (leave values in original arrays). This means we do not want to delete values in the end
         MP_random_data_impl(RandomVariable** array, const MP_set_base &s1, const MP_set_base &s2,                const MP_set_base &s3, const MP_set_base &s4, const MP_set_base &s5):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
-            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),i1(const_cast<MP_set_base*>(&s1)),i2(const_cast<MP_set_base*>(&s2)),i3(const_cast<MP_set_base*>(&s3)),i4(const_cast<MP_set_base*>(&s4)),i5(const_cast<MP_set_base*>(&s5)),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
+            S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),i1(const_cast<MP_set_base&>(s1)),i2(const_cast<MP_set_base&>(s2)),i3(const_cast<MP_set_base&>(s3)),i4(const_cast<MP_set_base&>(s4)),i5(const_cast<MP_set_base&>(s5)),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
                 initialize();
                 // Very ugly code..
                 // What is done here: Arrays stage index is one less than normal stage index because first stage needs no RV. 
@@ -740,7 +740,7 @@ namespace flopc{
 
     }
 
-    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, int sampleSize ): DiscreteRandomVariable(),start(from),end(to),distribution(from,to)
+    DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, int sampleSize, DiscretizationMethod* dmPtr ): DiscreteRandomVariable(),start(from),end(to),distribution(from,to)
     { // Ensure correct functionality
         //TODO: Include test for stepWidth
         if (end < start){
@@ -756,8 +756,12 @@ namespace flopc{
         }
         step = double(end-start)/sampleSize;
         defaultSampleSize = sampleSize;
-        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization(sampleSize));
-        dm->setRandomVariable(this);
+
+        //Set standard discretization method, if no other is given..
+        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+        dm->setSampleNumber(sampleSize);
+        dm->setRandomVariable(this); 
+        
     }
 
     DiscreteUniformRandomVariable::~DiscreteUniformRandomVariable()
@@ -783,6 +787,13 @@ namespace flopc{
         else { // If we have EmpiricalDiscretization, we have to compute these values ourselves..
             assert( dynamic_cast<EmpiricalDiscretization*>(dm.get()) != 0);
             if (howMany == 0 && discreteDistribution.empty()){
+                if ( defaultSampleSize == 1 ) {
+                    // Return mean value with prob. 1
+                    valuesMap.insert(std::pair<double,double> ( double(end-start)/2 ,1.0) );
+                    discreteDistribution = valuesMap;
+                    return;
+                }
+                assert(defaultSampleSize > 1);
                 double stepWidth = double(end-start) /(defaultSampleSize-1);
                 for (int i = 0; i < defaultSampleSize; i++){
                     valuesMap.insert(std::pair<double,double>(start+stepWidth*i,1.0/defaultSampleSize));
