@@ -11,6 +11,7 @@
 #include "CoinFloatEqual.hpp"
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
+#include "Benders.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
 
@@ -157,6 +158,8 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+
+    //Test fails to test the correct thing, somehow something is messed up, assumingly during the det.eq. generation of Smi. Supposed problem: constraints span two stages? I am not so sure about that
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){
         MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
         
@@ -189,12 +192,12 @@ namespace flopc {
 
         testModel.setObjective(objective);
         testModel.attach();
-        testModel.solve(MP_model::MAXIMIZE);
+        //testModel.solve(MP_model::MAXIMIZE);
 
-
-
-
-
+        OsiStochasticBendersTwoStageSolverInterface benders(testModel.Solver,testModel.getSmi());
+				//double begin = CoinCpuTime();
+				benders.initialSolve();
+						//double duration = CoinCpuTime() - begin;
     }
 
     TEST_F(MP_modelTest,DiscretizationTest){
