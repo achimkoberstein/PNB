@@ -125,6 +125,9 @@ namespace flopc {
         const MP_set_base* getSet() const;
         /// Getter for the index used in construction.
         MP_index* getIndex() const;
+
+        virtual MP_index_base* deepCopy() const;
+        virtual MP_index_base* insertIndexExpr(const MP_index_exp&);
         /** @note Internal use. 
         @todo Is internal? can be private? or needs more doc.
         */

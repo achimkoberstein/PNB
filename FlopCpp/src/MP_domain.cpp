@@ -20,6 +20,16 @@ namespace flopc {
         return MP_domain(const_cast<MP_domain_set*>(this));
     }
 
+    MP_index_base* MP_domain_set::insertIndexExpr( const MP_index_exp& expr)
+    {
+        throw not_implemented_error();
+        return expr.operator->(); //TODO: We have to redo this eventually?
+    }
+
+    MP_index_base* MP_domain_set::deepCopy() const
+    {
+        return getIndex();
+    }
     class Functor_conditional : public Functor {
     public:
         Functor_conditional(const Functor* f, const std::vector<MP_boolean> & condition)
