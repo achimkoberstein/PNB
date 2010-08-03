@@ -129,7 +129,7 @@ void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in
     }
 }
 
-void MP_model::Probabilities(const MP_data& prob){
+void MP_model::setProbabilities(const MP_data& prob){
     // set probabilities
     if (scenSet.size() == 0)
         throw invalid_argument_exception(); //We need to set MP_scenario_set first..
@@ -152,7 +152,7 @@ void MP_model::Probabilities(const MP_data& prob){
     }
 }
 
-std::vector<double> MP_model::Probabilities(){
+std::vector<double> MP_model::getProbabilities(){
     // set probabilities
     return probabilities;
 }
@@ -1338,11 +1338,11 @@ namespace flopc {
                 if (curStage < nStages-1){//Add to queue for the next stage, if we are not in the last stage
                     subScenarioQueueVector[curStage+1].push_back(parentScen);
                 }
-                else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete the parent scenario from subScenarios
+                else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete the parent scenario from subScenarios so that only the same scenarios as the parentScen scenario are left
                     scenarioIndirection[parentScen] = scenCounter++;
                     realOrderingFromVirtualScenario[scenCounter -1] = parentScen;
                     subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin()); //Remove from subsetSet to only contain strict subset in the last stage: This ensures correct probability calculation
-                    probabilities[scenCounter-1] = probabilities[scenCounter-1];
+                    //probabilities[scenCounter-1] = probabilities[scenCounter-1];
                 }
 
 #pragma region setCoefficients
@@ -1464,6 +1464,7 @@ namespace flopc {
             probabilities = newProbs;
             
         }
+        // Need a debug assertment statement
 
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
@@ -1485,12 +1486,13 @@ namespace flopc {
             return false;
         bool identical = true;
         for (int i = 0; i < randomVariableVector[curStage].size();i++){
+            // If there is any value in the curStage that is different from the value of nextScen, the scenarios differ.
             if (!compareDouble(randomVariableVector[curStage][i]->scenVector[curScen],randomVariableVector[curStage][i]->scenVector[nextScen]) ){
                 identical = false;
                 break; //break loop and return
             }
         }
-        return !identical;
+        return !identical; 
     }
 
     std::string printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){

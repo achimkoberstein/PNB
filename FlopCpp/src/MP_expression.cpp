@@ -494,8 +494,13 @@ void MP::GenerateFunctor::operator()() const {
                 double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
                 scenarioValues.push_back(temp);
             }
+            //Compute mean via computation of scenario values
+            double meanValue = 0;
+            std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+            for (int j = 0; j < scenarioValues.size(); j++)
+                meanValue += scenarioValues[j]*probs[j];
             // Store mean value
-            sideOfConstraint *= multiplicators[i]->getValue(outOfBound);
+            sideOfConstraint *= meanValue;
         }
         else {
             sideOfConstraint *= multiplicators[i]->getValue();
@@ -522,10 +527,18 @@ void MP::GenerateFunctor::operator()() const {
                 stage = varStage;
                 //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
                 const Expression_random_constant* ePtr = dynamic_cast<const Expression_random_constant*> (C);
-                if (ePtr != 0)
+                if (ePtr != 0){
                     for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
+                    double meanValue = 0;
+                    std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+                    for (int j = 0; j < scenarioValues.size(); j++)
+                        meanValue += scenarioValues[j]*probs[j];
+                    val = meanValue;
+
+                    // We have to replace the mean value?
+                }
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
            
