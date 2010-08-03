@@ -230,12 +230,7 @@ DoubleDiscretization(int samples);
 
         ContinuousRandomVariable();
         ~ContinuousRandomVariable();
-
-
-
     protected:
-        
-
     };
 
     class ContinuousUniformRandomVariable : public ContinuousRandomVariable {

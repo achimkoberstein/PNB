@@ -159,11 +159,41 @@ namespace flopc {
 
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){
         MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
-        MP_stage T(2);
+        
+        MP_stage T(3);
+        //Define two sets
+        MP_set cars(3);
+        MP_set trains(2);
+        MP_set streets(3);
         
         MP_random_data a(T);
         a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(10));
         a(1)->setStage(1);
+        a(2) = new ContinuousNormalRandomVariable(0,1,new ExtendedPearsonTukeyDiscretization());
+        a(2)->setStage(2);
+
+        MP_variable x(T);
+        MP_variable y(T);
+        MP_variable z(cars);
+        MP_variable z1(cars);
+
+        MP_constraint testCon(cars),carOnStreet(T),countCars(T);
+        //testCon(cars) = z(cars) <= sum(cars,z1(cars));
+        carOnStreet(T) = x(T) <= abs(a(T));
+        MP_index aliasT;
+        countCars(T+1) = y(T+1) <= sum(T(aliasT).such_that(aliasT<= T) ,x(aliasT+1));
+
+
+        MP_expression objective;
+        objective = y(T.last());
+
+        testModel.setObjective(objective);
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+
+
+
+
 
     }
 
@@ -465,7 +495,7 @@ namespace flopc {
         objective = rvar(T.last())*x(T.last());
         testModel.setObjective( objective );
         //If we want other probs, we have to attach them
-        testModel.Probabilities(probabilities);
+        testModel.setProbabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         
@@ -563,7 +593,7 @@ namespace flopc {
         prob(low)    = 0.3;
         prob(normal) = 0.4;
         prob(high)   = 0.3;
-        dacota.Probabilities(prob);
+        dacota.setProbabilities(prob);
         
         enum {desk, table, chair, numProducts};
         MP_set P(numProducts);
@@ -790,7 +820,7 @@ namespace flopc {
             EXPECT_LE(3,sampledValues[i]);
             EXPECT_GE(4,sampledValues[i]);
         }
-        std::vector<double> prob = testModel.Probabilities();
+        std::vector<double> prob = testModel.getProbabilities();
         double sum = 0;
         for (int i = 0 ; i < testModel.ScenSet().size(); i++){
             std::cout << " Sc." << i << ": " << prob[i];
@@ -812,7 +842,7 @@ namespace flopc {
         MP_data prob(scen);
         prob(0) = 0.5;
         prob(1) = 0.5;
-        testModel2.Probabilities(prob);
+        testModel2.setProbabilities(prob);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
