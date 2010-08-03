@@ -272,8 +272,8 @@ namespace flopc {
         void Stage(const MP_stage& val) { stage = val; }
         MP_scenario_set ScenSet() const { return scenSet; }
         void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
-        void Probabilities(const MP_data& prob);
-        std::vector<double> Probabilities();
+        void setProbabilities(const MP_data& prob);
+        std::vector<double> getProbabilities();
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @fn void SampleSize(int val)
         ///
@@ -299,7 +299,9 @@ namespace flopc {
         /// @param  sampleOnly  true to sample only. 
         /// @param  sampleSize  Size of the sample. 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize ) { this->sampleOnly = sampleOnly; defaultSampleSize = sampleSize; }
+        void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize ) { this->sampleOnly = sampleOnly; defaultSampleSize = sampleSize; doSample = true; }
+        void setSample(bool sample) { doSample = sample; }
+        bool getSample() { return doSample; }
 
         const SmiScnModel* getSmi() const { return smiModel; }
         SmiScnModel* getSmi() { return smiModel; }
@@ -347,6 +349,7 @@ namespace flopc {
         std::vector<double> probabilities;
         int defaultSampleSize;
         bool sampleOnly;
+        bool doSample;
 
     private:
         int m;

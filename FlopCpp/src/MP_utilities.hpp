@@ -180,6 +180,12 @@ namespace flopc {
         bool isDefined() const {
             return root != 0;
         }
+        bool operator==(const Handle& h) const{
+            return root == h.operator->();
+        }
+        bool operator!=(const Handle& h) const{
+            return !operator==(h);
+        }
         ~Handle() {
             decrement();
         }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 
+#include <boost/math/distributions.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
@@ -16,12 +17,69 @@
 
 //TODO: Define CustomRandomVariable that takes a function void operator()() and is able to generate one sample after another..
 
-
 namespace flopc{
+
+    
 
     //Forward declaration
     class MP_random_data_impl;
-    class RandomDataRef;    
+    class RandomDataRef;
+    class RandomVariable;
+    
+
+    // This class is a virtual base class
+    class DiscretizationMethod {
+    public:
+
+        DiscretizationMethod(int samples);
+        virtual ~DiscretizationMethod();
+
+        void setRandomVariable(RandomVariable* ptr);
+        virtual void generateDiscreteDistribution() = 0;
+
+        int getSampleNumber() const { return samples; }
+        void setSampleNumber(int val) { samples = val; }
+
+    protected:
+        int samples;
+
+        RandomVariable* rvarPtr;
+    };
+
+    class DoubleDiscretization : public DiscretizationMethod {
+        
+    public:
+DoubleDiscretization(int samples);
+
+        void generateDiscreteDistribution();
+    };
+
+    class EmpiricalDiscretization : public DiscretizationMethod {
+      
+    public:
+          EmpiricalDiscretization(int samples);
+        void generateDiscreteDistribution();
+    };
+
+    class BracketMeanDiscretization : public DiscretizationMethod {
+    
+    public:
+            BracketMeanDiscretization(int samples);
+        void generateDiscreteDistribution();
+    };
+
+    class BracketMedianDiscretization : public DiscretizationMethod {
+
+    public:
+                BracketMedianDiscretization(int samples);
+        void generateDiscreteDistribution();
+    };
+
+    class ExtendedPearsonTukeyDiscretization : public DiscretizationMethod {
+    public:
+        ExtendedPearsonTukeyDiscretization();
+        void generateDiscreteDistribution();
+    };
 
     //Class that defines a concrete RandomVariable 
     class RandomVariable : boost::noncopyable {
@@ -40,17 +98,29 @@ namespace flopc{
         std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
         void setScenarioValues(const std::vector<double>&);
+        void setScenarioValuesWithProb(const std::map<double,double>&);
         double getSampledValue(int index) const;
         
         virtual double getMeanValue() const = 0; //Usually we want mean of distribution. Sample mean only for scenario/empirical distributions.
+        virtual double pdf(double x) const = 0;
+        virtual double cdf(double x) const = 0;
+        virtual double quantile(double p) const = 0;
+        //virtual double complementcdf(double x) const = 0;
 
-        int Stage() const { return stage; }
-        void Stage(int val) { stage = val; }
+        int getStage() const { return stage; }
+        void setStage(int val) { stage = val; }
         int SampleSize() const { return defaultSampleSize; }
         void SampleSize(int val) { defaultSampleSize = val; }
         bool isRandomVariable() const { return initialized; }
         int Seed() const { return seed; }
         void Seed(int val) { seed = val; }
+        boost::shared_ptr<DiscretizationMethod> getDiscretizationMethod() const { return dm; }
+        void setDiscretizationMethod(boost::shared_ptr<DiscretizationMethod> val) { dm = val; dm->setRandomVariable(this); }
+        sampleVector getDiscreteDistribution() { return discreteDistribution;  }
+        void setDiscreteDistribution(const sampleVector& map) { discreteDistribution = map; }
+
+
+
     protected:
 
         //Boost::random number generator? Needs seed
@@ -62,6 +132,10 @@ namespace flopc{
         std::vector<double> values; //All values are equally probable
         std::map<double,double> valuesMap; //Value with it's probability. One can get the number of occurences by : prob/1 (and round that)
         int defaultSampleSize;
+        boost::shared_ptr<DiscretizationMethod> dm;
+        sampleVector discreteDistribution;
+
+
 
     private:
         int stage; //Defaults to 0. If this is the case when this variable should get used, we have an error.
@@ -69,30 +143,36 @@ namespace flopc{
 
     };
 
+
+
+
+
+
     class DiscreteRandomVariable : public RandomVariable {
         
     public:
         DiscreteRandomVariable();
         ~DiscreteRandomVariable();
-
-        virtual void sample(int howMany = 0) = 0;
-        virtual double getMeanValue() const = 0;
-
     };
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from = 0, int to = 1, double stepWidth = 1, int sampleSize = 1);
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2, DiscretizationMethod* dmPtr = new EmpiricalDiscretization(2));
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         //Params for DiscreteUniformDistribution: [start,end] in steps of step
         int start;
         int end;
         double step;
+        boost::math::uniform distribution;
+
 
     };
     
@@ -103,9 +183,13 @@ namespace flopc{
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double probability;
+        boost::math::bernoulli distribution;
 
     };
     
@@ -117,9 +201,13 @@ namespace flopc{
 
         virtual void sample(int howMany = 0);
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double probability;
+        boost::math::bernoulli distribution;
 
     };
 
@@ -132,6 +220,9 @@ namespace flopc{
         ~ScenarioRandomVariable();
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
     };
 
     class ContinuousRandomVariable : public RandomVariable {
@@ -139,75 +230,92 @@ namespace flopc{
 
         ContinuousRandomVariable();
         ~ContinuousRandomVariable();
-
-        virtual void sample(int howMany = 0) = 0;
-        virtual double getMeanValue() const = 0;
-
+    protected:
     };
 
     class ContinuousUniformRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousUniformRandomVariable(int from, int to);
+        ContinuousUniformRandomVariable(int from, int to, DiscretizationMethod* dmPtr);
         ~ContinuousUniformRandomVariable();
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         int start;
         int end;
+        boost::math::uniform distribution;
     };
 
     class ContinuousLogNormalRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousLogNormalRandomVariable(double mean, double sigma);
+        ContinuousLogNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr);
         ~ContinuousLogNormalRandomVariable();
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double mean;
         double sigma;
+        boost::math::lognormal distribution;
     };
 
     class ContinuousNormalRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousNormalRandomVariable(double mean, double sigma);
+        ContinuousNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr);
         ~ContinuousNormalRandomVariable();
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double mean;
         double sigma;
+        boost::math::normal distribution;
     };
 
     class ContinuousExponentialRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousExponentialRandomVariable(double lambda);
+        ContinuousExponentialRandomVariable(double lambda, DiscretizationMethod* dmPtr);
         ~ContinuousExponentialRandomVariable();
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double lambda;
+        boost::math::exponential distribution;
     };
     
     class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
     public:
-        ContinuousTriangleRandomVariable(double a, double b, double c);
+        ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr);
         ~ContinuousTriangleRandomVariable();
 
         virtual void sample(int howMany = 0) ;
         virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
 
     private:
         double a;
         double b;
         double c;
+        boost::math::triangular distribution;
     };
 
     //Class that defines indexable random_variables. Contains concrete RandomVariables.
@@ -264,6 +372,7 @@ namespace flopc{
 
     //non-member non-friend functions
     std::ostream &operator<<( std::ostream &out, const RandomVariable& rhs ) ;
+
 
 }
 

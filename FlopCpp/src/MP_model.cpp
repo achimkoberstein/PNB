@@ -90,7 +90,7 @@ void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) const {
 }
 
 MP_model::MP_model(OsiSolverInterface* s, Messenger* m, unsigned int seed ) : 
-Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0),sampleOnly(false),
+Solver(s),messenger(m),stage(0),scenSet(0),Objective(0),defaultSampleSize(0),sampleOnly(false),doSample(false),
 m(0), n(0), nz(0),Cst(0),Clg(0),Rnr(0),Elm(0), bl(0), bu(0), c(0),l(0),u(0),colStage(0),rowStage(0),colIndirection(0),rowIndirection(0),
 mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGenerator(new Uniform01Generator()),smiModel(0) {
     MP_model::current_model = this;
@@ -129,7 +129,7 @@ void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in
     }
 }
 
-void MP_model::Probabilities(const MP_data& prob){
+void MP_model::setProbabilities(const MP_data& prob){
     // set probabilities
     if (scenSet.size() == 0)
         throw invalid_argument_exception(); //We need to set MP_scenario_set first..
@@ -152,7 +152,7 @@ void MP_model::Probabilities(const MP_data& prob){
     }
 }
 
-std::vector<double> MP_model::Probabilities(){
+std::vector<double> MP_model::getProbabilities(){
     // set probabilities
     return probabilities;
 }
@@ -316,6 +316,13 @@ void MP_model::attachStochastic(){
     if (Solver == 0)
         throw invalid_argument_exception();
 
+    // Maybe we have changed RandomVariables, so we have to empty the RV set and fill it again
+    for (int i = 0; i < RandomVariables.size(); i++){
+        RandomVariables[i].clear();
+    }
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); ++i)
+        (*i)->insertRandomVariables(RandomVariables);
+
     // Resample values
     sampleRandomVariates(RandomVariables);
 
@@ -354,7 +361,8 @@ void MP_model::attachStochastic(){
                 if (randomCoefs[i][j]->col == -1)
                     randomCoefs[i][j]->col = n; //This is not very consistent with realn..
                 assert( colIndirection[randomCoefs[i][j]->col] != outOfBound);
-                randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
+                if (colIndirection[randomCoefs[i][j]->col] != -1 ) //In case of RHS?!
+                    randomCoefs[i][j]->col = colIndirection[randomCoefs[i][j]->col];
             }
         }
     }//end if stage
@@ -1329,11 +1337,11 @@ namespace flopc {
                 if (curStage < nStages-1){//Add to queue for the next stage, if we are not in the last stage
                     subScenarioQueueVector[curStage+1].push_back(parentScen);
                 }
-                else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete the parent scenario from subScenarios
+                else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete the parent scenario from subScenarios so that only the same scenarios as the parentScen scenario are left
                     scenarioIndirection[parentScen] = scenCounter++;
                     realOrderingFromVirtualScenario[scenCounter -1] = parentScen;
                     subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin()); //Remove from subsetSet to only contain strict subset in the last stage: This ensures correct probability calculation
-                    probabilities[scenCounter-1] = probabilities[scenCounter-1];
+                    //probabilities[scenCounter-1] = probabilities[scenCounter-1];
                 }
 
 #pragma region setCoefficients
@@ -1455,6 +1463,7 @@ namespace flopc {
             probabilities = newProbs;
             
         }
+        // Need a debug assertment statement
 
         //Delete temporary variables
         for (int curScen = 0; curScen < nScen; curScen++){
@@ -1476,12 +1485,13 @@ namespace flopc {
             return false;
         bool identical = true;
         for (int i = 0; i < randomVariableVector[curStage].size();i++){
+            // If there is any value in the curStage that is different from the value of nextScen, the scenarios differ.
             if (!compareDouble(randomVariableVector[curStage][i]->scenVector[curScen],randomVariableVector[curStage][i]->scenVector[nextScen]) ){
                 identical = false;
                 break; //break loop and return
             }
         }
-        return !identical;
+        return !identical; 
     }
 
     std::string printMatrix(CoinPackedMatrix* matrix_,int n, int m, double* clo, double* cup, double* obj, double* rlo, double* rup, int* colStage = 0, int* rowStage = 0){

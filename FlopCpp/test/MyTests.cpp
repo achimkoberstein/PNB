@@ -1,3 +1,4 @@
+#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
@@ -156,16 +157,83 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    TEST_F(MP_modelTest,ComplicatedExpressionsTest){
+        MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
+        
+        MP_stage T(3);
+        //Define two sets
+        MP_set cars(3);
+        MP_set trains(2);
+        MP_set streets(3);
+        
+        MP_random_data a(T);
+        a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(10));
+        a(1)->setStage(1);
+        a(2) = new ContinuousNormalRandomVariable(0,1,new ExtendedPearsonTukeyDiscretization());
+        a(2)->setStage(2);
+
+        MP_variable x(T);
+        MP_variable y(T);
+        MP_variable z(cars);
+        MP_variable z1(cars);
+
+        MP_constraint testCon(cars),carOnStreet(T),countCars(T);
+        //testCon(cars) = z(cars) <= sum(cars,z1(cars));
+        carOnStreet(T) = x(T) <= abs(a(T));
+        MP_index aliasT;
+        countCars(T+1) = y(T+1) <= sum(T(aliasT).such_that(aliasT<= T) ,x(aliasT+1));
+
+
+        MP_expression objective;
+        objective = y(T.last());
+
+        testModel.setObjective(objective);
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+
+
+
+
+
+    }
+
+    TEST_F(MP_modelTest,DiscretizationTest){
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
+        MP_stage T(2);
+        MP_random_data rvar(T);
+        rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMeanDiscretization(10));
+        rvar(1)->setStage(1);
+        //rvar2(1) = new ContinuousNormalRandomVariable(0,1, new BracketMedianDiscretization(5));
+        //rvar2(1)->setStage(1);
+        MP_variable x(T);
+        MP_constraint con(T);
+        con(T) = x(T) <= rvar(T);
+        testModel.setObjective( x(T.last()) );
+        testModel.solve(MP_model::MAXIMIZE);
+        rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMedianDiscretization(10));
+        rvar(1)->setStage(1);
+        testModel.setObjective( x(T.last()) );
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        rvar(1) = new ContinuousExponentialRandomVariable(1, new BracketMedianDiscretization(10));
+        rvar(1)->setStage(1);
+        testModel.setObjective( x(T.last()) );
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+
+
+    }
+
     TEST_F(MP_modelTest,CoefficientGeneration){
         MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger(),837234979);
         // Enable stochastic elements to allow matrix printing
         MP_stage T(3);
         MP_random_data rVar(T);
         //rVar(0) = new DiscreteBernoulliRandomVariable();
-        rVar(1) = new DiscreteUniformRandomVariable(-2,-1,1,1);
-        rVar(1)->Stage(1);
-        rVar(2) = new DiscreteUniformRandomVariable(1,2,1,1);
-        rVar(2)->Stage(2);
+        rVar(1) = new DiscreteUniformRandomVariable(-2,-1);
+        rVar(1)->setStage(1);
+        rVar(2) = new DiscreteUniformRandomVariable(1,2,3);
+        rVar(2)->setStage(2);
         MP_data A(T);
         A(0) = 15;
         A(1) = 10;
@@ -181,12 +249,42 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(5,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(5,testModel.Solver->getObjValue());
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
-        
+    }
 
+    TEST_F(MP_modelTest,ExtendedCoefficientGeneration){
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger(),837234979);
+        // Enable stochastic elements to allow matrix printing
+        MP_stage T(3);
+        MP_random_data rVar(T);
+        //rVar(0) = new DiscreteBernoulliRandomVariable();
+        rVar(1) = new DiscreteUniformRandomVariable(-2,-1,2);
+        rVar(1)->setStage(1);
+        rVar(2) = new DiscreteUniformRandomVariable(1,2,2);
+        rVar(2)->setStage(2);
+        MP_data A(T);
+        A(0) = 15;
+        A(1) = 10;
+        A(2) = 5;
+        MP_random_data combined(T);
+        combined(T) = A(T-1) + rVar(T);
+        MP_variable y(T);
+        MP_constraint randomConstraint1(T),randomConstraint2(T),randomConstraint3(T);
+        //randomConstraint1(T) = y(T) <= combined(T);
+        //randomConstraint3(T+2) = y(T+2) <= combined(T+2)+rVar(T+1);
+        randomConstraint2(T+1) = y(T+1) <= combined(T+1);
+        testModel.setObjective(y(T.last()));
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        EXPECT_DOUBLE_EQ(11.5,testModel.Solver->getObjValue());
+        y.display("y");
+        rVar.display("RandomVars");
+        combined.display("CombinedData");
+        // We should have a better way to check for certain values.. (like the level command)
     }
 
     TEST_F(MP_modelTest,SimpleTestThatHasToBeRenamed){
@@ -194,7 +292,7 @@ namespace flopc {
         MP_stage T(2);
         MP_data a;
         MP_random_data b(T);
-        DiscreteUniformRandomVariable* xy = new DiscreteUniformRandomVariable(0,10,1);
+        DiscreteUniformRandomVariable* xy = new DiscreteUniformRandomVariable(0,10,11);
         a() = 10;
         b(T.last()) = xy;
 
@@ -216,7 +314,7 @@ namespace flopc {
 
         MP_stage T(numStage);
 
-        RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(-1,1,1,2), new DiscreteUniformRandomVariable(4,5,1,2) };
+        RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(-1,1,2), new DiscreteUniformRandomVariable(4,5,2) };
         MP_random_data randomWalkVar(&randomVars[0],T);
         MP_random_data sumR(T);
         MP_data blubb(T);
@@ -252,7 +350,7 @@ namespace flopc {
         x.display("Werte");
         sumR.display("SumR");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_DOUBLE_EQ(35,testModel.Solver->getObjValue());
+        EXPECT_DOUBLE_EQ(34.5,testModel.Solver->getObjValue());
 
     }
 
@@ -282,8 +380,8 @@ namespace flopc {
         MP_stage T(3);
         //TODO: We have to write a good seed generation routine...
         // Idea: At the moment of sampling total number of sampling variables is known. One can divide the seeds evenly.
-        RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,1,10),new DiscreteUniformRandomVariable(0,10,2,10)};
-        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,1,10),new DiscreteUniformRandomVariable(10,20,2,10)};
+        RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,11),new DiscreteUniformRandomVariable(0,10,11)};
+        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,11),new DiscreteUniformRandomVariable(10,20,11)};
         MP_random_data rvar(&scenarioValues[0],T);
         MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);
@@ -397,7 +495,7 @@ namespace flopc {
         objective = rvar(T.last())*x(T.last());
         testModel.setObjective( objective );
         //If we want other probs, we have to attach them
-        testModel.Probabilities(probabilities);
+        testModel.setProbabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         
@@ -495,7 +593,7 @@ namespace flopc {
         prob(low)    = 0.3;
         prob(normal) = 0.4;
         prob(high)   = 0.3;
-        dacota.Probabilities(prob);
+        dacota.setProbabilities(prob);
         
         enum {desk, table, chair, numProducts};
         MP_set P(numProducts);
@@ -678,8 +776,8 @@ namespace flopc {
         MP_stage T(2);
         MP_set cars(numCars);
         MP_set colors(numColors);
-        RandomVariable* var[1] = { new DiscreteUniformRandomVariable(0,1,1,2) };
-        RandomVariable* var1[1] = { new DiscreteUniformRandomVariable(3,4,1,2) };
+        RandomVariable* var[1] = { new DiscreteUniformRandomVariable(0,1,20) };
+        RandomVariable* var1[1] = { new DiscreteUniformRandomVariable(3,4,20) };
         MP_random_data demand(&var[0],T);
         MP_random_data price(&var1[0],T);
 
@@ -722,7 +820,7 @@ namespace flopc {
             EXPECT_LE(3,sampledValues[i]);
             EXPECT_GE(4,sampledValues[i]);
         }
-        std::vector<double> prob = testModel.Probabilities();
+        std::vector<double> prob = testModel.getProbabilities();
         double sum = 0;
         for (int i = 0 ; i < testModel.ScenSet().size(); i++){
             std::cout << " Sc." << i << ": " << prob[i];
@@ -744,7 +842,7 @@ namespace flopc {
         MP_data prob(scen);
         prob(0) = 0.5;
         prob(1) = 0.5;
-        testModel2.Probabilities(prob);
+        testModel2.setProbabilities(prob);
         double scenarioValues[1][2] = { {1,2} };
         MP_random_data var(&scenarioValues[0][0],T);
         MP_variable x(T);
@@ -875,6 +973,9 @@ namespace flopc {
         vars(1,BMW) = x; 
         vars(1,Audi) = y;
         vars(1,Ford) = z;
+        vars(1,BMW)->setStage(1);
+        vars(1,Audi)->setStage(1);
+        vars(1,Ford)->setStage(1);
         //Stage setting is not yet supported, TODO
         MP_variable test(cars,trains);
         RandomVariable* varsArr[1][3] = {{ new DiscreteUniformRandomVariable(0,2,1),new DiscreteUniformRandomVariable(0,3,1),new DiscreteUniformRandomVariable(0,4,1) }}; //Initialize RV with Array of RV
@@ -892,6 +993,7 @@ namespace flopc {
         testModel.setObjective( sum(cars*trains,test(cars,trains)) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_DOUBLE_EQ(9,testModel->getObjValue());
         
     }
 
@@ -904,17 +1006,15 @@ namespace flopc {
         MP_random_data rVarScenario(&vals[0][0][0],T,testSet);
         //MP_random_data rVarDiscrete;
         //MP_random_data rVarContinuous;
-        DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,1.0/2);
-        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2); 
+        DiscreteUniformRandomVariable* rv = new DiscreteUniformRandomVariable(-3,2,6);
+        ContinuousUniformRandomVariable* rv2 = new ContinuousUniformRandomVariable(-2,2, new BracketMeanDiscretization(20)); 
         rv->Seed(static_cast<unsigned int>(std::time(0)));
-        rv->sample(20);
         std::vector<double> sampledValues = rv->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i],-3);
             EXPECT_LE(sampledValues[i],2);
         }
         rv2->Seed(static_cast<unsigned int>(std::time(0)));
-        rv2->sample(20);
         sampledValues = rv2->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i],-2);
@@ -927,34 +1027,30 @@ namespace flopc {
             EXPECT_EQ(vals[0][0][i],sampledValues[i]);
         }
         
-        ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5);
+        ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5, new BracketMeanDiscretization(20) );
         rv4->Seed(static_cast<unsigned int>(std::time(0)));
-        rv4->sample(20);
         sampledValues = rv4->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
         }
         
-        ContinuousNormalRandomVariable* rv5 = new ContinuousNormalRandomVariable(0,1);
+        ContinuousNormalRandomVariable* rv5 = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
         rv5->Seed(static_cast<unsigned int>(std::time(0)));
-        rv5->sample(20);
         sampledValues = rv5->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], -4);
             EXPECT_LE(sampledValues[i], 4);
         }
         
-        ContinuousExponentialRandomVariable* rv6 = new ContinuousExponentialRandomVariable(1);
+        ContinuousExponentialRandomVariable* rv6 = new ContinuousExponentialRandomVariable(1,new BracketMeanDiscretization(20));
         rv6->Seed(static_cast<unsigned int>(std::time(0)));
-        rv6->sample(20);
         sampledValues = rv6->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
         }
         
-        ContinuousTriangleRandomVariable* rv7 = new ContinuousTriangleRandomVariable(0,1,2);
+        ContinuousTriangleRandomVariable* rv7 = new ContinuousTriangleRandomVariable(0,1,2,new BracketMeanDiscretization(20));
         rv7->Seed(static_cast<unsigned int>(std::time(0)));
-        rv7->sample(20);
         sampledValues = rv7->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
@@ -963,7 +1059,7 @@ namespace flopc {
         
         DiscreteGeometricRandomVariable* rv8 = new DiscreteGeometricRandomVariable(0.5);
         rv8->Seed(static_cast<unsigned int>(std::time(0)));
-        rv8->sample(20);
+        //rv8->sample(20);
         sampledValues = rv8->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 1);
@@ -971,7 +1067,7 @@ namespace flopc {
         
         DiscreteBernoulliRandomVariable* rv9 = new DiscreteBernoulliRandomVariable(0.5);
         rv9->Seed(static_cast<unsigned int>(std::time(0)));
-        rv9->sample(20);
+        //rv9->sample(20);
         sampledValues = rv9->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
@@ -1043,7 +1139,7 @@ namespace flopc {
     TEST_F(RandomVariableTest,RepeatedSamplingTest){
         MP_model testModel(new OsiClpSolverInterface());
         MP_stage T(2);
-        RandomVariable* randomVars[1] = { new DiscreteUniformRandomVariable(0,10,1,10) };
+        RandomVariable* randomVars[1] = { new DiscreteUniformRandomVariable(0,10,11) };
         MP_random_data rvar(&randomVars[0],T);
         MP_variable x(T);
         MP_constraint con1(T),con2(T);

@@ -54,6 +54,7 @@ namespace flopc {
         MP_data* D;
     private:
         mutable MP_index_exp I1,I2,I3,I4,I5;
+        MP_index_exp origI1,origI2,origI3,origI4,origI5;
         Constant C;
         int stochastic;
         MP_boolean B;

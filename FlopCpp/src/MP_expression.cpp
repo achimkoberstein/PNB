@@ -157,6 +157,7 @@ namespace flopc {
             vector<TerminalExpression*> multiplicators,
             MP::GenerateFunctor& f,
             double m) const {
+                // If we generate coefficients we need correct indices, i.e. the ones stored in the RandomDataRef. Therefore empty indices should be propagated, as the function can then decide to either propagate the given indices or use the already stored indices.
                 C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
                 f.setMultiplicator(multiplicators,m);
                 f.setTerminalExpression(this);
@@ -483,6 +484,9 @@ void MP::GenerateFunctor::operator()() const {
             // If we have a stage, we have a Expression_random_constant
             // At this moment we have to ensure that correct indexation is used in the subexpressions
             Expression_random_constant* ePtr = dynamic_cast<Expression_random_constant*>(multiplicators[i]);
+            if (ePtr == 0)
+                throw invalid_argument_exception();
+            // Propagate correct indices, i.e. use the ones defined during assignment phase for MP_random_data. Therefore we have to call the function with empty indices to signal this.
             ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = std::max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient
@@ -490,8 +494,13 @@ void MP::GenerateFunctor::operator()() const {
                 double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
                 scenarioValues.push_back(temp);
             }
+            //Compute mean via computation of scenario values
+            double meanValue = 0;
+            std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+            for (int j = 0; j < scenarioValues.size(); j++)
+                meanValue += scenarioValues[j]*probs[j];
             // Store mean value
-            sideOfConstraint *= multiplicators[i]->getValue(outOfBound);
+            sideOfConstraint *= meanValue;
         }
         else {
             sideOfConstraint *= multiplicators[i]->getValue();
@@ -518,10 +527,18 @@ void MP::GenerateFunctor::operator()() const {
                 stage = varStage;
                 //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
                 const Expression_random_constant* ePtr = dynamic_cast<const Expression_random_constant*> (C);
-                if (ePtr != 0)
+                if (ePtr != 0){
                     for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
+                    double meanValue = 0;
+                    std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+                    for (int j = 0; j < scenarioValues.size(); j++)
+                        meanValue += scenarioValues[j]*probs[j];
+                    val = meanValue;
+
+                    // We have to replace the mean value?
+                }
             }
             Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
            

@@ -101,7 +101,7 @@ void MP_variable::operator()() const {
         for (int i = 0; i < M->scenSet.size(); i++){
             values = M->smiModel->getColSolution(i,&length);
             //TODO: Check length //Check colIndirection for outOfBound..
-            cout<< " Sc. " << i << " " << values[M->colIndirection[offset +
+            cout<< " Sc. " << i << ": " << values[M->colIndirection[offset +
             f(i1.evaluate(),
             i2.evaluate(),
             i3.evaluate(),
