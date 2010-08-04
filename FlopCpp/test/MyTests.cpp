@@ -83,16 +83,16 @@ namespace flopc {
         MP_model testModel;
     };
 
-        // Class to test the functionality of random variables
+    // Class to test the functionality of random variables
     class IntegerTest: public MP_modelTest {
     };
-    
+
     class BendersTest: public ::testing::Test{
     protected:
         BendersTest(){ }
     };
-    
-    #pragma endregion initialization
+
+#pragma endregion initialization
 
     //TEST_F(BendersTest,BendersSolverTest){
     //    // minimization 
@@ -159,13 +159,13 @@ namespace flopc {
 
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){
         MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
-        
+
         MP_stage T(3);
         //Define two sets
         MP_set cars(3);
         MP_set trains(2);
         MP_set streets(3);
-        
+
         MP_random_data a(T);
         a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(10));
         a(1)->setStage(1);
@@ -323,18 +323,18 @@ namespace flopc {
         blubb(2) = 20;
         //sumR(0) = 0;
         sumR(T) = blubb(T) + randomWalkVar(T);
-        
+
         MP_variable x(T);
         MP_variable y(T);
 
         MP_constraint firstConstraint(T),secondConstraint(T);
         MP_constraint thirdConstraint;
         //firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
-        
+
         secondConstraint(T+1) = y(T+1) == sumR(T+1) + y(T);
         firstConstraint(T+1) = x(T+1) <= y(T+1);
         thirdConstraint() = y(0) <= Constant(0);
-      
+
         //MP_constraint secondConstraint(T);
         //secondConstraint(T+1) = 2*y(T+1) + x(T+1) <= randomWalkVar(T+1);
         MP_expression objective( x(T.last()) );
@@ -410,7 +410,7 @@ namespace flopc {
 
     // Simple Example Model to test fundamental ScenTree Generation and Solving Capabilites
     TEST_F(UseCaseTest,InvestmentExampleTest){
-        
+
         MP_model investmentModel(new OsiClpSolverInterface());
         MP_data initialWealth,goal;
         initialWealth() = 55; //set data
@@ -498,7 +498,7 @@ namespace flopc {
         testModel.setProbabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
-        
+
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(52,testModel->getObjValue());
     }
@@ -594,7 +594,7 @@ namespace flopc {
         prob(normal) = 0.4;
         prob(high)   = 0.3;
         dacota.setProbabilities(prob);
-        
+
         enum {desk, table, chair, numProducts};
         MP_set P(numProducts);
 
@@ -634,32 +634,32 @@ namespace flopc {
 
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
-          - sum(R, x(R) * resourceCost(R))
-        );
-        
+            - sum(R, x(R) * resourceCost(R))
+            );
+
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
-        
+
         // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
-        
+
         ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(ev, 4165);
-        
+
         eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
         EXPECT_NEAR(eev, 1545, 0.0001);
-        
+
         ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(ws, 4165);
-        
+
         // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE);
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
-        
-        
+
+
         cout << "Finished";
     }
 
@@ -804,7 +804,7 @@ namespace flopc {
             EXPECT_GE(4,sampledValues[i]);
         }
         testModel.setSampleOnlyScenarioGeneration(true,10);
-        
+
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
@@ -994,7 +994,7 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(9,testModel->getObjValue());
-        
+
     }
 
     //RandomVariable Sampling Tests..
@@ -1026,14 +1026,14 @@ namespace flopc {
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_EQ(vals[0][0][i],sampledValues[i]);
         }
-        
+
         ContinuousLogNormalRandomVariable* rv4 = new ContinuousLogNormalRandomVariable(1,0.5, new BracketMeanDiscretization(20) );
         rv4->Seed(static_cast<unsigned int>(std::time(0)));
         sampledValues = rv4->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
         }
-        
+
         ContinuousNormalRandomVariable* rv5 = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
         rv5->Seed(static_cast<unsigned int>(std::time(0)));
         sampledValues = rv5->getSampledValues();
@@ -1041,14 +1041,14 @@ namespace flopc {
             EXPECT_GE(sampledValues[i], -4);
             EXPECT_LE(sampledValues[i], 4);
         }
-        
+
         ContinuousExponentialRandomVariable* rv6 = new ContinuousExponentialRandomVariable(1,new BracketMeanDiscretization(20));
         rv6->Seed(static_cast<unsigned int>(std::time(0)));
         sampledValues = rv6->getSampledValues();
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 0);
         }
-        
+
         ContinuousTriangleRandomVariable* rv7 = new ContinuousTriangleRandomVariable(0,1,2,new BracketMeanDiscretization(20));
         rv7->Seed(static_cast<unsigned int>(std::time(0)));
         sampledValues = rv7->getSampledValues();
@@ -1056,7 +1056,7 @@ namespace flopc {
             EXPECT_GE(sampledValues[i], 0);
             EXPECT_LE(sampledValues[i], 2);
         }
-        
+
         DiscreteGeometricRandomVariable* rv8 = new DiscreteGeometricRandomVariable(0.5);
         rv8->Seed(static_cast<unsigned int>(std::time(0)));
         //rv8->sample(20);
@@ -1064,7 +1064,7 @@ namespace flopc {
         for (std::vector<double>::size_type i = 1; i < sampledValues.size();++i){
             EXPECT_GE(sampledValues[i], 1);
         }
-        
+
         DiscreteBernoulliRandomVariable* rv9 = new DiscreteBernoulliRandomVariable(0.5);
         rv9->Seed(static_cast<unsigned int>(std::time(0)));
         //rv9->sample(20);
