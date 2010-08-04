@@ -1288,10 +1288,10 @@ namespace flopc {
 
         }
 
-        //CoinPackedVector clo;
-        //CoinPackedVector cup;
         std::vector<int> tempAncScenVec(nScen,outOfBound); //Initalized Vector with outOfBound (not valid)
         std::vector<int> branchStageVec(nScen,outOfBound); //Initialized Vector with 0
+        // Usage: Branch: stage in which scenario differs from ancestor scenario
+        // => if we differ in stage 1 we need 0 as ancestor (or otherwise this does not makes so much sense)
         //set correct values for first scenario:
         tempAncScenVec[0] = 0;
         branchStageVec[0] = 1;
@@ -1424,7 +1424,7 @@ namespace flopc {
         std::vector<int> ancScenVec(scenCounter);
         for (int i = 0; i < nScen; i++){
             if (scenarioIndirection[i] != outOfBound) //If we are out of Bound this scenario is the same as another one.
-                ancScenVec[scenarioIndirection[i]] = tempAncScenVec[scenarioIndirection[i]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
+                ancScenVec[scenarioIndirection[i]] = scenarioIndirection[tempAncScenVec[i]]; //Get program index for natural scenario i. Need to transfer program index to natural scenario index. 
         }
         if (smiModel){ //If we already have a smiModel we do not want to create a new one, but only throw away the scenario tree.
             smiModel->releaseCore(); //Keep Core Model.
