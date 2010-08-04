@@ -190,6 +190,7 @@ namespace flopc {
         testModel.setObjective(objective);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
 
 
 
