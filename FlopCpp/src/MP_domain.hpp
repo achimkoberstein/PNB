@@ -180,6 +180,17 @@ namespace flopc {
         MP_domain_subset<nbr> (MP_subset<nbr>* s, 
             const std::vector<MP_index*> &i) : S(s), I(i){}
 
+        // Does it makes sense to call this function for a MP_domain_subset? I hope not *G*
+        MP_index_base* insertIndexExpr( const MP_index_exp& expr)
+        {
+            throw not_implemented_error();
+            return getIndex(); //TODO: We have to redo this eventually?
+        }
+
+        MP_index_base* deepCopy() const
+        {
+            return getIndex();
+        }
         /** Evaluates the index within the domain.  
         @note For internal use
         */
