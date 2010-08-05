@@ -823,7 +823,7 @@ namespace flopc {
         }
         std::vector<double> prob = testModel.getProbabilities();
         double sum = 0;
-        for (int i = 0 ; i < testModel.ScenSet().size(); i++){
+        for (int i = 0 ; i < testModel.getScenSet().size(); i++){
             std::cout << " Sc." << i << ": " << prob[i];
             sum += prob[i];
         }
