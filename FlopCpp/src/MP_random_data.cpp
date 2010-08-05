@@ -423,8 +423,8 @@ namespace flopc{
                     probVector.insert(std::pair<double,double>( probSum ,it->first ));
                 }
                 // Setup RNG
-                typedef boost::uniform_int<> distr_type;
-                boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,1));
+                typedef boost::uniform_01<> distr_type;
+                boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type());
 
                 // Now we can call the RNG and sample the values
                 for (int i = 0; i < howMany; i++) {

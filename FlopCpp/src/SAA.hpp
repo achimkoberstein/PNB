@@ -1,8 +1,13 @@
 #ifndef _SAA_hpp_
 #define _SAA_hpp_
 
-#include "flopc.hpp"
+#include <vector>
+
+#include "OsiSolverInterface.hpp"
 #include "OsiStochasticSolverInterface.hpp"
+
+#include "flopc.hpp"
+
 
 using namespace ::flopc;
 

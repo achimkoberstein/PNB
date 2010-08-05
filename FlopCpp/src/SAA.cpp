@@ -1,7 +1,7 @@
 #include "SAA.hpp"
 
 //TODO: Initialize the other variables
-SAASolver::SAASolver(MP_model& model, OsiSolverInterface& solver) : model(model),solver(solver)
+SAASolver::SAASolver(MP_model& model, OsiSolverInterface& solver) : innerSampleSize(0),outerSampleSize(0),numberOfRuns(0),initialized(false),model(model),solver(solver)
 { }
 
 void SAASolver::solve( const MP_model::MP_direction& direction) {
@@ -17,7 +17,7 @@ void SAASolver::solve( const MP_model::MP_direction& direction) {
     for (int i = 0; i < numberOfRuns; i++){
         model.attach(); // This step includes resampling..
         model.solve(direction);
-
+        solutionValues[i] = model->getObjValue();
     }
 
     // Set the sample size to outerSampleSize
@@ -30,3 +30,16 @@ void SAASolver::solve( const MP_model::MP_direction& direction) {
 
 }
 
+SAASolver::~SAASolver()
+{
+
+}
+
+void SAASolver::setValues( int innerSampleSize, int outerSampleSize, int numberOfRuns )
+{
+    this->innerSampleSize = innerSampleSize;
+    this->outerSampleSize = outerSampleSize;
+    this->numberOfRuns = numberOfRuns;
+    initialized = true;
+
+}

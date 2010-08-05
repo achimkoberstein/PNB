@@ -11,6 +11,7 @@
 #include "CoinFloatEqual.hpp"
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
+#include "SAA.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
 
@@ -157,6 +158,46 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    //TEST_F(MP_modelTest,SAATest){
+    //    MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
+
+    //    MP_stage T(3);
+    //    //Define two sets
+    //    MP_set cars(3);
+    //    MP_set trains(2);
+    //    MP_set streets(3);
+
+    //    MP_random_data a(T);
+    //    a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
+    //    a(1)->setStage(1);
+    //    a(2) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
+    //    a(2)->setStage(2);
+
+    //    MP_variable x(T);
+    //    MP_variable y(T);
+    //    MP_variable z(cars);
+    //    MP_variable z1(cars);
+
+    //    MP_constraint testCon(cars),carOnStreet(T),countCars(T);
+    //    //testCon(cars) = z(cars) <= sum(cars,z1(cars));
+    //    carOnStreet(T) = x(T) <= abs(a(T));
+    //    MP_index aliasT;
+    //    countCars(T+1) = y(T+1) <= sum(T(aliasT).such_that(aliasT<= T) ,x(aliasT+1));
+
+
+    //    MP_expression objective;
+    //    objective = y(T.last());
+
+    //    testModel.setObjective(objective);
+    //    SAASolver solver(testModel,*testModel.Solver);
+    //    solver.setValues(10,20,5);
+    //    solver.solve(MP_model::MAXIMIZE);
+    //    EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
+
+
+
+    //}
+
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){
         MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
 
@@ -191,10 +232,6 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
-
-
-
-
 
     }
 
