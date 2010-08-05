@@ -268,10 +268,10 @@ namespace flopc {
         Messenger *getMessenger(){ 
             return messenger;
         }
-        MP_stage Stage() const { return stage; }
-        void Stage(const MP_stage& val) { stage = val; }
-        MP_scenario_set ScenSet() const { return scenSet; }
-        void ScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
+        MP_stage getStage() const { return stage; }
+        void setStage(const MP_stage& val) { stage = val; }
+        MP_scenario_set getScenSet() const { return scenSet; }
+        void setScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
         void setProbabilities(const MP_data& prob);
         std::vector<double> getProbabilities();
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -284,8 +284,8 @@ namespace flopc {
         ///
         /// @param  val The value. 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        void SampleSize(int val) { defaultSampleSize = val; };
-        int SampleSize() { return defaultSampleSize; };
+        void setSampleSize(int val) { defaultSampleSize = val; };
+        int getSampleSize() { return defaultSampleSize; };
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// @fn void setSampleOnlyScenarioGeneration(bool sampleOnly, int sampleSize = 0)

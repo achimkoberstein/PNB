@@ -48,12 +48,12 @@ namespace flopc{
                 findStageSet();
                 switch (stage)
                 {
-                    case 0: j1i = 1; break;
-                    case 1: j2i = 1; break;
-                    case 2: j3i = 1; break;
-                    case 3: j4i = 1; break;
-                    case 4: j5i = 1; break;
-                    default : throw invalid_argument_exception();
+                case 0: j1i = 1; break;
+                case 1: j2i = 1; break;
+                case 2: j3i = 1; break;
+                case 3: j4i = 1; break;
+                case 4: j5i = 1; break;
+                default : throw invalid_argument_exception();
 
                 }
                 for (int j1 = j1i; j1 < S1.size();j1++)
@@ -91,7 +91,7 @@ namespace flopc{
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
                 initialize();
-                int scen = MP_model::getCurrentModel()->ScenSet().size();
+                int scen = MP_model::getCurrentModel()->getScenSet().size();
                 //Identify stage set: The set with getStage > 0 is the stage set.
                 //If there is no stage set: No Problem ;)
                 int j1i,j2i,j3i,j4i,j5i;
@@ -212,7 +212,7 @@ namespace flopc{
         }
 
 
-        
+
         const MP_set_base &S1,&S2,&S3,&S4,&S5;
         mutable MP_index_exp i1,i2,i3,i4,i5;// MP_index. Used to iterate over the sets in the display method
         RandomConstant c;
@@ -264,12 +264,12 @@ namespace flopc{
         if (&S5!=&MP_set::getEmpty()) cout << i5->evaluate() << " ";
         if (values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
             i4->evaluate(),i5->evaluate())] != NULL){
-                for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
+                for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++)
                     std::cout << " Sc." << i << ": " << values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(), i4->evaluate(),i5->evaluate())]->getSampledValue(i) << " ";
         }
         else if (c.isDefined()){ // There is no variable at this point, so we can skip it.
             //c->propagateIndexExpressions(i1,i2,i3,i4,i5);
-            for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++)
+            for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++)
                 std::cout << " Sc." << i << ": " << c->evaluate(i) << " "; 
         }
         std::cout << std::endl;
@@ -331,7 +331,7 @@ namespace flopc{
             throw not_implemented_error();
         }
         return values; //might be empty, might not be empty..
-        
+
     }
 
     std::map<double,double> RandomVariable::getSampledValuesWithProb()
@@ -343,7 +343,7 @@ namespace flopc{
         if ( !values.empty() ){
             if (defaultSampleSize == 0) //Compute Sample Size
                 defaultSampleSize = values.size();
-                
+
             //Count number of different elements and store them in the map
             for (int i = 0; i < values.size(); i++){
                 valuesMap[values[i]] = valuesMap[values[i]] + 1.0;
@@ -401,7 +401,7 @@ namespace flopc{
         if (discreteDistribution.empty() || discreteDistribution.size() != defaultSampleSize){
             dm->generateDiscreteDistribution(); //This sets discreteDistribution.
         } 
-        
+
         // We already have a discretized distribution available to us at this point.
         if (MP_model::getCurrentModel()->getSample()){
             //We want to sample, so we need a fresh valuesMap
@@ -479,7 +479,7 @@ namespace flopc{
         visited(ref.visited)
     {}
 
-     const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
+    const RandomDataRef& RandomDataRef::operator=( const RandomConstant& c )
     { //TODO: What about bool, B, index_exp ?
         RV->c = c;
         return *this;
@@ -501,11 +501,11 @@ namespace flopc{
         // Set correct stage for variable.
         //Set stage to correct value
         switch (RV->stage){
-            case 0: c->setStage((int)I1->evaluate() ); break;
-            case 1: c->setStage((int)I2->evaluate() ); break;
-            case 2: c->setStage((int)I3->evaluate() ); break;
-            case 3: c->setStage((int)I4->evaluate() ); break;
-            case 4: c->setStage((int)I5->evaluate() ); break;
+    case 0: c->setStage((int)I1->evaluate() ); break;
+    case 1: c->setStage((int)I2->evaluate() ); break;
+    case 2: c->setStage((int)I3->evaluate() ); break;
+    case 3: c->setStage((int)I4->evaluate() ); break;
+    case 4: c->setStage((int)I5->evaluate() ); break;
         }
         return *this;
     }
@@ -578,12 +578,12 @@ namespace flopc{
     int RandomDataRef::getStage() const
     {	//We do not know which of these sets is the stage set, so we have to check all (but could abort after we found one)
         switch (RV->stage){
-            case 0 : return I1->evaluate();
-            case 1 : return I2->evaluate();
-            case 2 : return I3->evaluate();
-            case 3 : return I4->evaluate();
-            case 4 : return I5->evaluate();
-            default: throw invalid_argument_exception();
+    case 0 : return I1->evaluate();
+    case 1 : return I2->evaluate();
+    case 2 : return I3->evaluate();
+    case 3 : return I4->evaluate();
+    case 4 : return I5->evaluate();
+    default: throw invalid_argument_exception();
         }
         //int i1 = RV->S1.checkStage(I1->evaluate());
         //int i2 = RV->S2.checkStage(I2->evaluate());
@@ -618,7 +618,7 @@ namespace flopc{
             visited = true;
             //TODO: Look at this method again..
         }
-        
+
     }
 
     double RandomDataRef::evaluate( int scenario ) const
@@ -645,13 +645,13 @@ namespace flopc{
                     // First: User made an error while typing the model. If this is the case we throw an invalid argument exception.
                     // Second: User used a random parameter in the first stage, we can check for that.
                     switch ( RV->stage){
-                        case 0: if ( i1 == 0) return 0; break;
-                        case 1: if ( i2 == 0) return 0; break;
-                        case 2: if ( i3 == 0) return 0; break;
-                        case 3: if ( i4 == 0) return 0; break;
-                        case 4: if ( i5 == 0) return 0; break;
-                        // We have either no stage defined (which throws an exception earlier) or we are not in the first stage.
-                        default : throw invalid_argument_exception();
+    case 0: if ( i1 == 0) return 0; break;
+    case 1: if ( i2 == 0) return 0; break;
+    case 2: if ( i3 == 0) return 0; break;
+    case 3: if ( i4 == 0) return 0; break;
+    case 4: if ( i5 == 0) return 0; break;
+        // We have either no stage defined (which throws an exception earlier) or we are not in the first stage.
+    default : throw invalid_argument_exception();
                     }
                 }
                 return RV->c->evaluate(scenario);
@@ -685,7 +685,7 @@ namespace flopc{
 
     double ScenarioRandomVariable::getMeanValue() const {
         // We need the number of scenarios to equal the values we got here. Otherwise something seems to be wrong
-        int scenarioSize = MP_model::getCurrentModel()->ScenSet().size();
+        int scenarioSize = MP_model::getCurrentModel()->getScenSet().size();
         std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
         assert(scenarioSize == probs.size()); // We have correct probabilities for current scenario set.
         assert(scenarioSize == values.size()); // We have same number of values as number of scenarios.
@@ -726,7 +726,7 @@ namespace flopc{
 
     ContinuousRandomVariable::ContinuousRandomVariable() : RandomVariable() {}
 
-     ContinuousRandomVariable::~ContinuousRandomVariable()
+    ContinuousRandomVariable::~ContinuousRandomVariable()
     {
 
     }
@@ -757,11 +757,10 @@ namespace flopc{
         step = double(end-start)/sampleSize;
         defaultSampleSize = sampleSize;
 
-        //Set standard discretization method, if no other is given..
         dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
         dm->setSampleNumber(sampleSize);
         dm->setRandomVariable(this); 
-        
+
     }
 
     DiscreteUniformRandomVariable::~DiscreteUniformRandomVariable()
@@ -771,28 +770,16 @@ namespace flopc{
 
     void DiscreteUniformRandomVariable::sample( int howMany )
     {
-        //Initialize data structure 
+        //Initialize data structure and discrete distribution.
         RandomVariable::sample(howMany);
-        if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-            // We want to compute values from start to end with a stepWidth of step (double)
-            // So we first compute size of domain : (end-start)/stepWidth
-            int domainSize = round((end-start)/step);
-            // Then generate the variates: start+step*random_variate
-            typedef boost::uniform_int<> distr_type;
-            boost::variate_generator<uniform_distr_gen&,distr_type> variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
-            for (int i = 0; i < howMany; ++i){
-                values.push_back(start+step*variateGen());
+        if (discreteDistribution.empty()){ // This should only be the case if we have a DoubleDiscretization..
+            if ( defaultSampleSize == 1 ) {
+                // Return mean value with prob. 1
+                valuesMap.insert(std::pair<double,double> ( double(end-start)/2 ,1.0) );
+                discreteDistribution = valuesMap;
+
             }
-        }
-        else { // If we have EmpiricalDiscretization, we have to compute these values ourselves..
-            assert( dynamic_cast<EmpiricalDiscretization*>(dm.get()) != 0);
-            if (howMany == 0 && discreteDistribution.empty()){
-                if ( defaultSampleSize == 1 ) {
-                    // Return mean value with prob. 1
-                    valuesMap.insert(std::pair<double,double> ( double(end-start)/2 ,1.0) );
-                    discreteDistribution = valuesMap;
-                    return;
-                }
+            else {
                 assert(defaultSampleSize > 1);
                 double stepWidth = double(end-start) /(defaultSampleSize-1);
                 for (int i = 0; i < defaultSampleSize; i++){
@@ -801,7 +788,24 @@ namespace flopc{
                 discreteDistribution = valuesMap;
             }
         }
+        if (MP_model::getCurrentModel()->getSample()){ //Sample from discrete distribution
+            // If we have EmpiricalDiscretization, we have to compute these values ourselves..
+            if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+                // Sample from uniform distribution using boost..
+                int domainSize = end-start;
+                typedef boost::uniform_int<> distr_type;
+                boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
+                for (int i = 0; i < howMany; ++i){
+                    values.push_back(start+variateGen());
+                }
+            }
+            else {
+                // Sampling from discrete distribution is already done in the base class method
+            }
+        }
+
     }
+
 
     double DiscreteUniformRandomVariable::getMeanValue() const {
         // We can compute it by sampled values or we can compute mean value for distribution
@@ -831,7 +835,7 @@ namespace flopc{
 
     DiscreteGeometricRandomVariable::DiscreteGeometricRandomVariable(double probability): DiscreteRandomVariable(),probability(probability),distribution(probability)
     { 
-        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization(1));
+        dm = boost::shared_ptr<DiscretizationMethod>(new DoubleDiscretization(1));
         dm->setRandomVariable(this);
     }
 
@@ -844,14 +848,23 @@ namespace flopc{
     {
         //Initialize data structure
         RandomVariable::sample(howMany);
-        if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        // Typedef to ease use and allow copy code ;)
-        typedef boost::geometric_distribution<> distr_type;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(variateGen());
+
+        if (MP_model::getCurrentModel()->getSample()){ //Sample from discrete distribution
+            // If we have EmpiricalDiscretization, we have to compute these values ourselves..
+            if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+                // Sample from uniform distribution using boost..
+                // Typedef to ease use and allow copy code ;)
+                typedef boost::geometric_distribution<> distr_type;
+                boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
+                for (int i = 0; i < howMany; ++i){
+                    values.push_back(variateGen());
+                }
+            }
+            else {
+                // Sampling from discrete distribution is already done in the base class method
+            }
         }
-        }
+
     }
 
     double DiscreteGeometricRandomVariable::getMeanValue() const
@@ -879,7 +892,7 @@ namespace flopc{
 
     DiscreteBernoulliRandomVariable::DiscreteBernoulliRandomVariable(double probability): DiscreteRandomVariable(),probability(probability),distribution(probability)
     {     
-        dm = boost::shared_ptr<DiscretizationMethod>(new EmpiricalDiscretization(1));
+        dm = boost::shared_ptr<DiscretizationMethod>(new DoubleDiscretization(1));
         dm->setRandomVariable(this);
     }
 
@@ -892,14 +905,21 @@ namespace flopc{
     {
         //Initialize data structure
         RandomVariable::sample(howMany);
- if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        // Typedef to ease use and allow copy code ;)
-        typedef boost::bernoulli_distribution<> distr_type;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(variateGen());
+
+        if (MP_model::getCurrentModel()->getSample()){ //Sample from discrete distribution
+            // If we have EmpiricalDiscretization, we have to compute these values ourselves..
+            if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+                // Typedef to ease use and allow copy code ;)
+                typedef boost::bernoulli_distribution<> distr_type;
+                boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(probability));
+                for (int i = 0; i < howMany; ++i){
+                    values.push_back(variateGen());
+                }
+            }
+            else {
+                // Sampling from discrete distribution is already done in the base class method
+            }
         }
- }
     }
 
     double DiscreteBernoulliRandomVariable::getMeanValue() const
@@ -944,337 +964,361 @@ namespace flopc{
     {
         //Initialize data structure
         RandomVariable::sample(howMany);
-        // Typedef to ease use and allow copy code ;)
-         if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        typedef boost::uniform_real<> distr_type;
-        double domainSize = end-start;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(start+variateGen());
+        if (MP_model::getCurrentModel()->getSample()){
+            if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+                // Typedef to ease use and allow copy code ;)
+                typedef boost::uniform_real<> distr_type;
+                double domainSize = end-start;
+                boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(0,domainSize));
+                for (int i = 0; i < howMany; ++i){
+                    values.push_back(start+variateGen());
+                }
+            }
+            else {
+                // Sampling from discrete distribution is already done in the base class method
+            }
         }
-         }
     }
 
-    double ContinuousUniformRandomVariable::getMeanValue() const
-    {
-        return start + (end-start)/2;
-    }
-    double ContinuousUniformRandomVariable::pdf( double x ) const
-    {
-        return boost::math::pdf(distribution,x);
-    }
+double ContinuousUniformRandomVariable::getMeanValue() const
+{
+    return start + (end-start)/2;
+}
+double ContinuousUniformRandomVariable::pdf( double x ) const
+{
+    return boost::math::pdf(distribution,x);
+}
 
-    double ContinuousUniformRandomVariable::cdf( double x ) const
-    {
-        return boost::math::cdf(distribution,x);
-    }
+double ContinuousUniformRandomVariable::cdf( double x ) const
+{
+    return boost::math::cdf(distribution,x);
+}
 
-    double ContinuousUniformRandomVariable::quantile( double p ) const
-    {
-        return boost::math::quantile(distribution,p);
-    }
+double ContinuousUniformRandomVariable::quantile( double p ) const
+{
+    return boost::math::quantile(distribution,p);
+}
 
 
-    ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
-    {
-        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
-        dm->setRandomVariable(this);
-    }
+ContinuousLogNormalRandomVariable::ContinuousLogNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
+{
+    dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+    dm->setRandomVariable(this);
+}
 
-    ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
-    {
+ContinuousLogNormalRandomVariable::~ContinuousLogNormalRandomVariable()
+{
 
-    }
+}
 
-    void ContinuousLogNormalRandomVariable::sample( int howMany )
-    {
-        //Initialize data structures
-        RandomVariable::sample(howMany);
- if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        // Typedef to ease use and allow copy code ;)
-        typedef boost::lognormal_distribution<> distr_type;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(variateGen());
+void ContinuousLogNormalRandomVariable::sample( int howMany )
+{
+    //Initialize data structures
+    RandomVariable::sample(howMany);
+    if (MP_model::getCurrentModel()->getSample()){
+        if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+            // Typedef to ease use and allow copy code ;)
+            typedef boost::lognormal_distribution<> distr_type;
+            boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
+            for (int i = 0; i < howMany; ++i){
+                values.push_back(variateGen());
+            }
         }
- }
-    }
-
-    double ContinuousLogNormalRandomVariable::getMeanValue() const
-    {
-        return mean;
-    }
-    double ContinuousLogNormalRandomVariable::pdf( double x ) const
-    {
-        return boost::math::pdf(distribution,x);
-    }
-
-    double ContinuousLogNormalRandomVariable::cdf( double x ) const
-    {
-        return boost::math::cdf(distribution,x);
-    }
-
-    double ContinuousLogNormalRandomVariable::quantile( double p ) const
-    {
-        return boost::math::quantile(distribution,p);
-    }
-
-    
-    ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
-    {
-        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
-        dm->setRandomVariable(this);
-    }
-
-    ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
-    {
-
-    }
-
-    void ContinuousNormalRandomVariable::sample( int howMany )
-    {
-        //Initialize data structures
-        RandomVariable::sample(howMany);
-         if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        // Typedef to ease use and allow copy code ;)
-        typedef boost::normal_distribution<> distr_type;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(variateGen());
+        else {
+            // Sampling from discrete distribution is already done in the base class method
         }
-         }
     }
+}
 
-    double ContinuousNormalRandomVariable::getMeanValue() const
-    {
-        return mean;
-    }
-    double ContinuousNormalRandomVariable::pdf( double x ) const
-    {
-        return boost::math::pdf(distribution,x);
-    }
+double ContinuousLogNormalRandomVariable::getMeanValue() const
+{
+    return mean;
+}
+double ContinuousLogNormalRandomVariable::pdf( double x ) const
+{
+    return boost::math::pdf(distribution,x);
+}
 
-    double ContinuousNormalRandomVariable::cdf( double x ) const
-    {
-        return boost::math::cdf(distribution,x);
-    }
+double ContinuousLogNormalRandomVariable::cdf( double x ) const
+{
+    return boost::math::cdf(distribution,x);
+}
 
-    double ContinuousNormalRandomVariable::quantile( double p ) const
-    {
-        return boost::math::quantile(distribution,p);
-    }
+double ContinuousLogNormalRandomVariable::quantile( double p ) const
+{
+    return boost::math::quantile(distribution,p);
+}
 
-    ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),lambda(lambda),distribution(lambda)
-    {
-        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
-        dm->setRandomVariable(this);
-    }
 
-    ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
-    {
+ContinuousNormalRandomVariable::ContinuousNormalRandomVariable(double mean, double sigma, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),mean(mean),sigma(sigma),distribution(mean,sigma)
+{
+    dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+    dm->setRandomVariable(this);
+}
 
-    }
+ContinuousNormalRandomVariable::~ContinuousNormalRandomVariable()
+{
 
-    void ContinuousExponentialRandomVariable::sample( int howMany )
-    {
-        //Initialize data structures
-        RandomVariable::sample(howMany);
- if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        // Typedef to ease use and allow copy code ;)
-        typedef boost::exponential_distribution<> distr_type;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(lambda));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(variateGen());
+}
+
+void ContinuousNormalRandomVariable::sample( int howMany )
+{
+    //Initialize data structures
+    RandomVariable::sample(howMany);
+    if (MP_model::getCurrentModel()->getSample()){
+        if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+            typedef boost::normal_distribution<> distr_type;
+            boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(mean, sigma));
+            for (int i = 0; i < howMany; ++i){
+                values.push_back(variateGen());
+            }
         }
- }
-    }
-
-    double ContinuousExponentialRandomVariable::getMeanValue() const
-    {
-        return 1.0/lambda;
-    }
-    double ContinuousExponentialRandomVariable::pdf( double x ) const
-    {
-        return boost::math::pdf(distribution,x);
-    }
-
-    double ContinuousExponentialRandomVariable::cdf( double x ) const
-    {
-        return boost::math::cdf(distribution,x);
-    }
-
-    double ContinuousExponentialRandomVariable::quantile( double p ) const
-    {
-        return boost::math::quantile(distribution,p);
-    }
-
-    ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),a(a),b(b),c(c), distribution(a,b,c)
-    {
-        dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
-        dm->setRandomVariable(this);
-    }
-
-    ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()
-    {
-
-    }
-
-    void ContinuousTriangleRandomVariable::sample( int howMany )
-    {
-        //Initialize data structures
-        RandomVariable::sample(howMany);
- if (MP_model::getCurrentModel()->getSample()){ //Sample from 
-        // Typedef to ease use and allow copy code ;)
-        typedef boost::triangle_distribution<> distr_type;
-        boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(a,b,c));
-        for (int i = 0; i < howMany; ++i){
-            values.push_back(variateGen());
+        else {
+            // Sampling from discrete distribution is already done in the base class method
         }
- }
     }
+}
 
-    double ContinuousTriangleRandomVariable::getMeanValue() const
-    {   
-        throw not_implemented_error();
-    }
-    double ContinuousTriangleRandomVariable::pdf( double x ) const
-    {
-        return boost::math::pdf(distribution,x);
-    }
+double ContinuousNormalRandomVariable::getMeanValue() const
+{
+    return mean;
+}
+double ContinuousNormalRandomVariable::pdf( double x ) const
+{
+    return boost::math::pdf(distribution,x);
+}
 
-    double ContinuousTriangleRandomVariable::cdf( double x ) const
-    {
-        return boost::math::cdf(distribution,x);
-    }
+double ContinuousNormalRandomVariable::cdf( double x ) const
+{
+    return boost::math::cdf(distribution,x);
+}
 
-    double ContinuousTriangleRandomVariable::quantile( double p ) const
-    {
-        return boost::math::quantile(distribution,p);
-    }
+double ContinuousNormalRandomVariable::quantile( double p ) const
+{
+    return boost::math::quantile(distribution,p);
+}
 
+ContinuousExponentialRandomVariable::ContinuousExponentialRandomVariable(double lambda, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),lambda(lambda),distribution(lambda)
+{
+    dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+    dm->setRandomVariable(this);
+}
 
+ContinuousExponentialRandomVariable::~ContinuousExponentialRandomVariable()
+{
 
-    DiscretizationMethod::DiscretizationMethod(int samples): samples(samples),rvarPtr(0)
-    {
-    
-    }
+}
 
-    DiscretizationMethod::~DiscretizationMethod()
-    {
-
-    }
-
-    void DiscretizationMethod::setRandomVariable( RandomVariable* ptr )
-    {
-        rvarPtr = ptr;
-        rvarPtr->SampleSize(samples);
-    }
-
-    BracketMeanDiscretization::BracketMeanDiscretization(int samples): DiscretizationMethod(samples)
-    {
-
-    }
-    
-    
-    void BracketMeanDiscretization::generateDiscreteDistribution()
-    {
-        // At first we compute the intervals, number is given by sampleSize.
-        // We should start with the end-points
-        double epsilon = std::numeric_limits<double>::epsilon();
-        double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
-        double upperEnd = rvarPtr->quantile(1-epsilon);
-        int intervals = rvarPtr->SampleSize();
-        std::vector<double> intervalPoints(intervals+1);
-        intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
-        double increment = (upperEnd-lowerEnd)/intervals;
-        for (int i = 1; i < intervals; i++){
-            intervalPoints[i] = intervalPoints[i-1]+increment;
+void ContinuousExponentialRandomVariable::sample( int howMany )
+{
+    //Initialize data structures
+    RandomVariable::sample(howMany);
+    if (MP_model::getCurrentModel()->getSample()){
+        if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+            // Typedef to ease use and allow copy code ;)
+            typedef boost::exponential_distribution<> distr_type;
+            boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(lambda));
+            for (int i = 0; i < howMany; ++i){
+                values.push_back(variateGen());
+            }
         }
-
-        // Now we compute the mean of each interval.
-        std::map<double,double> bracketMeans;
-        double probSum = 0;
-        for (int i = 0; i < intervals; i++){
-            // Probability of interval is CDF right bracket - CDF left bracket
-            double prob = (rvarPtr->cdf(intervalPoints[i+1])-rvarPtr->cdf(intervalPoints[i]));
-            // Bracket mean is value that corresponds to mean probability of that interval
-            double bracketMean = intervalPoints[i]+increment/2;
-            bracketMeans.insert(std::pair<double,double>(bracketMean,prob));
-            probSum += prob;
+        else {
+            // Sampling from discrete distribution is already done in the base class method
         }
-        assert( compareDouble(1.0,probSum) ); 
-        rvarPtr->setDiscreteDistribution(bracketMeans);
     }
+}
 
-    void BracketMedianDiscretization::generateDiscreteDistribution()
-    {
-        // At first we compute the intervals, number is given by sampleSize.
-        // We should start with the end-points
-        double epsilon = std::numeric_limits<double>::epsilon();
-        double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
-        double upperEnd = rvarPtr->quantile(1-epsilon);
-        int intervals = rvarPtr->SampleSize();
-        std::vector<double> intervalPoints(intervals+1);
-        intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
+double ContinuousExponentialRandomVariable::getMeanValue() const
+{
+    return 1.0/lambda;
+}
+double ContinuousExponentialRandomVariable::pdf( double x ) const
+{
+    return boost::math::pdf(distribution,x);
+}
 
-        double increment = (1-2*epsilon)/intervals;
-        for (int i = 1; i < intervals; i++){
-            intervalPoints[i] = rvarPtr->quantile(0+epsilon+increment*i);
+double ContinuousExponentialRandomVariable::cdf( double x ) const
+{
+    return boost::math::cdf(distribution,x);
+}
+
+double ContinuousExponentialRandomVariable::quantile( double p ) const
+{
+    return boost::math::quantile(distribution,p);
+}
+
+ContinuousTriangleRandomVariable::ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr) : ContinuousRandomVariable(),a(a),b(b),c(c), distribution(a,b,c)
+{
+    dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
+    dm->setRandomVariable(this);
+}
+
+ContinuousTriangleRandomVariable::~ContinuousTriangleRandomVariable()
+{
+
+}
+
+void ContinuousTriangleRandomVariable::sample( int howMany )
+{
+    //Initialize data structures
+    RandomVariable::sample(howMany);
+    if (MP_model::getCurrentModel()->getSample()){
+        if( dynamic_cast<DoubleDiscretization*>(dm.get()) != 0 ){
+            // Typedef to ease use and allow copy code ;)
+            typedef boost::triangle_distribution<> distr_type;
+            boost::variate_generator<uniform_distr_gen,distr_type > variateGen(*MP_model::getCurrentModel()->getUniformGenerator()->uniform,distr_type(a,b,c));
+            for (int i = 0; i < howMany; ++i){
+                values.push_back(variateGen());
+            }
         }
-
-        // Now we compute the median of each interval.
-        std::map<double,double> bracketMedians;
-        double probSum = 0;
-        for (int i = 1; i <= intervals; i++){
-            // Probability of interval is 1 / #intervals
-            double prob = 1.0/intervals;
-            // Bracket median is quantil of intervalStartProb+increment/2
-            double median = rvarPtr->quantile(0 + epsilon + increment*(i-1)+ increment/2);         
-            bracketMedians.insert(std::pair<double,double>(median,prob));
-            probSum += prob;
+        else {
+            // Sampling from discrete distribution is already done in the base class method
         }
-        assert( compareDouble(1.0,probSum));
-        rvarPtr->setDiscreteDistribution(bracketMedians);
+    }
+}
+
+double ContinuousTriangleRandomVariable::getMeanValue() const
+{   
+    throw not_implemented_error();
+}
+double ContinuousTriangleRandomVariable::pdf( double x ) const
+{
+    return boost::math::pdf(distribution,x);
+}
+
+double ContinuousTriangleRandomVariable::cdf( double x ) const
+{
+    return boost::math::cdf(distribution,x);
+}
+
+double ContinuousTriangleRandomVariable::quantile( double p ) const
+{
+    return boost::math::quantile(distribution,p);
+}
+
+
+
+DiscretizationMethod::DiscretizationMethod(int samples): samples(samples),rvarPtr(0)
+{
+
+}
+
+DiscretizationMethod::~DiscretizationMethod()
+{
+
+}
+
+void DiscretizationMethod::setRandomVariable( RandomVariable* ptr )
+{
+    rvarPtr = ptr;
+    rvarPtr->SampleSize(samples);
+}
+
+BracketMeanDiscretization::BracketMeanDiscretization(int samples): DiscretizationMethod(samples)
+{
+
+}
+
+
+void BracketMeanDiscretization::generateDiscreteDistribution()
+{
+    // At first we compute the intervals, number is given by sampleSize.
+    // We should start with the end-points
+    double epsilon = std::numeric_limits<double>::epsilon();
+    double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
+    double upperEnd = rvarPtr->quantile(1-epsilon);
+    int intervals = rvarPtr->SampleSize();
+    std::vector<double> intervalPoints(intervals+1);
+    intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
+    double increment = (upperEnd-lowerEnd)/intervals;
+    for (int i = 1; i < intervals; i++){
+        intervalPoints[i] = intervalPoints[i-1]+increment;
     }
 
-    BracketMedianDiscretization::BracketMedianDiscretization( int samples ): DiscretizationMethod(samples)
-    {
-
+    // Now we compute the mean of each interval.
+    std::map<double,double> bracketMeans;
+    double probSum = 0;
+    for (int i = 0; i < intervals; i++){
+        // Probability of interval is CDF right bracket - CDF left bracket
+        double prob = (rvarPtr->cdf(intervalPoints[i+1])-rvarPtr->cdf(intervalPoints[i]));
+        // Bracket mean is value that corresponds to mean probability of that interval
+        double bracketMean = intervalPoints[i]+increment/2;
+        bracketMeans.insert(std::pair<double,double>(bracketMean,prob));
+        probSum += prob;
     }
-    void DoubleDiscretization::generateDiscreteDistribution()
-    {
-        // We do nothing. This allows sampling from a double discretized distribution.. (not so useful.. most likely)
+    assert( compareDouble(1.0,probSum) ); 
+    rvarPtr->setDiscreteDistribution(bracketMeans);
+}
+
+void BracketMedianDiscretization::generateDiscreteDistribution()
+{
+    // At first we compute the intervals, number is given by sampleSize.
+    // We should start with the end-points
+    double epsilon = std::numeric_limits<double>::epsilon();
+    double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
+    double upperEnd = rvarPtr->quantile(1-epsilon);
+    int intervals = rvarPtr->SampleSize();
+    std::vector<double> intervalPoints(intervals+1);
+    intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
+
+    double increment = (1-2*epsilon)/intervals;
+    for (int i = 1; i < intervals; i++){
+        intervalPoints[i] = rvarPtr->quantile(0+epsilon+increment*i);
     }
 
-    DoubleDiscretization::DoubleDiscretization( int samples ): DiscretizationMethod(samples)
-    {
-
+    // Now we compute the median of each interval.
+    std::map<double,double> bracketMedians;
+    double probSum = 0;
+    for (int i = 1; i <= intervals; i++){
+        // Probability of interval is 1 / #intervals
+        double prob = 1.0/intervals;
+        // Bracket median is quantil of intervalStartProb+increment/2
+        double median = rvarPtr->quantile(0 + epsilon + increment*(i-1)+ increment/2);         
+        bracketMedians.insert(std::pair<double,double>(median,prob));
+        probSum += prob;
     }
-    void EmpiricalDiscretization::generateDiscreteDistribution()
-    {
-        // We do nothing.
-    }
+    assert( compareDouble(1.0,probSum));
+    rvarPtr->setDiscreteDistribution(bracketMedians);
+}
 
-    EmpiricalDiscretization::EmpiricalDiscretization( int samples ): DiscretizationMethod(samples)
-    {
+BracketMedianDiscretization::BracketMedianDiscretization( int samples ): DiscretizationMethod(samples)
+{
 
-    }
+}
+void DoubleDiscretization::generateDiscreteDistribution()
+{
+    // We do nothing. This allows sampling from a double discretized distribution.. (not so useful.. most likely)
+}
 
-    ExtendedPearsonTukeyDiscretization::ExtendedPearsonTukeyDiscretization() : DiscretizationMethod(3)
-    {
+DoubleDiscretization::DoubleDiscretization( int samples ): DiscretizationMethod(samples)
+{
 
-    }
+}
+//void EmpiricalDiscretization::generateDiscreteDistribution()
+//{
+//    // We do nothing.
+//}
 
-    void ExtendedPearsonTukeyDiscretization::generateDiscreteDistribution()
-    {
-        // ExtendedPearson-Tukey: Generate discrete approximation of 5,50,and 95 percent quantile.
-        double lowerQuantile = rvarPtr->quantile(0.05); // 0.185 %
-        double upperQuantile = rvarPtr->quantile(0.95); // 0.630 %
-        double medianQuantile = rvarPtr->quantile(0.5); // 0.185 %
-        std::map<double,double> discretizedDistribution;
-        discretizedDistribution.insert(std::pair<double,double>(lowerQuantile,0.185));
-        discretizedDistribution.insert(std::pair<double,double>(medianQuantile,0.630));
-        discretizedDistribution.insert(std::pair<double,double>(upperQuantile,0.185));
-        rvarPtr->setDiscreteDistribution(discretizedDistribution);
-    }
+//EmpiricalDiscretization::EmpiricalDiscretization( int samples ): DiscretizationMethod(samples)
+//{
+
+//}
+
+ExtendedPearsonTukeyDiscretization::ExtendedPearsonTukeyDiscretization() : DiscretizationMethod(3)
+{
+
+}
+
+void ExtendedPearsonTukeyDiscretization::generateDiscreteDistribution()
+{
+    // ExtendedPearson-Tukey: Generate discrete approximation of 5,50,and 95 percent quantile.
+    double lowerQuantile = rvarPtr->quantile(0.05); // 0.185 %
+    double upperQuantile = rvarPtr->quantile(0.95); // 0.630 %
+    double medianQuantile = rvarPtr->quantile(0.5); // 0.185 %
+    std::map<double,double> discretizedDistribution;
+    discretizedDistribution.insert(std::pair<double,double>(lowerQuantile,0.185));
+    discretizedDistribution.insert(std::pair<double,double>(medianQuantile,0.630));
+    discretizedDistribution.insert(std::pair<double,double>(upperQuantile,0.185));
+    rvarPtr->setDiscreteDistribution(discretizedDistribution);
+}
 }
