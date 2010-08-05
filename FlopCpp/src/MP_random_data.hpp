@@ -19,13 +19,13 @@
 
 namespace flopc{
 
-    
+
 
     //Forward declaration
     class MP_random_data_impl;
     class RandomDataRef;
     class RandomVariable;
-    
+
 
     // This class is a virtual base class
     class DiscretizationMethod {
@@ -46,32 +46,35 @@ namespace flopc{
         RandomVariable* rvarPtr;
     };
 
+    // A random variable that has no discretization method can use the double discretization method as the method of choice.
+    // This means that the natural discretization applied by a computer is used. No defaultSampleSize 
     class DoubleDiscretization : public DiscretizationMethod {
-        
+
     public:
-DoubleDiscretization(int samples);
+        DoubleDiscretization(int samples);
 
         void generateDiscreteDistribution();
     };
 
-    class EmpiricalDiscretization : public DiscretizationMethod {
-      
-    public:
-          EmpiricalDiscretization(int samples);
-        void generateDiscreteDistribution();
-    };
+    // Class that discretizes 
+    //class EmpiricalDiscretization : public DiscretizationMethod {
+
+    //public:
+    //    EmpiricalDiscretization(int samples);
+    //    void generateDiscreteDistribution();
+    //};
 
     class BracketMeanDiscretization : public DiscretizationMethod {
-    
+
     public:
-            BracketMeanDiscretization(int samples);
+        BracketMeanDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
     class BracketMedianDiscretization : public DiscretizationMethod {
 
     public:
-                BracketMedianDiscretization(int samples);
+        BracketMedianDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
@@ -100,7 +103,7 @@ DoubleDiscretization(int samples);
         void setScenarioValues(const std::vector<double>&);
         void setScenarioValuesWithProb(const std::map<double,double>&);
         double getSampledValue(int index) const;
-        
+
         virtual double getMeanValue() const = 0; //Usually we want mean of distribution. Sample mean only for scenario/empirical distributions.
         virtual double pdf(double x) const = 0;
         virtual double cdf(double x) const = 0;
@@ -149,7 +152,7 @@ DoubleDiscretization(int samples);
 
 
     class DiscreteRandomVariable : public RandomVariable {
-        
+
     public:
         DiscreteRandomVariable();
         ~DiscreteRandomVariable();
@@ -157,7 +160,7 @@ DoubleDiscretization(int samples);
 
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
-        DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2, DiscretizationMethod* dmPtr = new EmpiricalDiscretization(2));
+        DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2, DiscretizationMethod* dmPtr = new DoubleDiscretization(2));
         ~DiscreteUniformRandomVariable();
 
         virtual void sample(int howMany = 0);
@@ -175,7 +178,7 @@ DoubleDiscretization(int samples);
 
 
     };
-    
+
     class DiscreteBernoulliRandomVariable : public DiscreteRandomVariable {
     public :
         DiscreteBernoulliRandomVariable(double probability);
@@ -192,7 +195,7 @@ DoubleDiscretization(int samples);
         boost::math::bernoulli distribution;
 
     };
-    
+
     // Shifted geometric Distribution
     class DiscreteGeometricRandomVariable : public DiscreteRandomVariable {
     public :
@@ -299,7 +302,7 @@ DoubleDiscretization(int samples);
         double lambda;
         boost::math::exponential distribution;
     };
-    
+
     class ContinuousTriangleRandomVariable : public ContinuousRandomVariable {
     public:
         ContinuousTriangleRandomVariable(double a, double b, double c, DiscretizationMethod* dmPtr);
@@ -365,7 +368,7 @@ DoubleDiscretization(int samples);
         MP_random_data& operator=(const MP_random_data& rhs); //forbid assignment operator
 
         boost::shared_ptr<MP_random_data_impl> ptrImpl; //TODO: We can change this to CoinSharedPointer?!
-        
+
 
 
     };
