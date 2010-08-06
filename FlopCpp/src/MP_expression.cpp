@@ -456,7 +456,7 @@ void MP::VariableBoundsFunctor::operator()() const {
     //std::vector<double> scenarioValues;
     //if (var->V->lowerLimit->getStage()){ //
     //    scenarioValues.clear();
-    //    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+    //    for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++) {
     //        scenarioValues.push_back(var->V->lowerLimit.evaluate(i));
     //    }
     //    boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),lowerBound,var->V->lowerLimit.evaluate(outOfBound),var->getStage(),var->V->lowerLimit.getStage(),scenarioValues));
@@ -464,7 +464,7 @@ void MP::VariableBoundsFunctor::operator()() const {
     //}
     //if (var->V->upperLimit->getStage()){ //
     //    scenarioValues.clear();
-    //    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++) {
+    //    for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++) {
     //        scenarioValues.push_back(var->V->upperLimit.evaluate(i));
     //    }
     //    boost::shared_ptr<MP::Coef> temp(new MP::Coef(var->getColumn(),upperBound,var->V->upperLimit.evaluate(outOfBound),var->getStage(),var->V->upperLimit.getStage(),scenarioValues));
@@ -490,7 +490,7 @@ void MP::GenerateFunctor::operator()() const {
             ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = std::max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient
-            for (int j = 0; j < MP_model::getCurrentModel()->ScenSet().size();j++){
+            for (int j = 0; j < MP_model::getCurrentModel()->getScenSet().size();j++){
                 double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
                 scenarioValues.push_back(temp);
             }
@@ -528,7 +528,7 @@ void MP::GenerateFunctor::operator()() const {
                 //We need to check if we have a lonesome random variable here. This means a dynamic_cast to MP_expression instead of VariableRef..
                 const Expression_random_constant* ePtr = dynamic_cast<const Expression_random_constant*> (C);
                 if (ePtr != 0){
-                    for (int i = 0; i < MP_model::getCurrentModel()->ScenSet().size(); i++ ){
+                    for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
                     double meanValue = 0;
