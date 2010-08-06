@@ -386,8 +386,57 @@ namespace flopc {
         
         x1.display();
         x2.display();
-        
-	EXPECT_DOUBLE_EQ(31.333333333333336,testModel->getObjValue());
+        EXPECT_DOUBLE_EQ(31.333333333333336,testModel->getObjValue());
+    }
+
+    TEST_F(MP_modelTest,SuchThatRandomTest){
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
+
+        MP_set A(2);
+        MP_set B(3);
+        MP_set C(4);
+        MP_set D(5);
+        MP_stage T(3);
+        MP_scenario_set scen(4);
+
+        MP_subset<2> AB(A,B);
+        AB.insert(0,0);
+        AB.insert(0,1);
+
+        MP_subset<2> CD(C,D);
+        CD.insert(0,0);
+
+        MP_subset<2> BC(B,C);
+        BC.insert(0,0);
+        BC.insert(0,1);
+        BC.insert(1,1);
+
+        MP_data dA(A);
+        dA(0) = 1;
+        dA(1) = 10;
+
+        double dbvalues[2][4] = { {1,2,3,4 }, {5,6,7,8 }}; 
+
+        MP_random_data dB(dbvalues[0,0],T);
+
+        MP_variable x1(A), x2(A),x3(B,C),x4(B),x5(A,T);
+        x1.upperLimit(A) = 10;
+        x2.upperLimit(A) = 10;
+        x3.upperLimit(B,C) = 10;
+        x4.upperLimit(B) = 10;
+
+        MP_constraint constr1(A), constr2(AB),constr3(T);
+        constr1(A) = sum( BC(B,C),3*x3(B,C))  <= dA(A);
+        constr2(AB(A,B)) = x2(A)+x4(B) <= dA(A); //constr(AB) = dA(A) <= x2(A); does not work
+        constr3(T) = sum(A,x5(A,T)) <= dB(T);
+
+        testModel.setObjective(sum(A.such_that(AB(A,B)), x2(A)) + sum(B.such_that(BC(B,C))*C.such_that(BC(B,C)), x3(B,C)   ));
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MAXIMIZE);
+
+        x1.display();
+        x2.display();
+        EXPECT_DOUBLE_EQ(1.333333333333336,testModel->getObjValue());
     }
 
     
