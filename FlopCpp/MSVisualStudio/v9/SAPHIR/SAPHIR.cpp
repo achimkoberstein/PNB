@@ -907,14 +907,14 @@ int main(int argc, char* argv[]) {
     //);
     saphir.setObjective(
         // gain
-        sum(SC*T, EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T))
+        sum(SC*T, EPRICESC(SC,T) * DELTAT(T) * LOAD(ST.last(),SC,T))
         // gasbezugskosten
      - (  sum(MBC(BC,M), EPRICEBC(MBC) * DELTAM(M) * pbcp(MBC)) 
-        + sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST+1,TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC)))
+        + sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC)))
         // speicherkosten
-     - (sum(S, SCF(S) + SCV(S) * emaxs(ST+1,S) + PPRICEINJ(S) * pmaxinj(ST+1,S) + PPRICEEXT(S) * pmaxext(ST+1,S) + sum(T, SCC(S) * DELTAT(T) * pinj(ST+1,S,T))))
+     - (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) + sum(T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T))))
         // netzkosten
-     - (sum(LMA, CENTRY(LMA) * pmaxl(ST+1,LMA) - CEXIT(LMA) * pminl(ST+1,LMA)))
+     - (sum(LMA, CENTRY(LMA) * pmaxl(ST.last(),LMA) - CEXIT(LMA) * pminl(ST.last(),LMA)))
     );
     
     saphir.attach(saphir.Solver);    

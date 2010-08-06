@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 	int numScen = 2;
 	if (argc >= 3)
 		numScen = (int) strtoul(argv[2], 0, 0);
-    capa.SampleSize(numScen);
+    capa.setSampleSize(numScen);
 
 
 #pragma region sets
@@ -6662,34 +6662,34 @@ int main(int argc, char* argv[]) {
     {//T
         {//M
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             },
             {//K
-                new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30), new ContinuousNormalRandomVariable(50,30)
+                new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen)), new ContinuousNormalRandomVariable(50,30, new BracketMedianDiscretization(numScen))
             }
         }
     };
@@ -6762,7 +6762,7 @@ int main(int argc, char* argv[]) {
       + sum(K, sum(M, h(M,K) * z(T+1,M,K)))
     );
 
-    capa.setSampleOnlyScenarioGeneration(true,capa.SampleSize() ); //We specified SampleSize already above
+    capa.setSampleOnlyScenarioGeneration(true,capa.getSampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
     
 	if (solveWithBenders) {
@@ -6773,7 +6773,7 @@ int main(int argc, char* argv[]) {
 
 		ofstream ofs;
 		ofs.open("CapaOpt_Benders.txt", std::ios::app);
-		ofs << "Sample size: " << capa.SampleSize() << endl;
+		ofs << "Sample size: " << capa.getSampleSize() << endl;
 		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
 		ofs << "Obj. Value: " << benders.getObjValue() << endl;
 		ofs << "Iterations: " << benders.getNumIterations() << endl;
@@ -6787,7 +6787,7 @@ int main(int argc, char* argv[]) {
 
 		ofstream ofs;
 		ofs.open("CapaOpt_DetEq.txt", std::ios::app);
-		ofs << "Sample size: " << capa.SampleSize() << endl;
+		ofs << "Sample size: " << capa.getSampleSize() << endl;
 		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
 		ofs << "Obj. Value: " << capa->getObjValue() << endl;
 		ofs << "Iterations: " << capa->getIterationCount() << endl;
