@@ -158,6 +158,45 @@ namespace flopc {
     //    delete benders; //TODO: This leads to errors
     //}
 
+    //TEST_F(MP_modelTest,SAATest){
+    //    MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
+
+    //    MP_stage T(3);
+    //    //Define two sets
+    //    MP_set cars(3);
+    //    MP_set trains(2);
+    //    MP_set streets(3);
+
+    //    MP_random_data a(T);
+    //    a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
+    //    a(1)->setStage(1);
+    //    a(2) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(20));
+    //    a(2)->setStage(2);
+
+    //    MP_variable x(T);
+    //    MP_variable y(T);
+    //    MP_variable z(cars);
+    //    MP_variable z1(cars);
+
+    //    MP_constraint testCon(cars),carOnStreet(T),countCars(T);
+    //    //testCon(cars) = z(cars) <= sum(cars,z1(cars));
+    //    carOnStreet(T) = x(T) <= abs(a(T));
+    //    MP_index aliasT;
+    //    countCars(T+1) = y(T+1) <= sum(T(aliasT).such_that(aliasT<= T) ,x(aliasT+1));
+
+
+    //    MP_expression objective;
+    //    objective = y(T.last());
+
+    //    testModel.setObjective(objective);
+    //    SAASolver solver(testModel,*testModel.Solver);
+    //    solver.setValues(10,20,5);
+    //    solver.solve(MP_model::MAXIMIZE);
+    //    EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
+
+
+
+    //}
 
     //Test fails to test the correct thing, somehow something is messed up, assumingly during the det.eq. generation of Smi. Supposed problem: constraints span two stages? I am not so sure about that
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){
@@ -311,6 +350,52 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
     }
 
+    TEST_F(MP_modelTest,SuchThatTest){
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
+
+        MP_set A(2);
+        MP_set B(3);
+        MP_set C(2);
+        MP_set D(2);
+        
+        MP_subset<2> AB(A,B);
+        AB.insert(0,0);
+        AB.insert(0,1);
+        
+        MP_subset<2> CD(C,D);
+        CD.insert(0,0);
+        
+        MP_subset<2> BC(B,C);
+        BC.insert(0,0);
+        BC.insert(0,1);
+        BC.insert(1,1);
+        
+        MP_data dA(A);
+        
+        dA(0) = 1;
+        dA(1) = 10;
+        
+        MP_variable x1(A), x2(A),x3(B,C),x4(B);
+        x1.upperLimit(A) = 10;
+        x2.upperLimit(A) = 10;
+        x3.upperLimit(B,C) = 10;
+        x4.upperLimit(B) = 10;
+        
+        MP_constraint constr1(A), constr2(AB);
+        constr1(A) = sum( BC(B,C),3*x3(B,C))  <= dA(A);
+        constr2(AB(A,B)) = x2(A)+x4(B) <= dA(A); //constr(AB) = dA(A) <= x2(A); does not work
+        
+        testModel.setObjective(sum(A, x1(A) + x2(A)) + sum(B.such_that(BC(B,C))*C.such_that(BC(B,C)), x3(B,C)   ));
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MAXIMIZE);
+        
+        x1.display();
+        x2.display();
+        
+	EXPECT_DOUBLE_EQ(31.333333333333336,testModel->getObjValue());
+    }
+
+    
     TEST_F(UseCaseTest,RandomWalkTest){ //Seed: 1015576855 im vergleich zu 1106783986
         const int numStage = 3;
         unsigned int seed = 2013598861;
@@ -826,7 +911,7 @@ namespace flopc {
         }
         std::vector<double> prob = testModel.getProbabilities();
         double sum = 0;
-        for (int i = 0 ; i < testModel.ScenSet().size(); i++){
+        for (int i = 0 ; i < testModel.getScenSet().size(); i++){
             std::cout << " Sc." << i << ": " << prob[i];
             sum += prob[i];
         }

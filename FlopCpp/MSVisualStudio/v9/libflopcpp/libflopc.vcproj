@@ -214,6 +214,10 @@
 				RelativePath="..\..\..\src\MP_variable.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\SAA.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -278,6 +282,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\MP_variable.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\SAA.hpp"
 				>
 			</File>
 		</Filter>

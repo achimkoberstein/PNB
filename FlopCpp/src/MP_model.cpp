@@ -1016,7 +1016,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
     } //end for
     if (sampleOnly){ //If we sampled only, we have equiprobable values and do not have to generate the scenario fan => resampling with preset probabilities does not makes sense..
         this->probabilities.clear();
-        this->ScenSet(MP_scenario_set(sampleSize));//Important <- otherwise scenario generation does not work as coefs get initialized without scenario values
+        this->setScenSet(MP_scenario_set(sampleSize));//Important <- otherwise scenario generation does not work as coefs get initialized without scenario values
         probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
         return;
     }
@@ -1080,7 +1080,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         }//end for rv
     }//end for stage
     //Prepare everything in the model: Set scenario set and add probabilities..
-    this->ScenSet(MP_scenario_set(overallScenarios.size()));
+    this->setScenSet(MP_scenario_set(overallScenarios.size()));
     this->probabilities.clear();
     this->probabilities.reserve(overallScenarios.size());
     double sum = 0;
