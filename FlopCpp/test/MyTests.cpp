@@ -12,6 +12,7 @@
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
 #include "Benders.hpp"
+#include "SAA.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
 

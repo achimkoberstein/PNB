@@ -885,7 +885,7 @@ int main(int argc, char* argv[]) {
     //---> Sale
     
     MP_constraint
-        Returns(ST,SC,T),
+        Returns(ST,SC,T);
     
     Returns(ST+1,SC,T) = revenues(ST+1,SC,T) == EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T);
     
@@ -924,11 +924,6 @@ int main(int argc, char* argv[]) {
     
     cout << "Obective Value: " << saphir->getObjValue() << endl;
     
-    gain.display("gain");
-    gasbezugskostengesamt.display("gasbezugskostengesamt");
-    speicherkostengesamt.display("speicherkostengesamt");
-    netzkostengesamt.display("netzkostengesamt");
-
     pbcp.display("pbcp");
     bc_use.display("bc_use");
     s_use.display("s_use");
