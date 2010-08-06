@@ -773,8 +773,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             assert(colIndirection[coefs[i]->col] != outOfBound); // Asssert that all variables in the objective function already appear in a constraint.
-            if (colIndirection[coefs[i]->col] = -1){ //Handle constant terms in the objective function..
-               coefs[i]->col = colIndirection[realn];
+            if (coefs[i]->col == -1){ //Handle constant terms in the objective function..
+               coefs[i]->col = colIndirection[n]; //or realn
             }// We should not have RHS in the objective function.
             else {
                 coefs[i]->col = colIndirection[coefs[i]->col];
