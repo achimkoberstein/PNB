@@ -22,7 +22,10 @@ using namespace flopc;
 int main(int argc, char* argv[]) {
 
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(0, "log");
+    FLAGS_minloglevel = 1;
+    google::SetLogDestination(1, "log");
+    google::LogToStderr();
+    google::SetStderrLogging(1); // logging to std::err enabled for all logging levels >= 0
     
     MP_model saphir(new OsiCpxSolverInterface());
     
@@ -701,22 +704,22 @@ int main(int argc, char* argv[]) {
     //---> Purchase
     
     MP_variable pbcp(MBC);			//Baseload Contracts Power to be ordered
-    pbcp.lowerLimit.initialize(0);
+
     
     MP_variable pbcu(ST,MBC);    	//Baseload Contracts Usage
-    pbcu.lowerLimit.initialize(0);
+
     
     MP_variable pmaxbc(ST,BC);		//Maximal Baseload Contracts Power
-    pmaxbc.lowerLimit.initialize(0);
+
     
     MP_variable pminbc(ST,BC);		//Minimal Baseload Contracts Power
-    pminbc.lowerLimit.initialize(0);
+
     
     MP_variable poc(ST,TOC);	    //Open Contracts Usage
-    poc.lowerLimit.initialize(0);
+
     
     MP_variable pmaxoc(OC);		//Maximal Open Contracts Power
-    pmaxoc.lowerLimit.initialize(0);
+
     
     MP_variable bc_use(BC);			//Indicator if Baseload Contracts will be used in Optimization
     bc_use.binary();
@@ -729,22 +732,22 @@ int main(int argc, char* argv[]) {
     //---> Storage
     
     MP_variable es(ST,S,T);	    //Amount of Energy stored in Storages (fill level)
-    es.lowerLimit.initialize(0);
+
     
     MP_variable emaxs(ST,S);	//Maximal Amount of Energy stored in Storage
-    emaxs.lowerLimit.initialize(0);
+
     
     MP_variable pinj(ST,S,T);	//Injection Power for every Time Period
-    pinj.lowerLimit.initialize(0);
+
     
     MP_variable pext(ST,S,T);	//Extraction Power for every Time Period
-    pext.lowerLimit.initialize(0);
+
     
     MP_variable pmaxinj(ST,S);	//Maximal used Injection Power by each Storage
-    pmaxinj.lowerLimit.initialize(0);
+
     
     MP_variable pmaxext(ST,S);	//Maximal used Extraction Power by each Storage
-    pmaxext.lowerLimit.initialize(0);
+
     
     MP_variable s_use(S);		//Indicator if Storage will be used in Optimization
     s_use.binary();
@@ -753,25 +756,29 @@ int main(int argc, char* argv[]) {
     
     //---> Network
     MP_variable pl(ST,L,T);   //Power Level on Links (can be negative)
+    pl.lowerLimit.initialize( -saphir.getInfinity());
     
     MP_variable pminl(ST,L);	//Minimal Power Level on Links
+    pminl.lowerLimit.initialize( -saphir.getInfinity());
     pminl.upperLimit.initialize(0);
     
     MP_variable pmaxl(ST,L);	//Maximal Power Level on Links
-    pmaxl.lowerLimit.initialize(0);
     
     //<--- Network
     
     //---> Sale
     
-    MP_variable gain(ST);					
+    MP_variable gain(ST);	
+    gain.lowerLimit.initialize( -saphir.getInfinity());
     MP_variable revenues(ST,SC,T);
+    revenues.lowerLimit.initialize( -saphir.getInfinity());
     
     //<--- Sale
     
     //---> Control
     
     MP_variable bilanz(ST,T);
+    bilanz.lowerLimit.initialize( -saphir.getInfinity());
     
     //<--- Control
 
@@ -883,11 +890,11 @@ int main(int argc, char* argv[]) {
     //<--- Network
     
     //---> Sale
-    
+
     MP_constraint
         Returns(ST,SC,T);
     
-    Returns(ST+1,SC,T) = revenues(ST+1,SC,T) == EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T);
+    Returns(ST+1,SC,T) = revenues(ST+1,SC,T) == LOAD(ST+1,SC,T); //EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T);
     
     //<--- Sale
     

@@ -535,7 +535,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (n>0) {
         l =   new double[realn];  
         u =   new double[realn];  
-        c =  new double[realn]; 
+        c =  new double[realn+1]; //The +1 accounts for the RHS term in the objective 
         if (stage.size()){
             colStage = new int[realn+1]; //Col Stage of RHS is not necessary..
             for (int i=0; i<realn+1; i++) {
@@ -794,7 +794,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
     }
 
-    for (int j=0; j<realn; j++) {
+    for (int j=0; j<=realn; j++) {
         c[j] = 0.0;
     }
     //Set objective coefficients
@@ -802,7 +802,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         int col = coefs[i]->col;
         if ( coefs[i]->row == m){
             double elm = coefs[i]->val;
-            c[col] += elm;
+            c[col] += elm; // a simple = should to the trick, as all coefficents are already added during the assemble step.
         }
     } 
 
@@ -851,8 +851,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         CoinPackedMatrix matrix(true,m,realn,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
         matrix.reverseOrdering(); //Smi needs matrix in row ordered form
         //TODO: Debug switch
-        
-        DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
+        //DLOG(INFO) << "Core-Matrix" << std::endl;
+        //DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
         
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
@@ -1379,6 +1379,10 @@ namespace flopc {
                     }
                     else{ //RHS : This means coefficient is multiplied with -1. TODO: Change this behaviour in FlopC++ so that also right hand side has original values.
                         assert(colIndex == n);
+                        if ( rowIndex == m){ // We have a constant term in the objective..
+                            objVec[parentScen]->modifyCoefficient(colIndex,0,coefficient);
+                            continue; // move to the next round of the for loop
+                        }
                         //We need the row sense to insert in the right vector..
                         switch (this->Solver->getRowSense()[rowIndex])
                         { 
@@ -1386,7 +1390,9 @@ namespace flopc {
                         case 'G' : rloVec[parentScen]->modifyCoefficient(rowIndex,0,-coefficient,true); break;
                         case 'L' : rupVec[parentScen]->modifyCoefficient(rowIndex,0,-coefficient,true); break; 
                         case 'N' : break;
-                        default : throw not_implemented_error(); 
+                        default : DLOG(FATAL) << this->Solver->getRowSense()[rowIndex] << " row sense of row " << rowIndex;
+                            const char* rowSense = this->Solver->getRowSense();
+                            throw invalid_argument_exception(); 
                         }//end switch
                     }//end else
                 }//end for: randVars
