@@ -91,7 +91,7 @@ namespace flopc {
         into the set.
         @todo is the internal use?
         */
-        //virtual ~MP_set(); //TODO: Is this destructor needed? If public, clients complain (maybe because baseclass destructor is protected?
+       
         virtual MP_domain operator()(const MP_index_exp& i) const {
             return i->getDomain(const_cast<MP_set*>(this));
         }
