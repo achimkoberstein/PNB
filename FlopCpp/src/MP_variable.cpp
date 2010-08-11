@@ -107,7 +107,7 @@ void MP_variable::operator()() const {
             i3.evaluate(),
             i4.evaluate(),
             i5.evaluate())]];
-            free(values); //we need to use free, as smi callocs the values..
+            ::free(values); //we need to use free, as smi callocs the values..
         }
         cout << endl;
     }
@@ -155,4 +155,12 @@ void flopc::MP_variable::binary()
     lowerLimit.initialize(0);
     upperLimit.initialize(1);
     type = variableType::binary;
+}
+
+void flopc::MP_variable::free()
+{
+    lowerLimit.initialize(-MP_model::getCurrentModel()->getInfinity());
+    upperLimit.initialize(MP_model::getCurrentModel()->getInfinity());
+    if (type == variableType::binary)
+        type = variableType::discrete;
 }

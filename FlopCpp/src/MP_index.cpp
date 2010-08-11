@@ -47,12 +47,15 @@ namespace flopc {
         friend class MP_index_exp;
     public:
     private:
-        MP_index_constant(const Constant& c) : C(c) {}
+        MP_index_constant(const Constant& c) : indexPtr(new MP_index()),C(c) { indexPtr->assign(c->evaluate());}
+        ~MP_index_constant() { delete indexPtr; }
         int evaluate() const {
             return int(C->evaluate()); 
         }
         MP_index* getIndex() const {
-            return 0;
+            // Return a new MP_index pointer (?)
+            // We can not return a null pointer. We have to return a pointer to this?
+            return indexPtr;
         }
         virtual MP_domain getDomain(MP_set* s) const{
             return MP_domain::getEmpty();
@@ -62,6 +65,7 @@ namespace flopc {
             return expr.operator->();
             throw invalid_argument_exception(); //TODO: What is it with this?
         }
+        MP_index* indexPtr;
         Constant C;
     };
 
