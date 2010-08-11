@@ -351,6 +351,7 @@ int
 CoinMessageHandler::internalPrint() 
 {
   int returnCode=0;
+  // FIXME: Something is wrong here
   if (messageOut_>messageBuffer_) {
     *messageOut_=0;
     //take off trailing spaces and commas

@@ -76,6 +76,9 @@ namespace flopc {
     /// Call this method to turn the MP_variable into an integer variable
     void integer();
 
+    // Call this method to turn the variable in a free variable
+    void free();
+
     void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
  
     /// Upper bound on the variable value.

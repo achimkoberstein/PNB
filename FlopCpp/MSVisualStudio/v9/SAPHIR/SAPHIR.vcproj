@@ -86,7 +86,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="$(TargetDir)\SAPHIR.exe"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration

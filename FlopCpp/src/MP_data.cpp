@@ -105,6 +105,10 @@ void DataRef::evaluate_lhs(double v) const {
     if (i != outOfBound) {
         D->v[i] = v;
     }
+    else {
+        DLOG(ERROR) << "An index not suitable for the given set appears. Please recheck your model formulation.";
+        throw invalid_argument_exception(); //This should not happen!
+    }
 }
 
 void MP_data::operator()() const {

@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     google::LogToStderr();
     google::SetStderrLogging(1); // logging to std::err enabled for all logging levels >= 0
     
-    MP_model saphir(new OsiCpxSolverInterface());
+    MP_model saphir(new OsiClpSolverInterface());
     
     // Stages
     enum {numST=2};
@@ -183,20 +183,20 @@ int main(int argc, char* argv[]) {
     
     // Energy prices
     MP_data EPRICEBC(MBC);
-    forall(M, EPRICEBC(EON_RG,M) = 0.02368);
-    forall(M, EPRICEBC(Shell,M)  = 0.01791);
+    forall(M, EPRICEBC( MBC(EON_RG,M) ) = 0.02368);
+    forall(M, EPRICEBC( MBC(Shell,M) )  = 0.01791);
     
     // Minimal Energy per Month for every Baseload Contract
     MP_data EMINMBC(MBC);
-    forall(M, EMINMBC(EON_RG,M) = 4711);
-    forall(M, EMINMBC(Shell,M)  = 0);
+    forall(M, EMINMBC(MBC(EON_RG,M) ) = 4711);
+    forall(M, EMINMBC(MBC(Shell,M))  = 0);
     
     // Maximal Energy per Month for every Baseload Contract
     MP_data EMAXMBC(MBC);
     //forall(M, EMAXMBC(EON_RG,M) = 10000000000);
     //forall(M, EMAXMBC(Shell,M)  = 5000000000);    
-    forall(M, EMAXMBC(EON_RG,M) = 2000000000);
-    forall(M, EMAXMBC(Shell,M)  = 2000000000);    
+    forall(M, EMAXMBC(MBC(EON_RG,M)) = 2000000000);
+    forall(M, EMAXMBC(MBC(Shell,M))  = 2000000000);    
     
     // Minimal Energy for each Baseload Contract
     double valEMINBC[numBC] = {4711, 0};
@@ -209,16 +209,16 @@ int main(int argc, char* argv[]) {
     
     // Minimal Power per Month for every Baseload Contract
     MP_data PMINBC(MBC);
-    forall(M, PMINBC(EON_RG,M) = 0);
-    forall(M, PMINBC(Shell,M)  = 0); 
+    forall(M, PMINBC(MBC(EON_RG,M)) = 0);
+    forall(M, PMINBC(MBC(Shell,M))  = 0); 
     
     // Maximal Power per Month for every Baseload Contract
     MP_data PMAXBC(MBC);
-    forall(M, PMAXBC(EON_RG,M) = 10000000);
-    forall(M, PMAXBC(Shell,M)  = 10000000); 
+    forall(M, PMAXBC(MBC(EON_RG,M)) = 10000000);
+    forall(M, PMAXBC(MBC(Shell,M))  = 10000000); 
     
     // Minimal Energy on Summer
-    double valEMINSOMMER[numBC] = {0, 1100000000};
+    double valEMINSOMMER[numBC] = {0, 1100000001};
     MP_data EMINSOMMER(&valEMINSOMMER[0], BC);
     
     // Maximal Energy on Winter
@@ -731,7 +731,7 @@ int main(int argc, char* argv[]) {
     
     //---> Storage
     
-    MP_variable es(ST,S,T);	    //Amount of Energy stored in Storages (fill level)
+    MP_variable es(ST,S,T);	    //Amount of Energy stored in Storages (fill level) for every time period
 
     
     MP_variable emaxs(ST,S);	//Maximal Amount of Energy stored in Storage
@@ -756,7 +756,7 @@ int main(int argc, char* argv[]) {
     
     //---> Network
     MP_variable pl(ST,L,T);   //Power Level on Links (can be negative)
-    pl.lowerLimit.initialize( -saphir.getInfinity());
+    pl.lowerLimit.initialize( -saphir.getInfinity()); // Free variable
     
     MP_variable pminl(ST,L);	//Minimal Power Level on Links
     pminl.lowerLimit.initialize( -saphir.getInfinity());
@@ -768,17 +768,17 @@ int main(int argc, char* argv[]) {
     
     //---> Sale
     
-    MP_variable gain(ST);	
-    gain.lowerLimit.initialize( -saphir.getInfinity());
+    //MP_variable gain(ST);	
+    //gain.lowerLimit.initialize( -saphir.getInfinity());
     MP_variable revenues(ST,SC,T);
-    revenues.lowerLimit.initialize( -saphir.getInfinity());
+    revenues.lowerLimit.initialize( -saphir.getInfinity()); // Free variable
     
     //<--- Sale
     
     //---> Control
     
-    MP_variable bilanz(ST,T);
-    bilanz.lowerLimit.initialize( -saphir.getInfinity());
+    //MP_variable bilanz(ST,T);
+    //bilanz.lowerLimit.initialize( -saphir.getInfinity());
     
     //<--- Control
 
@@ -808,25 +808,25 @@ int main(int argc, char* argv[]) {
         PMinOpenContractLimit(ST,OC,T),
         PMaxOpenContractLimit(ST,OC,T);
     
-    EMinBaseLoad1(MBC(BC,M)) = EMINMBC(MBC) * bc_use(BC) <= DELTAM(M) * pbcp(MBC);
-    EMaxBaseLoad1(MBC(BC,M)) = DELTAM(M) * pbcp(MBC) <= EMAXMBC(MBC) * bc_use(BC);
+    EMinBaseLoad1(MBC(BC,M)) = EMINMBC(MBC(BC,M)) * bc_use(BC) <= DELTAM(M) * pbcp(MBC(BC,M));  //OK
+    EMaxBaseLoad1(MBC(BC,M)) = DELTAM(M) * pbcp(MBC(BC,M)) <= EMAXMBC(MBC(BC,M)) * bc_use(BC); //OK
     
-    EMinBaseLoad2(BC) = EMINBC(BC) * bc_use(BC) <= sum(MBC(BC,M), DELTAM(M) * pbcp(MBC));
-    EMaxBaseLoad2(BC) = sum(MBC(BC,M), DELTAM(M) * pbcp(MBC)) <= EMAXBC(BC) * bc_use(BC);
+    EMinBaseLoad2(BC) = EMINBC(BC) * bc_use(BC) <= sum(M, DELTAM(M) * pbcp(MBC(BC,M))); //OK
+    EMaxBaseLoad2(BC) = sum(M, DELTAM(M) * pbcp(MBC(BC,M))) <= EMAXBC(BC) * bc_use(BC); //OK
     
-    EMaxWinter(BC) = sum(WMBC(BC,M), DELTAM(M) * pbcp(WMBC)) <= EMAXWINTER(BC);
-    EMinSommer(BC) = EMINSOMMER(BC) * bc_use(BC) <= sum(SMBC(BC,M), DELTAM(M) * pbcp(SMBC));
+    EMaxWinter(BC) = sum(M, DELTAM(M) * pbcp(WMBC(BC,M))) <= EMAXWINTER(BC);
+    EMinSommer(BC) = EMINSOMMER(BC) * bc_use(BC) <= sum(M, DELTAM(M) * pbcp(SMBC(BC,M)));
     
-    PMinBaseLoadLimit(MBC(BC,M)) = PMINBC(MBC) * bc_use(BC) <= pbcp(MBC);
-    PMaxBaseLoadLimit(MBC(BC,M)) = pbcp(MBC) <= PMAXBC(MBC) * bc_use(BC);
+    PMinBaseLoadLimit(MBC(BC,M)) = PMINBC(MBC(BC,M)) * bc_use(BC) <= pbcp(MBC(BC,M)); //OK
+    PMaxBaseLoadLimit(MBC(BC,M)) = pbcp(MBC(BC,M)) <= PMAXBC(MBC(BC,M)) * bc_use(BC); //OK
     
-    PMinBaseLoad(ST+1,MBC(BC,M)) = pminbc(ST+1,BC) <= pbcp(MBC);
-    PMaxBaseLoad(ST+1,MBC(BC,M)) = pbcp(MBC) <= pmaxbc(ST+1,BC);
+    PMinBaseLoad(ST+1,MBC(BC,M)) = pminbc(ST+1,BC) <= pbcp(MBC(BC,M));
+    PMaxBaseLoad(ST+1,MBC(BC,M)) = pbcp(MBC(BC,M)) <= pmaxbc(ST+1,BC);
     
-    BASELOADYEAR1(ST+1,BC).such_that(BCTYP(BC) < 1) = pmaxbc(ST+1,BC) <= pminbc(ST+1,BC); // "== 0" geht nicht, "== 1" jedoch schon...
-    BASELOADQUATER(MBC(BC,M)).such_that(M > 0 && BCTYP(BC) == 1 && MQ(M) == MQ(M-1)) = pbcp(MBC) == pbcp(MBC(BC,M-1));
+    //BASELOADYEAR1(ST+1,BC).such_that(BCTYP(BC) < 1) = pmaxbc(ST+1,BC) <= pminbc(ST+1,BC); // "== 0" geht nicht, "== 1" jedoch schon...
+    //BASELOADQUATER(MBC(BC,M)).such_that(M > 0 && BCTYP(BC) == 1 && MQ(M) == MQ(M-1)) = pbcp(MBC(BC,M)) == pbcp(MBC(BC,M-1));
 
-    PUseNotMoreThanExistBaseLoad(ST+1,MBC(BC,M)) = pbcu(ST+1,MBC) <= pbcp(MBC);
+    PUseNotMoreThanExistBaseLoad(ST+1,MBC) = pbcu(ST+1,MBC) <= pbcp(MBC);
     
     EMinOpenContract(ST+1,OC) = EMINOC(OC) * oc_use(OC) <= sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T)));
     EMaxOpenContract(ST+1,OC) = sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T))) <= EMAXOC(OC) * oc_use(OC);
@@ -854,14 +854,14 @@ int main(int argc, char* argv[]) {
         PMaxExtConstant(ST,S,T);
     
     // !(S == Slack) - Slack oder SlackStorage??? SlackStorage, wie es in MOPS Studio steht, gibt es garnicht
-    EBeginngingStorage(ST+1,S) = es(ST+1,S,0) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0) - pext(ST+1,S,0)); //EBeginngingStorage(ST+1,S).such_that(!(S == Slack)) = es(ST+1,S,0) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0) - pext(ST+1,S,0));
+    EBeginngingStorage(ST+1,S).such_that(S != Slack) = es(ST+1,S,0) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0) - pext(ST+1,S,0)); //EBeginngingStorage(ST+1,S).such_that(!(S == Slack)) = es(ST+1,S,0) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0) - pext(ST+1,S,0));
     EStorage(ST+1,S,T).such_that(T > 0) = es(ST+1,S,T) == es(ST+1,S,T-1) + DELTAT(T) * (pinj(ST+1,S,T) - pext(ST+1,S,T));
-    EEndStorage(ST+1,S) = es(ST+1,S,numT-1) >= emaxs(ST+1,S) * STCOND; //EEndStorage(ST+1,S).such_that(!(S == Slack)) = es(ST+1,S,numT-1) >= emaxs(ST+1,S) * STCOND;
+    EEndStorage(ST+1,S).such_that(S != Slack) = es(ST+1,S,numT-1) >= emaxs(ST+1,S)  * STCOND; //EEndStorage(ST+1,S).such_that(!(S == Slack)) = es(ST+1,S,numT-1) >= emaxs(ST+1,S) * STCOND;
     
     EMinMaxStorage0(ST+1,S,T) =  es(ST+1,S,T) <= EMAXST(S,T);
-    EMinMaxStorage1(ST+1,S,T) = es(ST+1,S,T) <= emaxs(ST+1,S);
-    EMinMaxStorage3(ST+1,S,T) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S); //EMinMaxStorage3(ST+1,S,T).such_that(!(S == Slack)) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S);
-    EMinMaxStorage4(ST+1,S,T) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S); //EMinMaxStorage4(ST+1,S,T).such_that(!(S == Slack)) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S);
+    EMinMaxStorage1(ST+1,S,T).such_that(T > 0) = es(ST+1,S,T) <= emaxs(ST+1,S);
+    EMinMaxStorage3(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S); //EMinMaxStorage3(ST+1,S,T).such_that(!(S == Slack)) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S);
+    EMinMaxStorage4(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S); //EMinMaxStorage4(ST+1,S,T).such_that(!(S == Slack)) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S);
     PMaxInj(ST+1,S,T) = pinj(ST+1,S,T) <= pmaxinj(ST+1,S);
     PMaxExt(ST+1,S,T) = pext(ST+1,S,T) <= pmaxext(ST+1,S);
     PMaxInjConstant(ST+1,S,T) = pinj(ST+1,S,T) <= PMAXINJ(S,T);
@@ -882,7 +882,7 @@ int main(int argc, char* argv[]) {
     Flow(ST+1,N,T) =
            sum(M.such_that(TM(T,M)) * BC.such_that(NBC(BC,N) && MBC(BC,M)), pbcu(ST+1,MBC(BC,M))) 
         +  sum(OC.such_that(NOC(OC,N) && TOC(OC,T)), poc(ST+1,TOC(OC,T)))
-        +  sum(S.such_that(NS(S,N)),  pext(ST+1,S,T,R) - pinj(ST+1,S,T))
+        +  sum(S.such_that(NS(S,N)),  pext(ST+1,S,T) - pinj(ST+1,S,T))
         +  sum(N2.such_that(L(N2,N)), pl(ST+1,L(N2,N),T)) 
         - sum(N2.such_that(L(N,N2)), pl(ST+1,L(N,N2),T))
         == sum(SC.such_that(NSC(SC,N)), LOAD(ST+1,SC,T));
@@ -894,14 +894,9 @@ int main(int argc, char* argv[]) {
     MP_constraint
         Returns(ST,SC,T);
     
-    Returns(ST+1,SC,T) = revenues(ST+1,SC,T) == LOAD(ST+1,SC,T); //EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T);
+    Returns(ST+1,SC,T) = revenues(ST+1,SC,T) == EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T);
     
     //<--- Sale
-    
-    
-    //MP_variable dummyVar(ST,SC,T,R);
-    //MP_constraint dummy(ST,SC,T,R);
-    //dummy(ST+1,SC,T,R) = dummyVar(ST+1,SC,T,R) == LOAD(ST+1,SC,T,R);
     
     
 #pragma endregion constraints
@@ -914,27 +909,59 @@ int main(int argc, char* argv[]) {
     //);
     saphir.setObjective(
         // gain
-        sum(SC*T, EPRICESC(SC,T) * DELTAT(T) * LOAD(ST.last(),SC,T))
+        sum(SC*T, revenues(ST.last(),SC,T) )
         // gasbezugskosten
-     - (  sum(MBC(BC,M), EPRICEBC(MBC) * DELTAM(M) * pbcp(MBC)) 
-        + sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC)))
-        // speicherkosten
-     - (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) + sum(T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T))))
-        // netzkosten
-     - (sum(LMA, CENTRY(LMA) * pmaxl(ST.last(),LMA) - CEXIT(LMA) * pminl(ST.last(),LMA)))
-    );
+        - (sum(BC*M, pbcp(MBC(BC,M))*DELTAM(M)*EPRICEBC(MBC(BC,M)) ) )
+        - (sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC) ) )
+        //speicherkosten
+        - (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) ) )
+        - (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) 
+        //netzkosten
+        - (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) 
+        );
+
+    // book keeping variables..
+    MP_constraint gain,gas,storage,net;
+    MP_variable gainVar,gasVar,storageVar,netVar;
+    gainVar.free();
+    gasVar.free();
+    storageVar.free();
+    netVar.free();
+    gain() = gainVar() == sum(SC*T, revenues(ST.last(),SC,T) );
+    gas() = gasVar() == (sum(BC*M, pbcp(MBC(BC,M))*DELTAM(M)*EPRICEBC(MBC(BC,M)) ) ) + (sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC) ) );
+    storage() = storageVar() == (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) ) )
+        + (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) ;
+    net() = netVar() == (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) ;
     
     saphir.attach(saphir.Solver);    
-
-    saphir.solve(MP_model::MAXIMIZE);
     saphir->writeLp("saphir_lp");
+    saphir->writeMps("saphir_mps","mps",1);
+    saphir.solve(MP_model::MAXIMIZE);
+
     
     cout << "Obective Value: " << saphir->getObjValue() << endl;
     
     pbcp.display("pbcp");
+    poc.display("poc");
+    emaxs.display("emaxs");
+    pmaxoc.display("pmaxoc");
+    pmaxinj.display("pmaxinj");
+    pmaxext.display("pmaxext");
+    pminl.display("pminl");
+    pmaxl.display("pmaxl");
     bc_use.display("bc_use");
     s_use.display("s_use");
     pbcu.display("pbcu");
+    //revenues.display("revenues");
+    es.display("es");
+    pinj.display("pinj");
+    pext.display("pext");
+    pl.display("pl");
+
+    gainVar.display("gain");
+    netVar.display("net costs");
+    storageVar.display("storage costs");
+    gasVar.display("gas costs");
 
     cout << "Status: " << saphir.getStatus() << endl;
 

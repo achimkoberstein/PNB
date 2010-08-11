@@ -773,11 +773,11 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
             assert(colIndirection[coefs[i]->col] != outOfBound); // Asssert that all variables in the objective function already appear in a constraint.
-            if (coefs[i]->col == -1){ //Handle constant terms in the objective function..
+            if (coefs[i]->col == -1){ //Handle constant terms in the objective function later (for now set coefficient value)
                coefs[i]->col = colIndirection[n]; //or realn
-            }// We should not have RHS in the objective function.
+            }
             else {
-                coefs[i]->col = colIndirection[coefs[i]->col];
+                coefs[i]->col = colIndirection[coefs[i]->col];     
             }
             if (coefs[i]->row == -1){ //Objective function 
                 coefs[i]->row = m;
@@ -881,7 +881,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         Solver->loadProblem(n, m, Cst, Rnr, Elm, l, u, c, bl, bu);
         if (!integerIndices.empty())
             Solver->setInteger(&integerIndices[0],integerIndices.size());
-        //TODO: Debug Switch Statement..
         //printMatrix( const_cast<CoinPackedMatrix*>(Solver->getMatrixByRow()),n,m,l,u,c,bl,bu,colStage,rowStage);
     }
 
@@ -1143,7 +1142,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     Solver->setObjSense(dir);
     bool isMIP = false;
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-        if ((*i)->type == discrete) {
+        if ( (*i)->type == discrete || (*i)->type == binary ) {
             isMIP = true;
             break;
         }
