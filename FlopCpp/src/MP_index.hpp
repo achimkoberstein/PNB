@@ -38,6 +38,8 @@ namespace flopc {
         int count;
     };
 
+    class MP_index_constant;
+
     /** @brief Representation of an index.
     @ingroup PublicInterface
     This is one of the main public interface classes.  
@@ -52,6 +54,7 @@ namespace flopc {
     */
     class MP_index : public MP_index_base {
         friend class MP_domain_set;
+        friend class MP_index_constant;
         template<int nbr> friend class MP_domain_subset;
     public:
         /// Default constructor. 
