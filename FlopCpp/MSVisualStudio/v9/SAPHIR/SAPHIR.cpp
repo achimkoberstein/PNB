@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
     
     // Summer Months Baseload Contracts
     MP_subset<2> SMBC(BC,M);
-    for (int i = 6; i <= 11; i++) WMBC.insert(EON_RG, i);
-    for (int i = 6; i <= 11; i++) WMBC.insert(Shell, i);
+    for (int i = 6; i <= 11; i++) SMBC.insert(EON_RG, i);
+    for (int i = 6; i <= 11; i++) SMBC.insert(Shell, i);
     
     // Open Contracts
     enum {numOC};
@@ -860,8 +860,8 @@ int main(int argc, char* argv[]) {
     
     EMinMaxStorage0(ST+1,S,T) =  es(ST+1,S,T) <= EMAXST(S,T);
     EMinMaxStorage1(ST+1,S,T).such_that(T > 0) = es(ST+1,S,T) <= emaxs(ST+1,S);
-    EMinMaxStorage3(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S); //EMinMaxStorage3(ST+1,S,T).such_that(!(S == Slack)) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S);
-    EMinMaxStorage4(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S); //EMinMaxStorage4(ST+1,S,T).such_that(!(S == Slack)) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S);
+    EMinMaxStorage3(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S); 
+    EMinMaxStorage4(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S); 
     PMaxInj(ST+1,S,T) = pinj(ST+1,S,T) <= pmaxinj(ST+1,S);
     PMaxExt(ST+1,S,T) = pext(ST+1,S,T) <= pmaxext(ST+1,S);
     PMaxInjConstant(ST+1,S,T) = pinj(ST+1,S,T) <= PMAXINJ(S,T);
@@ -933,7 +933,8 @@ int main(int argc, char* argv[]) {
         + (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) ;
     net() = netVar() == (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) ;
     
-    saphir.attach(saphir.Solver);    
+    saphir.attach(saphir.Solver); 
+    // Routines that write out the files need direction. standard for them is minimization..
     saphir->writeLp("saphir_lp");
     saphir->writeMps("saphir_mps","mps",1);
     saphir.solve(MP_model::MAXIMIZE);
