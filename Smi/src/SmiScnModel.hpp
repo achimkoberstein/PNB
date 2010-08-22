@@ -72,6 +72,8 @@ public:
 	int readSmps(const char *name,
 		SmiCoreCombineRule *r=NULL );
 
+    void writeSmps(const char *name);
+
 	SmiCoreData * getCore() {return core_;}
 
 	/**@name Direct methods.
@@ -219,6 +221,7 @@ public:
 	void deleteNode(SmiScnNode *tnode);
 	
 	void addNode(SmiNodeData *node);
+	inline SmiScenarioTree<SmiScnNode *> * getSmiTree() { return &smiTree_; }
 private:
 	CoinMessageHandler *handler_;
 	SmiMessage *messages_;

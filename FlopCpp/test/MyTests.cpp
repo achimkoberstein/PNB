@@ -12,6 +12,7 @@
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
 #include "SAA.hpp"
+#include "SmiSmpsIO.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
 
@@ -613,6 +614,73 @@ namespace flopc {
         EXPECT_NEAR(10.76479,result,0.0001);
     }
 
+    // Test write (and read) functionality for SMPS files
+    TEST_F(UseCaseTest,SMPSExampleTest){
+
+        MP_model investmentModel(new OsiClpSolverInterface());
+        MP_data initialWealth,goal;
+        initialWealth() = 55; //set data
+        goal() = 80;
+
+        enum {numStage=4};
+        MP_stage T(numStage); //Time Stages
+        enum {numScen=8};
+        MP_scenario_set scen(numScen);
+        enum {asset1,asset2,numAssets};
+        MP_set assets(numAssets);
+        double scenarios[numStage-1][numAssets][numScen]=
+        {//T
+            {//assets
+                // stage 2
+                {1.25,1.25,1.25,1.25,1.06,1.06,1.06,1.06},{1.14,1.14,1.14,1.14,1.16,1.16,1.16,1.16} //asset1 to asset1, scen 1 to 8
+            },
+            {// stage 3
+                {1.21,1.21,1.07,1.07,1.15,1.15,1.06,1.06},{1.17,1.17,1.12,1.12,1.18,1.18,1.12,1.12} //asset1 to asset1, scen 1 to 8
+            },
+            {// stage 4
+                {1.26,1.07,1.25,1.06,1.05,1.06,1.05,1.06},{1.13,1.14,1.15,1.12,1.17,1.15,1.14,1.12} //asset1 to asset1, scen 1 to 8
+            }
+        };
+        MP_random_data returns(&scenarios[0][0][0],T,assets);
+
+        MP_variable x(T,assets);
+        MP_variable wealth(T);
+        MP_variable shortage(T), overage(T);
+
+        MP_constraint 
+            initialWealthConstr,
+            returnConstr(T),
+            allocationConstr(T),
+            goalConstr(T);
+
+        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+        allocationConstr(T-1) = sum(assets,x(T-1,assets)) == wealth(T-1);
+        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+
+        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+        MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
+
+        investmentModel.setObjective( valueFunction );
+        investmentModel.attach(investmentModel.Solver);
+        investmentModel.solve(MP_model::MAXIMIZE);
+
+        // write SMPS files
+        investmentModel.smiModel->writeSmps("invstMod");
+        
+        // read SMPS files        
+        SmiScnModel smi;
+	    cout << "SMPS reader: " << smi.readSmps("invstMod") << "\n";
+	    OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+	    smi.setOsiSolverHandle(*clp);
+	    OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+	    osiStoch->setObjSense(MP_model::MAXIMIZE);
+	    osiStoch->initialSolve();
+	            
+        // check objective values
+        cout << investmentModel.Solver->getObjValue() << " - " << osiStoch->getObjValue();
+        EXPECT_DOUBLE_EQ(investmentModel.Solver->getObjValue(), osiStoch->getObjValue());
+    }
+
     TEST_F(MP_modelTest,RandomParameterInObjectiveTest){
         MP_model testModel(new OsiClpSolverInterface());
         MP_stage T(2);
@@ -791,9 +859,6 @@ namespace flopc {
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
-
-
-        cout << "Finished";
     }
 
     // Test complex combinations of random variables in constraints

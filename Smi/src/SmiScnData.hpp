@@ -197,6 +197,7 @@ class SmiCoreData
 public:
 	inline int getNumCols(){ return ncol_;} //Gesamtzahl Variablen für das CoreModell
 	inline int getNumRows(){ return nrow_;} //Gesamtzahl Restriktionen für das CoreModell
+	inline int getNumElements(){ return nz_;} // Gesamtzahl Elemente für das CoreModell
 	inline int getNumStages(){ return nstag_;} //Anzahl an Stufen
 	inline int getNumCols(SmiStageIndex t){ return nColInStage_[t];} //Anzahl Variablen in Stufe t 
 	inline int getNumRows(SmiStageIndex t){ return nRowInStage_[t];} //Number of Restrictions in stage t
