@@ -116,8 +116,8 @@ SmiScnModel::generateScenario(SmiCoreData *core,
         // prepare array for counting max nels per stage and scenario
         if (this->maxNelsPerScenInStage)
             delete[] maxNelsPerScenInStage;
-        this->maxNelsPerScenInStage = new int[this->core_->getNumStages()];
-        std::fill_n(maxNelsPerScenInStage, this->core_->getNumStages(), 0); //Initialize before using it. 
+        this->maxNelsPerScenInStage = new int[core->getNumStages()];
+        std::fill_n(maxNelsPerScenInStage, core->getNumStages(), 0); //Initialize before using it. 
         this->maxNelsPerScenInStage[0] = this->nels_;
 	}
 	else
@@ -574,22 +574,22 @@ SmiScnModel::loadOsiSolverData()
 	//TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
 #ifndef NDEBUG 
-    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-    }
-    std::cout << std::endl;
-	for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-		printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-		for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-			printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-		}
-		printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        //printf(" %g",this->core_->getRowStage(mi)); //We have to transform indices back to core model..
-	}
-	printf("\n Matrix printed \n");
-	for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-        printf("\n%g <= %d <= %g : stage %d",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi], core_->getColStage(mi) );
-	}
+ //   for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+ //       std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+ //   }
+ //   std::cout << std::endl;
+	//for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+	//	printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+	//	for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+	//		printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+	//	}
+	//	printf("<= %g",osiStoch_->getRowUpper()[mi]);
+ //       //printf(" %g",this->core_->getRowStage(mi)); //We have to transform indices back to core model..
+	//}
+	//printf("\n Matrix printed \n");
+	//for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+ //       printf("\n%g <= %d <= %g : stage %d",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi], core_->getColStage(mi) );
+	//}
 #endif
 	return osiStoch_;
 }
@@ -1210,6 +1210,11 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 
 	core_ = smiCore;
 	return 0;
+}
+
+void SmiScnModel::writeSmps(const char *name) {
+    SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
+    smpsIO->writeSmps(name);
 }
 
 void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &dsecond)
