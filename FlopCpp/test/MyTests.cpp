@@ -18,7 +18,7 @@
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
-
+//TODO: Test scenario tree generation for RV that are not for themselves part of the model. Maybe this is already working, maybe not..
 
 //using namespace flopc;
 namespace flopc {
