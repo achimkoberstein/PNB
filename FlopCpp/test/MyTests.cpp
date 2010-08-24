@@ -18,7 +18,7 @@
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
-
+//TODO: Test scenario tree generation for RV that are not for themselves part of the model. Maybe this is already working, maybe not..
 
 //using namespace flopc;
 namespace flopc {
@@ -198,6 +198,41 @@ namespace flopc {
 
 
     //}
+
+TEST_F(MP_modelTest,RandomVarInScenTreeTest){
+    MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
+    MP_stage T(2);
+
+    MP_random_data a(T);
+    a(1) = new ContinuousNormalRandomVariable(0,1,new BracketMeanDiscretization(10));
+    a(1)->setStage(1);
+    MP_random_data b(T);
+    b(1) = new ContinuousNormalRandomVariable(0,1,new ExtendedPearsonTukeyDiscretization());
+    b(1)->setStage(1);
+    MP_random_data d(T);
+    d(1) = new ContinuousNormalRandomVariable(0,1, new DoubleDiscretization(4) );
+    d(1)->setStage(1);
+    MP_random_data c(T);
+    c(T) = a(T)+b(T);
+
+    MP_variable x(T);
+
+    MP_constraint testCon(T);
+    testCon(T) = x(T) <= 10+c(T);
+    
+    MP_expression objective;
+    objective = x(T.last());
+
+    testModel.setObjective(objective);
+    testModel.attach();
+    testModel.solve(MP_model::MAXIMIZE);
+    //EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
+
+    //OsiStochasticBendersTwoStageSolverInterface benders(testModel.Solver,testModel.getSmi());
+    ////double begin = CoinCpuTime();
+    //benders.initialSolve();
+    //double duration = CoinCpuTime() - begin;
+}
 
     //Test fails to test the correct thing, somehow something is messed up, assumingly during the det.eq. generation of Smi. Supposed problem: constraints span two stages? I am not so sure about that
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){

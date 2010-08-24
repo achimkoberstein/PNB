@@ -67,14 +67,14 @@ namespace flopc{
     class BracketMeanDiscretization : public DiscretizationMethod {
 
     public:
-        BracketMeanDiscretization(int samples);
+        explicit BracketMeanDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
     class BracketMedianDiscretization : public DiscretizationMethod {
 
     public:
-        BracketMedianDiscretization(int samples);
+        explicit BracketMedianDiscretization(int samples);
         void generateDiscreteDistribution();
     };
 
