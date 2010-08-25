@@ -772,6 +772,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         for ( int i = 0; i != coefs.size(); i++){
             //Set correct rowIndex and colIndex via colIndirection
+            DLOG_IF(INFO,colIndirection[coefs[i]->col] == outOfBound) << "Some of your variables in your objective function do not appear in your model. Please check your model for validity. Take a closer look at indexed variables.";
             assert(colIndirection[coefs[i]->col] != outOfBound); // Asssert that all variables in the objective function already appear in a constraint.
             if (coefs[i]->col == -1){ //Handle constant terms in the objective function later (for now set coefficient value)
                coefs[i]->col = colIndirection[n]; //or realn
@@ -956,6 +957,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         // Sample values for every variable independently. We might not have equally probable scenarios.
         std::vector< RandomVariable::sampleVector > sampledValuesOfVars;
 
+        DLOG_IF(INFO,rv[i].empty()) << "There are no random variables in this stage, but you specified a stage set. Please check your model";
         assert(!rv[i].empty()); //Assume we have random variables in every stage. If not specifying a stage set does not make sense.
         for (rvIterator it = rv[i].begin(); it != rv[i].end();++it){
             (*it)->sample(sampleSize);

@@ -4085,16 +4085,7 @@ CoinMpsIO::writeMps(const char *filename, int compression,
    // NAME card
 
    line = "NAME          ";
-   if (strcmp(problemName_,"")==0) {
-      line.append("BLANK   ");
-   } else {
-      if (strlen(problemName_) >= 8) {
-	 line.append(problemName_, 8);
-      } else {
-	 line.append(problemName_);
-	 line.append(8-strlen(problemName_), ' ');
-      }
-   }
+   line.append(this->getProblemName());
    if (freeFormat&&(formatType&7)!=2)
      line.append("  FREE");
    else if (freeFormat)
@@ -4633,9 +4624,20 @@ CoinMpsIO::writeMps(const char *filename, int compression,
    
 //------------------------------------------------------------------
 // Problem name
-const char * CoinMpsIO::getProblemName() const
+const std::string CoinMpsIO::getProblemName() const
 {
-  return problemName_;
+    std::string name = "";
+    if (strcmp(problemName_,"")==0) {
+        name.append("BLANK   ");
+    } else {
+        if (strlen(problemName_) >= 8) {
+            name.append(problemName_, 8);
+        } else {
+            name.append(problemName_);
+            name.append(8-strlen(problemName_), ' ');
+        }
+    }
+    return name;
 }
 // Objective name
 const char * CoinMpsIO::getObjectiveName() const

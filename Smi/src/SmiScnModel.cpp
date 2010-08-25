@@ -116,8 +116,8 @@ SmiScnModel::generateScenario(SmiCoreData *core,
         // prepare array for counting max nels per stage and scenario
         if (this->maxNelsPerScenInStage)
             delete[] maxNelsPerScenInStage;
-        this->maxNelsPerScenInStage = new int[this->core_->getNumStages()];
-        std::fill_n(maxNelsPerScenInStage, this->core_->getNumStages(), 0); //Initialize before using it. 
+        this->maxNelsPerScenInStage = new int[core->getNumStages()];
+        std::fill_n(maxNelsPerScenInStage, core->getNumStages(), 0); //Initialize before using it. 
         this->maxNelsPerScenInStage[0] = this->nels_;
 	}
 	else
@@ -1210,6 +1210,11 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 
 	core_ = smiCore;
 	return 0;
+}
+
+void SmiScnModel::writeSmps(const char *name) {
+    SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
+    smpsIO->writeSmps(name);
 }
 
 void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &dsecond)
