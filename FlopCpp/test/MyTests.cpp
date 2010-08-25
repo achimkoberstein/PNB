@@ -22,6 +22,26 @@
 
 //using namespace flopc;
 namespace flopc {
+    void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename){
+        // write SMPS files
+        model.smiModel->writeSmps(filename.c_str());
+
+        // read SMPS files        
+        SmiScnModel smi;
+        DLOG(INFO) << "SMPS reader: " << smi.readSmps(filename.c_str()) << "\n";
+        OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+        smi.setOsiSolverHandle(*clp);
+        OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+        osiStoch->setObjSense(direction);
+        osiStoch->initialSolve();
+
+        // check objective values
+        DLOG(INFO) << model.Solver->getObjValue() << " - " << osiStoch->getObjValue();
+        EXPECT_DOUBLE_EQ(model.Solver->getObjValue(), osiStoch->getObjValue());
+        ASSERT_EQ(0,remove( (filename+".core").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".time").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".stoch").c_str() ));
+    }
 
 #pragma region initialization
     class MP_modelTest: public ::testing::Test {
@@ -233,6 +253,7 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
     }
 
@@ -259,6 +280,8 @@ namespace flopc {
         testModel.setObjective( x(T.last()) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
 
     }
@@ -292,6 +315,8 @@ namespace flopc {
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
+
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
     }
 
     TEST_F(MP_modelTest,ExtendedCoefficientGeneration){
@@ -320,6 +345,7 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(11.5,testModel.Solver->getObjValue());
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
@@ -344,6 +370,7 @@ namespace flopc {
         thirdConstraint(T+1) = b(T+1)*x(T+1) <= y(T+1);
         testModel.setObjective(x(T.last()));
         testModel.solve(MP_model::MAXIMIZE);
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
     }
 
     TEST_F(MP_modelTest,SuchThatTest){
@@ -384,6 +411,7 @@ namespace flopc {
         testModel.setObjective(sum(A, x1(A) + x2(A)) + sum(B.such_that(BC(B,C))*C.such_that(BC(B,C)), x3(B,C)   ));
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         
         x1.display();
         x2.display();
@@ -434,10 +462,11 @@ namespace flopc {
         testModel.setObjective(sum(A.such_that(AB(A,B)), x2(A)) + sum(B.such_that(BC(B,C))*C.such_that(BC(B,C)), x3(B,C)   ));
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
         x1.display();
         x2.display();
-        EXPECT_DOUBLE_EQ(1.333333333333336,testModel->getObjValue());
+        EXPECT_DOUBLE_EQ(4.0/3,testModel->getObjValue());
     }
 
     
@@ -480,6 +509,7 @@ namespace flopc {
         randomWalkVar.display("RandomWalkVar");
         std::cout << std::endl;
         testModel.solve(MP_model::MAXIMIZE);
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         //sumR.display("RandomValues?");
         x.display("Werte");
         sumR.display("SumR");
@@ -592,6 +622,7 @@ namespace flopc {
         investmentModel.attach(investmentModel.Solver);
         this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
@@ -614,72 +645,6 @@ namespace flopc {
         EXPECT_NEAR(10.76479,result,0.0001);
     }
 
-    // Test write (and read) functionality for SMPS files
-    TEST_F(UseCaseTest,SMPSExampleTest){
-
-        MP_model investmentModel(new OsiClpSolverInterface());
-        MP_data initialWealth,goal;
-        initialWealth() = 55; //set data
-        goal() = 80;
-
-        enum {numStage=4};
-        MP_stage T(numStage); //Time Stages
-        enum {numScen=8};
-        MP_scenario_set scen(numScen);
-        enum {asset1,asset2,numAssets};
-        MP_set assets(numAssets);
-        double scenarios[numStage-1][numAssets][numScen]=
-        {//T
-            {//assets
-                // stage 2
-                {1.25,1.25,1.25,1.25,1.06,1.06,1.06,1.06},{1.14,1.14,1.14,1.14,1.16,1.16,1.16,1.16} //asset1 to asset1, scen 1 to 8
-            },
-            {// stage 3
-                {1.21,1.21,1.07,1.07,1.15,1.15,1.06,1.06},{1.17,1.17,1.12,1.12,1.18,1.18,1.12,1.12} //asset1 to asset1, scen 1 to 8
-            },
-            {// stage 4
-                {1.26,1.07,1.25,1.06,1.05,1.06,1.05,1.06},{1.13,1.14,1.15,1.12,1.17,1.15,1.14,1.12} //asset1 to asset1, scen 1 to 8
-            }
-        };
-        MP_random_data returns(&scenarios[0][0][0],T,assets);
-
-        MP_variable x(T,assets);
-        MP_variable wealth(T);
-        MP_variable shortage(T), overage(T);
-
-        MP_constraint 
-            initialWealthConstr,
-            returnConstr(T),
-            allocationConstr(T),
-            goalConstr(T);
-
-        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-        allocationConstr(T-1) = sum(assets,x(T-1,assets)) == wealth(T-1);
-        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
-
-        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
-        MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
-
-        investmentModel.setObjective( valueFunction );
-        investmentModel.attach(investmentModel.Solver);
-        investmentModel.solve(MP_model::MAXIMIZE);
-
-        // write SMPS files
-        investmentModel.smiModel->writeSmps("invstMod");
-        
-        // read SMPS files        
-        SmiScnModel smi;
-	    cout << "SMPS reader: " << smi.readSmps("invstMod") << "\n";
-	    OsiClpSolverInterface *clp = new OsiClpSolverInterface();
-	    smi.setOsiSolverHandle(*clp);
-	    OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
-	    osiStoch->setObjSense(MP_model::MAXIMIZE);
-	    osiStoch->initialSolve();
-	            
-        // check objective values
-        cout << investmentModel.Solver->getObjValue() << " - " << osiStoch->getObjValue();
-        EXPECT_DOUBLE_EQ(investmentModel.Solver->getObjValue(), osiStoch->getObjValue());
-    }
 
     TEST_F(MP_modelTest,RandomParameterInObjectiveTest){
         MP_model testModel(new OsiClpSolverInterface());
@@ -699,6 +664,7 @@ namespace flopc {
         testModel.setProbabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(52,testModel->getObjValue());
@@ -723,6 +689,7 @@ namespace flopc {
         intModel.attach(intModel.Solver);
         this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
+         writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
         const double * colSolution = intModel->getColSolution();
         for (int i = 0; i < intModel->getNumCols(); i++)
             cout << "Column " << i << ": " << colSolution[i] << endl;
@@ -753,6 +720,7 @@ namespace flopc {
         intModel.attach(intModel.Solver);
         this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
+         writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
         EXPECT_EQ(6,intModel->getObjValue());
         EXPECT_TRUE(intModel->isInteger(0));
         EXPECT_TRUE(intModel->isInteger(1));
@@ -780,6 +748,7 @@ namespace flopc {
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
     }
 
     // Dacota  Model to test the EV-, EEV- and WS-Problems
@@ -856,6 +825,7 @@ namespace flopc {
         // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE);
+         writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
@@ -890,6 +860,7 @@ namespace flopc {
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
+         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
@@ -923,6 +894,7 @@ namespace flopc {
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE);
+         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         EXPECT_NEAR(0,testModel2.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
@@ -1005,6 +977,7 @@ namespace flopc {
 
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
+         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         demand.display("Demand");
         price.display("Price");
@@ -1057,6 +1030,7 @@ namespace flopc {
         testModel2.setObjective(objective);
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MINIMIZE);
+         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(1.5,testModel2->getObjValue());
         //Test Bounds
@@ -1082,6 +1056,7 @@ namespace flopc {
         testModel2.setObjective(x(T+1));
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
+         writeReadSMPSTest(testModel2,MP_model::MAXIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         //TODO: Test appearance of RandomVariable vector
         EXPECT_DOUBLE_EQ(4,testModel2->getObjValue());
@@ -1129,6 +1104,7 @@ namespace flopc {
         testModel.attach(testModel.Solver);
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
@@ -1191,7 +1167,9 @@ namespace flopc {
         testModel.setObjective( sum(cars*trains,test(cars,trains)) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+
         EXPECT_DOUBLE_EQ(9,testModel->getObjValue());
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
     }
 
@@ -1314,6 +1292,7 @@ namespace flopc {
         EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,1));
         EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,2));
         EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,6));
+         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         //testModel2.detach();
         //double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
         //MP_random_data rvar2(&scenarios2[0],T);
@@ -1351,6 +1330,7 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         //EXPECT_DOUBLE_EQ(4.8,testModel->getObjValue());
     }
 
@@ -1379,6 +1359,7 @@ namespace flopc {
         //EXPECT_EQ(1,testModel2.RandomVariables.size());
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(547,testModel2->getObjValue());
+         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
     }
 
     TEST_F(MP_modelTest,InvalidArgumentTest){
