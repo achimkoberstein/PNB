@@ -6,14 +6,14 @@
 
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-#include "OsiCpxSolverInterface.hpp"
+//#include "OsiCpxSolverInterface.hpp"
 
 #include "CoinFloatEqual.hpp"
 #include "CoinTime.hpp"
 
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
-#include "Benders.hpp"
+//#include "Benders.hpp"
 
 using namespace flopc;
 
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	if (argc == 4)
 		seed = (int) strtoul(argv[3], 0, 0);
 
-    MP_model capa(new OsiCpxSolverInterface(), new NormalMessenger(), seed);
+    MP_model capa(new OsiClpSolverInterface(), new NormalMessenger(), seed);
 
     // Stufen
     enum {numStage=2};
@@ -6766,20 +6766,20 @@ int main(int argc, char* argv[]) {
     capa.attach(capa.Solver);
     
 	if (solveWithBenders) {
-		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
-		double begin = CoinCpuTime();
-		benders.initialSolve();
-		double duration = CoinCpuTime() - begin;
+		//OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+		//double begin = CoinCpuTime();
+		//benders.initialSolve();
+		//double duration = CoinCpuTime() - begin;
 
-		ofstream ofs;
-		ofs.open("CapaOpt_Benders.txt", std::ios::app);
-		ofs << "Sample size: " << capa.getSampleSize() << endl;
-		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
-		ofs << "Obj. Value: " << benders.getObjValue() << endl;
-		ofs << "Iterations: " << benders.getNumIterations() << endl;
-		ofs << "Duration (secs): " << duration << endl;
-		ofs << "-------------------------" << endl;
-		ofs.close();
+		//ofstream ofs;
+		//ofs.open("CapaOpt_Benders.txt", std::ios::app);
+		//ofs << "Sample size: " << capa.getSampleSize() << endl;
+		//ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
+		//ofs << "Obj. Value: " << benders.getObjValue() << endl;
+		//ofs << "Iterations: " << benders.getNumIterations() << endl;
+		//ofs << "Duration (secs): " << duration << endl;
+		//ofs << "-------------------------" << endl;
+		//ofs.close();
 	} else {
 		double begin = CoinCpuTime();
 		capa.solve(MP_model::MINIMIZE);
