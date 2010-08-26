@@ -64,6 +64,8 @@ namespace flopc{
     //    void generateDiscreteDistribution();
     //};
 
+    // BracketMeanDiscretization divides distribution in equal probable intervals and assigns probability of interval to the mean value of the interval.
+    // This value can be computed via the quantile of the mean probability of that interval.
     class BracketMeanDiscretization : public DiscretizationMethod {
 
     public:
@@ -71,6 +73,7 @@ namespace flopc{
         void generateDiscreteDistribution();
     };
 
+    // BracketMedianDiscretization divides distribution in equal probable intervals and assigns probability of interval to the median value of the interval.
     class BracketMedianDiscretization : public DiscretizationMethod {
 
     public:
