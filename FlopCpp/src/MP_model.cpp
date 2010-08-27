@@ -408,6 +408,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
         Solver=_solver;
     }
+    LOG(INFO) << "Started coefficient generation process, i.e. attach() was called.";
     // In case we have an already attached (or solved) model AND we are in the stochastic setting: call attachStochastic
     if (mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY && stage.size() > 1 ){
         attachStochastic();
@@ -906,9 +907,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         delete [] bu;
     }  
 #pragma endregion cleanUp;
-
-
-
     messenger->generationTime(CoinCpuTime()-time);
 }
 
