@@ -95,7 +95,7 @@ void MP_variable::operator()() const {
     if (S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
     if (S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
     if (S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
-    if (M->stage.size()){ //TODO: Terribly inefficient..
+    if (M->stage.size()){ //TODO: Terribly inefficient.. It really is..
         int length = 0;
         double* values = 0;
         for (int i = 0; i < M->scenSet.size(); i++){
