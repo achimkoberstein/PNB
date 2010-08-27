@@ -17,8 +17,8 @@ int main() {
     MP_set i(numFactories), j(numDistributionCenters);
 
     MP_data 
-	capacity(i),
-	transcost(i,j);
+        capacity(i),
+        transcost(i,j);
 
     transcost(0,0) = 2.49; transcost(1,0) = 1.46; transcost(2,0) = 3.26; 
     transcost(0,1) = 5.21; transcost(1,1) = 2.54; transcost(2,1) = 3.08; 
@@ -35,9 +35,9 @@ int main() {
     const double wastecost = 4;
 
     const double Demand[numScenarios][numDistributionCenters] = 
-	{{150,100,250,300,600},
-	 {160,120,270,325,700},
-	 {170,135,300,350,800}};
+    {{150,100,250,300,600},
+    {160,120,270,325,700},
+    {170,135,300,350,800}};
 
     const double prob[numScenarios] = {0.25,0.5,0.25};
 
@@ -46,36 +46,36 @@ int main() {
     MP_model masterproblem(new OsiClpSolverInterface);
 
     MP_variable 
-	theta,
-	ship(i,j),
-	product(i),
-	slackproduct(i),
-	received(j);
+        theta,
+        ship(i,j),
+        product(i),
+        slackproduct(i),
+        received(j);
 
     MP_constraint
-	production(i),
-	receive(j),
-	prodcap(i);
+        production(i),
+        receive(j),
+        prodcap(i);
 
     production(i) = product(i) == sum(j,ship(i,j));
     receive(j) =    received(j) == sum(i,ship(i,j));
     prodcap(i) =    product(i) + slackproduct(i) == capacity(i);
 
     masterproblem.minimize( sum(i*j,transcost(i,j)*ship(i,j)) +
-			    sum(i, prodcost*product(i)) + theta() );
+        sum(i, prodcost*product(i)) + theta() );
 
     ///// Sub problem ///////////////////////////////////////////////
 
     MP_model subproblem(new OsiClpSolverInterface);
 
     MP_variable
-	sales(j),
-	waste(j),
-	slacksales(j);
+        sales(j),
+        waste(j),
+        slacksales(j);
 
     MP_constraint
-	selling(j),
-	selmax(j);
+        selling(j),
+        selmax(j);
 
     selling(j) = sales(j) + waste(j) == 0.0;
     selmax(j) =  sales(j) + slacksales(j) == 0.0;
@@ -92,61 +92,61 @@ int main() {
 
     int kk;
     for (kk=0; kk<25; kk++) { // max 25 iterations
-	double cutconst = 0.0;
-	MP_data cutcoeff(j);
+        double cutconst = 0.0;
+        MP_data cutcoeff(j);
 
-	double objsub = 0.0;
-	received.display("received");
-	for (int jj=0; jj<numDistributionCenters; jj++) {
-	    subproblem->setRowBounds( selling(jj), received.level(jj), received.level(jj));
-	}
-	for (int s=0; s<numScenarios; s++) {
-	    for (int j=0; j<numDistributionCenters; j++) {
-		subproblem->setRowBounds( selmax(j), Demand[s][j], Demand[s][j]);
-	    }
-	    subproblem->resolve();
-	    objsub += prob[s]*subproblem->getObjValue();
-	    for (int j=0; j<numDistributionCenters; j++) {
-		cout<<selmax.price(j)<<"  "<<prob[s]<<"  "<<Demand[s][j]<<endl;
-		cutconst += prob[s]*selmax.price(j)*Demand[s][j];
-		cutcoeff(j) += prob[s]*selling.price(j);
-	    }
-	}
+        double objsub = 0.0;
+        received.display("received");
+        for (int jj=0; jj<numDistributionCenters; jj++) {
+            subproblem->setRowBounds( selling(jj), received.level(jj), received.level(jj));
+        }
+        for (int s=0; s<numScenarios; s++) {
+            for (int j=0; j<numDistributionCenters; j++) {
+                subproblem->setRowBounds( selmax(j), Demand[s][j], Demand[s][j]);
+            }
+            subproblem->resolve();
+            objsub += prob[s]*subproblem->getObjValue();
+            for (int j=0; j<numDistributionCenters; j++) {
+                cout<<selmax.price(j)<<"  "<<prob[s]<<"  "<<Demand[s][j]<<endl;
+                cutconst += prob[s]*selmax.price(j)*Demand[s][j];
+                cutcoeff(j) += prob[s]*selling.price(j);
+            }
+        }
 
-	upperbound = std::min(upperbound, objmaster + objsub);
-	cout<<"Lower and upper bounds: "<<lowerbound<<"   "<<upperbound<<endl;
-	if ((upperbound-lowerbound) < 0.0001*(1+fabs(lowerbound))) {
-	    break;
-	}
+        upperbound = std::min(upperbound, objmaster + objsub);
+        cout<<"Lower and upper bounds: "<<lowerbound<<"   "<<upperbound<<endl;
+        if ((upperbound-lowerbound) < 0.0001*(1+fabs(lowerbound))) {
+            break;
+        }
 
-	cout<<"cutconst="<<cutconst<<endl;
-	masterproblem.addRow( theta() >= cutconst + sum(j, cutcoeff(j)*received(j)) );
+        cout<<"cutconst="<<cutconst<<endl;
+        masterproblem.addRow( theta() >= cutconst + sum(j, cutcoeff(j)*received(j)) );
 
-	masterproblem->resolve();
-	ship.display("ship");
+        masterproblem->resolve();
+        ship.display("ship");
 
-	lowerbound = masterproblem->getObjValue();
-	objmaster = lowerbound - theta.level();
+        lowerbound = masterproblem->getObjValue();
+        objmaster = lowerbound - theta.level();
     }
     assert(kk<25);
 
-// Expected solution:
-// ship
-// 0 0   0
-// 0 1   0
-// 0 2   0
-// 0 3   0
-// 0 4   500
-// 1 0   150
-// 1 1   0
-// 1 2   0
-// 1 3   300
-// 1 4   0
-// 2 0   0
-// 2 1   100
-// 2 2   270
-// 2 3   0
-// 2 4   100
+    // Expected solution:
+    // ship
+    // 0 0   0
+    // 0 1   0
+    // 0 2   0
+    // 0 3   0
+    // 0 4   500
+    // 1 0   150
+    // 1 1   0
+    // 1 2   0
+    // 1 3   300
+    // 1 4   0
+    // 2 0   0
+    // 2 1   100
+    // 2 2   270
+    // 2 3   0
+    // 2 4   100
 
     cout<<"Test stochbenders passed."<<endl;
 }
