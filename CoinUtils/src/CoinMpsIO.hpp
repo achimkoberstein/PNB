@@ -465,7 +465,7 @@ public:
     { objectiveOffset_=value;}
 
     /// Return the problem name
-    const std::string getProblemName() const;
+    const char * getProblemName() const;
 
     /// Return the objective name
     const char * getObjectiveName() const;

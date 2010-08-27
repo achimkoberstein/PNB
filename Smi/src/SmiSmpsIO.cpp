@@ -823,6 +823,21 @@ SmiSmpsCardReader::nextSmpsField (  )
   }
 }
 
+std::string SmiSmpsIO::getModProblemName() {
+    std::string name = "";
+    if (strcmp(problemName_,"")==0) {
+        name.append("BLANK   ");
+    } else {
+        if (strlen(problemName_) >= 8) {
+            name.append(problemName_, 8);
+        } else {
+            name.append(problemName_);
+            name.append(8-strlen(problemName_), ' ');
+        }
+    }
+    return name;
+}
+
 void SmiSmpsIO::writeCoreFile(const char* filename) {
     // count nels
     int nels = 0;
@@ -911,7 +926,7 @@ void SmiSmpsIO::writeTimeFile(const char* filename) {
 
     std::stringstream line;
     line.fill(' ');
-    line << "TIME          " << this->getProblemName() << "\nPERIODS\n";
+    line << "TIME          " << this->getModProblemName() << "\nPERIODS\n";
     
     int row = 0, col = 0;
     for (int stg = 0; stg < core->getNumStages(); stg++) {
@@ -940,8 +955,13 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
     
     std::stringstream line;
     line.fill(' ');
-    line << "STOCH         " << this->getProblemName() << "\n";
-    line << "SCENARIO      DISCRETE                 REPLACE\n";
+    line << "STOCH         " << this->getModProblemName() << "\n";
+    line << "SCENARIO      DISCRETE                 ";
+    if (tree->getLeaf(0)->getDataPtr()->getNode()->getCoreCombineRule() == SmiCoreCombineReplace::Instance())
+        line << "REPLACE\n";
+    else
+        line << "ADD\n";
+        
     for (int scen = 0; scen < tree->getNumScenarios(); scen++) {
         writeScenarioToStochFile(line, tree->getLeaf(scen), scen);
     }
@@ -952,7 +972,7 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
 }
 
 void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario) {
-    // first, go up the tree - if possible and the parent node is still within the same scenario
+    // first, go up the tree - if possible and the parent node is still within the same scenario and not the root node
     // if thats not the case, we reached the first node for that scenario
     if (node->hasParent() && node->getParent()->scenario() == scenario && node->getParent() != tree->getRoot()) {
         writeScenarioToStochFile(stream, node->getParent(), scenario);
@@ -994,14 +1014,20 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
     if (data->getColUpperLength() > 0) {
         // write column upper elements
     }
-    if (data->getRowLowerLength() > 0) {
-        // write row lower elements
+
+    // write row lower elements
+    for (int i = 0; i < data->getRowLowerLength(); i++) {
+        stream << "    RHS        " << std::setw(15) << std::left << this->rowName(data->getRowLowerIndices()[i]) << data->getRowLowerElements()[i] << "\n";
     }
-    if (data->getRowUpperLength() > 0) {
-        // write row upper elements
+
+    // write row upper elements
+    for (int i = 0; i < data->getRowUpperLength(); i++) {
+        stream << "    RHS        " << std::setw(15) << std::left << this->rowName(data->getRowUpperIndices()[i]) << data->getRowUpperElements()[i] << "\n";
     }
-    if (data->getObjectiveLength() > 0) {
-        // write objective elements
+
+    // write objective elements
+    for (int i = 0; i < data->getObjectiveLength(); i++) {
+        stream << "    OBJROW     " << std::setw(15) << std::left << this->rowName(data->getObjectiveIndices()[i]) << data->getObjectiveElements()[i] << "\n";
     }
 }
 
