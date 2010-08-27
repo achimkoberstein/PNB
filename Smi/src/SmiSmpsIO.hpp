@@ -95,7 +95,9 @@ private:
     void writeTimeFile(const char* filename);
     void writeStochFile(const char* filename);
 
-    void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario);
+    void writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario);
+    
+    inline std::string getModProblemName(); // get the (probably modified) problem name
 
 	int nstag_;
 	int *cstag_;
