@@ -1222,7 +1222,7 @@ BracketMeanDiscretization::BracketMeanDiscretization(int samples): Discretizatio
 
 void BracketMeanDiscretization::generateDiscreteDistribution()
 {
-    // At first we compute the intervals, number is given by sampleSize.
+    // At first we compute the intervals, number is given by sampleSize. Each interval has to have the same probability.
     // We should start with the end-points
     double epsilon = std::numeric_limits<double>::epsilon();
     double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
@@ -1230,19 +1230,20 @@ void BracketMeanDiscretization::generateDiscreteDistribution()
     int intervals = rvarPtr->SampleSize();
     std::vector<double> intervalPoints(intervals+1);
     intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
-    double increment = (upperEnd-lowerEnd)/intervals;
+    // Compute interval points by evaluating the quantile for rising probabilities
+    double increment = (1-2*epsilon)/intervals;
     for (int i = 1; i < intervals; i++){
-        intervalPoints[i] = intervalPoints[i-1]+increment;
+        intervalPoints[i] = rvarPtr->quantile(0+epsilon+increment*i);
     }
 
     // Now we compute the mean of each interval.
     std::map<double,double> bracketMeans;
     double probSum = 0;
-    for (int i = 0; i < intervals; i++){
+    for (int i = 1; i <= intervals; i++){
         // Probability of interval is CDF right bracket - CDF left bracket
-        double prob = (rvarPtr->cdf(intervalPoints[i+1])-rvarPtr->cdf(intervalPoints[i]));
+        double prob = 1.0/intervals;
         // Bracket mean is value that corresponds to mean probability of that interval
-        double bracketMean = intervalPoints[i]+increment/2;
+        double bracketMean = rvarPtr->quantile(0+epsilon+increment*i-increment/2);
         bracketMeans.insert(std::pair<double,double>(bracketMean,prob));
         probSum += prob;
     }
@@ -1252,7 +1253,7 @@ void BracketMeanDiscretization::generateDiscreteDistribution()
 
 void BracketMedianDiscretization::generateDiscreteDistribution()
 {
-    // At first we compute the intervals, number is given by sampleSize.
+    // At first we compute the intervals, number is given by sampleSize. Each interval has to have the same probability.
     // We should start with the end-points
     double epsilon = std::numeric_limits<double>::epsilon();
     double lowerEnd = rvarPtr->quantile(0+epsilon); //TODO: Maybe we need an epsilon here?!
@@ -1260,7 +1261,7 @@ void BracketMedianDiscretization::generateDiscreteDistribution()
     int intervals = rvarPtr->SampleSize();
     std::vector<double> intervalPoints(intervals+1);
     intervalPoints[0] = lowerEnd; intervalPoints[intervals] = upperEnd;
-
+    // Compute interval points by evaluating the quantile for rising probabilities
     double increment = (1-2*epsilon)/intervals;
     for (int i = 1; i < intervals; i++){
         intervalPoints[i] = rvarPtr->quantile(0+epsilon+increment*i);
@@ -1272,8 +1273,9 @@ void BracketMedianDiscretization::generateDiscreteDistribution()
     for (int i = 1; i <= intervals; i++){
         // Probability of interval is 1 / #intervals
         double prob = 1.0/intervals;
-        // Bracket median is quantil of intervalStartProb+increment/2
-        double median = rvarPtr->quantile(0 + epsilon + increment*(i-1)+ increment/2);         
+        // Bracket median is median point of the interval. Compute intervalPoint on the right minus half the interval length.
+        double median = intervalPoints[i]-(intervalPoints[i]-intervalPoints[i-1])/2;
+            //rvarPtr->quantile(0 + epsilon + increment*(i-1)+ increment/2);         
         bracketMedians.insert(std::pair<double,double>(median,prob));
         probSum += prob;
     }
