@@ -88,7 +88,7 @@ public:
 	void writeSmps(const char* filename);
 public:
 	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),combineRuleSet(false){}
-	SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),core(core), nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),combineRuleSet(false){ tree = smiTree; }
+	SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),core(core), nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),combineRuleSet(false),smpsCardReader_(NULL){ tree = smiTree; }
         ~SmiSmpsIO(){delete [] cstag_;delete[] rstag_;delete smpsCardReader_;}
 private:
     void writeCoreFile(const char* filename);
@@ -97,7 +97,7 @@ private:
 
     void writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario);
     
-    inline std::string getModProblemName(); // get the (probably modified) problem name
+    std::string getModProblemName(); // get the (probably modified) problem name
 
 	int nstag_;
 	int *cstag_;
