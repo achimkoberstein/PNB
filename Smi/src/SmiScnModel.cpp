@@ -1210,8 +1210,13 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 }
 
 void SmiScnModel::writeSmps(const char *name) {
-    SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
-    smpsIO->writeSmps(name);
+    if (this != NULL) {
+        SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
+        smpsIO->writeSmps(name);
+        delete smpsIO;
+    } else {
+        std::cerr << "SMPS files for " << name << " cant be written - no stochastic model.";
+    }
 }
 
 void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &dsecond)
