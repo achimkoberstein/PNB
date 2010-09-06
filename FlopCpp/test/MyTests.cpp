@@ -28,7 +28,7 @@ namespace flopc {
         // read SMPS files        
         SmiScnModel smi;
         DLOG(INFO) << "SMPS reader: " << smi.readSmps(filename.c_str()) << "\n";
-        OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+        OsiSolverInterface *clp = new OsiClpSolverInterface();
         smi.setOsiSolverHandle(*clp);
         OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
         osiStoch->setObjSense(direction);
@@ -38,11 +38,18 @@ namespace flopc {
         else
             osiStoch->initialSolve();
         
-        // check objective values
-        EXPECT_NEAR(model.Solver->getObjValue(), osiStoch->getObjValue(), 0.001);
+        EXPECT_EQ(model.Solver->isProvenOptimal(),osiStoch->isProvenOptimal());
+        EXPECT_EQ(model.Solver->isProvenPrimalInfeasible(),osiStoch->isProvenPrimalInfeasible());
+        EXPECT_EQ(model.Solver->isProvenDualInfeasible(),osiStoch->isProvenDualInfeasible());
+        EXPECT_EQ(model.Solver->isAbandoned(),osiStoch->isAbandoned());
+       
+        // check objective values in case of optimal solution
+        if ( model.Solver->isProvenOptimal() )
+            EXPECT_NEAR(model.Solver->getObjValue(), osiStoch->getObjValue(), 0.001);
         ASSERT_EQ(0,remove( (filename+".core").c_str() ));
         ASSERT_EQ(0,remove( (filename+".time").c_str() ));
         ASSERT_EQ(0,remove( (filename+".stoch").c_str() ));
+        delete clp;
     }
 
 #pragma region initialization
@@ -401,6 +408,7 @@ namespace flopc {
 
         MP_variable x(T);
         MP_variable y(T);
+        y.upperLimit() = 10;
 
         MP_constraint firstConstraint,secondConstraint,thirdConstraint(T);
         //firstConstraint() = a()*x() <= 20;
@@ -409,6 +417,7 @@ namespace flopc {
         testModel.setObjective(x(T.last()));
         testModel.solve(MP_model::MAXIMIZE);
         
+        // How to test for infeasible models? Is this the point? No it is not..
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
     }
 
@@ -786,7 +795,8 @@ namespace flopc {
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        // We do not have a model that contains randomness, so there is not much sense in writing a SMPS file.
+        // It is not possible anyway as no SmiScnModel gets created.
     }
 
     // Dacota  Model to test the EV-, EEV- and WS-Problems
@@ -1143,70 +1153,6 @@ namespace flopc {
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-        //Print some results..
-        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
-    }
-
-    //TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
-    //    MP_stage T(3); //We have three stages
-    //    MP_random_data rVar(T); //Random Variable depends only on stage
-    //    MP_random_data rVar2(T);
-    //    //As we see: Only stages 1..T needs to be defined. If a RV is indexed via stage=0, in the generation process later on, it is not evaluated.
-    //    rVar(1) = new DiscreteRandomVariable();
-    //    rVar2(1) = new DiscreteRandomVariable();
-    //    rVar(2) = new DiscreteRandomVariable();
-    //    rVar2(2) = new DiscreteRandomVariable();
-    //    MP_variable x;
-    //    MP_variable y(T);
-    //    MP_constraint con1; 
-    //    MP_constraint con2(T);
-    //    con1() = x() <= 10;
-    //    con2(T) = x() + rVar(T)*y(T) <= rVar2(T);
-    //    testModel.setObjective(y(T.last()));
-    //    testModel.attach(testModel.Solver);
-    //    testModel.solve(MP_model::MAXIMIZE);
-    //    EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
-    //}
-
-    TEST_F(MP_modelTest,RandomVariableInitializationTest){
-        MP_model testModel(new OsiClpSolverInterface());
-        // Test RV Usage by Assignment or Initialization.
-        enum {Audi, BMW, Ford, numCars};
-        enum {DB,EuroBahn,numTrains};
-        MP_stage T(2);
-        MP_set cars(numCars);
-        MP_set trains(numTrains);
-        MP_random_data vars(T,cars); //Initialize RV with set
-        DiscreteUniformRandomVariable *x,*y,*z;
-        x = new DiscreteUniformRandomVariable();
-        y = new DiscreteUniformRandomVariable();
-        z = new DiscreteUniformRandomVariable();
-        vars(1,BMW) = x; 
-        vars(1,Audi) = y;
-        vars(1,Ford) = z;
-        vars(1,BMW)->setStage(1);
-        vars(1,Audi)->setStage(1);
-        vars(1,Ford)->setStage(1);
-        //Stage setting is not yet supported, TODO
-        MP_variable test(cars,trains);
-        RandomVariable* varsArr[1][3] = {{ new DiscreteUniformRandomVariable(0,2,1),new DiscreteUniformRandomVariable(0,3,1),new DiscreteUniformRandomVariable(0,4,1) }}; //Initialize RV with Array of RV
-        // Need to delete Array as RV does not take ownership..
-        // Maybe store boost::shared_ptr<> to RV?
-        // Then the values assigned to the RV get managed by the RV and released too
-        // No Deletion of array values necessary afterwards..
-        MP_random_data vars2(&varsArr[0][0],T,cars);
-        //Check if vars2 contains these random variables
-        EXPECT_EQ(varsArr[0][0],vars2(1,0)); //only checks pointer
-        EXPECT_EQ(varsArr[0][1],vars2(1,1));
-        EXPECT_EQ(varsArr[0][2],vars2(1,2));
-        MP_constraint constraint1(trains,T);
-        constraint1(trains,T+1) = sum(cars,test(cars,trains)) <= sum(cars,vars2(T+1,cars));
-        testModel.setObjective( sum(cars*trains,test(cars,trains)) );
-        testModel.attach();
-        testModel.solve(MP_model::MAXIMIZE);
-
-        EXPECT_DOUBLE_EQ(9,testModel->getObjValue());
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
@@ -1630,7 +1576,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //VLDEnable();
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
-    ::testing::GTEST_FLAG(filter) = "MP_modelTest.SimpleTestThatHasToBeRenamed";
+    //::testing::GTEST_FLAG(filter) = "MP_modelTest.SimpleTestThatHasToBeRenamed";
     //_CrtMemState memstate;
     //_CrtMemCheckpoint(&memstate);
 
