@@ -1,18 +1,18 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCbc", "..\..\..\Cbc\MSVisualStudio\v9\libCbc\libCbc.vcxproj", "{363BA154-FEC9-4E1E-BC23-93CEC58AB785}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCbc", "..\..\..\Cbc\MSVisualStudio\v10\libCbc\libCbc.vcxproj", "{363BA154-FEC9-4E1E-BC23-93CEC58AB785}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCgl", "..\..\..\Cgl\MSVisualStudio\v9\libCgl\libCgl.vcxproj", "{DBEA3904-F0B8-408A-9E1A-6497FEBE8C42}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCgl", "..\..\..\Cgl\MSVisualStudio\v10\libCgl\libCgl.vcxproj", "{DBEA3904-F0B8-408A-9E1A-6497FEBE8C42}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libClp", "..\..\..\Clp\MSVisualStudio\v9\libClp\libClp.vcxproj", "{4F8F7D1C-3A9E-444D-8EE9-77F33FA05994}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libClp", "..\..\..\Clp\MSVisualStudio\v10\libClp\libClp.vcxproj", "{4F8F7D1C-3A9E-444D-8EE9-77F33FA05994}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\CoinUtils\MSVisualStudio\v9\libCoinUtils\libCoinUtils.vcxproj", "{C4867F15-438D-4FF8-8388-62FBAAA9786C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\CoinUtils\MSVisualStudio\v10\libCoinUtils\libCoinUtils.vcxproj", "{C4867F15-438D-4FF8-8388-62FBAAA9786C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "..\..\..\Osi\MSVisualStudio\v9\libOsi\libOsi.vcxproj", "{7D98E2CB-876E-4F75-9F71-77D3FE87E149}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "..\..\..\Osi\MSVisualStudio\v10\libOsi\libOsi.vcxproj", "{7D98E2CB-876E-4F75-9F71-77D3FE87E149}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCbc", "..\..\..\Osi\MSVisualStudio\v9\libOsiCbc\libOsiCbc.vcxproj", "{A4D8DB82-7DC6-45EE-AF08-2A6DD7E7AB56}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCbc", "..\..\..\Osi\MSVisualStudio\v10\libOsiCbc\libOsiCbc.vcxproj", "{A4D8DB82-7DC6-45EE-AF08-2A6DD7E7AB56}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiClp", "..\..\..\Osi\MSVisualStudio\v9\libOsiClp\libOsiClp.vcxproj", "{02D45875-A8CF-41B9-990B-3699C0ECFE10}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiClp", "..\..\..\Osi\MSVisualStudio\v10\libOsiClp\libOsiClp.vcxproj", "{02D45875-A8CF-41B9-990B-3699C0ECFE10}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "aircraft", "examples\aircraft\aircraft.vcxproj", "{26FEF589-5419-4C78-AFB0-D6759A0FE8D0}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -223,16 +223,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTest", "FlopCpp\unitTes
 		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSmi", "..\..\..\Smi\MSVisualStudio\v9\libSmi\smiLib.vcxproj", "{0FB13161-09B7-46BE-8626-296431701F9F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSmi", "..\..\..\Smi\MSVisualStudio\v10\libSmi\smiLib.vcxproj", "{0FB13161-09B7-46BE-8626-296431701F9F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTestSmi", "..\..\..\Smi\MSVisualStudio\v9\unitTestSmi\smiUnitTest.vcxproj", "{023B2D59-816F-484B-91D2-46965956163D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unitTestSmi", "..\..\..\Smi\MSVisualStudio\v10\unitTestSmi\smiUnitTest.vcxproj", "{023B2D59-816F-484B-91D2-46965956163D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0FB13161-09B7-46BE-8626-296431701F9F} = {0FB13161-09B7-46BE-8626-296431701F9F}
 		{02D45875-A8CF-41B9-990B-3699C0ECFE10} = {02D45875-A8CF-41B9-990B-3699C0ECFE10}
 		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exampleSmi", "..\..\..\Smi\MSVisualStudio\v9\exampleSmi\exampleSmi.vcxproj", "{363A478B-7DAC-4E0A-A2EC-961B5B3ED726}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "exampleSmi", "..\..\..\Smi\MSVisualStudio\v10\exampleSmi\exampleSmi.vcxproj", "{363A478B-7DAC-4E0A-A2EC-961B5B3ED726}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0FB13161-09B7-46BE-8626-296431701F9F} = {0FB13161-09B7-46BE-8626-296431701F9F}
 		{02D45875-A8CF-41B9-990B-3699C0ECFE10} = {02D45875-A8CF-41B9-990B-3699C0ECFE10}
@@ -242,6 +242,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libflopcpp", "libflopcpp\libflopc.vcxproj", "{98885124-894A-48BF-9C20-D9F389C92275}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyTest", "MyTest\MyTest.vcxproj", "{894612FE-BCCE-4084-B089-20B65E2BFE06}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DBEA3904-F0B8-408A-9E1A-6497FEBE8C42} = {DBEA3904-F0B8-408A-9E1A-6497FEBE8C42}
+		{363BA154-FEC9-4E1E-BC23-93CEC58AB785} = {363BA154-FEC9-4E1E-BC23-93CEC58AB785}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\ThirdParty\gtest\msvc\gtest.vcxproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
 EndProject

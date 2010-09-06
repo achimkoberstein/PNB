@@ -49,6 +49,7 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <PostBuildEventUseInBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -70,6 +71,7 @@
     </Link>
     <PostBuildEvent>
       <Command>"$(TargetPath)" --gtest_output=xml</Command>
+      <Message>Run Test Suite </Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -93,6 +95,9 @@
     <ClCompile Include="..\..\..\test\MyTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Cbc\MSVisualStudio\v9\libCbc\libCbc.vcxproj">
+      <Project>{363ba154-fec9-4e1e-bc23-93cec58ab785}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v9\libClp\libClp.vcxproj">
       <Project>{4f8f7d1c-3a9e-444d-8ee9-77f33fa05994}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
