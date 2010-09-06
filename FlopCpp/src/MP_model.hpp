@@ -13,6 +13,8 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
+#include <Windows.h>
+//#include <pfunc/pfunc.hpp>
 
 
 #include "MP_expression.hpp"
@@ -29,6 +31,11 @@ class SmiCoreData;
 class SmiScnModel;
 
 namespace flopc {
+
+    /* Library instance description */
+    //typedef ::pfunc::generator<cilkS, /* scheduling policy */
+    //    ::pfunc::use_default, /* compare */
+    //    ::pfunc::use_default> my_pfunc; /*function object*/
 
     // forward declarations
     class MP_variable;

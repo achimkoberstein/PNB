@@ -12,9 +12,12 @@ using std::endl;
 #include <queue>
 #include <ctime>
 #include <iterator>
-#include <omp.h>
 
-#include "boost/shared_ptr.hpp"
+
+
+#include <glog/logging.h>
+
+#include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 
 #include <CoinTime.hpp>
@@ -33,6 +36,10 @@ using std::endl;
 #include "MP_constraint.hpp"
 #include "MP_shared_implementation_details.hpp"
 
+// Workaround necessary for glog, if WinGDI.h is included (I do not know who includes the file)
+#ifdef ERROR
+#undef ERROR
+#endif
 
 using namespace flopc;
 
@@ -96,6 +103,7 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     MP_model::current_model = this;
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
+    // Create a new taskmgr for PFunc
 }
 
 MP_model::~MP_model() {

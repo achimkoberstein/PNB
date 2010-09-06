@@ -2,7 +2,13 @@
 // File: MP_expression.cpp
 //****************************************************************************
 
+
+
 #include <sstream>
+#include <algorithm>
+
+#include <OsiSolverInterface.hpp>
+
 #include "MP_index.hpp"
 #include "MP_expression.hpp"
 #include "MP_constant.hpp"
@@ -12,7 +18,8 @@
 #include "MP_variable.hpp"
 #include "MP_model.hpp"
 #include "MP_random_constant.hpp"
-#include <OsiSolverInterface.hpp>
+
+using std::max;
 
 namespace flopc {
 
@@ -488,7 +495,7 @@ void MP::GenerateFunctor::operator()() const {
                 throw invalid_argument_exception();
             // Propagate correct indices, i.e. use the ones defined during assignment phase for MP_random_data. Therefore we have to call the function with empty indices to signal this.
             ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
-            stage = std::max(stage,multiplicators[i]->getStage());
+            stage = max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient
             for (int j = 0; j < MP_model::getCurrentModel()->getScenSet().size();j++){
                 double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
