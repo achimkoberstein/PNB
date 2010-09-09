@@ -1435,10 +1435,6 @@ namespace flopc {
                     else{ // Scenario is in another node, skip it for now. Will be looked at during the inner while loop
                         ++innerIt;
                     }
-
-                    //Workaround iterator invalidating if one deletes the last element, what should not happen according to manual..
-                    if (subScenariosPerStageAndScenario[curStage][curScen].empty())
-                        innerIt = subScenariosPerStageAndScenario[curStage][curScen].end();
                 }//end for
             }//end while: subScenariosPerStageAndScenario
 
