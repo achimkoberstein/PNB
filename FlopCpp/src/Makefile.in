@@ -68,7 +68,7 @@ am_libFlopCpp_la_OBJECTS = MP_boolean.lo MP_constant.lo \
 	MP_constraint.lo MP_data.lo MP_domain.lo MP_expression.lo \
 	MP_index.lo MP_model.lo MP_set.lo MP_utilities.lo \
 	MP_variable.lo MP_random_data.lo \
-	MP_shared_implementation_details.lo
+	MP_shared_implementation_details.lo MP_random_constant.lo
 libFlopCpp_la_OBJECTS = $(am_libFlopCpp_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
@@ -349,7 +349,8 @@ libFlopCpp_la_SOURCES = \
 	MP_utilities.cpp MP_utilities.hpp \
 	MP_variable.cpp MP_variable.hpp \
 	MP_random_data.cpp MP_random_data.hpp \
-	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp
+	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp \
+	MP_random_constant.cpp MP_random_constant.hpp
 
 libFlopCpp_la_LIBADD = $(GLOGLIB)/libglog.la 
 # this is not necessary: libFlopCpp_la_LDFLAGS = -lglog
@@ -631,6 +632,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_expression.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_index.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_model.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_random_constant.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_random_data.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_set.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MP_shared_implementation_details.Plo@am__quote@

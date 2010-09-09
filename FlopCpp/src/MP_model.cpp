@@ -822,18 +822,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         int begin = (*i)->offset;
         int end = (*i)->offset+(*i)->size();
-        if ( (*i)->type == flopc::variableType::discrete || (*i)->type == flopc::variableType::binary ) {
+        if ( (*i)->type == type::discrete || (*i)->type == type::binary ) {
             for (int k=begin; k<end; k++) {
                 if (stage.size()){
                     if (colIndirection[k] != outOfBound){
                         integerIndices.push_back(colIndirection[k]);
-                        if ( (*i)->type == flopc::variableType::binary)
+                        if ( (*i)->type == type::binary)
                             binaryIndices.push_back(colIndirection[k]);
                     }
                 }
                 else{
                     integerIndices.push_back(k);
-                    if ( (*i)->type == flopc::variableType::binary)
+                    if ( (*i)->type == type::binary)
                         binaryIndices.push_back(k);
                 }
             }
@@ -1153,7 +1153,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     Solver->setObjSense(dir);
     bool isMIP = false;
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-        if ( (*i)->type == discrete || (*i)->type == binary ) {
+        if ( (*i)->type == type::discrete || (*i)->type == type::binary ) {
             isMIP = true;
             break;
         }
