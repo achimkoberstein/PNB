@@ -1576,7 +1576,6 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //VLDEnable();
     //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
-    //::testing::GTEST_FLAG(filter) = "MP_modelTest.SimpleTestThatHasToBeRenamed";
     //_CrtMemState memstate;
     //_CrtMemCheckpoint(&memstate);
 

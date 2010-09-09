@@ -21,7 +21,9 @@ namespace flopc {
   /** @brief Enumeration for indicating variable type
       @ingroup INTERNAL_USE
   */
-  enum variableType {continuous, discrete, binary};
+  namespace type {
+  	enum variableType {continuous, discrete, binary};
+  }
 
   class MP_model;
   class MP_variable;
@@ -99,7 +101,7 @@ namespace flopc {
 
     MP_model *M;
     std::vector<VariableRef*> myrefs;
-    variableType type;
+    type::variableType type;
     int offset;
     int stageSet;
   };
