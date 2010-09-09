@@ -1036,3 +1036,4 @@ void SmiSmpsIO::writeSmps(const char* filename) {
     
     this->freeAll();
 }
+
