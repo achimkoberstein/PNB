@@ -9,7 +9,8 @@ using std::endl;
 #include <algorithm>
 #include <limits>
 #include <map>
-#include <queue>
+#include <list>
+#include <deque>
 #include <ctime>
 #include <iterator>
 
@@ -822,7 +823,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         int begin = (*i)->offset;
         int end = (*i)->offset+(*i)->size();
-        if ( (*i)->type == flopc::variableType::discrete || (*i)->type == flopc::variableType::binary ) {
+        if ( (*i)->type == discrete || (*i)->type == binary ) {
             for (int k=begin; k<end; k++) {
                 if (stage.size()){
                     if (colIndirection[k] != outOfBound){
@@ -860,8 +861,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         CoinPackedMatrix matrix(true,m,realn,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
         matrix.reverseOrdering(); //Smi needs matrix in row ordered form
         //TODO: Debug switch
-        //DLOG(INFO) << "Core-Matrix" << std::endl;
-        //DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
+        // DLOG(INFO) << "Core-Matrix" << std::endl;
+        // DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
         
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
@@ -1316,18 +1317,18 @@ namespace flopc {
         if (probabilities.empty())
             probabilities = std::vector<double>(nScen,1.0/nScen); //If probability set is present, use that, otherwise use equiprobable values.
 
-        typedef std::set<int>::iterator scenIt;
-        std::set<int> scenarioHeap;
+        typedef std::list<int>::iterator scenIt;
+        std::list<int> scenarioHeap;
 
         for (int i = 0; i < nScen; i++)
-            scenarioHeap.insert(i);
+            scenarioHeap.push_back(i);
 
         std::vector<std::deque<int> > subScenarioQueueVector(nStages,std::deque<int> ()); //For each stage an own queue
         subScenarioQueueVector[0].push_front(0);
 
         //We do not like recursion, therefore we need to store all the elements in a list of vectors and stuff
-        std::vector< std::vector< std::set<int> > > subScenariosPerStageAndScenario(nStages,std::vector<std::set<int> > (nScen));
-        for (int j = 0; j < nScen; j++){ // Assign scenarioHeap to all the first stage sets. TODO: Improve memory consumption..
+        std::vector< std::vector< std::list<int> > > subScenariosPerStageAndScenario(nStages, std::vector<std::list<int> > (nScen)); //TODO: Redo, this seems to be expensive..
+        for (int j = 0; j < nScen; j++){ // Assign scenarioHeap to all the first stage sets. TODO: Improve memory consumption and thus running time due to allocation and deletion
             subScenariosPerStageAndScenario[0][j] = scenarioHeap;
         }
 
@@ -1410,6 +1411,10 @@ namespace flopc {
 
                 // Remove elements from subsetHeap that are equal to this one and add them to subset for next stage.
                 for (scenIt innerIt = subScenariosPerStageAndScenario[curStage][curScen].begin(); innerIt != subScenariosPerStageAndScenario[curStage][curScen].end();){
+                    //DLOG(INFO) << "curStage " << curStage << " curScen " << curScen << " parentScen " << parentScen << " innerIt " << *innerIt;
+                    //if (subScenariosPerStageAndScenario[curStage][curScen].empty() || innerIt == subScenariosPerStageAndScenario[curStage][curScen].end())
+                    //    innerIt = subScenariosPerStageAndScenario[curStage][curScen].end();
+
                     if (curStage == nStages-1){
                         //We are in the last stage. All scenarios that still have the same values end up in the same scenario, but that increases the probability
                         //Remove the scenario from current stage and set realOdering to outOfBound
@@ -1423,13 +1428,17 @@ namespace flopc {
                     // Define the new scenario subset node for the next stage
                     else if (!differFromPrevious(randomCoefficientVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
                         //Add to scenario subset heap of next stage node and scenario
-                        subScenariosPerStageAndScenario[curStage+1][parentScen].insert(*innerIt); //debug this statement
+                        subScenariosPerStageAndScenario[curStage+1][parentScen].push_back(*innerIt); 
                         //Erase from subsetHeap, so that this subset scenario does not form a new node in a subsequent run of the while loop
-                        subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
+                       subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     else{ // Scenario is in another node, skip it for now. Will be looked at during the inner while loop
                         ++innerIt;
                     }
+
+                    //Workaround iterator invalidating if one deletes the last element, what should not happen according to manual..
+                    if (subScenariosPerStageAndScenario[curStage][curScen].empty())
+                        innerIt = subScenariosPerStageAndScenario[curStage][curScen].end();
                 }//end for
             }//end while: subScenariosPerStageAndScenario
 

@@ -13,7 +13,6 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
-#include <Windows.h>
 //#include <pfunc/pfunc.hpp>
 
 

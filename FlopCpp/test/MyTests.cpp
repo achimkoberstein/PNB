@@ -1009,8 +1009,8 @@ namespace flopc {
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        demand.display("Demand");
-        price.display("Price");
+        //demand.display("Demand");
+        //price.display("Price");
         std::vector<double> sampledValues = var[0]->getSampledValues();
         for (int i = 0; i < sampledValues.size(); i++){
             EXPECT_LE(0,sampledValues[i]);
@@ -1027,8 +1027,8 @@ namespace flopc {
         testModel.solve(MP_model::MINIMIZE);
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        demand.display("Demand");
-        price.display("Price");
+        //demand.display("Demand");
+        //price.display("Price
         sampledValues = var[0]->getSampledValues();
         for (int i = 0; i < sampledValues.size(); i++){
             EXPECT_LE(0,sampledValues[i]);
@@ -1042,7 +1042,7 @@ namespace flopc {
         std::vector<double> prob = testModel.getProbabilities();
         double sum = 0;
         for (int i = 0 ; i < testModel.getScenSet().size(); i++){
-            std::cout << " Sc." << i << ": " << prob[i];
+            //std::cout << " Sc." << i << ": " << prob[i];
             sum += prob[i];
         }
         std::cout << std::endl;
