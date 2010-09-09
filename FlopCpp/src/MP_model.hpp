@@ -13,6 +13,8 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
+// This is necessary for PFunc and windows, so do a #ifdef around it
+//#include <Windows.h>
 //#include <pfunc/pfunc.hpp>
 
 
