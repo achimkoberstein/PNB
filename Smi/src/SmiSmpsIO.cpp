@@ -298,7 +298,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					}
 					else	// add element
 					{
-						matrix->modifyCoefficient(i,j,value);
+						matrix->modifyCoefficient(i,j,value,true);
 					}
 					if ( !( (oldi==i)&&(oldj==j) ) ) // this is a new RV
 					{
@@ -442,7 +442,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					}
 					else	// add element
 					{
-						matrix->modifyCoefficient(i,j,value);
+						matrix->modifyCoefficient(i,j,value,true);
 					}
 				}
 				
