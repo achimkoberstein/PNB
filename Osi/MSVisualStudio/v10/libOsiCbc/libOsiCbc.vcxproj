@@ -154,9 +154,8 @@
     <ClInclude Include="..\..\..\src\OsiSolverParameters.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Cbc\MSVisualStudio\v9\libCbc\libCbc.vcxproj">
+    <ProjectReference Include="..\..\..\..\Cbc\MSVisualStudio\v10\libCbc\libCbc.vcxproj">
       <Project>{363ba154-fec9-4e1e-bc23-93cec58ab785}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Cgl\MSVisualStudio\v9\libCgl\libCgl.vcxproj">
       <Project>{dbea3904-f0b8-408a-9e1a-6497febe8c42}</Project>
