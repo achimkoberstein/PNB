@@ -1411,10 +1411,6 @@ namespace flopc {
 
                 // Remove elements from subsetHeap that are equal to this one and add them to subset for next stage.
                 for (scenIt innerIt = subScenariosPerStageAndScenario[curStage][curScen].begin(); innerIt != subScenariosPerStageAndScenario[curStage][curScen].end();){
-                    //DLOG(INFO) << "curStage " << curStage << " curScen " << curScen << " parentScen " << parentScen << " innerIt " << *innerIt;
-                    //if (subScenariosPerStageAndScenario[curStage][curScen].empty() || innerIt == subScenariosPerStageAndScenario[curStage][curScen].end())
-                    //    innerIt = subScenariosPerStageAndScenario[curStage][curScen].end();
-
                     if (curStage == nStages-1){
                         //We are in the last stage. All scenarios that still have the same values end up in the same scenario, but that increases the probability
                         //Remove the scenario from current stage and set realOdering to outOfBound
