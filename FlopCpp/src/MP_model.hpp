@@ -351,6 +351,7 @@ namespace flopc {
         MP_stage stage;
         MP_scenario_set scenSet;
         MP_expression Objective;
+        // We have sets of MP_variables and MP_constraints, as well as set of RandomVariable's. Is this the most efficient way to handle it?
         set<MP_constraint *> Constraints;
         set<MP_variable *> Variables;
         std::vector< std::set<RandomVariable*> > RandomVariables;
