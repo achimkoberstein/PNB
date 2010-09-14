@@ -9,5 +9,5 @@ SCENARIOS     DISCRETE                REPLACE
      x04       C3             3.000
      RHS       C1             0.000
      RHS       C2             1.000
-     RHS       C3             2.000 
+     RHS       C3             0.000 
 ENDATA
