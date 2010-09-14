@@ -5,7 +5,7 @@
 #ifndef _MP_set_hpp_
 #define _MP_set_hpp_
 
-#include <iosfwd>
+#include <iostream>
 
 #include <string>
 using std::string;
