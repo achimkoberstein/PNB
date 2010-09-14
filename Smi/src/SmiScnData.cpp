@@ -7,7 +7,37 @@
 
 using namespace std;
 
-SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):intColsStagewise(nstag,std::vector<int>()),integerIndices_(0),integerLength_(0),binaryIndices_(0),binaryLength_(0)
+int nrow_;
+int ncol_;
+int nz_; // We can count the total number of elements, but I do not if we need this at one point
+SmiStageIndex nstag_; //Total number of stages in the problem, apart from the first stage. A two-stage problem has nstag_ = 1 and so on. If the problem is deterministic, nstag_ = 0.
+int *nColInStage_; //Number of Columns in Stage
+int *nRowInStage_; //Number of Rows in Stage
+int *stageColPtr_; //Start Index of Columns in Stage, with respect to ncol_
+int *stageRowPtr_; //Start Index of Rows in Stage, with respect to nrow_
+int *colStage_; //To which stage belongs the column?
+int *rowStage_; //To which stage belongs the row?
+int *colEx2In_; //Not clear yet
+int *rowEx2In_; //Not clear yet
+int *colIn2Ex_; // Not clear yet
+int *rowIn2Ex_; // Not clear yet
+int *integerIndices_; //indices of integer variables
+int integerLength_; //number of integer variables
+int *binaryIndices_; //indices of binary variables
+int binaryLength_; //number of binary variables
+double **cdrlo_;
+double **cdrup_;
+double **cdobj_;
+double **cdclo_;
+double **cdcup_;
+vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
+vector<double *> pDenseRow_; //dense probability vector
+vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
+
+SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
+nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
+colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
+cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>())
 {	//Copies all values already stored in the Solver..
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -30,7 +60,10 @@ SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag
     delete dobj;
 }
 
-SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag,int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):intColsStagewise(nstag,std::vector<int>()),integerIndices_(0),integerLength_(0),binaryIndices_(0),binaryLength_(0)
+SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag,int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
+nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
+colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
+cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>())
 {
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();

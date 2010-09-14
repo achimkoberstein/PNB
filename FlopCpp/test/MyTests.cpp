@@ -16,7 +16,6 @@
 #include "SmiSmpsIO.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
-
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
 //TODO: Test scenario tree generation for RV that are not for themselves part of the model. Maybe this is already working, maybe not..
@@ -25,23 +24,33 @@
 namespace flopc {
     void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename){
         // write SMPS files
-        //model.smiModel->writeSmps(filename.c_str());
-
-        //// read SMPS files        
-        //SmiScnModel smi;
-        //DLOG(INFO) << "SMPS reader: " << smi.readSmps(filename.c_str()) << "\n";
-        //OsiClpSolverInterface *clp = new OsiClpSolverInterface();
-        //smi.setOsiSolverHandle(*clp);
-        //OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
-        //osiStoch->setObjSense(direction);
-        //osiStoch->initialSolve();
-
-        //// check objective values
-        //DLOG(INFO) << model.Solver->getObjValue() << " - " << osiStoch->getObjValue();
-        //EXPECT_DOUBLE_EQ(model.Solver->getObjValue(), osiStoch->getObjValue());
-        //ASSERT_EQ(0,remove( (filename+".core").c_str() ));
-        //ASSERT_EQ(0,remove( (filename+".time").c_str() ));
-        //ASSERT_EQ(0,remove( (filename+".stoch").c_str() ));
+        model.smiModel->writeSmps(filename.c_str());        
+        
+        // read SMPS files        
+        SmiScnModel smi;
+        DLOG(INFO) << "SMPS reader: " << smi.readSmps(filename.c_str()) << "\n";
+        OsiSolverInterface *clp = new OsiClpSolverInterface();
+        smi.setOsiSolverHandle(*clp);
+        OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+        osiStoch->setObjSense(direction);
+        
+        if (osiStoch->getNumIntegers() > 0)
+            osiStoch->branchAndBound();
+        else
+            osiStoch->initialSolve();
+        
+        EXPECT_EQ(model.Solver->isProvenOptimal(),osiStoch->isProvenOptimal());
+        EXPECT_EQ(model.Solver->isProvenPrimalInfeasible(),osiStoch->isProvenPrimalInfeasible());
+        EXPECT_EQ(model.Solver->isProvenDualInfeasible(),osiStoch->isProvenDualInfeasible());
+        EXPECT_EQ(model.Solver->isAbandoned(),osiStoch->isAbandoned());
+       
+        // check objective values in case of optimal solution
+        if ( model.Solver->isProvenOptimal() )
+            EXPECT_NEAR(model.Solver->getObjValue(), osiStoch->getObjValue(), 0.001);
+        ASSERT_EQ(0,remove( (filename+".core").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".time").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".stoch").c_str() ));
+        delete clp;
     }
 
 #pragma region initialization
@@ -221,39 +230,39 @@ namespace flopc {
 
     //}
 
-TEST_F(MP_modelTest,RandomVarInScenTreeTest){
-    MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
-    MP_stage T(2);
-    MP_random_data a(T);
-    a(1) = new ContinuousUniformRandomVariable(-2,-1,new BracketMeanDiscretization(2));
-    a(1)->setStage(1);
-    MP_random_data b(T);
-    b(1) = new ContinuousUniformRandomVariable(1,2,new BracketMeanDiscretization(2));
-    b(1)->setStage(1);
-    MP_random_data d(T);
-    d(1) = new ContinuousNormalRandomVariable(0,1, new DoubleDiscretization(4) );
-    d(1)->setStage(1);
-    MP_random_data c(T);
-    c(T) = a(T)+b(T);
+    TEST_F(MP_modelTest,RandomVarInScenTreeTest){
+        MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
+        MP_stage T(2);
+        MP_random_data a(T);
+        a(1) = new ContinuousUniformRandomVariable(-2,-1,new BracketMeanDiscretization(2));
+        a(1)->setStage(1);
+        MP_random_data b(T);
+        b(1) = new ContinuousUniformRandomVariable(1,2,new BracketMeanDiscretization(2));
+        b(1)->setStage(1);
+        MP_random_data d(T);
+        d(1) = new ContinuousNormalRandomVariable(0,1, new DoubleDiscretization(4) );
+        d(1)->setStage(1);
+        MP_random_data c(T);
+        c(T) = a(T)+b(T);
 
-    MP_variable x(T);
+        MP_variable x(T);
 
-    MP_constraint testCon(T);
-    testCon(T) = x(T) <= 10+c(T);
+        MP_constraint testCon(T);
+        testCon(T) = x(T) <= 10+c(T);
 
-    MP_expression objective;
-    objective = x(T.last());
+        MP_expression objective;
+        objective = x(T.last());
 
-    testModel.setObjective(objective);
-    testModel.attach();
-    testModel.solve(MP_model::MAXIMIZE);
-    //EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
-    ASSERT_EQ(3,testModel.getScenSet().size());
-    //OsiStochasticBendersTwoStageSolverInterface benders(testModel.Solver,testModel.getSmi());
-    ////double begin = CoinCpuTime();
-    //benders.initialSolve();
-    //double duration = CoinCpuTime() - begin;
-}
+        testModel.setObjective(objective);
+        testModel.attach();
+        testModel.solve(MP_model::MAXIMIZE);
+        //EXPECT_DOUBLE_EQ(1.5922808968215727,testModel->getObjValue());
+        ASSERT_EQ(3,testModel.getScenSet().size());
+        //OsiStochasticBendersTwoStageSolverInterface benders(testModel.Solver,testModel.getSmi());
+        ////double begin = CoinCpuTime();
+        //benders.initialSolve();
+        //double duration = CoinCpuTime() - begin;
+    }
 
 
     //Test fails to test the correct thing, somehow something is messed up, assumingly during the det.eq. generation of Smi. Supposed problem: constraints span two stages? I am not so sure about that
@@ -406,6 +415,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
 
         MP_variable x(T);
         MP_variable y(T);
+        y.upperLimit() = 10;
 
         MP_constraint firstConstraint,secondConstraint,thirdConstraint(T);
         //firstConstraint() = a()*x() <= 20;
@@ -413,6 +423,8 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         thirdConstraint(T+1) = b(T+1)*x(T+1) <= y(T+1);
         testModel.setObjective(x(T.last()));
         testModel.solve(MP_model::MAXIMIZE);
+        
+        // How to test for infeasible models? Is this the point? No it is not..
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
     }
 
@@ -423,39 +435,38 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         MP_set B(3);
         MP_set C(2);
         MP_set D(2);
-        
+
         MP_subset<2> AB(A,B);
         AB.insert(0,0);
         AB.insert(0,1);
-        
+
         MP_subset<2> CD(C,D);
         CD.insert(0,0);
-        
+
         MP_subset<2> BC(B,C);
         BC.insert(0,0);
         BC.insert(0,1);
         BC.insert(1,1);
-        
+
         MP_data dA(A);
-        
+
         dA(0) = 1;
         dA(1) = 10;
-        
+
         MP_variable x1(A), x2(A),x3(B,C),x4(B);
         x1.upperLimit(A) = 10;
         x2.upperLimit(A) = 10;
         x3.upperLimit(B,C) = 10;
         x4.upperLimit(B) = 10;
-        
+
         MP_constraint constr1(A), constr2(AB);
         constr1(A) = sum( BC(B,C),3*x3(B,C))  <= dA(A);
         constr2(AB(A,B)) = x2(A)+x4(B) <= dA(A); //constr(AB) = dA(A) <= x2(A); does not work
-        
+
         testModel.setObjective(sum(A, x1(A) + x2(A)) + sum(B.such_that(BC(B,C))*C.such_that(BC(B,C)), x3(B,C)   ));
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
-        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-        
+
         x1.display();
         x2.display();
         EXPECT_DOUBLE_EQ(31.333333333333336,testModel->getObjValue());
@@ -512,7 +523,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         EXPECT_DOUBLE_EQ(4.0/3,testModel->getObjValue());
     }
 
-    
+
     TEST_F(UseCaseTest,RandomWalkTest){ //Seed: 1015576855 im vergleich zu 1106783986
         const int numStage = 3;
         unsigned int seed = 2013598861;
@@ -552,7 +563,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         randomWalkVar.display("RandomWalkVar");
         std::cout << std::endl;
         testModel.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         //sumR.display("RandomValues?");
         x.display("Werte");
         sumR.display("SumR");
@@ -665,7 +676,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         investmentModel.attach(investmentModel.Solver);
         this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+         writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
 
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
@@ -707,7 +718,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel.setProbabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
 
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(52,testModel->getObjValue());
@@ -732,7 +743,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         intModel.attach(intModel.Solver);
         this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
-         writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
         const double * colSolution = intModel->getColSolution();
         for (int i = 0; i < intModel->getNumCols(); i++)
             cout << "Column " << i << ": " << colSolution[i] << endl;
@@ -763,7 +774,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         intModel.attach(intModel.Solver);
         this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
-         writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
         EXPECT_EQ(6,intModel->getObjValue());
         EXPECT_TRUE(intModel->isInteger(0));
         EXPECT_TRUE(intModel->isInteger(1));
@@ -791,7 +802,8 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel.attach(testModel.Solver);
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        // We do not have a model that contains randomness, so there is not much sense in writing a SMPS file.
+        // It is not possible anyway as no SmiScnModel gets created.
     }
 
     // Dacota  Model to test the EV-, EEV- and WS-Problems
@@ -868,7 +880,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
@@ -903,7 +915,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
-         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
@@ -937,7 +949,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE);
-         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         EXPECT_NEAR(0,testModel2.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
@@ -1004,8 +1016,8 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        demand.display("Demand");
-        price.display("Price");
+        //demand.display("Demand");
+        //price.display("Price");
         std::vector<double> sampledValues = var[0]->getSampledValues();
         for (int i = 0; i < sampledValues.size(); i++){
             EXPECT_LE(0,sampledValues[i]);
@@ -1020,10 +1032,10 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
 
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
-         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        demand.display("Demand");
-        price.display("Price");
+        //demand.display("Demand");
+        //price.display("Price
         sampledValues = var[0]->getSampledValues();
         for (int i = 0; i < sampledValues.size(); i++){
             EXPECT_LE(0,sampledValues[i]);
@@ -1037,7 +1049,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         std::vector<double> prob = testModel.getProbabilities();
         double sum = 0;
         for (int i = 0 ; i < testModel.getScenSet().size(); i++){
-            std::cout << " Sc." << i << ": " << prob[i];
+            //std::cout << " Sc." << i << ": " << prob[i];
             sum += prob[i];
         }
         std::cout << std::endl;
@@ -1073,7 +1085,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel2.setObjective(objective);
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MINIMIZE);
-         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(1.5,testModel2->getObjValue());
         //Test Bounds
@@ -1099,7 +1111,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel2.setObjective(x(T+1));
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(testModel2,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(testModel2,MP_model::MAXIMIZE,"test");
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         //TODO: Test appearance of RandomVariable vector
         EXPECT_DOUBLE_EQ(4,testModel2->getObjValue());
@@ -1147,7 +1159,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel.attach(testModel.Solver);
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
@@ -1212,7 +1224,10 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel.solve(MP_model::MAXIMIZE);
 
         EXPECT_DOUBLE_EQ(9,testModel->getObjValue());
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        
+        // as stage setting is not yet implemented, this cant work - right?!
+        //writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        
 
     }
 
@@ -1335,7 +1350,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,1));
         EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,2));
         EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,6));
-         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         //testModel2.detach();
         //double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
         //MP_random_data rvar2(&scenarios2[0],T);
@@ -1373,7 +1388,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         //EXPECT_DOUBLE_EQ(4.8,testModel->getObjValue());
     }
 
@@ -1402,7 +1417,7 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         //EXPECT_EQ(1,testModel2.RandomVariables.size());
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(547,testModel2->getObjValue());
-         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
     }
 
     TEST_F(MP_modelTest,InvalidArgumentTest){
@@ -1559,7 +1574,6 @@ TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         EXPECT_DOUBLE_EQ( 1566.0421891327067,m1->getObjValue());
         y.display("y second model");
     }
-
 
 } //end namespace
 

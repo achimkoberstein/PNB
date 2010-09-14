@@ -13,6 +13,9 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
+// This is necessary for PFunc and windows, so do a #ifdef around it
+//#include <Windows.h>
+//#include <pfunc/pfunc.hpp>
 
 
 #include "MP_expression.hpp"
@@ -29,6 +32,11 @@ class SmiCoreData;
 class SmiScnModel;
 
 namespace flopc {
+
+    /* Library instance description */
+    //typedef ::pfunc::generator<cilkS, /* scheduling policy */
+    //    ::pfunc::use_default, /* compare */
+    //    ::pfunc::use_default> my_pfunc; /*function object*/
 
     // forward declarations
     class MP_variable;
@@ -343,6 +351,7 @@ namespace flopc {
         MP_stage stage;
         MP_scenario_set scenSet;
         MP_expression Objective;
+        // We have sets of MP_variables and MP_constraints, as well as set of RandomVariable's. Is this the most efficient way to handle it?
         set<MP_constraint *> Constraints;
         set<MP_variable *> Variables;
         std::vector< std::set<RandomVariable*> > RandomVariables;

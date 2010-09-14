@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/WL %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>../../../../Smi/src;../../../../Osi/src;../../../../FlopCpp/src;../../../../Cbc/src;../../../../Clp/src;../../../../Osi/src/OsiCbc;../../../../Osi/src/OsiCpx;../../../../Osi/src/OsiClp;../../../../BuildTools/headers;../../../../PFunc/include;../../../../CoinUtils/src;../../../../ThirdParty/gtest/include;../../../../ThirdParty/boost;../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

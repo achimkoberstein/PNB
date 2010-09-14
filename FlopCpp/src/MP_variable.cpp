@@ -27,7 +27,7 @@ lowerLimit(s1,s2,s3,s4,s5),
 S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
 offset(-1)
 {
-    type = continuous;
+    type = type::continuous;
     lowerLimit.initialize(0);
     upperLimit.initialize(MP_model::getCurrentModel()->getInfinity());
     setStageSet();
@@ -144,23 +144,24 @@ void MP_variable::bounds(std::vector<std::vector<boost::shared_ptr<MP::Coef> > >
     myrefs.pop_back();
 }
 
-void flopc::MP_variable::integer()
+void MP_variable::integer()
 {
-    type = variableType::discrete;
+    type = type::discrete;
 }
 
-void flopc::MP_variable::binary()
+void MP_variable::binary()
 {
     //upperLimit.initialize(1);
     lowerLimit.initialize(0);
     upperLimit.initialize(1);
-    type = variableType::binary;
+    type = type::binary;
 }
 
-void flopc::MP_variable::free()
+void MP_variable::free()
 {
     lowerLimit.initialize(-MP_model::getCurrentModel()->getInfinity());
     upperLimit.initialize(MP_model::getCurrentModel()->getInfinity());
-    if (type == variableType::binary)
-        type = variableType::discrete;
+    if (type == type::binary)
+        type = type::discrete;
 }
+

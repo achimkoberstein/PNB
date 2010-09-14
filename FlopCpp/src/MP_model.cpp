@@ -9,12 +9,16 @@ using std::endl;
 #include <algorithm>
 #include <limits>
 #include <map>
-#include <queue>
+#include <list>
+#include <deque>
 #include <ctime>
 #include <iterator>
-#include <omp.h>
 
-#include "boost/shared_ptr.hpp"
+
+
+#include <glog/logging.h>
+
+#include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 
 #include <CoinTime.hpp>
@@ -33,6 +37,10 @@ using std::endl;
 #include "MP_constraint.hpp"
 #include "MP_shared_implementation_details.hpp"
 
+// Workaround necessary for glog, if WinGDI.h is included (I do not know who includes the file)
+#ifdef ERROR
+#undef ERROR
+#endif
 
 using namespace flopc;
 
@@ -96,6 +104,7 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     MP_model::current_model = this;
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
+    // Create a new taskmgr for PFunc
 }
 
 MP_model::~MP_model() {
@@ -266,7 +275,7 @@ void MP_model::maximize() {
         attach(Solver);
         solve(MP_model::MAXIMIZE);
     } else {
-        DLOG(WARNING) <<"no solver specified"<<endl;
+        LOG(ERROR) <<"no solver specified"<<endl;
     }
 }
 
@@ -276,7 +285,7 @@ void MP_model::maximize(const MP_expression &obj) {
         attach(Solver);
         solve(MP_model::MAXIMIZE);
     } else {
-        DLOG(WARNING) <<"no solver specified"<<endl;
+        LOG(ERROR) << "no solver specified" << endl;
     }
 }
 
@@ -815,18 +824,18 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         int begin = (*i)->offset;
         int end = (*i)->offset+(*i)->size();
-        if ( (*i)->type == flopc::variableType::discrete || (*i)->type == flopc::variableType::binary ) {
+        if ( (*i)->type == type::discrete || (*i)->type == type::binary ) {
             for (int k=begin; k<end; k++) {
                 if (stage.size()){
                     if (colIndirection[k] != outOfBound){
                         integerIndices.push_back(colIndirection[k]);
-                        if ( (*i)->type == flopc::variableType::binary)
+                        if ( (*i)->type == type::binary)
                             binaryIndices.push_back(colIndirection[k]);
                     }
                 }
                 else{
                     integerIndices.push_back(k);
-                    if ( (*i)->type == flopc::variableType::binary)
+                    if ( (*i)->type == type::binary)
                         binaryIndices.push_back(k);
                 }
             }
@@ -853,8 +862,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         CoinPackedMatrix matrix(true,m,realn,realnz,Elm,Rnr,Cst,NULL); //Matrix without right-hand-side..
         matrix.reverseOrdering(); //Smi needs matrix in row ordered form
         //TODO: Debug switch
-        //DLOG(INFO) << "Core-Matrix" << std::endl;
-        //DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
+        // DLOG(INFO) << "Core-Matrix" << std::endl;
+        // DLOG(INFO) << printMatrix(&matrix,realn,m,l,u,c,bl,bu,colStage,rowStage);
         
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
@@ -1142,7 +1151,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     Solver->setObjSense(dir);
     bool isMIP = false;
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
-        if ( (*i)->type == discrete || (*i)->type == binary ) {
+        if ( (*i)->type == type::discrete || (*i)->type == type::binary ) {
             isMIP = true;
             break;
         }
@@ -1305,18 +1314,18 @@ namespace flopc {
         if (probabilities.empty())
             probabilities = std::vector<double>(nScen,1.0/nScen); //If probability set is present, use that, otherwise use equiprobable values.
 
-        typedef std::set<int>::iterator scenIt;
-        std::set<int> scenarioHeap;
+        typedef std::list<int>::iterator scenIt;
+        std::list<int> scenarioHeap;
 
         for (int i = 0; i < nScen; i++)
-            scenarioHeap.insert(i);
+            scenarioHeap.push_back(i);
 
         std::vector<std::deque<int> > subScenarioQueueVector(nStages,std::deque<int> ()); //For each stage an own queue
         subScenarioQueueVector[0].push_front(0);
 
         //We do not like recursion, therefore we need to store all the elements in a list of vectors and stuff
-        std::vector< std::vector< std::set<int> > > subScenariosPerStageAndScenario(nStages,std::vector<std::set<int> > (nScen));
-        for (int j = 0; j < nScen; j++){ // Assign scenarioHeap to all the first stage sets. TODO: Improve memory consumption..
+        std::vector< std::vector< std::list<int> > > subScenariosPerStageAndScenario(nStages, std::vector<std::list<int> > (nScen)); //TODO: Redo, this seems to be expensive..
+        for (int j = 0; j < nScen; j++){ // Assign scenarioHeap to all the first stage sets. TODO: Improve memory consumption and thus running time due to allocation and deletion
             subScenariosPerStageAndScenario[0][j] = scenarioHeap;
         }
 
@@ -1412,9 +1421,9 @@ namespace flopc {
                     // Define the new scenario subset node for the next stage
                     else if (!differFromPrevious(randomCoefficientVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
                         //Add to scenario subset heap of next stage node and scenario
-                        subScenariosPerStageAndScenario[curStage+1][parentScen].insert(*innerIt); //debug this statement
+                        subScenariosPerStageAndScenario[curStage+1][parentScen].push_back(*innerIt); 
                         //Erase from subsetHeap, so that this subset scenario does not form a new node in a subsequent run of the while loop
-                        subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
+                       subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
                     }
                     else{ // Scenario is in another node, skip it for now. Will be looked at during the inner while loop
                         ++innerIt;
