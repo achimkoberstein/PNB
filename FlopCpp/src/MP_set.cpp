@@ -5,6 +5,7 @@
 #include "MP_set.hpp"
 #include "MP_model.hpp"
 #include <sstream>
+#include <iostream>
 using namespace flopc;
 
 namespace flopc {

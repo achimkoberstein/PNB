@@ -5,10 +5,7 @@
 #ifndef _MP_set_hpp_
 #define _MP_set_hpp_
 
-#include <iostream>
-#include <sstream>
-using std::cout;
-using std::endl;
+#include <iosfwd>
 
 #include <string>
 using std::string;
@@ -194,12 +191,12 @@ namespace flopc {
 
         void display(const std::string& s = "") const {
             std::map<std::vector<int>, int>::const_iterator i;
-            cout<<s<<endl;
+            std::cout<<s<<std::endl;
             for (i = elements.begin(); i != elements.end(); i++) {
                 for (int j=0; j<nbr; j++) {
-                    cout<<(*i).first[j]<<"  ";
+                    std::cout<<(*i).first[j]<<"  ";
                 }
-                cout<<endl;
+                std::cout<<std::endl;
             }
         }
 

@@ -1,4 +1,4 @@
-#include "MP_random_data.hpp"
+#include <iosfwd>
 #include <exception>
 #include <stdexcept>
 #include <vector>
@@ -7,6 +7,7 @@
 #include <boost/random.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
+#include "MP_random_data.hpp"
 #include "MP_expression.hpp"
 #include "MP_random_constant.hpp"
 #include "MP_model.hpp"
@@ -257,11 +258,11 @@ namespace flopc{
 
     //Implementation for MP_random_data_impl TODO: Store values to reduce computational burden
     void MP_random_data_impl::operator ()() const { //Called by display method indirectly via functor evaluation
-        if (&S1!=&MP_set::getEmpty()) cout << i1->evaluate() << " ";
-        if (&S2!=&MP_set::getEmpty()) cout << i2->evaluate() << " ";
-        if (&S3!=&MP_set::getEmpty()) cout << i3->evaluate() << " ";
-        if (&S4!=&MP_set::getEmpty()) cout << i4->evaluate() << " ";
-        if (&S5!=&MP_set::getEmpty()) cout << i5->evaluate() << " ";
+        if (&S1!=&MP_set::getEmpty()) std::cout << i1->evaluate() << " ";
+        if (&S2!=&MP_set::getEmpty()) std::cout << i2->evaluate() << " ";
+        if (&S3!=&MP_set::getEmpty()) std::cout << i3->evaluate() << " ";
+        if (&S4!=&MP_set::getEmpty()) std::cout << i4->evaluate() << " ";
+        if (&S5!=&MP_set::getEmpty()) std::cout << i5->evaluate() << " ";
         if (values[f(i1->evaluate(),i2->evaluate(),i3->evaluate(),
             i4->evaluate(),i5->evaluate())] != NULL){
                 for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++)
@@ -742,21 +743,17 @@ namespace flopc{
 
     DiscreteUniformRandomVariable::DiscreteUniformRandomVariable( int from, int to, int sampleSize, DiscretizationMethod* dmPtr ): DiscreteRandomVariable(),start(from),end(to),distribution(from,to)
     { // Ensure correct functionality
-        //TODO: Include test for stepWidth
         if (end < start){
             int temp = start;
             start = end;
             end = temp;
         }
-        if (step < 0){
-            step = std::fabs(step);
-        }
-        else if (step == 0.0){
-            throw invalid_argument_exception();
-        }
         step = double(end-start)/sampleSize;
         defaultSampleSize = sampleSize;
-
+        if (step == 0.0){
+            LOG(ERROR) << "UniformRandomVariable from start " << start << " to " << end << "has stepwidth zero.";
+            throw invalid_argument_exception();
+        }
         dm = boost::shared_ptr<DiscretizationMethod>(dmPtr);
         dm->setSampleNumber(sampleSize);
         dm->setRandomVariable(this); 

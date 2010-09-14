@@ -275,7 +275,7 @@ void MP_model::maximize() {
         attach(Solver);
         solve(MP_model::MAXIMIZE);
     } else {
-        DLOG(WARNING) <<"no solver specified"<<endl;
+        LOG(ERROR) <<"no solver specified"<<endl;
     }
 }
 
@@ -285,7 +285,7 @@ void MP_model::maximize(const MP_expression &obj) {
         attach(Solver);
         solve(MP_model::MAXIMIZE);
     } else {
-        DLOG(WARNING) <<"no solver specified"<<endl;
+        LOG(ERROR) << "no solver specified" << endl;
     }
 }
 
