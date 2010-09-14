@@ -32,7 +32,8 @@ libFlopCpp_la_SOURCES = \
 	MP_utilities.cpp MP_utilities.hpp \
 	MP_variable.cpp MP_variable.hpp \
 	MP_random_data.cpp MP_random_data.hpp \
-	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp
+	MP_shared_implementation_details.cpp MP_shared_implementation_details.hpp \
+	MP_random_constant.cpp MP_random_constant.hpp
 
 libFlopCpp_la_LIBADD = $(GLOGLIB)/libglog.la 
 # this is not necessary: libFlopCpp_la_LDFLAGS = -lglog

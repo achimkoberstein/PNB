@@ -128,9 +128,9 @@ SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
 		{
 			int i;
 
-			for(i=colStart;i<this->getNumCols();++i)
+			for(i=std::max(colStart, 0);i<this->getNumCols();++i)
 				cstag_[i]=nstag_;
-			for(i=rowStart;i<this->getNumRows();++i)
+			for(i=std::max(rowStart, 0);i<this->getNumRows();++i)
 				rstag_[i]=nstag_;
 		}
 		else
@@ -298,7 +298,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					}
 					else	// add element
 					{
-						matrix->modifyCoefficient(i,j,value);
+						matrix->modifyCoefficient(i,j,value,true);
 					}
 					if ( !( (oldi==i)&&(oldj==j) ) ) // this is a new RV
 					{
@@ -442,7 +442,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					}
 					else	// add element
 					{
-						matrix->modifyCoefficient(i,j,value);
+						matrix->modifyCoefficient(i,j,value,true);
 					}
 				}
 				
@@ -823,23 +823,37 @@ SmiSmpsCardReader::nextSmpsField (  )
   }
 }
 
+std::string SmiSmpsIO::getModProblemName() {
+    std::string name = "";
+    if (strcmp(problemName_,"")==0) {
+        name.append("BLANK   ");
+    } else {
+        if (strlen(problemName_) >= 8) {
+            name.append(problemName_, 8);
+        } else {
+            name.append(problemName_);
+            name.append(8-strlen(problemName_), ' ');
+        }
+    }
+    return name;
+}
+
 void SmiSmpsIO::writeCoreFile(const char* filename) {
     // count nels
     int nels = 0;
     for (int t = 0; t < core->getNumStages(); t++) {
         nels += core->getNode(t)->getNumMatrixElements();
     }
-
     
     // initialize arrays
     double* clo = new double[core->getNumCols()];
     double* cup = new double[core->getNumCols()];
     double* obj = new double[core->getNumCols()];
-    double* rlo = new double[core->getNumCols()];
-    double* rup = new double[core->getNumCols()];
+    double* rlo = new double[core->getNumRows()];
+    double* rup = new double[core->getNumRows()];
     
     // initialize row-ordered matrix arrays
-    double * dels = new double[nels]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+    double * dels = new double[nels];
     int * indx = new int[nels];
     int * rstrt = new int[core->getNumRows()+1];
     rstrt[0] = 0;
@@ -877,7 +891,6 @@ void SmiSmpsIO::writeCoreFile(const char* filename) {
 		    nels+=rowNumEls;
 		    rstrt[rowCount] = nels;
 		    //done with preparations for the next row
-
         }
         
         ncol += core->getNumCols(stg);
@@ -886,22 +899,31 @@ void SmiSmpsIO::writeCoreFile(const char* filename) {
     
     CoinPackedMatrix matrix(false, ncol, nrow, nels, dels, indx, rstrt, NULL);
     
+    delete [] dels;
+    delete [] indx;
+    delete [] rstrt;
+    
+    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, NULL, NULL);
+
+    delete [] clo;
+    delete [] cup;
+    delete [] obj;
+    delete [] rlo;
+    delete [] rup;
+
+    this->setProblemName(filename);
+
     char* integrality = new char[ncol];
     std::fill_n(integrality, ncol, 0);
     for (int i = 0; i < core->getIntegerLength(); i++) {
         integrality[core->getIntegerIndices()[i]] = 1;
     }
     this->copyInIntegerInformation(integrality);
-    
-    
-    this->setMpsData(matrix, this->infinity_, clo, cup, obj, this->integerColumns(), rlo, rup, NULL, NULL);
-
-    this->setProblemName(filename);
+    delete [] integrality;
     
     std::string fnWithExt = filename;
     fnWithExt += ".core";
     this->writeMps(fnWithExt.c_str());
-
 }
 
 void SmiSmpsIO::writeTimeFile(const char* filename) {
@@ -911,22 +933,16 @@ void SmiSmpsIO::writeTimeFile(const char* filename) {
 
     std::stringstream line;
     line.fill(' ');
-    line << "TIME          " << this->getProblemName() << "\nPERIODS\n";
+    line << "TIME          " << this->getModProblemName() << "\nPERIODS\n";
     
-    int row = 0, col = 0;
     for (int stg = 0; stg < core->getNumStages(); stg++) {
         line << "    ";
-        
-        while (core->getColStage(col) < stg)
-            col++;
-            
-        while (core->getRowStage(row) < stg)
-            row++;
-        
-        line << std::setw(10) << std::left << this->columnName(col);
-        line << std::setw(25) << std::left << this->rowName(row);
+        if (core->getColStart(stg) == core->getNumCols())
+            line << std::setw(10) << std::left << "RHS"; // if this stage has no columns, it may have some RHS values
+        else
+            line << std::setw(10) << std::left << this->columnName(core->getColStart(stg));
+        line << std::setw(25) << std::left << this->rowName(core->getRowStart(stg));
         stg == 0 ? line << "ROOT\n" : line << "STAGE_" << stg << "\n";
-        
     }
     line << "ENDDATA\n";
     output->puts(line.str());        
@@ -940,8 +956,13 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
     
     std::stringstream line;
     line.fill(' ');
-    line << "STOCH         " << this->getProblemName() << "\n";
-    line << "SCENARIO      DISCRETE                 REPLACE\n";
+    line << "STOCH         " << this->getModProblemName() << "\n";
+    line << "SCENARIO      DISCRETE                 ";
+    if (tree->getLeaf(0)->getDataPtr()->getNode()->getCoreCombineRule() == SmiCoreCombineReplace::Instance())
+        line << "REPLACE\n";
+    else
+        line << "ADD\n";
+        
     for (int scen = 0; scen < tree->getNumScenarios(); scen++) {
         writeScenarioToStochFile(line, tree->getLeaf(scen), scen);
     }
@@ -952,15 +973,11 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
 }
 
 void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario) {
-    // first, go up the tree - if possible and the parent node is still within the same scenario
+    // first, go up the tree - if possible and the parent node is still within the same scenario and not the root node
     // if thats not the case, we reached the first node for that scenario
     if (node->hasParent() && node->getParent()->scenario() == scenario && node->getParent() != tree->getRoot()) {
         writeScenarioToStochFile(stream, node->getParent(), scenario);
     } else {
-        //stream << "* New scenario " << node->scenario() << " branched from scenario ";
-        //node->hasParent() ? stream << node->getParent()->scenario() : stream << "\'ROOT\'";
-        //stream << " in Stage " << node->getDataPtr()->getStage() << " with probability " << tree->getLeaf(scenario)->getDataPtr()->getProb() << "\n";
-    
         stream << " SC Scen_" << std::setw(5) << std::left << node->scenario();
         if (node->getParent() != tree->getRoot()) {
             stream << "Scen_" << std::setw(10) << std::left << node->getParent()->scenario();
@@ -972,16 +989,11 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
     }
     
     // now we can print the stochastic data
-    //stream << "* Stochastic data for scenario " << scenario << " in Stage " << node->getDataPtr()->getStage() << "\n";
-    
     SmiNodeData* data = node->getDataPtr()->getNode();
-    
     if (data->getNumMatrixElements() > 0) {
         // write matrix elements
-        //stream << "* Matrix: " << data->getNumMatrixElements() << " elements\n";
         for (int i = data->getCore()->getRowStart(data->getStage()); i < data->getCore()->getRowStart(data->getStage()+1); i++) {
             for (int j = 0; j < data->getRowLength(i); j++) {
-                //stream << "* " << data->getRowElements(i)[j] << " - " << data->getRowIndices(i)[j] << "\n";
                 stream << "    " << std::setw(10) << std::left << this->columnName(data->getRowIndices(i)[j]);
                 stream << std::setw(15) << std::left << this->rowName(i);
                 stream << data->getRowElements(i)[j] << "\n";
@@ -994,14 +1006,21 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
     if (data->getColUpperLength() > 0) {
         // write column upper elements
     }
-    if (data->getRowLowerLength() > 0) {
-        // write row lower elements
+
+    // write row lower elements
+    for (int i = 0; i < data->getRowLowerLength(); i++) {
+        stream << "    RHS       " << std::setw(15) << std::left << this->rowName(data->getRowLowerIndices()[i]) << data->getRowLowerElements()[i] << "\n";
     }
-    if (data->getRowUpperLength() > 0) {
-        // write row upper elements
+
+    // write row upper elements
+    for (int i = 0; i < data->getRowUpperLength(); i++) {
+        if (this->getRowSense()[data->getRowUpperIndices()[i]] != 'E')
+            stream << "    RHS       " << std::setw(15) << std::left << this->rowName(data->getRowUpperIndices()[i]) << data->getRowUpperElements()[i] << "\n";
     }
-    if (data->getObjectiveLength() > 0) {
-        // write objective elements
+
+    // write objective elements
+    for (int i = 0; i < data->getObjectiveLength(); i++) {
+        stream << "    " << std::setw(10) << std::left << this->columnName(data->getObjectiveIndices()[i]) << "OBJROW         " << data->getObjectiveElements()[i] << "\n";
     }
 }
 
@@ -1015,4 +1034,6 @@ void SmiSmpsIO::writeSmps(const char* filename) {
     // write stoch file
     this->writeStochFile(filename);
     
+    this->freeAll();
 }
+

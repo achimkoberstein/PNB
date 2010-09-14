@@ -41,7 +41,5 @@ public:
     double getObjValue();
 };
 
-
-
-
 #endif //OsiStochasticSolverInterface_HPP
+
