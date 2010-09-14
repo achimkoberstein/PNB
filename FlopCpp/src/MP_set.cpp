@@ -33,10 +33,7 @@ namespace flopc {
 		MP_model::getCurrentModel()->setStage(*this);
 	  }
 
-  MP_stage::~MP_stage() {
-      //if (MP_model::getCurrentModel() != 0 && &MP_model::getCurrentModel()->Stage() == this)
-      //    MP_model::getCurrentModel()->Stage(0); //Set Stage to 0.
-  }
+  MP_stage::~MP_stage() { }
 
   MP_scenario_set::MP_scenario_set( int i /*= 0*/ ):MP_set(i)
 	  {
@@ -46,10 +43,7 @@ namespace flopc {
 		  MP_model::getCurrentModel()->setScenSet(*this);
 	  }
 
-    MP_scenario_set::~MP_scenario_set() {
-      //if (MP_model::getCurrentModel() != 0 && &MP_model::getCurrentModel()->getScenSet() == this)
-      //    MP_model::getCurrentModel()->ScenSet(0); //Set Stage to 0.
-  }
+    MP_scenario_set::~MP_scenario_set() { }
 
   flopc::MP_domain SUBSETREF::getDomain( MP_set* s ) const
   {
