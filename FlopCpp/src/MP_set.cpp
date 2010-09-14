@@ -8,6 +8,9 @@
 #include <iostream>
 using namespace flopc;
 
+using std::cout;
+using std::endl;
+
 namespace flopc {
 
 	//See item 26 More Effective C++
@@ -73,4 +76,5 @@ namespace flopc {
   {
       return getIndex();
   }
+
 }
