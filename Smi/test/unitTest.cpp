@@ -1113,6 +1113,7 @@ void SmiScnModelScenarioUnitTest()
 	Then get the parent.  Repeat until parent is NULL.
 	(Only the root node has a NULL parent.)
 	*/
+    double probSum = 0;
 
 	for(is=0; is<ns; ++is)
 	{
@@ -1123,7 +1124,7 @@ void SmiScnModelScenarioUnitTest()
 		SmiScnNode *node = smiModel->getLeafNode(is);
 
 		// leaf node probability is the scenario probability
-		double scenprob = node->getModelProb();
+		double scenprob = node->getProb();
 
 		while (node != NULL)
 		{
@@ -1138,9 +1139,10 @@ void SmiScnModelScenarioUnitTest()
 			node = node->getParent();
 		}
 		objSum += scenSum*scenprob;
+        probSum += scenprob;
 	}
 
-
+    myAssert(__FILE__,__LINE__,fabs(probSum-1) < 0.01);
 	myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-objSum) <	0.01);
 	free (incr);
 	free (indx);
@@ -2008,6 +2010,8 @@ void SmpsBug()
 	// solve
 	osiStoch->initialSolve();
 
+    smi.writeSmps("bug_smps");
+
 	// print results
 	printf("Solved stochastic program Bug\n");
 	printf("Number of rows: %d\n",osiStoch->getNumRows());
@@ -2024,22 +2028,22 @@ int main()
 {
 
 	//testingMessage( "Testing SmiTreeNode \n");
-	//SmiTreeNodeUnitTest();
+	SmiTreeNodeUnitTest();
 
 	//testingMessage( "Testing SmiScenarioTree\n" );
-	//SmiScenarioTreeUnitTest();
+	SmiScenarioTreeUnitTest();
 
 	//testingMessage( "Testing SmiScnSmpsIO Replace\n" );
-	////SmiScnSmpsIOUnitTestReplace();
+	SmiScnSmpsIOUnitTestReplace();
 
 	//testingMessage( "Testing SmiScnSmpsIO Add\n" );
-	////SmiScnSmpsIOUnitTestAdd();
+	SmiScnSmpsIOUnitTestAdd();
 
 	//testingMessage( "Testing base data structures for SmiScnModel\n");
- //   //SmiScnModelScenarioUnitTest();
+    SmiScnModelScenarioUnitTest();
 
 	//testingMessage( "Testing SmiScnModel Discrete Distribution\n" );
-	////SmiScnModelDiscreteUnitTest();
+	SmiScnModelDiscreteUnitTest();
 
 	//testingMessage("Model generation for simple model Bug");
 	ModelBug();
@@ -2048,7 +2052,7 @@ int main()
 	SmpsBug();
 
 	//testingMessage("Unit test for decomposition.");
-	//DecompUnitTest();
+	DecompUnitTest();
 
 	SmiCoreCombineReplace::ClearInstance();
 	SmiCoreCombineAdd::ClearInstance();

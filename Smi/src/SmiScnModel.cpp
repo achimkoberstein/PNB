@@ -15,7 +15,7 @@ using namespace std;
 int SmiScnNode::getCoreColIndex(int i)
 {
     SmiCoreData *core = node_->getCore();
-    return core->getColInternalIndex(i-coffset_+core->getColStart(node_->getStage()));
+    return core->getColExternalIndex(i-coffset_+core->getColStart(node_->getStage()));
 }
 //int
 //SmiScnNode::getSolverColIndex(int i)
@@ -1503,7 +1503,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
     // fill in vector up to root
     int t=stg;
-    while (s = s->getParent())
+    while (s = s->getParent() )
     {
         vecNode[--t] = s;
         label[t]   = s->getScenarioIndex();
