@@ -87,8 +87,8 @@ public:
 	
 	void writeSmps(const char* filename);
 public:
-	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),combineRuleSet(false){}
-	SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),core(core), nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),combineRuleSet(false),smpsCardReader_(NULL){ tree = smiTree; }
+	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(NULL),tree(NULL),periodMap_(),scenarioMap_() {}
+    SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_() {}
         ~SmiSmpsIO(){delete [] cstag_;delete[] rstag_;delete smpsCardReader_;}
 private:
     void writeCoreFile(const char* filename);
@@ -102,9 +102,7 @@ private:
 	int nstag_;
 	int *cstag_;
 	int *rstag_;
-	typedef std::map<string,int> StringIntMap;
-	StringIntMap periodMap_;
-	StringIntMap scenarioMap_;
+
 	bool iftime,ifstoch;
 	SmiSmpsCardReader *smpsCardReader_;
 	SmiCoreCombineRule *combineRule_;
@@ -112,7 +110,11 @@ private:
 	
 	SmiCoreData * core;
 	SmiScenarioTree<SmiScnNode *> * tree;
-	
+
+    typedef std::map<string,int> StringIntMap;
+    StringIntMap periodMap_;
+    StringIntMap scenarioMap_;
+
 };
 
 
