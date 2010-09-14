@@ -1054,7 +1054,6 @@ SmiScnModel::getColSolution(int ns, int stage, int colIndex)
 {
     //CoinPackedVector *soln=new CoinPackedVector();
     const double * osiSoln = this->getOsiSolverInterface()->getColSolution();
-    int numcols=0;
 
     assert( ns < this->getNumScenarios() );
     assert( stage < this->core_->getNumStages() );
