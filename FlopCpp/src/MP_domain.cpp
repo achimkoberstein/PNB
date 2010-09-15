@@ -152,12 +152,12 @@ flopc::MP_domain flopc::operator*(const flopc::MP_domain& a, const flopc::MP_dom
         return a;
     } else { //Both Domains are nonempty
         //Create new Domain by copying a
-        MP_domain retval = a;
+        MP_domain retval(a);
         // Set functor of what a's last pointer currently points to, to MP_domain_base of a to b's MP_domain_base
         retval.last->donext = b.operator->();
-        //Memory Management: increment both counters
-        const_cast<MP_domain&>(b).increment();
-        const_cast<MP_domain&>(a).increment();
+        //Memory Management: increment both counters: Should be done by default?
+        //const_cast<MP_domain&>(b).increment();
+        //const_cast<MP_domain&>(a).increment();
         //Set last pointer of new MP_domain to what b currently points to
         retval.last = b.last;
         //Subsets only: If there are any conditions on b, transfer them to new MP_domain
