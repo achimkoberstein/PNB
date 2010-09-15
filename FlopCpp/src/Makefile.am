@@ -234,7 +234,9 @@ includecoin_HEADERS = \
 	MP_set.hpp \
 	MP_utilities.hpp \
 	MP_variable.hpp \
-	MP_random_data.hpp
+	MP_random_data.hpp \
+	MP_random_constant.hpp \
+	MP_shared_implementation_details.hpp
 
 #############################################################################
 # Create the Config.h file that always defines HAVE_CONFIG_H and install it #
