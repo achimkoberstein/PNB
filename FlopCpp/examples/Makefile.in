@@ -7,6 +7,8 @@ CXX      := g++
 CXXFLAGS := -g
 
 IncDir	:= $(CoinDir)/include/coin
+IncDir += $(CoinDir)/ThirdParty/boost
+IncDir += $(CoinDir)/include
 
 LIBDIRS := $(CoinDir)/lib
 
