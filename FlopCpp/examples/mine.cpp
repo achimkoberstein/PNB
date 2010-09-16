@@ -101,9 +101,9 @@ int main() {
 
         MP_variable x(l,l,l); //   extraction of blocks
 
-        //MP_constraint pr(k,c); //  precedence relationships
+        MP_constraint pr(k,c); //  precedence relationships
 
-        //pr(k,c(l,i,j)) = x(l,i+li(k),j+lj(k)) >= x(l+1,i,j);
+        pr(k,c(l,i,j)) = x(l,i+li(k),j+lj(k)) >= x(l+1,i,j);
 
         x.upperLimit(l,i,j) = 1;
 
