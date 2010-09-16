@@ -178,7 +178,7 @@ namespace flopc {
         MP_expression(const VariableRef& v);
         /// Constructor which (silently) converts a RandomDataRef to a MP_expression
         MP_expression(const RandomConstant &r);
-        MP_expression(MP_expression_base* r) : Handle<MP_expression_base*>(r) {}
+        MP_expression(MP_expression_base* r);
         
     };
 

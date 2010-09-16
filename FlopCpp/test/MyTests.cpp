@@ -795,16 +795,16 @@ namespace flopc {
         data5() = data2();
         MP_data data6;
         data6() = data5() + data2();
-        //MP_variable x;
+        MP_variable x;
 
-        //MP_constraint constraint1,constraint2;
-        //constraint1 = (data4() +data3())*x() <= 10;
-        //constraint2 = data4()*data3()*x() <= 10;
+        MP_constraint constraint1,constraint2;
+        constraint1 = (data4() +data3())*x() <= 10;
+        constraint2 = data4()*data3()*x() <= 10;
 
-        //testModel.setObjective(x());
-        //testModel.attach(testModel.Solver);
-        //testModel.solve(MP_model::MAXIMIZE);
-        //EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        testModel.setObjective(x());
+        testModel.attach(testModel.Solver);
+        testModel.solve(MP_model::MAXIMIZE);
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         // We do not have a model that contains randomness, so there is not much sense in writing a SMPS file.
         // It is not possible anyway as no SmiScnModel gets created.
     }
