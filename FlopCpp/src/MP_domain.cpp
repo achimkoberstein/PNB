@@ -34,7 +34,7 @@ namespace flopc {
     public:
         Functor_conditional(const Functor* f, const std::vector<MP_boolean> & condition)
             : F(f), Condition(condition) {}
-        virtual ~Functor_conditional() {}
+        virtual ~Functor_conditional() { }
         void operator()() const {
             bool goOn = true;
             for (size_t i = 0; i<Condition.size(); i++) {
@@ -92,14 +92,24 @@ MP_domain MP_domain::such_that(const MP_boolean& b) {
 void MP_domain::forall(const Functor& op) const {
     forall(&op);
 }
-void MP_domain::forall(const Functor* op) const {
+void MP_domain::forall(const Functor* op, bool deleteFunctor) const {
+    bool conditionalFunctor = false;
     if (condition.size()>0) {
+        conditionalFunctor = true;
         last->donext = new Functor_conditional(op,condition);
     } else {
         last->donext = op;
     }
     //Iterate over all elements of the domain and call op on them.
     operator->()->operator()();
+    // Delete conditional functor, if any
+    if (conditionalFunctor)
+        delete last->donext;
+    if (deleteFunctor){
+        delete op;
+        last->donext = NULL;
+        op = NULL;
+    }
 }
 
 const MP_set_base* MP_domain_set::getSet() const {
@@ -137,6 +147,8 @@ void MP_domain_set::operator()() const {
 MP_index* MP_domain_set::getIndex() const {
     return I;
 }
+
+
 
 //This operator creates a new domain from two already existing domains
 //What happens is this

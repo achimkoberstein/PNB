@@ -336,6 +336,7 @@ void MP_model::attachStochastic(){
     sampleRandomVariates(RandomVariables);
 
     vector<boost::shared_ptr<MP::Coef> > coefs;
+    // TODO
     vector<MP::Coef> cfs;
 
     // Generate new coefficients

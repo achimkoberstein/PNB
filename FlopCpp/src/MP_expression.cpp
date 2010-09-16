@@ -416,7 +416,7 @@ MP_expression::MP_expression(const Constant &c) :
 Handle<MP_expression_base*>(new Expression_constant(c)) {} 
 
 MP_expression::MP_expression(const VariableRef &v) : 
-Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) {} 
+Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) { operator->()->count++; } // We delete the VariableRef from the corresponding MP_variable
 
 MP_expression::MP_expression(const RandomConstant &r) :
 Handle<MP_expression_base*>(new Expression_random_constant(r)) {}

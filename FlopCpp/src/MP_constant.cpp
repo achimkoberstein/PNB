@@ -437,7 +437,7 @@ namespace flopc {
     }
 
     Constant::Constant(const DataRef& d) : 
-    Handle<Constant_base*>(const_cast<DataRef*>(&d)) {}
+    Handle<Constant_base*>(const_cast<DataRef*>(&d)) { operator->()->count++; } //We delete DataRefs from the belonging MP_data.
 
     Constant::Constant(const MP_index_exp& i) :
     Handle<Constant_base*>(new Constant_index(i)){}

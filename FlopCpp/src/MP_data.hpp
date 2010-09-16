@@ -31,7 +31,7 @@ namespace flopc {
             const MP_index_exp& i5,
             int s = 0) ;
 
-        ~DataRef() {} 
+        virtual ~DataRef() { } 
         DataRef& such_that(const MP_boolean& b);
 
         //Get Value via current settings for MP_index_exp
@@ -122,7 +122,9 @@ namespace flopc {
             if (manageData == true) delete[] v;
             //Delete DataRefs ?
             if (!myrefs.empty()){
-                
+                for (int i = 0; i < myrefs.size();i++)
+                    // We only want to delete the data if it was not used in the model. This is most likely an error in the modelling process.
+                    delete myrefs[i];                
             }
 
         }

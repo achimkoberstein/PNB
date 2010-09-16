@@ -81,6 +81,8 @@ namespace flopc {
         public:
             GenerateFunctor(MP_constraint* r, vector<Coef>& cfs): R(r), Coefs(cfs) {}
 
+            virtual~ GenerateFunctor() {  }
+
             void setMultiplicator(vector<TerminalExpression*>& mults, double m) {
                 multiplicators = mults;
                 M = m;
