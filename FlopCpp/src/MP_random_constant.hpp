@@ -62,9 +62,8 @@ namespace flopc {
     class RandomConstant : public Handle<RandomConstant_base*> {
     public:
         RandomConstant(const RandomDataRef& d);
-        RandomConstant(RandomConstant_base* r) : Handle<RandomConstant_base*>(r) {}
+        RandomConstant(RandomConstant_base* r);
         RandomConstant(const Constant& c); //Allows transformation of Constant to a RandomConstant by default
-
     };
 
     class RandomDataRef : public RandomConstant_base { 
