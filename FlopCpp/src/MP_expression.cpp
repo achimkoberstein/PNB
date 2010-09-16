@@ -261,6 +261,8 @@ namespace flopc {
                double m) const {
                    multiplicators.push_back(new Expression_random_constant(left));
                    right->generate(domain, multiplicators, f, m);
+                   delete multiplicators.back();
+                   multiplicators.pop_back();
    
            }
            void insertVariables(set<MP_variable*>& v) const {
@@ -292,6 +294,8 @@ namespace flopc {
                double m) const {
                    multiplicators.push_back(new Expression_random_constant(1/right));
                    left->generate(domain, multiplicators, f, m);
+                   delete multiplicators.back();
+                   multiplicators.pop_back();
            }
            void insertVariables(set<MP_variable*>& v) const {
                left->insertVariables(v);

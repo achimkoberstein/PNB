@@ -14,8 +14,8 @@ using std::string;
 using std::vector;
 
 // TODO: Remove these headers together with the static int in the Handle class
-#include <iostream>
-#include <typeinfo>
+//#include <iostream>
+//#include <typeinfo>
 //
 
 #include <boost/exception/all.hpp>
@@ -167,20 +167,20 @@ namespace flopc {
     template<class T> class Handle {
     public:
 
-        static int counter;
+        //static int counter;
 
         const T &operator->() const {
             return root;
         }
         Handle(const T &r) : root(r) {
             increment();
-            counter++;
-            std::cout << "one more handle" << typeid(T).name() << " " << counter << std::endl;
+            //counter++;
+            //std::cout << "one more handle" << typeid(T).name() << " " << counter << std::endl;
         }
         Handle(const Handle& h) : root(h.root) {
             increment();
-            counter++;
-            std::cout << "one more handle" << typeid(T).name() << " " << counter << std::endl;
+            //counter++;
+            //std::cout << "one more handle" << typeid(T).name() << " " << counter << std::endl;
         }
         const Handle& operator=(const Handle& h) {
             if (root != h.root) {
@@ -201,8 +201,8 @@ namespace flopc {
         }
         ~Handle() {
             decrement();
-            counter--;
-            std::cout << "current amount of handles for " << typeid(T).name() << " " << counter << std::endl;
+            //counter--;
+            //std::cout << "current amount of handles for " << typeid(T).name() << " " << counter << std::endl;
         }
     protected:
         void increment() {
@@ -226,7 +226,7 @@ namespace flopc {
         T root;
     };
 
-    template<class T> int Handle<T>::counter = 0;
+    //template<class T> int Handle<T>::counter = 0;
 
     
 
