@@ -515,9 +515,8 @@ namespace flopc {
     RandomConstant::RandomConstant(const Constant& c) :
     Handle<RandomConstant_base*>(new RandomConstant_constant(c)) {}
 
-
-
-
+    RandomConstant::RandomConstant( RandomConstant_base* r ) : 
+    Handle<RandomConstant_base*>(r) {}
 
     //const RandomDataRef& RandomDataRef::operator=(  Constant c )
     //{

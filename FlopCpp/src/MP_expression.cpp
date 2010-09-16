@@ -407,6 +407,8 @@ namespace flopc {
         return new Expression_sum(d, e);  
     }
 
+
+
 } // End of namespace flopc
 
 using namespace flopc;
@@ -416,10 +418,14 @@ MP_expression::MP_expression(const Constant &c) :
 Handle<MP_expression_base*>(new Expression_constant(c)) {} 
 
 MP_expression::MP_expression(const VariableRef &v) : 
-Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) {} 
+Handle<MP_expression_base*>(const_cast<VariableRef*>(&v)) { } // We delete the VariableRef from the corresponding MP_variable
 
 MP_expression::MP_expression(const RandomConstant &r) :
 Handle<MP_expression_base*>(new Expression_random_constant(r)) {}
+
+MP_expression::MP_expression( MP_expression_base* r ) : 
+Handle<MP_expression_base*>(r) {}
+
 
 
 //bool MP::CoefLess::operator() (const MP::Coef& a, const MP::Coef& b) const {

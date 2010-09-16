@@ -16,10 +16,12 @@ int main() {
         enum {nw,ne,se,sw,numK};
 
         MP_set l(4);  // identfiers for level row and column labels  / 1*4 /;
+        l.setName("l");
 
         MP_index i,j;
 
         MP_data conc(l,l,l);
+        conc.setName("conc");
 
         conc(0,0,0) =  1.5;
         conc(0,0,1) =  1.5;
@@ -63,7 +65,9 @@ int main() {
 
         MP_set  k(numK); //  location of four neighbouring blocks / nw, "ne", se, sw /
         MP_subset<3> c(l,l,l); //  neighbouring blocks related to extraction feasibility
+        c.setName("c");
         MP_subset<3> d(l,l,l); //  complete set of block identifiers
+        d.setName("d");
 
         MP_data li(k), // lead for i  / (se,sw)  = 1 /
             lj(k),     // lead for j  / ("ne",se) = 1 /
@@ -103,12 +107,12 @@ int main() {
 
         x.upperLimit(l,i,j) = 1;
 
-        thisModel.maximize( sum(d(l,i,j), (conc(l,i,j)*value/100 - cost(l))*x(l,i,j)) );
+        //thisModel.maximize( sum(d(l,i,j), (conc(l,i,j)*value/100 - cost(l))*x(l,i,j)) );
 
-        assert(thisModel->getNumRows()==56);
-        assert(thisModel->getNumCols()==64);
-        assert(thisModel->getNumElements()==112);
-        assert(thisModel->getObjValue()>=17500 && thisModel->getObjValue()<=17500);
+        //assert(thisModel->getNumRows()==56);
+        //assert(thisModel->getNumCols()==64);
+        //assert(thisModel->getNumElements()==112);
+        //assert(thisModel->getObjValue()>=17500 && thisModel->getObjValue()<=17500);
 
 
         x.display("x");
