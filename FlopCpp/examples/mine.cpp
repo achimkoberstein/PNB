@@ -107,12 +107,12 @@ int main() {
 
         x.upperLimit(l,i,j) = 1;
 
-        //thisModel.maximize( sum(d(l,i,j), (conc(l,i,j)*value/100 - cost(l))*x(l,i,j)) );
+        thisModel.maximize( sum(d(l,i,j), (conc(l,i,j)*value/100 - cost(l))*x(l,i,j)) );
 
-        //assert(thisModel->getNumRows()==56);
-        //assert(thisModel->getNumCols()==64);
-        //assert(thisModel->getNumElements()==112);
-        //assert(thisModel->getObjValue()>=17500 && thisModel->getObjValue()<=17500);
+        assert(thisModel->getNumRows()==56);
+        assert(thisModel->getNumCols()==64);
+        assert(thisModel->getNumElements()==112);
+        assert(thisModel->getObjValue()>=17500 && thisModel->getObjValue()<=17500);
 
 
         x.display("x");

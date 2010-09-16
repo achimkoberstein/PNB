@@ -73,6 +73,9 @@ void MP_constraint::coefficients(vector<MP::Coef>& cfs) {
         DLOG(INFO) << "v is not empty?!";
 
     }
+    if (!v.empty())
+        for (int i = 0; i < v.size(); i++)
+            delete v[i];
     //TODO Delete pointer when in vector v TODO FIXME
 }
 
