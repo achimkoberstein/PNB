@@ -303,6 +303,13 @@ double SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense = 1)
     osiStoch_->setObjSense(objSense);
     osiStoch_->initialSolve(); //Solve this problem. We need objSense..
 
+    //Delete new-ed objects
+    delete matrix_;
+    delete [] this->dels_;
+    delete [] this->indx_;
+    delete [] this->rstrt_;
+    matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
+
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
@@ -403,6 +410,13 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
         // sum up the solution values (multiplied with probabilities)
         eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
 
+        //Delete new-ed objects
+        delete matrix_;
+        delete [] this->dels_;
+        delete [] this->indx_;
+        delete [] this->rstrt_;
+        matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
+
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
@@ -497,6 +511,13 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
         osiStoch_->setObjSense(objSense);
         osiStoch_->initialSolve(); //Solve this problem. We need objSense..
         solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
+
+        //Delete new-ed objects
+        delete matrix_;
+        delete [] this->dels_;
+        delete [] this->indx_;
+        delete [] this->rstrt_;
+        matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
 
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
