@@ -132,8 +132,9 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
 {
     // Why do we return more than one DataRefs? Why do we return only a new DataRef?
     //Answer: Depends on the calling context, depending on the index expressions. These can be different from one call to another and we need different DataRef to obey the indexation.
-    myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
-    return *myrefs.back();
+    DataRef* dPtr = new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5);
+    myrefs.push_back(Constant(dPtr));
+    return *dPtr;
 
 }
 
