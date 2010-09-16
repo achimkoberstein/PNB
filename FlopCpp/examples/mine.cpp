@@ -12,7 +12,10 @@ int main() {
 
     for (int ij = 0; ij < 11; ij++) {
 
-        MP_model thisModel(new OsiCbcSolverInterface(new OsiClpSolverInterface()));
+        OsiClpSolverInterface* osiLPPtr = new OsiClpSolverInterface();
+
+
+        MP_model thisModel(new OsiCbcSolverInterface());
         enum {nw,ne,se,sw,numK};
 
         MP_set l(4);  // identfiers for level row and column labels  / 1*4 /;
@@ -117,6 +120,7 @@ int main() {
 
         x.display("x");
         cout<<"Test mine passed."<<endl;
+        delete osiLPPtr;
 
     }
 }
