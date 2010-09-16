@@ -13,6 +13,8 @@ using std::string;
 #include <vector>
 using std::vector;
 
+#include <typeinfo>
+
 #include <boost/exception/all.hpp>
 #include <glog/logging.h>
 
@@ -50,9 +52,10 @@ namespace flopc {
     class Functor {
     public:
         virtual void operator()() const = 0;
-    protected:
+    
         Functor() {}
         virtual ~Functor() {}
+    protected:
         Functor(const Functor&); //copy constructor
     private:
         //disable assignment operator
@@ -160,14 +163,21 @@ namespace flopc {
     */
     template<class T> class Handle {
     public:
+
+        static int counter;
+
         const T &operator->() const {
             return root;
         }
         Handle(const T &r) : root(r) {
             increment();
+            counter++;
+            std::cout << "one more handle" << typeid(T).name() << " " << counter << std::endl;
         }
         Handle(const Handle& h) : root(h.root) {
             increment();
+            counter++;
+            std::cout << "one more handle" << typeid(T).name() << " " << counter << std::endl;
         }
         const Handle& operator=(const Handle& h) {
             if (root != h.root) {
@@ -188,6 +198,8 @@ namespace flopc {
         }
         ~Handle() {
             decrement();
+            counter--;
+            std::cout << "current amount of handles for " << typeid(T).name() << " " << counter << std::endl;
         }
     protected:
         void increment() {
@@ -210,6 +222,10 @@ namespace flopc {
         Handle() : root(0) {}
         T root;
     };
+
+    template<class T> int Handle<T>::counter = 0;
+
+    
 
 } // End of namespace flopc
 #endif
