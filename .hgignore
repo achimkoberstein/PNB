@@ -3,11 +3,13 @@ branches
 releases
 stable
 .svn
+.libs
+.deps
 Debug\
 Release\
 boost
 gtest
-doxydoc\
+doxydoc
 test_detail.xml
 SmiBenders\
 autom4te.cache
@@ -16,6 +18,8 @@ configure.orig
 *.*.*
 *.ncb
 *.suo
+*.lo
+*.o
 
 *.aux
 *.bbl
