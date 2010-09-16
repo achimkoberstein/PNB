@@ -1164,10 +1164,9 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
     double startClock = CoinCpuTime();
     double stochasticClock = 0;
     if (stage.size() > 0 && smiModel != 0) { // We have a time structure AND a smiModel ready. If only timeStructure, there were no RandomVariables specified.
-        //OsiClpSolverInterface osiClp;
-        //smiModel->setOsiSolverHandle(osiClp);
-        smiModel->setOsiSolverHandle(Solver);
-        //OsiSolverInterface* osiStoch = smiModel->loadOsiSolverData();
+        smiModel->setOsiSolverHandle(Solver); //We create a copy of the solver with this method..
+        // Delete current solver before we overwrite the Pointer with the new solver interface
+        delete Solver;
         Solver = smiModel->loadOsiSolverData();
         Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
         stochasticClock = CoinCpuTime();        
