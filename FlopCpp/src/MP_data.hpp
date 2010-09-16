@@ -31,7 +31,7 @@ namespace flopc {
             const MP_index_exp& i5,
             int s = 0) ;
 
-        ~DataRef() {} 
+        virtual ~DataRef() { } 
         DataRef& such_that(const MP_boolean& b);
 
         //Get Value via current settings for MP_index_exp
@@ -121,9 +121,11 @@ namespace flopc {
         ~MP_data() {
             if (manageData == true) delete[] v;
             //Delete DataRefs ?
-            if (!myrefs.empty()){
-                
-            }
+            //if (!myrefs.empty()){
+            //    for (int i = 0; i < myrefs.size();i++)
+            //        // We only want to delete the data if it was not used in the model. This is most likely an error in the modelling process.
+            //        delete myrefs[i];                
+            //}
 
         }
 
@@ -177,7 +179,7 @@ namespace flopc {
         /// For displaying data in a human readable format.
         void display(string s = "");
     protected:
-        vector<DataRef*> myrefs;
+        vector<Constant> myrefs;
     private:
         MP_data(const MP_data&); // Forbid copy constructor
         MP_data& operator=(const MP_data&); // Forbid assignment

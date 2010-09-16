@@ -69,6 +69,10 @@ void MP_constraint::coefficients(vector<MP::Coef>& cfs) {
     } else {
         cout<<"FlopCpp Warning: Constraint declared but not defined."<<endl;
     }
+    if (!v.empty()){
+        DLOG(INFO) << "v is not empty?!";
+
+    }
     //TODO Delete pointer when in vector v TODO FIXME
 }
 
