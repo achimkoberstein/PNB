@@ -181,6 +181,7 @@ namespace flopc{
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
+                myrefs.push_back(RandomConstant(tempPtr));
                 return *tempPtr; 
         }
 
@@ -219,7 +220,7 @@ namespace flopc{
         RandomConstant c;
         //boost::ptr_vector<RandomVariable> values;
         RandomVariable** values; //Array of pointers to RandomVariables : TODO: Redo this
-        std::vector<boost::shared_ptr<RandomDataRef> > myrefs;
+        std::vector<RandomConstant> myrefs;
         bool manageData;
         int stage; // Can be one of 0 to 4
     };

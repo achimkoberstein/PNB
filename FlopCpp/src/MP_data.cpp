@@ -24,10 +24,7 @@ DataRef::DataRef(MP_data* d,
                  const MP_index_exp& i5,
                  int s) : 
 D(d),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),origI1(MP_index_exp::getEmpty()),origI2(MP_index_exp::getEmpty()),origI3(MP_index_exp::getEmpty()),origI4(MP_index_exp::getEmpty()),origI5(MP_index_exp::getEmpty()),C(0),stochastic(s) {
-    //if (!d->myrefs.empty()){ //Myrefs is not empty.. so copy Constant from last DataRef TODO: Think about that if we know why we have a vector here in the first place?!
-    //    C = (*d->myrefs.back()).C;
-    //}
-}
+ }
 
 const DataRef& DataRef::operator=(const Constant& c) {
     C = c;
@@ -38,7 +35,7 @@ const DataRef& DataRef::operator=(const Constant& c) {
 const DataRef& DataRef::operator=(const DataRef& r) { 
     if (this == &r)
         return *this;
-    return operator=(Constant(const_cast<DataRef*>(&r)));
+    return operator=(Constant(r));
 }
 
 void DataRef::operator()() const {
@@ -135,8 +132,9 @@ DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp:
 {
     // Why do we return more than one DataRefs? Why do we return only a new DataRef?
     //Answer: Depends on the calling context, depending on the index expressions. These can be different from one call to another and we need different DataRef to obey the indexation.
-    myrefs.push_back(new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5));
-    return *myrefs.back();
+    DataRef* dPtr = new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5);
+    myrefs.push_back(Constant(dPtr));
+    return *dPtr;
 
 }
 
