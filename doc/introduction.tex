@@ -72,7 +72,7 @@ escapeinside={\%*}{*)}  % if you want to add a comment within your code
  \subsection{Linux}
 Under Linux just follow these steps to compile FlopC++ to obtain a library.
 \begin{enumerate}
-\item svn co https://projects.coin-or.org/svn/FlopC++/stable/1.0 coin-FlopCpp 
+\item svn co https://projects.coin-or.org/svn/FlopC++/branches/stochastic coin-FlopCpp 
 \item cd coin-FlopCpp/ThirdParty
 \item ./get.ThirdParty
 \item cd .. 
@@ -94,6 +94,8 @@ Step 7 builds and runs the FLOPC++ unit test program.
 
 Step 8 installs libraries, executables and header files in the directories \emph{coin-FlopCpp/lib}, \emph{coin-FlopCpp/bin} and \emph{coin-FlopCpp/include}.
 
+It may be necessary to copy the folder \emph{ThirdParty/boost/boost} to the directory where the install command has installed the include files, this is \emph{coin-FlopCpp/include} if you follow the procedure above.
+
  \subsection{Windows}
 If you have Visual Studio 2008 installed, you can use the solution file FlopCpp/MsVisualStudio/v9/FlopCpp.sln to load the solution. Then you can start a new C++ project and set a project dependency on libflopcpp.
  \subsection{Bleeding Edge}
@@ -104,10 +106,9 @@ You have to enter the username ``anonymous''. A password is not required.
 This section covers some errors that are likely to happen on different architectures.
 
 \paragraph{Linux}
-The compiler stops with an error about long long constants. Solution: Solved. Removed -pedantic-errors switch for FlopC++ project.
-
-make install does not work for googletest. Solution: Remove ThirdParty/gtest from subdirs variable in the Makefile before typing make install.
-
+\begin{enumerate}
+ \item The UnitTests of FlopCpp fail. \emph{Answer: } Reduce the optimization level from O3 to O2 in the Makefile residing in \emph{FlopCpp/test}.
+\end{enumerate}
 
 
 \section{An illustrative example}
