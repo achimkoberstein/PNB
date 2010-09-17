@@ -4,7 +4,7 @@
 
 #include <string>
 
-#define SMI_TEST_DATA_DIR  ""
+#define SMI_TEST_DATA_DIR  "SmiTestData"
 
 #include "SmiScnModel.hpp"
 #include "OsiClpSolverInterface.hpp"
@@ -1988,7 +1988,7 @@ void SmpsBug()
 	SmiScnModel smi;
 
 	std::string dataDir=SMI_TEST_DATA_DIR;
-	dataDir += "bug";
+	dataDir += "/bug";
 
 	// read SMPS model from files
 	// <name>.core, <name>.time, and <name>.stoch

@@ -268,7 +268,7 @@ namespace flopc {
     using Named::setName;
     using Named::getName;
 
-        MP_constraint& operator()(
+    MP_constraint& operator()(
             const MP_index_exp& i1 = MP_index_exp::getEmpty(), 
             const MP_index_exp& i2 = MP_index_exp::getEmpty(), 
             const MP_index_exp& i3 = MP_index_exp::getEmpty(), 

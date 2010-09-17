@@ -219,7 +219,9 @@ namespace flopc {
             const MP_index_exp& i3=MP_index::getEmpty(),
             const MP_index_exp& i4=MP_index::getEmpty(),
             const MP_index_exp& i5=MP_index::getEmpty()) {
-                return *new SubsetRef<nbr>(this,i1,i2,i3,i4,i5);
+                SubsetRef<nbr>* tempPtr = new SubsetRef<nbr>(this,i1,i2,i3,i4,i5);
+                myrefs.push_back(MP_index_exp(tempPtr));
+                return *tempPtr;
         }
 
         MP_domain& operator()(const SUBSETREF& s) {
@@ -246,6 +248,7 @@ namespace flopc {
             for (int i=0; i<nbr; i++) {
                 if ( S[i]->check(args[i]) == outOfBound ) {
                     isOk = false;
+                    LOG(ERROR) << "You supplied wrong arguments for the indexation of SubSet " << this->getName() << " for the " << i << ". argument.";
                 }
             }
             if (isOk == true) {
@@ -272,6 +275,7 @@ namespace flopc {
         }
 
     private:
+        vector<MP_index_exp> myrefs;
         vector<const MP_set*> S; 
         std::map<std::vector<int>, int> elements;
     };

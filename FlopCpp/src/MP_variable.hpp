@@ -18,109 +18,110 @@
 
 namespace flopc {
 
-  /** @brief Enumeration for indicating variable type
-      @ingroup INTERNAL_USE
-  */
-  namespace type {
-  	enum variableType {continuous, discrete, binary};
-  }
-
-  class MP_model;
-  class MP_variable;
-
-  /** @brief Symantic representation of a variable.
-      @ingroup PublicInterface
-      This is one of the main public interface classes.  
-      It should be directly declared by clients of the FlopC++.  The
-      parametersof construction are MP_set s which specify the indexes
-      over which the variable is defined.
-  */
-  class MP_variable : public RowMajor, public Functor , private Named {
-    friend class MP_model;
-    friend class DisplayVariable;
-    friend class VariableRef;
-  public:
-    MP_variable(const MP_set_base &s1 = MP_set::getEmpty(), 
-                const MP_set_base &s2 = MP_set::getEmpty(), 
-                const MP_set_base &s3 = MP_set::getEmpty(),
-                const MP_set_base &s4 = MP_set::getEmpty(), 
-                const MP_set_base &s5 = MP_set::getEmpty());
-
-    ~MP_variable();
-    void display(const std::string &s = "");  
-    
-    using Named::setName;
-    using Named::getName;
-
-    /// Returns the value of the variable given the specific index values.
-    double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
-    double levelScenario(int scenario = 0,int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
-
-
-    /// Convert a MP_variable into a VariableRef
-    const VariableRef& operator()(
-      const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
-      const MP_index_exp& d2 = MP_index_exp::getEmpty(), 
-      const MP_index_exp& d3 = MP_index_exp::getEmpty(),
-      const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
-      const MP_index_exp& d5 = MP_index_exp::getEmpty()
-      ) {
-          //TODO: Look at lower/upperLimits again
-          //lowerLimit->propagateIndexExpressions(d1,d2,d3,d4,d5);
-          //upperLimit->propagateIndexExpressions(d1,d2,d3,d4,d5);
-          myrefs.push_back(new VariableRef(this, d1, d2, d3, d4, d5));
-      return *myrefs.back(); //TODO: possible Memory Leak.. same procedure as in MP_data: Store all refs in a array to be able to clean up in the end..
+    /** @brief Enumeration for indicating variable type
+    @ingroup INTERNAL_USE
+    */
+    namespace type {
+        enum variableType {continuous, discrete, binary};
     }
-    
-    /// Call this method to turn the variable into a binary variable
-    void binary();
 
-    /// Call this method to turn the MP_variable into an integer variable
-    void integer();
+    class MP_model;
+    class MP_variable;
 
-    // Call this method to turn the variable in a free variable
-    void free();
+    /** @brief Symantic representation of a variable.
+    @ingroup PublicInterface
+    This is one of the main public interface classes.  
+    It should be directly declared by clients of the FlopC++.  The
+    parametersof construction are MP_set s which specify the indexes
+    over which the variable is defined.
+    */
+    class MP_variable : public RowMajor, public Functor , private Named {
+        friend class MP_model;
+        friend class DisplayVariable;
+        friend class VariableRef;
+    public:
+        MP_variable(const MP_set_base &s1 = MP_set::getEmpty(), 
+            const MP_set_base &s2 = MP_set::getEmpty(), 
+            const MP_set_base &s3 = MP_set::getEmpty(),
+            const MP_set_base &s4 = MP_set::getEmpty(), 
+            const MP_set_base &s5 = MP_set::getEmpty());
 
-    void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
- 
-    /// Upper bound on the variable value.
-    MP_data upperLimit;
-    /// Lower bound on the variable value.
-    MP_data lowerLimit;
-  private:
-    //Disabling copy constructor and assignment
-    MP_variable(const MP_variable&);
-    MP_variable& operator=(const MP_variable&);
+        ~MP_variable();
+        void display(const std::string &s = "");  
 
-    int getCurrentStage(int i1, int i2, int i3, int i4, int i5);
-    void setStageSet();
- 
-    void operator()() const;
-    const MP_set_base *S1, *S2, *S3, *S4, *S5;
-    MP_index i1,i2,i3,i4,i5;
+        using Named::setName;
+        using Named::getName;
 
-    MP_model *M;
-    std::vector<VariableRef*> myrefs;
-    type::variableType type;
-    int offset;
-    int stageSet;
-  };
+        /// Returns the value of the variable given the specific index values.
+        double level(int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
+        double levelScenario(int scenario = 0,int i1=0, int i2=0, int i3=0, int i4=0, int i5=0);
 
-  /** Specialized subclass of MP_variable where the variable is
-      pre-specified to be binary.
-      @ingroup PublicInterface
-  */
-  class MP_binary_variable : public MP_variable {
-  public:
-    MP_binary_variable(const MP_set_base &s1 = MP_set::getEmpty(), 
-                       const MP_set_base &s2 = MP_set::getEmpty(), 
-                       const MP_set_base &s3 = MP_set::getEmpty(),
-                       const MP_set_base &s4 = MP_set::getEmpty(), 
-                       const MP_set_base &s5 = MP_set::getEmpty()) :
-      MP_variable(s1,s2,s3,s4,s5) {
-      binary();
-    }
-  };
+
+        /// Convert a MP_variable into a VariableRef
+        const VariableRef& operator()(
+            const MP_index_exp& d1 = MP_index_exp::getEmpty(), 
+            const MP_index_exp& d2 = MP_index_exp::getEmpty(), 
+            const MP_index_exp& d3 = MP_index_exp::getEmpty(),
+            const MP_index_exp& d4 = MP_index_exp::getEmpty(), 
+            const MP_index_exp& d5 = MP_index_exp::getEmpty()
+            ) {
+                //TODO: Look at lower/upperLimits again
+                //lowerLimit->propagateIndexExpressions(d1,d2,d3,d4,d5);
+                //upperLimit->propagateIndexExpressions(d1,d2,d3,d4,d5);
+                VariableRef* vPtr = new VariableRef(this, d1, d2, d3, d4, d5);
+                myrefs.push_back(MP_expression(vPtr));
+                return *vPtr; 
+        }
+
+        /// Call this method to turn the variable into a binary variable
+        void binary();
+
+        /// Call this method to turn the MP_variable into an integer variable
+        void integer();
+
+        // Call this method to turn the variable in a free variable
+        void free();
+
+        void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
+
+        /// Upper bound on the variable value.
+        MP_data upperLimit;
+        /// Lower bound on the variable value.
+        MP_data lowerLimit;
+    private:
+        //Disabling copy constructor and assignment
+        MP_variable(const MP_variable&);
+        MP_variable& operator=(const MP_variable&);
+
+        int getCurrentStage(int i1, int i2, int i3, int i4, int i5);
+        void setStageSet();
+
+        void operator()() const;
+        const MP_set_base *S1, *S2, *S3, *S4, *S5;
+        MP_index i1,i2,i3,i4,i5;
+
+        MP_model *M;
+        std::vector<MP_expression> myrefs;
+        type::variableType type;
+        int offset;
+        int stageSet;
+    };
+
+    /** Specialized subclass of MP_variable where the variable is
+    pre-specified to be binary.
+    @ingroup PublicInterface
+    */
+    class MP_binary_variable : public MP_variable {
+    public:
+        MP_binary_variable(const MP_set_base &s1 = MP_set::getEmpty(), 
+            const MP_set_base &s2 = MP_set::getEmpty(), 
+            const MP_set_base &s3 = MP_set::getEmpty(),
+            const MP_set_base &s4 = MP_set::getEmpty(), 
+            const MP_set_base &s5 = MP_set::getEmpty()) :
+        MP_variable(s1,s2,s3,s4,s5) {
+            binary();
+        }
+    };
 
 } // End of namespace flopc
 #endif 

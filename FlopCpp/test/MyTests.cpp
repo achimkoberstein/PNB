@@ -532,6 +532,7 @@ namespace flopc {
         MP_stage T(numStage);
 
         RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(-1,1,2), new DiscreteUniformRandomVariable(4,5,2) };
+        
         MP_random_data randomWalkVar(&randomVars[0],T);
         MP_random_data sumR(T);
         MP_data blubb(T);
@@ -785,13 +786,22 @@ namespace flopc {
     // Test several data combining constraints
     TEST_F(MP_modelTest,DataTest){
         MP_data data1;
+        data1.setName("d1");
         MP_data data2;
+        data2.setName("d2");
         data1() = 7;
         data2() = 10;
         MP_data data3;
+        data3.setName("d3");
         MP_data data4;
+        MP_data data5;
+        data5.setName("data5");
+        data4.setName("data4");
         data4() = data2();
         data3() = data1() + data2();
+        data5() = data2();
+        MP_data data6;
+        data6() = data5() + data2();
         MP_variable x;
 
         MP_constraint constraint1,constraint2;
@@ -2084,7 +2094,7 @@ int main(int argc, char *argv[]) {
     //VLDDisable();
     ::testing::InitGoogleTest(&argc, argv);
     //VLDEnable();
-    //::testing::GTEST_FLAG(filter) = "RandomVariableTest.*";
+    //::testing::GTEST_FLAG(filter) = "*.RandomWalkTest";
     //_CrtMemState memstate;
     //_CrtMemCheckpoint(&memstate);
 
@@ -2099,4 +2109,3 @@ int main(int argc, char *argv[]) {
     //_CrtDumpMemoryLeaks();
     return result;
 }
-
