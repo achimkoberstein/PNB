@@ -69,12 +69,13 @@ namespace flopc {
         Constant C;
     };
 
-    class MP_index_subsetRef : public MP_index_base {
+    // Wrapper around templatized SubsetRef, that does the actual work.
+    class MP_index_subset : public MP_index_base {
         friend class MP_index_exp;
     private:
-        MP_index_subsetRef(const SUBSETREF& s) : S(&s) {}
+        MP_index_subset(const SUBSETREF& s) : S(&s) {}
         int evaluate() const {
-            return int(S->evaluate()); 
+            return S->evaluate(); 
         }
         MP_index* getIndex() const {
             return S->getIndex();
@@ -82,9 +83,11 @@ namespace flopc {
         virtual MP_domain getDomain(MP_set* s) const{
             return MP_domain(S->getDomain(s));
         }
-        virtual MP_index_base* deepCopy() const { return S->getIndex(); }
+        virtual MP_index_base* deepCopy() const { return S->deepCopy(); }
         virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr) { 
-            throw not_implemented_error();return expr.operator->(); }
+            return (const_cast<SUBSETREF*>(S))->insertIndexExpr(expr);    
+        }
+
         const SUBSETREF* S;
     };
 
@@ -187,7 +190,7 @@ MP_index_exp::MP_index_exp(int i) :
 Handle<MP_index_base*>(new MP_index_constant(Constant(i))) {} 
 
 MP_index_exp::MP_index_exp(const SUBSETREF& s) : 
-Handle<MP_index_base*>(new MP_index_subsetRef(s)) {}
+Handle<MP_index_base*>(new MP_index_subset(s)) {}
 
 MP_index_exp::MP_index_exp(const Constant& c) : 
 Handle<MP_index_base*>(new MP_index_constant(c)) {}
