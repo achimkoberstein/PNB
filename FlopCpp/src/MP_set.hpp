@@ -280,25 +280,24 @@ namespace flopc {
         std::map<std::vector<int>, int> elements;
     };
 
-    /** @brief Internal representation of a "set" 
+    /** @brief Abstract base class for templatized derived class SubsetRef.
+    Allows access to templatized derived class without knowing anything about the template parameter.
     @ingroup INTERNAL_USE
     @note FOR INTERNAL USE: This is not normally used directly by the
     calling code.
     @note this is often implicitly created with many expressions which may
     subset a set.
-    //TODO: What is SUBSETREF used for? It is plain empty..
     */
-
     class SUBSETREF : public MP_index_base {
     public:
-        virtual MP_index* getIndex() const;
-        virtual MP_domain getDomain(MP_set* s) const;
-        virtual int evaluate() const;
-        virtual MP_index_base* deepCopy() const;
-        virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr);
+        virtual MP_index* getIndex() const = 0;
+        virtual MP_domain getDomain(MP_set* s) const = 0;
+        virtual int evaluate() const = 0;
+        virtual MP_index_base* deepCopy() const = 0;
+        virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr) = 0;
     };
 
-    /** @brief Internal representation of a "set" 
+    /** @brief Internal representation of a concrete Subset.
     @ingroup INTERNAL_USE
     @note FOR INTERNAL USE: This is not normally used directly by the
     calling code.
@@ -365,6 +364,14 @@ namespace flopc {
         virtual MP_index* getIndex() const {
             return S;
         }
+
+        virtual MP_index_base* deepCopy() const {
+            return getIndex();
+        }
+        virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr){
+            return getIndex();
+        }
+
         MP_boolean B;
         MP_subset<nbr>* S;
         MP_index_exp I1,I2,I3,I4,I5;
