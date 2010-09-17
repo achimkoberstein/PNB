@@ -313,7 +313,7 @@ namespace flopc {
             const MP_index_exp& i3,
             const MP_index_exp& i4,
             const MP_index_exp& i5) : 
-        S(s),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5) {} 
+        counter(0),B(),S(s),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5) {} 
 
         virtual operator MP_domain() const {
             // 	    MP_domain_base* base;
@@ -366,12 +366,40 @@ namespace flopc {
         }
 
         virtual MP_index_base* deepCopy() const {
-            return getIndex();
+            // This method get's called if we have a MP_subset that holds RandomVariables
+            // We have to update the MP_index_exp we store here.. so we try to do that on a correct basis..
+            // This will most likely not work in a simple way because we do not know in which direction we want to go..
+            MP_index_base* tempPtr(NULL);
+            switch (counter){ // We have the first element..
+                case 0: tempPtr = I1->deepCopy(); break;
+                case 1: tempPtr = I2->deepCopy(); break;
+                case 2: tempPtr = I3->deepCopy(); break;
+                case 3: tempPtr = I4->deepCopy(); break;
+                case 4: tempPtr = I5->deepCopy(); break;
+            }
+            if (counter == nbr) // We have inserted the expression for all of the subset members, reset the counter
+                counter = 0;
+            return tempPtr;
         }
         virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr){
-            return getIndex();
+            // This method get's called if we have a MP_subset that holds RandomVariables
+            // We have to update the MP_index_exp we store here.. so we try to do that on a correct basis..
+            // This will most likely not work in a simple way because we do not know in which direction we want to go..
+            MP_index_base* tempPtr(NULL);
+            switch (counter){ // We have the first element..
+                case 0: tempPtr = I1->insertIndexExpr(expr); break;
+                case 1: tempPtr = I2->insertIndexExpr(expr); break;
+                case 2: tempPtr = I3->insertIndexExpr(expr); break;
+                case 3: tempPtr = I4->insertIndexExpr(expr); break;
+                case 4: tempPtr = I5->insertIndexExpr(expr); break;
+            }
+            counter++;
+            if (counter == nbr) // We have inserted the expression for all of the subset members, reset the counter
+                counter = 0;
+            return tempPtr;
         }
 
+        mutable int counter;
         MP_boolean B;
         MP_subset<nbr>* S;
         MP_index_exp I1,I2,I3,I4,I5;

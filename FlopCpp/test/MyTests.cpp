@@ -1429,6 +1429,51 @@ namespace flopc {
 
     }
 
+    // Test if RV in MP_subset's work correctly
+    TEST_F(MP_modelTest,RandomSubSetTest){
+        MP_model testModel(new OsiClpSolverInterface());
+        testModel.setSample(true);
+
+        enum {numStage = 2};
+        MP_stage T(numStage);
+
+        enum {NodeA, NodeB, NodeC, NodeD, numNodes};
+        MP_set nodes(numNodes);
+        nodes.setName("nodes");
+
+        MP_subset<2> arcs(nodes,nodes);
+        arcs.insert(NodeA,NodeB);
+        arcs.insert(NodeA,NodeC);
+        arcs.insert(NodeA,NodeD);
+        arcs.insert(NodeB, NodeC);
+        arcs.insert(NodeB,NodeD);
+        arcs.insert(NodeC,NodeD);
+
+        MP_random_data zeroOne(T);
+        zeroOne.setName("zeroOne");
+        
+        zeroOne(1) = new DiscreteBernoulliRandomVariable(0.5);
+        zeroOne(1)->setStage(1);
+
+        MP_random_data arcsInStage(T,arcs);
+        arcsInStage.setName("arcsInStage");
+        arcsInStage(T+1,arcs) = zeroOne(T+1);
+
+        MP_variable x(T);
+
+        MP_constraint constraint1(T);
+
+        constraint1(T+1) = sum(arcs, arcsInStage(T+1,arcs)) <= x(T+1);
+
+
+
+        MP_expression objective( x(T.last()) );
+
+        testModel.setObjective(objective);
+        testModel.solve(MP_model::MINIMIZE);
+
+    }
+
     TEST(UnitTest,OldUnitTest){
         enum {airA, airB, airC, airD, numA};
         enum {route_1, route_2, route_3, route_4, route_5, numRoutes};
@@ -1582,13 +1627,8 @@ namespace flopc {
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
-    //VLDDisable();
     ::testing::InitGoogleTest(&argc, argv);
-    //VLDEnable();
-    //::testing::GTEST_FLAG(filter) = "*.RandomWalkTest";
-    //_CrtMemState memstate;
-    //_CrtMemCheckpoint(&memstate);
-
+    //::testing::GTEST_FLAG(filter) = "*.RandomSubSetTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
