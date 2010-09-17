@@ -1,3 +1,4 @@
+#!/bin/sh
 ./runone aircraft 
 ./runone transport 
 ./runone ampl 
