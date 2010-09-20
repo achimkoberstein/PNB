@@ -1654,19 +1654,26 @@ namespace flopc {
 
         enum { numST=2};
         MP_stage ST(numST);
+        ST.setName("ST");
 
         //enum { numScen=10};
         enum { numScen=1};
         MP_scenario_set scen(numScen);
+        scen.setName("scen");
 
         enum { FRA, HAM, MUC, DRS, HAJ, STR, IAD, CHI, BOS, PHL, CLT, CVG, numA};
         MP_set A(numA);
+        A.setName("A");
         MP_set A2(numA);
+        A2.setName("A2");
         MP_set A3(numA);
+        A3.setName("A3");
         MP_set A4(numA);
+        A4.setName("A4");       
 
         enum { A320, A340, A380, numT};
         MP_set T(numT);
+        T.setName("T");
 
         double distance[numA][numA] =
         {{0,413,300,388,282,157,6545,6964,5884,6334,7052,6995},
@@ -1681,31 +1688,40 @@ namespace flopc {
         {6334,6262,6627,6612,6295,6440,216,1075,450,0,720,813},
         {7052,6982,7345,7332,7016,7158,516,949,1169,720,0,539},
         {6995,6886,7292,7248,6932,7110,632,410,1207,813,539,0}};
-        MP_data dist(&distance[0][0], A, A);
+        MP_data dist(&distance[0][0], A, A2);
+        dist.setName("dist");
 
-        MP_data p(A, A);
+        MP_data p(A, A2);
         forall(A*A2, p(A,A2) = dist(A,A2) * 0.08);
+        p.setName("p");
 
         MP_data dcf;
         dcf() = 1.0;
+        dcf.setName("dcf");
 
         MP_data pd;
         pd() = 0.1;
+        pd.setName("pd");
 
         double maxCapacity[numT] = { 150, 250, 500 };
         MP_data m(&maxCapacity[0], T);
+        m.setName("m");
 
         double kerosinConsumption[numT] = { 6.75, 10, 17.5 };
         MP_data cons(&kerosinConsumption[0], T);
+        cons.setName("cons");
 
         double costPerKM[numT] = { 10.125, 11.25, 18 };
         MP_data cpm(&costPerKM[0], T);
+        cpm.setName("cpm");
 
         double maxRange[numT] = { 5500, 14000, 14000 };
         MP_data r(&maxRange[0], T);
+        r.setName("r");
 
-        double maxFlights[numT] = { 1e10, 1e10, 1e10 };
+        double maxFlights[numT] = { 1e10, 1e10, 1e10};
         MP_data ub(&maxFlights[0], T);
+        ub.setName("ub");
 
         double stochasticDemand[numST-1][numA][numA][numScen] =
         {
@@ -2052,25 +2068,30 @@ namespace flopc {
         //  }
         // }
         //};
-        MP_random_data d(&stochasticDemand[0][0][0][0], ST, A, A);
+        MP_random_data d(&stochasticDemand[0][0][0][0], ST, A, A2);
+        d.setName("d");
 
         MP_data x_min;
         x_min() = 0.5;
+        x_min.setName("x_min");
 
         //double kerosinPrice[numST-1][numScen] = { {0.055, 0.11, 0.165, 0.275, 0.4125, 0.55, 0.6875, 0.825, 1.045, 1.375} };
         double kerosinPrice[numST-1][numScen] = { {0.055} };
         MP_random_data k_price(&kerosinPrice[0][0], ST);
+        k_price.setName("k_price");
 
         MP_data f_price;
         f_price() = 0.55;
+        f_price.setName("f_price");
 
         MP_data f_price_margin;
         f_price_margin() = 10;
+        f_price_margin.setName("f_price_margin");
 
 
         /////// VARIABLES
 
-        MP_variable y(A,A,T);
+        MP_variable y(A,A2,T);
         y.integer();
         for (int i = 0; i < numA; i++) {
             for (int j = 0; j < numA; j++) {
@@ -2081,10 +2102,11 @@ namespace flopc {
                 }
             }
         }
+        y.setName("y");
 
         MP_variable x0(ST,A,A2);
-        MP_variable x1(ST,A,A2,A3);
-        MP_variable x2(ST,A,A2,A3,A4);
+        MP_variable x1(ST,A,A3,A2);
+        MP_variable x2(ST,A,A3,A4,A2);
         for (int i = 0; i < numA; i++) {
             for (int j = 0; j < numA; j++) {
                 if (i == j) {
@@ -2102,9 +2124,14 @@ namespace flopc {
                 }
             }
         }
+        x0.setName("x0");
+        x2.setName("x1");
+        x1.setName("x2");
 
         MP_variable buy_stoch(ST), buy_hedge, jet_fuel_consumption;
-
+        buy_stoch.setName("buy_stoch");
+        buy_hedge.setName("buy_hedge");
+        jet_fuel_consumption.setName("jet_fuel_consumption");
 
 
         ////// CONSTRAINTS
@@ -2112,36 +2139,42 @@ namespace flopc {
         //demand
         MP_constraint demand(ST,A,A2);
         demand(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2)) <= d(ST+1,A,A2);
-
+        demand.setName("demand");
+        
         //subject to force_percentage_expected_demand_satisfaction 
         MP_constraint percentDemandSat(ST,A,A2);
         percentDemandSat(ST+1,A,A2) = x_min() * d(ST+1,A,A2) <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+        percentDemandSat.setName("percentDemandSat");
 
         //max_aircraft_capacity
         MP_constraint maxAircraftCapacity(ST,A,A2);
         maxAircraftCapacity(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A2,A3) + x1(ST+1,A3,A,A2) + sum(A4, x2(ST+1,A,A2,A3,A4) + x2(ST+1,A3,A,A2,A4) + x2(ST+1,A3,A4,A,A2))) <= sum(T, m(T) * y(A,A2,T));
-
+        maxAircraftCapacity.setName("maxAircraftCapacity");
+        
         //ub for airlcraft types{t in T}: sum{i in A, j in A}(y[i,j,t])<=ub[t];
         MP_constraint availableAircrafts(T);
         availableAircrafts(T) = sum(A*A2, y(A,A2,T)) <= ub(T);
+        availableAircrafts.setName("availableAircrafts");
 
         //buy_jet_fuel: buy_stoch + buy_hedge = jet_fuel_consumption;
         MP_constraint buyJetFuel(ST);
         buyJetFuel(ST+1) = buy_stoch(ST+1) + buy_hedge() == jet_fuel_consumption();
-
+        buyJetFuel.setName("buyJetFuel");
+        
         //fuel consumption
         MP_constraint fuelConsumption;
-        fuelConsumption() = sum(A*A2*T, y(A,A2,T) * dist(A,A2) * cons(T)) == jet_fuel_consumption();
-
+        //fuelConsumption() = sum(A*A2*T, y(A,A2,T) * dist(A,A2) * cons(T)) == jet_fuel_consumption();
+        fuelConsumption() = sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cons(T))) == jet_fuel_consumption();
+        fuelConsumption.setName("fuelConsumption");
 
 
         /////// OBJECTIVE
 
         mod.setObjective(
-            (buy_stoch(ST+1) * k_price(ST+1) + buy_hedge() * f_price() * (1 + (f_price_margin() / 100))) //fuel costs
-            + (sum(A*A2*T, y(A,A2,T) * dist(A,A2) * cpm(T))) //operationcost
+              (buy_stoch(ST+1) * k_price(ST+1) + buy_hedge() * f_price() * (1 + (f_price_margin() / 100))) //fuel costs
+            + (sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cpm(T)))) //operationcost
             - (sum(A*A2, p(A,A2) * dcf() * (x0(ST+1,A,A2) + (1 - pd()) * sum(A3, x1(ST+1,A,A3,A2)) + (1 - 2*pd()) * sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue
-            );
+        );
 
         mod.attach(mod.Solver);
 
@@ -2157,6 +2190,7 @@ namespace flopc {
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.RandomSubSetTest";
+    //::testing::GTEST_FLAG(filter) = "MP_modelTest.TimosORBProjekt";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
