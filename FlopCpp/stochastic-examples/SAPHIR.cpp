@@ -78,11 +78,13 @@ int main(int argc, char* argv[]) {
    
     // Winter Months Baseload Contracts
     MP_subset<2> WMBC(BC,M);
+    WMBC.setName("WMBC");
     for (int i = 1; i <= 5; i++) WMBC.insert(EON_RG, i);
     for (int i = 1; i <= 5; i++) WMBC.insert(Shell, i);
     
     // Summer Months Baseload Contracts
     MP_subset<2> SMBC(BC,M);
+    SMBC.setName("SMBC");
     for (int i = 6; i <= 11; i++) SMBC.insert(EON_RG, i);
     for (int i = 6; i <= 11; i++) SMBC.insert(Shell, i);
     
@@ -92,9 +94,11 @@ int main(int argc, char* argv[]) {
     
     // Connections between Open Contracts and Nodes
     MP_subset<2> NOC(OC,N);
+    NOC.setName("NOC");
     
     // Time perionds when Open Contracts are available
     MP_subset<2> TOC(OC,T);
+    TOC.setName("TOC");
     
     //<--- purchase
     
@@ -119,7 +123,7 @@ int main(int argc, char* argv[]) {
     L.insert(Exit_1, NetConnect);
     L.insert(EE_Speicher, NetConnect);
         
-    // Marketarea
+    // Marketarea : Must be a subset of set L
     // Connections that introduce Pipes (From Entry-Exit Point to Market Areas)
     MP_subset<2> LMA(N,N);
     LMA.insert(Entry_1, NetConnect);
@@ -306,10 +310,12 @@ int main(int argc, char* argv[]) {
     
     // Entry Prices
     MP_data CENTRY(L);
+    CENTRY.setName("CENTRY");
     forall(L, CENTRY(L) = 2);
     
     // Exit Prices
     MP_data CEXIT(L);
+    CEXIT.setName("CEXIT");
     forall(L, CEXIT(L) = 2);
     
     //<--- Network
@@ -831,7 +837,7 @@ int main(int argc, char* argv[]) {
     EMinOpenContract(ST+1,OC) = EMINOC(OC) * oc_use(OC) <= sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T)));
     EMaxOpenContract(ST+1,OC) = sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T))) <= EMAXOC(OC) * oc_use(OC);
     
-    PMaxOpenConstact(ST+1,TOC(OC,T)) = poc(ST+1,T) <= pmaxoc(OC);
+    PMaxOpenConstact(ST+1,TOC(OC,T)) = poc(ST+1,TOC(OC,T)) <= pmaxoc(OC);
 
     PMinOpenContractLimit(ST+1,TOC(OC,T)) = PMINOC(TOC) * oc_use(OC) <= poc(ST+1,TOC);
     PMaxOpenContractLimit(ST+1,TOC(OC,T)) = poc(ST+1,TOC) <= PMAXOC(TOC) * oc_use(OC);
@@ -909,35 +915,35 @@ int main(int argc, char* argv[]) {
     //);
     saphir.setObjective(
         // gain
-        sum(SC*T, revenues(ST.last(),SC,T) )
+        sum(SC*T, -1*revenues(ST.last(),SC,T) )
         // gasbezugskosten
-        - (sum(BC*M, pbcp(MBC(BC,M))*DELTAM(M)*EPRICEBC(MBC(BC,M)) ) )
-        - (sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC) ) )
+        + (sum(BC*M, pbcp(MBC(BC,M))*DELTAM(M)*EPRICEBC(MBC(BC,M)) ) )
+        + (sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC) ) )
         //speicherkosten
-        - (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) ) )
-        - (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) 
+        + (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) ) )
+        + (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) 
         //netzkosten
-        - (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) 
+        + (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) 
         );
 
     // book keeping variables..
-    MP_constraint gain,gas,storage,net;
-    MP_variable gainVar,gasVar,storageVar,netVar;
-    gainVar.free();
-    gasVar.free();
-    storageVar.free();
-    netVar.free();
-    gain() = gainVar() == sum(SC*T, revenues(ST.last(),SC,T) );
-    gas() = gasVar() == (sum(BC*M, pbcp(MBC(BC,M))*DELTAM(M)*EPRICEBC(MBC(BC,M)) ) ) + (sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC) ) );
-    storage() = storageVar() == (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) ) )
-        + (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) ;
-    net() = netVar() == (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) ;
+    //MP_constraint gain,gas,storage,net;
+    //MP_variable gainVar,gasVar,storageVar,netVar;
+    //gainVar.free();
+    //gasVar.free();
+    //storageVar.free();
+    //netVar.free();
+    //gain() = gainVar() == sum(SC*T, revenues(ST.last(),SC,T) );
+    //gas() = gasVar() == (sum(BC*M, pbcp(MBC(BC,M))*DELTAM(M)*EPRICEBC(MBC(BC,M)) ) ) + (sum(TOC(OC,T), EPRICEOC(TOC) * DELTAT(T) * poc(ST.last(),TOC(OC,T)) + PPRICEOC(OC) * pmaxoc(OC) ) );
+    //storage() = storageVar() == (sum(S, SCF(S) + SCV(S) * emaxs(ST.last(),S) + PPRICEINJ(S) * pmaxinj(ST.last(),S) + PPRICEEXT(S) * pmaxext(ST.last(),S) ) )
+    //    + (sum(S*T, SCC(S) * DELTAT(T) * pinj(ST.last(),S,T) ) ) ;
+    //net() = netVar() == (sum(N*N2, CENTRY(LMA(N,N2)) * pmaxl(ST.last(),L(N,N2)) - CEXIT(LMA(N,N2)) * pminl(ST.last(),L(N,N2)) )) ;
     
     saphir.attach(saphir.Solver); 
     // Routines that write out the files need direction. standard for them is minimization..
     //saphir->writeLp("saphir_lp");
     //saphir->writeMps("saphir_mps","mps",1);
-    saphir.solve(MP_model::MAXIMIZE);
+    //saphir.solve(MP_model::MINIMIZE);
 
     
     cout << "Obective Value: " << saphir->getObjValue() << endl;
@@ -966,8 +972,8 @@ int main(int argc, char* argv[]) {
 
     cout << "Status: " << saphir.getStatus() << endl;
 
-    //OsiStochasticBendersTwoStageSolverInterface benders(saphir.Solver,saphir.getSmi());
-    //benders.initialSolve();
+    OsiStochasticBendersTwoStageSolverInterface benders(saphir.Solver,saphir.getSmi());
+    benders.initialSolve();
 
 #pragma endregion optimization
 

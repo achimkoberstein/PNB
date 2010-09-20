@@ -2686,7 +2686,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         //Set params for Benders
         int maxIt = 10000;
 		double tolerance = 0.000001;
-		bool useBenders = false;
+		bool useBenders = true;
 		//	// Input parameters:
 //	// #1: Maximal Iterations
 //	// #2: Single/multi: s m
