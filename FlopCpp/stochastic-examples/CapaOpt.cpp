@@ -6,14 +6,14 @@
 
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
-//#include "OsiCpxSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
 
 #include "CoinFloatEqual.hpp"
 #include "CoinTime.hpp"
 
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
-//#include "Benders.hpp"
+#include "Benders.hpp"
 
 using namespace flopc;
 
@@ -6766,10 +6766,10 @@ int main(int argc, char* argv[]) {
     capa.attach(capa.Solver);
     
 	if (solveWithBenders) {
-		//OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
-		//double begin = CoinCpuTime();
-		//benders.initialSolve();
-		//double duration = CoinCpuTime() - begin;
+		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+		double begin = CoinCpuTime();
+		benders.initialSolve();
+		double duration = CoinCpuTime() - begin;
 
 		//ofstream ofs;
 		//ofs.open("CapaOpt_Benders.txt", std::ios::app);
