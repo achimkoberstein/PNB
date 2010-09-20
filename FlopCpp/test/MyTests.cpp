@@ -1478,6 +1478,25 @@ namespace flopc {
 
         testModel.setObjective(objective);
         testModel.solve(MP_model::MINIMIZE);
+        //TODO: Test something here, not just nothing
+    }
+
+    TEST_F(UseCaseTest,UnaryMinusTest){
+        MP_model testModel(new OsiClpSolverInterface());
+
+        MP_variable x;
+        MP_data y;
+        y() = 5;
+
+        MP_constraint z1,z2;
+        z1() = -x() >= -10;
+        z2() = -y() >= -x();
+
+        testModel.setObjective(x());
+        testModel.solve(MP_model::MAXIMIZE);
+        ASSERT_EQ(10,testModel->getObjValue());
+        testModel.solve(MP_model::MINIMIZE);
+        ASSERT_EQ(5,testModel->getObjValue());
 
     }
 
