@@ -585,11 +585,15 @@ void MP::GenerateFunctor::operator()() const {
                     for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
-                    double meanValue = 0;
-                    std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
-                    for (int j = 0; j < scenarioValues.size(); j++)
-                        meanValue += scenarioValues[j]*probs[j];
-                    val = meanValue;
+
+                    // If we sample we may want to replace the mean value, otherwise we probably don't
+                    if (MP_model::getCurrentModel()->getSample() ){
+                        double meanValue = 0;
+                        std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+                        for (int j = 0; j < scenarioValues.size(); j++)
+                            meanValue += scenarioValues[j]*probs[j];
+                        val = meanValue;
+                    }
 
                     // We have to replace the mean value?
                 }

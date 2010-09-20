@@ -491,9 +491,9 @@ namespace flopc {
         dA(0) = 1;
         dA(1) = 10;
 
-        double dbvalues[2][4] = { {1,2,3,4 }, {5,6,7,8 }}; 
+        double dbvalues[2][4] = { {1,2,3,4 }, {5,6,7,8 } }; 
 
-        MP_random_data dB(dbvalues[0,0],T);
+        MP_random_data dB( &dbvalues[0][0],T);
 
         MP_variable x1(A), x2(A),x3(B,C),x4(B),x5(A,T);
         x1.upperLimit(A) = 10;
@@ -1431,7 +1431,7 @@ namespace flopc {
 
     // Test if RV in MP_subset's work correctly
     TEST_F(MP_modelTest,RandomSubSetTest){
-        MP_model testModel(new OsiClpSolverInterface());
+        MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger(), 2617119269);
         testModel.setSample(true);
 
         enum {numStage = 2};
@@ -1451,13 +1451,25 @@ namespace flopc {
 
         MP_random_data zeroOne(T);
         zeroOne.setName("zeroOne");
+
+        MP_data zeroTest(T);
+        zeroTest(T) = 1;
+        zeroTest.display("zeroTest");
         
         zeroOne(1) = new DiscreteBernoulliRandomVariable(0.5);
         zeroOne(1)->setStage(1);
 
+        MP_data testData(T,arcs);
+
         MP_random_data arcsInStage(T,arcs);
         arcsInStage.setName("arcsInStage");
-        arcsInStage(T+1,arcs) = zeroOne(T+1);
+        forall(T, testData(T,arcs) = 0 );
+        forall(arcs, testData(T.last(),arcs) = zeroTest(T.last()) );
+        testData.display("testData");
+        forall(T,arcsInStage(T,arcs) = 0 );
+        forall(arcs, arcsInStage(T.last(),arcs) = zeroOne(T.last()) );
+        arcsInStage.display("arcsInStage");
+        //arcsInStage(T+1,arcs) = zeroOne(T+1);
 
         MP_variable x(T);
 

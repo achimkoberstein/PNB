@@ -66,10 +66,10 @@ namespace flopc {
         RandomConstant(const Constant& c); //Allows transformation of Constant to a RandomConstant by default
     };
 
-    class RandomDataRef : public RandomConstant_base { 
+    class RandomDataRef : public RandomConstant_base, public Functor { // We need to be a functor, so that the operator= can be called in a forall loop 
         friend class MP_random_data_impl;
+        //friend class MP_model;
     public:
-
         RandomDataRef(MP_random_data_impl * const rv, 
             const MP_index_exp& i1,
             const MP_index_exp& i2,
@@ -90,11 +90,12 @@ namespace flopc {
         //TODO: See if this methods is still needed
         virtual RandomVariable* getRandomVariable(int index = outOfBound) const;
 
-    
         //Assignment operators to allow assignment in the model
         const RandomDataRef& operator=(const RandomDataRef& c);
         const RandomDataRef& operator=(const RandomConstant& c);
         const RandomDataRef& operator=( RandomVariable* c);
+
+        virtual void operator()() const;
         
         
 private:
