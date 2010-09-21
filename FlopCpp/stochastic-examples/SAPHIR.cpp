@@ -974,6 +974,7 @@ int main(int argc, char* argv[]) {
 
     OsiStochasticBendersTwoStageSolverInterface benders(saphir.Solver,saphir.getSmi());
     benders.initialSolve();
+    saphir.getSmi()->writeSmps("saphirModel");
 
 #pragma endregion optimization
 
