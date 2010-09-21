@@ -593,8 +593,8 @@ namespace flopc {
         MP_stage T(3);
         //TODO: We have to write a good seed generation routine...
         // Idea: At the moment of sampling total number of sampling variables is known. One can divide the seeds evenly.
-        RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,11),new DiscreteUniformRandomVariable(0,10,11)};
-        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,11),new DiscreteUniformRandomVariable(10,20,11)};
+        RandomVariable* scenarioValues[2] = { new DiscreteUniformRandomVariable(0,10,11),new DiscreteUniformRandomVariable(0,10,5)};
+        RandomVariable* scenarioValues1[2] = { new DiscreteUniformRandomVariable(10,20,5),new DiscreteUniformRandomVariable(10,20,5)};
         MP_random_data rvar(&scenarioValues[0],T);
         MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);
@@ -1432,11 +1432,11 @@ namespace flopc {
     }
 
     // Test if RV in MP_subset's work correctly
-    TEST_F(MP_modelTest,RandomSubSetTest){
+    TEST_F(MP_modelTest,RandomSubsetTest){
         MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger(), 2617119269);
         testModel.setSample(true);
 
-        enum {numStage = 2};
+        enum {numStage = 3};
         MP_stage T(numStage);
 
         enum {NodeA, NodeB, NodeC, NodeD, numNodes};
@@ -1460,6 +1460,11 @@ namespace flopc {
         
         zeroOne(1) = new DiscreteBernoulliRandomVariable(0.5);
         zeroOne(1)->setStage(1);
+        zeroOne(2) = new DiscreteUniformRandomVariable(5,6,3);
+        zeroOne(2)->setStage(2);
+
+        MP_random_data combined(T);
+        combined(T) = zeroTest(T) + zeroOne(T);
 
         MP_data testData(T,arcs);
 
@@ -1469,7 +1474,7 @@ namespace flopc {
         forall(arcs, testData(T.last(),arcs) = zeroTest(T.last()) );
         testData.display("testData");
         forall(T,arcsInStage(T,arcs) = 0 );
-        forall(arcs, arcsInStage(T.last(),arcs) = zeroOne(T.last()) );
+        arcsInStage(T,arcs) = combined(T);
         arcsInStage.display("arcsInStage");
         //arcsInStage(T+1,arcs) = zeroOne(T+1);
 
@@ -1478,14 +1483,13 @@ namespace flopc {
         MP_constraint constraint1(T);
 
         constraint1(T+1) = sum(arcs, arcsInStage(T+1,arcs)) <= x(T+1);
-
-
-
-        MP_expression objective( x(T.last()) );
+        MP_expression objective( x(T.last())+x(1) );
 
         testModel.setObjective(objective);
         testModel.solve(MP_model::MINIMIZE);
-        //TODO: Test something here, not just nothing
+        EXPECT_EQ(51,testModel->getObjValue());
+        EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
+        
     }
 
     TEST_F(UseCaseTest,UnaryMinusTest){
