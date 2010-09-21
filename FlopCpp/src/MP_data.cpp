@@ -104,7 +104,7 @@ void DataRef::evaluate_lhs(double v) const {
         D->v[i] = v;
     }
     else {
-        LOG(ERROR) << "An index not suitable for the given set appears. Please recheck your model formulation.";
+        LOG(ERROR) << "FlopCpp Error: an index not suitable for the given set appears. Please recheck your model formulation.";
         throw invalid_argument_exception(); //This should not happen!
     }
 }

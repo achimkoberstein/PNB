@@ -354,6 +354,7 @@ namespace flopc {
         randomConstraint2(T+1) = y(T+1) <= combined(T+1);
         testModel.setObjective(y(T.last()));
         testModel.attach();
+        //EXPECT_THROW(testModel.attach(),std::exception);
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(5,testModel.Solver->getObjValue());
@@ -712,10 +713,11 @@ namespace flopc {
         testModel.setProbabilities(probabilities);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
-        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(52,testModel->getObjValue());
+        writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+
+
     }
 
 
@@ -1659,7 +1661,7 @@ namespace flopc {
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.RandomSubSetTest";
+    //::testing::GTEST_FLAG(filter) = "*.RandomParameterIn*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
