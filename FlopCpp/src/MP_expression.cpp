@@ -280,8 +280,7 @@ namespace flopc {
         friend MP_expression operator*(const MP_expression& e1, const Constant& e2);
         friend MP_expression operator*(const RandomConstant& e1, const MP_expression& e2);
         friend MP_expression operator*(const MP_expression& e1, const RandomConstant& e2);
-        //friend MP_expression operator*(const RandomDataRef& e1, const MP_expression& e2);
-        //friend MP_expression operator*(const MP_expression& e1, const RandomDataRef& e2);
+
 
     private:
         Expression_mult(const RandomConstant& e1, const MP_expression& e2) : 

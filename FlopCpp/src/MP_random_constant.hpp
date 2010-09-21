@@ -111,6 +111,7 @@ private:
         MP_random_data_impl* const RV;
         //const MP_set_base &S1,&S2,&S3,&S4,&S5;
         MP_index_exp I1,I2,I3,I4,I5;
+        MP_index_exp copy1,copy2,copy3,copy4,copy5;
         MP_boolean B;
         mutable bool visited;
 
