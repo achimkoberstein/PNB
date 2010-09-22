@@ -306,6 +306,7 @@ namespace flopc {
         MP_model testModel(new OsiClpSolverInterface(), new VerboseMessenger());
         MP_stage T(2);
         MP_random_data rvar(T);
+        // MP_random_data should delete all the RV it get's assigned..
         rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMeanDiscretization(10));
         rvar(1)->setStage(1);
         //rvar2(1) = new ContinuousNormalRandomVariable(0,1, new BracketMedianDiscretization(5));
@@ -315,11 +316,14 @@ namespace flopc {
         con(T) = x(T) <= rvar(T);
         testModel.setObjective( x(T.last()) );
         testModel.solve(MP_model::MAXIMIZE);
+        // We assign a new RV to the old one, we have to delete the old one before
+        delete rvar(1);
         rvar(1) = new ContinuousNormalRandomVariable(0,1, new BracketMedianDiscretization(10));
         rvar(1)->setStage(1);
         testModel.setObjective( x(T.last()) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+        delete rvar(1);
         rvar(1) = new ContinuousExponentialRandomVariable(1, new BracketMedianDiscretization(10));
         rvar(1)->setStage(1);
         testModel.setObjective( x(T.last()) );

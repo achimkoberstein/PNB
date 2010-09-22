@@ -164,7 +164,7 @@ public:
     double getWSValue(OsiSolverInterface *osiSolver, double objSense);
 
     //Let SmiScnModel own core data
-    void Core(SmiCoreData * val) { core_ = val; }
+    void setCore(SmiCoreData * val) { core_ = val; }
 
     // get scenario problem data
     SmiScenarioIndex getNumScenarios(){ return smiTree_.getNumScenarios();}
