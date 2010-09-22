@@ -315,6 +315,7 @@ public:
                 node_= NULL;
             }
        	}
+         
     }
 
 private:
