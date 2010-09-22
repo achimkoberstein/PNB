@@ -875,7 +875,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         SmiCoreData *osiCore = NULL; //Create CoreData Node. Needs to be deleted in case of stochastic solver.
         if (!integerIndices.empty()){ //suffices, because every binary is also an integer
             Solver->setInteger(&integerIndices[0],integerIndices.size());
-            osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0]); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
             if (!binaryIndices.empty())
                 osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0],integerIndices.size(), &binaryIndices[0],binaryIndices.size()); 
             else
@@ -1120,12 +1119,12 @@ void MP_model::detach() {
     mSolverState = MP_model::DETACHED;
     if (Solver)
         delete Solver;
-    Solver = 0;
+    Solver = NULL;
     //Delete stochastic information. We have this, if we have a time structure AND we have attached a solver.
     if (stage.size() > 0 && smiModel != 0){ 
-        smiModel->releaseSolver(); //TODO: This can be deleted, if stochasticSolverInterface is ready.
+        smiModel->releaseSolver(); //TODO: until we have a stochastic solver
         delete smiModel;
-        smiModel = 0;
+        smiModel = NULL;
         if (n > 0){
             delete [] colStage;
             delete [] colIndirection;

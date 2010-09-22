@@ -159,7 +159,7 @@ public:
     OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
     std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
-    double solveEV(OsiSolverInterface *osiSolver, double objSense);
+    std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense);
     double solveEEV(OsiSolverInterface *osiSolver, double objSense);
     double getWSValue(OsiSolverInterface *osiSolver, double objSense);
 
