@@ -545,9 +545,13 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
 	this->strt_[i_start] = offset_dst;
 
 	// return excess memory to the heap
-	this->dels_=(double *)realloc(this->dels_,offset_dst*sizeof(double));
-	this->inds_=(int *)realloc(this->inds_,offset_dst*sizeof(int));
-
+    // TODO Valgrind reports a memory leak occuring right here.
+    void *temp_ptr = realloc(this->dels_,offset_dst*sizeof(double));
+    if (temp_ptr) 
+        this->dels_ = (double*)temp_ptr;
+    temp_ptr = realloc(this->inds_,offset_dst*sizeof(int));
+    if (temp_ptr)
+        this->inds_ = (int*)temp_ptr;
 }
 
 int SmiNodeData::combineWithDenseCoreRow(double *dr,const int nels,const int *inds, const double *dels, double *dest_dels,int *dest_indx)

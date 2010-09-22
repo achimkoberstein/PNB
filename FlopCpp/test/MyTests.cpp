@@ -877,7 +877,7 @@ namespace flopc {
         // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
 
-        ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE);
+        ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE).first;
         EXPECT_EQ(ev, 4165);
 
         eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
@@ -1316,6 +1316,14 @@ namespace flopc {
             EXPECT_GE(sampledValues[i], 0);
             EXPECT_LE(sampledValues[i], 1);
         }
+        delete rv;
+        delete rv2;
+        delete rv4;
+        delete rv5;
+        delete rv6;
+        delete rv7;
+        delete rv8;
+        delete rv9;
         cout << "Finished.";
     }
 
