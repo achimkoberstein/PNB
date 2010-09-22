@@ -236,7 +236,9 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
     return scen;
 
 }
-double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense = 1){
+
+// Main public interfaces for getting WS, EV, and EEV values (no coefficients whatsoever).
+double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense ){
     //Test if wsValues is empty, if this is the case, run solveWS
     std::vector< std::pair<double,double> > tempVector = solveWS(osiSolver, objSense);
     assert( tempVector.size() == smiTree_.getNumScenarios()); 
@@ -247,7 +249,18 @@ double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense = 
     return result;
 }
 
-std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense = 1)
+double SmiScnModel::getEVValue(OsiSolverInterface *osiSolver, double objSense ){
+    //Test if wsValues is empty, if this is the case, run solveWS
+    std::pair<double, double*> results(solveEV(osiSolver,objSense));
+    delete[] results.second;
+    return results.first;
+}
+
+double SmiScnModel::getEEVValue(OsiSolverInterface* osiSolver, double objSense){
+    return solveEEV(osiSolver,objSense);
+}
+
+std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense )
 {
     // We create a new osiSolver Handle at this point. 
     OsiSolverInterface* tempPtr = osiStoch_;
@@ -339,7 +352,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     return make_pair(objValue,colSolution );
 }
 
-double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
+double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense)
 {
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false);
@@ -457,7 +470,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense = 1)
     return eev;
 }
 
-std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense = 1) 
+std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense) 
 {
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false); // We copy the existing solverHandle, so we have to delete it at the end?
