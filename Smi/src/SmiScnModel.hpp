@@ -161,7 +161,10 @@ public:
     std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
     std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense);
     double solveEEV(OsiSolverInterface *osiSolver, double objSense);
+
     double getWSValue(OsiSolverInterface *osiSolver, double objSense);
+    double getEVValue(OsiSolverInterface* osiSolver, double objSense);
+    double getEEVValue(OsiSolverInterface* osiSolver, double objSense);
 
     //Let SmiScnModel own core data
     void setCore(SmiCoreData * val) { core_ = val; }

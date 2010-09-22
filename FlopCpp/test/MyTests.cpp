@@ -877,10 +877,10 @@ namespace flopc {
         // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
 
-        ev = dacota.smiModel->solveEV(dacota.Solver, MP_model::MAXIMIZE).first;
+        ev = dacota.smiModel->getEVValue(dacota.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(ev, 4165);
 
-        eev = dacota.smiModel->solveEEV(dacota.Solver, MP_model::MAXIMIZE);
+        eev = dacota.smiModel->getEEVValue(dacota.Solver, MP_model::MAXIMIZE);
         EXPECT_NEAR(eev, 1545, 0.0001);
 
         ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
