@@ -1210,13 +1210,15 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     return 0;
 }
 
-void SmiScnModel::writeSmps(const char *name) {
+int SmiScnModel::writeSmps(const char *name) {
     if (this != NULL) {
         SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
         smpsIO->writeSmps(name);
         delete smpsIO;
+        return 0;
     } else {
         std::cerr << "SMPS files for " << name << " cant be written - no stochastic model.";
+        return -1;
     }
 }
 
