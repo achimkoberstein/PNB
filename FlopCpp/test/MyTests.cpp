@@ -2075,7 +2075,7 @@ namespace flopc {
         testModel.maximize(tot());
 
         testModel->writeMps("coex","mps",1.0);
-        ASSERT_EQ(0,remove(("coex.mps").c_str() ));
+        ASSERT_EQ(0,remove("coex.mps"));
 
         assert(testModel->getNumRows()==347);
         assert(testModel->getNumCols()==51);
@@ -3913,6 +3913,36 @@ namespace flopc {
 
         s.display("s");
         cout<<"Test xbsl passed."<<endl;
+    }
+    
+    TEST_F(UseCaseTest, SmpsWriterTest) {
+        MP_model testModel(new OsiClpSolverInterface());
+        
+        enum {numT = 2};
+        MP_stage T(numT);
+        
+        enum {numScen = 2};
+        MP_scenario_set scen(numScen);
+        
+        double probabilities[numScen] = { 0.1234567890123456, 0.876543211 };
+        MP_data prob(&probabilities[0], scen);
+        testModel.setProbabilities(prob);
+        
+        double stochData[numT-1][numScen] = { {0.1234567890123456, 0.876543211 } };
+        MP_random_data d(&stochData[0][0], T);
+        
+        MP_variable x(T);
+        
+        MP_constraint constr(T);
+        constr(T) = x(T) >= d(T);
+        
+        testModel.setObjective(sum(T, x(T)));
+        
+        testModel.attach(testModel.Solver);
+        
+        testModel.getSmi()->writeSmps("smpsWriterTest");
+        
+        cout << "Finished";
     }
 } //end namespace
 
