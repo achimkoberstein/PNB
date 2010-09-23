@@ -976,16 +976,20 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
     // first, go up the tree - if possible and the parent node is still within the same scenario and not the root node
     // if thats not the case, we reached the first node for that scenario
     if (node->hasParent() && node->getParent()->scenario() == scenario && node->getParent() != tree->getRoot()) {
+        // go up the tree
         writeScenarioToStochFile(stream, node->getParent(), scenario);
     } else {
+        // write scenario card
         stream << " SC Scen_" << std::setw(5) << std::left << node->scenario();
         if (node->getParent() != tree->getRoot()) {
+            // branches from parent scenario
             stream << "Scen_" << std::setw(10) << std::left << node->getParent()->scenario();
         } else {
+            // branches from root
             stream << std::setw(15) << std::left << "ROOT";
         }
-        stream << std::setw(10) << tree->getLeaf(scenario)->getDataPtr()->getProb();
-        stream << "STAGE_" << node->getDataPtr()->getStage() << "\n";
+        stream << std::setw(10) << tree->getLeaf(scenario)->getDataPtr()->getProb(); // write the probabilty
+        stream << "STAGE_" << node->getDataPtr()->getStage() << "\n"; // write the stage number
     }
     
     // now we can print the stochastic data
@@ -999,12 +1003,6 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
                 stream << data->getRowElements(i)[j] << "\n";
             }
         }
-    }
-    if (data->getColLowerLength() > 0) {
-        // write column lower elements
-    }
-    if (data->getColUpperLength() > 0) {
-        // write column upper elements
     }
 
     // write row lower elements
@@ -1022,6 +1020,69 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
     for (int i = 0; i < data->getObjectiveLength(); i++) {
         stream << "    " << std::setw(10) << std::left << this->columnName(data->getObjectiveIndices()[i]) << "OBJROW         " << data->getObjectiveElements()[i] << "\n";
     }
+
+    // write column bounds    
+    if (data->getColLowerLength() > 0 || data->getColUpperLength() > 0) {
+        int icl = 0, icu = 0;
+        while (icl < data->getColLowerLength() || icu < data->getColUpperLength()) {
+            
+            if (icl < data->getColLowerLength() &&  icu < data->getColUpperLength() && data->getColLowerIndices()[icl] == data->getColUpperIndices()[icu]) {
+                // lower and upper bound given for current column
+                if (data->getColLowerElements()[icl] == data->getColUpperElements()[icu]) {
+                    // variable is fixed
+                    stream << " FX BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
+                } 
+                else if (data->getColLowerElements()[icl] == 0.0 && data->getColUpperElements()[icu] == 1.0) {
+                    // variable is binary
+                    stream << " BV BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
+                }
+                else if (data->getColLowerElements()[icl] == -this->infinity_ && data->getColUpperElements()[icu] == this->infinity_) {
+                    // variable is free
+                    stream << " FR BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
+                }
+                icl++; icu++;
+                continue;
+            }
+            
+            if (icu >= data->getColUpperLength() || data->getColLowerIndices()[icl] < data->getColUpperIndices()[icu]) {
+                // write column lower bound
+                if (this->isInteger(icl)) {
+                    // column lower bound for integer variable
+                    stream << " LI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
+                }
+                else {
+                    if (data->getColLowerElements()[icl] == -this->infinity_) {
+                        // lower bound is -infinity
+                        stream << " MI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
+                    }
+                    else {
+                        // normal column lower bound
+                        stream << " LO BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
+                    }
+                }
+                icl++;
+            }
+            else {
+                // write column upper bound
+                if (this->isInteger(icu)) {
+                    // column upper bound for integer variable
+                    stream << " UI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu];
+                }
+                else {
+                    if (data->getColUpperElements()[icu] == this->infinity_) {
+                        // upper bound is infinity
+                        stream << " PL BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]);
+                    }
+                    else {
+                        // normal column upper bound
+                        stream << " UP BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu];
+                    }
+                }
+                icu++;
+            }
+        }
+    }
+
 }
 
 void SmiSmpsIO::writeSmps(const char* filename) {

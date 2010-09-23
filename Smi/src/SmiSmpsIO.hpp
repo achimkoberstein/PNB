@@ -91,10 +91,32 @@ public:
     SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_() {}
         ~SmiSmpsIO(){delete [] cstag_;delete[] rstag_;delete smpsCardReader_;}
 private:
+    /**
+    This method writes the core file for the current model
+    by invoking writeMPS() from CoinMpsIO.
+    
+    @param filename The filename (without extension).
+    */ 
     void writeCoreFile(const char* filename);
+    
+    /**
+    Writes the time file for the current model, containing the assignments
+    from rows and columns to stages.
+    
+    @param filename The filename (without extension).
+    */
     void writeTimeFile(const char* filename);
+    
+    /**
+    Writes the stoch file for the current model, containing the stochastic data.
+    
+    @param filename The filename (without extension).
+    */
     void writeStochFile(const char* filename);
 
+    /**
+    Writes the stochastic informations for the given scenario into the stream.
+    */
     void writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario);
     
     std::string getModProblemName(); // get the (probably modified) problem name
