@@ -72,7 +72,16 @@ public:
     int readSmps(const char *name,
         SmiCoreCombineRule *r=NULL );
 
-    void writeSmps(const char *name);
+    /**@name Writes SMPS files.
+    
+    This method generates three files {name}.[core, time, stoch].
+    
+    @param name The name for the model and the written files (no file extension needed)
+    
+    @return -1 in case of no existing SMI model, otherwise 0
+    
+    */
+    int writeSmps(const char *name);
 
     SmiCoreData * getCore() {return core_;}
 
