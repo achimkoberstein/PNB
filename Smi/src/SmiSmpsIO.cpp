@@ -946,7 +946,7 @@ void SmiSmpsIO::writeTimeFile(const char* filename) {
         line << std::setw(25) << std::left << this->rowName(core->getRowStart(stg));
         line << "STAGE_" << stg << "\n";
     }
-    line << "ENDATA\n";
+    line << "ENDDATA\n";
     output->puts(line.str());        
     delete output;
 }
