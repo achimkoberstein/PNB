@@ -221,8 +221,11 @@ namespace flopc{
                 stage = 3;
             else if (S5.isStage())
                 stage = 4;
-            else //As long as we only support recourse formulations, we need to adress a stage to a RV
+            else{ //As long as we only support recourse formulations, we need to adress a stage to a RV
+                // Delete RV array
+                delete[] values;
                 throw invalid_argument_exception();
+            }
         }
 
 
