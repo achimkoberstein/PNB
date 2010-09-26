@@ -840,7 +840,7 @@ std::string SmiSmpsIO::getModProblemName() {
     return name;
 }
 
-void SmiSmpsIO::writeCoreFile(const char* filename) {
+void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension) {
     // count nels
     int nels = 0;
     for (int t = 0; t < core->getNumStages(); t++) {
@@ -924,13 +924,13 @@ void SmiSmpsIO::writeCoreFile(const char* filename) {
     delete [] integrality;
     
     std::string fnWithExt = filename;
-    fnWithExt += ".core";
+    fnWithExt.append(".").append(extension);
     this->writeMps(fnWithExt.c_str());
 }
 
-void SmiSmpsIO::writeTimeFile(const char* filename) {
+void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension) {
     std::string fnWithExt = filename;
-    fnWithExt.append(".time");
+    fnWithExt.append(".").append(extension);
     CoinFileOutput* output = CoinFileOutput::create(fnWithExt, CoinFileOutput::COMPRESS_NONE);
 
     std::stringstream line;
@@ -946,24 +946,26 @@ void SmiSmpsIO::writeTimeFile(const char* filename) {
         line << std::setw(25) << std::left << this->rowName(core->getRowStart(stg));
         line << "STAGE_" << stg << "\n";
     }
-    line << "ENDDATA\n";
+    line << "ENDATA\n";
     output->puts(line.str());        
     delete output;
 }
 
-void SmiSmpsIO::writeStochFile(const char* filename) {
+void SmiSmpsIO::writeStochFile(const char* filename, const char* extension) {
     std::string fnWithExt = filename;
-    fnWithExt.append(".stoch");
+    fnWithExt.append(".").append(extension);
     CoinFileOutput* output = CoinFileOutput::create(fnWithExt, CoinFileOutput::COMPRESS_NONE);
     
-    std::stringstream line;
+    std::ostringstream line;
     line.fill(' ');
+    line << setprecision(8);
     line << "STOCH         " << this->getModProblemName() << "\n";
-    line << "SCENARIOS     DISCRETE                 ";
-    if (tree->getLeaf(0)->getDataPtr()->getNode()->getCoreCombineRule() == SmiCoreCombineReplace::Instance())
-        line << "REPLACE\n";
-    else
-        line << "ADD\n";
+    line << "SCENARIOS     DISCRETE\n";
+    //line << "SCENARIOS     DISCRETE                 ";
+    //if (tree->getLeaf(0)->getDataPtr()->getNode()->getCoreCombineRule() == SmiCoreCombineReplace::Instance())
+    //    line << "REPLACE\n";
+    //else
+    //    line << "ADD\n";
         
     for (int scen = 0; scen < tree->getNumScenarios(); scen++) {
         writeScenarioToStochFile(line, tree->getLeaf(scen), scen);
@@ -974,7 +976,7 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
     delete output;
 }
 
-void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario) {
+void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario) {
     // first, go up the tree - if possible and the parent node is still within the same scenario and not the root node
     // if thats not the case, we reached the first node for that scenario
     if (node->hasParent() && node->getParent()->scenario() == scenario && node->getParent() != tree->getRoot()) {
@@ -985,12 +987,12 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
         stream << " SC Scen_" << std::setw(5) << std::left << node->scenario();
         if (node->getParent() != tree->getRoot()) {
             // branches from parent scenario
-            stream << "Scen_" << std::setw(10) << std::left << node->getParent()->scenario();
+            stream << "Scen_" << std::setw(5) << std::left << node->getParent()->scenario();
         } else {
             // branches from root
-            stream << std::setw(15) << std::left << "ROOT";
+            stream << std::setw(10) << std::left << "'ROOT'";
         }
-        stream << std::setw(10) << tree->getLeaf(scenario)->getDataPtr()->getProb(); // write the probabilty
+        stream << std::setw(15) << std::left << tree->getLeaf(scenario)->getDataPtr()->getProb(); // write the probabilty
         stream << "STAGE_" << node->getDataPtr()->getStage() << "\n"; // write the stage number
     }
     
@@ -1001,7 +1003,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
         for (int i = data->getCore()->getRowStart(data->getStage()); i < data->getCore()->getRowStart(data->getStage()+1); i++) {
             for (int j = 0; j < data->getRowLength(i); j++) {
                 stream << "    " << std::setw(10) << std::left << this->columnName(data->getRowIndices(i)[j]);
-                stream << std::setw(15) << std::left << this->rowName(i);
+                stream << std::setw(10) << std::left << this->rowName(i);
                 stream << data->getRowElements(i)[j] << "\n";
             }
         }
@@ -1009,13 +1011,13 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
 
     // write row lower elements
     for (int i = 0; i < data->getRowLowerLength(); i++) {
-        stream << "    RHS       " << std::setw(15) << std::left << this->rowName(data->getRowLowerIndices()[i]) << data->getRowLowerElements()[i] << "\n";
+        stream << "    RHS       " << std::setw(10) << std::left << this->rowName(data->getRowLowerIndices()[i]) << data->getRowLowerElements()[i] << "\n";
     }
 
     // write row upper elements
     for (int i = 0; i < data->getRowUpperLength(); i++) {
         if (this->getRowSense()[data->getRowUpperIndices()[i]] != 'E')
-            stream << "    RHS       " << std::setw(15) << std::left << this->rowName(data->getRowUpperIndices()[i]) << data->getRowUpperElements()[i] << "\n";
+            stream << "    RHS       " << std::setw(10) << std::left << this->rowName(data->getRowUpperIndices()[i]) << data->getRowUpperElements()[i] << "\n";
     }
 
     // write objective elements
@@ -1087,15 +1089,26 @@ void SmiSmpsIO::writeScenarioToStochFile(std::stringstream& stream, SmiTreeNode<
 
 }
 
-void SmiSmpsIO::writeSmps(const char* filename) {
-    //write core file
-    this->writeCoreFile(filename);
-    
-    // write time file
-    this->writeTimeFile(filename);
-    
-    // write stoch file
-    this->writeStochFile(filename);
+void SmiSmpsIO::writeSmps(const char* filename, bool winFileExtensions) {
+    if (winFileExtensions) {
+        //write core file
+        this->writeCoreFile(filename, "cor");
+        
+        // write time file
+        this->writeTimeFile(filename, "tim");
+        
+        // write stoch file
+        this->writeStochFile(filename, "sto");
+    } else {
+        //write core file
+        this->writeCoreFile(filename, "core");
+        
+        // write time file
+        this->writeTimeFile(filename, "time");
+        
+        // write stoch file
+        this->writeStochFile(filename, "stoch");
+    }
     
     this->freeAll();
 }
