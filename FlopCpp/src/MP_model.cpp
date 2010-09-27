@@ -953,7 +953,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         if (probabilities.empty()){ //If probabilities are not of the correct size, we are wrong, probably a user error (assert)
             probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
         }
-        CHECK_EQ(probabilities.size(),scenSet.size()) << "You have a different number of probabilities compared to your scenario set.";
+        assert(probabilities.size() == scenSet.size()); //<< "You have a different number of probabilities compared to your scenario set.";
         return;
     }
 
