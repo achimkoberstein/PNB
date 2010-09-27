@@ -29,7 +29,7 @@ namespace flopc {
     void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename){
         // write SMPS files
         model.smiModel->writeSmps(filename.c_str());        
-        
+
         // read SMPS files        
         SmiScnModel smi;
         DLOG(INFO) << "SMPS reader: " << smi.readSmps(filename.c_str()) << "\n";
@@ -37,17 +37,17 @@ namespace flopc {
         smi.setOsiSolverHandle(*clp);
         OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
         osiStoch->setObjSense(direction);
-        
+
         if (osiStoch->getNumIntegers() > 0)
             osiStoch->branchAndBound();
         else
             osiStoch->initialSolve();
-        
+
         EXPECT_EQ(model.Solver->isProvenOptimal(),osiStoch->isProvenOptimal());
         EXPECT_EQ(model.Solver->isProvenPrimalInfeasible(),osiStoch->isProvenPrimalInfeasible());
         EXPECT_EQ(model.Solver->isProvenDualInfeasible(),osiStoch->isProvenDualInfeasible());
         EXPECT_EQ(model.Solver->isAbandoned(),osiStoch->isAbandoned());
-       
+
         // check objective values in case of optimal solution
         if ( model.Solver->isProvenOptimal() )
             EXPECT_NEAR(model.Solver->getObjValue(), osiStoch->getObjValue(), 0.001);
@@ -127,7 +127,7 @@ namespace flopc {
     protected:
         BendersTest(){ }
     };
-    
+
     class FlopCppExamples: public MP_modelTest {
     public:
     protected:
@@ -432,7 +432,7 @@ namespace flopc {
         thirdConstraint(T+1) = b(T+1)*x(T+1) <= y(T+1);
         testModel.setObjective(x(T.last()));
         testModel.solve(MP_model::MAXIMIZE);
-        
+
         // How to test for infeasible models? Is this the point? No it is not..
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
     }
@@ -541,7 +541,7 @@ namespace flopc {
         MP_stage T(numStage);
 
         RandomVariable* randomVars[numStage-1] = { new DiscreteUniformRandomVariable(-1,1,2), new DiscreteUniformRandomVariable(4,5,2) };
-        
+
         MP_random_data randomWalkVar(&randomVars[0],T);
         MP_random_data sumR(T);
         MP_data blubb(T);
@@ -686,7 +686,7 @@ namespace flopc {
         investmentModel.attach(investmentModel.Solver);
         this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
-         writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
+        writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
 
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
@@ -1244,10 +1244,10 @@ namespace flopc {
         testModel.solve(MP_model::MAXIMIZE);
 
         EXPECT_DOUBLE_EQ(9,testModel->getObjValue());
-        
+
         // as stage setting is not yet implemented, this cant work - right?!
         //writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-        
+
 
     }
 
@@ -1480,7 +1480,7 @@ namespace flopc {
         MP_data zeroTest(T);
         zeroTest(T) = 1;
         zeroTest.display("zeroTest");
-        
+
         zeroOne(1) = new DiscreteBernoulliRandomVariable(0.5);
         zeroOne(1)->setStage(1);
         zeroOne(2) = new DiscreteUniformRandomVariable(5,6,3);
@@ -1512,7 +1512,7 @@ namespace flopc {
         testModel.solve(MP_model::MINIMIZE);
         EXPECT_EQ(51,testModel->getObjValue());
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
-        
+
     }
 
     TEST_F(UseCaseTest,UnaryMinusTest){
@@ -1682,7 +1682,7 @@ namespace flopc {
         EXPECT_DOUBLE_EQ( 1566.0421891327067,m1->getObjValue());
         y.display("y second model");
     }
-    
+
     TEST_F(FlopCppExamples, Aircraft){
         /*The objective of this model is to allocate aircrafts to routes to maximize
         the expected profit when traffic demand is uncertain. Two different
@@ -1700,30 +1700,30 @@ namespace flopc {
         MP_set h(numDemandStates);// demand states 
 
         double ddval[5][5] = {{200,     220,    250,    270,    300},
-		          { 50,     150,      0,      0,      0},  
-		          {140,     160,    180,    200,    220},
-		          { 10,      50,     80,    100,    340},
-		          {580,     600,    620,      0,      0}};
+        { 50,     150,      0,      0,      0},  
+        {140,     160,    180,    200,    220},
+        { 10,      50,     80,    100,    340},
+        {580,     600,    620,      0,      0}};
 
         double lambdaval[5][5] =
-	    {{.2,     .05,    .35,    .2,     .2},
-	     {.3,     .7,    0.0,    0.0,    0.0},
-	     {.1,     .2,     .4,     .2,     .1},
-	     {.2,     .2,     .3,     .2,     .1},
-	     {.1,     .8,     .1,    0.0,    0.0}};
+        {{.2,     .05,    .35,    .2,     .2},
+        {.3,     .7,    0.0,    0.0,    0.0},
+        {.1,     .2,     .4,     .2,     .1},
+        {.2,     .2,     .3,     .2,     .1},
+        {.1,     .8,     .1,    0.0,    0.0}};
 
-        
+
         double cval[4][5] =
-	    {{18,         21,         18,          16,           10},
-	     {0,          15,         16,          14,           9},
-	     {0,          10,          0,          9,            6},
-	     {17,         16,         17,          15,           10}};
+        {{18,         21,         18,          16,           10},
+        {0,          15,         16,          14,           9},
+        {0,          10,          0,          9,            6},
+        {17,         16,         17,          15,           10}};
 
         double pval[4][5] =
-	    {{16,         15,          28,          23,          81},
-	     {0,         10,          14,         15,          57},
-	     {0,          5,           0,           7,          29},
-	     {9,         11,          22,          17,          55}};
+        {{16,         15,          28,          23,          81},
+        {0,         10,          14,         15,          57},
+        {0,          5,           0,           7,          29},
+        {9,         11,          22,          17,          55}};
 
         MP_data dd(&ddval[0][0],j,h); //    dd.value(&ddval[0][0]);
         MP_data lambda(&lambdaval[0][0],j,h); //lambda.value(&lambdaval[0][0]);
@@ -1733,11 +1733,11 @@ namespace flopc {
         c.display("c");
 
         MP_data 
-	    aa(i),      // aircraft availiability 
-	    k(j),       // revenue lost (1000 per 100  bumped) 
-	    ed(j),      // expected demand
-	    gamma(j,h), // probability of exceeding demand increment h on route j
-	    deltb(j,h); // incremental passenger load in demand states;
+            aa(i),      // aircraft availiability 
+            k(j),       // revenue lost (1000 per 100  bumped) 
+            ed(j),      // expected demand
+            gamma(j,h), // probability of exceeding demand increment h on route j
+            deltb(j,h); // incremental passenger load in demand states;
 
         aa(a1) = 10;  aa(a2) = 19;  
         aa(a3) = 25;  aa(a4) = 15;
@@ -1762,33 +1762,33 @@ namespace flopc {
         aa.display("aa");
 
         MP_variable
-	    x(i,j),   // number of aircraft type i assigned to route j
-	    y(j,h),   // passengers actually carried
-	    b(j,h),   // passengers bumped
-	    oc,       // operating cost
-	    bc;       // bumping cost
+            x(i,j),   // number of aircraft type i assigned to route j
+            y(j,h),   // passengers actually carried
+            b(j,h),   // passengers bumped
+            oc,       // operating cost
+            bc;       // bumping cost
 
         MP_constraint
-	    ab(i),    // aircraft balance
-	    db(j),    // demand balance
-	    yd(j,h),  // definition of boarded passangers
-	    bd(j,h),  // definition of bumped passangers
-	    ocd,     // 
-	    bcd1,     // bumping cost definition: version 1
-	    bcd2;     // bumping cost definition: version 2
+            ab(i),    // aircraft balance
+            db(j),    // demand balance
+            yd(j,h),  // definition of boarded passangers
+            bd(j,h),  // definition of bumped passangers
+            ocd,     // 
+            bcd1,     // bumping cost definition: version 1
+            bcd2;     // bumping cost definition: version 2
 
-        
+
         ab(i) =   sum(j, x(i,j)) <= aa(i);
-	    ab.setName("aircraft balance");
+        ab.setName("aircraft balance");
 
         db(j) =  sum(i, p(i,j)*x(i,j)) >= sum( h.such_that(deltb(j,h)>0), y(j,h));
-	    db.setName("demand balance");
+        db.setName("demand balance");
 
         yd(j,h) = y(j,h) <= sum(i, p(i,j)*x(i,j));
-	    yd.setName("definition of boarded passengers");
+        yd.setName("definition of boarded passengers");
 
         bd(j,h) = b(j,h) == dd(j,h) - y(j,h);
-	    bd.setName("definition of bumped passengers");
+        bd.setName("definition of bumped passengers");
 
         ocd() =     oc() == sum(i*j, c(i,j)*x(i,j));
 
@@ -1809,7 +1809,7 @@ namespace flopc {
         assert(m1->getNumCols()==47);
         assert(m1->getNumElements()==96);
         assert(m1->getObjValue()>=1566.03 && m1->getObjValue()<=1566.05);
-       
+
         y.display("y first model");
         ab.display("ab");
         db.display("db");
@@ -1820,7 +1820,7 @@ namespace flopc {
         y.upperLimit(j,h) = m2->getInfinity();
 
         m2.minimize(oc() + bc());
-     
+
         assert(m2->getNumRows()==56);
         assert(m2->getNumCols()==72);
         assert(m2->getNumElements()==219);
@@ -1829,7 +1829,7 @@ namespace flopc {
         y.display("y second model");
         cout<<"Test aircraft passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, AMPL){
         /*   A sample problem to demonstrate the power of modeling systems
         Fourer, R, Gay, D M, and Kernighan, B W, AMPL: A Mathematical Programming
@@ -1843,14 +1843,14 @@ namespace flopc {
         const int numT = 4;
 
         MP_set 
-	    prd(numPrd),    // products        / nuts, bolts, washers /
-	    raw(numRaw),    // raw materials   / iron, nickel /
-	    TL(numT+1);     // extended t      / 1 * 5 /
+            prd(numPrd),    // products        / nuts, bolts, washers /
+            raw(numRaw),    // raw materials   / iron, nickel /
+            TL(numT+1);     // extended t      / 1 * 5 /
 
         MP_subset<1>
-	    T(TL),     //  periods     / 1 * 4 /
-	    first(TL), //          / 1     /
-	    last(TL);  //           /     5 /
+            T(TL),     //  periods     / 1 * 4 /
+            first(TL), //          / 1     /
+            last(TL);  //           /     5 /
 
         T.insert(0);
         T.insert(1);
@@ -1873,15 +1873,15 @@ namespace flopc {
         MP_data units(raw,prd); // raw material inputs to produce a unit of product
 
         double avalue[numRaw][numPrd] =  {{ .79, .83, .92 }, 
-				          { .21, .17, .08 }};
-        
+        { .21, .17, .08 }};
+
         units.value(&avalue[0][0]);
 
         MP_data profit(prd,T); // profit
 
         double cvalue[numPrd][numT] = {{ 1.73,  1.8,  1.6,  2.2 },
-				     { 1.82,  1.9,  1.7,   .95},
-				     { 1.05,  1.1,   .95, 1.33}};
+        { 1.82,  1.9,  1.7,   .95},
+        { 1.05,  1.1,   .95, 1.33}};
 
         profit.value(&cvalue[0][0]);
 
@@ -1892,14 +1892,14 @@ namespace flopc {
         MP_index p,r,t;
 
         MP_constraint  
-	    limit(T),       // capacity constraint
-	    balance(raw,TL);  // raw material balance
+            limit(T),       // capacity constraint
+            balance(raw,TL);  // raw material balance
 
-        
+
         limit(T) =   sum(prd(p), x(p,T)) <= m;
 
         balance(r,TL+1) = 
- 	    s(r,TL+1) == s(r,TL) - sum(prd(p), units(r,p)*x(p,TL));
+            s(r,TL+1) == s(r,TL) - sum(prd(p), units(r,p)*x(p,TL));
 
         s.upperLimit(r,0) = istock(r);
 
@@ -1907,10 +1907,10 @@ namespace flopc {
         // MP_model::default_model.verbose();
 
         testModel.maximize( 
-	    sum(T(t), sum(prd(p), profit(p,t)*x(p,t)) -
-	              sum(raw(r), scost(r)*s(r,t) )) +
-	    sum(raw(r), rvalue(r)*s(r,numT)) 
-        );
+            sum(T(t), sum(prd(p), profit(p,t)*x(p,t)) -
+            sum(raw(r), scost(r)*s(r,t) )) +
+            sum(raw(r), rvalue(r)*s(r,numT)) 
+            );
 
         assert(testModel->getNumRows()==14);
         assert(testModel->getNumCols()==25);
@@ -1921,7 +1921,7 @@ namespace flopc {
         s.display();
         cout<<"Test ampl passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, DISABLED_bid){
         // Adapted from bid.gms from the GAMS model library:
         //    http://www.gams.com/
@@ -1937,7 +1937,7 @@ namespace flopc {
 
         enum { a, b, c, d, e, nbrV};
         const int numSegments = 5;
-        
+
         MP_set V(nbrV);           // vendors     
         MP_set S(numSegments);    // segments    
 
@@ -1991,8 +1991,8 @@ namespace flopc {
         qmax(VS(e,0)) =  42000;
         qmax(VS(e,1)) =  77000;
 
-         setup(VS(V,S+1)) = setup(VS(V,S)) +
- 	    qmax(VS(V,S))*(price(VS(V,S))-price(VS(V,S+1)));
+        setup(VS(V,S+1)) = setup(VS(V,S)) +
+            qmax(VS(V,S))*(price(VS(V,S))-price(VS(V,S+1)));
 
         //    setup(VS(V,S+1)) = setup(VS(V,S)) +
         //	qmax(VS(V,S))*(price(VS(V,S))-price(VS(V,S+1)));
@@ -2003,10 +2003,10 @@ namespace flopc {
         MP_binary_variable  plb(VS);   //  purchase decision
 
         MP_constraint 
-	    demand,    // demand constraint
-	    minpl(VS), // min purchase
-	    maxpl(VS), // max purchase
-	    oneonly(V);// at most one deal;
+            demand,    // demand constraint
+            minpl(VS), // min purchase
+            maxpl(VS), // max purchase
+            oneonly(V);// at most one deal;
 
         demand() =   req == sum( VS, pl(VS) );
 
@@ -2027,14 +2027,14 @@ namespace flopc {
 
         cout<<"Test bid passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, coex){
         /* Peacefully Coexisting Armies of Queens 
 
-         Two armies of queens (balvk and white) peacefully coexsit on a
-         chessboard when they are placed pon the board in such a way that
-         no two queens from opposing armies can attack each other. The
-         problem is to find the maximum two equal-sized armies.
+        Two armies of queens (balvk and white) peacefully coexsit on a
+        chessboard when they are placed pon the board in such a way that
+        no two queens from opposing armies can attack each other. The
+        problem is to find the maximum two equal-sized armies.
 
 
         Bosch, R, Mind Sharpener. OPTIMA MPS Newsletter (2000).
@@ -2042,28 +2042,28 @@ namespace flopc {
         MP_model testModel(new OsiCbcSolverInterface);
 
         MP_set I(5);  // size of chess board
-        
+
         MP_subset<4> M(I,I,I,I); // shared positions on the board;
 
         MP_index i,j,ii,jj;
 
         forall(
-	    I(i)*I(j)*I(ii)*I(jj).such_that(i==ii||j==jj || abs(i-ii)==abs(j-jj)), 
-	    M.insert(i,j,ii,jj) 
-        );
+            I(i)*I(j)*I(ii)*I(jj).such_that(i==ii||j==jj || abs(i-ii)==abs(j-jj)), 
+            M.insert(i,j,ii,jj) 
+            );
 
         MP_variable 
-	    b(I,I), // square occupied by a black Queen
-	    w(I,I), // square occupied by a white Queen
-	    tot;    // total queens in each army;
+            b(I,I), // square occupied by a black Queen
+            w(I,I), // square occupied by a white Queen
+            tot;    // total queens in each army;
 
         b.binary();
         w.binary();
 
         MP_constraint
-	    eq1(M), // keeps armies at peace
-	    eq2,    // add up all the black queens
-	    eq3;    // add up all the white queens;
+            eq1(M), // keeps armies at peace
+            eq2,    // add up all the black queens
+            eq3;    // add up all the white queens;
 
 
         eq1(M(i,j,ii,jj)) =   b(i,j) + w(ii,jj) <= 1;
@@ -2071,7 +2071,7 @@ namespace flopc {
         eq2() =  tot() == sum(I(i)*I(j), b(i,j));
 
         eq3() =  tot() == sum(I(i)*I(j), w(i,j));
-     
+
         testModel.maximize(tot());
 
         testModel->writeMps("coex","mps",1.0);
@@ -2081,83 +2081,83 @@ namespace flopc {
         assert(testModel->getNumCols()==51);
         assert(testModel->getNumElements()==742);
         assert(testModel->getObjValue()==4);
-        
+
         b.display("Black");
         w.display("White");
-       
+
         cout<<"Test coex passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, coexx){
         /* Peacefully Coexisting Armies of Queens - tight 
 
-         This is a tighter formulation than the original COEX problem.
-         We have set the size of the board to 5 in order to find
-         solutions quickly. In addition we fix the position of one queen.
+        This is a tighter formulation than the original COEX problem.
+        We have set the size of the board to 5 in order to find
+        solutions quickly. In addition we fix the position of one queen.
 
-         Two armies of queens (balvk and white) peacefully coexsit on a
-         chessboard when they are placed pon the board in such a way that
-         no two queens from opposing armies can attack each other. The
-         problem is to find the maximum two equal-sized armies.
+        Two armies of queens (balvk and white) peacefully coexsit on a
+        chessboard when they are placed pon the board in such a way that
+        no two queens from opposing armies can attack each other. The
+        problem is to find the maximum two equal-sized armies.
 
         Bosch, R, Mind Sharpener. OPTIMA MPS Newsletter (2000).
         */
-        
+
         MP_model testModel(new OsiCbcSolverInterface);
 
         const int boardSize = 5;
 
         MP_set 
-	    i(boardSize),  
-	    s(2*boardSize-3); // diagonal offsets
+            i(boardSize),  
+            s(2*boardSize-3); // diagonal offsets
 
         MP_data
-	    sh(s),    // shift values for diagonals
-	    rev(s,i); // reverse shift order;
+            sh(s),    // shift values for diagonals
+            rev(s,i); // reverse shift order;
 
         sh(s)  = s - i.size() + 1;
 
         rev(s,i) = i.size() + 1 - 2*Constant(i) + sh(s);
 
         MP_binary_variable 
-	    xw(i,i), // has a white queen
-	    xb(i,i), // has a black queen
-	    wa(i),   // white in row i
-	    wb(i),   // white in column j
-	    wc(s),   // white in diagonal s
-	    wd(s);   // white in backward diagonal s;
+            xw(i,i), // has a white queen
+            xb(i,i), // has a black queen
+            wa(i),   // white in row i
+            wb(i),   // white in column j
+            wc(s),   // white in diagonal s
+            wd(s);   // white in backward diagonal s;
 
         MP_variable tot;
 
         MP_index j;
-        
+
         MP_constraint
-	    aw(i,i), // white in row i
-	    bw(i,i), // white in column j
-	    cw(s,i), // white in diagonal s
-	    dw(s,i), // white in backward diagonal s
-	    ew,      // total white
-	    ab(i,i), // black in row i
-	    bb(i,i), // black in column j
-	    cb(s,i), // black in diagonal s
-	    db(s,i), // black in backward diagonal s
-	    eb;      // total black;
+            aw(i,i), // white in row i
+            bw(i,i), // white in column j
+            cw(s,i), // white in diagonal s
+            dw(s,i), // white in backward diagonal s
+            ew,      // total white
+            ab(i,i), // black in row i
+            bb(i,i), // black in column j
+            cb(s,i), // black in diagonal s
+            db(s,i), // black in backward diagonal s
+            eb;      // total black;
 
 
         aw(i,j) =  wa(i) >=  xw(i,j);
 
         bw(j,i) =  wb(j) >=  xw(i,j);
-        
+
         cw(s,i) =  wc(s) >=  xw(i,i+sh(s));
-        
+
         dw(s,i) =  wd(s) >= xw(i,i+rev(s,i));
-        
+
         ab(i,j) =  1-wa(i) >= xb(i,j);
-           
+
         bb(j,i) =  1-wb(j) >= xb(i,j);
 
         cb(s,i) =  1-wc(s) >= xb(i,i+sh(s));
-           
+
         db(s,i) =  1-wd(s) >= xb(i,i+rev(s,i));
 
         eb() =   tot() == sum(i*i(j), xb(i,j));
@@ -2167,7 +2167,7 @@ namespace flopc {
         xb.lowerLimit(0,0) = 1;
 
         testModel.maximize(tot());
-     
+
         assert(testModel->getNumRows()==242);
         assert(testModel->getNumCols()==75);
         assert(testModel->getNumElements()==480);
@@ -2178,7 +2178,7 @@ namespace flopc {
 
         cout<<"Test coexx passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, cross){
         /* Alcuin's River Crossing  
 
@@ -2196,52 +2196,52 @@ namespace flopc {
         Zentrum for Informationstechnik, Berlin, 1995.
 
         Contributed by Soren Nielsen, Institute for Mathematical Sciences
-                       University of Copenhagen
+        University of Copenhagen
         */
         MP_model testModel(new OsiCbcSolverInterface);
 
         enum {goose, wolf, corn, numI};
 
         MP_set
-	    i(numI),  // /goose, wolf, corn/
-	    t(10);    // time  
+            i(numI),  // /goose, wolf, corn/
+            t(10);    // time  
 
         MP_data dir(t);  // crossing - near to far is +1 - far to near -1;
 
         for (int k=0; k<t.size(); k++) {
-	    dir(k) = pow((double)-1,(double)k);
+            dir(k) = pow((double)-1,(double)k);
         }
 
         dir.display("dir");
 
         MP_variable
-	    cross(i,t), //  crossing the river
-	    done(t);    //  all items in far side
+            cross(i,t), //  crossing the river
+            done(t);    //  all items in far side
 
         MP_binary_variable
-	    y(i,t);     //  1 iff the item is on the far side at time t
+            y(i,t);     //  1 iff the item is on the far side at time t
 
         MP_constraint
-	    DefDone(i,t),  // everything on far side
-	    DefCross(i,t), // crossing
-	    LimCross(t),   
-	    EatNone1(t),
-	    EatNone2(t);
+            DefDone(i,t),  // everything on far side
+            DefCross(i,t), // crossing
+            LimCross(t),   
+            EatNone1(t),
+            EatNone2(t);
 
         DefCross(i,t) =  y(i,t) == y(i,t-1) + dir(t-1)*cross(i,t-1);
 
         DefDone(i,t)  =  done(t) <= y(i,t);
 
         LimCross(t) =  sum(i, cross(i,t-1)) <= 1;
-        
+
         EatNone1(t) =   dir(t)*(y(goose,t) + y(wolf,t) - 1) <= done(t) ;
-        
+
         EatNone2(t) =   dir(t)*(y(goose,t) + y(corn,t) - 1) <= done(t) ;
 
         y.upperLimit(i,0) = 0;
 
         testModel.maximize(sum(t, done(t)));
-        
+
         assert(testModel->getNumRows()==90);
         assert(testModel->getNumCols()==70);
         assert(testModel->getNumElements()==231);
@@ -2252,7 +2252,7 @@ namespace flopc {
 
         cout<<"Test cross passed."<<endl;
     }
-    
+
     namespace cuttingStock {
         // this belongs to the following cutting stock example
         // --->
@@ -2266,16 +2266,16 @@ namespace flopc {
             MP_constraint demC;
 
             Paper(int numWidths) : MP_model(new OsiCbcSolverInterface),
-	              WIDTHS(numWidths), PATTERNS(numWidths),
-	              widths(WIDTHS), demand(WIDTHS),
-	              pattern(WIDTHS,PATTERNS), use(WIDTHS),
-	              demC(WIDTHS) {
+                WIDTHS(numWidths), PATTERNS(numWidths),
+                widths(WIDTHS), demand(WIDTHS),
+                pattern(WIDTHS,PATTERNS), use(WIDTHS),
+                demC(WIDTHS) {
 
-	        MP_index i,j;
-            
-	        demC(i) = sum(WIDTHS(j), pattern(i,j)*use(j)) >= demand (i);
+                    MP_index i,j;
 
-                setObjective( sum(WIDTHS(j), use(j)) );
+                    demC(i) = sum(WIDTHS(j), pattern(i,j)*use(j)) >= demand (i);
+
+                    setObjective( sum(WIDTHS(j), use(j)) );
             }
         };
 
@@ -2303,11 +2303,11 @@ namespace flopc {
 
             x.display("x");
             for (int i=0; i<n; i++) {
-	        pat[i] = x.level(i);
+                pat[i] = x.level(i);
             }
             return KnapSack->getObjValue();
         }
-        
+
         TEST_F(FlopCppExamples, cuttingStock){
             const int numWidths = 5;
             double tabDemand[] = {150, 96, 48, 108, 227};
@@ -2326,7 +2326,7 @@ namespace flopc {
             demand.value(tabDemand);
 
             for (int i=0; i<numWidths; i++) {
-    	        pattern(i,i) = ::floor(maxWidth/width(i));
+                pattern(i,i) = ::floor(maxWidth/width(i));
             }
 
             pattern.display("pattern");
@@ -2336,20 +2336,20 @@ namespace flopc {
             MP_constraint demC(WIDTHS);
 
             demC(i) = sum(WIDTHS(j), pattern(i,j)*use(j)) >= demand (i);
-          
+
             Paper.add(demC);
             Paper.minimize( sum(WIDTHS(j), use(j)) );
 
             double pat[numWidths];
             double ob;
             do {
-	        ob = knapsack(numWidths, tabWidth, Paper.Solver->getRowPrice()+demC.offset, maxWidth, pat);
+                ob = knapsack(numWidths, tabWidth, Paper.Solver->getRowPrice()+demC.offset, maxWidth, pat);
 
-	        CoinPackedVector Pat;	
-	        Pat.setFull(numWidths, pat);
-        	
-	        Paper->addCol(Pat,0,100,1);
-	        Paper->resolve();
+                CoinPackedVector Pat;	
+                Pat.setFull(numWidths, pat);
+
+                Paper->addCol(Pat,0,100,1);
+                Paper->resolve();
             } while(ob>1.0001);
 
             Paper.minimize( sum(WIDTHS(j), use(j)) );
@@ -2358,7 +2358,7 @@ namespace flopc {
             assert(Paper->getNumCols()==5);
             assert(Paper->getNumElements()==5);
             assert(Paper->getObjValue()>=177.666 && Paper->getObjValue()<=177.667);
-           
+
             cout<<"Test cuttingstock passed."<<endl;
         }
     } // end namespace cuttingStock
@@ -2366,486 +2366,486 @@ namespace flopc {
     namespace exampleSmi {
         void SmpsIO(const char * const name )
         {
-		        SmiScnModel smi;	
+            SmiScnModel smi;	
 
-		        // read SMPS model from files
-		        //	<name>.core, <name>.time, and <name>.stoch
-		        smi.readSmps(name);		
+            // read SMPS model from files
+            //	<name>.core, <name>.time, and <name>.stoch
+            smi.readSmps(name);		
 
-		        // generate OSI solver object
-		        // 	here we use OsiClp
-		        OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+            // generate OSI solver object
+            // 	here we use OsiClp
+            OsiClpSolverInterface *clp = new OsiClpSolverInterface();
 
-		        // set solver object for SmiScnModel
-		        smi.setOsiSolverHandle(*clp);	
+            // set solver object for SmiScnModel
+            smi.setOsiSolverHandle(*clp);	
 
-		        // load solver data
-		        // 	this step generates the deterministic equivalent 
-		        //	and returns an OsiSolver object 
-		        OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+            // load solver data
+            // 	this step generates the deterministic equivalent 
+            //	and returns an OsiSolver object 
+            OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
 
-		        // set some nice Hints to the OSI solver
-		        osiStoch->setHintParam(OsiDoPresolveInInitial,true);
-		        osiStoch->setHintParam(OsiDoScale,true);
-		        osiStoch->setHintParam(OsiDoCrash,true);
+            // set some nice Hints to the OSI solver
+            osiStoch->setHintParam(OsiDoPresolveInInitial,true);
+            osiStoch->setHintParam(OsiDoScale,true);
+            osiStoch->setHintParam(OsiDoCrash,true);
 
-		        // solve
-		        osiStoch->initialSolve();		
+            // solve
+            osiStoch->initialSolve();		
 
-		        // print results
-		        printf("Solved stochastic program %s\n", name);
-		        printf("Number of rows: %d\n",osiStoch->getNumRows());
-		        printf("Number of cols: %d\n",osiStoch->getNumCols());
-		        printf("Optimal value: %g\n",osiStoch->getObjValue());		
+            // print results
+            printf("Solved stochastic program %s\n", name);
+            printf("Number of rows: %d\n",osiStoch->getNumRows());
+            printf("Number of cols: %d\n",osiStoch->getNumCols());
+            printf("Optimal value: %g\n",osiStoch->getObjValue());		
 
-		        // print solution to file
-		        string outfilename(name);
-		        const string suffix(".out");
-		        outfilename = outfilename + suffix;
-		        FILE *fp = fopen(outfilename.c_str(),"w");
-		        int numScenarios=smi.getNumScenarios();
+            // print solution to file
+            string outfilename(name);
+            const string suffix(".out");
+            outfilename = outfilename + suffix;
+            FILE *fp = fopen(outfilename.c_str(),"w");
+            int numScenarios=smi.getNumScenarios();
 
-		        for (int i=0 ; i<numScenarios; ++i) {
-			        double *dsoln=NULL;
-			        int numCols=0;
-			        fprintf(fp,"Scenario %d \n",i);
-			        dsoln = smi.getColSolution(i,&numCols);
-			        for (int j=0; j<numCols; j++)
-				        fprintf(fp,"%g \n",dsoln[j]);
-			        free(dsoln);
-		        }
-		        fclose(fp);
+            for (int i=0 ; i<numScenarios; ++i) {
+                double *dsoln=NULL;
+                int numCols=0;
+                fprintf(fp,"Scenario %d \n",i);
+                dsoln = smi.getColSolution(i,&numCols);
+                for (int j=0; j<numCols; j++)
+                    fprintf(fp,"%g \n",dsoln[j]);
+                free(dsoln);
+            }
+            fclose(fp);
 
 
         }	
 
         void ModelScenario(const char * const name )
         {
-	        OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
-	        double INF=osiClp1->getInfinity();
+            OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
+            double INF=osiClp1->getInfinity();
 
-	        // example of direct interfaces for scenario generation
-        	
+            // example of direct interfaces for scenario generation
+
             /* Model dimensions */
             int ncol=27, nrow=9, nels=44;
-        	
-	        /* Sparse matrix data...organized by row */
+
+            /* Sparse matrix data...organized by row */
             int mrow[]={ 0, 0, 0, 0, 0,
-		        1, 1, 1, 1,
-		        2, 2, 2,
-		        3, 3, 3, 3, 3,
-		        4, 4, 4, 4,
-		        5, 5, 5, 5, 5, 5,
-		        6, 6, 6, 6, 6,
-		        7, 7, 7, 7, 7, 7,
-		        8, 8, 8, 8, 8, 8 };
-	          int mcol[]={ 0, 1, 2, 3, 4,
-		        5, 6, 7, 8,
-		        9,10, 11, 
-		        12, 13, 14, 15, 16, 
-		        0,        12, 17, 18,
-		        1, 5, 9,  13, 19, 20,
-		        2, 6,     14, 21, 22,
-		        3, 7, 10, 15, 23, 24,
-		        4, 8, 11, 16, 25, 26 };
+                1, 1, 1, 1,
+                2, 2, 2,
+                3, 3, 3, 3, 3,
+                4, 4, 4, 4,
+                5, 5, 5, 5, 5, 5,
+                6, 6, 6, 6, 6,
+                7, 7, 7, 7, 7, 7,
+                8, 8, 8, 8, 8, 8 };
+            int mcol[]={ 0, 1, 2, 3, 4,
+                5, 6, 7, 8,
+                9,10, 11, 
+                12, 13, 14, 15, 16, 
+                0,        12, 17, 18,
+                1, 5, 9,  13, 19, 20,
+                2, 6,     14, 21, 22,
+                3, 7, 10, 15, 23, 24,
+                4, 8, 11, 16, 25, 26 };
 
             double dels[] = { 1.0, 1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0, 1.0,
-		        16.0,              9.0, -1.0, 1.0,
-		        15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
-		        28.0, 14.0,       22.0, -1.0, 1.0,
-		        23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
-		        81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
-        	
+                1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0,
+                16.0,              9.0, -1.0, 1.0,
+                15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
+                28.0, 14.0,       22.0, -1.0, 1.0,
+                23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
+                81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
+
             /* Objective */
             double dobj[]={ 18.0, 21.0, 18.0, 16.0, 10.0, 15.0, 16.0, 14.0, 9.0,
-		        10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
-		        13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
-        	
+                10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
+                13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
+
             /* Column bounds */
             double dclo[]={ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
 
 
 
             double dcup[]={ INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
-        	
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
+
             /* Row bounds */
             double drlo[]={ -INF, -INF, -INF, -INF,  0.0, 4.0, 0.0, 8.0, 10.0 };
             double drup[]={ 10.0, 19.0, 25.0, 15.0,  0.0, 7.0, 0.0, 8.0, 90.0 };
-        	
+
             /* Stages */
             int nstg=2;
             int n_first_stg_rows=4;
             int rstg[]={ 0,0,0,0,1,1,1,1,1 };
             int cstg[]={ 0,0,0,0,0,0,0,0,0,
-		        0,0,0,0,0,0,0,0,1,
-		        1,1,1,1,1,1,1,1,1 };
-        	
+                0,0,0,0,0,0,0,0,1,
+                1,1,1,1,1,1,1,1,1 };
+
             /* Stochastic data */
             int nindp=5;
             int nsamp[]={ 5, 2, 5, 5, 3 };
             double demand[]={ 200, 220, 250, 270, 300,
-		        50, 150,
-		        140, 160, 180, 200, 220,
-		        10, 50, 80, 100, 340,
-		        580, 600, 620 };
+                50, 150,
+                140, 160, 180, 200, 220,
+                10, 50, 80, 100, 340,
+                580, 600, 620 };
             double dprobs[]={ 0.2, 0.05, 0.35, 0.2, 0.2,
-		        0.3, 0.7,
-		        0.1, 0.2, 0.4, 0.2, 0.1,
-		        0.2, 0.2, 0.3, 0.2, 0.1,
-		        0.1, 0.8, 0.1 };
-        	
+                0.3, 0.7,
+                0.1, 0.2, 0.4, 0.2, 0.1,
+                0.2, 0.2, 0.3, 0.2, 0.1,
+                0.1, 0.8, 0.1 };
+
             /* local variables */
             int ns=1,ii,iii,jj,*indx,*incr;
             double dp=1.0;
 
             for (ii=0;ii<nindp;ii++) ns *= nsamp[ii];     /* Compute number of scenarios */
 
-        	
-	        // initialize SmiModel
-	        SmiScnModel *smiModel = new SmiScnModel();
-	        smiModel->setOsiSolverHandle(*osiClp1);
 
-	        // set core model using Osi interface
-	        OsiClpSolverInterface ocsi;
-	        ocsi.loadProblem(CoinPackedMatrix( 1,mrow,mcol,dels,nels),dclo,dcup,dobj,drlo,drup);
-	        SmiCoreData *osiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
+            // initialize SmiModel
+            SmiScnModel *smiModel = new SmiScnModel();
+            smiModel->setOsiSolverHandle(*osiClp1);
 
-	        cout << "ModelScenario: Created CoreData" << endl;
+            // set core model using Osi interface
+            OsiClpSolverInterface ocsi;
+            ocsi.loadProblem(CoinPackedMatrix( 1,mrow,mcol,dels,nels),dclo,dcup,dobj,drlo,drup);
+            SmiCoreData *osiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
 
-	        // Coin structures for scenario updates to right hand sides
-	        CoinPackedVector cpv_rlo;
-	        CoinPackedVector cpv_rup;
-        		
+            cout << "ModelScenario: Created CoreData" << endl;
+
+            // Coin structures for scenario updates to right hand sides
+            CoinPackedVector cpv_rlo;
+            CoinPackedVector cpv_rup;
+
             // initialize right hand side data for first scenario
             indx = (int *) malloc( (1+nindp)*sizeof(int) );
             memset( indx,0,(1+nindp)*sizeof(int));
             for (jj=0;jj<nindp;jj++) {
-		        indx[jj+1] += indx[jj] + nsamp[jj];
-		        dp *= dprobs[ indx[jj] ];
+                indx[jj+1] += indx[jj] + nsamp[jj];
+                dp *= dprobs[ indx[jj] ];
 
-		        drlo[n_first_stg_rows + jj] = demand[ indx[jj] ];
-		        drup[n_first_stg_rows + jj] = demand[ indx[jj] ];
-        		
-		        cpv_rlo.insert(n_first_stg_rows + jj,demand[ indx[jj] ]);
-		        cpv_rup.insert(n_first_stg_rows + jj,demand[ indx[jj] ]);
+                drlo[n_first_stg_rows + jj] = demand[ indx[jj] ];
+                drup[n_first_stg_rows + jj] = demand[ indx[jj] ];
+
+                cpv_rlo.insert(n_first_stg_rows + jj,demand[ indx[jj] ]);
+                cpv_rup.insert(n_first_stg_rows + jj,demand[ indx[jj] ]);
             }
-        	
-	        cout << "ModelScenario: Adding " << ns << " scenarios" << endl;
 
-	        // first scenario
-	        int anc = 0;
-	        int branch = 1;
-	        int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-									        &cpv_rlo,&cpv_rup,branch,anc,dp);	
-        	
+            cout << "ModelScenario: Adding " << ns << " scenarios" << endl;
 
-        	
-	        /***** ...main loop to generate scenarios from discrete random variables
-		        For each scenario index ii:
-                If the sample size nsamp[jj] divides the scenario index ii,
-		        reverse the increment direction incr[jj]
-		        and increase the random variable index jj by 1.
-                Increment the jj'th random variable by incr[jj]
-		        and generate new sample data.
+            // first scenario
+            int anc = 0;
+            int branch = 1;
+            int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+                &cpv_rlo,&cpv_rup,branch,anc,dp);	
+
+
+
+            /***** ...main loop to generate scenarios from discrete random variables
+            For each scenario index ii:
+            If the sample size nsamp[jj] divides the scenario index ii,
+            reverse the increment direction incr[jj]
+            and increase the random variable index jj by 1.
+            Increment the jj'th random variable by incr[jj]
+            and generate new sample data.
             ***** */
-        	
+
             /* sample space increment initialized to 1 */
             incr = (int *) malloc( nindp*sizeof(int) );
             for (jj=0;jj<nindp;jj++) incr[jj] = 1;
-        	
+
             for (int iss=1;iss<ns;iss++) {
-		        iii=iss; jj=0;
-		        while ( !(iii%nsamp[jj]) ) {
-			        iii /= nsamp[jj];
-			        incr[jj] = -incr[jj];
-			        jj++;
-		        }
-		        dp /= dprobs[ indx[jj] ];
-		        indx[jj] += incr[jj];
-		        dp *= dprobs[ indx[jj] ];
+                iii=iss; jj=0;
+                while ( !(iii%nsamp[jj]) ) {
+                    iii /= nsamp[jj];
+                    incr[jj] = -incr[jj];
+                    jj++;
+                }
+                dp /= dprobs[ indx[jj] ];
+                indx[jj] += incr[jj];
+                dp *= dprobs[ indx[jj] ];
 
-		        // set data
-		        drlo[n_first_stg_rows + jj] = demand[ indx[jj] ];
-		        drup[n_first_stg_rows + jj] = demand[ indx[jj] ];
+                // set data
+                drlo[n_first_stg_rows + jj] = demand[ indx[jj] ];
+                drup[n_first_stg_rows + jj] = demand[ indx[jj] ];
 
-		        cpv_rlo.setElement(cpv_rlo.findIndex(n_first_stg_rows + jj),demand[ indx[jj] ]);
-		        cpv_rup.setElement(cpv_rup.findIndex(n_first_stg_rows + jj),demand[ indx[jj] ]);
-        		
-		        // genScenario
-		        is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-			        &cpv_rlo,&cpv_rup,branch,anc,dp);	
-        		
-        		
-	        }
-        	
-	        assert(ns==smiModel->getNumScenarios());
-	        cout << "ModelScenario: Finished adding scenarios" << endl;
+                cpv_rlo.setElement(cpv_rlo.findIndex(n_first_stg_rows + jj),demand[ indx[jj] ]);
+                cpv_rup.setElement(cpv_rup.findIndex(n_first_stg_rows + jj),demand[ indx[jj] ]);
+
+                // genScenario
+                is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+                    &cpv_rlo,&cpv_rup,branch,anc,dp);	
 
 
-        	
-	        // load problem data into OsiSolver
-	        smiModel->loadOsiSolverData();
-	        // get Osi pointer
-	        OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
-	        // set some parameters
-	        smiOsi->setHintParam(OsiDoPresolveInInitial,true);
-	        smiOsi->setHintParam(OsiDoScale,true);
-	        smiOsi->setHintParam(OsiDoCrash,true);
-	        // solve using Osi Solver
-	        smiOsi->initialSolve();
-	        // test optimal value
-    	        assert(fabs(smiOsi->getObjValue()-1566.042)<0.01);
+            }
 
-	        // test solutions
-	        const double *dsoln = smiOsi->getColSolution();
-	        double objSum = 0.0;
+            assert(ns==smiModel->getNumScenarios());
+            cout << "ModelScenario: Finished adding scenarios" << endl;
 
-	        /* The canonical way to traverse the tree:
-	           For each scenario, get the leaf node.
-	           Then get the parent.  Repeat until parent is NULL.
-	           (Only the root node has a NULL parent.)
-	         */
-        	
 
-	        for(is=0; is<ns; ++is)
-	        {
-		        /* this loop calculates the scenario objective value */
-		        double scenSum = 0.0;
 
-		        // start with leaf node
-		        SmiScnNode *node = smiModel->getLeafNode(is);
+            // load problem data into OsiSolver
+            smiModel->loadOsiSolverData();
+            // get Osi pointer
+            OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
+            // set some parameters
+            smiOsi->setHintParam(OsiDoPresolveInInitial,true);
+            smiOsi->setHintParam(OsiDoScale,true);
+            smiOsi->setHintParam(OsiDoCrash,true);
+            // solve using Osi Solver
+            smiOsi->initialSolve();
+            // test optimal value
+            assert(fabs(smiOsi->getObjValue()-1566.042)<0.01);
 
-		        // leaf node probability is the scenario probability
-		        double scenprob = node->getModelProb();
-        	
-		        while (node != NULL)
-		        {
+            // test solutions
+            const double *dsoln = smiOsi->getColSolution();
+            double objSum = 0.0;
 
-			        // getColStart returns the starting index of node in OSI model
-			        for(int j=node->getColStart(); j<node->getColStart()+node->getNumCols(); ++j)
-			        {
-				        // getCoreColIndex returns the corresponding Core index
-				        // in the original (user's) ordering
-				        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];	
-        				
+            /* The canonical way to traverse the tree:
+            For each scenario, get the leaf node.
+            Then get the parent.  Repeat until parent is NULL.
+            (Only the root node has a NULL parent.)
+            */
 
-			        }			
-			        // get parent of node
-			        node = node->getParent();
-		        }
-		        objSum += scenSum*scenprob;
-	        }
 
-	        assert(fabs(smiOsi->getObjValue()-objSum) < 0.01);
+            for(is=0; is<ns; ++is)
+            {
+                /* this loop calculates the scenario objective value */
+                double scenSum = 0.0;
 
-		        // print results
-		        printf("Solved stochastic program %s\n", name);
-		        printf("Number of rows: %d\n",smiOsi->getNumRows());
-		        printf("Number of cols: %d\n",smiOsi->getNumCols());
-		        printf("Optimal value: %g\n",smiOsi->getObjValue());
+                // start with leaf node
+                SmiScnNode *node = smiModel->getLeafNode(is);
+
+                // leaf node probability is the scenario probability
+                double scenprob = node->getModelProb();
+
+                while (node != NULL)
+                {
+
+                    // getColStart returns the starting index of node in OSI model
+                    for(int j=node->getColStart(); j<node->getColStart()+node->getNumCols(); ++j)
+                    {
+                        // getCoreColIndex returns the corresponding Core index
+                        // in the original (user's) ordering
+                        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];	
+
+
+                    }			
+                    // get parent of node
+                    node = node->getParent();
+                }
+                objSum += scenSum*scenprob;
+            }
+
+            assert(fabs(smiOsi->getObjValue()-objSum) < 0.01);
+
+            // print results
+            printf("Solved stochastic program %s\n", name);
+            printf("Number of rows: %d\n",smiOsi->getNumRows());
+            printf("Number of cols: %d\n",smiOsi->getNumCols());
+            printf("Optimal value: %g\n",smiOsi->getObjValue());
 
         }
 
         void ModelDiscrete(const char * const name)
         {
-	        // example of direct interfaces for discrete distribution
-        	
-	        OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
-	        double INF=osiClp1->getInfinity();
-        	
+            // example of direct interfaces for discrete distribution
+
+            OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
+            double INF=osiClp1->getInfinity();
+
             /* Model dimensions */
             int ncol=27, nrow=9, nels=44;
-        	
-	        /* Sparse matrix data...organized by row */
+
+            /* Sparse matrix data...organized by row */
             int mrow[]={ 0, 0, 0, 0, 0,
-		        1, 1, 1, 1,
-		        2, 2, 2,
-		        3, 3, 3, 3, 3,
-		        4, 4, 4, 4,
-		        5, 5, 5, 5, 5, 5,
-		        6, 6, 6, 6, 6,
-		        7, 7, 7, 7, 7, 7,
-		        8, 8, 8, 8, 8, 8 };
-	          int mcol[]={ 0, 1, 2, 3, 4,
-		        5, 6, 7, 8,
-		        9,10, 11, 
-		        12, 13, 14, 15, 16, 
-		        0,        12, 17, 18,
-		        1, 5, 9,  13, 19, 20,
-		        2, 6,     14, 21, 22,
-		        3, 7, 10, 15, 23, 24,
-		        4, 8, 11, 16, 25, 26 };
+                1, 1, 1, 1,
+                2, 2, 2,
+                3, 3, 3, 3, 3,
+                4, 4, 4, 4,
+                5, 5, 5, 5, 5, 5,
+                6, 6, 6, 6, 6,
+                7, 7, 7, 7, 7, 7,
+                8, 8, 8, 8, 8, 8 };
+            int mcol[]={ 0, 1, 2, 3, 4,
+                5, 6, 7, 8,
+                9,10, 11, 
+                12, 13, 14, 15, 16, 
+                0,        12, 17, 18,
+                1, 5, 9,  13, 19, 20,
+                2, 6,     14, 21, 22,
+                3, 7, 10, 15, 23, 24,
+                4, 8, 11, 16, 25, 26 };
 
             double dels[] = { 1.0, 1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0, 1.0,
-		        16.0,              9.0, -1.0, 1.0,
-		        15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
-		        28.0, 14.0,       22.0, -1.0, 1.0,
-		        23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
-		        81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
-        	
+                1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0,
+                16.0,              9.0, -1.0, 1.0,
+                15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
+                28.0, 14.0,       22.0, -1.0, 1.0,
+                23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
+                81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
+
             /* Objective */
             /* Objective */
             double dobj[]={ 18.0, 21.0, 18.0, 16.0, 10.0, 15.0, 16.0, 14.0, 9.0,
-		        10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
-		        13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
-        	
+                10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
+                13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
+
             /* Column bounds */
             double dclo[]={ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
 
 
 
             double dcup[]={ INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
-        	
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
+
             /* Row bounds */
             double drlo[]={ -INF, -INF, -INF, -INF,  0.0, 4.0, 0.0, 8.0, 10.0 };
             double drup[]={ 10.0, 19.0, 25.0, 15.0,  0.0, 7.0, 0.0, 8.0, 90.0 };
-        	
+
             /* Stages */
             int nstg=2;
             int n_first_stg_rows=4;
             int rstg[]={ 0,0,0,0,1,1,1,1,1 };
             int cstg[]={ 0,0,0,0,0,0,0,0,0,
-		        0,0,0,0,0,0,0,0,1,
-		        1,1,1,1,1,1,1,1,1 };
-        	
+                0,0,0,0,0,0,0,0,1,
+                1,1,1,1,1,1,1,1,1 };
+
             /* Stochastic data */
             int nindp=5;
             int nsamp[]={ 5, 2, 5, 5, 3 };
             double demand[]={ 200, 220, 250, 270, 300,
-		        50, 150,
-		        140, 160, 180, 200, 220,
-		        10, 50, 80, 100, 340,
-		        580, 600, 620 };
+                50, 150,
+                140, 160, 180, 200, 220,
+                10, 50, 80, 100, 340,
+                580, 600, 620 };
             double dprobs[]={ 0.2, 0.05, 0.35, 0.2, 0.2,
-		        0.3, 0.7,
-		        0.1, 0.2, 0.4, 0.2, 0.1,
-		        0.2, 0.2, 0.3, 0.2, 0.1,
-		        0.1, 0.8, 0.1 };
-        	
+                0.3, 0.7,
+                0.1, 0.2, 0.4, 0.2, 0.1,
+                0.2, 0.2, 0.3, 0.2, 0.1,
+                0.1, 0.8, 0.1 };
+
             /* local variables */
             int ii,jj;
 
-	        // initialize SmiModel
-	        SmiScnModel *smiModel = new SmiScnModel();
-	        smiModel->setOsiSolverHandle(*osiClp1);
-
-        		
-	        // set core model using Osi interface
-	        OsiClpSolverInterface ocsi;
-	        ocsi.loadProblem(CoinPackedMatrix( 1,mrow,mcol,dels,nels),dclo,dcup,dobj,drlo,drup);
-        	
-	        // core model 
-	        SmiCoreData *smiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
-
-	        cout << "ModelDiscrete: generated Core data" << endl;
-
-	        // Create discrete distribution
-	        SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(smiCore);
-
-	        cout << "ModelDiscrete: adding random variables" << endl;
-
-	        int index=0;
-	        for (jj=0;jj<nindp;jj++)
-	        {
-		        SmiDiscreteRV *smiRV = new SmiDiscreteRV(1);
-		        for (ii=0;ii<nsamp[jj];ii++)
-		        {			
-			        CoinPackedVector empty_vec;
-			        CoinPackedMatrix empty_mat;
-			        CoinPackedVector cpv_rlo ;
-			        CoinPackedVector cpv_rup ;
-			        cpv_rlo.insert(n_first_stg_rows + jj, demand[index+ii]);
-			        cpv_rup.insert(n_first_stg_rows + jj, demand[index+ii]);
-			        smiRV->addEvent(empty_mat,empty_vec,empty_vec,empty_vec,cpv_rlo,cpv_rup,dprobs[index+ii]);
-			        cpv_rlo.clear();
-			        cpv_rup.clear();
-		        }
-		        smiDD->addDiscreteRV(smiRV);
-		        index+=nsamp[jj];
-	        }
-
-	        assert(smiDD->getNumRV() == nindp);
-	        cout << "ModelDiscrete: added " << nindp << " random variables" << endl;
+            // initialize SmiModel
+            SmiScnModel *smiModel = new SmiScnModel();
+            smiModel->setOsiSolverHandle(*osiClp1);
 
 
-        	
-	        cout << "ModelDiscrete: processing into scenarios" << endl;
+            // set core model using Osi interface
+            OsiClpSolverInterface ocsi;
+            ocsi.loadProblem(CoinPackedMatrix( 1,mrow,mcol,dels,nels),dclo,dcup,dobj,drlo,drup);
 
-	        smiModel->processDiscreteDistributionIntoScenarios(smiDD);
-        	
-	        // load problem data into OsiSolver
-	        smiModel->loadOsiSolverData();
-	        // get Osi pointer
-	        OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
-	        // set some parameters
-	        smiOsi->setHintParam(OsiDoPresolveInInitial,true);
-	        smiOsi->setHintParam(OsiDoScale,true);
-	        smiOsi->setHintParam(OsiDoCrash,true);
-	        // solve using Osi Solver
-	        smiOsi->initialSolve();
-	        // test optimal value
-    	        assert(fabs(smiOsi->getObjValue()-1566.042)<0.01);
+            // core model 
+            SmiCoreData *smiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
 
-	        // test solutions
-	        const double *dsoln = smiOsi->getColSolution();
-	        double objSum = 0.0;
+            cout << "ModelDiscrete: generated Core data" << endl;
 
-	        /* The canonical way to traverse the tree:
-	           For each scenario, get the leaf node.
-	           Then get the parent.  Repeat until parent is NULL.
-	           (Only the root node has a NULL parent.)
-	         */
+            // Create discrete distribution
+            SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(smiCore);
 
-	        for(int is=0; is<smiModel->getNumScenarios(); ++is)
-	        {
-		        /* this loop calculates the scenario objective value */
-		        double scenSum = 0.0;
+            cout << "ModelDiscrete: adding random variables" << endl;
 
-		        // start with leaf node
-		        SmiScnNode *node = smiModel->getLeafNode(is);
+            int index=0;
+            for (jj=0;jj<nindp;jj++)
+            {
+                SmiDiscreteRV *smiRV = new SmiDiscreteRV(1);
+                for (ii=0;ii<nsamp[jj];ii++)
+                {			
+                    CoinPackedVector empty_vec;
+                    CoinPackedMatrix empty_mat;
+                    CoinPackedVector cpv_rlo ;
+                    CoinPackedVector cpv_rup ;
+                    cpv_rlo.insert(n_first_stg_rows + jj, demand[index+ii]);
+                    cpv_rup.insert(n_first_stg_rows + jj, demand[index+ii]);
+                    smiRV->addEvent(empty_mat,empty_vec,empty_vec,empty_vec,cpv_rlo,cpv_rup,dprobs[index+ii]);
+                    cpv_rlo.clear();
+                    cpv_rup.clear();
+                }
+                smiDD->addDiscreteRV(smiRV);
+                index+=nsamp[jj];
+            }
 
-		        // leaf node probability is the scenario probability
-		        double scenprob = node->getModelProb();
-        	
-		        while (node != NULL)
-		        {
-			        // getColStart returns the starting index of node in OSI model
-			        for(int j=node->getColStart(); j<node->getColStart()+node->getNumCols(); ++j)
-			        {
-				        // getCoreColIndex returns the corresponding Core index
-				        // in the original (user's) ordering
-				        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];	
-        				
+            assert(smiDD->getNumRV() == nindp);
+            cout << "ModelDiscrete: added " << nindp << " random variables" << endl;
 
-			        }			
-        			
-			        // get parent of node
-			        node = node->getParent();
-		        }
-		        objSum += scenSum*scenprob;
-	        }
 
-	        assert(fabs(smiOsi->getObjValue()-objSum) < 0.01);
 
-		        // print results
-		        printf("Solved stochastic program %s\n", name);
-		        printf("Number of rows: %d\n",smiOsi->getNumRows());
-		        printf("Number of cols: %d\n",smiOsi->getNumCols());
-		        printf("Optimal value: %g\n",smiOsi->getObjValue());
+            cout << "ModelDiscrete: processing into scenarios" << endl;
+
+            smiModel->processDiscreteDistributionIntoScenarios(smiDD);
+
+            // load problem data into OsiSolver
+            smiModel->loadOsiSolverData();
+            // get Osi pointer
+            OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
+            // set some parameters
+            smiOsi->setHintParam(OsiDoPresolveInInitial,true);
+            smiOsi->setHintParam(OsiDoScale,true);
+            smiOsi->setHintParam(OsiDoCrash,true);
+            // solve using Osi Solver
+            smiOsi->initialSolve();
+            // test optimal value
+            assert(fabs(smiOsi->getObjValue()-1566.042)<0.01);
+
+            // test solutions
+            const double *dsoln = smiOsi->getColSolution();
+            double objSum = 0.0;
+
+            /* The canonical way to traverse the tree:
+            For each scenario, get the leaf node.
+            Then get the parent.  Repeat until parent is NULL.
+            (Only the root node has a NULL parent.)
+            */
+
+            for(int is=0; is<smiModel->getNumScenarios(); ++is)
+            {
+                /* this loop calculates the scenario objective value */
+                double scenSum = 0.0;
+
+                // start with leaf node
+                SmiScnNode *node = smiModel->getLeafNode(is);
+
+                // leaf node probability is the scenario probability
+                double scenprob = node->getModelProb();
+
+                while (node != NULL)
+                {
+                    // getColStart returns the starting index of node in OSI model
+                    for(int j=node->getColStart(); j<node->getColStart()+node->getNumCols(); ++j)
+                    {
+                        // getCoreColIndex returns the corresponding Core index
+                        // in the original (user's) ordering
+                        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];	
+
+
+                    }			
+
+                    // get parent of node
+                    node = node->getParent();
+                }
+                objSum += scenSum*scenprob;
+            }
+
+            assert(fabs(smiOsi->getObjValue()-objSum) < 0.01);
+
+            // print results
+            printf("Solved stochastic program %s\n", name);
+            printf("Number of rows: %d\n",smiOsi->getNumRows());
+            printf("Number of cols: %d\n",smiOsi->getNumCols());
+            printf("Optimal value: %g\n",smiOsi->getObjValue());
 
 
         }
@@ -2853,43 +2853,43 @@ namespace flopc {
         // Display message on stdout and stderr
         void testingMessage( const char * const msg )
         {
-        //  std::cerr <<msg;
-          cout <<endl <<"*****************************************"
-               <<endl <<msg <<endl;
+            //  std::cerr <<msg;
+            cout <<endl <<"*****************************************"
+                <<endl <<msg <<endl;
         }
-    
+
         TEST_F(FlopCppExamples, exampleSmi){
-	        //testingMessage( "Model generation using SMPS files for Cambridge-Watson problems.\n" );
-	        //SmpsIO("../../../../Data/Stochastic/wat_10_C_32");		
+            //testingMessage( "Model generation using SMPS files for Cambridge-Watson problems.\n" );
+            //SmpsIO("../../../../Data/Stochastic/wat_10_C_32");		
 
-	        testingMessage( "Model generation using scenario tree construction methods.\n");
-	        ModelScenario("Dantzig-Ferguson Aircraft Allocation using Scenarios");
+            testingMessage( "Model generation using scenario tree construction methods.\n");
+            ModelScenario("Dantzig-Ferguson Aircraft Allocation using Scenarios");
 
-	        testingMessage( "Model generation using discrete distribution specification methods.\n" );
-	        ModelDiscrete("Dantzig-Ferguson Aircraft Allocation using Discrete Distribution");
+            testingMessage( "Model generation using discrete distribution specification methods.\n" );
+            ModelDiscrete("Dantzig-Ferguson Aircraft Allocation using Discrete Distribution");
 
 
-	        testingMessage( "*** Done! *** \n");
+            testingMessage( "*** Done! *** \n");
         }
     } // end namespace exampleSmi
-    
+
     namespace gapmin {
         /* This is a FlopCpp version of the model gapmin.gms from 
-           the GAMS model library.
-         
-          A general assignment problem is solved via Lagrangian Relaxation
-          by dualizing the multiple choice constraints and solving
-          the remaining knapsack subproblems.
-          The data for this problem are taken from Martello.
-          The optimal value is 223 and the optimal solution is:
-              1 1 4 2 3 5 1 4 3 5, where
-          in columns 1 and 2, the variable in the first row is equal to 1,
-          in column 3, the variable in the fourth row is equal to 1, etc...
+        the GAMS model library.
 
-          Martello, S, and Toth, P, Knapsack Problems: Algorithms and Computer 
-          Implementations. John Wiley and Sons, Chichester, 1990.
-          Guignard, M, and Rosenwein, M, An Improved Dual-Based Algorthm for
-          the Generalized Assignment Problem. Operations Research 37 (1989), 658-663. 
+        A general assignment problem is solved via Lagrangian Relaxation
+        by dualizing the multiple choice constraints and solving
+        the remaining knapsack subproblems.
+        The data for this problem are taken from Martello.
+        The optimal value is 223 and the optimal solution is:
+        1 1 4 2 3 5 1 4 3 5, where
+        in columns 1 and 2, the variable in the first row is equal to 1,
+        in column 3, the variable in the fourth row is equal to 1, etc...
+
+        Martello, S, and Toth, P, Knapsack Problems: Algorithms and Computer 
+        Implementations. John Wiley and Sons, Chichester, 1990.
+        Guignard, M, and Rosenwein, M, An Improved Dual-Based Algorthm for
+        the Generalized Assignment Problem. Operations Research 37 (1989), 658-663. 
         */
 
 
@@ -2902,34 +2902,34 @@ namespace flopc {
             MP_binary_variable x;
 
             Knapsack(int numItems, double* ap, MP_data & f, double b) :	
-                MP_model(new OsiCbcSolverInterface), j(numItems), a(ap,j),  x(j) {
-	        knapsack() = sum(j, a(j)*x(j)) <= b; 
-        	
-	        this->minimize( sum(j, f(j)*x(j)) );
+            MP_model(new OsiCbcSolverInterface), j(numItems), a(ap,j),  x(j) {
+                knapsack() = sum(j, a(j)*x(j)) <= b; 
+
+                this->minimize( sum(j, f(j)*x(j)) );
             }
         };
-    
+
         TEST_F(FlopCppExamples, gapmin){
             const int numResources = 5; const int numItems = 10;
             MP_set  i(numResources), j(numItems);
-         
+
             double atable[numResources][numItems] =
-	        { {12,   8,  25,  17,  19,  22,   6,  22,  20,  25},
-	          { 5,  15,  15,  14,   7,  11,  14,  16,  17,  15},
-	          {21,  24,  13,  24,  12,  16,  23,  20,  15,   5},
-	          {23,  17,  10,   6,  24,  20,  15,  10,  19,   9},
-	          {17,  20,  15,  16,   5,  13,   7,  16,   8,   5} };
+            { {12,   8,  25,  17,  19,  22,   6,  22,  20,  25},
+            { 5,  15,  15,  14,   7,  11,  14,  16,  17,  15},
+            {21,  24,  13,  24,  12,  16,  23,  20,  15,   5},
+            {23,  17,  10,   6,  24,  20,  15,  10,  19,   9},
+            {17,  20,  15,  16,   5,  13,   7,  16,   8,   5} };
 
             double ftable[numResources][numItems] =
-	        { {16,  26,  30,  47,  18,  19,  33,  37,  42,  31},
-	          {38,  42,  15,  21,  26,  11,  11,  50,  24,  19},
-	          {48,  17,  14,  22,  14,  18,  47,  32,  17,  42},
-	          {22,  32,  28,  39,  37,  23,  25,  12,  44,  17},
-	          {31,  42,  31,  40,  16,  15,  29,  31,  44,  41} };
+            { {16,  26,  30,  47,  18,  19,  33,  37,  42,  31},
+            {38,  42,  15,  21,  26,  11,  11,  50,  24,  19},
+            {48,  17,  14,  22,  14,  18,  47,  32,  17,  42},
+            {22,  32,  28,  39,  37,  23,  25,  12,  44,  17},
+            {31,  42,  31,  40,  16,  15,  29,  31,  44,  41} };
 
             MP_data b(i), w(j), f(i,j), zfeas, s(j), solution(i,j);
             b(0) = 28;  b(1) = 20;  b(2) = 27;  b(3) = 24;  b(4) = 19;
-         
+
             double tolerance = 1e-5;
             int maxiter = 100;
             double zlbest = 0.0;
@@ -2947,48 +2947,48 @@ namespace flopc {
             MP_data myf(j);
 
             for (int iter=0; iter<100; iter++) { 
-	        double zlr = 0.0;
-	        s(j) = 1.0;
-	        for (int k=0; k<numResources; k++) {
-	            for (int jc=0; jc<j.size(); jc++) {
-	              myf(jc) = ftable[k][jc] - w(jc);
-	            }
-	            Knapsack my_knap(numItems, atable[k], myf, b(k));
-        	       
-	            zlr += (my_knap)->getObjValue();
-	            for (int jc=0; jc<j.size(); jc++) {
-	              s(jc) = s(jc) - my_knap.x.level(jc);
-	            }
-        	    
-	        }
+                double zlr = 0.0;
+                s(j) = 1.0;
+                for (int k=0; k<numResources; k++) {
+                    for (int jc=0; jc<j.size(); jc++) {
+                        myf(jc) = ftable[k][jc] - w(jc);
+                    }
+                    Knapsack my_knap(numItems, atable[k], myf, b(k));
 
-	        MP_data zl;
-	        zl() = zlr + sum(j, w(j));
+                    zlr += (my_knap)->getObjValue();
+                    for (int jc=0; jc<j.size(); jc++) {
+                        s(jc) = s(jc) - my_knap.x.level(jc);
+                    }
 
-	        bool improve = (zl>zlbest);
-	        zlbest = std::max<double>(zlbest,zl(0));
-        	
-	        double norm = 0.0;
-	        for (int jc=0; jc<j.size(); jc++) {
-	            norm += s(jc)*s(jc);
-	        }
-        		
-	        cout<<"Iter Nbr."<<iter+1<<"   "<<zlr<<"   "<<zl<<"   "<<zlbest<<"   "<<norm<<endl;	
-	        if (norm<tolerance) break;
-        	
-	        double target = (zlbest+zfeas)/2.0;
-	        double step = (alpha*(target-zl)/norm);
+                }
 
-	        w(j) = w(j)+step*s(j);
+                MP_data zl;
+                zl() = zlr + sum(j, w(j));
 
-	        if (count>reset) {
-	            alpha = alpha/2.0;
-	            count = 1;
-	        } else if (improve == true) {
-	            count = 1;
-	        } else {
-	            count++;
-	        }
+                bool improve = (zl>zlbest);
+                zlbest = std::max<double>(zlbest,zl(0));
+
+                double norm = 0.0;
+                for (int jc=0; jc<j.size(); jc++) {
+                    norm += s(jc)*s(jc);
+                }
+
+                cout<<"Iter Nbr."<<iter+1<<"   "<<zlr<<"   "<<zl<<"   "<<zlbest<<"   "<<norm<<endl;	
+                if (norm<tolerance) break;
+
+                double target = (zlbest+zfeas)/2.0;
+                double step = (alpha*(target-zl)/norm);
+
+                w(j) = w(j)+step*s(j);
+
+                if (count>reset) {
+                    alpha = alpha/2.0;
+                    count = 1;
+                } else if (improve == true) {
+                    count = 1;
+                } else {
+                    count++;
+                }
             }
 
             assert(zlbest>=222.99999 && zlbest<=223.00001);
@@ -2996,44 +2996,44 @@ namespace flopc {
             vector<Knapsack*> pknap;
 
             for (int k=0; k<numResources; k++) {
-              for (int jc=0; jc<j.size(); jc++) {
-	        myf(jc) = ftable[k][jc] - w(jc);
-              }
-              
-              pknap.push_back(new Knapsack(numItems, atable[k], myf, b(k)));
+                for (int jc=0; jc<j.size(); jc++) {
+                    myf(jc) = ftable[k][jc] - w(jc);
+                }
+
+                pknap.push_back(new Knapsack(numItems, atable[k], myf, b(k)));
             }
 
 
             for (int q=0; q<numItems; q++) {
-	        for (int k=0; k<numResources; k++) {
-	            if ( pknap[k]->x.level(q) == 1) cout<<k+1<<"  ";
-	        }
+                for (int k=0; k<numResources; k++) {
+                    if ( pknap[k]->x.level(q) == 1) cout<<k+1<<"  ";
+                }
             }
             cout<<endl;
             cout<<"Test gapmin passed."<<endl;
         }
     } //end namespace gapmin
-    
+
     TEST_F(FlopCppExamples, magic){
         // M A G I C   Power Scheduling Problem 
         /*   A number of power stations are committed to meet demand for a particular
-           day. three types of generators having different operating characteristics
-           are available.  Generating units can be shut down or operate between
-           minimum and maximum output levels.  Units can be started up or closed down
-           in every demand block.
+        day. three types of generators having different operating characteristics
+        are available.  Generating units can be shut down or operate between
+        minimum and maximum output levels.  Units can be started up or closed down
+        in every demand block.
 
-           Reference: R E Day and H P Williams, MAGIC: The design and use of an
-                      interactive modeling language for mathematical programming,
-                      Department Business Studies, University of Edinburgh, Edinburgh,
-                      UK, February 1982.
+        Reference: R E Day and H P Williams, MAGIC: The design and use of an
+        interactive modeling language for mathematical programming,
+        Department Business Studies, University of Edinburgh, Edinburgh,
+        UK, February 1982.
 
-                      H P Williams, Model Building in Mathematical Programming, Wiley,
-                      New York, 1978.
+        H P Williams, Model Building in Mathematical Programming, Wiley,
+        New York, 1978.
         */
-        
+
         MP_model testModel(new OsiCbcSolverInterface);
         testModel.verbose();
-        
+
         enum {t12pm_6am, t6am_9am, t9am_3pm, t3pm_6pm, t6pm_12pm, numT};
         enum {type_1, type_2, type_3, numG};
 
@@ -3055,12 +3055,12 @@ namespace flopc {
         dur(t6pm_12pm) = 6;
 
         MP_data 
-	    min_pow(G), 
-	    max_pow(G), 
-	    cost_min(G), 
-	    cost_inc(G), 
-	    start(G), 
-	    number(G);
+            min_pow(G), 
+            max_pow(G), 
+            cost_min(G), 
+            cost_inc(G), 
+            start(G), 
+            number(G);
 
         min_pow(type_1) = 0.85; max_pow(type_1) = 2.0;     
         min_pow(type_2) = 1.25; max_pow(type_2) = 1.75;    
@@ -3075,10 +3075,10 @@ namespace flopc {
         start(type_3) = 500;  number(type_3) =  5;     
 
         MP_data  
-	    peak,     // peak power (1000 mw)
-	    ener(T),  // energy demand in load block (1000mwh)
-	    tener,    // total energy demanded (1000mwh)
-	    lf;       // load factor 
+            peak,     // peak power (1000 mw)
+            ener(T),  // energy demand in load block (1000mwh)
+            tener,    // total energy demanded (1000mwh)
+            lf;       // load factor 
 
         MP_index i,j;
 
@@ -3094,22 +3094,22 @@ namespace flopc {
         tener.display();
         lf.display();
         ener.display("ener");
-      
+
         MP_variable
-	    x(G,T),  // generator output (1000mw)
-	    n(G,T),  // number of generators in use
-	    s(G,T);  // number of generators started up
+            x(G,T),  // generator output (1000mw)
+            n(G,T),  // number of generators in use
+            s(G,T);  // number of generators started up
 
         n.integer();
         n.upperLimit(j,i) = number(j);
         //n.upperLimit.display("n upper");
 
         MP_constraint
-	    pow(T),    // demand for power (1000mw)
-	    res(T),    // spinning reserve requirements (1000mw)
-	    st(G,T),   // start_up definition
-	    minu(G,T), // minimum generation level (1000mw)
-	    maxu(G,T); // maximum generation level (1000mw)
+            pow(T),    // demand for power (1000mw)
+            res(T),    // spinning reserve requirements (1000mw)
+            st(G,T),   // start_up definition
+            minu(G,T), // minimum generation level (1000mw)
+            maxu(G,T); // maximum generation level (1000mw)
 
         pow(i) =  sum(G(j), x(j,i)) >= dem(i);
 
@@ -3123,9 +3123,9 @@ namespace flopc {
 
         MP_expression  cost;    // total operating cost (l)
         cost = sum(G(j)*T(i), 
-	           dur(i)* cost_min(j)*n(j,i) + start(j)*s(j,i) +
-	           1000*dur(i)*cost_inc(j)*(x(j,i)-min_pow(j)*n(j,i)) );
-        
+            dur(i)* cost_min(j)*n(j,i) + start(j)*s(j,i) +
+            1000*dur(i)*cost_inc(j)*(x(j,i)-min_pow(j)*n(j,i)) );
+
         testModel.minimize(cost);
 
         assert(testModel->getNumRows()==55);
@@ -3137,35 +3137,35 @@ namespace flopc {
         x.display("x");
         n.display("n");
         s.display("s");
-	    const int TSize=T.size();
+        const int TSize=T.size();
         double **rep = new double *[TSize];
-	    for(int cnt=0;cnt<TSize;cnt++)
-	    {
-		    rep[cnt]=new double[4];
-	    }
+        for(int cnt=0;cnt<TSize;cnt++)
+        {
+            rep[cnt]=new double[4];
+        }
         for (unsigned i=0; i<T.size(); i++) {
-	    rep[i][0] = dem(i);
+            rep[i][0] = dem(i);
 
-	    rep[i][1] = 0;
-	    for (unsigned j=0; j<G.size(); j++) { 
-	        rep[i][1] +=  max_pow(j) * n.level(j,i);
-	    }
+            rep[i][1] = 0;
+            for (unsigned j=0; j<G.size(); j++) { 
+                rep[i][1] +=  max_pow(j) * n.level(j,i);
+            }
 
-	    rep[i][2] = 0;
-	    for (unsigned j=0; j<G.size(); j++) { 
-	        rep[i][2] +=  s.level(j,i);
-	    }
+            rep[i][2] = 0;
+            for (unsigned j=0; j<G.size(); j++) { 
+                rep[i][2] +=  s.level(j,i);
+            }
 
- 	    rep[i][3] = -pow.price(i)/dur(i)/1000;
+            rep[i][3] = -pow.price(i)/dur(i)/1000;
         }
 
         for (unsigned i=0; i<T.size(); i++) {
-	    cout<<i<<"  "<<rep[i][0]<<"  "<<rep[i][1]<<"  "<<rep[i][2]<<"  "<<rep[i][3]<<endl;
+            cout<<i<<"  "<<rep[i][0]<<"  "<<rep[i][1]<<"  "<<rep[i][2]<<"  "<<rep[i][3]<<endl;
         }
 
         cout<<"Test magic passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, mine){
         for (int ij = 0; ij < 11; ij++) {
 
@@ -3273,7 +3273,7 @@ namespace flopc {
 
         }
     }
-    
+
     namespace multiProduct {
         void MultiProduct(
             MP_model& testModel,
@@ -3287,30 +3287,30 @@ namespace flopc {
             MP_data& demand,
             double& limit, 
             MP_data& cost
-        ) {
-            MP_index p,o,d;
-            MP_variable trans(Routes);
+            ) {
+                MP_index p,o,d;
+                MP_variable trans(Routes);
 
-            MP_constraint sup(Suppliers);
-            MP_constraint dem(Customers);
-            MP_constraint lim(Connections);
+                MP_constraint sup(Suppliers);
+                MP_constraint dem(Customers);
+                MP_constraint lim(Connections);
 
-            sup(Suppliers(p,o)) =
-	        sum(Routes(p,o,d), trans(Routes(p,o,d))) <= supply(Suppliers(p,o));
-        							   
-            dem(Customers(p,d)) =
- 	        sum(Routes(p,o,d), trans(Routes(p,o,d))) >= demand(Customers(p,d));
+                sup(Suppliers(p,o)) =
+                    sum(Routes(p,o,d), trans(Routes(p,o,d))) <= supply(Suppliers(p,o));
 
-            lim(Connections(o,d)) =
-	        sum(Routes(p,o,d), trans(Routes(p,o,d))) <= limit;
+                dem(Customers(p,d)) =
+                    sum(Routes(p,o,d), trans(Routes(p,o,d))) >= demand(Customers(p,d));
 
-            testModel.minimize( sum(Routes(p,o,d), cost(Routes(p,o,d)) * trans(Routes(p,o,d))) );
+                lim(Connections(o,d)) =
+                    sum(Routes(p,o,d), trans(Routes(p,o,d))) <= limit;
 
-            assert(testModel->getNumRows()==41);
-            assert(testModel->getNumCols()==18);
-            assert(testModel->getNumElements()==54);
+                testModel.minimize( sum(Routes(p,o,d), cost(Routes(p,o,d)) * trans(Routes(p,o,d))) );
 
-            trans.display("solution");
+                assert(testModel->getNumRows()==41);
+                assert(testModel->getNumCols()==18);
+                assert(testModel->getNumElements()==54);
+
+                trans.display("solution");
         }
 
         double random(double min, double max) {
@@ -3322,8 +3322,8 @@ namespace flopc {
             testModel.verbose();
             enum {Godiva,Neuhaus,Leonidas,nbrProducts};
             enum {Brussels,Amsterdam,Antwerpen,Paris,Milan,Cassis,Bonn,Madrid,Bergen,
-	          London,nbrCities};
-            
+                London,nbrCities};
+
             MP_set Cities(nbrCities);
             MP_set Products(nbrProducts);
             MP_subset<3> Routes(Products,Cities,Cities);
@@ -3377,23 +3377,23 @@ namespace flopc {
             MP_data cost(Routes);
 
             for (int i=0; i<Suppliers.size(); i++) {
-	        supply(i) = random(200,300);
+                supply(i) = random(200,300);
             }
             for (int i=0; i<Customers.size(); i++) {
-	        demand(i) = random(50,100);
+                demand(i) = random(50,100);
             }
             for (int i=0; i<Routes.size(); i++) {
-	        cost(i) = random(1,2);
+                cost(i) = random(1,2);
             }
             double limit = 500;
 
             MultiProduct(testModel, Cities,Products,Routes,Suppliers,Customers, Connections,
-		         supply,demand,limit,cost);
+                supply,demand,limit,cost);
 
             cout<<"Test multiproduct passed."<<endl;
         }
     }//end namesprace multiProduct
-    
+
     TEST_F(FlopCppExamples, stochBenders){
         /* Benders decomposition for a simple transportation problem
         with stochastic demands. For details see: Erwin Kalvelagen:
@@ -3406,8 +3406,8 @@ namespace flopc {
         MP_set i(numFactories), j(numDistributionCenters);
 
         MP_data 
-        capacity(i),
-        transcost(i,j);
+            capacity(i),
+            transcost(i,j);
 
         transcost(0,0) = 2.49; transcost(1,0) = 1.46; transcost(2,0) = 3.26; 
         transcost(0,1) = 5.21; transcost(1,1) = 2.54; transcost(2,1) = 3.08; 
@@ -3425,8 +3425,8 @@ namespace flopc {
 
         const double Demand[numScenarios][numDistributionCenters] = 
         {{150,100,250,300,600},
-         {160,120,270,325,700},
-         {170,135,300,350,800}};
+        {160,120,270,325,700},
+        {170,135,300,350,800}};
 
         const double prob[numScenarios] = {0.25,0.5,0.25};
 
@@ -3435,36 +3435,36 @@ namespace flopc {
         MP_model masterproblem(new OsiClpSolverInterface);
 
         MP_variable 
-        theta,
-        ship(i,j),
-        product(i),
-        slackproduct(i),
-        received(j);
+            theta,
+            ship(i,j),
+            product(i),
+            slackproduct(i),
+            received(j);
 
         MP_constraint
-        production(i),
-        receive(j),
-        prodcap(i);
+            production(i),
+            receive(j),
+            prodcap(i);
 
         production(i) = product(i) == sum(j,ship(i,j));
         receive(j) =    received(j) == sum(i,ship(i,j));
         prodcap(i) =    product(i) + slackproduct(i) == capacity(i);
 
         masterproblem.minimize( sum(i*j,transcost(i,j)*ship(i,j)) +
-		            sum(i, prodcost*product(i)) + theta() );
+            sum(i, prodcost*product(i)) + theta() );
 
         ///// Sub problem ///////////////////////////////////////////////
 
         MP_model subproblem(new OsiClpSolverInterface);
 
         MP_variable
-        sales(j),
-        waste(j),
-        slacksales(j);
+            sales(j),
+            waste(j),
+            slacksales(j);
 
         MP_constraint
-        selling(j),
-        selmax(j);
+            selling(j),
+            selmax(j);
 
         selling(j) = sales(j) + waste(j) == 0.0;
         selmax(j) =  sales(j) + slacksales(j) == 0.0;
@@ -3481,41 +3481,41 @@ namespace flopc {
 
         int kk;
         for (kk=0; kk<25; kk++) { // max 25 iterations
-        double cutconst = 0.0;
-        MP_data cutcoeff(j);
+            double cutconst = 0.0;
+            MP_data cutcoeff(j);
 
-        double objsub = 0.0;
-        received.display("received");
-        for (int jj=0; jj<numDistributionCenters; jj++) {
-            subproblem->setRowBounds( selling(jj), received.level(jj), received.level(jj));
-        }
-        for (int s=0; s<numScenarios; s++) {
-            for (int j=0; j<numDistributionCenters; j++) {
-	        subproblem->setRowBounds( selmax(j), Demand[s][j], Demand[s][j]);
+            double objsub = 0.0;
+            received.display("received");
+            for (int jj=0; jj<numDistributionCenters; jj++) {
+                subproblem->setRowBounds( selling(jj), received.level(jj), received.level(jj));
             }
-            subproblem->resolve();
-            objsub += prob[s]*subproblem->getObjValue();
-            for (int j=0; j<numDistributionCenters; j++) {
-	        cout<<selmax.price(j)<<"  "<<prob[s]<<"  "<<Demand[s][j]<<endl;
-	        cutconst += prob[s]*selmax.price(j)*Demand[s][j];
-	        cutcoeff(j) += prob[s]*selling.price(j);
+            for (int s=0; s<numScenarios; s++) {
+                for (int j=0; j<numDistributionCenters; j++) {
+                    subproblem->setRowBounds( selmax(j), Demand[s][j], Demand[s][j]);
+                }
+                subproblem->resolve();
+                objsub += prob[s]*subproblem->getObjValue();
+                for (int j=0; j<numDistributionCenters; j++) {
+                    cout<<selmax.price(j)<<"  "<<prob[s]<<"  "<<Demand[s][j]<<endl;
+                    cutconst += prob[s]*selmax.price(j)*Demand[s][j];
+                    cutcoeff(j) += prob[s]*selling.price(j);
+                }
             }
-        }
 
-        upperbound = std::min(upperbound, objmaster + objsub);
-        cout<<"Lower and upper bounds: "<<lowerbound<<"   "<<upperbound<<endl;
-        if ((upperbound-lowerbound) < 0.0001*(1+fabs(lowerbound))) {
-            break;
-        }
+            upperbound = std::min(upperbound, objmaster + objsub);
+            cout<<"Lower and upper bounds: "<<lowerbound<<"   "<<upperbound<<endl;
+            if ((upperbound-lowerbound) < 0.0001*(1+fabs(lowerbound))) {
+                break;
+            }
 
-        cout<<"cutconst="<<cutconst<<endl;
-        masterproblem.addRow( theta() >= cutconst + sum(j, cutcoeff(j)*received(j)) );
+            cout<<"cutconst="<<cutconst<<endl;
+            masterproblem.addRow( theta() >= cutconst + sum(j, cutcoeff(j)*received(j)) );
 
-        masterproblem->resolve();
-        ship.display("ship");
+            masterproblem->resolve();
+            ship.display("ship");
 
-        lowerbound = masterproblem->getObjValue();
-        objmaster = lowerbound - theta.level();
+            lowerbound = masterproblem->getObjValue();
+            objmaster = lowerbound - theta.level();
         }
         assert(kk<25);
 
@@ -3539,7 +3539,7 @@ namespace flopc {
 
         cout<<"Test stochbenders passed."<<endl;
     }
-    
+
     TEST_F(FlopCppExamples, sudoku){
         MP_model testModel(new OsiCbcSolverInterface);
 
@@ -3551,23 +3551,23 @@ namespace flopc {
 
         std::string fname = "fixed.dat";
         std::ifstream file(fname.c_str());
-        
+
         int ival,jval,kval;
 
         while (file>>ival>>jval>>kval) {
-          F.insert(ival-1,jval-1,kval-1);
+            F.insert(ival-1,jval-1,kval-1);
         }
         file.close();
-        
+
         MP_binary_variable	x(J,J,J);
 
         MP_constraint 
-          rows(J,J),
-          cols(J,J),
-          nums(J,J),
-          squares(K,K,J),
-          preselected(F);
-        
+            rows(J,J),
+            cols(J,J),
+            nums(J,J),
+            squares(K,K,J),
+            preselected(F);
+
         MP_index i,j,k,m,n;
 
         rows(i,j) = sum(J(k), x(i,j,k)) == 1;
@@ -3583,19 +3583,19 @@ namespace flopc {
         testModel.minimize(x(0,0,0));
 
         for (int i=0; i<9; i++) {
-          for (int j=0; j<9; j++) {
-        for (int k=0; k<9; k++) {
-          if (x.level(i,j,k)==1) {
-            cout<<k+1<<" ";
-          }
+            for (int j=0; j<9; j++) {
+                for (int k=0; k<9; k++) {
+                    if (x.level(i,j,k)==1) {
+                        cout<<k+1<<" ";
+                    }
+                }
+            }
+            cout<<endl;
         }
-          }
-          cout<<endl;
-        }
-        
+
         cout<<"Test sodoku passed."<<endl;
     }
-    
+
     namespace tap {
         class Tap : public MP_model {
         public:
@@ -3607,31 +3607,31 @@ namespace flopc {
             MP_constraint supply, demand, def_y;
 
             Tap(int numS, int numD) : MP_model(new OsiCbcSolverInterface),
-			              S(numS), D(numD),
-			              s(S), d(D),
-			              x(S,D), y(S,D),
-			              supply(S), demand(D), def_y(S,D) {
-	        y.binary();
-        	
-	        supply(S) = sum(D, x(S,D)) <= s(S);
-        	
-	        demand(D) = sum(S, x(S,D)) >= d(D) ; 
-        	
-	        def_y(S,D) = d(D)*y(S,D) >= x(S,D);
-        	
-	        add(supply); add(demand); add(def_y);
-        	
-	        setObjective( sum(S*D, y(S,D)) );
-        	
+                S(numS), D(numD),
+                s(S), d(D),
+                x(S,D), y(S,D),
+                supply(S), demand(D), def_y(S,D) {
+                    y.binary();
+
+                    supply(S) = sum(D, x(S,D)) <= s(S);
+
+                    demand(D) = sum(S, x(S,D)) >= d(D) ; 
+
+                    def_y(S,D) = d(D)*y(S,D) >= x(S,D);
+
+                    add(supply); add(demand); add(def_y);
+
+                    setObjective( sum(S*D, y(S,D)) );
+
             }    
         };
-    
+
         TEST_F(FlopCppExamples, DISABLED_tap){
             double stab_1[6]  = {5,5,6,6,6,6};
             double dtab_1[4]  = {4, 7, 10, 11};
             double stab_2[7] =  {9,9,10,12,12,12,16};
             double dtab_2[5] =  {6, 14, 17, 21, 22};
-            
+
             Tap first_instance(6,4);
             Tap second_instance(7,5);
 
@@ -3640,14 +3640,14 @@ namespace flopc {
 
             second_instance.s.value(stab_2);
             second_instance.d.value(dtab_2);
-                
+
             first_instance.minimize();
 
             assert(first_instance->getNumRows()==34);
             assert(first_instance->getNumCols()==48);
             assert(first_instance->getNumElements()==96);
             assert(first_instance->getObjValue()>=7 && first_instance->getObjValue()<=7);
-           
+
 
             first_instance.x.display("Solution of first instance (x)");
             first_instance.y.display("Solution of first instance (y)");
@@ -3663,36 +3663,36 @@ namespace flopc {
             cout<<"Test tap passed."<<endl;
         }
     }//end namespace tap
-    
+
     namespace train {
         int readFile(string fname, map<string, vector<double> >& d) {
             std::ifstream file(fname.c_str());
             string cline;
 
             while(getline(file,cline)) {
- 	        if (cline.compare(0,5,"begin")==0) {
-	            string field = cline.substr(6,cline.find_first_of(')')-6);
-	            double val;
-	            while (file>>val) {
-		        d[field].push_back(val);
-	            }
-	            file.clear();
- 	        }
+                if (cline.compare(0,5,"begin")==0) {
+                    string field = cline.substr(6,cline.find_first_of(')')-6);
+                    double val;
+                    while (file>>val) {
+                        d[field].push_back(val);
+                    }
+                    file.clear();
+                }
             }
             return 0;
         }
 
         void scheduleInsert(MP_subset<4>& sched, vector<double>& v, int c1, int c2) {
             for (int i = 0; i != v.size(); i++) {
-	        sched.insert(c1,c2,int(v[i])-1,int(v[i+1])-1);
-	        i++;
+                sched.insert(c1,c2,int(v[i])-1,int(v[i+1])-1);
+                i++;
             }
         }
 
         void demandInsert(MP_data& demand, vector<double>& v, int c1, int c2, MP_subset<4>& sched) {
             for (int i = 0; i != v.size(); i++) {
-	        demand(sched(c1,c2,int(v[i])-1,int(v[i+1])-1)) = v[i+2];
-	        i++; i++;
+                demand(sched(c1,c2,int(v[i])-1,int(v[i+1])-1)) = v[i+2];
+                i++; i++;
             }
         }
         TEST_F(FlopCppExamples, DISABLED_train){
@@ -3727,7 +3727,7 @@ namespace flopc {
             scheduleInsert(schedule,d["BONY"],BO,NY);
             scheduleInsert(schedule,d["NYPH"],NY,PH);
             scheduleInsert(schedule,d["PHWA"],PH,WA);
-           
+
             schedule.display("SCHEDULE");
 
             MP_data demand(schedule); 
@@ -3761,7 +3761,7 @@ namespace flopc {
 
             low(schedule) = ceil(demand(schedule));
             high(schedule) = maximum (2, minimum (ceil(2*demand(schedule)), 
-				          section*ceil(demand(schedule)/section) ));
+                section*ceil(demand(schedule)/section) ));
             low.display("LOW");
             high.display("HIGH");
 
@@ -3779,8 +3779,8 @@ namespace flopc {
             MP_index c,t;
 
             MP_expression cars =  
-	        sum( cities(c), U(c,times.size()-1)) + 
-	        sum( schedule(c1,c2,t1,t2).such_that(t2 < t1), X(schedule) );
+                sum( cities(c), U(c,times.size()-1)) + 
+                sum( schedule(c1,c2,t1,t2).such_that(t2 < t1), X(schedule) );
 
             // Number of cars in the system:
             // sum of unused cars and cars in trains during the last time interval of the day
@@ -3791,10 +3791,10 @@ namespace flopc {
             MP_constraint account(cities,times);
 
             account(c,t) =  
-	        U(c,t) == U(c,t-1) + 
-	           sum( schedule(c1,c,t1,t), X(schedule(c1,c,t1,t)) ) - 
-	           sum( schedule(c,c2,t,t2), X(schedule(c,c2,t,t2)) );
-            
+                U(c,t) == U(c,t-1) + 
+                sum( schedule(c1,c,t1,t), X(schedule(c1,c,t1,t)) ) - 
+                sum( schedule(c,c2,t,t2), X(schedule(c,c2,t,t2)) );
+
             // For every city and time: unused cars in the present interval must equal
             // unused cars in the previous interval, plus cars just arriving in trains, 
             // minus cars just leaving in trains
@@ -3822,7 +3822,7 @@ namespace flopc {
             cout<<"Test train passed."<<endl;
         }
     }//end namesprace train
-        
+
     TEST_F(FlopCppExamples, transport){
         MP_model testModel(new OsiClpSolverInterface);
         enum  {seattle, sandiego, numS}; 
@@ -3842,7 +3842,7 @@ namespace flopc {
 
         SUPPLY(seattle)=350;  SUPPLY(sandiego)=600;
         DEMAND(newyork)=325;  DEMAND(chicago)=300;  DEMAND(topeka)=275;
-        
+
         MP_data COST(Link);
 
         COST(Link(seattle,newyork)) = 2.5;  
@@ -3851,7 +3851,7 @@ namespace flopc {
         COST(Link(sandiego,topeka)) = 1.4;
 
         COST(Link) = 90 * COST(Link) / 1000.0;
-        
+
         MP_variable x(Link);
         x.display("...");
 
@@ -3862,7 +3862,7 @@ namespace flopc {
 
         supply(S) =  sum( Link(S,D), x(Link) ) <= SUPPLY(S);
         demand(D) =  sum( Link(S,D), x(Link) ) >= DEMAND(D);
-        
+
         cout<<"Here"<<endl;
 
         testModel.minimize( sum(Link, COST(Link)*x(Link)) );
@@ -3870,12 +3870,12 @@ namespace flopc {
         assert(testModel->getNumCols()==4);
         assert(testModel->getNumElements()==8);
         assert(testModel->getObjValue()>=156.14 && testModel->getObjValue()<=156.16);
-        
+
         x.display("Optimal solution:");
         supply.display("Supply dual solution");
         cout<<"Test transport passed."<<endl;
     }
-        
+
     TEST_F(FlopCppExamples, xbsl){
         const int numJ =  4;
         const int numT = 10;
@@ -3901,7 +3901,7 @@ namespace flopc {
         C3(J) = sum( T(t).such_that(t <= numT-D(j)), (t+1)*delta(j,t) ) == s(j);
 
         C4(J) = sum( T(t).such_that(t <= numT-D(j)), delta(j,t) ) == 1;
-      
+
         s.upperLimit(j) = numT-D(j);
 
         M.minimize_max( J, s(J)+D(J) ); 
@@ -3914,34 +3914,34 @@ namespace flopc {
         s.display("s");
         cout<<"Test xbsl passed."<<endl;
     }
-    
+
     TEST_F(UseCaseTest, SmpsWriterTest) {
         MP_model testModel(new OsiClpSolverInterface());
-        
+
         enum {numT = 2};
         MP_stage T(numT);
-        
+
         enum {numScen = 2};
         MP_scenario_set scen(numScen);
-        
+
         double probabilities[numScen] = { 0.1234567890123456, 0.876543211 };
         MP_data prob(&probabilities[0], scen);
         testModel.setProbabilities(prob);
-        
+
         double stochData[numT-1][numScen] = { {0.1234567890123456, 0.876543211 } };
         MP_random_data d(&stochData[0][0], T);
-        
+
         MP_variable x(T);
-        
+
         MP_constraint constr(T);
         constr(T) = x(T) >= d(T);
-        
+
         testModel.setObjective(sum(T, x(T)));
-        
+
         testModel.attach(testModel.Solver);
-        
+
         testModel.getSmi()->writeSmps("smpsWriterTest");
-        
+
         cout << "Finished";
     }
 } //end namespace
