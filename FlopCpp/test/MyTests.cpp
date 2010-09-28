@@ -826,6 +826,22 @@ namespace flopc {
         // It is not possible anyway as no SmiScnModel gets created.
     }
 
+    TEST_F(MP_modelTest,ConstantTermInObjectiveTest){
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_variable x(T);
+        MP_random_data randomData(T);
+        randomData(1) = new DiscreteUniformRandomVariable(0,1,2,new BracketMedianDiscretization(2));
+        randomData(1)->setStage(1);
+        MP_constraint con1(T);
+        con1(T) = x(T) >= randomData(T);
+        MP_expression obj = x(T.last())-10;
+        testModel.setObjective(obj);
+        testModel.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(-9.5,testModel->getObjValue());
+
+    }
+
     // Dacota  Model to test the EV-, EEV- and WS-Problems
     TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
@@ -2909,7 +2925,7 @@ namespace flopc {
             }
         };
 
-        TEST_F(FlopCppExamples, gapmin){
+        TEST_F(FlopCppExamples, DISABLED_gapmin){
             const int numResources = 5; const int numItems = 10;
             MP_set  i(numResources), j(numItems);
 
@@ -3317,7 +3333,7 @@ namespace flopc {
             return min + (max-min)*(rand()/(RAND_MAX+0.0));
         }
 
-        TEST_F(FlopCppExamples, multiProduct){
+        TEST_F(FlopCppExamples, DISABLED_multiProduct){
             MP_model testModel(new OsiCbcSolverInterface);
             testModel.verbose();
             enum {Godiva,Neuhaus,Leonidas,nbrProducts};
@@ -3949,7 +3965,7 @@ namespace flopc {
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.RandomParameterIn*";
+    //::testing::GTEST_FLAG(filter) = "*.ConstantTerm*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
