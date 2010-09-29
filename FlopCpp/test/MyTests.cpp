@@ -240,6 +240,28 @@ namespace flopc {
 
     //}
 
+    TEST_F(UseCaseTest,ConditionalValueAtRiskTest){
+        MP_model testModel(new OsiClpSolverInterface);
+        MP_stage T(2);
+        MP_random_data a(T);
+        a(1) = new DiscreteUniformRandomVariable(1,10,10,new BracketMedianDiscretization(10));
+        a(1)->setStage(1);
+
+        MP_variable x;
+        MP_variable recourse(T);
+
+        MP_constraint secondStageConstraint1(T),secondStageConstraint2(T);
+        secondStageConstraint1(T+1) = x() >= a(T+1) + recourse(T+1);
+        //secondStageConstraint2(T+1) = y(T+1) == a()
+        MP_expression obj = x(T.last()) + 2*recourse(T.last());
+        testModel.setObjective(obj);
+        testModel.solve(MP_model::MINIMIZE);
+        testModel.setObjective( cvar(0.1,obj));
+        testModel.solve(MP_model::MINIMIZE);
+
+
+    }
+
     TEST_F(MP_modelTest,RandomVarInScenTreeTest){
         MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
         MP_stage T(2);

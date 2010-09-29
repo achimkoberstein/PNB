@@ -340,6 +340,65 @@ namespace flopc {
            RandomConstant right;
     };
 
+    class Expression_cvar : public MP_expression_base, public MP  {
+        friend MP_expression cvar(double alpha, const MP_expression& e);
+    private:
+        Expression_cvar(double alpha, const MP_expression& e) : alpha(alpha), exp(e) {
+            // We have to add our new variables and constraints and stuff to the current model
+            MP_stage T = MP_model::getCurrentModel()->getStage();
+            MP_variable* zPtr = 0;
+            if ( MP_model::getCurrentModel()->getStochastic() && MP_model::getCurrentModel()->getStage().size() <= 2){
+                zPtr = new MP_variable( MP_model::getCurrentModel()->getStage() );
+            } 
+            else{
+                throw invalid_argument_exception();
+            }
+            MP_variable* gammaPtr = new MP_variable();
+            MP_variable* scenarioValue = new MP_variable();
+            MP_constraint* cvarConstrPtr = new MP_constraint(T);
+            MP_constraint* equalConstrPtr = new MP_constraint();
+            //e.getDomain();
+            MP_index a,b,c,d,f;
+            (*equalConstrPtr)() = (*scenarioValue)() == exp; //sum(a*b*c*d*f,exp(a,b,c,d,f)); // If this really works? TODO
+            (*cvarConstrPtr)(T+1) = (*zPtr)(T+1) >= (*scenarioValue)()-(*gammaPtr)();
+            // We have to ensure that we set the right objective
+            MP_model::getCurrentModel()->setObjective( (*gammaPtr)() + 1/(1-alpha)* (*zPtr)(T.last()) );
+
+        }
+
+        double level() const {
+            //SumFunctor SF(exp);
+            //D.forall(SF);
+            //return SF.the_sum;
+            throw not_implemented_error();
+        } 
+        void generate(const MP_domain& domain,
+            vector<TerminalExpression *> multiplicators,
+            MP::GenerateFunctor& f,
+            double m) const {
+                exp->generate(domain, multiplicators, f, m); 
+        }
+        void insertVariables(set<MP_variable*>& v) const {
+            exp->insertVariables(v);
+        }
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+            exp->insertRandomVariables(v);
+        }
+
+        class CvarFunctor : public Functor {
+        public:
+            CvarFunctor(double alpha,MP_expression exp) : A(alpha), E(exp) {}
+            void operator()() const {
+                //the_sum += E->level();
+            }
+            double A;
+            MP_expression E;      
+        };
+
+        double alpha;
+        MP_expression exp;
+    };
+
     class Expression_sum : public MP_expression_base, public MP  {
         friend MP_expression sum(const MP_domain& d, const MP_expression& e);
     private:
@@ -447,6 +506,10 @@ namespace flopc {
         return new Expression_sum(d, e);  
     }
 
+    MP_expression cvar( double alpha, const MP_expression& e1 )
+    { // Turn the given expression into a cvar-ready formulation. We need to add 
+        return new Expression_cvar(alpha,e1);
+    }
 
 
 } // End of namespace flopc

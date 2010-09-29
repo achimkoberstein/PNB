@@ -181,6 +181,10 @@ void MP_model::add(MP_variable* v) { //Counts total number of variables in this 
     n += v->size();
 }
 
+//TODO: Write a method which makes it possible to add a MP_Variable or a MP_Constraint to a MP_model.
+// This can then be used to add model elements in methods, not just when the model get's declared
+// Also important because of memory leaks that can occur otherwise, but at first we will create these leaks..
+
 void MP_model::addRow(const Constraint& constraint) {
     vector<MP::Coef> cfs;
     vector<TerminalExpression*> v;
