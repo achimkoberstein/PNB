@@ -28,11 +28,15 @@
 namespace flopc {
     void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename){
         // write SMPS files
-        model.smiModel->writeSmps(filename.c_str());        
-
+        model.smiModel->writeSmps(filename.c_str(), true);        
+        
+        // check with fortsp
+        // often fails because RHS is not known when parsing the stoch file, and thats because there are no RHS values in the core file
+        //EXPECT_EQ(0, system(("fortsp.exe " + filename).c_str())); 
+                
         // read SMPS files        
         SmiScnModel smi;
-        DLOG(INFO) << "SMPS reader: " << smi.readSmps(filename.c_str()) << "\n";
+        EXPECT_EQ(0, smi.readSmps(filename.c_str(), SmiCoreCombineReplace::Instance()));
         OsiSolverInterface *clp = new OsiClpSolverInterface();
         smi.setOsiSolverHandle(*clp);
         OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
@@ -51,9 +55,9 @@ namespace flopc {
         // check objective values in case of optimal solution
         if ( model.Solver->isProvenOptimal() )
             EXPECT_NEAR(model.Solver->getObjValue(), osiStoch->getObjValue(), 0.001);
-        ASSERT_EQ(0,remove( (filename+".core").c_str() ));
-        ASSERT_EQ(0,remove( (filename+".time").c_str() ));
-        ASSERT_EQ(0,remove( (filename+".stoch").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".cor").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".tim").c_str() ));
+        ASSERT_EQ(0,remove( (filename+".sto").c_str() ));
         delete clp;
     }
 
@@ -1666,9 +1670,9 @@ namespace flopc {
         m1.add(ab).add(db).add(bcd1).add(ocd);
         m1.minimize(oc() + bc());
 
-        assert(m1->getNumRows()==11);
-        assert(m1->getNumCols()==47);
-        assert(m1->getNumElements()==96);
+        EXPECT_EQ(11, m1->getNumRows());
+        EXPECT_EQ(47, m1->getNumCols());
+        EXPECT_EQ(96, m1->getNumElements());
         EXPECT_GE(m1->getObjValue(),1566.03);
         EXPECT_LE(m1->getObjValue(),1566.05);
 
@@ -1685,9 +1689,9 @@ namespace flopc {
 
         m2.minimize(oc() + bc());
 
-        assert(m2->getNumRows()==56);
-        assert(m2->getNumCols()==72);
-        assert(m2->getNumElements()==219);
+        EXPECT_EQ(56, m2->getNumRows());
+        EXPECT_EQ(72, m2->getNumCols());
+        EXPECT_EQ(219, m2->getNumElements());
 
         // Optimal objective value m1: 1566.04218913
         // Optimal objective value m2: 1566.04218913 (like m1)
@@ -1821,10 +1825,10 @@ namespace flopc {
         m1.add(ab).add(db).add(bcd1).add(ocd);
         m1.minimize(oc() + bc());
 
-        assert(m1->getNumRows()==11);
-        assert(m1->getNumCols()==47);
-        assert(m1->getNumElements()==96);
-        assert(m1->getObjValue()>=1566.03 && m1->getObjValue()<=1566.05);
+        EXPECT_EQ(11, m1->getNumRows());
+        EXPECT_EQ(47, m1->getNumCols());
+        EXPECT_EQ(96, m1->getNumElements());
+        EXPECT_NEAR(1566.04, m1->getObjValue(), 0.01);
 
         y.display("y first model");
         ab.display("ab");
@@ -1837,10 +1841,10 @@ namespace flopc {
 
         m2.minimize(oc() + bc());
 
-        assert(m2->getNumRows()==56);
-        assert(m2->getNumCols()==72);
-        assert(m2->getNumElements()==219);
-        assert(m2->getObjValue()>=1566.03 && m2->getObjValue()<=1566.05);
+        EXPECT_EQ(56, m2->getNumRows());
+        EXPECT_EQ(72, m2->getNumCols());
+        EXPECT_EQ(219, m2->getNumElements());
+        EXPECT_NEAR(1566.04, m2->getObjValue(), 0.01);
 
         y.display("y second model");
         cout<<"Test aircraft passed."<<endl;
@@ -1928,17 +1932,17 @@ namespace flopc {
             sum(raw(r), rvalue(r)*s(r,numT)) 
             );
 
-        assert(testModel->getNumRows()==14);
-        assert(testModel->getNumCols()==25);
-        assert(testModel->getNumElements()==52);
-        assert(testModel->getObjValue()>=79.3412 && testModel->getObjValue()<=79.3414);
+        EXPECT_EQ(14, testModel->getNumRows());
+        EXPECT_EQ(25, testModel->getNumCols());
+        EXPECT_EQ(52, testModel->getNumElements());
+        EXPECT_NEAR(79.3413, testModel->getObjValue(), 0.0001);
 
         x.display();
         s.display();
         cout<<"Test ampl passed."<<endl;
     }
 
-    TEST_F(FlopCppExamples, DISABLED_bid){
+    TEST_F(FlopCppExamples, DISABLED_bid){ // formularion for setup doesnt work (see below)
         // Adapted from bid.gms from the GAMS model library:
         //    http://www.gams.com/
 
@@ -2007,8 +2011,10 @@ namespace flopc {
         qmax(VS(e,0)) =  42000;
         qmax(VS(e,1)) =  77000;
 
-        setup(VS(V,S+1)) = setup(VS(V,S)) +
-            qmax(VS(V,S))*(price(VS(V,S))-price(VS(V,S+1)));
+        //original formulation doesnt work - index error
+        setup(VS(V,S+1)) = setup(VS(V,S)) + qmax(VS(V,S)) * (price(VS(V,S)) - price(VS(V,S+1)));
+        //tried this one, no error, but objective is far away from expected
+        //forall(VS(V,S).such_that(S > 0), setup(VS(V,S)) = setup(VS(V,S-1)) + qmax(VS(V,S-1)) * (price(VS(V,S-1)) - price(VS(V,S))));
 
         //    setup(VS(V,S+1)) = setup(VS(V,S)) +
         //	qmax(VS(V,S))*(price(VS(V,S))-price(VS(V,S+1)));
@@ -2036,10 +2042,10 @@ namespace flopc {
 
         bid.minimize( sum(VS, price(VS)*pl(VS) + setup(VS)*plb(VS)) );
 
-        assert(bid->getNumRows()==24);
-        assert(bid->getNumCols()==18);
-        assert(bid->getNumElements()==50);
-        assert(bid->getObjValue()>=1.52100e+07 && bid->getObjValue()<=1.52102e+07);
+        EXPECT_EQ(24, bid->getNumRows());
+        EXPECT_EQ(18, bid->getNumCols());
+        EXPECT_EQ(50, bid->getNumElements());
+        EXPECT_NEAR(1.52101e+07, bid->getObjValue(), 100);
 
         cout<<"Test bid passed."<<endl;
     }
@@ -2093,10 +2099,10 @@ namespace flopc {
         testModel->writeMps("coex","mps",1.0);
         ASSERT_EQ(0,remove("coex.mps"));
 
-        assert(testModel->getNumRows()==347);
-        assert(testModel->getNumCols()==51);
-        assert(testModel->getNumElements()==742);
-        assert(testModel->getObjValue()==4);
+        EXPECT_EQ(347, testModel->getNumRows());
+        EXPECT_EQ(51, testModel->getNumCols());
+        EXPECT_EQ(742, testModel->getNumElements());
+        EXPECT_EQ(4, testModel->getObjValue());
 
         b.display("Black");
         w.display("White");
@@ -2184,10 +2190,10 @@ namespace flopc {
 
         testModel.maximize(tot());
 
-        assert(testModel->getNumRows()==242);
-        assert(testModel->getNumCols()==75);
-        assert(testModel->getNumElements()==480);
-        assert(testModel->getObjValue()==4);
+        EXPECT_EQ(242, testModel->getNumRows());
+        EXPECT_EQ(75, testModel->getNumCols());
+        EXPECT_EQ(480, testModel->getNumElements());
+        EXPECT_EQ(4, testModel->getObjValue());
 
         xb.display("Black");
         xw.display("White");
@@ -2258,10 +2264,10 @@ namespace flopc {
 
         testModel.maximize(sum(t, done(t)));
 
-        assert(testModel->getNumRows()==90);
-        assert(testModel->getNumCols()==70);
-        assert(testModel->getNumElements()==231);
-        assert(testModel->getObjValue()==3);
+        EXPECT_EQ(90, testModel->getNumRows());
+        EXPECT_EQ(70, testModel->getNumCols());
+        EXPECT_EQ(231, testModel->getNumElements());
+        EXPECT_EQ(3, testModel->getObjValue());
 
         y.display("y");
         cross.display("cross");
@@ -2370,10 +2376,10 @@ namespace flopc {
 
             Paper.minimize( sum(WIDTHS(j), use(j)) );
 
-            assert(Paper->getNumRows()==5);
-            assert(Paper->getNumCols()==5);
-            assert(Paper->getNumElements()==5);
-            assert(Paper->getObjValue()>=177.666 && Paper->getObjValue()<=177.667);
+            EXPECT_EQ(5, Paper->getNumRows());
+            EXPECT_EQ(5, Paper->getNumCols());
+            EXPECT_EQ(5, Paper->getNumElements());
+            EXPECT_NEAR(177.666, Paper->getObjValue(), 0.001);
 
             cout<<"Test cuttingstock passed."<<endl;
         }
@@ -2601,7 +2607,7 @@ namespace flopc {
 
             }
 
-            assert(ns==smiModel->getNumScenarios());
+	        EXPECT_EQ(ns, smiModel->getNumScenarios());
             cout << "ModelScenario: Finished adding scenarios" << endl;
 
 
@@ -2617,7 +2623,7 @@ namespace flopc {
             // solve using Osi Solver
             smiOsi->initialSolve();
             // test optimal value
-            assert(fabs(smiOsi->getObjValue()-1566.042)<0.01);
+            EXPECT_LT(fabs(smiOsi->getObjValue()-1566.042), 0.01);
 
             // test solutions
             const double *dsoln = smiOsi->getColSolution();
@@ -2659,7 +2665,7 @@ namespace flopc {
                 objSum += scenSum*scenprob;
             }
 
-            assert(fabs(smiOsi->getObjValue()-objSum) < 0.01);
+            EXPECT_LT(fabs(smiOsi->getObjValue()-objSum), 0.01);
 
             // print results
             printf("Solved stochastic program %s\n", name);
@@ -2794,7 +2800,7 @@ namespace flopc {
                 index+=nsamp[jj];
             }
 
-            assert(smiDD->getNumRV() == nindp);
+            EXPECT_EQ(nindp, smiDD->getNumRV());
             cout << "ModelDiscrete: added " << nindp << " random variables" << endl;
 
 
@@ -2814,7 +2820,7 @@ namespace flopc {
             // solve using Osi Solver
             smiOsi->initialSolve();
             // test optimal value
-            assert(fabs(smiOsi->getObjValue()-1566.042)<0.01);
+            EXPECT_LT(fabs(smiOsi->getObjValue()-1566.042), 0.01);
 
             // test solutions
             const double *dsoln = smiOsi->getColSolution();
@@ -2855,7 +2861,7 @@ namespace flopc {
                 objSum += scenSum*scenprob;
             }
 
-            assert(fabs(smiOsi->getObjValue()-objSum) < 0.01);
+            EXPECT_LT(fabs(smiOsi->getObjValue()-objSum), 0.01);
 
             // print results
             printf("Solved stochastic program %s\n", name);
@@ -2925,7 +2931,7 @@ namespace flopc {
             }
         };
 
-        TEST_F(FlopCppExamples, DISABLED_gapmin){
+        TEST_F(FlopCppExamples, DISABLED_gapmin){ // heap error at the end when destrcutors got called
             const int numResources = 5; const int numItems = 10;
             MP_set  i(numResources), j(numItems);
 
@@ -3007,7 +3013,7 @@ namespace flopc {
                 }
             }
 
-            assert(zlbest>=222.99999 && zlbest<=223.00001);
+            EXPECT_NEAR(223, zlbest, 0.00001);
 
             vector<Knapsack*> pknap;
 
@@ -3144,10 +3150,10 @@ namespace flopc {
 
         testModel.minimize(cost);
 
-        assert(testModel->getNumRows()==55);
-        assert(testModel->getNumCols()==45);
-        assert(testModel->getNumElements()==135);
-        assert(testModel->getObjValue()>=988539 && testModel->getObjValue()<=988541);
+        EXPECT_EQ(55, testModel->getNumRows());
+        EXPECT_EQ(45, testModel->getNumCols());
+        EXPECT_EQ(135, testModel->getNumElements());
+        EXPECT_NEAR(988540, testModel->getObjValue(), 1);
 
 
         x.display("x");
@@ -3278,10 +3284,10 @@ namespace flopc {
 
             thisModel.maximize( sum(d(l,i,j), (conc(l,i,j)*value/100 - cost(l))*x(l,i,j)) );
 
-            assert(thisModel->getNumRows()==56);
-            assert(thisModel->getNumCols()==64);
-            assert(thisModel->getNumElements()==112);
-            assert(thisModel->getObjValue()>=17500 && thisModel->getObjValue()<=17500);
+            EXPECT_EQ(56, thisModel->getNumRows());
+            EXPECT_EQ(64, thisModel->getNumCols());
+            EXPECT_EQ(112, thisModel->getNumElements());
+            EXPECT_EQ(17500, thisModel->getObjValue());
 
 
             x.display("x");
@@ -3322,9 +3328,9 @@ namespace flopc {
 
                 testModel.minimize( sum(Routes(p,o,d), cost(Routes(p,o,d)) * trans(Routes(p,o,d))) );
 
-                assert(testModel->getNumRows()==41);
-                assert(testModel->getNumCols()==18);
-                assert(testModel->getNumElements()==54);
+                EXPECT_EQ(41, testModel->getNumRows());
+                EXPECT_EQ(18, testModel->getNumCols());
+                EXPECT_EQ(54, testModel->getNumElements());
 
                 trans.display("solution");
         }
@@ -3333,7 +3339,7 @@ namespace flopc {
             return min + (max-min)*(rand()/(RAND_MAX+0.0));
         }
 
-        TEST_F(FlopCppExamples, DISABLED_multiProduct){
+        TEST_F(FlopCppExamples, DISABLED_multiProduct){ // same here, errors when calling destructors at the end
             MP_model testModel(new OsiCbcSolverInterface);
             testModel.verbose();
             enum {Godiva,Neuhaus,Leonidas,nbrProducts};
@@ -3533,7 +3539,7 @@ namespace flopc {
             lowerbound = masterproblem->getObjValue();
             objmaster = lowerbound - theta.level();
         }
-        assert(kk<25);
+        EXPECT_LT(kk, 25);
 
         // Expected solution:
         // ship
@@ -3642,7 +3648,7 @@ namespace flopc {
             }    
         };
 
-        TEST_F(FlopCppExamples, DISABLED_tap){
+        TEST_F(FlopCppExamples, DISABLED_tap){ // heap error in branch&bound for the second instance
             double stab_1[6]  = {5,5,6,6,6,6};
             double dtab_1[4]  = {4, 7, 10, 11};
             double stab_2[7] =  {9,9,10,12,12,12,16};
@@ -3659,10 +3665,10 @@ namespace flopc {
 
             first_instance.minimize();
 
-            assert(first_instance->getNumRows()==34);
-            assert(first_instance->getNumCols()==48);
-            assert(first_instance->getNumElements()==96);
-            assert(first_instance->getObjValue()>=7 && first_instance->getObjValue()<=7);
+            EXPECT_EQ(34, first_instance->getNumRows());
+            EXPECT_EQ(48, first_instance->getNumCols());
+            EXPECT_EQ(96, first_instance->getNumElements());
+            EXPECT_EQ(7, first_instance->getObjValue());
 
 
             first_instance.x.display("Solution of first instance (x)");
@@ -3670,10 +3676,10 @@ namespace flopc {
 
             second_instance.minimize();
 
-            assert(second_instance->getNumRows()==47);
-            assert(second_instance->getNumCols()==70);
-            assert(second_instance->getNumElements()==140);
-            assert(second_instance->getObjValue()>=9 && second_instance->getObjValue()<=9);
+            EXPECT_EQ(47, second_instance->getNumRows());
+            EXPECT_EQ(70, second_instance->getNumCols());
+            EXPECT_EQ(140, second_instance->getNumElements());
+            EXPECT_EQ(9, second_instance->getObjValue());
 
             second_instance.x.display("Solution of second instance");
             cout<<"Test tap passed."<<endl;
@@ -3711,7 +3717,7 @@ namespace flopc {
                 i++; i++;
             }
         }
-        TEST_F(FlopCppExamples, DISABLED_train){
+        TEST_F(FlopCppExamples, train){
             MP_model testModel(new OsiCbcSolverInterface);
             testModel.verbose();
             const int numTimeIntervals=48;
@@ -3820,19 +3826,19 @@ namespace flopc {
 
             testModel.minimize(cars);
 
-            assert(testModel->getNumRows()==192);
-            assert(testModel->getNumCols()==411);
-            assert(testModel->getNumElements()==822);
-            assert(testModel->getObjValue()==1143);
+            EXPECT_EQ(192, testModel->getNumRows());
+            EXPECT_EQ(411, testModel->getNumCols());
+            EXPECT_EQ(822, testModel->getNumElements());
+            EXPECT_EQ(1143, testModel->getObjValue());
 
             //cout<<cars.level()<<"  -----  "<<miles.level()<<endl;
 
             testModel.minimize(miles);
 
-            assert(testModel->getNumRows()==192);
-            assert(testModel->getNumCols()==411);
-            assert(testModel->getNumElements()==822);
-            assert(testModel->getObjValue()==163882);
+            EXPECT_EQ(192, testModel->getNumRows());
+            EXPECT_EQ(411, testModel->getNumCols());
+            EXPECT_EQ(822, testModel->getNumElements());
+            EXPECT_EQ(163882, testModel->getObjValue());
             //cout<<cars.level()<<"  -----  "<<miles.level()<<endl;
 
             cout<<"Test train passed."<<endl;
@@ -3882,10 +3888,10 @@ namespace flopc {
         cout<<"Here"<<endl;
 
         testModel.minimize( sum(Link, COST(Link)*x(Link)) );
-        assert(testModel->getNumRows()==5);
-        assert(testModel->getNumCols()==4);
-        assert(testModel->getNumElements()==8);
-        assert(testModel->getObjValue()>=156.14 && testModel->getObjValue()<=156.16);
+        EXPECT_EQ(5, testModel->getNumRows());
+        EXPECT_EQ(4, testModel->getNumCols());
+        EXPECT_EQ(8, testModel->getNumElements());
+        EXPECT_NEAR(156.15, testModel->getObjValue(), 0.01);
 
         x.display("Optimal solution:");
         supply.display("Supply dual solution");
@@ -3922,10 +3928,10 @@ namespace flopc {
 
         M.minimize_max( J, s(J)+D(J) ); 
 
-        assert(M->getNumRows()==14);
-        assert(M->getNumCols()==45);
-        assert(M->getNumElements()==80);
-        assert(M->getObjValue()>=6 && M->getObjValue()==6);
+        EXPECT_EQ(14, M->getNumRows());
+        EXPECT_EQ(45, M->getNumCols());
+        EXPECT_EQ(80, M->getNumElements());
+        EXPECT_EQ(6, M->getObjValue());
 
         s.display("s");
         cout<<"Test xbsl passed."<<endl;
@@ -3956,7 +3962,7 @@ namespace flopc {
 
         testModel.attach(testModel.Solver);
 
-        testModel.getSmi()->writeSmps("smpsWriterTest");
+        testModel.getSmi()->writeSmps("smpsWriterTest", true);
 
         cout << "Finished";
     }

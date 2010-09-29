@@ -1255,10 +1255,10 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     return 0;
 }
 
-int SmiScnModel::writeSmps(const char *name) {
+int SmiScnModel::writeSmps(const char *name, bool winFileExtensions) {
     if (this != NULL) {
         SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
-        smpsIO->writeSmps(name);
+        smpsIO->writeSmps(name, winFileExtensions);
         delete smpsIO;
         return 0;
     } else {
