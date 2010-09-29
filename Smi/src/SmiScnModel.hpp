@@ -74,14 +74,16 @@ public:
 
     /**@name Writes SMPS files.
     
-    This method generates three files {name}.[core, time, stoch].
+    This method generates three files {name}.[core, time, stoch] or {name}.[cor, tim, sto] (see second parameter).
     
-    @param name The name for the model and the written files (no file extension needed)
+    @param name The name for the model and the written files
+    
+    @param winFileExtensions Optional; by default its set to false, so extensions will be [core, time, stoch]. With this parameter set to true, it will be [cor, tim, sto].
     
     @return -1 in case of no existing SMI model, otherwise 0
     
     */
-    int writeSmps(const char *name);
+    int writeSmps(const char *name, bool winFileExtensions = false);
 
     SmiCoreData * getCore() {return core_;}
 
