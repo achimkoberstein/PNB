@@ -942,9 +942,9 @@ void SmiSmpsIO::writeTimeFile(const char* filename) {
         else
             line << std::setw(10) << std::left << this->columnName(core->getColStart(stg));
         line << std::setw(25) << std::left << this->rowName(core->getRowStart(stg));
-        stg == 0 ? line << "ROOT\n" : line << "STAGE_" << stg << "\n";
+        line << "STAGE_" << stg << "\n";
     }
-    line << "ENDDATA\n";
+    line << "ENDATA\n";
     output->puts(line.str());        
     delete output;
 }
@@ -957,7 +957,7 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
     std::stringstream line;
     line.fill(' ');
     line << "STOCH         " << this->getModProblemName() << "\n";
-    line << "SCENARIO      DISCRETE                 ";
+    line << "SCENARIOS     DISCRETE                 ";
     if (tree->getLeaf(0)->getDataPtr()->getNode()->getCoreCombineRule() == SmiCoreCombineReplace::Instance())
         line << "REPLACE\n";
     else
@@ -967,7 +967,7 @@ void SmiSmpsIO::writeStochFile(const char* filename) {
         writeScenarioToStochFile(line, tree->getLeaf(scen), scen);
     }
     
-    line << "ENDDATA\n";
+    line << "ENDATA\n";
     output->puts(line.str());        
     delete output;
 }
