@@ -346,6 +346,8 @@ void Benders::BendersSolve(double eps, int maxIter){
         cout << "UB " << UB_ << endl;
         cout << "LB_ " << LB_ << endl;	
         cout << "UB-LB_ " << UB_-LB_ << endl;
+        if (nIter_ > 350)
+            break;
         cout << "Iteration: " << nIter_ << endl;
     }	
     cout << "Objective value after "<< nIter_ << " iterations is: "  << LB_ << endl;
@@ -2691,9 +2693,9 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 //	// #7: Problem Path
 //	// #8: Solution Path
 		if (useBenders)
-			benders = new Benders("m", "+ws", "-ki", "-tr", "+ben"); //WarmStart is indeed usefull
+			benders = new Benders("m", "-ws", "-ki", "-tr", "+ben"); 
 		else 
-			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); //WarmStart is indeed usefull
+			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); 
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
 		// 
