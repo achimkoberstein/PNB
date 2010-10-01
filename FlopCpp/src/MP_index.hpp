@@ -5,6 +5,8 @@
 #ifndef _MP_index_hpp_
 #define _MP_index_hpp_
 
+#include <string>
+
 #include "MP_utilities.hpp"
 #include "MP_constant.hpp"
 
@@ -137,6 +139,10 @@ namespace flopc {
     and a Constant.  
     */
     MP_index_exp operator*(MP_index& i,const Constant& j);
+
+    class MP_set_base;
+
+    void semanticCheck( const std::string& type, const std::string& name, const MP_index* S1, const MP_index* S2, const MP_index* S3, const MP_index* S4, const MP_index* S5, const MP_index_exp& d1, const MP_index_exp& d2, const MP_index_exp& d3, const MP_index_exp& d4,const MP_index_exp& d5);
 
     class SUBSETREF;
 
@@ -278,6 +284,8 @@ namespace flopc {
         MP_index* indexPtr;
         Constant C;
     };
+
+
 
 
 } // End of namespace flopc

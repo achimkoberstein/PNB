@@ -1258,6 +1258,7 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 int SmiScnModel::writeSmps(const char *name, bool winFileExtensions) {
     if (this != NULL) {
         SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
+        smpsIO->setInfinity(osiStoch_->getInfinity());
         smpsIO->writeSmps(name, winFileExtensions);
         delete smpsIO;
         return 0;

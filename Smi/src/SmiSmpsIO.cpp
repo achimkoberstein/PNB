@@ -904,7 +904,7 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension) {
     delete [] dels;
     delete [] indx;
     delete [] rstrt;
-    
+       
     this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, NULL, NULL);
 
     delete [] clo;
