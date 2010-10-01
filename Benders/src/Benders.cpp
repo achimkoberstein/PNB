@@ -181,7 +181,11 @@ void Benders::BendersSolve(double eps, int maxIter){
         // Declaration of a temporary solution vector
         double *bestSol_Temp = new double[mncol_+zSub_+sncol_*nScen_];
         // Read current stage 1 solution 
-        const double* mSol = osiMaster_->getColSolution();
+        const double* mSol = 0;
+        if (osiMaster_->isProvenDualInfeasible())
+            mSol = osiMaster_->getPrimalRays(1)[0];
+        else 
+            mSol = osiMaster_->getColSolution();
         // Write current stage 1 solution to temporary solution vector; it 
         // also contains the value(s) of the variables for the scenario(s);
         // there is a check if the values are close to zero, if this is the
@@ -198,6 +202,7 @@ void Benders::BendersSolve(double eps, int maxIter){
                 bestSol_Temp[i] = mSol[i];
             }
         }
+        delete [] mSol;
 
         // Update lower bound, but not in the first iteration and only if
         // there are no feasibility cuts added in the previous iterations,
@@ -1106,7 +1111,7 @@ int Benders::solveMaster(){
         }
         // Solve master problem
         // If there are no integer variables use initialSolve
-        if(mnInt_==0){
+        if(mnInt_==0){ 
             osiMaster_->setHintParam(OsiDoDualInInitial,true);
             osiMaster_->initialSolve();
             //osiMaster_->initialBarSolve();
@@ -1135,11 +1140,29 @@ int Benders::solveMaster(){
     }
 
     // If master problem is infeasible, print an error
-    if(osiMaster_->isProvenPrimalInfeasible() && osiMaster_->isProvenDualInfeasible()){
-
+    bool primalInfeasible = osiMaster_->isProvenPrimalInfeasible();
+    bool dualInfeasible = osiMaster_->isProvenDualInfeasible();
+    bool abandonedd = osiMaster_->isAbandoned();
+    bool primalObjectiveLimit = osiMaster_->isPrimalObjectiveLimitReached();
+    bool dualObjectiveLimit = osiMaster_->isDualObjectiveLimitReached();
+    bool optimal = osiMaster_->isProvenOptimal();
+    if(osiMaster_->isProvenPrimalInfeasible() ) {
         cout << "Error: master problem is infeasible or unbounded!" << endl;
         return -1;
     }
+    if ( osiMaster_->isProvenDualInfeasible()){
+        // We do not take an arbitrary feasible solution, but one on the unbounbed ray.
+        // We need the LP solution to get dual rays right now..
+        osiMaster_->initialSolve();
+        cout << "Error: master problem is unbounded!" << endl;
+        if ( nIter_ > 0)
+        return -1;
+    }
+    if (osiMaster_->isAbandoned()){
+        cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
+        return -1;
+    }
+    // We have to find a suitable feasible solution if the problem is unbounded ?!
 
 
     return 0;

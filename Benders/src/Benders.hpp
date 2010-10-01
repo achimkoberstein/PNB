@@ -371,7 +371,7 @@ public:
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
-		OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+		//OsiClpSolverInterface *clp = new OsiClpSolverInterface();
 		// Solver interface for master problem
 		//osiMaster_ = clp->clone(false);
 		osiMaster_ = cpx->clone(false);
@@ -396,7 +396,7 @@ public:
 		knapsack_ = false;
 		// Delete solver interfaces		
 		delete cpx;
-		delete clp;
+		//delete clp;
 	}
 
 	Benders(char * single, char * warmstart, char * knap, char * trust, char * bend):
@@ -429,7 +429,7 @@ public:
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
-		OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+		//OsiClpSolverInterface *clp = new OsiClpSolverInterface();
 		// Solver interface for master problem
 		//osiMaster_ = clp->clone(false);
 		osiMaster_ = cpx->clone(false);
@@ -485,7 +485,7 @@ public:
 		}
 		// Delete solver interfaces		
 		delete cpx;
-		delete clp;
+		//delete clp;
 	}
 	// Boolean to indicate if problem should be solved
 	// with Benders or detEq
