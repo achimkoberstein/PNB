@@ -263,12 +263,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
     testModel.solve(MP_model::MAXIMIZE);
 
     EXPECT_EQ(MP_model::DUAL_INFEASIBLE,testModel.getStatus());
-    testModel->writeMps("testFile"); //We write no direction into MPS files.. that is not good.
-    testModel->readMps("testFile");
-    testModel->initialSolve();
-
-
-    
+    //testModel->writeMps("testFile"); //We write no direction into MPS files.. that is not good.
+    //testModel->readMps("testFile");
+    //testModel->initialSolve();
+   
 }
 
     TEST_F(UseCaseTest,ConditionalValueAtRiskTest){
@@ -4033,18 +4031,20 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         testModel.setObjective(sum(T, x(T)));
 
-        testModel.attach(testModel.Solver);
+        testModel.attach();
+        testModel.solve(MP_model::MINIMIZE);
 
         testModel.getSmi()->writeSmps("smpsWriterTest", true);
 
         cout << "Finished";
+        //TODO: Nothing is tested here?!
     }
 } //end namespace
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.Infinity*";
+    //::testing::GTEST_FLAG(filter) = "*.Infinity*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
