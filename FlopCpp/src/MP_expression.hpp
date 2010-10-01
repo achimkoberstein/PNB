@@ -301,6 +301,8 @@ namespace flopc {
     MP_expression operator/(const MP_expression& e1, const Constant& e2);
     /// @ingroup PublicInterface
     MP_expression sum(const MP_domain& d, const MP_expression& e);
+    /// @ingroup PublicInterface
+    MP_expression cvar(double alpha, const MP_expression& e1);
 
 } // End of namespace flopc
 #endif

@@ -276,11 +276,11 @@ namespace flopc {
         Messenger *getMessenger(){ 
             return messenger;
         }
-        MP_stage getStage() const { return stage; }
+        const MP_stage& getStage() const { return stage; }
         void setStage(const MP_stage& val) { stage = val; }
         bool getStochastic() const { return stochastic; }
         void setStochastic(const bool& val) { stochastic = val; }
-        MP_scenario_set getScenSet() const { return scenSet; }
+        const MP_scenario_set& getScenSet() const { return scenSet; }
         void setScenSet(const flopc::MP_scenario_set& val) { scenSet = val; }
         void setProbabilities(const MP_data& prob);
         std::vector<double> getProbabilities();
