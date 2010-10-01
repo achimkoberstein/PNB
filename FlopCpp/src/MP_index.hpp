@@ -5,6 +5,8 @@
 #ifndef _MP_index_hpp_
 #define _MP_index_hpp_
 
+#include <string>
+
 #include "MP_utilities.hpp"
 #include "MP_constant.hpp"
 
@@ -138,6 +140,10 @@ namespace flopc {
     */
     MP_index_exp operator*(MP_index& i,const Constant& j);
 
+    class MP_set_base;
+
+    void semanticCheck( const std::string& type, const std::string& name, const MP_index* S1, const MP_index* S2, const MP_index* S3, const MP_index* S4, const MP_index* S5, const MP_index_exp& d1, const MP_index_exp& d2, const MP_index_exp& d3, const MP_index_exp& d4,const MP_index_exp& d5);
+
     class SUBSETREF;
 
     /** @brief Representation of an expression involving an index.
@@ -259,7 +265,7 @@ namespace flopc {
         friend class MP_index_exp;
     public:
     private:
-        MP_index_constant(const Constant& c) : indexPtr(new MP_index()),C(c) { indexPtr->assign(c->evaluate());}
+        MP_index_constant(const Constant& c) : indexPtr(new MP_index()),C(c) { indexPtr->assign((int)(c->evaluate()));}
         ~MP_index_constant() { delete indexPtr; }
         int evaluate() const {
             return int(C->evaluate()); 
@@ -270,7 +276,7 @@ namespace flopc {
             return indexPtr;
         }
         virtual MP_domain getDomain(MP_set* s) const;
-        virtual MP_index_base* deepCopy() const { return MP_index_exp::getEmpty().operator->(); }
+        virtual MP_index_base* deepCopy() const { return new MP_index_constant(C); }
         virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr) { 
             return expr.operator->();
             throw invalid_argument_exception(); //TODO: What is it with this?
@@ -278,6 +284,8 @@ namespace flopc {
         MP_index* indexPtr;
         Constant C;
     };
+
+
 
 
 } // End of namespace flopc

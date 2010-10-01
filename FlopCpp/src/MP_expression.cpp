@@ -280,8 +280,7 @@ namespace flopc {
         friend MP_expression operator*(const MP_expression& e1, const Constant& e2);
         friend MP_expression operator*(const RandomConstant& e1, const MP_expression& e2);
         friend MP_expression operator*(const MP_expression& e1, const RandomConstant& e2);
-        //friend MP_expression operator*(const RandomDataRef& e1, const MP_expression& e2);
-        //friend MP_expression operator*(const MP_expression& e1, const RandomDataRef& e2);
+
 
     private:
         Expression_mult(const RandomConstant& e1, const MP_expression& e2) : 
@@ -339,6 +338,65 @@ namespace flopc {
            }
            MP_expression left;
            RandomConstant right;
+    };
+
+    class Expression_cvar : public MP_expression_base, public MP  {
+        friend MP_expression cvar(double alpha, const MP_expression& e);
+    private:
+        Expression_cvar(double alpha, const MP_expression& e) : alpha(alpha), exp(e) {
+            // We have to add our new variables and constraints and stuff to the current model
+            //const MP_stage& T = MP_model::getCurrentModel()->getStage();
+            //MP_variable* zPtr = 0;
+            //if ( MP_model::getCurrentModel()->getStochastic() && MP_model::getCurrentModel()->getStage().size() <= 2){
+            //    zPtr = new MP_variable( T );
+            //} 
+            //else{
+            //    throw invalid_argument_exception();
+            //}
+            //MP_variable* gammaPtr = new MP_variable();
+            //MP_variable* scenarioValue = new MP_variable();
+            //MP_constraint* cvarConstrPtr = new MP_constraint(T);
+            //MP_constraint* equalConstrPtr = new MP_constraint();
+            ////e.getDomain();
+            //MP_index a,b,c,d,f;
+            //(*equalConstrPtr)() = (*scenarioValue)() == exp; //sum(a*b*c*d*f,exp(a,b,c,d,f)); // If this really works? TODO
+            //(*cvarConstrPtr)(T+1) = (*zPtr)(T+1) >= (*scenarioValue)()-(*gammaPtr)();
+            //// We have to ensure that we set the right objective
+            //MP_model::getCurrentModel()->setObjective( (*gammaPtr)() + 1/(1-alpha)* (*zPtr)(T.last()) );
+
+        }
+
+        double level() const {
+            //SumFunctor SF(exp);
+            //D.forall(SF);
+            //return SF.the_sum;
+            throw not_implemented_error();
+        } 
+        void generate(const MP_domain& domain,
+            vector<TerminalExpression *> multiplicators,
+            MP::GenerateFunctor& f,
+            double m) const {
+                exp->generate(domain, multiplicators, f, m); 
+        }
+        void insertVariables(set<MP_variable*>& v) const {
+            exp->insertVariables(v);
+        }
+        void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
+            exp->insertRandomVariables(v);
+        }
+
+        class CvarFunctor : public Functor {
+        public:
+            CvarFunctor(double alpha,MP_expression exp) : A(alpha), E(exp) {}
+            void operator()() const {
+                //the_sum += E->level();
+            }
+            double A;
+            MP_expression E;      
+        };
+
+        double alpha;
+        MP_expression exp;
     };
 
     class Expression_sum : public MP_expression_base, public MP  {
@@ -448,6 +506,10 @@ namespace flopc {
         return new Expression_sum(d, e);  
     }
 
+    MP_expression cvar( double alpha, const MP_expression& e1 )
+    { // Turn the given expression into a cvar-ready formulation. We need to add 
+        return new Expression_cvar(alpha,e1);
+    }
 
 
 } // End of namespace flopc
@@ -585,11 +647,15 @@ void MP::GenerateFunctor::operator()() const {
                     for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++ ){
                         scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
-                    double meanValue = 0;
-                    std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
-                    for (int j = 0; j < scenarioValues.size(); j++)
-                        meanValue += scenarioValues[j]*probs[j];
-                    val = meanValue;
+
+                    // If we sample we may want to replace the mean value, otherwise we probably don't
+                    if (MP_model::getCurrentModel()->getSample() ){
+                        double meanValue = 0;
+                        std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+                        for (int j = 0; j < scenarioValues.size(); j++)
+                            meanValue += scenarioValues[j]*probs[j];
+                        val = meanValue;
+                    }
 
                     // We have to replace the mean value?
                 }

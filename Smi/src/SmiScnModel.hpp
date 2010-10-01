@@ -72,7 +72,18 @@ public:
     int readSmps(const char *name,
         SmiCoreCombineRule *r=NULL );
 
-    void writeSmps(const char *name);
+    /**@name Writes SMPS files.
+    
+    This method generates three files {name}.[core, time, stoch] or {name}.[cor, tim, sto] (see second parameter).
+    
+    @param name The name for the model and the written files
+    
+    @param winFileExtensions Optional; by default its set to false, so extensions will be [core, time, stoch]. With this parameter set to true, it will be [cor, tim, sto].
+    
+    @return -1 in case of no existing SMI model, otherwise 0
+    
+    */
+    int writeSmps(const char *name, bool winFileExtensions = false);
 
     SmiCoreData * getCore() {return core_;}
 
@@ -159,12 +170,15 @@ public:
     OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
     std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
-    double solveEV(OsiSolverInterface *osiSolver, double objSense);
+    std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense);
     double solveEEV(OsiSolverInterface *osiSolver, double objSense);
+
     double getWSValue(OsiSolverInterface *osiSolver, double objSense);
+    double getEVValue(OsiSolverInterface* osiSolver, double objSense);
+    double getEEVValue(OsiSolverInterface* osiSolver, double objSense);
 
     //Let SmiScnModel own core data
-    void Core(SmiCoreData * val) { core_ = val; }
+    void setCore(SmiCoreData * val) { core_ = val; }
 
     // get scenario problem data
     SmiScenarioIndex getNumScenarios(){ return smiTree_.getNumScenarios();}
@@ -315,6 +329,7 @@ public:
                 node_= NULL;
             }
        	}
+         
     }
 
 private:
