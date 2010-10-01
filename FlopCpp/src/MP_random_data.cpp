@@ -92,7 +92,7 @@ namespace flopc{
         }; 
 
         //Do a shallow copy (leave values in original arrays). This means we do want to delete the created RandomVariables
-        MP_random_data_impl(double* array, const MP_set_base &s1, const MP_set_base &s2, const                   MP_set_base &s3, const MP_set_base &s4, const MP_set_base &s5):
+        MP_random_data_impl(double* array, const MP_set_base &s1, const MP_set_base &s2, const MP_set_base &s3, const MP_set_base &s4, const MP_set_base &s5):
         RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
             S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),c(0),values(new RandomVariable*[size()]),myrefs(),manageData(true),stage(-1) {  //Consistency check?
                 initialize();
@@ -185,12 +185,7 @@ namespace flopc{
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
                 if (MP_model::getCurrentModel()->checkSemantic() ){
-                    LOG_IF(WARNING,S1.getIndex() != &MP_set::getEmpty() && d1->getIndex() != S1.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "First index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S2.getIndex() != &MP_set::getEmpty() && d2->getIndex() != S2.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Second index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S3.getIndex() != &MP_set::getEmpty() && d3->getIndex() != S3.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Third index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S4.getIndex() != &MP_set::getEmpty() && d4->getIndex() != S4.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fourth index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S5.getIndex() != &MP_set::getEmpty() && d5->getIndex() != S5.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fifth index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-
+                    semanticCheck("MP_random_data", this->getName(), S1.getIndex(),S2.getIndex(),S3.getIndex(), S4.getIndex(),S5.getIndex(),d1,d2,d3,d4,d5);
                 }
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
                 myrefs.push_back(RandomConstant(tempPtr));
@@ -221,8 +216,11 @@ namespace flopc{
                 stage = 3;
             else if (S5.isStage())
                 stage = 4;
-            else //As long as we only support recourse formulations, we need to adress a stage to a RV
+            else{ //As long as we only support recourse formulations, we need to adress a stage to a RV
+                // Delete RV array
+                delete[] values;
                 throw invalid_argument_exception();
+            }
         }
 
 

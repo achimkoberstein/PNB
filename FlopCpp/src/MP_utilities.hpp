@@ -13,11 +13,6 @@ using std::string;
 #include <vector>
 using std::vector;
 
-// TODO: Remove these headers together with the static int in the Handle class
-//#include <iostream>
-//#include <typeinfo>
-//
-
 #include <boost/exception/all.hpp>
 #include <glog/logging.h>
 
