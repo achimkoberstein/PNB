@@ -29,7 +29,7 @@ D(d),I1(i1),I2(i2),I3(i3),I4(i4),I5(i5),origI1(MP_index_exp::getEmpty()),origI2(
 
 const DataRef& DataRef::operator=(const Constant& c) {
     C = c;
-    ((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); //TODO: What happens if Dimensions are not right?
+    ((D->S1(I1)*D->S2(I2)*D->S3(I3)*D->S4(I4)*D->S5(I5)).such_that(B)).forall(this); 
     return *this;
 }
 
@@ -104,7 +104,7 @@ void DataRef::evaluate_lhs(double v) const {
         D->v[i] = v;
     }
     else {
-        DLOG(ERROR) << "An index not suitable for the given set appears. Please recheck your model formulation.";
+        LOG(ERROR) << "FlopCpp Error: an index not suitable for the given set appears. Please recheck your model formulation.";
         throw invalid_argument_exception(); //This should not happen!
     }
 }
@@ -132,11 +132,7 @@ DataRef& flopc::DataRef::probability( double p )
 DataRef& flopc::MP_data::operator()( const MP_index_exp& lcli1 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli2 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli3 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli4 /*= MP_index_exp::getEmpty()*/, const MP_index_exp& lcli5 /*= MP_index_exp::getEmpty() */ )
 {
     if (MP_model::getCurrentModel()->checkSemantic()){
-        LOG_IF(WARNING,S1.getIndex() != &MP_set::getEmpty() && lcli1->getIndex() != S1.getIndex() && lcli1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "First index given to MP_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S2.getIndex() != &MP_set::getEmpty() && lcli2->getIndex() != S2.getIndex() && lcli2->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Second index given to MP_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S3.getIndex() != &MP_set::getEmpty() && lcli3->getIndex() != S3.getIndex() && lcli3->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Third index given to MP_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S4.getIndex() != &MP_set::getEmpty() && lcli4->getIndex() != S4.getIndex() && lcli4->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fourth index given to MP_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S5.getIndex() != &MP_set::getEmpty() && lcli5->getIndex() != S5.getIndex() && lcli5->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fifth index given to MP_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        semanticCheck("MP_data", this->getName(), S1.getIndex(),S2.getIndex(),S3.getIndex(), S4.getIndex(),S5.getIndex(),lcli1,lcli2,lcli3,lcli4,lcli5);
     }
 
     DataRef* dPtr = new DataRef(this, lcli1, lcli2, lcli3, lcli4, lcli5);

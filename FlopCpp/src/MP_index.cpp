@@ -23,11 +23,11 @@ namespace flopc {
     }
 
     MP_index_base* MP_index::insertIndexExpr( const MP_index_exp& expr)
-    {
+    { // We should replace this MP_index with the MP_index_exp we got. How can this possibly work?
         if (this->getIndex() == expr->getIndex()){
             return expr.operator->();
         }
-        else{ // We should check for indices, which can be instantiated during the display and generation methiod
+        else{ // We should check for indices, which can be instantiated during the display and generation method
             return this->getIndex();
         }
         throw not_implemented_error();
@@ -146,6 +146,21 @@ namespace flopc {
     MP_domain MP_index_constant::getDomain( MP_set* s ) const
     {
         return MP_domain::getEmpty();
+    }
+
+    void semanticCheck( const std::string& type, const std::string& name, const MP_index* S1, const MP_index* S2, const MP_index* S3, const MP_index* S4, const MP_index* S5, const MP_index_exp& d1, const MP_index_exp& d2, const MP_index_exp& d3, const MP_index_exp& d4,const MP_index_exp& d5 )
+    {
+        // We also have to check if we index with more indices than we assigned.// typename
+        LOG_IF(ERROR,S1 == &MP_set::getEmpty() && &d1 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " that has no set. This is an error.";
+        LOG_IF(ERROR,S2 == &MP_set::getEmpty() && &d2 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with two indices, but only one set. This is an error.";
+        LOG_IF(ERROR,S3 == &MP_set::getEmpty() && &d3 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with three indices, but only two sets. This is an error.";
+        LOG_IF(ERROR,S4 == &MP_set::getEmpty() && &d4 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with four indices, but only three sets. This is an error.";
+        LOG_IF(ERROR,S5 == &MP_set::getEmpty() && &d5 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with five indices, but only four sets. This is an error.";
+        LOG_IF(WARNING,S1 != &MP_set::getEmpty() && d1->getIndex() != S1 && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()  ) << "First index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S2 != &MP_set::getEmpty() && d2->getIndex() != S2 && d2->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Second index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S3 != &MP_set::getEmpty() && d3->getIndex() != S3 && d3->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Third index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S4 != &MP_set::getEmpty() && d4->getIndex() != S4 && d4->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fourth index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S5 != &MP_set::getEmpty() && d5->getIndex() != S5 && d5->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fifth index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
     }
 } // End of namespace flopc
 
