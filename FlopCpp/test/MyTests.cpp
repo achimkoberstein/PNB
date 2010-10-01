@@ -128,7 +128,7 @@ namespace flopc {
         BendersTest(){ }
     };
 
-    class FlopCppExamples: public MP_modelTest {
+    class FlopCppExamples: public ::testing::Test {
     public:
     protected:
         FlopCppExamples(){}
@@ -240,6 +240,33 @@ namespace flopc {
 
     //}
 
+TEST_F(UseCaseTest,InfinityHandlingTest){
+    MP_model testModel(new OsiClpSolverInterface);
+    MP_data data1;
+    data1() = testModel->getInfinity();
+    MP_data data2;
+    data2() = 1000000000;
+    
+    MP_variable x,y;
+    x.upperLimit() = data1();
+    y.upperLimit() = data2();
+
+    MP_constraint con1,con2;
+    con1() = x() <= data1();
+    con2() = y() <= data2();
+
+    testModel.setObjective(x()+y());
+    testModel.solve(MP_model::MAXIMIZE);
+
+    EXPECT_EQ(MP_model::DUAL_INFEASIBLE,testModel.getStatus());
+    testModel->writeMps("testFile"); //We write no direction into MPS files.. that is not good.
+    testModel->readMps("testFile");
+    testModel->initialSolve();
+
+
+    
+}
+
     TEST_F(UseCaseTest,ConditionalValueAtRiskTest){
         MP_model testModel(new OsiClpSolverInterface);
         MP_stage T(2);
@@ -251,12 +278,12 @@ namespace flopc {
         MP_variable recourse(T);
 
         MP_constraint secondStageConstraint1(T),secondStageConstraint2(T);
-        secondStageConstraint1(T+1) = x() >= a(T+1) + recourse(T+1);
+        secondStageConstraint1(T+1) = x() >= a(T+1) - recourse(T+1);
         //secondStageConstraint2(T+1) = y(T+1) == a()
-        MP_expression obj = x(T.last()) + 2*recourse(T.last());
+        MP_expression obj = x() + 2*recourse(T.last());
         testModel.setObjective(obj);
         testModel.solve(MP_model::MINIMIZE);
-        testModel.setObjective( cvar(0.1,obj));
+        testModel.setObjective( cvar(0.2,obj));
         testModel.solve(MP_model::MINIMIZE);
 
 
@@ -3355,7 +3382,7 @@ namespace flopc {
             return min + (max-min)*(rand()/(RAND_MAX+0.0));
         }
 
-        TEST_F(FlopCppExamples, DISABLED_multiProduct){
+        TEST_F(FlopCppExamples, multiProduct){
             MP_model testModel(new OsiCbcSolverInterface);
             testModel.verbose();
             enum {Godiva,Neuhaus,Leonidas,nbrProducts};
@@ -3425,8 +3452,32 @@ namespace flopc {
             }
             double limit = 500;
 
-            MultiProduct(testModel, Cities,Products,Routes,Suppliers,Customers, Connections,
-                supply,demand,limit,cost);
+            //MP_index p,o,d;
+            MP_variable trans(Routes);
+
+            MP_constraint sup(Suppliers);
+            MP_constraint dem(Customers);
+            MP_constraint lim(Connections);
+
+            sup(Suppliers(p,o)) =
+                sum(Routes(p,o,d), trans(Routes(p,o,d))) <= supply(Suppliers(p,o));
+
+            dem(Customers(p,d)) =
+                sum(Routes(p,o,d), trans(Routes(p,o,d))) >= demand(Customers(p,d));
+
+            lim(Connections(o,d)) =
+                sum(Routes(p,o,d), trans(Routes(p,o,d))) <= limit;
+
+            testModel.minimize( sum(Routes(p,o,d), cost(Routes(p,o,d)) * trans(Routes(p,o,d))) );
+
+            assert(testModel->getNumRows()==41);
+            assert(testModel->getNumCols()==18);
+            assert(testModel->getNumElements()==54);
+
+            trans.display("solution");
+
+            //MultiProduct(testModel, Cities,Products,Routes,Suppliers,Customers, Connections,
+            //    supply,demand,limit,cost);
 
             cout<<"Test multiproduct passed."<<endl;
         }
@@ -3987,7 +4038,7 @@ namespace flopc {
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.ConstantTerm*";
+    ::testing::GTEST_FLAG(filter) = "*.Infinity*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

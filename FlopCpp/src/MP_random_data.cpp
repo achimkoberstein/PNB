@@ -185,12 +185,7 @@ namespace flopc{
             const MP_index_exp& d4, 
             const MP_index_exp& d5) {
                 if (MP_model::getCurrentModel()->checkSemantic() ){
-                    LOG_IF(WARNING,S1.getIndex() != &MP_set::getEmpty() && d1->getIndex() != S1.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "First index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S2.getIndex() != &MP_set::getEmpty() && d2->getIndex() != S2.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Second index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S3.getIndex() != &MP_set::getEmpty() && d3->getIndex() != S3.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Third index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S4.getIndex() != &MP_set::getEmpty() && d4->getIndex() != S4.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fourth index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-                    LOG_IF(WARNING,S5.getIndex() != &MP_set::getEmpty() && d5->getIndex() != S5.getIndex() && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fifth index given to MP_random_data with name " << this->getName() << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-
+                    semanticCheck("MP_random_data", this->getName(), S1.getIndex(),S2.getIndex(),S3.getIndex(), S4.getIndex(),S5.getIndex(),d1,d2,d3,d4,d5);
                 }
                 RandomDataRef* tempPtr = new RandomDataRef(this, d1, d2, d3, d4, d5);
                 myrefs.push_back(RandomConstant(tempPtr));
