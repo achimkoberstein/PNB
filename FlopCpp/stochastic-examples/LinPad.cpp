@@ -29,8 +29,13 @@ int main(int argc, char* argv[]) {
     MP_model mod(new OsiCpxSolverInterface());
 
     enum {numT=2};
-    MP_stage T(numT);
+    //MP_stage T(numT);
+    MP_set T(numT);
     T.setName("T");
+    
+    //enum {numScen=1};
+    //MP_scenario_set scen(numScen);
+    //scen.setName("scen");
     
     // SETS
     
@@ -85,8 +90,8 @@ int main(int argc, char* argv[]) {
         {30, 20, 10},
         {30, 20, 10}
     };
-    MP_data varkK(&valVarK[0][0], T, Behaelter);
-    varkK.setName("VarK");
+    MP_data varK(&valVarK[0][0], T, Behaelter);
+    varK.setName("VarK");
     
     double valNachfrage[numT][numKnoten] = {
         {20, 10, 15, 30, 17, 5},
@@ -145,9 +150,15 @@ int main(int argc, char* argv[]) {
         z(T, Strang, App),
         y(T, Strang, App);
     
+    qs.setName("qs");
+    yq.setName("yq");
     yq.binary();
+    q.setName("q");
     q.free();
+    h.setName("h");
+    z.setName("z");
     z.free();
+    y.setName("y");
     y.binary();
     
     forall(T*Strang*App.such_that(App <= App-1), z.upperLimit(T,Strang,App) = 0);
@@ -155,16 +166,107 @@ int main(int argc, char* argv[]) {
     
     // CONSTRAINTS
     
+    MP_index S, E, M, N, I; // used for Strang
+    
     MP_constraint bigM(Behaelter);
+    bigM.setName("bigM");
+    bigM(Behaelter).such_that(!IstBehaelter(Behaelter)) = sum(T, qs(T,Behaelter)) <= 100000 * yq(Behaelter);
+    
+    MP_constraint istBeh(IstBehaelter);
+    istBeh.setName("istBeh");
+    istBeh(IstBehaelter) = yq(IstBehaelter) == 1;
+    
+    MP_constraint masBilEinOhneBeh(T, Einspeisung);
+    masBilEinOhneBeh.setName("masBilEinOhneBeh");
+    masBilEinOhneBeh(T, Einspeisung(E).such_that(!Behaelter(E))) = sum(Strang(M,E), q(T,M,E)) - sum(Strang(E,N), q(T,E,N)) == nachfrage(T,E) - e(T,E);
+    
+    MP_constraint masBilEinMitBeh0(Knoten);
+    masBilEinMitBeh0.setName("MasBilEinMitBeh0");
+    masBilEinMitBeh0(Knoten).such_that(Einspeisung(Knoten) && Behaelter(Knoten))  = sum(Strang(M,Knoten), q(0,M,Knoten)) - sum(Strang(Knoten,N), q(0,Knoten,N) - qs(0,Knoten)) == nachfrage(0,Knoten) - e(0,Knoten);
+    
+    MP_constraint masBilEinMitBehT(T, Knoten);
+    masBilEinMitBehT.setName("masBilEinMitBehT");
+    masBilEinMitBehT(T, Knoten).such_that(T > 0 && Einspeisung(Knoten) && Behaelter(Knoten))  = sum(Strang(M,Knoten), q(T,M,Knoten)) - sum(Strang(Knoten,N), q(T,Knoten,N) - qs(T,Knoten) + qs(T-1,Knoten)) == nachfrage(T,Knoten) - e(T,Knoten);
+    
+    MP_constraint masBilMitBeh0(Behaelter);
+    masBilMitBeh0.setName("masBilMitBeh0");
+    masBilMitBeh0(Behaelter(I).such_that(!Einspeisung(Behaelter))) = sum(Strang(M,I), q(0,M,I)) - sum(Strang(I,N), q(0,I,N) - qs(0,I)) == nachfrage(0,I);
+    
+    MP_constraint masBilMitBehT(T, Behaelter);
+    masBilMitBehT.setName("masBilMitBehT");
+    masBilMitBehT(T,Behaelter).such_that(T > 0 && !Einspeisung(Behaelter)) = sum(Strang(M,I), q(T,M,I)) - sum(Strang(I,N), q(T,I,N) - qs(T,I) + qs(T-1,I)) == nachfrage(0,I);
+    
+    MP_constraint masBilOhneBeh(T, Knoten);
+    masBilOhneBeh.setName("masBilOhneBeh");
+    masBilOhneBeh(T, Knoten).such_that(!Einspeisung(Knoten) && !Behaelter(Knoten)) = sum(Strang(M,Knoten), q(T,M,Knoten)) - sum(Strang(Knoten,N), q(T,Knoten,N)) == nachfrage(T,Knoten);
+    
+    MP_constraint druckInit0(Bezugspunkt);
+    druckInit0.setName("druckInit0");
+    druckInit0(Bezugspunkt) = h(0,Bezugspunkt) == initH(Bezugspunkt);
+    
+    MP_constraint druckInit1(T, Behaelter);
+    druckInit1.setName("druckInit1");
+    druckInit1(T, Behaelter).such_that(T > 0) = h(T,Behaelter) - qs(T-1,Behaelter) <= 100 * (1 - yq(Behaelter));
+    
+    MP_constraint druckInit2(T, Behaelter);
+    druckInit2.setName("druckInit2");
+    druckInit2(T, Behaelter).such_that(T > 0) = -h(T,Behaelter) + qs(T-1,Behaelter) <= 100 * (1 - yq(Behaelter));
+    
+    MP_constraint druckInit3(T, Behaelter);
+    druckInit3.setName("druckInit3");
+    druckInit3(T, Behaelter).such_that(T > 0) = qs(T-1,Behaelter) <= 100 * yq(Behaelter);
+    
+    MP_constraint linKomb1(T, Strang);
+    linKomb1.setName("linKomb1");
+    linKomb1(T, Strang) = q(T,Strang) == linKoeffQ(0) + sum(App.such_that(App <= App-1), z(T,Strang,App));
+    
+    MP_constraint linKomb2(T, Strang);
+    linKomb2.setName("linKomb2");
+    linKomb2(T, Strang(M,N)) = linKoeffH(0) + sum(App.such_that(App <= App-1), linKoeffH(App+1) * z(T,Strang,App)) == h(T,M) - h(T,N);
+    
+    MP_constraint linBin1(T, Strang, App);
+    linBin1.setName("linBin1");
+    linBin1(T, Strang(M,N), App).such_that(App <= App-2) = z(T,Strang,App) >= linKoeffQ(App+1) * y(T,Strang,App);
+    
+    MP_constraint linBin2(T, Strang, App);
+    linBin2.setName("linBin2");
+    linBin2(T, Strang(M,N), App).such_that((App >= 1) && (App <= App-1)) = z(T,Strang,App) <= linKoeffQ(App+1) * y(T,Strang,App-1);
+    
+    //MP_constraint linBin3(T, Strang);
+    //linBin3.setName("linBin3");
+    //linBin3(T, Strang) = z(T,Strang,App-1) >= 0;
+    forall(T*Strang, z.lowerLimit(T,Strang,App.last()) = 0);
+    
+    MP_constraint linBin4(T, Strang);
+    linBin4.setName("linBin4");
+    linBin4(T, Strang) = z(T,Strang,0) <= linKoeffQ(1);
+    
+    MP_constraint lub0(Behaelter);
+    lub0.setName("lub0");
+    lub0(Behaelter) = qs(0,Behaelter) <= sum(Einspeisung, e(0,Einspeisung));
+    
+    MP_constraint lub(T, Behaelter);
+    lub.setName("lub");
+    MP_index behAlias;
+    lub(T, Behaelter).such_that(T >= 1) = qs(T,Behaelter) <= sum(Einspeisung, e(T,Einspeisung)) + sum(Behaelter(behAlias), qs(T-1,behAlias));
+    
+    MP_constraint lVmax(T, Behaelter);
+    lVmax.setName("lVmax");
+    lVmax(T, Behaelter) = qs(T,Behaelter) <= vmax(Behaelter);
     
     
+    // OBJECTIVE
+    
+    mod.setObjective(sum(Behaelter, fixK(Behaelter) * yq(Behaelter) + sum(T, varK(T,Behaelter) * qs(T,Behaelter))));
+    
+    // SOLVE    
     
     mod.attach(mod.Solver);
 
-    //mod.solve(MP_model::MINIMIZE);
+    mod.solve(MP_model::MINIMIZE);
 
-    OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
-    benders.initialSolve();
+    //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
+    //benders.initialSolve();
 
     return 0;
 }
