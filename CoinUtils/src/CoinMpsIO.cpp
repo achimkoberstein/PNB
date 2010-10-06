@@ -2311,7 +2311,7 @@ int CoinMpsIO::readMps(int & numberSets,CoinSet ** &sets)
 	    } else {
 	      ifError = true;
 	    }
-            if (value>1.0e25)
+            if (value>1.0e19) //We made this setting so we can handle Cplex infinity values?!
               value=infinity_;
 	    colupper_[icolumn] = value;
 	    columnType[icolumn] = COIN_UP_BOUND;

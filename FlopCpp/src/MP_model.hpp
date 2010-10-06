@@ -330,7 +330,7 @@ namespace flopc {
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;
         typedef std::set<RandomVariable* >::iterator randomVarIt;
-        static MP_model& default_model;
+        //static MP_model& default_model;
         static MP_model* current_model;
         MP_model(const MP_model&);
         MP_model& operator=(const MP_model&);
