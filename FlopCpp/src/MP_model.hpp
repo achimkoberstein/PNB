@@ -14,8 +14,11 @@
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
 // This is necessary for PFunc and windows, so do a #ifdef around it
-//#include <Windows.h>
-//#include <pfunc/pfunc.hpp>
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
+
+#include <pfunc/pfunc.hpp>
 
 
 #include "MP_expression.hpp"

@@ -138,6 +138,12 @@ GLOGINCDIR=`cd $srcdir/../ThirdParty/glog/include; pwd`
 GLOGLIB=`cd $srcdir/../ThirdParty/glog/lib; pwd`
 AC_COIN_HAS_USER_LIBRARY([glog],[GLOG],[glog/logging.h])
 
+AC_SUBST(PFUNCINCDIR)
+AC_SUBST(PFUNCLIB)
+PFUNCINCDIR=`cd $srcdir/../ThirdParty/pfunc/pfunc; pwd`
+PFUNCLIB=`cd $srcdir/../ThirdParty/pfunc/lib; pwd`
+AC_COIN_HAS_USER_LIBRARY([pfunc],[PFUNC],[pfunc/pfunc.hpp])
+
 
 ##############################################################################
 #                   VPATH links for example input files                      #
