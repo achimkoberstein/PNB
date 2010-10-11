@@ -19,7 +19,7 @@ MyTest_SOURCES = MyTests.cpp
 
 # List libraries of COIN projects
 unitTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la $(GLOGLIB)/libglog.la
-MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la $(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la $(GLOGLIB)/libglog.la
+MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la $(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la $(GLOGLIB)/libglog.la $(PFUNCLIB)/libpfunc.a
 # Add pthread library for googletest
 MyTest_LDFLAGS = -lpthread
 
@@ -35,6 +35,7 @@ AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(BOOSTINCDIR)` \
 	-I`$(CYGPATH_W) $(GTESTINCDIR)` \
 	-I`$(CYGPATH_W) $(GLOGINCDIR)` \
+	-I`$(CYGPATH_W) $(PFUNCINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src` 
 
 # This line is necessary to allow VPATH compilation with MS compilers
