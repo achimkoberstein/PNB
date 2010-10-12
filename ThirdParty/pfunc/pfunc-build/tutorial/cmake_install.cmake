@@ -2,7 +2,7 @@
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  SET(CMAKE_INSTALL_PREFIX "/home/christian/pfunc-install")
+  SET(CMAKE_INSTALL_PREFIX "/home/christian/src/flopcpp/ThirdParty/pfunc")
 ENDIF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 STRING(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -34,7 +34,7 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
   IF("${CMAKE_INSTALL_CONFIG_NAME}" MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee]|[Dd][Ee][Bb][Uu][Gg]|[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Uu][Gg][Ii][Nn][Ff][Oo])$")
-    FILE(INSTALL DESTINATION "/home/christian/pfunc-install/tutorial" TYPE FILE OPTIONAL FILES "/home/christian/src/flopcpp/ThirdParty/pfunc/pfunc-build/tutorial/tutorial.pdf")
+    FILE(INSTALL DESTINATION "/home/christian/src/flopcpp/ThirdParty/pfunc/tutorial" TYPE FILE OPTIONAL FILES "/home/christian/src/flopcpp/ThirdParty/pfunc/pfunc-build/tutorial/tutorial.pdf")
   ENDIF("${CMAKE_INSTALL_CONFIG_NAME}" MATCHES "^([Rr][Ee][Ll][Ee][Aa][Ss][Ee]|[Dd][Ee][Bb][Uu][Gg]|[Rr][Ee][Ll][Ww][Ii][Tt][Hh][Dd][Ee][Bb][Uu][Gg][Ii][Nn][Ff][Oo])$")
 ENDIF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
 
