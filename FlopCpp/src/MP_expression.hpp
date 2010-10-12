@@ -24,6 +24,7 @@ namespace flopc {
     class VariableRef;
     class RandomDataRef;
     class RandomConstant;
+    class pfunc_coef;
 
     class MP {
         friend class MP_expression;
@@ -36,6 +37,7 @@ namespace flopc {
         friend class VariableRef;
         friend class MP_variable;
         friend class RandomDataRef;
+        friend class pfunc_coef;
 
         // TODO: Efficiency improvement: Do not store vectors but pointer to vectors?
         // Or: Do not store Coef's in vectors but pointer to Coef's?

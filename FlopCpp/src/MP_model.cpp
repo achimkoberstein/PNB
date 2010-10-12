@@ -44,11 +44,49 @@ using std::endl;
 
 using namespace flopc;
 
+/* Library instance description */
+typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
+		::pfunc::use_default, /* compare */
+		 pfunc_coef> my_pfunc; /*function object*/
+
+pfunc_coef::pfunc_coef(MP_model* model, MP_constraint* con, std::vector<boost::shared_ptr<MP::Coef> >& vec) : model(model),c(con),coefVec(vec) {}
+
+void pfunc_coef::operator() (){
+	std::vector<MP::Coef> vec;
+	c->coefficients(vec);
+	model->assemble(vec,coefVec);
+}
+
+
 const std::string MP_model::stageString("StageSet");
 MP_model& MP_model::default_model = *new MP_model(0);
 MP_model* MP_model::current_model = &MP_model::default_model;
 MP_model& MP_model::getDefaultModel() { return default_model;}
 MP_model* MP_model::getCurrentModel() { return current_model;}
+
+void MP_model::initializePfunc() {
+	if (numOfInstances == 0){
+		++numOfInstances; // We create a new instance here
+
+		unsigned int num_queues = 4;
+		const unsigned int num_threads_per_queue[] = {1,1,1,1};
+		const unsigned int affinities[4][1] = {{0},{1},{2},{3}};
+		unsigned int num_attempts;
+	//	// Create a variable of the type taskmgr
+//		my_pfunc::taskmgr my_taskmgr (num_queues, num_threads_per_queue);
+//	//	// Set up my taskmgr as the global runtime
+//		::pfunc::init (my_taskmgr);
+//	//	// Change the number of attempts if necessary
+//		::pfunc::taskmgr_max_attempts_get(num_attempts);
+//		if (10000 > num_attempts)
+//			::pfunc::taskmgr_max_attempts_set (10000);
+	}
+	else
+		++numOfInstances;
+
+}
+
+int MP_model::numOfInstances = 0;
 
 void NormalMessenger::statistics(int bm, int m, int bn, int n, int nz) {
     DLOG(INFO) <<"FlopCpp: Number of constraint blocks: " <<bm<<endl;
@@ -105,6 +143,7 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
     // Create a new taskmgr for PFunc
+    initializePfunc();
 }
 
 MP_model::~MP_model() {
@@ -117,6 +156,9 @@ MP_model::~MP_model() {
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
+    --numOfInstances;
+    if (numOfInstances == 0)
+    	pfunc::clear();
 
 }
 
@@ -344,11 +386,20 @@ void MP_model::attachStochastic(){
     vector<MP::Coef> cfs;
 
     // Generate new coefficients
+    // Try PFunc to parallelize the for loop..
+    // What do we do? We add a function object, that gets a Constraint, the MP_model and the coefs vector..
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
-        (*i)->coefficients(cfs);
-        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
-        assemble(cfs,coefs);
-        cfs.erase(cfs.begin(),cfs.end());
+    	pfunc_coef funObj(this,*i,coefs); //create new function object
+    	my_pfunc::task myTask;
+    	my_pfunc::attribute myAttribute;
+    	my_pfunc::group myGroup;
+//    	pfunc_coef funObj2(1,2,3);
+
+    	::pfunc::spawn(myTask,myAttribute,myGroup,funObj);
+//        (*i)->coefficients(cfs);
+//        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
+//        assemble(cfs,coefs);
+//        cfs.clear();
     }
     // Initialize vector that stores shared ptrs to Coefs that are result of a combination of random variates.
     vector< vector<boost::shared_ptr<MP::Coef> > > randomCoefs(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed

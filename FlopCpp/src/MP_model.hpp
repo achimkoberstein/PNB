@@ -16,9 +16,11 @@
 // This is necessary for PFunc and windows, so do a #ifdef around it
 #ifdef _MSC_VER
 #include <Windows.h>
+#else
+#include <pfunc/pfunc.hpp> //FIXME: For the moment pfunc only on linux
 #endif
 
-#include <pfunc/pfunc.hpp>
+
 
 
 #include "MP_expression.hpp"
@@ -28,6 +30,7 @@
 
 using std::vector;
 using std::set;
+using pfunc::spawn;
 
 class OsiSolverInterface;
 //Forward declarations for generateScenarioTree and private variable declaration
@@ -36,10 +39,7 @@ class SmiScnModel;
 
 namespace flopc {
 
-    /* Library instance description */
-    //typedef ::pfunc::generator<cilkS, /* scheduling policy */
-    //    ::pfunc::use_default, /* compare */
-    //    ::pfunc::use_default> my_pfunc; /*function object*/
+
 
     // forward declarations
     class MP_variable;
@@ -94,6 +94,8 @@ namespace flopc {
         virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
     };
 
+    class pfunc_coef;
+
     /** @brief This is the anchor point for all constructs in a FlopC++ model.
     @ingroup PublicInterface
     The constructors take an OsiSolverInterface, and (optionally) a
@@ -121,6 +123,8 @@ namespace flopc {
 
         //For testing purposes
         friend class MP_modelTest;
+        //For pfunc
+        friend class pfunc_coef;
     public:
         /// used when calling the solve() method.  
         typedef enum {MINIMIZE=1, MAXIMIZE=-1} MP_direction;
@@ -274,6 +278,7 @@ namespace flopc {
         @todo explain the default and current model concepts.
         */
         static MP_model *getCurrentModel();
+
         /** Gets the current messenger.
         */
         Messenger *getMessenger(){ 
@@ -330,6 +335,9 @@ namespace flopc {
 
 		unsigned int getSeed();
     private:
+        static void initializePfunc();
+
+        static int numOfInstances;
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;
         typedef std::set<RandomVariable* >::iterator randomVarIt;
@@ -397,6 +405,20 @@ namespace flopc {
         SmiScnModel *smiModel;
 
     };
+
+    // PFunc stuff
+    struct pfunc_coef { //: public my_pfunc::functor {
+    public:
+    	pfunc_coef( MP_model*, MP_constraint*, std::vector< boost::shared_ptr<MP::Coef> >& );
+    	void operator() ();
+    private:
+
+    	MP_model* model;
+    	MP_constraint* c;
+    	std::vector<boost::shared_ptr<MP::Coef> >& coefVec;
+
+    };
+    // End PFunc stuff
 
     /// allows print of result from call to solve();
     std::ostream &operator<<(std::ostream &os, 
