@@ -16,9 +16,12 @@
 // This is necessary for PFunc and windows, so do a #ifdef around it
 #ifdef _MSC_VER
 #include <Windows.h>
+#else
+#include <pfunc/pfunc.hpp> //FIXME: For the moment pfunc only on linux
+#define _PFUNC 1
 #endif
 
-#include <pfunc/pfunc.hpp>
+
 
 
 #include "MP_expression.hpp"
@@ -36,10 +39,7 @@ class SmiScnModel;
 
 namespace flopc {
 
-    /* Library instance description */
-    //typedef ::pfunc::generator<cilkS, /* scheduling policy */
-    //    ::pfunc::use_default, /* compare */
-    //    ::pfunc::use_default> my_pfunc; /*function object*/
+
 
     // forward declarations
     class MP_variable;
@@ -94,6 +94,8 @@ namespace flopc {
         virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
     };
 
+    struct pfunc_coef;
+
     /** @brief This is the anchor point for all constructs in a FlopC++ model.
     @ingroup PublicInterface
     The constructors take an OsiSolverInterface, and (optionally) a
@@ -121,6 +123,8 @@ namespace flopc {
 
         //For testing purposes
         friend class MP_modelTest;
+        //For pfunc
+        friend struct pfunc_coef;
     public:
         /// used when calling the solve() method.  
         typedef enum {MINIMIZE=1, MAXIMIZE=-1} MP_direction;
@@ -274,6 +278,7 @@ namespace flopc {
         @todo explain the default and current model concepts.
         */
         static MP_model *getCurrentModel();
+
         /** Gets the current messenger.
         */
         Messenger *getMessenger(){ 
@@ -330,6 +335,10 @@ namespace flopc {
 
 		unsigned int getSeed();
     private:
+#ifdef _PFUNC
+        static void initializePfunc();
+#endif
+        static int numOfInstances;
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;
         typedef std::set<RandomVariable* >::iterator randomVarIt;
@@ -392,11 +401,29 @@ namespace flopc {
         int *rowIndirection;
         MP_status mSolverState;
         boost::shared_ptr<Uniform01Generator> uniformGenerator;
-        
+#ifdef _PFUNC
+        static pfunc::mutex writeMutex;
+#endif
     public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
 
     };
+
+#ifdef _PFUNC
+    // PFunc stuff
+    struct pfunc_coef { //: public my_pfunc::functor {
+    public:
+    	pfunc_coef( MP_model*, MP_constraint*, std::vector< boost::shared_ptr<MP::Coef> >& );
+    	void operator() ();
+    private:
+
+    	MP_model* model;
+    	MP_constraint* c;
+    	std::vector<boost::shared_ptr<MP::Coef> >& coefVec;
+
+    };
+#endif 
+    // End PFunc stuff
 
     /// allows print of result from call to solve();
     std::ostream &operator<<(std::ostream &os, 

@@ -2,7 +2,7 @@
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  SET(CMAKE_INSTALL_PREFIX "/home/christian/pfunc-install")
+  SET(CMAKE_INSTALL_PREFIX "/home/christian/src/flopcpp/ThirdParty/pfunc")
 ENDIF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 STRING(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -33,10 +33,10 @@ IF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  FILE(INSTALL DESTINATION "/home/christian/pfunc-install/include/pfunc" TYPE DIRECTORY FILES "/home/christian/src/flopcpp/ThirdParty/pfunc/pfunc/." REGEX "/CMake[^/]*$" EXCLUDE REGEX "/cmake\\_tests$" EXCLUDE REGEX "/config\\.h\\.in$" EXCLUDE REGEX "/Makefile$" EXCLUDE REGEX "/\\.svn$" EXCLUDE)
+  FILE(INSTALL DESTINATION "/home/christian/src/flopcpp/ThirdParty/pfunc/include/pfunc" TYPE DIRECTORY FILES "/home/christian/src/flopcpp/ThirdParty/pfunc/pfunc/." REGEX "/CMake[^/]*$" EXCLUDE REGEX "/cmake\\_tests$" EXCLUDE REGEX "/config\\.h\\.in$" EXCLUDE REGEX "/Makefile$" EXCLUDE REGEX "/\\.svn$" EXCLUDE)
 ENDIF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
 
 IF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
-  FILE(INSTALL DESTINATION "/home/christian/pfunc-install/include/pfunc" TYPE FILE FILES "/home/christian/src/flopcpp/ThirdParty/pfunc/pfunc-build/pfunc/config.h")
+  FILE(INSTALL DESTINATION "/home/christian/src/flopcpp/ThirdParty/pfunc/include/pfunc" TYPE FILE FILES "/home/christian/src/flopcpp/ThirdParty/pfunc/pfunc-build/pfunc/config.h")
 ENDIF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified")
 
