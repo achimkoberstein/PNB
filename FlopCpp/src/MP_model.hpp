@@ -400,6 +400,7 @@ namespace flopc {
         int *rowIndirection;
         MP_status mSolverState;
         boost::shared_ptr<Uniform01Generator> uniformGenerator;
+        static pfunc::mutex writeMutex;
         
     public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
