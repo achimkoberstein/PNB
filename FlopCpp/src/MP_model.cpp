@@ -57,6 +57,8 @@ void pfunc_coef::operator() (){
 	model->assemble(vec,coefVec);
 }
 
+//Initialize static variables
+pfunc::mutex MP_model::writeMutex;
 
 const std::string MP_model::stageString("StageSet");
 MP_model& MP_model::default_model = *new MP_model(0);
@@ -73,13 +75,13 @@ void MP_model::initializePfunc() {
 		const unsigned int affinities[4][1] = {{0},{1},{2},{3}};
 		unsigned int num_attempts;
 	//	// Create a variable of the type taskmgr
-//		my_pfunc::taskmgr my_taskmgr (num_queues, num_threads_per_queue);
-//	//	// Set up my taskmgr as the global runtime
-//		::pfunc::init (my_taskmgr);
-//	//	// Change the number of attempts if necessary
-//		::pfunc::taskmgr_max_attempts_get(num_attempts);
-//		if (10000 > num_attempts)
-//			::pfunc::taskmgr_max_attempts_set (10000);
+		my_pfunc::taskmgr* taskMgrPtr = new my_pfunc::taskmgr(num_queues, num_threads_per_queue);
+	//	// Set up my taskmgr as the global runtime
+		::pfunc::init (*taskMgrPtr);
+	//	// Change the number of attempts if necessary
+		::pfunc::taskmgr_max_attempts_get(num_attempts);
+		if (10000 > num_attempts)
+			::pfunc::taskmgr_max_attempts_set (10000);
 	}
 	else
 		++numOfInstances;
@@ -158,7 +160,7 @@ MP_model::~MP_model() {
         MP_model::current_model = &MP_model::default_model;
     --numOfInstances;
     if (numOfInstances == 0)
-    	pfunc::clear();
+    	::pfunc::clear();
 
 }
 
@@ -312,7 +314,9 @@ void MP_model::assemble(vector<MP::Coef>& v, vector<boost::shared_ptr<MP::Coef> 
             ++i;
         }
         boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
+        writeMutex.lock();
         av.push_back(temp);
+        writeMutex.unlock();
     }
 }
 
@@ -389,17 +393,10 @@ void MP_model::attachStochastic(){
     // Try PFunc to parallelize the for loop..
     // What do we do? We add a function object, that gets a Constraint, the MP_model and the coefs vector..
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
-    	pfunc_coef funObj(this,*i,coefs); //create new function object
-    	my_pfunc::task myTask;
-    	my_pfunc::attribute myAttribute;
-    	my_pfunc::group myGroup;
-//    	pfunc_coef funObj2(1,2,3);
-
-    	::pfunc::spawn(myTask,myAttribute,myGroup,funObj);
-//        (*i)->coefficients(cfs);
-//        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
-//        assemble(cfs,coefs);
-//        cfs.clear();
+        (*i)->coefficients(cfs);
+        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
+        assemble(cfs,coefs);
+        cfs.clear();
     }
     // Initialize vector that stores shared ptrs to Coefs that are result of a combination of random variates.
     vector< vector<boost::shared_ptr<MP::Coef> > > randomCoefs(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
@@ -518,16 +515,32 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     vector<boost::shared_ptr<MP::Coef> > coefs;
     vector<MP::Coef> cfs;
     conIt it;
+    vector<my_pfunc::task *> tasks;
+
 
     double timeBegin = CoinCpuTime();
-    for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
-        (*it)->coefficients(cfs);
-        messenger->constraintDebug((*it)->getName(),cfs);
-        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
-        assemble(cfs,coefs);
-
-        cfs.clear();
-
+    int count = 0;
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
+    	pfunc_coef funObj(this,*i,coefs); //create new function object
+    	my_pfunc::task* taskPtr = new my_pfunc::task;
+    	my_pfunc::attribute myAttribute;
+    	my_pfunc::group myGroup;
+    	::pfunc::spawn(*taskPtr,myAttribute,myGroup,funObj);
+    	tasks.push_back(taskPtr);
+    	++count;
+    }
+//    for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
+//        (*it)->coefficients(cfs);
+//        messenger->constraintDebug((*it)->getName(),cfs);
+//        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
+//        assemble(cfs,coefs);
+//
+//        cfs.clear();
+//
+//    }
+    // We have to wait here until all the processes returned..
+    for (int count = 0; count < Constraints.size(); count++){
+    	::pfunc::wait( *tasks[count] );
     }
     DLOG(INFO) << "Time for coefficient generation: " << CoinCpuTime()-timeBegin << "s";
     nz = coefs.size();
