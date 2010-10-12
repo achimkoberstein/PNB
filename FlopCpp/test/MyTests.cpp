@@ -3595,7 +3595,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
                 }
             }
 
-            upperbound = std::min(upperbound, objmaster + objsub);
+            upperbound = min(upperbound, objmaster + objsub);
             cout<<"Lower and upper bounds: "<<lowerbound<<"   "<<upperbound<<endl;
             if ((upperbound-lowerbound) < 0.0001*(1+fabs(lowerbound))) {
                 break;
@@ -4044,7 +4044,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.Infinity*";
+    ::testing::GTEST_FLAG(filter) = "*.Infinity*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

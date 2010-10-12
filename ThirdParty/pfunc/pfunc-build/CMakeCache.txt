@@ -91,7 +91,7 @@ CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Install path prefix, prepended onto install directories.
-CMAKE_INSTALL_PREFIX:PATH=/home/christian/pfunc-install
+CMAKE_INSTALL_PREFIX:PATH=/home/christian/src/flopcpp/ThirdParty/pfunc
 
 //Path to a program.
 CMAKE_LINKER:FILEPATH=/usr/bin/ld

@@ -337,8 +337,8 @@ examples/c/preinstall:
 # Target rules for target examples/c/CMakeFiles/c_examples.dir
 
 # All Build rule for target.
-examples/c/CMakeFiles/c_examples.dir/all: examples/c/CMakeFiles/simple.dir/all
 examples/c/CMakeFiles/c_examples.dir/all: examples/c/CMakeFiles/groups.dir/all
+examples/c/CMakeFiles/c_examples.dir/all: examples/c/CMakeFiles/simple.dir/all
 	$(MAKE) -f examples/c/CMakeFiles/c_examples.dir/build.make examples/c/CMakeFiles/c_examples.dir/depend
 	$(MAKE) -f examples/c/CMakeFiles/c_examples.dir/build.make examples/c/CMakeFiles/c_examples.dir/build
 	$(CMAKE_COMMAND) -E cmake_progress_report /home/christian/src/flopcpp/ThirdParty/pfunc/pfunc-build/CMakeFiles 
