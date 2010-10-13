@@ -757,23 +757,25 @@ SmiSmpsCardReader::nextSmpsField (  )
 			  if (!(next = strtok(NULL,blanks)))
 			  {
 				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  break;
+				  //break;
 			  }
 			  // find the section, if there is one
 			  // next card should be DISCRETE
 			  if (!(next = strtok(NULL,blanks)))
 			  {
 				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  break;
+				  //break;
 			  }
 			  // find the section, if there is one
-			  
-			  for ( i = SMI_SMPS_COMBINE_ADD; i < SMI_SMPS_COMBINE_UNKNOWN; i++ ) {
-				  if ( !strncmp ( next, smpsType[i], strlen ( section[i] ) ) ) {
-					  break;
-				  }
+			  if (next == NULL) {
+			    i = SMI_SMPS_COMBINE_REPLACE; 
+			  } else {
+			      for ( i = SMI_SMPS_COMBINE_ADD; i < SMI_SMPS_COMBINE_UNKNOWN; i++ ) {
+				      if ( !strncmp ( next, smpsType[i], strlen ( section[i] ) ) ) {
+					      break;
+				      }
+			      }
 			  }
-			  
 		   }
 			  // set combine rule if it is not already set.
 		   if (!combineRuleSet)
@@ -840,7 +842,7 @@ std::string SmiSmpsIO::getModProblemName() {
     return name;
 }
 
-void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension) {
+void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const bool strictFormat) {
     // count nels
     int nels = 0;
     for (int t = 0; t < core->getNumStages(); t++) {
@@ -925,10 +927,14 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension) {
     
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
-    this->writeMps(fnWithExt.c_str());
+    
+    if (strictFormat)
+        this->writeMps(fnWithExt.c_str());
+    else
+        this->writeMps(fnWithExt.c_str(), 0, 1);
 }
 
-void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension) {
+void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension, const bool strictFormat) {
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
     CoinFileOutput* output = CoinFileOutput::create(fnWithExt, CoinFileOutput::COMPRESS_NONE);
@@ -951,14 +957,22 @@ void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension) {
     delete output;
 }
 
-void SmiSmpsIO::writeStochFile(const char* filename, const char* extension) {
+void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, const bool strictFormat) {
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
     CoinFileOutput* output = CoinFileOutput::create(fnWithExt, CoinFileOutput::COMPRESS_NONE);
     
     std::ostringstream line;
     line.fill(' ');
-    line << setprecision(8);
+
+    // TODO
+    // the following is not working correctly: in default mode, setprecision should count the total number of digits, 
+    // before and after the dot, but here it affects only the number of decimal digits
+    //if (strictFormat)
+    //    line << setprecision(12);
+    //else   
+    //    line << setprecision(15);
+    
     line << "STOCH         " << this->getModProblemName() << "\n";
     line << "SCENARIOS     DISCRETE\n";
     //line << "SCENARIOS     DISCRETE                 ";
@@ -1089,25 +1103,25 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
 
 }
 
-void SmiSmpsIO::writeSmps(const char* filename, bool winFileExtensions) {
+void SmiSmpsIO::writeSmps(const char* filename, bool winFileExtensions, bool strictFormat) {
     if (winFileExtensions) {
         //write core file
-        this->writeCoreFile(filename, "cor");
+        this->writeCoreFile(filename, "cor", strictFormat);
         
         // write time file
-        this->writeTimeFile(filename, "tim");
+        this->writeTimeFile(filename, "tim", strictFormat);
         
         // write stoch file
-        this->writeStochFile(filename, "sto");
+        this->writeStochFile(filename, "sto", strictFormat);
     } else {
         //write core file
-        this->writeCoreFile(filename, "core");
+        this->writeCoreFile(filename, "core", strictFormat);
         
         // write time file
-        this->writeTimeFile(filename, "time");
+        this->writeTimeFile(filename, "time", strictFormat);
         
         // write stoch file
-        this->writeStochFile(filename, "stoch");
+        this->writeStochFile(filename, "stoch", strictFormat);
     }
     
     this->freeAll();
