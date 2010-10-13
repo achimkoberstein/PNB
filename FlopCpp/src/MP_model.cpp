@@ -37,11 +37,6 @@ using std::endl;
 #include "MP_constraint.hpp"
 #include "MP_shared_implementation_details.hpp"
 
-// Workaround necessary for glog, if WinGDI.h is included (I do not know who includes the file)
-#ifdef ERROR
-#undef ERROR
-#endif
-
 using namespace flopc;
 
 #ifdef _PFUNC
@@ -162,8 +157,8 @@ MP_model::~MP_model() {
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::default_model;
     --numOfInstances;
-    if (numOfInstances == 0)
 #ifdef _PFUNC
+    if (numOfInstances == 0)
     	::pfunc::clear();
 #endif
 }
