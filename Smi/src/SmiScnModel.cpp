@@ -1255,12 +1255,12 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     return 0;
 }
 
-int SmiScnModel::writeSmps(const char *name, bool winFileExtensions) {
+int SmiScnModel::writeSmps(const char *name, bool winFileExtensions, bool strictFormat) {
     if (this != NULL) {
         SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
         if (osiStoch_)
             smpsIO->setInfinity(osiStoch_->getInfinity());
-        smpsIO->writeSmps(name, winFileExtensions);
+        smpsIO->writeSmps(name, winFileExtensions, strictFormat);
         delete smpsIO;
         return 0;
     } else {
