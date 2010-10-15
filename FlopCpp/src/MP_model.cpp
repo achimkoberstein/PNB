@@ -283,7 +283,7 @@ void MP_model::minimize_max(MP_set &s, const MP_expression  &obj) {
 
 
 void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::shared_ptr<MP::Coef> >& av) {
-    std::sort(v.begin(),v.end(),MP::CoefLessWithStageShared);
+    std::sort(v.begin(),v.end(),MP::CoefLessShared);
     int c,r,s,rs;
     double val;
     std::vector<double> scenVector;
