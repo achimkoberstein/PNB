@@ -26,8 +26,6 @@ using std::endl;
 #include <CoinPackedVector.hpp>
 #include <OsiSolverInterface.hpp>
 
-
-
 #include "SmiScnData.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiScnModel.hpp"

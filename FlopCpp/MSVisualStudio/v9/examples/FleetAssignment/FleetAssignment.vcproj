@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\..\CplexConfiguration.vsprops;..\IncludeFilesExamples.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -61,6 +61,7 @@
 				Name="VCLinkerTool"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
+				Profile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -89,7 +90,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\..\CplexConfiguration.vsprops;..\..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\CplexConfiguration.vsprops;..\IncludeFilesExamples.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -112,7 +113,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				RuntimeLibrary="2"
+				AdditionalIncludeDirectories="../../../../../Benders/src"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -132,6 +134,7 @@
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
+				Profile="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
