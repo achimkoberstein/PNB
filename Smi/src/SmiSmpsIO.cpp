@@ -1004,7 +1004,10 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
             stream << "Scen_" << std::setw(5) << std::left << node->getParent()->scenario();
         } else {
             // branches from root
-            stream << std::setw(10) << std::left << "'ROOT'";
+            if (node->getParent()->scenario() == 0) // First Scenario (Scen_0) branches from ROOT, other scenarios branches from Scen_0
+                stream << std::setw(10) << std::left << "'ROOT'";
+            else
+                stream << std::setw(10) << std::left << "Scen_0";
         }
         stream << std::setw(15) << std::left << tree->getLeaf(scenario)->getDataPtr()->getProb(); // write the probabilty
         stream << "STAGE_" << node->getDataPtr()->getStage() << "\n"; // write the stage number
