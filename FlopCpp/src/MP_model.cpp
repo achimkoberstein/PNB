@@ -26,8 +26,6 @@ using std::endl;
 #include <CoinPackedVector.hpp>
 #include <OsiSolverInterface.hpp>
 
-
-
 #include "SmiScnData.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiScnModel.hpp"
@@ -45,9 +43,9 @@ using std::endl;
 using namespace flopc;
 
 const std::string MP_model::stageString("StageSet");
-MP_model& MP_model::default_model = *new MP_model(0);
-MP_model* MP_model::current_model = &MP_model::default_model;
-MP_model& MP_model::getDefaultModel() { return default_model;}
+//MP_model& MP_model::default_model = *new MP_model(0);
+MP_model* MP_model::current_model = NULL;
+MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
 MP_model* MP_model::getCurrentModel() { return current_model;}
 
 void NormalMessenger::statistics(int bm, int m, int bn, int n, int nz) {
@@ -116,7 +114,7 @@ MP_model::~MP_model() {
     assert(smiModel == 0);
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
-        MP_model::current_model = &MP_model::default_model;
+        MP_model::current_model = &MP_model::getDefaultModel();
 
 }
 
@@ -964,7 +962,7 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         if (probabilities.empty()){ //If probabilities are not of the correct size, we are wrong, probably a user error (assert)
             probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
         }
-        CHECK_EQ(probabilities.size(),scenSet.size()) << "You have a different number of probabilities compared to your scenario set.";
+        assert(probabilities.size() == scenSet.size()); //<< "You have a different number of probabilities compared to your scenario set.";
         return;
     }
 

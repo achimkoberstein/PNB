@@ -15,16 +15,25 @@
 #include "Benders.hpp"
 
 #include <glog/logging.h>
+//#include <vld.h>
 
 using namespace flopc;
 
 int main(int argc, char* argv[]) {
 
+    /*VLDDisable();*/
     google::InitGoogleLogging(argv[0]);
     FLAGS_minloglevel = 0;
     google::SetLogDestination(1, "log");
     google::LogToStderr();
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
+    //VLDEnable();
+
+    //SmiScnModel* smiModel = new SmiScnModel();
+    //smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
+    //smiModel->readSmps("fleetAssignment",SmiCoreCombineReplace::Instance());
+    //OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
+    //benders2.initialSolve();
     
     MP_model mod(new OsiCpxSolverInterface());
 
@@ -314,7 +323,7 @@ int main(int argc, char* argv[]) {
     /////// VARIABLES
 
     MP_variable y(A,A2,T);
-    y.integer();
+    //y.integer();
     for (int i = 0; i < numA; i++) {
         for (int j = 0; j < numA; j++) {
             for (int k = 0; k < numT; k++) {
@@ -401,9 +410,10 @@ int main(int argc, char* argv[]) {
     mod.attach(mod.Solver);
 
     //mod.solve(MP_model::MINIMIZE);
+    //mod.getSmi()->writeSmps("fleetAssignment");
 
-    OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
-    benders.initialSolve();
+    //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
+    //benders.initialSolve();
 
     return 0;
 }

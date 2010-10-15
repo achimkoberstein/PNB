@@ -971,11 +971,23 @@ int main(int argc, char* argv[]) {
     //gasVar.display("gas costs");
 
     cout << "Status: " << saphir.getStatus() << endl;
+ /*   saphir.getSmi()->writeSmps("saphirModelDebug");
+    SmiScnModel* readInModel = new SmiScnModel();
+    readInModel->setOsiSolverHandle( &OsiClpSolverInterface() );
+    readInModel->readSmps("saphirModelDebug");
+    OsiStochasticBendersTwoStageSolverInterface benders(readInModel->getOsiSolverInterface(),readInModel);*/
+    OsiStochasticBendersTwoStageSolverInterface benders2(saphir.Solver,saphir.getSmi());
 
-    OsiStochasticBendersTwoStageSolverInterface benders(saphir.Solver,saphir.getSmi());
-    benders.initialSolve();
+
+    benders2.initialSolve();
+    //benders2.initialSolve();
+    //SmiScnModel* readInModel2 = new SmiScnModel();
+    //readInModel2->setOsiSolverHandle( &OsiClpSolverInterface() );
+    //readInModel2->readSmps("saphirModelRelease");
+    //OsiStochasticBendersTwoStageSolverInterface benders3(readInModel2->getOsiSolverInterface(),readInModel2);
+    //benders3.initialSolve();
+    
 
 #pragma endregion optimization
-
     return 0;
 }

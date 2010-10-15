@@ -300,6 +300,12 @@ void OsiCpxSolverInterface::initialSolve()
 #if CPX_VERSION >= 800
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   if (stat == CPX_STAT_INForUNBD && presolve){
+      // In CPLEX 9, this is a way to discard the presolve information: 
+      {
+          int objsen = CPXgetobjsen(env_, lp);
+          CPXchgobjsen(env_, lp, -objsen);
+          CPXchgobjsen(env_, lp, objsen);
+      }
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
      if (algorithm==1)
         term = CPXprimopt( env_, lp );
@@ -370,6 +376,12 @@ void OsiCpxSolverInterface::resolve()
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   if (stat == CPX_STAT_INForUNBD && presolve){
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+    // In CPLEX 9, this is a way to discard the presolve information: 
+    {
+        int objsen = CPXgetobjsen(env_, lp);
+        CPXchgobjsen(env_, lp, -objsen);
+        CPXchgobjsen(env_, lp, objsen);
+    }
     if (algorithm==1)
        term = CPXprimopt( env_, lp );
     else
@@ -409,6 +421,39 @@ void OsiCpxSolverInterface::branchAndBound()
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
   CPXmipopt( env_, lp );
+
+ 
+
+#if CPX_VERSION >= 800
+  int stat = CPXgetstat( env_, getMutableLpPtr() );
+  if (stat == CPXMIP_INForUNBD){
+      // Get presolve information
+      int presolve;
+      int relaxPresolve;
+      CPXgetintparam( env_, CPX_PARAM_PREIND, &presolve );
+      CPXgetintparam( env_, CPX_PARAM_RELAXPREIND, &relaxPresolve);
+      // Set presolve to off
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+      CPXsetintparam( env_, CPX_PARAM_RELAXPREIND, CPX_OFF);
+      // In CPLEX 9, this is a way to discard the presolve information: 
+      {
+          int objsen = CPXgetobjsen(env_, lp);
+          CPXchgobjsen(env_, lp, -objsen);
+          CPXchgobjsen(env_, lp, objsen);
+      }
+      CPXmipopt( env_, lp );
+      // Restore original presolve settings
+      CPXsetintparam( env_, CPX_PARAM_PREIND, presolve );
+      CPXsetintparam( env_, CPX_PARAM_RELAXPREIND, relaxPresolve);
+      //stat = CPXgetstat( env_, getMutableLpPtr() );
+  }
+#else
+  if (term == CPXERR_PRESLV_INForUNBD && presolve){
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+      CPXmipopt( env_, lp );
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
+  }
+#endif
 }
 
 //#############################################################################
@@ -653,7 +698,11 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
   // In CPLEX 8, the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
-  return (stat == CPX_STAT_INFEASIBLE);
+  //return (stat == CPX_STAT_INFEASIBLE);
+  return (probtypemip_ == false &&
+      (stat == CPX_STAT_INFEASIBLE))
+      || (probtypemip_ == true &&
+      (stat == CPXMIP_INFEASIBLE ) );
   //  return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_INFEASIBLE || 
   //  method == CPX_ALG_DUAL && stat == CPX_STAT_UNBOUNDED);
 #else
@@ -677,7 +726,11 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
   // In CPLEX 8, the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
-  return (stat == CPX_STAT_UNBOUNDED);
+  //return (stat == CPX_STAT_UNBOUNDED);
+  return (probtypemip_ == false &&
+      (stat == CPX_STAT_UNBOUNDED))
+      || (probtypemip_ == true &&
+      (stat == CPXMIP_UNBOUNDED ) );
   //return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_UNBOUNDED || 
   //	  method == CPX_ALG_DUAL && stat == CPX_STAT_INFEASIBLE);
 #else
