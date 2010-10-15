@@ -57,9 +57,8 @@ pfunc::mutex MP_model::writeMutex;
 #endif
 
 const std::string MP_model::stageString("StageSet");
-MP_model& MP_model::default_model = *new MP_model(0);
-MP_model* MP_model::current_model = &MP_model::default_model;
-MP_model& MP_model::getDefaultModel() { return default_model;}
+MP_model* MP_model::current_model = NULL;
+MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
 MP_model* MP_model::getCurrentModel() { return current_model;}
 
 #ifdef _PFUNC
@@ -155,7 +154,7 @@ MP_model::~MP_model() {
     assert(smiModel == 0);
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
-        MP_model::current_model = &MP_model::default_model;
+        MP_model::current_model = &MP_model::getDefaultModel();
     --numOfInstances;
 #ifdef _PFUNC
     if (numOfInstances == 0)
