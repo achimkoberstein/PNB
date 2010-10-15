@@ -660,9 +660,8 @@ void MP::GenerateFunctor::operator()() const {
                     // We have to replace the mean value?
                 }
             }
-            Coefs.push_back(MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
-           
-
+            boost::shared_ptr<MP::Coef> temp(new MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
+            Coefs.push_back(temp);           
         }//end if colNumber != outOfBound
     }//end if rowNumber != out of bound
 }

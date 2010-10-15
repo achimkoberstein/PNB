@@ -156,11 +156,12 @@ MyTest_OBJECTS = $(am_MyTest_OBJECTS)
 @COIN_HAS_MSK_TRUE@	$(OSIOBJDIR)/src/OsiMsk/libOsiMsk.la
 MyTest_DEPENDENCIES = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
 	$(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la \
-	$(GLOGLIB)/libglog.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
-	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5) \
-	$(am__DEPENDENCIES_6) $(am__DEPENDENCIES_7) \
-	$(am__DEPENDENCIES_8) $(OSIOBJDIR)/src/libOsi.la \
+	$(GLOGLIB)/libglog.la $(PFUNCLIB)/libpfunc.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
+	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
+	$(am__DEPENDENCIES_7) $(am__DEPENDENCIES_8) \
+	$(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 am_unitTest_OBJECTS = unitTest.$(OBJEXT)
 unitTest_OBJECTS = $(am_unitTest_OBJECTS)
@@ -263,6 +264,8 @@ COIN_HAS_OSI_FALSE = @COIN_HAS_OSI_FALSE@
 COIN_HAS_OSI_TRUE = @COIN_HAS_OSI_TRUE@
 COIN_HAS_OSL_FALSE = @COIN_HAS_OSL_FALSE@
 COIN_HAS_OSL_TRUE = @COIN_HAS_OSL_TRUE@
+COIN_HAS_PFUNC_FALSE = @COIN_HAS_PFUNC_FALSE@
+COIN_HAS_PFUNC_TRUE = @COIN_HAS_PFUNC_TRUE@
 COIN_HAS_SMI_FALSE = @COIN_HAS_SMI_FALSE@
 COIN_HAS_SMI_TRUE = @COIN_HAS_SMI_TRUE@
 COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
@@ -352,6 +355,8 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PFUNCINCDIR = @PFUNCINCDIR@
+PFUNCLIB = @PFUNCLIB@
 RANLIB = @RANLIB@
 RPATH_FLAGS = @RPATH_FLAGS@
 SET_MAKE = @SET_MAKE@
@@ -438,10 +443,10 @@ unitTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 MyTest_LDADD = ../src/libFlopCpp.la ../../Smi/src/libSmi.la \
 	$(GTESTLIB)/libgtest.la $(GTESTLIB)/libgtest_main.la \
-	$(GLOGLIB)/libglog.la $(am__append_3) $(am__append_7) \
-	$(am__append_10) $(am__append_14) $(am__append_17) \
-	$(am__append_21) $(am__append_24) $(am__append_27) \
-	$(OSIOBJDIR)/src/libOsi.la \
+	$(GLOGLIB)/libglog.la $(PFUNCLIB)/libpfunc.a $(am__append_3) \
+	$(am__append_7) $(am__append_10) $(am__append_14) \
+	$(am__append_17) $(am__append_21) $(am__append_24) \
+	$(am__append_27) $(OSIOBJDIR)/src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 # Add pthread library for googletest
 MyTest_LDFLAGS = -lpthread
@@ -454,10 +459,11 @@ AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
 	$(SMISRCDIR)/src` -I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(BOOSTINCDIR)` -I`$(CYGPATH_W) \
 	$(GTESTINCDIR)` -I`$(CYGPATH_W) $(GLOGINCDIR)` -I`$(CYGPATH_W) \
-	$(srcdir)/../src` $(am__append_1) $(am__append_5) \
-	$(am__append_12) $(am__append_15) $(am__append_19) \
-	$(am__append_22) $(am__append_25) $(am__append_28) \
-	$(am__append_30) $(am__append_32) $(am__append_35)
+	$(PFUNCINCDIR)` -I`$(CYGPATH_W) $(srcdir)/../src` \
+	$(am__append_1) $(am__append_5) $(am__append_12) \
+	$(am__append_15) $(am__append_19) $(am__append_22) \
+	$(am__append_25) $(am__append_28) $(am__append_30) \
+	$(am__append_32) $(am__append_35)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

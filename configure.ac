@@ -62,6 +62,11 @@ AC_SUBST(GLOGLIB)
 GLOGINCDIR=`cd $srcdir/ThirdParty/glog/src; pwd`
 GLOGLIB=`pwd`/ThirdParty/glog
 AC_COIN_THIRDPARTY_SUBDIRS([glog],[ThirdParty/glog],[src/googletest.h])
+AC_COIN_THIRDPARTY_SUBDIRS([pfunc],[ThirdParty/pfunc],[pfunc/pfunc.hpp])
+AC_SUBST(PFUNCINCDIR)
+AC_SUBST(PFUNCLIB)
+PFUNCINCDIR=`cd $srcdir/ThirdParty/pfunc/pfunc; pwd`
+PFUNCLIB=`pwd`/ThirdParty/pfunc
 
 #############################################################################
 #                  Check which subprojects are there                        #
