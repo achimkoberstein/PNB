@@ -4,7 +4,7 @@
 #include <ctime>
 #include <limits>
 
-//#include "OsiClpSolverInterface.hpp"
+#include "OsiClpSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
 
 #include "CoinFloatEqual.hpp"
@@ -29,12 +29,11 @@ int main(int argc, char* argv[]) {
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     //VLDEnable();
 
-    SmiScnModel* smiModel = new SmiScnModel();
-    smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
-    smiModel->readSmps("fleetAssignment",SmiCoreCombineReplace::Instance());
-    OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
-    benders2.initialSolve();
-
+    //SmiScnModel* smiModel = new SmiScnModel();
+    //smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
+    //smiModel->readSmps("fleetAssignment",SmiCoreCombineReplace::Instance());
+    //OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
+    //benders2.initialSolve();
     
     MP_model mod(new OsiCpxSolverInterface());
 
@@ -410,11 +409,11 @@ int main(int argc, char* argv[]) {
 
     mod.attach(mod.Solver);
 
-    mod.solve(MP_model::MINIMIZE);
-    mod.getSmi()->writeSmps("fleetAssignment");
+    //mod.solve(MP_model::MINIMIZE);
+    //mod.getSmi()->writeSmps("fleetAssignment");
 
-    OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
-    benders.initialSolve();
+    //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
+    //benders.initialSolve();
 
     return 0;
 }

@@ -230,7 +230,7 @@ void Benders::BendersSolve(double eps, int maxIter){
         for(int scen_=0; scen_<nScen_; scen_++){
             // Build subproblem, combine deterministic data with stochastic
             // data; Input: number of current scenario
-            osiSubproblem_->reset();
+            osiSubproblem_->reset(); // FIXME: Christian: May not be necessary
             buildSubproblem(scen_);
             // Add current stage 1 solution to subproblem, i.e. update RHS of
             // subproblem; Input: number of current scenario, current stage 1 
@@ -2739,7 +2739,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 //	// #7: Problem Path
 //	// #8: Solution Path
 		if (useBenders)
-			benders = new Benders("m", "-ws", "-ki", "-tr", "+ben"); 
+			benders = new Benders("s", "-ws", "-ki", "-tr", "+ben"); 
 		else 
 			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); 
         benders->copyMaster(smiModel);
