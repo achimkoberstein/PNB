@@ -283,7 +283,7 @@ void MP_model::minimize_max(MP_set &s, const MP_expression  &obj) {
 
 
 void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::shared_ptr<MP::Coef> >& av) {
-    std::sort(v.begin(),v.end());
+    std::sort(v.begin(),v.end(),MP::CoefLessWithStageShared);
     int c,r,s,rs;
     double val;
     std::vector<double> scenVector;
@@ -558,7 +558,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
         // TODO: Column indirection is not necessary for sucess, but it helps to eliminate empty variables 
-        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStageShared);
+        std::sort(coefs.begin(),coefs.end(),MP::CoefLessWithStageShared);
         //Initialize all values with outOfBound to prevent misuse
         colIndirection = new int[n+1]; //store all variables (n) starting from index 0 and rhs as value n => n+1 size needed to store all these values
         for (int i = 0; i < n+1; i++){
@@ -593,7 +593,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //Now we can access the new column ordering via colIndirection from FlopC++.
         //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
         //We need to extract all the random Coefficients that belong to the variable bounds and store them in the random coefficients array.
-        std::sort(coefs.begin(),coefs.end());
+        std::sort(coefs.begin(),coefs.end(),MP::CoefLessWithStageShared);
 
     }
 #pragma endregion colIndirection;
