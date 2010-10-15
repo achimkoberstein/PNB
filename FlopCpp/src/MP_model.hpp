@@ -68,8 +68,8 @@ namespace flopc {
         virtual void logMessage(int level, const char * const msg);
         friend class MP_model;
     private:
-    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
-    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
+        virtual void constraintDebug(string name, const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
+        virtual void objectiveDebug(const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
     virtual void solutionStatus(const OsiSolverInterface* Solver);
     virtual void statistics(int bm, int m, int bn, int n, int nz);
     virtual void generationTime(double t);
@@ -94,8 +94,8 @@ namespace flopc {
     class VerboseMessenger : public NormalMessenger {
         friend class MP_model;
     private:
-        virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
-        virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
+        virtual void constraintDebug(string name, const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
+        virtual void objectiveDebug(const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
     };
 
     struct pfunc_coef;
@@ -354,7 +354,7 @@ namespace flopc {
 
 
         //Transfer Coefficients from v to av, build rhs and sort coefficients
-        static void assemble(vector<MP::Coef>& v, vector< boost::shared_ptr<MP::Coef> >& av);
+        static void assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector< boost::shared_ptr<MP::Coef> >& av);
         //count number of constraints and add offests
         void add(MP_constraint* constraint);
 
