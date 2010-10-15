@@ -58,7 +58,7 @@ I1(0),I2(0),I3(0),I4(0),I5(0)
     M->add(*this);
 }
 
-void MP_constraint::coefficients(vector<MP::Coef>& cfs) {
+void MP_constraint::coefficients(vector<boost::shared_ptr<MP::Coef> >& cfs) {
     MP::GenerateFunctor f(this, cfs);
     // f.setConstraint(this);
 
