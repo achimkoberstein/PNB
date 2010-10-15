@@ -13,10 +13,6 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
-// This is necessary for PFunc and windows, so do a #ifdef around it
-//#include <Windows.h>
-//#include <pfunc/pfunc.hpp>
-
 
 #include "MP_expression.hpp"
 #include "MP_constraint.hpp"
@@ -330,7 +326,7 @@ namespace flopc {
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;
         typedef std::set<RandomVariable* >::iterator randomVarIt;
-        static MP_model& default_model;
+        //static MP_model& default_model;
         static MP_model* current_model;
         MP_model(const MP_model&);
         MP_model& operator=(const MP_model&);
