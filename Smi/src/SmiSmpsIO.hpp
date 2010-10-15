@@ -85,7 +85,7 @@ public:
 	inline int *getColumnStages(){ return cstag_;}
 	inline int *getRowStages(){ return rstag_;}
 	
-	void writeSmps(const char* filename, bool winFileExtensions = false);
+	void writeSmps(const char* filename, bool winFileExtensions = false, bool strictFormat = true);
 public:
 	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(NULL),tree(NULL),periodMap_(),scenarioMap_() {}
     SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_() {}
@@ -97,8 +97,9 @@ private:
     
     @param filename The filename.
     @param extension The file extension.
+    @param strictFormat Whether a strict format should be used or not.
     */ 
-    void writeCoreFile(const char* filename, const char* extension);
+    void writeCoreFile(const char* filename, const char* extension, const bool strictFormat);
     
     /**
     Writes the time file for the current model, containing the assignments
@@ -106,16 +107,18 @@ private:
     
     @param filename The filename.
     @param extension The file extension.
+    @param strictFormat Whether a strict format should be used or not.
     */
-    void writeTimeFile(const char* filename, const char* extension);
+    void writeTimeFile(const char* filename, const char* extension, const bool strictFormat);
     
     /**
     Writes the stoch file for the current model, containing the stochastic data.
     
     @param filename The filename.
     @param extension The file extension.
+    @param strictFormat Whether a strict format should be used or not.
     */
-    void writeStochFile(const char* filename, const char* extension);
+    void writeStochFile(const char* filename, const char* extension, const bool strictFormat);
 
     /**
     Writes the stochastic informations for the given scenario into the stream.

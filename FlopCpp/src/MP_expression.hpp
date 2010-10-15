@@ -24,6 +24,7 @@ namespace flopc {
     class VariableRef;
     class RandomDataRef;
     class RandomConstant;
+    struct pfunc_coef;
 
     class MP {
         friend class MP_expression;
@@ -36,6 +37,7 @@ namespace flopc {
         friend class VariableRef;
         friend class MP_variable;
         friend class RandomDataRef;
+        friend struct pfunc_coef;
 
         // TODO: Efficiency improvement: Do not store vectors but pointer to vectors?
         // Or: Do not store Coef's in vectors but pointer to Coef's?
@@ -81,7 +83,7 @@ namespace flopc {
         //This class is used to set all coefficients of an constraint to 
         class GenerateFunctor : public Functor {
         public:
-            GenerateFunctor(MP_constraint* r, vector<Coef>& cfs): R(r), Coefs(cfs) {}
+            GenerateFunctor(MP_constraint* r, vector<boost::shared_ptr<MP::Coef> >& cfs): R(r), Coefs(cfs) {}
 
             virtual~ GenerateFunctor() {  }
 
@@ -106,7 +108,7 @@ namespace flopc {
             double M; // sign (1=lhs, -1=rhs)
             const TerminalExpression* C; //Current 
             //End Temporary values
-            vector<MP::Coef>& Coefs;
+            vector<boost::shared_ptr<MP::Coef> >& Coefs;
         };
 
         class VariableBoundsFunctor : public Functor {

@@ -409,8 +409,8 @@ int main(int argc, char* argv[]) {
 
     mod.attach(mod.Solver);
 
-    //mod.solve(MP_model::MINIMIZE);
-    //mod.getSmi()->writeSmps("fleetAssignment");
+    mod.solve(MP_model::MINIMIZE);
+    mod.getSmi()->writeSmps("fleetAssignment");
 
     //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
     //benders.initialSolve();

@@ -146,7 +146,7 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
         this->ncol_ += core->getNumCols(t); //TODO: Why is this done for every stage? What if a new scenario branches from e.g. root node? 
         this->nrow_ += core->getNumRows(t); //Reson seems to be intersection between Tree Generation and Preparations for Det. Eq. Generation in SmiScnModel.. 
         this->nels_ += core->getNode(t)->getNumMatrixElements() + node->getNumMatrixElements(); //Maybe we have to split that..
-        this->maxNelsPerScenInStage[t] = std::max(this->maxNelsPerScenInStage[t], core->getNode(t)->getNumMatrixElements() + node->getNumMatrixElements());
+        this->maxNelsPerScenInStage[t] = max(this->maxNelsPerScenInStage[t], core->getNode(t)->getNumMatrixElements() + node->getNumMatrixElements());
     }
 
     //Christian: What is this method doing? Connects the newly created nodes above
@@ -1257,12 +1257,12 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     return 0;
 }
 
-int SmiScnModel::writeSmps(const char *name, bool winFileExtensions) {
+int SmiScnModel::writeSmps(const char *name, bool winFileExtensions, bool strictFormat) {
     if (this != NULL) {
         SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
         if (osiStoch_)
             smpsIO->setInfinity(osiStoch_->getInfinity());
-        smpsIO->writeSmps(name, winFileExtensions);
+        smpsIO->writeSmps(name, winFileExtensions, strictFormat);
         delete smpsIO;
         return 0;
     } else {

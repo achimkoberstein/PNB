@@ -35,18 +35,54 @@ using std::endl;
 #include "MP_constraint.hpp"
 #include "MP_shared_implementation_details.hpp"
 
-// Workaround necessary for glog, if WinGDI.h is included (I do not know who includes the file)
-#ifdef ERROR
-#undef ERROR
-#endif
-
 using namespace flopc;
+
+#ifdef _PFUNC
+/* Library instance description */
+typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
+		::pfunc::use_default, /* compare */
+		 pfunc_coef> my_pfunc; /*function object*/
+
+pfunc_coef::pfunc_coef(MP_model* model, MP_constraint* con, std::vector<boost::shared_ptr<MP::Coef> >& vec) : model(model),c(con),coefVec(vec) {}
+
+void pfunc_coef::operator() (){
+	std::vector<MP::Coef> vec;
+	c->coefficients(vec);
+	model->assemble(vec,coefVec);
+}
+//Initialize static variables
+pfunc::mutex MP_model::writeMutex;
+#endif
 
 const std::string MP_model::stageString("StageSet");
 //MP_model& MP_model::default_model = *new MP_model(0);
 MP_model* MP_model::current_model = NULL;
 MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
 MP_model* MP_model::getCurrentModel() { return current_model;}
+
+#ifdef _PFUNC
+void MP_model::initializePfunc() {
+	if (numOfInstances == 0){
+		++numOfInstances; // We create a new instance here
+		unsigned int num_queues = 4;
+		const unsigned int num_threads_per_queue[] = {1,1,1,1};
+		const unsigned int affinities[4][1] = {{0},{1},{2},{3}};
+		unsigned int num_attempts;
+	//	// Create a variable of the type taskmgr
+		my_pfunc::taskmgr* taskMgrPtr = new my_pfunc::taskmgr(num_queues, num_threads_per_queue);
+	//	// Set up my taskmgr as the global runtime
+		::pfunc::init (*taskMgrPtr);
+	//	// Change the number of attempts if necessary
+		::pfunc::taskmgr_max_attempts_get(num_attempts);
+		if (10000 > num_attempts)
+			::pfunc::taskmgr_max_attempts_set (10000);
+    }
+	else
+		++numOfInstances;
+}
+#endif
+
+int MP_model::numOfInstances = 0;
 
 void NormalMessenger::statistics(int bm, int m, int bn, int n, int nz) {
     DLOG(INFO) <<"FlopCpp: Number of constraint blocks: " <<bm<<endl;
@@ -74,23 +110,23 @@ void NormalMessenger::solutionStatus(const OsiSolverInterface* Solver) {
     }
 }
 
-void VerboseMessenger::constraintDebug(string name, const vector<MP::Coef>& cfs) const {
+void VerboseMessenger::constraintDebug(string name, const vector<boost::shared_ptr<MP::Coef> >& cfs) const {
     DLOG(INFO) <<"FlopCpp: Constraint "<<name<<endl;
     for (unsigned int j=0; j<cfs.size(); j++) {
-        int col=cfs[j].col;
-        int row=cfs[j].row;
-        double elm=cfs[j].val;
-        int stage=cfs[j].varStage;
+        int col=cfs[j]->col;
+        int row=cfs[j]->row;
+        double elm=cfs[j]->val;
+        int stage=cfs[j]->varStage;
         DLOG(INFO) <<row<<"   "<<col<<"  "<<elm<<"  "<<stage<<endl;
     }
 }
 
-void VerboseMessenger::objectiveDebug(const vector<MP::Coef>& cfs) const {
+void VerboseMessenger::objectiveDebug(const vector<boost::shared_ptr<MP::Coef> >& cfs) const {
     DLOG(INFO) <<"FlopCpp: Objective "<<endl;
     for (unsigned int j=0; j<cfs.size(); j++) {
-        int col=cfs[j].col;
-        int row=cfs[j].row;
-        double elm=cfs[j].val;
+        int col=cfs[j]->col;
+        int row=cfs[j]->row;
+        double elm=cfs[j]->val;
         DLOG(INFO) <<row<<"   "<<col<<"  "<<elm<<endl;
     }
 }
@@ -103,6 +139,9 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
     // Create a new taskmgr for PFunc
+#ifdef _PFUNC
+    initializePfunc();
+#endif
 }
 
 MP_model::~MP_model() {
@@ -115,7 +154,11 @@ MP_model::~MP_model() {
     //Reset currentModel Pointer to default model IF it points to this model to prevent dangling pointer
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::getDefaultModel();
-
+    --numOfInstances;
+#ifdef _PFUNC
+    if (numOfInstances == 0)
+    	::pfunc::clear();
+#endif
 }
 
 unsigned int MP_model::getSeed() {
@@ -184,7 +227,7 @@ void MP_model::add(MP_variable* v) { //Counts total number of variables in this 
 // Also important because of memory leaks that can occur otherwise, but at first we will create these leaks..
 
 void MP_model::addRow(const Constraint& constraint) {
-    vector<MP::Coef> cfs;
+    vector<boost::shared_ptr<MP::Coef> > cfs;
     vector<TerminalExpression*> v;
     MP::GenerateFunctor f(0,cfs);
     constraint->left->generate(MP_domain::getEmpty(),v,f,1.0);
@@ -192,9 +235,9 @@ void MP_model::addRow(const Constraint& constraint) {
     CoinPackedVector newRow;
     double rhs = 0.0;
     for (unsigned int j=0; j<cfs.size(); j++) {
-        int col=cfs[j].col;
+        int col=cfs[j]->col;
         //int row=cfs[j].row;
-        double elm=cfs[j].val;
+        double elm=cfs[j]->val;
         //cout<<row<<"   "<<col<<"  "<<elm<<endl;
         if (col>=0) {
             newRow.insert(col,elm);
@@ -237,38 +280,45 @@ void MP_model::minimize_max(MP_set &s, const MP_expression  &obj) {
 } 
 
 
-void MP_model::assemble(vector<MP::Coef>& v, vector<boost::shared_ptr<MP::Coef> >& av) {
-    std::sort(v.begin(),v.end(),&MP::CoefLess);
+void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::shared_ptr<MP::Coef> >& av) {
+    std::sort(v.begin(),v.end(),MP::CoefLessShared);
     int c,r,s,rs;
     double val;
     std::vector<double> scenVector;
-    std::vector<MP::Coef>::const_iterator i = v.begin();
+    std::vector<boost::shared_ptr<MP::Coef> >::const_iterator i = v.begin();
     while (i!=v.end()) {
-        c = i->col;
-        r = i->row;
-        val = i->val;
-        s = i->varStage;
-        rs = i->randomStage;
-        scenVector = i->scenVector;
+        c = (*i)->col;
+        r = (*i)->row;
+        val = (*i)->val;
+        s = (*i)->varStage;
+        rs = (*i)->randomStage;
+        scenVector = (*i)->scenVector;
         ++i;
         //In case of RHS with a constant term consisting of more than one constant
         //These values were added one after another, otherwise this does not make sense.
-        while (i!=v.end() && c==i->col && r==i->row) {
-            val += i->val;
-            if (i->varStage>0) {//If Coefficient was added with a random variable..
+        while (i!=v.end() && c==(*i)->col && r==(*i)->row) {
+            val += (*i)->val;
+            if ( (*i)->varStage>0 ) {//If Coefficient was added with a random variable..
                 //This is for right-hand-side addition
-                s = i->varStage;
+                s = (*i)->varStage;
                 //We do not add random variables, so we better do not have a valid pointer yet
                 //Add values of other scenarios
-                assert(scenVector.size() == i->scenVector.size());
+                assert(scenVector.size() == (*i)->scenVector.size());
                 for (int j = 0; j < scenVector.size(); j++){
-                    scenVector[j] = scenVector[j] + (i->scenVector)[j];
+                    scenVector[j] = scenVector[j] + ((*i)->scenVector)[j];
                 }
             }
             ++i;
-        }
+        } 
+        // We need a new MP::Coef in case of entering the while loop, otherwise it is not necessary. TODO: Fix this
         boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
+#ifdef _PFUNC
+        writeMutex.lock();
+#endif
         av.push_back(temp);
+#ifdef _PFUNC
+        writeMutex.unlock();
+#endif
     }
 }
 
@@ -339,14 +389,16 @@ void MP_model::attachStochastic(){
 
     vector<boost::shared_ptr<MP::Coef> > coefs;
     // TODO
-    vector<MP::Coef> cfs;
+    vector<boost::shared_ptr<MP::Coef> > cfs;
 
     // Generate new coefficients
+    // Try PFunc to parallelize the for loop..
+    // What do we do? We add a function object, that gets a Constraint, the MP_model and the coefs vector..
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
         (*i)->coefficients(cfs);
         //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
         assemble(cfs,coefs);
-        cfs.erase(cfs.begin(),cfs.end());
+        cfs.clear();
     }
     // Initialize vector that stores shared ptrs to Coefs that are result of a combination of random variates.
     vector< vector<boost::shared_ptr<MP::Coef> > > randomCoefs(stage.size()+1);//we store nStages, but without first place, so nStages+1 places are needed
@@ -463,19 +515,38 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     // Generate coefficient matrix and right hand side. All Variables and Constraints needs their offset for that to work
     //At first, generate coefficients for every constraint and store them in coefs vector: Assigns column and row number
     vector<boost::shared_ptr<MP::Coef> > coefs;
-    vector<MP::Coef> cfs;
+    vector<boost::shared_ptr<MP::Coef> > cfs;
     conIt it;
 
+    
+
+
     double timeBegin = CoinCpuTime();
+#ifdef _PFUNC
+    vector<my_pfunc::task *> tasks;
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
+    	pfunc_coef funObj(this,*i,coefs); //create new function object
+    	my_pfunc::task* taskPtr = new my_pfunc::task;
+    	my_pfunc::attribute myAttribute;
+    	my_pfunc::group myGroup;
+    	::pfunc::spawn(*taskPtr,myAttribute,myGroup,funObj);
+    	tasks.push_back(taskPtr);
+    	
+    }
+    for (int count = 0; count < Constraints.size(); count++){
+        ::pfunc::wait( *tasks[count] );
+    }
+#else
     for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
         (*it)->coefficients(cfs);
         messenger->constraintDebug((*it)->getName(),cfs);
         //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
         assemble(cfs,coefs);
-
         cfs.clear();
-
     }
+#endif
+    // We have to wait here until all the processes returned..
+
     DLOG(INFO) << "Time for coefficient generation: " << CoinCpuTime()-timeBegin << "s";
     nz = coefs.size();
     ++n; // Account for constant term in objective function.. So n+1 or realn is RHS
@@ -485,7 +556,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     if (stage.size()){
         //At this point we have all coefficients for the matrix. We need to sort them by stage, if we are in the stochastic setting and keep the old ordering to be able to set correct values for FlopC++ calls
         // TODO: Column indirection is not necessary for sucess, but it helps to eliminate empty variables 
-        std::sort(coefs.begin(),coefs.end(),&MP::CoefLessWithStageShared);
+        std::sort(coefs.begin(),coefs.end(),MP::CoefLessWithStageShared);
         //Initialize all values with outOfBound to prevent misuse
         colIndirection = new int[n+1]; //store all variables (n) starting from index 0 and rhs as value n => n+1 size needed to store all these values
         for (int i = 0; i < n+1; i++){
@@ -520,7 +591,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //Now we can access the new column ordering via colIndirection from FlopC++.
         //Now we changed coefficients and we should sort the coefs again, so, that they obey the new ordering
         //We need to extract all the random Coefficients that belong to the variable bounds and store them in the random coefficients array.
-        std::sort(coefs.begin(),coefs.end());
+        std::sort(coefs.begin(),coefs.end(),MP::CoefLessWithStageShared);
 
     }
 #pragma endregion colIndirection;
@@ -962,7 +1033,8 @@ void MP_model::sampleRandomVariates(std::vector<std::set<RandomVariable*> >& rv)
         if (probabilities.empty()){ //If probabilities are not of the correct size, we are wrong, probably a user error (assert)
             probabilities = std::vector<double>(scenSet.size(),1.0/scenSet.size());
         }
-        assert(probabilities.size() == scenSet.size()); //<< "You have a different number of probabilities compared to your scenario set.";
+        //CHECK_EQ(probabilities.size(),scenSet.size()) << "You have a different number of probabilities compared to your scenario set.";
+        assert(probabilities.size()==scenSet.size());
         return;
     }
 
@@ -1580,12 +1652,12 @@ namespace flopc {
 
     }
 
-    void Messenger::objectiveDebug( const vector<MP::Coef>& cfs ) const
+    void Messenger::objectiveDebug( const vector<boost::shared_ptr<MP::Coef> >& cfs ) const
     {
 
     }
 
-    void Messenger::constraintDebug( string name, const vector<MP::Coef>& cfs ) const
+    void Messenger::constraintDebug( string name, const vector<boost::shared_ptr<MP::Coef> >& cfs ) const
     {
 
     }

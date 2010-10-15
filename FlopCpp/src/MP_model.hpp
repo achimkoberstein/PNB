@@ -13,6 +13,18 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
+#ifdef _MSC_VER
+#include <Windows.h>
+// Workaround necessary for glog, if WinGDI.h is included (I do not know who includes the file)
+#ifdef ERROR
+#undef ERROR
+#endif
+#else
+#include <pfunc/pfunc.hpp> //FIXME: For the moment pfunc only on linux
+#define _PFUNC 1
+#endif
+
+
 
 #include "MP_expression.hpp"
 #include "MP_constraint.hpp"
@@ -29,10 +41,7 @@ class SmiScnModel;
 
 namespace flopc {
 
-    /* Library instance description */
-    //typedef ::pfunc::generator<cilkS, /* scheduling policy */
-    //    ::pfunc::use_default, /* compare */
-    //    ::pfunc::use_default> my_pfunc; /*function object*/
+
 
     // forward declarations
     class MP_variable;
@@ -57,8 +66,8 @@ namespace flopc {
         virtual void logMessage(int level, const char * const msg);
         friend class MP_model;
     private:
-    virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
-    virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
+        virtual void constraintDebug(string name, const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
+        virtual void objectiveDebug(const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
     virtual void solutionStatus(const OsiSolverInterface* Solver);
     virtual void statistics(int bm, int m, int bn, int n, int nz);
     virtual void generationTime(double t);
@@ -83,9 +92,11 @@ namespace flopc {
     class VerboseMessenger : public NormalMessenger {
         friend class MP_model;
     private:
-        virtual void constraintDebug(string name, const vector<MP::Coef>& cfs) const;
-        virtual void objectiveDebug(const vector<MP::Coef>& cfs) const;
+        virtual void constraintDebug(string name, const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
+        virtual void objectiveDebug(const vector<boost::shared_ptr<MP::Coef> >& cfs) const;
     };
+
+    struct pfunc_coef;
 
     /** @brief This is the anchor point for all constructs in a FlopC++ model.
     @ingroup PublicInterface
@@ -114,6 +125,8 @@ namespace flopc {
 
         //For testing purposes
         friend class MP_modelTest;
+        //For pfunc
+        friend struct pfunc_coef;
     public:
         /// used when calling the solve() method.  
         typedef enum {MINIMIZE=1, MAXIMIZE=-1} MP_direction;
@@ -267,6 +280,7 @@ namespace flopc {
         @todo explain the default and current model concepts.
         */
         static MP_model *getCurrentModel();
+
         /** Gets the current messenger.
         */
         Messenger *getMessenger(){ 
@@ -323,6 +337,10 @@ namespace flopc {
 
 		unsigned int getSeed();
     private:
+#ifdef _PFUNC
+        static void initializePfunc();
+#endif
+        static int numOfInstances;
         typedef std::set<MP_variable* >::iterator varIt;
         typedef std::set<MP_constraint* >::iterator conIt;
         typedef std::set<RandomVariable* >::iterator randomVarIt;
@@ -334,7 +352,7 @@ namespace flopc {
 
 
         //Transfer Coefficients from v to av, build rhs and sort coefficients
-        static void assemble(vector<MP::Coef>& v, vector< boost::shared_ptr<MP::Coef> >& av);
+        static void assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector< boost::shared_ptr<MP::Coef> >& av);
         //count number of constraints and add offests
         void add(MP_constraint* constraint);
 
@@ -385,11 +403,29 @@ namespace flopc {
         int *rowIndirection;
         MP_status mSolverState;
         boost::shared_ptr<Uniform01Generator> uniformGenerator;
-        
+#ifdef _PFUNC
+        static pfunc::mutex writeMutex;
+#endif
     public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
         SmiScnModel *smiModel;
 
     };
+
+#ifdef _PFUNC
+    // PFunc stuff
+    struct pfunc_coef { //: public my_pfunc::functor {
+    public:
+    	pfunc_coef( MP_model*, MP_constraint*, std::vector< boost::shared_ptr<MP::Coef> >& );
+    	void operator() ();
+    private:
+
+    	MP_model* model;
+    	MP_constraint* c;
+    	std::vector<boost::shared_ptr<MP::Coef> >& coefVec;
+
+    };
+#endif 
+    // End PFunc stuff
 
     /// allows print of result from call to solve();
     std::ostream &operator<<(std::ostream &os, 
