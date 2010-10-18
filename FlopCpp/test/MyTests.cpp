@@ -6018,7 +6018,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.OldUnitTest*";
-    ::testing::GTEST_FLAG(filter) = "*.SmpsWriterTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
