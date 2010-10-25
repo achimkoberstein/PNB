@@ -119,7 +119,7 @@ int main() {
             }
         }
 
-        upperbound = std::min(upperbound, objmaster + objsub);
+        upperbound = min(upperbound, objmaster + objsub);
         cout<<"Lower and upper bounds: "<<lowerbound<<"   "<<upperbound<<endl;
         if ((upperbound-lowerbound) < 0.0001*(1+fabs(lowerbound))) {
             break;

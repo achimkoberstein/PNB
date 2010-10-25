@@ -21,22 +21,28 @@ namespace flopc {
 	 }
   
 
-  MP_stage::MP_stage( int i /*= 0*/ ) : MP_set(i)
-	  {
-	  //MP_model contains a MP_stage and a MP_scenario_set set, initalized to 0.
-	  //If a new one is created we only need to add it to the current model
-	  
-	  //During first initialization, currentModel pointer is zero. Under this circumstances,
-	  //stage gets initalized with 0 by MP_model constructor and belongs to the current model
-      this->setName(MP_model::stageString); //Assign stageString to MP_stage set to identify it later on.
-      if (MP_model::getCurrentModel() != 0){
-		MP_model::getCurrentModel()->setStage(*this);
-        MP_model::getCurrentModel()->setStochastic(true);
-      }
-        
-	  }
+    MP_stage::MP_stage( int i /*= 0*/ ) : MP_set(i)
+    {
+        //MP_model contains a MP_stage and a MP_scenario_set set, initalized to 0.
+        //If a new one is created we only need to add it to the current model
 
-  MP_stage::~MP_stage() { }
+        //During first initialization, currentModel pointer is zero. Under this circumstances,
+        //stage gets initalized with 0 by MP_model constructor and belongs to the current model
+        if (i> 0){
+            this->setName(MP_model::stageString); //Assign stageString to MP_stage set to identify it later on.
+            if (MP_model::getCurrentModel() != 0){
+                MP_model::getCurrentModel()->setStage(*this);
+                MP_model::getCurrentModel()->setStochastic(true);
+            }
+        }
+
+    }
+
+  MP_stage::~MP_stage() {
+      if (MP_model::getCurrentModel() != 0){
+          MP_model::getCurrentModel()->setStochastic(false);
+      }
+  }
 
   MP_scenario_set::MP_scenario_set( int i /*= 0*/ ):MP_set(i)
 	  {

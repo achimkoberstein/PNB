@@ -1614,6 +1614,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
     }
 
     TEST(UnitTest,OldUnitTest){
+        MP_model testModel(new OsiClpSolverInterface);
         enum {airA, airB, airC, airD, numA};
         enum {route_1, route_2, route_3, route_4, route_5, numRoutes};
         const int numDemandStates = 5;
