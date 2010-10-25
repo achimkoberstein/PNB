@@ -98,6 +98,7 @@ namespace flopc {
         type::variableType type;
         int offset;
         int stageSet;
+        MP_set_base* stageSetPtr; 
     };
 
     /** Specialized subclass of MP_variable where the variable is

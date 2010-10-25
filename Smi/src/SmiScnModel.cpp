@@ -1197,8 +1197,8 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     }
 
     smiSmpsIO = new SmiSmpsIO();
-    if (osiStoch_) //TODO: Warning message
-        smiSmpsIO->setInfinity(osiStoch_->getInfinity()); // Set solver infinity..
+    //if (osiStoch_) 
+    //    smiSmpsIO->setInfinity(osiStoch_->getInfinity()); // Set solver infinity..
 
     if (r != NULL)
         smiSmpsIO->setCoreCombineRule(r);
@@ -1261,7 +1261,9 @@ int SmiScnModel::writeSmps(const char *name, bool winFileExtensions, bool strict
     if (this != NULL) {
         SmiSmpsIO * smpsIO = new SmiSmpsIO(this->getCore(), this->getSmiTree());
         if (osiStoch_)
-            smpsIO->setInfinity(osiStoch_->getInfinity());
+            smpsIO->setSolverInfinity(osiStoch_->getInfinity());
+        else if (core_)
+            smpsIO->setSolverInfinity(core_->getInfinity() );
         smpsIO->writeSmps(name, winFileExtensions, strictFormat);
         delete smpsIO;
         return 0;

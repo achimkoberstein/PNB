@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <string>
+#include <sstream>
 #include <ctime>
 using std::string;
 
@@ -15,6 +16,14 @@ using std::vector;
 
 #include <boost/exception/all.hpp>
 #include <glog/logging.h>
+
+template <class T>
+inline std::string to_string (const T& t)
+{
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
+}
 
 
 namespace flopc {
