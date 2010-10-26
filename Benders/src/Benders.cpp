@@ -9,6 +9,7 @@
 #include <string>
 #include <assert.h>
 #include <algorithm>
+#include <exception>
 #include <ctime>
 
 #include "SmiDiscreteDistribution.hpp"
@@ -210,7 +211,7 @@ void Benders::BendersSolve(double eps, int maxIter){
         int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
         if (resultCmp == 0)
             std::cout << "same results" << std::endl;
-        memcpy(tempFirstStageSol,mSol, mncol_+zSub_); // Copy old values
+        memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
         // Write current stage 1 solution to temporary solution vector; it 
         // also contains the value(s) of the variables for the scenario(s);
         // there is a check if the values are close to zero, if this is the
@@ -279,7 +280,7 @@ void Benders::BendersSolve(double eps, int maxIter){
                 if (single_)
                     break;
                 else
-                    continue; //Allow to generate more cuts in the multi setting
+                    continue; //Allow to generate more feas cuts in the multi setting
             }
             // Copy vector of current solution of subproblem
             const double* sSol_Temp = osiSubproblem_->getColSolution();
@@ -322,7 +323,7 @@ void Benders::BendersSolve(double eps, int maxIter){
             // In the first iteration the variables for the scenarios have 
             // the value -infinity, therefor the first cut(s) is(are) valid
             // We have to differentiate between multi and single cut..
-            if( (!single_ && !fCut) && (single_ || subObjVal > bestSol_Temp[mncol_+scen_] || nIter_==nFeas ) ){
+            if( feasible && (single_ || subObjVal > bestSol_Temp[mncol_+scen_] || nIter_==nFeas ) ){
                 // Calculate an optimality cut; Input: number of optimality cuts
                 // which were calculate during the current iteration, number of
                 // current scenario;
@@ -350,7 +351,7 @@ void Benders::BendersSolve(double eps, int maxIter){
         // added to the master problem; of course this will only take
         // place if there is any optimality cut and none feasibility cut; if
         // knapsack inequalities should be added, this method will derive one
-        if( oCut>0 ){
+        if( feasible && oCut>0 ){
             addOptiCut(oCut);
         }
         // Apply Trust Region method
@@ -1142,6 +1143,7 @@ int Benders::solveMaster(){
     }
     // Else the master problem is resolved
     else{	
+        try {
         if(warmStart_ || warmStartFol_ ){
             // Set warmstart informations
             osiMaster_->setWarmStart(warmStartMaster_);
@@ -1151,6 +1153,7 @@ int Benders::solveMaster(){
         if(mnInt_==0){ 
             osiMaster_->setHintParam(OsiDoDualInInitial,true);
             osiMaster_->resolve();
+
             //osiMaster_->initialBarSolve();
         }
         // Else solve via branch and bound
@@ -1173,6 +1176,14 @@ int Benders::solveMaster(){
                 warmStartMaster_ = osiMaster_->getEmptyWarmStart();
                 warmStartEmptyMaster_ = true;
             }	
+        }
+        }
+        catch (CoinError& e) {
+            std::cout << e.message() << std::endl;
+        }
+        catch (exception& e)
+        {
+            cout << e.what() << endl;
         }
     }
 
@@ -1912,6 +1923,9 @@ void Benders::addOptiCut(int oCut){
             osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB);
             // Set obj function value of z to 1 (if not already done, but does not hurt to do it anyway..)
             mdobj_[mncol_] = 1;
+            // We have to modify the value of the coefficient in the solver
+            osiMaster_->setObjCoeff(mncol_,1);
+            //osiMaster_->writeMps("test");
         }
         // If knapsack inequalities are used, check if all stage 1 
         // variables are integer
@@ -1938,12 +1952,16 @@ void Benders::addOptiCut(int oCut){
     // during the method "calcOptiCut" are added to master problem
     if(!single_){
         // Cycle over all cuts which were created
+        
         for(int i=0; i<oCut; i++){
+            int index = i*(mncol_+1);
             // Copy the cut and add it to the master problem
-            memcpy(cutElements, cutElements_+i*(mncol_+1), (mncol_+1)*sizeof(double));
-            memcpy(cutIndex, cutIndex_+i*(mncol_+1), (mncol_+1)*sizeof(int));
+            memcpy(cutElements, cutElements_+index, (mncol_+1)*sizeof(double));
+            memcpy(cutIndex, cutIndex_+index, (mncol_+1)*sizeof(int));
             osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]);
-            mdobj_[mncol_+cutIndex_[i*(mncol_+1)+mncol_]-1] = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            mdobj_[mncol_+cutIndex_[index+mncol_]-1] = scenProb_[cutIndex_[index+mncol_]-mncol_];
+            // We have to change the coefficient in the master problem
+            osiMaster_->setObjCoeff(mncol_+cutIndex_[index+mncol_]-1,scenProb_[cutIndex_[index+mncol_]-mncol_]);
         }	
     }
     delete [] cutElements;
