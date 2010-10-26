@@ -127,7 +127,7 @@ private:
     /**
     Writes the stochastic informations for the given scenario into the stream.
     */
-    void writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario);
+    void writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario, bool strictFormat);
     
     std::string getModProblemName(); // get the (probably modified) problem name
 
