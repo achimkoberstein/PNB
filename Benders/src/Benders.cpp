@@ -1952,16 +1952,15 @@ void Benders::addOptiCut(int oCut){
     // during the method "calcOptiCut" are added to master problem
     if(!single_){
         // Cycle over all cuts which were created
-        
+        //assert(oCut == nScen_); // If we do not have a cut for every scenario, something is wrong
         for(int i=0; i<oCut; i++){
             int index = i*(mncol_+1);
             // Copy the cut and add it to the master problem
             memcpy(cutElements, cutElements_+index, (mncol_+1)*sizeof(double));
             memcpy(cutIndex, cutIndex_+index, (mncol_+1)*sizeof(int));
-            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]);
-            mdobj_[mncol_+cutIndex_[index+mncol_]-1] = scenProb_[cutIndex_[index+mncol_]-mncol_];
+            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
             // We have to change the coefficient in the master problem
-            osiMaster_->setObjCoeff(mncol_+cutIndex_[index+mncol_]-1,scenProb_[cutIndex_[index+mncol_]-mncol_]);
+            osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
         }	
     }
     delete [] cutElements;
@@ -2814,7 +2813,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 //	// #7: Problem Path
 //	// #8: Solution Path
 		if (useBenders)
-			benders = new Benders("s", "-ws", "-ki", "-tr", "+ben"); 
+			benders = new Benders("m", "+wsI", "-ki", "-tr", "+ben"); 
 		else 
 			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); 
         benders->copyMaster(smiModel);
