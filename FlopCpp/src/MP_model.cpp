@@ -26,8 +26,6 @@ using std::endl;
 #include <CoinPackedVector.hpp>
 #include <OsiSolverInterface.hpp>
 
-
-
 #include "SmiScnData.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiScnModel.hpp"
@@ -475,7 +473,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
         Solver=_solver;
     }
-    //// In case we have an already attached (or solved) model AND we are in the stochastic setting: call attachStochastic
+    LOG(INFO) << "Started coefficient generation process, i.e. attach() was called.";
     //if (mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY && stage.size() > 1 ){
     //    attachStochastic();
     //    return;
@@ -910,6 +908,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         int begin = (*i)->offset;
         int end = (*i)->offset+(*i)->size();
+        // Name setzen
+
+
         if ( (*i)->type == type::discrete || (*i)->type == type::binary ) {
             for (int k=begin; k<end; k++) {
                 if (stage.size()){
@@ -1003,9 +1004,6 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         delete [] bu;
     }  
 #pragma endregion cleanUp;
-
-
-
     messenger->generationTime(CoinCpuTime()-time);
 }
 

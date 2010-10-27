@@ -84,12 +84,16 @@ public:
 	inline int getNumStages(){ return nstag_;}
 	inline int *getColumnStages(){ return cstag_;}
 	inline int *getRowStages(){ return rstag_;}
-	
+
+    inline void setSolverInfinity(double solverInf) { solverInf_ = solverInf; }
+    inline double getSolverInfinity() const { return solverInf_; }
+
 	void writeSmps(const char* filename, bool winFileExtensions = false, bool strictFormat = true);
 public:
-	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(NULL),tree(NULL),periodMap_(),scenarioMap_() {}
-    SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_() {}
-        ~SmiSmpsIO(){delete [] cstag_;delete[] rstag_;delete smpsCardReader_;}
+	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),solverInf_(COIN_DBL_MAX),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(NULL),tree(NULL),periodMap_(),scenarioMap_() {}
+    SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),solverInf_(COIN_DBL_MAX),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_() {}
+
+    ~SmiSmpsIO(){delete [] cstag_;delete[] rstag_;delete smpsCardReader_;}
 private:
     /**
     This method writes the core file for the current model
@@ -130,6 +134,7 @@ private:
 	int nstag_;
 	int *cstag_;
 	int *rstag_;
+    double solverInf_;
 
 	bool iftime,ifstoch;
 	SmiSmpsCardReader *smpsCardReader_;

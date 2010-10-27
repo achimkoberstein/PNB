@@ -4,7 +4,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 
-
 namespace flopc {
 
     typedef boost::mt19937 base_generator_type; //Set RNG
