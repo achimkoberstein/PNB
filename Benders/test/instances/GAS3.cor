@@ -1,0 +1,50 @@
+NAME          GASPERTU
+ROWS
+  N OBJ
+  G R1
+  E R6
+  G R2
+  G R3
+  E R4
+  E R5
+  L R7
+  L R8
+COLUMNS
+    C1        OBJ       5           
+    C1        R1        1           
+    C1        R6        -1          
+    C4        R1        1           
+    C7        OBJ       1           
+    C7        R6        1           
+    C7        R4        -1          
+    C7        R7        -1          
+    C2        OBJ       5.8         
+    C2        R2        1           
+    C2        R4        -1          
+    C3        OBJ       6           
+    C3        R3        1           
+    C3        R5        -1          
+    C5        R2        1           
+    C5        R4        -1          
+    C5        R7        1           
+    C6        R3        1           
+    C6        R5        -1          
+    C6        R8        1           
+    C8        OBJ       1           
+    C8        R4        1           
+    C8        R5        -1          
+    C8        R8        -1          
+    C9        OBJ       1           
+    C9        R5        1           
+RHS
+    RHS       R1        100         
+    RHS       R6        -100        
+    RHS       R2        150         
+    RHS       R3        120         
+    RHS       R4        -150        
+    RHS       R5        -120        
+    RHS       R7        0           
+    RHS       R8        0           
+BOUNDS
+ FX BOUND1    C4        0           
+ENDATA
