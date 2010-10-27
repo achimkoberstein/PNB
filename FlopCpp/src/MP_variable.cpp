@@ -26,7 +26,7 @@ RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 upperLimit(s1,s2,s3,s4,s5),
 lowerLimit(s1,s2,s3,s4,s5),
 S1(&s1),S2(&s2),S3(&s3),S4(&s4),S5(&s5),
-offset(-1)
+offset(-1),stageSetPtr(NULL)
 {
     type = type::continuous;
     lowerLimit.initialize(0);
@@ -59,20 +59,30 @@ double MP_variable::levelScenario(int scenario, int lcl_i1, int lcl_i2, int lcl_
 }  
 
 void MP_variable::setStageSet(){
-    if (S1->isStage())
+    if (S1->isStage()){
         stageSet = 0;
+        stageSetPtr = const_cast<MP_set_base*>(S1);
+    }
     else 
-        if (S2->isStage())
+        if (S2->isStage()){
             stageSet = 1;
+            stageSetPtr = const_cast<MP_set_base*>(S2);
+        }
         else 
-            if (S3->isStage())
+            if (S3->isStage()){
                 stageSet = 2;
+                stageSetPtr = const_cast<MP_set_base*>(S3);
+            }
             else 
-                if (S4->isStage())
+                if (S4->isStage()){
                     stageSet = 3;
+                    stageSetPtr = const_cast<MP_set_base*>(S4);
+                }
                 else 
-                    if (S5->isStage())
+                    if (S5->isStage()){
                         stageSet = 4;
+                        stageSetPtr = const_cast<MP_set_base*>(S5);
+                    }
                     else
                         stageSet = outOfBound;
 }
@@ -96,21 +106,36 @@ void MP_variable::operator()() const {
     if (S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
     if (S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
     if (S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
-    if (M->stage.size()){ //TODO: Terribly inefficient..
+    // Problem when variables get added to a model via added constraints. This will not work then.
+    // A variable can not be in two models at the same time obviously, or can it be?
+    if ( M->getStochastic() ){ 
         int length = 0;
         double* values = 0;
-        for (int i = 0; i < M->scenSet.size(); i++){
-            values = M->smiModel->getColSolution(i,&length);
-            //TODO: Check length //Check colIndirection for outOfBound..
-            cout<< " Sc. " << i << ": " << values[M->colIndirection[offset +
-            f(i1.evaluate(),
+        int curOffset = offset+ f(i1.evaluate(),
             i2.evaluate(),
             i3.evaluate(),
             i4.evaluate(),
-            i5.evaluate())]];
-            ::free(values); //we need to use free, as smi callocs the values..
+            i5.evaluate());
+        if ( stageSet >= 0){
+            // get current stage
+            //int curStage = getCurrentStage(i1.evaluate(),i2.evaluate,i3.evaluate(),i4.evaluate(),i5.evaluate());
+            for (int i = 0; i < M->scenSet.size(); i++){
+                values = M->smiModel->getColSolution(i,&length);
+                //TODO: Check length //Check colIndirection for outOfBound..
+                //TODO: Terribly inefficient.. It really is.. We can enhance this by getting the correct colIndex via the 
+                cout<< " Sc. " << i << ": " << values[M->colIndirection[curOffset]];
+                ::free(values); //we need to use free, as smi callocs the values..
+            }
+            cout << endl;
         }
-        cout << endl;
+        else { 
+            if ( M->colIndirection[curOffset] == outOfBound ) {
+                cout << " OutOfBound " << endl;
+            }
+            else {
+                cout << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
+            }
+        }
     }
     else
         cout<<"  "<< M->Solver->getColSolution()[offset +

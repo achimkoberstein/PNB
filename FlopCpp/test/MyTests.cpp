@@ -5977,7 +5977,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         TEST_F(SmiUnitTest, SmpsBug) {
 	        SmiScnModel smi;
 
+//#ifdef _MSC_VER
 	        std::string dataDir="../../../smiUnitTestData";
+//#else
+//            std::string dataDir="../../Smi/SmiTestData"
+//#endif
 	        dataDir += "/bug";
 
 	        // read SMPS model from files

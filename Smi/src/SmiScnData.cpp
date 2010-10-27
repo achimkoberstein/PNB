@@ -52,6 +52,7 @@ cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDense
     matrix->eliminateDuplicates(0.0);
 
     gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup,integerIndices,integerLength,binaryIndices,binaryLength);
+    infinity_ = osi->getInfinity();
 
     delete matrix;
     delete drlo;
@@ -78,6 +79,7 @@ cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDense
     matrix->eliminateDuplicates(0.0);
     
     gutsOfConstructor(nrow,ncol,nstag,cstag,rstag,matrix,dclo,dcup,dobj,drlo,drup,integerIndices,integerLength,binaryIndices,binaryLength);
+    infinity_ = osi->getInfinity();
 
     delete matrix;
     delete drlo;

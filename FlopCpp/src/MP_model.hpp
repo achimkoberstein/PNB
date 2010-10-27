@@ -13,7 +13,6 @@
 
 #include <CoinPackedVector.hpp>
 #include <CoinPackedMatrix.hpp>
-// This is necessary for PFunc and windows, so do a #ifdef around it
 #ifdef _MSC_VER
 #include <Windows.h>
 // Workaround necessary for glog, if WinGDI.h is included (I do not know who includes the file)
@@ -24,7 +23,6 @@
 #include <pfunc/pfunc.hpp> //FIXME: For the moment pfunc only on linux
 #define _PFUNC 1
 #endif
-
 
 
 

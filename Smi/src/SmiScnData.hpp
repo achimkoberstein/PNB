@@ -224,6 +224,7 @@ public:
 	inline int getIntegerLength() { return integerLength_; }
     inline int* getBinaryIndices() { return binaryIndices_; } //indices of binary variables
     inline int getBinaryLength() { return binaryLength_; }
+    inline double getInfinity() { return infinity_; }
 
 	void copyRowLower(double * drlo,SmiStageIndex t );
 	void copyRowUpper(double * drup,SmiStageIndex t);
@@ -265,6 +266,7 @@ private:
     int integerLength_; //number of integer variables
     int *binaryIndices_; //indices of binary variables
     int binaryLength_; //number of binary variables
+    double infinity_; //Infinity of solver
 	double **cdrlo_;
 	double **cdrup_;
 	double **cdobj_;
