@@ -3595,8 +3595,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_set J(p*p);
         MP_set K(p);
         MP_subset<3> F(J,J,J);
-
-        std::string fname = "fixed.dat";
+#ifdef _MSC_VER
+	        std::string fname="../../../test/testFiles/fixed.dat";
+#else
+            std::string fname="testFiles/fixed.dat";
+#endif
         std::ifstream file(fname.c_str());
 
         int ival,jval,kval;
@@ -3768,7 +3771,12 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             // city c1 at time t1 and arrives in city c2 at time t2
 
             map<string, vector<double> > d;
-            readFile("train.dat",d);
+#ifdef _MSC_VER
+	        std::string dataDir="../../../test/testFiles/train.dat";
+#else
+            std::string dataDir="testFiles/train.dat";
+#endif
+            readFile(dataDir,d);
             scheduleInsert(schedule,d["WAPH"],WA,PH);
             scheduleInsert(schedule,d["PHNY"],PH,NY);
             scheduleInsert(schedule,d["NYBO"],NY,BO);
@@ -4577,7 +4585,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 
         TEST_F(SmiUnitTest, SmiScnSmpsIOUnitTestReplace) {
-	        std::string dataDir="../../../smiUnitTestData";
+#ifdef _MSC_VER
+	        std::string dataDir="../../../../Smi/test/SmiTestData";
+#else
+            std::string dataDir="../../Smi/SmiTestData"
+#endif
 	        int nrows, ncols;
 
 	        // test SMPS files app0110R
@@ -4603,7 +4615,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         }
 
         TEST_F(SmiUnitTest, SmiScnSmpsIOUnitTestAdd) {
-	        std::string dataDir="../../../smiUnitTestData";
+#ifdef _MSC_VER
+	        std::string dataDir="../../../../Smi/test/SmiTestData";
+#else
+            std::string dataDir="../../Smi/SmiTestData"
+#endif
 	        int nrows, ncols;
 
 	        // test SMPS files app0110 -- ADD scenario values
@@ -5977,11 +5993,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         TEST_F(SmiUnitTest, SmpsBug) {
 	        SmiScnModel smi;
 
-//#ifdef _MSC_VER
-	        std::string dataDir="../../../smiUnitTestData";
-//#else
-//            std::string dataDir="../../Smi/SmiTestData"
-//#endif
+#ifdef _MSC_VER
+	        std::string dataDir="../../../../Smi/test/SmiTestData";
+#else
+            std::string dataDir="../../Smi/SmiTestData"
+#endif
 	        dataDir += "/bug";
 
 	        // read SMPS model from files
