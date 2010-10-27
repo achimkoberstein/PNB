@@ -1,0 +1,5 @@
+TIME          GASPERTU
+PERIODS
+    C1        R1                       PERIOD1
+    C2        R2                       PERIOD2
+ENDATA

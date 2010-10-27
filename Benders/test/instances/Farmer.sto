@@ -1,0 +1,15 @@
+STOCH         FARMER
+SCENARIOS     DISCRETE                REPLACE
+ SC SCEN1     ROOT              0.3333333  STAGE2
+    X1        WHEAT              2.5
+    X2        CORN               3
+    X3        SB1                -20
+ SC SCEN2     ROOT              0.3333333  STAGE2
+    X1        WHEAT              3
+    X2        CORN               3.6
+    X3        SB1                -24
+ SC SCEN3     ROOT              0.3333333  STAGE2
+    X1        WHEAT              2
+    X2        CORN               2.4
+    X3        SB1                -16
+ENDATA
