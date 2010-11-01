@@ -1,0 +1,5 @@
+TIME          FARMER
+PERIODS       LP
+    X1        ACRE                    STAGE1
+    Y1        WHEAT                   STAGE2
+ENDATA

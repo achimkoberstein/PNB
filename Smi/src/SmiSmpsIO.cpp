@@ -900,6 +900,35 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
         ncol += core->getNumCols(stg);
 	    nrow += core->getNumRows(stg);
     }
+    // 
+    if (solverInf_ != this->infinity_){
+    // We have to transform the values from solverInfinity to infinity
+        for (int i = 0; i < core->getNumCols(); i++){
+            if (clo[i] == -solverInf_)
+                clo[i] = -infinity_;
+            if (clo[i] == solverInf_)
+                clo[i] = infinity_;
+            if (cup[i] == -solverInf_)
+                cup[i] = -infinity_;
+            if (cup[i] == solverInf_)
+                cup[i] = infinity_;
+            if (obj[i] == -solverInf_)
+                obj[i] = -infinity_;
+            if (obj[i] == solverInf_)
+                obj[i] = infinity_;
+        }
+        for (int i = 0; i < core->getNumRows(); i++){
+            if (rlo[i] == -solverInf_)
+                rlo[i] = -infinity_;
+            if (rlo[i] == solverInf_)
+                rlo[i] = infinity_;
+            if (rup[i] == -solverInf_)
+                rup[i] = -infinity_;
+            if (rup[i] == solverInf_)
+                rup[i] = infinity_;
+        }
+        // We assume that there are no infinity values in the coefficient matrix..
+    }
     
     CoinPackedMatrix matrix(false, ncol, nrow, nels, dels, indx, rstrt, NULL);
     
@@ -965,13 +994,12 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     std::ostringstream line;
     line.fill(' ');
 
-    // TODO
-    // the following is not working correctly: in default mode, setprecision should count the total number of digits, 
-    // before and after the dot, but here it affects only the number of decimal digits
-    //if (strictFormat)
-    //    line << setprecision(12);
-    //else   
-    //    line << setprecision(15);
+    if (strictFormat) {
+        line << setprecision(11);
+    }
+    else {
+        line << setprecision(20);
+    }
     
     line << "STOCH         " << this->getModProblemName() << "\n";
     line << "SCENARIOS     DISCRETE\n";
@@ -982,7 +1010,7 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     //    line << "ADD\n";
         
     for (int scen = 0; scen < tree->getNumScenarios(); scen++) {
-        writeScenarioToStochFile(line, tree->getLeaf(scen), scen);
+        writeScenarioToStochFile(line, tree->getLeaf(scen), scen, strictFormat);
     }
     
     line << "ENDATA\n";
@@ -990,26 +1018,32 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     delete output;
 }
 
-void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario) {
+void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode<SmiScnNode *> * node, int scenario, bool strictFormat) {
     // first, go up the tree - if possible and the parent node is still within the same scenario and not the root node
     // if thats not the case, we reached the first node for that scenario
     if (node->hasParent() && node->getParent()->scenario() == scenario && node->getParent() != tree->getRoot()) {
         // go up the tree
-        writeScenarioToStochFile(stream, node->getParent(), scenario);
+        writeScenarioToStochFile(stream, node->getParent(), scenario, strictFormat);
     } else {
         // write scenario card
         stream << " SC Scen_" << std::setw(5) << std::left << node->scenario();
+
         if (node->getParent() != tree->getRoot()) {
             // branches from parent scenario
             stream << "Scen_" << std::setw(5) << std::left << node->getParent()->scenario();
         } else {
             // branches from root, i.e. Scen_0.
-            if (node->getParent()->scenario() == 0) // First Scenario (Scen_0) branches from ROOT, other scenarios branches from Scen_0
+            if (scenario == 0) // First Scenario (Scen_0) branches from ROOT, other scenarios branches from Scen_0
                 stream << std::setw(10) << std::left << "'ROOT'";
             else
                 stream << std::setw(10) << std::left << "Scen_0";
         }
-        stream << std::setw(15) << std::left << tree->getLeaf(scenario)->getDataPtr()->getProb(); // write the probabilty
+
+        if (strictFormat)
+            stream << std::setw(15) << std::left << tree->getLeaf(scenario)->getDataPtr()->getProb(); // write the probabilty
+        else
+            stream << tree->getLeaf(scenario)->getDataPtr()->getProb() << " "; // write the probabilty
+
         stream << "STAGE_" << node->getDataPtr()->getStage() << "\n"; // write the stage number
     }
     
@@ -1057,7 +1091,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                     // variable is binary
                     stream << " BV BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
                 }
-                else if (data->getColLowerElements()[icl] == -this->infinity_ && data->getColUpperElements()[icu] == this->infinity_) {
+                else if (data->getColLowerElements()[icl] == -this->solverInf_ && data->getColUpperElements()[icu] == this->solverInf_) {
                     // variable is free
                     stream << " FR BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
                 }
@@ -1072,7 +1106,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                     stream << " LI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
                 }
                 else {
-                    if (data->getColLowerElements()[icl] == -this->infinity_) {
+                    if (data->getColLowerElements()[icl] == -this->solverInf_) {
                         // lower bound is -infinity
                         stream << " MI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
                     }
@@ -1090,7 +1124,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                     stream << " UI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu];
                 }
                 else {
-                    if (data->getColUpperElements()[icu] == this->infinity_) {
+                    if (data->getColUpperElements()[icu] == this->solverInf_) {
                         // upper bound is infinity
                         stream << " PL BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]);
                     }

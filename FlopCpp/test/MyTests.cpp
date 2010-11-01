@@ -18,8 +18,6 @@
 #include "SmiScnModel.hpp"
 #include "Benders.hpp"
 #include "SAA.hpp"
-#include "SmiSmpsIO.hpp"
-#include "SmiScnModel.cpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
@@ -28,9 +26,9 @@
 
 //using namespace flopc;
 namespace flopc {
-    void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename){
+    void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename, const bool strictFormat=true){
         // write SMPS files
-        model.smiModel->writeSmps(filename.c_str(), true);
+        model.smiModel->writeSmps(filename.c_str(), true, strictFormat);
 
         // read SMPS files        
         SmiScnModel smi;
@@ -1614,6 +1612,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
     }
 
     TEST(UnitTest,OldUnitTest){
+        MP_model testModel(new OsiClpSolverInterface);
         enum {airA, airB, airC, airD, numA};
         enum {route_1, route_2, route_3, route_4, route_5, numRoutes};
         const int numDemandStates = 5;
@@ -3979,14 +3978,14 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         enum {numT = 2};
         MP_stage T(numT);
 
-        enum {numScen = 2};
+        enum {numScen = 3};
         MP_scenario_set scen(numScen);
 
         double probabilities[numScen] = { 0.1234567890123456, 0.876543211 };
         MP_data prob(&probabilities[0], scen);
         testModel.setProbabilities(prob);
 
-        double stochData[numT-1][numScen] = { {0.1234567890123456, 0.876543211 } };
+        double stochData[numT-1][numScen] = { {123.4567890123456, -0.1234567890123456, 0.1234567890123456 } };
         MP_random_data d(&stochData[0][0], T);
 
         MP_variable x(T);
@@ -3997,13 +3996,16 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel.setObjective(sum(T, x(T)));
 
         testModel.attach();
-        testModel.solve(MP_model::MINIMIZE);
 
-        // uncomment to test handling of long numbers...
-        //testModel.getSmi()->writeSmps("smpstest");
+        testModel.minimize();
+
+        testModel.getSmi()->writeSmps("smpsFree", false, false);
+        testModel.getSmi()->writeSmps("smpsStrict", false, true);
+
+        writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", false);
+        writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", true);
         
         cout << "Finished";
-        //TODO: Nothing is tested here?!
     }
 
     TEST_F(MP_modelTest, SetOperatorTest) {
@@ -5161,6 +5163,15 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        delete osiCore;
 	        delete origmat;
 	        delete cpm_mat;
+        }
+
+        void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &dsecond)
+        {
+            double *delt1 = dfirst.getElements();
+            const double *delt2 = dsecond.getElements();
+            const int *indx2 = dsecond.getIndices();
+            for(int j=0;j<dsecond.getNumElements();++j)
+                delt1[dfirst.findIndex(indx2[j])] = delt2[j];
         }
 
         TEST_F(SmiUnitTest, SmiScnModelDiscreteUnitTest) {

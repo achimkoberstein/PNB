@@ -29,11 +29,11 @@ int main(int argc, char* argv[]) {
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     //VLDEnable();
 
-    //SmiScnModel* smiModel = new SmiScnModel();
-    //smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
-    //smiModel->readSmps("fleetAssignment",SmiCoreCombineReplace::Instance());
-    //OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
-    //benders2.initialSolve();
+    SmiScnModel* smiModel = new SmiScnModel();
+    smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
+    smiModel->readSmps("fA",SmiCoreCombineReplace::Instance());
+    OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
+    benders2.initialSolve();
     
     MP_model mod(new OsiCpxSolverInterface());
 
@@ -363,6 +363,7 @@ int main(int argc, char* argv[]) {
     buy_stoch.setName("buy_stoch");
     buy_hedge.setName("buy_hedge");
     jet_fuel_consumption.setName("jet_fuel_consumption");
+    jet_fuel_consumption.lowerLimit() = 2954400;
 
 
     ////// CONSTRAINTS
@@ -408,9 +409,12 @@ int main(int argc, char* argv[]) {
     );
 
     mod.attach(mod.Solver);
-
+    mod.getSmi()->writeSmps("fA",true,true);
     mod.solve(MP_model::MINIMIZE);
-    mod.getSmi()->writeSmps("fleetAssignment");
+    buy_hedge.display("buy_hedge");
+    jet_fuel_consumption.display("jet_fuel_consumption");
+    y.display("y");
+    
 
     //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
     //benders.initialSolve();

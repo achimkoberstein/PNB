@@ -255,6 +255,9 @@ void OsiCpxSolverInterface::initialSolve()
   debugMessage("OsiCpxSolverInterface::initialSolve()\n");
   
   switchToLP();
+  int err = 0;
+  err = CPXsetintparam( env_, CPX_PARAM_NUMERICALEMPHASIS, 1);
+  checkCPXerror( err, "CPXsetintparam", "numerical emphasis" );
 
   int algorithm = 1;
   bool takeHint, gotHint;
@@ -1509,24 +1512,30 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
       new const CoinPackedVectorBase*[2*numrows];
    int newcols = 0;
    for (i = 0; i < numrows; ++i) {
-      switch (sense[i]) {
+       switch (sense[i]) {
       case 'L':
-	 cols[newcols++] =
-	    new CoinShallowPackedVector(1, &index[i], &minusone, false);
-	 break;
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &minusone, false);
+          break;
       case 'G':
-	 cols[newcols++] =
-	    new CoinShallowPackedVector(1, &index[i], &plusone, false);
-	 break;
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &plusone, false);
+          break;
       case 'R':
-	 cols[newcols++] =
-	    new CoinShallowPackedVector(1, &index[i], &minusone, false);
-	 cols[newcols++] =
-	    new CoinShallowPackedVector(1, &index[i], &plusone, false);
-	 break;
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &minusone, false);
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &plusone, false);
+          break;
       case 'N':
-	 break;
-      }
+          break;
+      case 'E':	 
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &minusone, false);
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &plusone, false);
+          break;
+       }
    }
 
    CoinFillN(obj, newcols, 1.0);
@@ -1542,6 +1551,7 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
 
    solver.setObjSense(1.0); // minimize
    solver.initialSolve();
+   std::cout << "obj. value from dual ray computation " << solver.getObjValue() << std::endl;
 
    const double* solverpi = solver.getRowPrice();
    double* pi = new double[numrows];

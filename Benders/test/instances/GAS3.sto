@@ -1,0 +1,45 @@
+STOCH         GASPERTU
+SCENARIOS     DISCRETE
+ SC SCEN1     ROOT      0.166667       PERIOD1
+    C2        OBJ       5.8         
+    C3        OBJ       6           
+    RHS       R2        150         
+    RHS       R3        120         
+    RHS       R4        -150        
+    RHS       R5        -120        
+ SC SCEN2     SCEN1     0.166667       PERIOD2
+    C2        OBJ       5.8         
+    C3        OBJ       6.2         
+    RHS       R2        150         
+    RHS       R3        80          
+    RHS       R4        -150        
+    RHS       R5        -80         
+ SC SCEN3     SCEN1     0.166667       PERIOD2
+    C2        OBJ       5.8         
+    C3        OBJ       6.5         
+    RHS       R2        150         
+    RHS       R3        200         
+    RHS       R4        -150        
+    RHS       R5        -200        
+ SC SCEN4     SCEN1     0.166667       PERIOD2
+    C2        OBJ       4.7         
+    C3        OBJ       4.5         
+    RHS       R2        90          
+    RHS       R3        110         
+    RHS       R4        -90         
+    RHS       R5        -110        
+ SC SCEN5     SCEN1     0.166667       PERIOD2
+    C2        OBJ       4.7         
+    C3        OBJ       5.1         
+    RHS       R2        90          
+    RHS       R3        60          
+    RHS       R4        -90         
+    RHS       R5        -60         
+ SC SCEN6     SCEN1     0.166667       PERIOD2
+    C2        OBJ       4.7         
+    C3        OBJ       5.6         
+    RHS       R2        90          
+    RHS       R3        70          
+    RHS       R4        -90         
+    RHS       R5        -70         
+ENDATA
