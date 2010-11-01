@@ -1,0 +1,5 @@
+TIME          FINA    
+PERIODS
+    C1        R1                       PERIOD1
+    C8        R15                      PERIOD2
+ENDATA

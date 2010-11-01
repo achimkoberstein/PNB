@@ -3,6 +3,15 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include <cassert>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <assert.h>
+#include <algorithm>
+#include <exception>
+#include <ctime>
+
 #include "SmiDiscreteDistribution.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiSmpsIO.hpp"
@@ -17,14 +26,18 @@
 
 #include "OsiCbcSolverInterface.hpp"
 #include "Benders.hpp"
-#include <cassert>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <assert.h>
-#include <algorithm>
-#include <ctime>
+
 using namespace std;
+
+#include <sstream>
+
+template <class T>
+inline std::string to_string (const T& t)
+{
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
+}
 
 
 //int main(int argc,  char* argv[]){	
@@ -168,6 +181,9 @@ void Benders::BendersSolve(double eps, int maxIter){
     // Counter for feasibility cuts
     int nFeas = 0;
 
+    masterValue_ = -infty_;
+    double* tempFirstStageSol = new double[mncol_+zSub_];
+
     // While the gap between upper and lower bound is larger than epsilon
     // repeat the benders decomposition method. Also continue if maximal 
     // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
@@ -179,26 +195,34 @@ void Benders::BendersSolve(double eps, int maxIter){
         if(solveMaster() == -1){
             return;		
         }
+        if (masterValue_ == osiMaster_->getObjValue()) {
+            std::cout << "repeated objective value : " << osiMaster_->getObjValue() << std::endl;
+        }
+        // Debug stuff
+        masterValue_ = osiMaster_->getObjValue();
+        //std::string filenameTemp = "osiMaster" + to_string(nIter_);
+        //osiMaster_->writeMps(filenameTemp.c_str(),"mps",1);
+
         //// Declaration of a temporary solution vector
         double *bestSol_Temp = new double[mncol_+zSub_+sncol_*nScen_];
         // Read current stage 1 solution 
         const double* mSol = 0;
-        osiMaster_->writeMps("osiMaster","mps",1);
         mSol = osiMaster_->getColSolution();
+        int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
+        if (resultCmp == 0)
+            std::cout << "same results" << std::endl;
+        memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
         // Write current stage 1 solution to temporary solution vector; it 
         // also contains the value(s) of the variables for the scenario(s);
         // there is a check if the values are close to zero, if this is the
         // case the values are set to zero
         for(int i=0; i<mncol_+zSub_; i++){
             double v=mSol[i];
-            if(v < 0){
-                v = -v;
-            }
-            if(v < ZEROTEST){
+            if(abs(v) < ZEROTEST && abs(v) > 0){ // TODO: Delete second test, not necessary. Just for debugging reasons inserted.
                 bestSol_Temp[i] = 0;
             }
             else{
-                bestSol_Temp[i] = mSol[i];
+                bestSol_Temp[i] = v;
             }
         }
 
@@ -246,7 +270,9 @@ void Benders::BendersSolve(double eps, int maxIter){
             fCut = false;
             // If dual subproblem is unbounded, add a feasibility cut to master
             // problem
-            if(osiSubproblem_->isProvenPrimalInfeasible()==1){
+            // PrimalInfeasible : feasibility set is empty (dual problem is unbounded or has empty feasibility set)
+            // DualInfeasible : dual feasibility set is empty (primal problem is unbounded or has empty feasibility set)
+            if( osiSubproblem_->isProvenPrimalInfeasible() ){
                 addFeasCut(scen_);
                 fCut = true;
                 feasible = false;
@@ -254,7 +280,7 @@ void Benders::BendersSolve(double eps, int maxIter){
                 if (single_)
                     break;
                 else
-                    continue; //Allow to generate more cuts in the multi setting
+                    continue; //Allow to generate more feas cuts in the multi setting
             }
             // Copy vector of current solution of subproblem
             const double* sSol_Temp = osiSubproblem_->getColSolution();
@@ -297,7 +323,7 @@ void Benders::BendersSolve(double eps, int maxIter){
             // In the first iteration the variables for the scenarios have 
             // the value -infinity, therefor the first cut(s) is(are) valid
             // We have to differentiate between multi and single cut..
-            if( (!single_ && !fCut) && (single_ || subObjVal > bestSol_Temp[mncol_+scen_] || nIter_==nFeas ) ){
+            if( feasible && (single_ || subObjVal > bestSol_Temp[mncol_+scen_] || nIter_==nFeas ) ){
                 // Calculate an optimality cut; Input: number of optimality cuts
                 // which were calculate during the current iteration, number of
                 // current scenario;
@@ -325,7 +351,7 @@ void Benders::BendersSolve(double eps, int maxIter){
         // added to the master problem; of course this will only take
         // place if there is any optimality cut and none feasibility cut; if
         // knapsack inequalities should be added, this method will derive one
-        if( oCut>0 ){
+        if( feasible && oCut>0 ){
             addOptiCut(oCut);
         }
         // Apply Trust Region method
@@ -1117,6 +1143,7 @@ int Benders::solveMaster(){
     }
     // Else the master problem is resolved
     else{	
+        try {
         if(warmStart_ || warmStartFol_ ){
             // Set warmstart informations
             osiMaster_->setWarmStart(warmStartMaster_);
@@ -1126,6 +1153,7 @@ int Benders::solveMaster(){
         if(mnInt_==0){ 
             osiMaster_->setHintParam(OsiDoDualInInitial,true);
             osiMaster_->resolve();
+
             //osiMaster_->initialBarSolve();
         }
         // Else solve via branch and bound
@@ -1148,6 +1176,14 @@ int Benders::solveMaster(){
                 warmStartMaster_ = osiMaster_->getEmptyWarmStart();
                 warmStartEmptyMaster_ = true;
             }	
+        }
+        }
+        catch (CoinError& e) {
+            std::cout << e.message() << std::endl;
+        }
+        catch (exception& e)
+        {
+            cout << e.what() << endl;
         }
     }
 
@@ -1417,7 +1453,8 @@ void Benders::convertSubproblem(){
         }
         // If lower bound is equal to zero and upper
         // bound has finite value, a new constraint is
-        // added to master problem
+        // added to master problem. This is the case as 
+        // we converted the lower bound to zero.
         if(combdcup_[i] < INFTYTEST){
             // Coefficient of new constraint is 1
             combSt2dels_[combSt2nels_+rowAdd_] = 1;
@@ -1435,6 +1472,7 @@ void Benders::convertSubproblem(){
             // Count up counter for new rows
             rowAdd_++;						
         }
+        
     }
 
     // Converting: All rows which contain a converted variable
@@ -1595,6 +1633,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     osiSubproblem_->loadProblem(*matrix, combdclo_, combdcup_, combdobj_, combdrlo_, combdrup_);
     // Parameter: use dual simplex
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
+    osiSubproblem_->setObjSense(1.0); // we minimize the subproblems
     // In the first iteration there are no warmstart informations
     // available. So distinguish between first and all other iterations.
     if(nIter_==0){
@@ -1750,7 +1789,7 @@ void Benders::calcOptiCut( int oCut, int scen_){
     for(int i=0; i<snrow_+rowAdd_; i++){
         if(SolDual[i] < 0){
             if(SolDual[i] < -ZEROTEST){
-                cutRowUB_[oCut]+= constDrup_[i]*SolDual[i];
+                cutRowUB_[oCut] += constDrup_[i]*SolDual[i];
             }
         }
         else{
@@ -1884,6 +1923,9 @@ void Benders::addOptiCut(int oCut){
             osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB);
             // Set obj function value of z to 1 (if not already done, but does not hurt to do it anyway..)
             mdobj_[mncol_] = 1;
+            // We have to modify the value of the coefficient in the solver
+            osiMaster_->setObjCoeff(mncol_,1);
+            //osiMaster_->writeMps("test");
         }
         // If knapsack inequalities are used, check if all stage 1 
         // variables are integer
@@ -1910,12 +1952,15 @@ void Benders::addOptiCut(int oCut){
     // during the method "calcOptiCut" are added to master problem
     if(!single_){
         // Cycle over all cuts which were created
+        //assert(oCut == nScen_); // If we do not have a cut for every scenario, something is wrong
         for(int i=0; i<oCut; i++){
+            int index = i*(mncol_+1);
             // Copy the cut and add it to the master problem
-            memcpy(cutElements, cutElements_+i*(mncol_+1), (mncol_+1)*sizeof(double));
-            memcpy(cutIndex, cutIndex_+i*(mncol_+1), (mncol_+1)*sizeof(int));
-            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]);
-            mdobj_[mncol_+cutIndex_[i*(mncol_+1)+mncol_]-1] = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            memcpy(cutElements, cutElements_+index, (mncol_+1)*sizeof(double));
+            memcpy(cutIndex, cutIndex_+index, (mncol_+1)*sizeof(int));
+            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
+            // We have to change the coefficient in the master problem
+            osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
         }	
     }
     delete [] cutElements;
@@ -1936,6 +1981,7 @@ void Benders::addFeasCut( int scen_){
 
     // Calculate RHS: r*d
     // Current ray
+    osiSubproblem_->setHintParam(OsiDoDualInInitial,false);
     vector<double*> ray = osiSubproblem_->getDualRays(1);
     double * dualRay;
     dualRay = ray[0];
@@ -1953,8 +1999,11 @@ void Benders::addFeasCut( int scen_){
     for(int i=0; i<snrow_+rowAdd_; i++){
         signTest+=subRHS[i]*dualRay[i];
     }
-    // We can discard the osiSubproblem
-    //osiSubproblem_->reset();
+    if ( subValue_ == osiSubproblem_->getObjValue()){
+        // We repeat ourselves
+        std::cout << "repeated solution value";
+    }
+    subValue_ = osiSubproblem_->getObjValue();
 
     // If the value is negative, the ray points in the
     // wrong direction; in this case the sign of the
@@ -1962,19 +2011,31 @@ void Benders::addFeasCut( int scen_){
     if(signTest < 0){
         for(int i=0; i<snrow_+rowAdd_; i++){
             dualRay[i]*=(-1);
-        }	
+        }
     }
     // To calculate r*d, use constant RHS/LHS; if the corresponding
     // dual variable is negative, use RHS; if the corresponding
     // dual variablé is positive, use LHS
+    //for(int i=0; i<snrow_+rowAdd_; i++){
+    //    if(dualRay[i] > 0){
+    //        cutRowUB += constDrlo_[i]*dualRay[i];
+    //    }
+    //    else{
+    //        cutRowUB += constDrup_[i]*dualRay[i];
+    //    }
+    //}	
     for(int i=0; i<snrow_+rowAdd_; i++){
+        if (abs(dualRay[i]) < ZEROTEST)
+            dualRay[i] = 0;
         if(dualRay[i] > 0){
-            cutRowUB+= constDrlo_[i]*dualRay[i];
+            cutRowUB -= constDrlo_[i]*dualRay[i];
         }
         else{
-            cutRowUB+= constDrup_[i]*dualRay[i];
+            cutRowUB -= constDrup_[i]*dualRay[i];
         }
-    }	
+    }
+    //if ( abs(signTest-cutRowUB) > ZEROTEST) //FIXME: Remove me when finished debugging
+    //    std::cout << "" << std::endl;
     // Declaration of an array for cut indices
     int * cutIndex = new int[mncol_];
     // Declaration of an array for cut coefficients
@@ -2004,30 +2065,30 @@ void Benders::addFeasCut( int scen_){
             // If the end of the deterministic matrix is reached, use
             // stochastic data for updating the cut coefficients
             if(cstg1els == sSt1rstrt_ [j+1]){
-                cutElements[mutSt1iels_[mutcstg1els]]-= dualRay[j]*mutSt1dels_[mutcstg1els];
+                cutElements[mutSt1iels_[mutcstg1els]] -= dualRay[j]*mutSt1dels_[mutcstg1els];
                 mutcstg1els++;
             }
             // If the end of the stochastic matrix is reached, use
             // deterministic data for updating the cut coefficients
             else if(mutcstg1els == mutSt1rstrt_ [scen_*snrow_+j+1]){
-                cutElements[sSt1iels_[cstg1els]]-= dualRay[j]*sSt1dels_[cstg1els];
+                cutElements[sSt1iels_[cstg1els]] -= dualRay[j]*sSt1dels_[cstg1els];
                 cstg1els++;	
             }
             // Else check, which matrix contains the next lesser index 
             // and use the corresponding data for update
             else if(sSt1iels_[cstg1els] > mutSt1iels_[mutcstg1els]){
-                cutElements[mutSt1iels_[mutcstg1els]]-= dualRay[j]*mutSt1dels_[mutcstg1els];
+                cutElements[mutSt1iels_[mutcstg1els]] -= dualRay[j]*mutSt1dels_[mutcstg1els];
                 mutcstg1els++;	
             }
             else if(sSt1iels_[cstg1els] < mutSt1iels_[mutcstg1els]){
-                cutElements[sSt1iels_[cstg1els]]-= dualRay[j]*sSt1dels_[cstg1els];
+                cutElements[sSt1iels_[cstg1els]] -= dualRay[j]*sSt1dels_[cstg1els];
                 cstg1els++;	
             }
             // If there is a coefficient which has the same index
             // in both matrices, use the stochastic coefficient
             // Note: both counter are counted up
             else if(sSt1iels_[cstg1els] == mutSt1iels_[mutcstg1els]){
-                cutElements[mutSt1iels_[mutcstg1els]]-= dualRay[j]*mutSt1dels_[mutcstg1els];
+                cutElements[mutSt1iels_[mutcstg1els]] -= dualRay[j]*mutSt1dels_[mutcstg1els];
                 mutcstg1els++;	
                 cstg1els++;
             }		
@@ -2041,11 +2102,24 @@ void Benders::addFeasCut( int scen_){
         // deterministic matrix                                                                                                                                 
         assert(cstg1els == sSt1rstrt_[j+1]);
     }
+    // Check cut coefficients
+    for (int i = 0; i < mncol_; i++) {
+        if ( abs(cutElements[i]) > 0 && abs(cutElements[i]) < ZEROTEST ){
+            //cutElements[i] = 0;
+            std::cout << std::endl;
+        }
+    }
     // Add the cut to the master problem
     // Note: RHS of the cut is multiplied by -1, since r*d
     // has to be on the other side of the inequalitiy
     CoinPackedVector row(mncol_, cutIndex, cutElements);
-    osiMaster_->addRow(row,cutRowLB,-cutRowUB);
+    osiMaster_->addRow(row,cutRowLB,cutRowUB-epsilonFeasCut_);
+        for (int i = 0; i < feasCutVector.size(); i++){
+            int compared = row.compare(feasCutVector[i]);
+            if ( compared == 0)
+                std::cout << "comparing" << i << ". cut with current cut results in equality" << std::endl;
+        }
+    feasCutVector.push_back(row);
     //osiMaster_->addRow( cutRowLB, -cutRowUB);
 
     delete [] cutIndex;
@@ -2739,7 +2813,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 //	// #7: Problem Path
 //	// #8: Solution Path
 		if (useBenders)
-			benders = new Benders("s", "-ws", "-ki", "-tr", "+ben"); 
+			benders = new Benders("m", "+wsI", "-ki", "-tr", "+ben"); 
 		else 
 			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); 
         benders->copyMaster(smiModel);

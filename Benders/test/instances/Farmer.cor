@@ -1,0 +1,36 @@
+NAME          FARMER                
+ROWS                                
+ N  COST                        
+ L  ACRE                       
+ G  WHEAT                        
+ G  CORN                        
+ L  SB1 
+ L  SB2                                                                     
+COLUMNS    
+    X1        COST      150.           ACRE      1.                             
+    X2        COST      230.           ACRE      1. 
+    X3        COST      260.           ACRE      1.  
+    Y1        COST      238.           WHEAT     1. 
+    Y2        COST      210.           CORN      1. 
+    W1        COST      -170.          WHEAT     -1.   
+    W2        COST      -150.          CORN      -1. 
+    W3        COST      -36.           SB1       1. 
+    W3        SB2       1.              
+    W4        COST      -10.           SB1       1.         
+RHS                                 
+    RHS       ACRE      500.           
+    RHS       WHEAT     200.        
+    RHS       CORN      240.           
+    RHS       SB1       0.     
+    RHS       SB2       6000. 
+BOUNDS                              
+ LO BOUND     X1        0. 
+ LO BOUND     X2        0. 
+ LO BOUND     X3        0. 
+ LO BOUND     Y1        0. 
+ LO BOUND     Y2        0. 
+ LO BOUND     W1        0. 
+ LO BOUND     W2        0. 
+ LO BOUND     W3        0. 
+ LO BOUND     W4        0.                                    
+ENDATA                              
