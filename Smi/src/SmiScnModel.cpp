@@ -308,13 +308,15 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     // pass data to osiStoch
     osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
-    // load integer values in solver
-    for (unsigned int i = 0; i < intIndices.size(); i++) {
-        osiStoch_->setInteger(intIndices[i]);
-    }
     //Set objSense
     osiStoch_->setObjSense(objSense);
-    osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+    // If we have integer indices, we need the branch-and-bound solver
+    if (intIndices.size()){
+        osiStoch_->setInteger(&intIndices[0],intIndices.size());
+        osiStoch_->branchAndBound();
+    }
+    else
+        osiStoch_->initialSolve(); //Solve this problem.
 
     //Delete new-ed objects
     delete matrix_;
@@ -413,11 +415,6 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense)
         // pass data to osiStoch
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
-        // load integer values in solver
-        for (unsigned int i = 0; i < intIndices.size(); i++) {
-            osiStoch_->setInteger(intIndices[i]);
-        }
-
         // fix stage-1-columns to the values of the evp
         for (int col = 0; col < numStage1Cols; col++) {
             if (this->core_->getColStage(col) == 0) {
@@ -427,7 +424,13 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense)
 
         //Set objSense
         osiStoch_->setObjSense(objSense);
-        osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+        // If we have integer indices, we need the branch-and-bound solver
+        if (intIndices.size()){
+            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+            osiStoch_->branchAndBound();
+        }
+        else
+            osiStoch_->initialSolve(); //Solve this problem.
 
         // sum up the solution values (multiplied with probabilities)
         eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
@@ -526,13 +529,15 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
         // pass data to osiStoch
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
-        // load integer values in solver
-        for (unsigned int i = 0; i < intIndices.size(); i++) {
-            osiStoch_->setInteger(intIndices[i]);
-        }
         //Set objSense
         osiStoch_->setObjSense(objSense);
-        osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+            // If we have integer indices, we need the branch-and-bound solver
+        if (intIndices.size()){
+            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+            osiStoch_->branchAndBound();
+        }
+        else
+            osiStoch_->initialSolve(); //Solve this problem.
         solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
 
         //Delete new-ed objects
@@ -612,10 +617,13 @@ SmiScnModel::loadOsiSolverData()
     // pass data to osiStoch
     osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
 
-    // load integer values in solver
-    for (unsigned int i = 0; i < intIndices.size(); i++) {
-        osiStoch_->setInteger(intIndices[i]);
+    // If we have integer indices, we add these to the solver.
+    if (intIndices.size()){
+        osiStoch_->setInteger(&intIndices[0],intIndices.size());
     }
+
+
+
 
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..

@@ -323,7 +323,7 @@ int main(int argc, char* argv[]) {
     /////// VARIABLES
 
     MP_variable y(A,A2,T);
-    //y.integer();
+    y.integer();
     for (int i = 0; i < numA; i++) {
         for (int j = 0; j < numA; j++) {
             for (int k = 0; k < numT; k++) {
@@ -414,6 +414,9 @@ int main(int argc, char* argv[]) {
     buy_hedge.display("buy_hedge");
     jet_fuel_consumption.display("jet_fuel_consumption");
     y.display("y");
+    SmiScnModel * smiModelPtr = mod.getSmi();
+    std::pair<double,double*> eevSolution = smiModelPtr->solveEV(smiModelPtr->getOsiSolverInterface(),MP_model::MINIMIZE);
+    
     
 
     //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());

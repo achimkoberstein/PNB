@@ -12,6 +12,8 @@
 #include <exception>
 #include <ctime>
 
+#include "cplex.h" // Only for RegularizedDecomposition
+
 #include "SmiDiscreteDistribution.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiSmpsIO.hpp"
@@ -23,9 +25,10 @@
 #include "CoinPackedMatrix.hpp"
 #include "SmiScnData.hpp"
 #include "OsiClpSolverInterface.hpp"
-
+#include "OsiCpxSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
 #include "Benders.hpp"
+#include <glog/logging.h>
 
 using namespace std;
 
@@ -147,12 +150,12 @@ inline std::string to_string (const T& t)
 //	// ###################################################################################
 //}
 bool Benders::computeRelativeGap(double ub, double lb, double eps){
-	if (ub == infty_ || lb == -infty_)
-		return true;
-	if (ub == 0) // We have no meaningful comparison
-		return true;
-	if (ub > 0 && lb < 0) //in this case we do not want relative difference, instead we want absolute difference..
-		return true;
+    if (ub == infty_ || lb == -infty_)
+        return true;
+    if (ub == 0) // We have no meaningful comparison
+        return true;
+    if (ub > 0 && lb < 0) //in this case we do not want relative difference, instead we want absolute difference..
+        return true;
     return (abs(lb-ub)/abs(ub)) >= eps; //See cplex mipgap
 }
 
@@ -184,6 +187,12 @@ void Benders::BendersSolve(double eps, int maxIter){
     masterValue_ = -infty_;
     double* tempFirstStageSol = new double[mncol_+zSub_];
 
+    if (useRegularizedDecomposition_)
+        regSubproblemSolutionValues_ = new double[nScen_];
+
+    // Find first stage solution
+    // computeInitialSolution();
+
     // While the gap between upper and lower bound is larger than epsilon
     // repeat the benders decomposition method. Also continue if maximal 
     // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
@@ -194,6 +203,10 @@ void Benders::BendersSolve(double eps, int maxIter){
         // Solve master problem
         if(solveMaster() == -1){
             return;		
+        }
+        // 
+        if ( useRegularizedDecomposition_) {
+            // We should check for optimality here: If c^T x + z = c^T + Q(a) stop, a is optimal
         }
         if (masterValue_ == osiMaster_->getObjValue()) {
             std::cout << "repeated objective value : " << osiMaster_->getObjValue() << std::endl;
@@ -243,8 +256,7 @@ void Benders::BendersSolve(double eps, int maxIter){
         // Initialize temporary upper bound with zero
         upperBound_ = 0;
         // Begin calculating temporary upper bound: objective function value
-        // of master problem
-        // Christian: You do not have to calculate, just use the value given from osiMaster_..
+        // of master problem : We do it this way to account for the ZEROTEST.
         for(int i=0; i<mncol_; i++){
             upperBound_+= mdobj_[i]*bestSol_Temp[i];
         }
@@ -280,7 +292,7 @@ void Benders::BendersSolve(double eps, int maxIter){
                 if (single_)
                     break;
                 else
-                    continue; //Allow to generate more feas cuts in the multi setting
+                    break; //Allow to generate more feas cuts in the multi setting
             }
             // Copy vector of current solution of subproblem
             const double* sSol_Temp = osiSubproblem_->getColSolution();
@@ -335,6 +347,15 @@ void Benders::BendersSolve(double eps, int maxIter){
             // on stage 2 variables, there could occur an offset of the objective 
             // function which has to be manually added to the objective function
             upperBound_+= subObjVal*scenProb_[scen_];
+
+            if (useRegularizedDecomposition_){
+                // We want to solve the subproblem with the regularized solution
+                addSt1ToSubproblem(scen_,regSolution_);
+                solveSubproblem(scen_,fCut);
+                //TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
+                regSubproblemSolutionValues_[scen_] = osiSubproblem_->getObjValue()*scenProb_[scen_];
+
+            }
         }
         // If current upper bound is less or equal than the old upper bound, update
         // the upper bound and the best feasible solution; the update takes plays 
@@ -354,6 +375,35 @@ void Benders::BendersSolve(double eps, int maxIter){
         if( feasible && oCut>0 ){
             addOptiCut(oCut);
         }
+        //
+        if (feasible && useRegularizedDecomposition_){
+            // If no optimality cut was generated, we update the regularized solution a to x (exact serious step)
+            if (oCut == 0){
+                seriousStep_ = true;
+                for (int i = 0; i < mncol_; i++){
+                    regSolution_[i] = bestSol_Temp[i];
+                }
+            }
+            // We generated some optimality cuts
+            else{
+                // We have to check if c^T \bar x + Q(\bar x) <= c^T a + Q( a ), if so we update the regularized solution a to x (approximate serious step)
+                // The first value is saved in upperBound_
+                // Compute regSolutionValue_
+                regSolutionValue_ = 0;
+                for (int i = 0; i < mncol_; i++){
+                    regSolutionValue_ += regSolution_[i]*mdobj_[i];
+                }
+                for (int i = 0; i < nScen_; i++) {
+                    regSolutionValue_ += regSubproblemSolutionValues_[i];
+                }
+                if ( upperBound_ <= regSolutionValue_ ){
+                    seriousStep_ = true;
+                    for (int i = 0; i < mncol_; i++){
+                        regSolution_[i] = bestSol_Temp[i];
+                    }
+                }// If not we make a (null feasible step) and let a be the same as before
+            }
+        }
         // Apply Trust Region method
         if(trustRegion_ ){
             // Apply trust region method as long as the method returns 1,
@@ -366,6 +416,8 @@ void Benders::BendersSolve(double eps, int maxIter){
         delete [] bestSol_Temp;
         // Count up iteration counter
         nIter_++;
+
+
 
         /*
         // ### Print master matrix and RHS ###	
@@ -390,7 +442,7 @@ void Benders::BendersSolve(double eps, int maxIter){
     }	
     cout << "Objective value after "<< nIter_ << " iterations is: "  << LB_ << endl;
 
-
+    delete [] regSubproblemSolutionValues_;
     // ###################################################################################
     // End: BendersSolve
     // ###################################################################################
@@ -1100,6 +1152,9 @@ int Benders::solveMaster(){
     // for the additional variables for the scenarios.
     // In all other itrations the master problem is solved after it
     // is updated with either a feasibility cut or some optimality cuts.
+    // We get the LP and Environment pointer from OsiCpx (only needed in case of regularized decomposition..
+    CPXLPptr lpPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getLpPtr();
+    CPXENVptr envPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getEnvironmentPtr();
 
     if(nIter_==0){
         // Declaration of the problem matrix
@@ -1110,18 +1165,90 @@ int Benders::solveMaster(){
         // Set integer informations
         if (mnInt_)
             osiMaster_->setInteger(miInt_, mnInt_);
-
         // Parameter: use dual simplex
-        osiMaster_->setHintParam(OsiDoDualInInitial,false);
+        osiMaster_->setHintParam(OsiDoDualInInitial,true);
+        //
+        if (useRegularizedDecomposition_) {
+            // To compute ||x-a||^2, we introduce a new variable w that is set to w = x-a and we use ||w||^2 in the objective. 
+
+            // Initialize quadratic matrix with entries on the diagonal axis only
+            double * quaddels = new double[mncol_]; // contains entries of the matrix 
+            int * quadiels = new int[mncol_]; // contains column (variable) which belongs to the coefficient 
+            int * quadbeg = new int[2*mncol_+zSub_+1]; // stores the beginning of a new column of the matrix (+1 for convenience)
+            int * quadcnt = new int[2*mncol_+zSub_]; // stores the number of entries a certain column (variable) appears in the column of the matrix
+            quadbeg[0] = 0;
+            double term = 1/sigma_; // Cplex multiplies all coefficients with 1/2
+            for (int i = 0; i < mncol_+zSub_; i++){
+                quadbeg[i+1] = 0;
+                quadcnt[i] = 0;
+            }
+            for ( int i = mncol_+zSub_;i < 2*mncol_+zSub_; i++) {
+                quaddels[i-mncol_-zSub_] = term;
+                quadiels[i-mncol_-zSub_] = i;
+                quadbeg[i+1] = quadbeg[i]+1;
+                quadcnt[i] = 1;
+            }
+            // We add the new columns first
+            double * collb = new double[mncol_];
+            double * colub = new double[mncol_];
+            double * colobj = new double[mncol_];
+            for (int i = 0; i < mncol_; i++){
+                collb[i] = -infty_;
+                colub[i] = infty_;
+                colobj[i] = 0; 
+            }
+            CoinPackedVectorBase** cpvb = new CoinPackedVectorBase*[mncol_];
+            for (int i = 0; i < mncol_; i++){
+                cpvb[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
+            }
+            osiMaster_->addCols(mncol_,cpvb, collb, colub , colobj);
+
+            // Prepare the new rows that are meant to set w = x-a
+            double * rowlb = new double[mncol_];
+            double * rowub = new double[mncol_];
+            int * rowstrt = new int[mncol_+1];
+            int * columns = new int[2*mncol_];
+            double * elements = new double[2*mncol_];
+            rowstrt[0] = 0;
+            for (int i = 0; i < mncol_; i++){
+                rowlb[i] = -regSolution_[i]; rowub[i] = -regSolution_[i]; // we have an equality constraint
+                columns[2*i] = i; columns[2*i+1] = mncol_+zSub_+i;
+                elements[2*i] = -1; elements[2*i+1] = 1;
+                rowstrt[i+1] = rowstrt[i]+2; // We have two elements per row, so we have to add two
+            }
+            startRows_ = osiMaster_->getNumRows();           
+            // We have to store the row numbers, so we can update these rows later on if the regularized solution changes
+            osiMaster_->addRows(mncol_, rowstrt, columns, elements, rowlb, rowub );
+            endRows_ = osiMaster_->getNumRows(); 
+
+            // Add the quadratic objective to the objective function
+            int error = 0;
+            if (mnInt_)
+                error = CPXchgprobtype(envPtr,lpPtr,CPXPROB_MIQP); 
+            else
+                error = CPXchgprobtype(envPtr,lpPtr,CPXPROB_QP);
+            DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXchgprobtype";
+            error = CPXcopyquad(envPtr,lpPtr,quadbeg,quadcnt,quadiels, quaddels);
+            DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXcopyquad";
+        }
+
+        osiMaster_->writeLp("osiMaster");
+        osiMaster_->writeMps("osiMaster");
         // Solve master problem 
         // If there are no integer variables use initialSolve
         if(mnInt_==0){
-            osiMaster_->initialSolve();
+            if (useRegularizedDecomposition_)
+                CPXqpopt(envPtr,lpPtr);
+            else
+                osiMaster_->initialSolve();
             //osiMaster_->initialBarSolve();
         }
         // Else solve via branch and bound
         else{
-            osiMaster_->branchAndBound();
+            if (useRegularizedDecomposition_)
+                CPXmipopt(envPtr,lpPtr);
+            else
+                osiMaster_->branchAndBound();
         }
 
         // If there is an optimal basis available, warmstart
@@ -1143,40 +1270,52 @@ int Benders::solveMaster(){
     }
     // Else the master problem is resolved
     else{	
+        // If we use reg. decomposition and we made a serious step in the last round, we need to update the reg. solution via the row bounds.
+        if (useRegularizedDecomposition_ && seriousStep_ ) {
+            seriousStep_ = false; // reset serious step indicator
+            osiMaster_->writeLp("before");
+            for (int i = 0; i <= mncol_; i++){
+                osiMaster_->setRowBounds(startRows_+i,-regSolution_[i],-regSolution_[i]);
+            }
+            osiMaster_->writeLp("after");
+        }
         try {
-        if(warmStart_ || warmStartFol_ ){
-            // Set warmstart informations
-            osiMaster_->setWarmStart(warmStartMaster_);
-        }
-        // Solve master problem
-        // If there are no integer variables use initialSolve
-        if(mnInt_==0){ 
-            osiMaster_->setHintParam(OsiDoDualInInitial,true);
-            osiMaster_->resolve();
-
-            //osiMaster_->initialBarSolve();
-        }
-        // Else solve via branch and bound
-        else{
-            osiMaster_->branchAndBound();
-        }
-        if(warmStart_ || warmStartFol_){
-            // Delete warmstart informations
-            if(warmStartEmptyMaster_==false){
-                delete warmStartMaster_;
+            if(warmStart_ || warmStartFol_ ){
+                // Set warmstart informations
+                osiMaster_->setWarmStart(warmStartMaster_);
             }
-            // If there is an optimal basis available, warmstart
-            // informations are saved
-            if(osiMaster_->optimalBasisIsAvailable()){
-                warmStartMaster_ = osiMaster_->getWarmStart();
-                warmStartEmptyMaster_ = false;
+            if(mnInt_==0){
+                osiMaster_->setHintParam(OsiDoDualInInitial,false);
+                if (useRegularizedDecomposition_)
+                    CPXqpopt(envPtr,lpPtr);
+                else
+                    osiMaster_->resolve();
+                
             }
-            // Else an emtpy warmstart object is created
+            // Else solve via branch and bound
             else{
-                warmStartMaster_ = osiMaster_->getEmptyWarmStart();
-                warmStartEmptyMaster_ = true;
-            }	
-        }
+                if (useRegularizedDecomposition_)
+                    CPXmipopt(envPtr,lpPtr);
+                else
+                    osiMaster_->branchAndBound();
+            }
+            if(warmStart_ || warmStartFol_){
+                // Delete warmstart informations
+                if(warmStartEmptyMaster_==false){
+                    delete warmStartMaster_;
+                }
+                // If there is an optimal basis available, warmstart
+                // informations are saved
+                if(osiMaster_->optimalBasisIsAvailable()){
+                    warmStartMaster_ = osiMaster_->getWarmStart();
+                    warmStartEmptyMaster_ = false;
+                }
+                // Else an emtpy warmstart object is created
+                else{
+                    warmStartMaster_ = osiMaster_->getEmptyWarmStart();
+                    warmStartEmptyMaster_ = true;
+                }	
+            }
         }
         catch (CoinError& e) {
             std::cout << e.message() << std::endl;
@@ -1204,7 +1343,7 @@ int Benders::solveMaster(){
         osiMaster_->initialSolve();
         cout << "Error: master problem is unbounded!" << endl;
         if ( nIter_ > 0)
-        return -1;
+            return -1;
     }
     if (osiMaster_->isAbandoned()){
         cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
@@ -1472,7 +1611,7 @@ void Benders::convertSubproblem(){
             // Count up counter for new rows
             rowAdd_++;						
         }
-        
+
     }
 
     // Converting: All rows which contain a converted variable
@@ -2114,11 +2253,11 @@ void Benders::addFeasCut( int scen_){
     // has to be on the other side of the inequalitiy
     CoinPackedVector row(mncol_, cutIndex, cutElements);
     osiMaster_->addRow(row,cutRowLB,cutRowUB-epsilonFeasCut_);
-        for (int i = 0; i < feasCutVector.size(); i++){
-            int compared = row.compare(feasCutVector[i]);
-            if ( compared == 0)
-                std::cout << "comparing" << i << ". cut with current cut results in equality" << std::endl;
-        }
+    for (int i = 0; i < feasCutVector.size(); i++){
+        int compared = row.compare(feasCutVector[i]);
+        if ( compared == 0)
+            std::cout << "comparing" << i << ". cut with current cut results in equality" << std::endl;
+    }
     feasCutVector.push_back(row);
     //osiMaster_->addRow( cutRowLB, -cutRowUB);
 
@@ -2583,6 +2722,16 @@ int Benders::writeSolutionFileDetEq(const char * solpath, double time ){
     return 0;
 }
 
+void Benders::setInitialSolution(double* solutionValues){
+    if (useRegularizedDecomposition_){
+        regSolution_ = new double[mncol_];
+        // We have to assert that the length of the array is ncol_
+        for (int i = 0; i < mncol_; i++) {
+            regSolution_[i] = solutionValues[i];
+        }
+    }
+}
+
 Benders::~Benders(){
     // Destructor
 
@@ -2801,33 +2950,58 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     if (smiModel){
         //Set params for Benders
         int maxIt = 10000;
-		double tolerance = 0.0000001;
-		bool useBenders = true;
-		//	// Input parameters:
-//	// #1: Maximal Iterations
-//	// #2: Single/multi: s m
-//	// #3: Warmstart: +wsI +wsS -ws
-//	// #4: Knapsack Inequalities: +ki -ki
-//	// #5: TrustRegion: +tr -tr
-//	// #6: Benders or detEq: +ben -ben
-//	// #7: Problem Path
-//	// #8: Solution Path
-		if (useBenders)
-			benders = new Benders("m", "+wsI", "-ki", "-tr", "+ben"); 
-		else 
-			benders = new Benders("m", "-ws", "-ki", "-tr", "-ben"); 
-        benders->copyMaster(smiModel);
+        double tolerance = 0.0000001;
+        bool useBenders = true;
+        bool useRegularized = true;
+        bool single = false;
+        bool knapsack = false;
+        bool trustRegion = false;
+        bool warmStart = true;
+        //	// Input parameters:
+        //	// #1: Maximal Iterations
+        //	// #2: Single/multi: s m
+        //	// #3: Warmstart: +wsI +wsS -ws
+        //	// #4: Knapsack Inequalities: +ki -ki
+        //	// #5: TrustRegion: +tr -tr
+        //	// #6: Benders or detEq: +ben -ben
+        //	// #7: Problem Path
+        //	// #8: Solution Path
+        std::string modeStr("m");
+        std::string regularizedStr("+reg");
+        std::string knapsackStr("-ki");
+        std::string trustRegionStr("-tr");
+        std::string bendersStr("+ben");
+        std::string warmStartStr("+wsI");
+        if (!useBenders)
+            bendersStr = "-ben";
+        if (!useRegularized)
+            regularizedStr = "-reg";
+        if (single)
+            modeStr = "s";
+        if (knapsack)
+            knapsackStr = "-ki";
+        if (trustRegion)
+            trustRegionStr = "-tr";
+        if (warmStart)
+            warmStartStr = "+wsI";
+
+
+        benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str());        benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
-		// 
-		if (useBenders)
-			benders->BendersSolve(tolerance, maxIt );
-		else
-			benders->detEq();
+        std::pair<double,double*> evResult = smiModel->solveEV(new OsiCpxSolverInterface(),1); // 1 for minimization
+        // copy initial values for regularized decomposition
+        if (useRegularized){
+            benders->setInitialSolution(evResult.second);
+        }
+        if (useBenders)
+            benders->BendersSolve(tolerance, maxIt );
+        else
+            benders->detEq();
     }
     else {
         std::cout << "SmiScnModel not initialized." << std::endl;
     }
- 
+
 }
 
 double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
