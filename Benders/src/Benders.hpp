@@ -343,6 +343,26 @@ private:
     double epsilonFeasCut_;
     double masterValue_;
 
+    // Regularized decomposition //
+    bool useRegularizedDecomposition_; // this goes together with the multi-cut variant
+
+    // regularizing parameter sigma
+    double sigma_;
+
+    // Solution values of the regularizing term
+    double* regSolution_; 
+
+    // objective function value of regularized solution 
+    double regSolutionValue_;
+    double* regSubproblemSolutionValues_;
+
+    // store rows in master problem used for reg. decomposition
+    int startRows_;
+    int endRows_;
+
+    // indicate if we make a serious step
+    bool seriousStep_;
+
 public:
 	// Constructor
 	Benders():
@@ -403,7 +423,7 @@ public:
 		//delete clp;
 	}
 
-	Benders(char * single, char * warmstart, char * knap, char * trust, char * bend):
+	Benders(const char * single, const char * warmstart, const char * knap, const char * trust, const char * bend, const char * reg):
 	  
 	mnrow_(0), mncol_(0), mdobj_(NULL), mdrlo_(NULL), mdrup_(NULL), 
 	mdclo_(NULL), mdcup_(NULL), mnels_(0), mlen_(NULL), mdels_(NULL), 
@@ -418,7 +438,7 @@ public:
 	mutSt1rstrt_(NULL), scenMatSt1Start_(NULL), mutnSt1len_(NULL), mutnSt2_(0), mutSt2dels_(NULL), 
 	mutSt2iels_(NULL), mutSt2rstrt_(NULL), scenMatSt2Start_(NULL), mutnSt2len_(NULL), combSt2dels_(NULL), 
 	combSt2iels_(NULL), combSt2rstrt_(NULL), combSt2len_(NULL), combSt2nels_(0), combdobj_(NULL),
-	INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -10)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
+	INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -6)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
 	zSub_(0), combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
 	mutlcup_(0), muticup_(NULL), mutdcup_(NULL), scenCupStart_(NULL), mutlclo_(0),
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
@@ -429,7 +449,8 @@ public:
     warmStartEmptySub_(NULL),warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
-	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7))
+	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -487,6 +508,12 @@ public:
 		if(!strcmp(knap,"-ki")){
 			knapsack_ = false;
 		}
+        if(!strcmp(reg,"+reg")){
+			useRegularizedDecomposition_ = true;
+		}
+		if(!strcmp(knap,"-reg")){
+			useRegularizedDecomposition_ = false;
+		}
 		// Delete solver interfaces		
 		delete cpx;
 		//delete clp;
@@ -541,6 +568,9 @@ public:
 	// Build problem for det Eq, combine alle scenarios;
 	// Input: number of current scenario
 	void buildProblem(int);
+
+    // Regularized Decomposition methods
+    void setInitialSolution(double*);
     
 	// Destructor
 	~Benders();
