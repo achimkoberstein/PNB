@@ -542,6 +542,8 @@ public:
 	// Input: number of current scenario
 	void buildProblem(int);
     
+    double getObjValue() { return this->LB_; }
+    
 	// Destructor
 	~Benders();
 
