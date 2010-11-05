@@ -3980,19 +3980,22 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         double stochData[numT-1][numScen] = { {123.4567890123456, -0.1234567890123456, 0.1234567890123456 } };
         MP_random_data d(&stochData[0][0], T);
 
-        MP_variable x(T);
+        MP_variable x1(T), x2(T), x3(T), x4(T), x5(T), x6(T);
+        x1.setName("abcdefghij");
+        x2.setName("abcdefghij");
+        x3.setName("abcdefghij");
 
         MP_constraint constr(T);
-        constr(T) = x(T) >= d(T);
+        constr(T) = x1(T) + x2(T) + x3(T) + x4(T) + x5(T) + x6(T) >= d(T);
 
-        testModel.setObjective(sum(T, x(T)));
+        testModel.setObjective(sum(T, x1(T)));
 
         testModel.attach();
 
         testModel.minimize();
 
-        testModel.getSmi()->writeSmps("smpsFree", false, false);
-        testModel.getSmi()->writeSmps("smpsStrict", false, true);
+        //testModel.getSmi()->writeSmps("smpsFree", false, false);
+        //testModel.getSmi()->writeSmps("smpsStrict", false, true);
 
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", false);
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", true);

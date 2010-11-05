@@ -907,7 +907,7 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     delete [] indx;
     delete [] rstrt;
        
-    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, NULL, NULL);
+    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, this->core->getColumnNames(strictFormat), NULL);
 
     delete [] clo;
     delete [] cup;
@@ -947,8 +947,10 @@ void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension, const
         line << "    ";
         if (core->getColStart(stg) == core->getNumCols())
             line << std::setw(10) << std::left << "RHS"; // if this stage has no columns, it may have some RHS values
-        else
+        else if (strictFormat)
             line << std::setw(10) << std::left << this->columnName(core->getColStart(stg));
+        else
+            line << this->columnName(core->getColStart(stg)) << " ";
         line << std::setw(25) << std::left << this->rowName(core->getRowStart(stg));
         line << "STAGE_" << stg << "\n";
     }
