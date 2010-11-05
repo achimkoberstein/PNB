@@ -77,6 +77,8 @@ namespace flopc {
 
         void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
 
+        void generateNames(std::set<string> &nameSetFix, std::set<string> &nameSetFree, char **colNamesFix, char **colNamesFree);
+
         /// Upper bound on the variable value.
         MP_data upperLimit;
         /// Lower bound on the variable value.
@@ -88,6 +90,8 @@ namespace flopc {
 
         int getCurrentStage(int i1, int i2, int i3, int i4, int i5);
         void setStageSet();
+
+        string MP_variable::generateNamesSuffixFree(const int k);
 
         void operator()() const;
         const MP_set_base *S1, *S2, *S3, *S4, *S5;
