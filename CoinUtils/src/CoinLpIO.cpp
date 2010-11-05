@@ -878,26 +878,26 @@ CoinLpIO::writeLp(FILE *fp, const bool useRowNames)
    fprintf(fp, "Bounds\n");
    
    for(j=0; j<ncol; j++) {
-     if((collow[j] > -lp_inf) && (colup[j] < lp_inf)) {
-       out_coeff(fp, collow[j], 1);
-       fprintf(fp, " <= %s <=", colNames[j]); 
-       out_coeff(fp, colup[j], 1);
-       fprintf(fp, "\n");
-     }
-     if((collow[j] == -lp_inf) && (colup[j] < lp_inf)) {
-       fprintf(fp, "%s <=", colNames[j]);
-       out_coeff(fp, colup[j], 1);
-       fprintf(fp, "\n");
-     }
-     if((collow[j] > -lp_inf) && (colup[j] == lp_inf)) {
-       if(fabs(collow[j]) > lp_eps) { 
-	 out_coeff(fp, collow[j], 1);
-	 fprintf(fp, " <= %s\n", colNames[j]);
+       if((collow[j] > -lp_inf) && (colup[j] < lp_inf)) {
+           out_coeff(fp, collow[j], 1);
+           fprintf(fp, " <= %s <=", colNames[j]); 
+           out_coeff(fp, colup[j], 1);
+           fprintf(fp, "\n");
        }
-     }
-     if(collow[j] == -lp_inf) {
-       fprintf(fp, " %s Free\n", colNames[j]); 
-     }
+       if((collow[j] == -lp_inf) && (colup[j] < lp_inf)) {
+           fprintf(fp, "%s <=", colNames[j]);
+           out_coeff(fp, colup[j], 1);
+           fprintf(fp, "\n");
+       }
+       if((collow[j] > -lp_inf) && (colup[j] == lp_inf)) {
+           //if(fabs(collow[j]) > lp_eps) { 
+               out_coeff(fp, collow[j], 1);
+               fprintf(fp, " <= %s\n", colNames[j]);
+           //}
+       }
+       if(collow[j] == -lp_inf && colup[j] == lp_inf) {
+           fprintf(fp, " %s Free\n", colNames[j]); 
+       }
    }
 
 #ifdef LPIO_DEBUG
