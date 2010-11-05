@@ -13,6 +13,7 @@ using std::endl;
 #include <deque>
 #include <ctime>
 #include <iterator>
+#include <set>
 
 
 
@@ -930,6 +931,24 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     std::sort(integerIndices.begin(),integerIndices.end()); //Sort indices in ascending order
     std::sort(binaryIndices.begin(),binaryIndices.end()); //Sort indices in ascending order
 
+    // generate variable/column names
+    char** colNamesStrict = NULL;
+    colNamesStrict = new char*[n];
+    char** colNamesFree = NULL;
+    colNamesFree = new char*[n];
+    for (int i = 0; i < n; i++) {
+        colNamesStrict[i] = NULL;
+        colNamesFree[i] = NULL;
+    }
+    std::set<string> nameSetStrict;
+    nameSetStrict.insert("V");
+    std::set<string> nameSetFree;
+    nameSetFree.insert("V");
+    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+        (*i)->generateNames(nameSetStrict, nameSetFree, colNamesStrict, colNamesFree);
+    }
+    //we pass the arrays to SMI and delete them there later
+
     ////
     // Core Model generated..
     // All rows and cols are sorted by stage.
@@ -964,6 +983,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         else {
             osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
         }
+
+        osiCore->setColumnNames(colNamesStrict, colNamesFree);
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         smiModel = generateScenarioTree(randomCoefs,osiCore);
