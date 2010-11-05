@@ -1290,7 +1290,7 @@ int Benders::solveMaster(){
                     CPXqpopt(envPtr,lpPtr);
                 else
                     osiMaster_->resolve();
-                
+
             }
             // Else solve via branch and bound
             else{
@@ -1769,8 +1769,27 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     // Reset solver Interface
     osiSubproblem_->reset();
     // Load subproblem
+    // Test: Set infinity values correctly..
+    for (int i = 0; i < sncol_; i++) {
+        if ( combdclo_[i] < -infty_)
+            combdclo_[i] = -infty_; 
+        if ( combdcup_[i] > infty_)
+            combdcup_[i] = infty_; 
+        if ( combdobj_[i] > infty_)
+            combdobj_[i] = infty_; 
+        if ( combdobj_[i] < -infty_)
+            combdobj_[i] = -infty_; 
+        
+    }
+    for (int i = 0; i < snrow_; i++ ) {
+        if ( combdrlo_[i] < -infty_)
+            combdrlo_[i] = -infty_; 
+        if ( combdrup_[i] > infty_)
+            combdrup_[i] = infty_; 
+    }
     osiSubproblem_->loadProblem(*matrix, combdclo_, combdcup_, combdobj_, combdrlo_, combdrup_);
     // Parameter: use dual simplex
+    //osiSubproblem_->writeLp("osiSub");
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
     osiSubproblem_->setObjSense(1.0); // we minimize the subproblems
     // In the first iteration there are no warmstart informations
@@ -2120,37 +2139,287 @@ void Benders::addFeasCut( int scen_){
 
     // Calculate RHS: r*d
     // Current ray
-    osiSubproblem_->setHintParam(OsiDoDualInInitial,false);
-    vector<double*> ray = osiSubproblem_->getDualRays(1);
-    double * dualRay;
-    dualRay = ray[0];
-    // Declaration of LHS and RHS of the new cut; they are
-    // initialized by -infinity and zero, respectively
+    double * dualRay = 0;
     double cutRowLB = -infty_;
     double cutRowUB = 0;
-    // Get the current RHS to calculate the current objective 
-    // value with the current ray
-    const double* subRHS = osiSubproblem_->getRightHandSide();
-    // Check, in which direction the ray points; therefore
-    // a counter is initialized with zero
-    double signTest = 0;
-    // Calculate the objective value of subproblem
-    for(int i=0; i<snrow_+rowAdd_; i++){
-        signTest+=subRHS[i]*dualRay[i];
-    }
-    if ( subValue_ == osiSubproblem_->getObjValue()){
-        // We repeat ourselves
-        std::cout << "repeated solution value";
-    }
-    subValue_ = osiSubproblem_->getObjValue();
+    // Try it another way: Fischetti-Approach
+    // TODO: We can improve this by just updating the objective function/RHS in case of deterministic W
+#pragma region fischetti
+    if (fischetti_){
+        OsiCpxSolverInterface* solverTry = new OsiCpxSolverInterface();
 
-    // If the value is negative, the ray points in the
-    // wrong direction; in this case the sign of the
-    // ray elements is changed
-    if(signTest < 0){
-        for(int i=0; i<snrow_+rowAdd_; i++){
-            dualRay[i]*=(-1);
+        // We have to build up the CGLP 
+        const double * rowLower = combdrlo_;
+        const double * rowUpper = combdrup_;
+        const double * objCoefs = combdobj_;
+        // We can use the osiSubproblem we created so far without the convertion of the variable ranges.
+        // How do we do this?
+        // We keep the Matrix.
+        // If we have variable bounds, we need to introduce slack dual variables for all the constraints..
+        // We move the old RHS to the Objective. Depending on wether we had greater or lesser constraints, the dual variable are greater or lesser than 0
+        // We create a new RHS by the old objective, depending on the variable bounds.
+        double* rowlb = new double[sncol_];
+        double* rowub = new double[sncol_];
+
+        double* rowValues = new double[sncol_];
+        int* rowIndices = new int[sncol_];
+
+        std::vector<int> lessZero;
+        std::vector<int> greaterZero;
+        std::vector<int> fixVars;
+        for (int i = 0; i < sncol_; i++){ // All the rows of the dual problems
+            // This is for the pi_0 column
+            rowIndices[i] = i;
+            rowValues[i] = -combdobj_[i];
+            // End pi_0 column
+            double lb = combdclo_[i];
+            double ub = combdcup_[i];
+            if ( lb == ub ){ // Fix variable, we have to add an additional free dual variable t with equality constraint in the i-th row
+                fixVars.push_back(i);
+                rowlb[i] = 0; rowub[i] = 0;
+            }
+            else if ( lb <= -infty_ ) {
+                if ( ub >= infty_ ){ // We have a free variable, we have an equality constraint
+                    rowlb[i] = 0; rowub[i] = 0;
+                }
+                else if ( ub != 0){ // We have a variable with an upper bound, we add an additional dual variable w <= 0 and we have an equality constraint
+                    lessZero.push_back(i);
+                    rowlb[i] = 0; rowub[i] = 0;
+                }
+                else { // We have a <= 0 variable, we have a >= constraint
+                    rowlb[i] = 0; rowub[i] = infty_;
+                }
+            }
+            else if ( ub >= infty_ ) {
+                if ( lb != 0 ) { // We have a variable with a lower bound, we add a dual variable v >= 0 and we have an equality constraint.
+                    greaterZero.push_back(i);
+                    rowlb[i] = 0; rowub[i] = 0;
+                }
+                else { // We have a >= variable, we have a <= constraint
+                    rowlb[i] = -infty_; rowub[i] = 0;
+                }
+            }
+            else { // We have a ranged variable, both lb and ub are different and also different from infinity
+                if ( lb == 0 ){ // We add a dual var w <= 0and a <= constraint
+                    lessZero.push_back(i);
+                    rowlb[i] = -infty_; rowub[i] = 0;
+                }
+                else if ( ub == 0 ){ // We add a dual var v >= 0 and a >= constraint
+                    greaterZero.push_back(i);
+                    rowlb[i] = 0; rowub[i] = infty_;
+                }
+                else { // Ranged variable => we add two dual variables and an equality constraint
+                    lessZero.push_back(i); greaterZero.push_back(i);
+                    rowlb[i] = 0; rowub[i] = 0;
+                }
+            }
         }
+        int additionalCols = fixVars.size() + lessZero.size() + greaterZero.size()+1;
+        int overallDualCols = snrow_ + rowAdd_ + additionalCols;
+
+        double* collb = new double[overallDualCols];
+        double* colub = new double[overallDualCols];
+        double* obj = new double[overallDualCols];
+        // We add one column ( pi_0 ) to the problem
+        int* index = new int[overallDualCols];
+        double* values = new double[overallDualCols];
+
+        // Process dual variables of the original number of rows and set lower/upper bounds accordingly as well as coefficients in the normalization row
+        for (int i = 0; i < snrow_+rowAdd_; i++){ 
+            index[i] = i;
+            if ( rowLower[i] > -infty_ && rowUpper[i] < infty_ ) {
+                // We have a equality row => dual variable free
+                if ( rowLower[i] == rowUpper[i] ){
+                    collb[i] = -infty_; colub[i] = infty_; obj[i] = rowLower[i];
+                    values[i] = 1;
+                }
+                // I do not know what to do in this case..
+                else {
+                    std::cout << " Ranged Row " << std::endl;
+                }
+            }
+            else { // One of the variables (or both) has to be infinity, otherwise we would not be in the else case
+                if (rowLower[i] <= -infty_ && rowUpper[i] >= infty_ ) {
+                    std::cout << "just to be sure" << std::endl;
+                }
+                if (rowUpper[i] >= infty_ ){
+                    // We have a greater row => dual variable >= 0
+                    collb[i] = 0; colub[i] = infty_; obj[i] = rowLower[i];
+                    values[i] = 1;
+                }
+                if (rowLower[i] <= -infty_){
+                    // We have a lesser row => dual variable <= 0
+                    collb[i] = -infty_; colub[i] = 0; obj[i] = rowUpper[i];
+                    values[i] = -1;
+                }
+            }
+        }
+        // Add free vars
+        int j = snrow_+rowAdd_;
+        for (int i = j; i < j + fixVars.size(); i++) {
+            index[i] = i;
+            values[i] = 1;
+            obj[i] = combdclo_[fixVars[i-j]];
+            collb[i] = -infty_;
+            colub[i] = infty_;
+        }
+        j += fixVars.size();
+        //// Add less Zero vars
+        for (int i = j; i < j+lessZero.size(); i++){
+            index[i] = i;
+            values[i] = -1;
+            obj[i] = combdclo_[lessZero[i-j]];
+            collb[i] = -infty_;
+            colub[i] = 0;
+        }
+        j += lessZero.size();
+        //// Add greater zero vars
+        for (int i = j; i < j+greaterZero.size(); i++){
+            index[i] = i;
+            values[i] = 1;
+            obj[i] = combdcup_[greaterZero[i-j]];
+            collb[i] = 0;
+            colub[i] = infty_;
+        }
+        j += greaterZero.size();
+
+        //// Add \pi_0
+        index[j] = j;
+        values[j] = 1;
+        if (single_)
+            obj[j] = -osiMaster_->getColSolution()[mncol_]; // This has to be the value of the current solution (of the theta)
+        else 
+            obj[j] = -osiMaster_->getColSolution()[mncol_+scen_];
+        collb[j] = 0;
+        colub[j] = infty_;
+        j++;
+
+        //TODO: problem without the dual variables for the ranged variable bounds provided better results (in my opinion)
+        // We need to add the normalization row to the problem
+
+        // We create the matrix from the combined matrix
+        CoinPackedMatrix wMatrix(false, sncol_, snrow_+rowAdd_, combSt2nels_+rowAdd_, combSt2dels_, combSt2iels_, combSt2rstrt_, combSt2len_);
+        wMatrix.transpose(); //TODO: Maybe this will not suffice
+        // We can use rightAppendMatrix to append columns to the right of the matrix
+        // We need to add the additional dual variables to the problem (only if we also add the additonal variables to the problem
+        if ( j > snrow_+rowAdd_+1 ){
+            appendColVectorToMatrix(fixVars,wMatrix);
+            appendColVectorToMatrix(lessZero,wMatrix);
+            appendColVectorToMatrix(greaterZero,wMatrix);
+        }
+        // We add another col (\pi_0) to the problem in the matrix
+        wMatrix.appendCol(sncol_,rowIndices,rowValues);
+        // And finally the normalization row
+        CoinPackedVector normalizationRow(j,index,values);
+        delete[] index;
+        delete[] values;
+
+        solverTry->loadProblem(wMatrix,collb,colub,obj,rowlb,rowub);
+        solverTry->addRow(normalizationRow,1,1);
+        solverTry->setObjSense(-1); // We have a maximization problem.. 
+        solverTry->setHintParam(OsiDoDualInInitial,1);
+        solverTry->initialSolve();
+        //solverTry->writeLp("cglp");
+        int solutionValue = solverTry->getObjValue();
+        DLOG(INFO) << "Solution value of CGLP is " << solutionValue;
+        bool optimality = solverTry->isProvenOptimal();
+        if (!optimality){
+            std::cout << "An error occured, your problem is stupid! Or our solver is." << std::endl;
+        }
+        if (solverTry->getObjValue() < 0){
+            std::cout << "Something went wrong. Most probably: your subproblem has a feasible solution.." << std::endl;
+        }
+        const double* dualValues = solverTry->getColSolution();
+        //assert( dualValues[j-1] == 0);
+
+        delete[] rowlb;
+        delete[] rowub;
+        delete[] colub;
+        delete[] collb;
+        delete[] obj;
+
+
+
+        dualRay = new double[j];
+        for (int i = 0; i < j; i++){
+            dualRay[i] = dualValues[i];
+        }
+        // Now we can delete the solver interface
+        delete solverTry;
+        for(int i=0; i<j-1; i++){ // we do not need the dual variable \pi_0
+            if (abs(dualRay[i]) < ZEROTEST && abs(dualRay[i]) > 0)
+                dualRay[i] = 0;
+            // Compute cut RHS
+            // Depending on the sign of the dual variable, we take the correct RHS of the constraint (lower or upper bound)
+            if ( i < snrow_+rowAdd_ ){
+                if(dualRay[i] > 0){ // Dual variable is greater than 0 => either dual var is free (Equality constraint) or dual var is >= 0 ( >= constraint, so we need the lower bound)
+                    cutRowUB -= constDrlo_[i]*dualRay[i];
+                }
+                else{ // Dual variable is lesser than 0 => either dual var is free (Equality constraint) or dual var is <= 0 ( <= constraint, so we need the upper bound)
+                    cutRowUB -= constDrup_[i]*dualRay[i];
+                }
+            }
+            else if (i < snrow_+rowAdd_+fixVars.size() ) {
+                // Primal variable is fixed, we can use either bound
+                cutRowUB -= combdclo_[i]*dualRay[i];
+            }
+            else if ( i < snrow_+rowAdd_+fixVars.size()+lessZero.size() ){
+                // Dual variable is <= 0
+                cutRowUB -= combdcup_[i]*dualRay[i];
+            }
+            else { // Dual variable is >= 0
+                cutRowUB -= combdclo_[i]*dualRay[i];
+            }
+        }
+
+    }
+#pragma endregion fischetti
+    else {
+        osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
+        vector<double*> ray = osiSubproblem_->getDualRays(1);
+        dualRay = new double[snrow_+rowAdd_];
+        
+        // Declaration of LHS and RHS of the new cut; they are
+        // initialized by -infinity and zero, respectively
+
+        // Get the current RHS to calculate the current objective 
+        // value with the current ray
+        const double* subRHS = osiSubproblem_->getRightHandSide();
+        // Check, in which direction the ray points; therefore
+        // a counter is initialized with zero
+        double signTest = 0;
+        // Calculate the objective value of subproblem
+        for(int i=0; i<snrow_+rowAdd_; i++){
+            signTest+=subRHS[i]* ray[0][i];
+        }
+        if ( subValue_ == osiSubproblem_->getObjValue()){
+            // We repeat ourselves
+            std::cout << "repeated solution value";
+        }
+        subValue_ = osiSubproblem_->getObjValue();
+
+        //If the value is negative, the ray points in the
+        //    wrong direction; in this case the sign of the
+        //    ray elements is changed
+        if(signTest < 0){
+            for(int i=0; i<snrow_+rowAdd_; i++){
+                dualRay[i] =(-1)*ray[0][i];
+            }
+        }
+        else {
+            memcpy(dualRay,&ray[0],sizeof(double)*(snrow_+rowAdd_));
+        }
+        for(int i=0; i<snrow_+rowAdd_; i++){
+            if (abs(dualRay[i]) < ZEROTEST)
+                dualRay[i] = 0;
+            if(dualRay[i] > 0){
+                cutRowUB -= constDrlo_[i]*dualRay[i];
+            }
+            else{
+                cutRowUB -= constDrup_[i]*dualRay[i];
+            }
+        }
+        delete [] ray[0]; 
     }
     // To calculate r*d, use constant RHS/LHS; if the corresponding
     // dual variable is negative, use RHS; if the corresponding
@@ -2163,16 +2432,7 @@ void Benders::addFeasCut( int scen_){
     //        cutRowUB += constDrup_[i]*dualRay[i];
     //    }
     //}	
-    for(int i=0; i<snrow_+rowAdd_; i++){
-        if (abs(dualRay[i]) < ZEROTEST)
-            dualRay[i] = 0;
-        if(dualRay[i] > 0){
-            cutRowUB -= constDrlo_[i]*dualRay[i];
-        }
-        else{
-            cutRowUB -= constDrup_[i]*dualRay[i];
-        }
-    }
+
     //if ( abs(signTest-cutRowUB) > ZEROTEST) //FIXME: Remove me when finished debugging
     //    std::cout << "" << std::endl;
     // Declaration of an array for cut indices
@@ -2259,11 +2519,10 @@ void Benders::addFeasCut( int scen_){
             std::cout << "comparing" << i << ". cut with current cut results in equality" << std::endl;
     }
     feasCutVector.push_back(row);
-    //osiMaster_->addRow( cutRowLB, -cutRowUB);
 
     delete [] cutIndex;
     delete [] cutElements;
-    delete [] ray[0];
+    delete[] dualRay; 
 
     // ###################################################################################
     // End: addFeasCut
@@ -2931,6 +3190,22 @@ Benders::~Benders(){
     if(comblen_)
         delete [] comblen_;
 }
+
+void Benders::appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatrix &matrix ){
+    if ( !fixVars.empty() ){
+        double* fixValues = new double[fixVars.size()];
+        int* fixColStart = new int[fixVars.size()+1];
+        fixColStart[0] = 0;
+        int* fixLength = new int[fixVars.size()];
+        for (int i = 0; i < fixVars.size(); i++){
+            fixValues[i] = 1; fixColStart[i+1] = fixColStart[i]+1; 
+            fixLength[i] = 1;
+        }
+        CoinPackedMatrix appendMatrix(true,sncol_,fixVars.size(),fixVars.size(),fixValues,&fixVars[0], fixColStart, fixLength);
+        matrix.rightAppendPackedMatrix(appendMatrix);
+    }
+}
+
 OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
 : OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
 {
@@ -2988,7 +3263,11 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 
         benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str());        benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
-        std::pair<double,double*> evResult = smiModel->solveEV(new OsiCpxSolverInterface(),1); // 1 for minimization
+        OsiCpxSolverInterface* osiCpxPtr = new OsiCpxSolverInterface();
+        CPXLPptr lpPtr = osiCpxPtr->getLpPtr();
+        CPXENVptr envPtr = osiCpxPtr->getEnvironmentPtr();
+        CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.06);
+        std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1); // 1 for minimization
         // copy initial values for regularized decomposition
         if (useRegularized){
             benders->setInitialSolution(evResult.second);

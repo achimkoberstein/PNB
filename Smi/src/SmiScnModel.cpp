@@ -264,7 +264,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
 {
     // We create a new osiSolver Handle at this point. 
     OsiSolverInterface* tempPtr = osiStoch_;
-    osiStoch_ = osiSolver->clone(false);
+    osiStoch_ = osiSolver; // think about cloning or not..
 
     //Clean up previous stuff.
     delete[] dclo_;
