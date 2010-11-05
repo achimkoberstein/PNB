@@ -1,6 +1,6 @@
 STOCH         FINA    
 SCENARIOS     DISCRETE
- SC SCEN1     ROOT      0.125          PERIOD1
+ SC SCEN1     ROOT      0.125          PERIOD2
     C22       R39       -95.89      
     C23       R39       -91.88      
     C24       R39       -88.46      

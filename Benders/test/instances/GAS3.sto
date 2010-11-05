@@ -1,6 +1,6 @@
 STOCH         GASPERTU
 SCENARIOS     DISCRETE
- SC SCEN1     ROOT      0.166667       PERIOD1
+ SC SCEN1     ROOT      0.166667       PERIOD2
     C2        OBJ       5.8         
     C3        OBJ       6           
     RHS       R2        150         
