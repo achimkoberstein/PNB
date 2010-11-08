@@ -47,9 +47,9 @@ typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
 pfunc_coef::pfunc_coef(MP_model* model, MP_constraint* con, std::vector<boost::shared_ptr<MP::Coef> >& vec) : model(model),c(con),coefVec(vec) {}
 
 void pfunc_coef::operator() (){
-	std::vector<MP::Coef> vec;
+	std::vector<boost::shared_ptr<MP::Coef> > vec;
 	c->coefficients(vec);
-	model->assemble(vec,coefVec);
+	MP_model::assemble(vec,coefVec);
 }
 //Initialize static variables
 pfunc::mutex MP_model::writeMutex;
