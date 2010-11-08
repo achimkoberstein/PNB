@@ -13,6 +13,7 @@ using std::endl;
 #include <deque>
 #include <ctime>
 #include <iterator>
+#include <set>
 
 
 
@@ -37,7 +38,7 @@ using std::endl;
 
 using namespace flopc;
 
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
 /* Library instance description */
 typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
 		::pfunc::use_default, /* compare */
@@ -46,20 +47,20 @@ typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
 pfunc_coef::pfunc_coef(MP_model* model, MP_constraint* con, std::vector<boost::shared_ptr<MP::Coef> >& vec) : model(model),c(con),coefVec(vec) {}
 
 void pfunc_coef::operator() (){
-	std::vector<MP::Coef> vec;
+	std::vector<boost::shared_ptr<MP::Coef> > vec;
 	c->coefficients(vec);
-	model->assemble(vec,coefVec);
+	MP_model::assemble(vec,coefVec);
 }
 //Initialize static variables
 pfunc::mutex MP_model::writeMutex;
 #endif
 
 const std::string MP_model::stageString("StageSet");
-MP_model* MP_model::current_model = NULL;
+MP_model* MP_model::current_model = &MP_model::getDefaultModel();
 MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
 MP_model* MP_model::getCurrentModel() { return current_model;}
 
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
 void MP_model::initializePfunc() {
 	if (numOfInstances == 0){
 		++numOfInstances; // We create a new instance here
@@ -138,7 +139,7 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
     // Create a new taskmgr for PFunc
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     initializePfunc();
 #endif
 }
@@ -154,7 +155,7 @@ MP_model::~MP_model() {
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::getDefaultModel();
     --numOfInstances;
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     if (numOfInstances == 0)
     	::pfunc::clear();
 #endif
@@ -311,11 +312,11 @@ void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::s
         } 
         // We need a new MP::Coef in case of entering the while loop, otherwise it is not necessary. TODO: Fix this
         boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
         writeMutex.lock();
 #endif
         av.push_back(temp);
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
         writeMutex.unlock();
 #endif
     }
@@ -521,7 +522,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
 
     double timeBegin = CoinCpuTime();
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     vector<my_pfunc::task *> tasks;
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
     	pfunc_coef funObj(this,*i,coefs); //create new function object
@@ -931,6 +932,24 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     std::sort(integerIndices.begin(),integerIndices.end()); //Sort indices in ascending order
     std::sort(binaryIndices.begin(),binaryIndices.end()); //Sort indices in ascending order
 
+    // generate variable/column names
+    char** colNamesStrict = NULL;
+    colNamesStrict = new char*[n];
+    char** colNamesFree = NULL;
+    colNamesFree = new char*[n];
+    for (int i = 0; i < n; i++) {
+        colNamesStrict[i] = NULL;
+        colNamesFree[i] = NULL;
+    }
+    std::set<string> nameSetStrict;
+    nameSetStrict.insert("V");
+    std::set<string> nameSetFree;
+    nameSetFree.insert("V");
+    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+        (*i)->generateNames(nameSetStrict, nameSetFree, colNamesStrict, colNamesFree);
+    }
+    //we pass the arrays to SMI and delete them there later
+
     ////
     // Core Model generated..
     // All rows and cols are sorted by stage.
@@ -965,6 +984,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         else {
             osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
         }
+
+        osiCore->setColumnNames(colNamesStrict, colNamesFree);
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         smiModel = generateScenarioTree(randomCoefs,osiCore);
