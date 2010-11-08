@@ -1273,11 +1273,9 @@ int Benders::solveMaster(){
         // If we use reg. decomposition and we made a serious step in the last round, we need to update the reg. solution via the row bounds.
         if (useRegularizedDecomposition_ && seriousStep_ ) {
             seriousStep_ = false; // reset serious step indicator
-            osiMaster_->writeLp("before");
             for (int i = 0; i <= mncol_; i++){
                 osiMaster_->setRowBounds(startRows_+i,-regSolution_[i],-regSolution_[i]);
             }
-            osiMaster_->writeLp("after");
         }
         try {
             if(warmStart_ || warmStartFol_ ){
