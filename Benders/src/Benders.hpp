@@ -7,12 +7,11 @@
 #endif
 
 #include "OsiCpxSolverInterface.hpp"
-#include "OsiStochasticSolverInterface.hpp"
 
 using namespace std;
 
+// Forward declaration
 class OsiStochasticBendersTwoStageSolverInterface;
-
 
 class Benders{
     friend class OsiStochasticBendersTwoStageSolverInterface;
@@ -584,6 +583,42 @@ public:
 		bool computeRelativeGap(double,double,double);
         void appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatrix &matrix );
 
+};
+
+
+//Forward declaration.
+class SmiScnModel;
+class OsiSolverInterface;
+
+class OsiStochasticSolverInterface  {
+
+public:
+    OsiStochasticSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel);
+
+    ~OsiStochasticSolverInterface();
+
+    //What methods are necessary?
+    virtual void initialSolve() = 0;
+    virtual double getObjValue() = 0;
+
+    SmiScnModel* getSmiModel() { return smiModel; }
+
+protected:
+    OsiSolverInterface* osiSolver;
+    SmiScnModel* smiModel;
+
+private:
+
+};
+
+class OsiStochasticDetEqSolverInterface : public OsiStochasticSolverInterface {
+public:
+
+    OsiStochasticDetEqSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
+    ~OsiStochasticDetEqSolverInterface();
+
+    void initialSolve();
+    double getObjValue();
 };
 
 class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
