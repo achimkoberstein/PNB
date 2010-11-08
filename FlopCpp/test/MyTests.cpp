@@ -4591,7 +4591,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 #ifdef _MSC_VER
 	        std::string dataDir="../../../../Smi/test/SmiTestData";
 #else
-            std::string dataDir="../../Smi/SmiTestData";
+            std::string dataDir="../../Smi/test/SmiTestData";
 #endif
 	        int nrows, ncols;
 
@@ -4621,7 +4621,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 #ifdef _MSC_VER
 	        std::string dataDir="../../../../Smi/test/SmiTestData";
 #else
-            std::string dataDir="../../Smi/SmiTestData";
+            std::string dataDir="../../Smi/test/SmiTestData";
 #endif
 	        int nrows, ncols;
 
@@ -5999,7 +5999,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 #ifdef _MSC_VER
 	        std::string dataDir="../../../../Smi/test/SmiTestData";
 #else
-            std::string dataDir="../../Smi/SmiTestData";
+            std::string dataDir="../../Smi/test/SmiTestData";
 #endif
 	        dataDir += "/bug";
 
