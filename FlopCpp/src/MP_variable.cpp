@@ -38,7 +38,7 @@ offset(-1),stageSetPtr(NULL)
 MP_variable::~MP_variable() { }
 
 double MP_variable::level(int lcl_i1, int lcl_i2, int lcl_i3, int lcl_i4, int lcl_i5) { 
-     assert(M != 0);
+    assert(M != 0);
     assert(M->Solver != 0);
     if (M->stage.size()) //TODO: This gives solution values for the first stage only..
         throw invalid_argument_exception();
@@ -137,23 +137,15 @@ void MP_variable::operator()() const {
                 cout << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
             }
         }
-        }
-        else { 
-            if ( M->colIndirection[curOffset] == outOfBound ) {
-                cout << " OutOfBound " << endl;
-            }
-            else {
-                cout << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
-            }
-        }
     }
-    else
-        cout<<"  "<< M->Solver->getColSolution()[offset +
-        f(i1.evaluate(),
-        i2.evaluate(),
-        i3.evaluate(),
-        i4.evaluate(),
-        i5.evaluate())]<<endl;
+    else { 
+            cout<<"  "<< M->Solver->getColSolution()[offset +
+                f(i1.evaluate(),
+                i2.evaluate(),
+                i3.evaluate(),
+                i4.evaluate(),
+                i5.evaluate())]<<endl;
+        }
 
 }
 
@@ -228,7 +220,7 @@ std::string to_string(const int i) {
 void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, char **colNamesStrict, char **colNamesFree) {
     // we start with the names for the the free-type
     string nameFree;
-    
+
     // build the prefix
     if (this->getName().length() > 0) {
         nameFree = this->getName();
@@ -276,7 +268,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             }
             else {
                 nameStrict = nameFree.substr(0, 8 - (to_string(size()).length() + 1));
-                
+
                 if (!isUniqueName(nameStrict, nameSetStrict)) {
                     // if its not a unique name, use an extension
                     int ext = 0;

@@ -349,7 +349,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     double * colSolution = new double[core_->getColStart(1)];
     memcpy(colSolution, osiStoch_->getColSolution(), (core_->getColStart(1) * sizeof(double)) );
     int objValue = osiStoch_->getObjValue();
-    delete osiStoch_;
+    // Reset osiStoch_ to old solver
     osiStoch_ = tempPtr;
     return make_pair(objValue,colSolution );
 }

@@ -17,9 +17,9 @@ namespace flopc {
         BendersTest(){ }
         
         double solveSMPS(const char* name) {
-            Benders* benders = new Benders("m", "+wsI", "-ki", "-tr", "+ben");
+            Benders* benders = new Benders("m", "+wsI", "-ki", "-tr", "+ben","-reg");
             benders->readSMPS(name);
-            benders->BendersSolve(0.0000001, 1000);
+            benders->BendersSolve(0.00001, 1000);
             return benders->getObjValue();
         }
     };
