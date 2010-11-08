@@ -574,6 +574,8 @@ public:
 
     // Regularized Decomposition methods
     void setInitialSolution(double*);
+    double getObjValue() { return this->LB_; }
+
     
 	// Destructor
 	~Benders();
