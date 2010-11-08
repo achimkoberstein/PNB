@@ -56,9 +56,9 @@ pfunc::mutex MP_model::writeMutex;
 #endif
 
 const std::string MP_model::stageString("StageSet");
-MP_model* MP_model::current_model = NULL;
+MP_model* MP_model::current_model = &MP_model::getDefaultModel();
 MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
-MP_model* MP_model::getCurrentModel() { if (current_model == 0) { current_model = &getDefaultModel(); } return current_model;}
+MP_model* MP_model::getCurrentModel() { return current_model;}
 
 #ifdef PFUNC_ENABLED_FLOPCPP
 void MP_model::initializePfunc() {
