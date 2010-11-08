@@ -19,9 +19,11 @@
 #ifdef ERROR
 #undef ERROR
 #endif
-#else
+#endif
+// uncomment next comment to use PFUNC
+// #define PFUNC_ENABLED_FLOPCPP 1
+#ifdef PFUNC_ENABLED_FLOPCPP
 #include <pfunc/pfunc.hpp> //FIXME: For the moment pfunc only on linux
-#define _PFUNC 1
 #endif
 
 
@@ -337,7 +339,7 @@ namespace flopc {
 
 		unsigned int getSeed();
     private:
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
         static void initializePfunc();
 #endif
         static int numOfInstances;
@@ -402,7 +404,7 @@ namespace flopc {
         int *rowIndirection;
         MP_status mSolverState;
         boost::shared_ptr<Uniform01Generator> uniformGenerator;
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
         static pfunc::mutex writeMutex;
 #endif
     public: //TODO: As long as we have no correct OsiStochasticSolverInterface, this will do
@@ -410,7 +412,7 @@ namespace flopc {
 
     };
 
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     // PFunc stuff
     struct pfunc_coef { //: public my_pfunc::functor {
     public:
