@@ -38,7 +38,7 @@ using std::endl;
 
 using namespace flopc;
 
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
 /* Library instance description */
 typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
 		::pfunc::use_default, /* compare */
@@ -60,7 +60,7 @@ MP_model* MP_model::current_model = NULL;
 MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
 MP_model* MP_model::getCurrentModel() { return current_model;}
 
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
 void MP_model::initializePfunc() {
 	if (numOfInstances == 0){
 		++numOfInstances; // We create a new instance here
@@ -139,7 +139,7 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
     // Create a new taskmgr for PFunc
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     initializePfunc();
 #endif
 }
@@ -155,7 +155,7 @@ MP_model::~MP_model() {
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::getDefaultModel();
     --numOfInstances;
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     if (numOfInstances == 0)
     	::pfunc::clear();
 #endif
@@ -312,11 +312,11 @@ void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::s
         } 
         // We need a new MP::Coef in case of entering the while loop, otherwise it is not necessary. TODO: Fix this
         boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
         writeMutex.lock();
 #endif
         av.push_back(temp);
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
         writeMutex.unlock();
 #endif
     }
@@ -522,7 +522,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
 
     double timeBegin = CoinCpuTime();
-#ifdef _PFUNC
+#ifdef PFUNC_ENABLED_FLOPCPP
     vector<my_pfunc::task *> tasks;
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
     	pfunc_coef funObj(this,*i,coefs); //create new function object
