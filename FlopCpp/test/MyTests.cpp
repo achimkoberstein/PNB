@@ -3603,8 +3603,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_set J(p*p);
         MP_set K(p);
         MP_subset<3> F(J,J,J);
-
-        std::string fname = "fixed.dat";
+#ifdef _MSC_VER
+	        std::string fname="../../../test/testFiles/fixed.dat";
+#else
+            std::string fname="testFiles/fixed.dat";
+#endif
         std::ifstream file(fname.c_str());
 
         int ival,jval,kval;
@@ -3776,7 +3779,12 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             // city c1 at time t1 and arrives in city c2 at time t2
 
             map<string, vector<double> > d;
-            readFile("train.dat",d);
+#ifdef _MSC_VER
+	        std::string dataDir="../../../test/testFiles/train.dat";
+#else
+            std::string dataDir="testFiles/train.dat";
+#endif
+            readFile(dataDir,d);
             scheduleInsert(schedule,d["WAPH"],WA,PH);
             scheduleInsert(schedule,d["PHNY"],PH,NY);
             scheduleInsert(schedule,d["NYBO"],NY,BO);
@@ -3988,19 +3996,22 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         double stochData[numT-1][numScen] = { {123.4567890123456, -0.1234567890123456, 0.1234567890123456 } };
         MP_random_data d(&stochData[0][0], T);
 
-        MP_variable x(T);
+        MP_variable x1(T), x2(T), x3(T), x4(T), x5(T), x6(T);
+        x1.setName("abcdefghij");
+        x2.setName("abcdefghij");
+        x3.setName("abcdefghij");
 
         MP_constraint constr(T);
-        constr(T) = x(T) >= d(T);
+        constr(T) = x1(T) + x2(T) + x3(T) + x4(T) + x5(T) + x6(T) >= d(T);
 
-        testModel.setObjective(sum(T, x(T)));
+        testModel.setObjective(sum(T, x1(T)));
 
         testModel.attach();
 
         testModel.minimize();
 
-        testModel.getSmi()->writeSmps("smpsFree", false, false);
-        testModel.getSmi()->writeSmps("smpsStrict", false, true);
+        //testModel.getSmi()->writeSmps("smpsFree", false, false);
+        //testModel.getSmi()->writeSmps("smpsStrict", false, true);
 
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", false);
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", true);
@@ -4585,7 +4596,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 
         TEST_F(SmiUnitTest, SmiScnSmpsIOUnitTestReplace) {
-	        std::string dataDir="../../../smiUnitTestData";
+#ifdef _MSC_VER
+	        std::string dataDir="../../../../Smi/test/SmiTestData";
+#else
+            std::string dataDir="../../Smi/test/SmiTestData";
+#endif
 	        int nrows, ncols;
 
 	        // test SMPS files app0110R
@@ -4611,7 +4626,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         }
 
         TEST_F(SmiUnitTest, SmiScnSmpsIOUnitTestAdd) {
-	        std::string dataDir="../../../smiUnitTestData";
+#ifdef _MSC_VER
+	        std::string dataDir="../../../../Smi/test/SmiTestData";
+#else
+            std::string dataDir="../../Smi/test/SmiTestData";
+#endif
 	        int nrows, ncols;
 
 	        // test SMPS files app0110 -- ADD scenario values
@@ -5985,7 +6004,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         TEST_F(SmiUnitTest, SmpsBug) {
 	        SmiScnModel smi;
 
-	        std::string dataDir="../../../smiUnitTestData";
+#ifdef _MSC_VER
+	        std::string dataDir="../../../../Smi/test/SmiTestData";
+#else
+            std::string dataDir="../../Smi/test/SmiTestData";
+#endif
 	        dataDir += "/bug";
 
 	        // read SMPS model from files
@@ -6025,7 +6048,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.OldUnitTest*";
+    //::testing::GTEST_FLAG(filter) = "*.Infinity*";
     //::testing::GTEST_FLAG(filter) = "MP_modelTest.TimosORBProjekt";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

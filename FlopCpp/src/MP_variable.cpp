@@ -14,6 +14,7 @@ using std::endl;
 #include "MP_model.hpp"
 #include "SmiScnModel.hpp"
 #include "MP_index.hpp"
+#include "CoinHelperFunctions.hpp"
 using namespace flopc;
 
 
@@ -136,6 +137,15 @@ void MP_variable::operator()() const {
                 cout << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
             }
         }
+        }
+        else { 
+            if ( M->colIndirection[curOffset] == outOfBound ) {
+                cout << " OutOfBound " << endl;
+            }
+            else {
+                cout << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
+            }
+        }
     }
     else
         cout<<"  "<< M->Solver->getColSolution()[offset +
@@ -202,4 +212,114 @@ const VariableRef& flopc::MP_variable::operator()( const MP_index_exp& d1 /*= MP
     VariableRef* vPtr = new VariableRef(this, d1, d2, d3, d4, d5);
     myrefs.push_back(MP_expression(vPtr));
     return *vPtr;
+}
+
+bool isUniqueName(const string &name, const std::set<string> &nameSet) {
+    std::set<string>::const_iterator sIter = nameSet.find(name);
+    return (sIter == nameSet.end());
+}
+
+std::string to_string(const int i) {
+    std::stringstream ss;
+    ss << i;
+    return ss.str();
+}
+
+void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, char **colNamesStrict, char **colNamesFree) {
+    // we start with the names for the the free-type
+    string nameFree;
+    
+    // build the prefix
+    if (this->getName().length() > 0) {
+        nameFree = this->getName();
+    }
+    else {
+        nameFree = "V";
+    }
+
+    // if the prefix is not unique (i.e. used by another variable), extend it with a consecutively number
+    if (!isUniqueName(nameFree, nameSetFree)) {
+        int ext = 0;
+        while (!isUniqueName(nameFree + to_string(ext), nameSetFree)) {
+            ext++;
+        }
+        nameFree = nameFree + to_string(ext);
+    }
+
+    // the name is unique, register it
+    nameSetFree.insert(nameFree);
+
+    // generate the names with the suffixes for every instance of this variable and copy them into the array
+    for (int k = 0; k < size(); k++) {
+        string free = nameFree + this->generateNamesSuffixFree(k);
+        colNamesFree[offset+k] = CoinStrdup(free.c_str());
+    }
+
+
+    // now for the strict-type
+    string nameStrict;
+
+    // maybe we are lucky and can use the same names for the strict-type as for the free-type...
+    if (isUniqueName(nameFree, nameSetStrict) && (nameFree.length() + this->generateNamesSuffixFree(size()-1).length()) <= 8) {
+        nameStrict = nameFree;
+        nameSetStrict.insert(nameStrict);
+        for (int k = 0; k < size(); k++) {
+            colNamesStrict[offset+k] = CoinStrdup(colNamesFree[offset+k]);
+        }
+    }
+    else {
+        // use the offset as suffix
+        bool genNames = true;
+        if (isUniqueName(nameFree, nameSetStrict)) {
+            if (nameFree.length() + 1 + to_string(size()).length() <= 8) {
+                nameStrict = nameFree;
+            }
+            else {
+                nameStrict = nameFree.substr(0, 8 - (to_string(size()).length() + 1));
+                
+                if (!isUniqueName(nameStrict, nameSetStrict)) {
+                    // if its not a unique name, use an extension
+                    int ext = 0;
+                    do {
+                        if (ext % 10 == 0) { 
+                            nameStrict = nameStrict.substr(0, nameStrict.length()-1);
+                            if (nameStrict.length() == 0) genNames = false;  // names do not fit into array of length 8 - so skip it
+                        }
+                        ext++;
+                    } while (!isUniqueName(nameStrict + to_string(ext), nameSetStrict) && genNames);
+                    nameStrict = nameStrict + to_string(ext);
+                }
+            }
+        }
+        if (genNames) {
+            // register the name
+            nameSetStrict.insert(nameStrict);
+            //fill the array
+            for (int k = 0; k < size(); k++) {
+                string strict = nameStrict + "_" + to_string(k);
+                colNamesStrict[offset+k] = CoinStrdup(strict.c_str());
+            }
+        }
+    }
+}
+
+string MP_variable::generateNamesSuffixFree(const int k) {
+    IndexKeeper ik = getIndices(k);
+    std::stringstream ss;
+    if (S1 != &MP_set::getEmpty()) {
+        ss << "_" << ik.i1;
+        if (S2 != &MP_set::getEmpty()) {
+            ss << "_" << ik.i2;
+            if (S3 != &MP_set::getEmpty()) {
+                ss << "_" << ik.i3;
+                if (S4 != &MP_set::getEmpty()) {
+                    ss << "_" << ik.i4;
+                    if (S5 != &MP_set::getEmpty()) {
+                        ss << "_" << ik.i5;
+                    }
+                }
+            }
+        }
+    }
+    return ss.str();
 }
