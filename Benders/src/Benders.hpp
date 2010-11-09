@@ -12,6 +12,7 @@ using namespace std;
 
 // Forward declaration
 class OsiStochasticBendersTwoStageSolverInterface;
+class SmiScnModel;
 
 class Benders{
     friend class OsiStochasticBendersTwoStageSolverInterface;
@@ -75,6 +76,7 @@ private:
 	// Solution vector; contains the best feasible solution of stage 1 
 	// and stage 2 variables found during the method
 	double* bestSol_;
+    double* bestSolTemp_; // Contains current stage 1 solution only
 
 	// Subproblems:
 	// Number of rows - Subproblem
@@ -429,7 +431,7 @@ public:
 	  
 	mnrow_(0), mncol_(0), mdobj_(NULL), mdrlo_(NULL), mdrup_(NULL), 
 	mdclo_(NULL), mdcup_(NULL), mnels_(0), mlen_(NULL), mdels_(NULL), 
-	miels_(NULL), mrstrt_(NULL), bestSol_(NULL),snrow_(0), sncol_(0), 
+	miels_(NULL), mrstrt_(NULL), bestSol_(NULL),bestSolTemp_(0),snrow_(0), sncol_(0), 
 	sdobj_(NULL), sdrlo_(NULL), sdrup_(NULL), sdclo_(NULL), sdcup_(NULL),
 	constDrup_(NULL), constDrlo_(NULL), snSt1_(0), snSt2_(0), sSt1dels_(NULL), 
 	sSt1iels_(NULL), sSt1rstrt_(NULL), sSt2dels_(NULL), sSt2iels_(NULL), sSt2rstrt_(NULL), 
@@ -582,6 +584,10 @@ public:
 	private:
 		bool computeRelativeGap(double,double,double);
         void appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatrix &matrix );
+        double computeDeviation( CoinPackedVector& vec, double rhs );
+        double computeDeviation( int*, double*, double rhs );
+        void relaxCut( CoinPackedVector& vec, double* rhs);
+        double computeCoefficientTest( CoinPackedVector& vec );
 
 };
 

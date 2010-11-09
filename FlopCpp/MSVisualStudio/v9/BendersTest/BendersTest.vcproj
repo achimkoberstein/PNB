@@ -83,7 +83,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="&quot;$(TargetPath)&quot; --gtest_output=xml"
+				Description="&quot;$(TargetPath)&quot; --gtest_output=xml"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
