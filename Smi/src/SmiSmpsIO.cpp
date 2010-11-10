@@ -10,6 +10,8 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include "SmiBlockStructure.hpp" 
+#include "SmiDiscreteDistribution.hpp"
 
 // In CoinUtilsConfig.h the COIN_HAS_ZLIB macro is set (or not)
 #include "CoinUtilsConfig.h"
@@ -21,7 +23,7 @@
 
 #if 1
 const static char *section[] = {
-  "", "NAME", "ENDATA", " ", "PERIODS", "SCENARIOS", "INDEPENDENT"," "
+  "", "NAME", "ENDATA", " ", "PERIODS", "SCENARIOS", "INDEPENDENT", "BLOCKS", " "
 };
 
 const static char *smpsType[] = {
@@ -466,6 +468,143 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 				}
 
 		} 
+		case SMI_BLOCKS_SECTION://BLOCKS card
+		{
+			printf("Processing BLOCKS section\n");
+
+			// Create Block-Structure
+			SmiBlockStructure *smiBS = new SmiBlockStructure(core);
+			SmiBlock *smiBlock = NULL;
+
+			CoinPackedVector drlo,drup,dclo,dcup,dobj;
+			CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
+			assert(!matrix->isColOrdered());
+
+			int nrow = core->getNumRows();
+			int ncol = core->getNumCols();
+			matrix->setDimensions(nrow,ncol);
+
+			char* blName=NULL;
+			int block=0;
+			double prob=0.0;
+			const char* periodName=NULL;
+					
+			while( smpsCardReader_->nextSmpsField (  ) == SMI_BLOCKS_SECTION ) 
+			{
+
+				switch (smpsCardReader_->whichSmpsType())
+				{
+				case SMI_BL_CARD:
+				{
+					if(blName!=NULL){
+						cout<<"Blockname: "<<blName<<endl;
+						cout<<"ist gleich: "<<smpsCardReader_->blockName()<<endl;
+						cout<<"Wahrscheinlichkeit: "<< prob<<endl;
+						smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+									
+						//first event of a block
+						if(strcmp(blName,smpsCardReader_->blockName())){
+							cout<<"bin drin"<<endl;
+							smiBS->addSmiBlock(smiBlock);
+							//delete smiBlock;
+							
+							//have to think about it
+							smiBlock = new SmiBlock(1);
+							blName= new char[strlen(smpsCardReader_->blockName())];
+							strcpy(blName,smpsCardReader_->blockName());
+						}
+						matrix->clear();
+						drlo.clear();
+						drup.clear();
+						dclo.clear();
+						dcup.clear();
+						dobj.clear();
+
+						matrix->setDimensions(nrow,ncol);
+					}
+					else{
+						smiBlock = new SmiBlock(1);
+						blName= new char[strlen(smpsCardReader_->blockName())];
+						strcpy(blName,smpsCardReader_->blockName());
+						cout<<"NULL"<<endl;
+					}
+					
+					prob = smpsCardReader_->value();
+					periodName= smpsCardReader_->periodName();
+					break;
+				}
+				case SMI_COLUMN_CARD:
+				{
+					int j=this->columnIndex(smpsCardReader_->columnName());
+					int i=this->rowIndex(smpsCardReader_->rowName());
+					double value = smpsCardReader_->value();
+
+					cout<<"Element ("<<i<<","<<j<<") hat den Wert "<<value<<endl;
+					if (j<0) // check RHS
+					{
+						if (!strcmp(this->getRhsName(),"")) {
+							 free(rhsName_);
+		 					 rhsName_=strdup(smpsCardReader_->columnName());
+						} else
+							assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
+						assert(!(i<0));
+
+						char c=this->getRowSense()[i];
+
+						switch(c)
+						{
+						case 'E':
+							drlo.insert(i,value);
+							drup.insert(i,value);
+							break;
+						case 'L':
+							//drlo.insert(i,value);
+							drup.insert(i,value);
+							break;
+						case 'G':
+							//drup.insert(i,value);
+							drlo.insert(i,value);
+							break;
+						default:
+							assert(!"bad row sense: shouldn't get here");
+							break;
+						}
+					}
+					else if(i<0 || i==getNumRows()) // check OBJ
+					{
+						assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
+						dobj.insert(j,value);
+					}
+					else	// add element
+					{
+						matrix->modifyCoefficient(i,j,value);
+					}
+					break;
+				}
+				
+				
+				case SMI_UNKNOWN_MPS_TYPE:
+				default:
+					return -2;
+				}
+			}
+			
+			if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
+			{
+				smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+				smiBS->addSmiBlock(smiBlock);
+				
+				//process SmiBlockStructure into Scenarios
+				smi->processBlockStructureIntoScenarios(smiBS);
+				//delete smiBlock;
+				//delete smiBS;
+				return 0;
+			}
+			else
+				return -2;
+			
+
+		}
 
 		default:// didn't recognize section
 		return -1;
@@ -682,6 +821,12 @@ SmiSmpsCardReader::nextSmpsField (  )
 				  }
 				  strcpy(periodName_,next);
 
+				  if (!(next = strtok(NULL,blanks)))
+					  position_ = eol_;
+				  else
+					  // strcpy(next,periodName_); // store it here until next time
+					  //strcpy(periodName_,next); // store it here until next time
+
 				  // no futher strings allowed.
 				  position_=eol_;
 				  break;
@@ -721,7 +866,99 @@ SmiSmpsCardReader::nextSmpsField (  )
 				  break;
 			  }
 		  }
+		  if ( smiSection_ == SMI_BLOCKS_SECTION )
+		  {
+			
+
+			  
+			  if (!(next = strtok(position_,blanks)))
+			  {
+				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+				  return smiSection_;
+			  }
+			
+			  int i;
+			  if (strlen(next)==2)
+			  {
+				  
+				  for (i = SMI_SC_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
+					  if ( !strncmp ( next, smpsType[i], 2 ) ) 
+					  {
+						  break;
+					  }
+				  }
+				  if (i==SMI_UNKNOWN_MPS_TYPE)
+					  i = SMI_COLUMN_CARD;
+			  }
+			  else
+				  i = SMI_COLUMN_CARD;
+			
+			  switch(smiSmpsType_ = (SmiSmpsType) i)
+			  {
+			  case SMI_BL_CARD:
+				  if (!(next = strtok(NULL,blanks)))
+				  {
+					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+					  break;
+				  }
+				  strcpy(columnName_,next);
+				  
+				  if (!(next = strtok(NULL,blanks)))
+				  {
+					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+					  break;
+				  }
+				  strcpy(periodName_,next);
+
+				  if (!(next = strtok(NULL,blanks)))
+				  {
+					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+					  break;
+				  }
+				  strcpy(valstr,next);
+
+				  value_ = osi_strtod(valstr,&after,0);
+				  // see if error
+				  assert(after>valstr);
+
+				  // no futher strings allowed.
+				  position_=eol_;
+				  break;
+			  case SMI_UNKNOWN_MPS_TYPE:
+				  //this in case the column name has two characters!
+			  case SMI_COLUMN_CARD:
+				  //already got the name
+				  strcpy(columnName_,next);
+				  
+				  if (!(next = strtok(NULL,blanks)))
+				  {
+					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+					  break;
+				  }
+				  strcpy(rowName_,next);
+
+				  if (!(next = strtok(NULL,blanks)))
+				  {
+					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+					  break;
+				  }
+				  strcpy(valstr,next);
+
+				  value_ = osi_strtod(valstr,&after,0);
+				  // see if error
+				  assert(after>valstr);
 		  
+				  if (!(next = strtok(NULL,blanks)))
+					  position_ = eol_;
+				  else
+					  // strcpy(next,periodName_); // store it here until next time
+					  strcpy(periodName_,next); // store it here until next time
+				  break;
+			  default:
+				  assert(smiSmpsType_ == SMI_UNKNOWN_MPS_TYPE);
+				  break;
+			  }
+		  }
 		  return smiSection_;
 
 	  } else if ( card_[0] != '*' ) {
