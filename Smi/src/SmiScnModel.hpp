@@ -12,6 +12,7 @@
 
 // Include files
 #include "SmiDiscreteDistribution.hpp"
+#include "SmiBlockStructure.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiScnData.hpp"
 #include "OsiSolverInterface.hpp"
@@ -99,8 +100,12 @@ public:
     */
 
     //@{
-
-
+//#############################################################################################
+//#############################################################################################
+	void processBlockStructureIntoScenarios(SmiBlockStructure *smiBS);
+	void combineBlocks(SmiBlockStructure *smiBS);
+//#############################################################################################
+//#############################################################################################
 
     /// generate scenarios from discrete distribution
     void processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *s, bool test=false);
@@ -235,7 +240,6 @@ public:
     //Christian: this method adds data of current node to big det. eq. problem
     void addNode(SmiScnNode *node, bool notDetEq = false);
     void deleteNode(SmiScnNode *tnode);
-
     void addNode(SmiNodeData *node);
     inline SmiScenarioTree<SmiScnNode *> * getSmiTree() { return &smiTree_; }
 private:
@@ -268,11 +272,8 @@ private:
     // total probability of added scenarios; used to normalize probability to one
     double totalProb_;
     //core model --- used for discrete distributions
-
-private:
     SmiCoreData * core_;
-
-    // scenario tree 
+    // scenario tree pointer
     SmiScenarioTree<SmiScnNode *> smiTree_;
 
     int* integerInd;
@@ -306,6 +307,8 @@ public:
     inline double getProb() { return prob_; }
     inline void setParent(SmiScnNode * g) {parent_=g;}
 
+    inline SmiNodeData *getNode() {return node_;}
+
     inline bool isVirtualNode() { return !include_; }
     // So can delete root node
     inline void zapNode() {node_=NULL;}
@@ -331,8 +334,7 @@ public:
                 node_= NULL;
             }
        	}
-         
-    }
+	}
 
 private:
     inline void setRowOffset(int r) {roffset_ = r;}
@@ -341,9 +343,6 @@ private:
     inline double getCondProb(){return condProb_;}
     inline void setCondProb(double p){condProb_=p;}
     inline void setModelProb(double p){mdl_prob_=p;}
-    //Necessary to get access to the data node stored within the SmiScnNode
-public:
-    inline SmiNodeData *getNode() {return node_;}
 private:
     inline void setIncludeOff() { include_=false; }
     inline void setIncludeOn()  { include_=true; }

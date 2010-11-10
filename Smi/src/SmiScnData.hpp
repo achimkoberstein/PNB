@@ -128,6 +128,15 @@ public:
 	int addPtr() { return ++ptr_count; }
 
 	~SmiNodeData();
+// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
+     const int getMatStart() { return mat_strt_;}
+	 const int getMatEnd()   { return mat_strt_+nrow_;}
+	 const int getRloStart() { return rlo_strt_;}
+	 const int getRupStart() { return rup_strt_;}
+	 const int getCloStart() { return clo_strt_;}
+	 const int getCupStart() { return cup_strt_;}
+	 const int getObjStart() { return obj_strt_;}
+// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
 
 protected:
 	void combineWithCoreDoubleArray(double *d_out, const CoinPackedVector &cpv, int o);
@@ -135,15 +144,16 @@ protected:
 	//Memory assignment/deletion
 	void assignMemory();
 	void deleteMemory();
-
+// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
 	//Covers for starts of arrays
-	 const int getMatStart() { return mat_strt_;}
+/*	 const int getMatStart() { return mat_strt_;}
 	 const int getMatEnd()   { return mat_strt_+nrow_;}
 	 const int getRloStart() { return rlo_strt_;}
 	 const int getRupStart() { return rup_strt_;}
 	 const int getCloStart() { return clo_strt_;}
 	 const int getCupStart() { return cup_strt_;}
-	 const int getObjStart() { return obj_strt_;}
+	 const int getObjStart() { return obj_strt_;} */
+// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
 
 	//Access to stored memory
 	 //Return number of Elements in row/bounds/ranges/objective istart
