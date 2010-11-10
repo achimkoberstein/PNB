@@ -159,7 +159,7 @@ bool Benders::computeRelativeGap(double ub, double lb, double eps){
     return (abs(lb-ub)/abs(ub)) >= eps; //See cplex mipgap
 }
 
-void Benders::BendersSolve(double eps, int maxIter){
+void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     // ###################################################################################
     // Begin: BendersSolve
     // ###################################################################################
@@ -201,7 +201,7 @@ void Benders::BendersSolve(double eps, int maxIter){
     // While the gap between upper and lower bound is larger than epsilon
     // repeat the benders decomposition method. Also continue if maximal 
     // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
-    while( UB_ > LB_ && abs(UB_-LB_)>eps && computeRelativeGap(UB_,LB_,eps) && maxIter > nIter_){ 
+    while( useRegularizedDecomposition_ || (UB_ > LB_ && abs(UB_-LB_)>absEps && computeRelativeGap(UB_,LB_,relEps) && maxIter > nIter_) ){ 
         // At the beginning of each iteration set counter of optimality
         // cuts to zero
         oCut = 0;
@@ -212,14 +212,12 @@ void Benders::BendersSolve(double eps, int maxIter){
             delete[] tempFirstStageSol;
             return;		
         }
-        // 
-        if ( useRegularizedDecomposition_) {
-            // We should check for optimality here: If c^T x + z = c^T + Q(a) stop, a is optimal
-        }
+
+
         if (masterValue_ == osiMaster_->getObjValue()) {
             std::cout << "repeated objective value : " << osiMaster_->getObjValue() << std::endl;
         }
-        // Debug stuff
+        // TODO Debug stuff
         masterValue_ = osiMaster_->getObjValue();
         //std::string filenameTemp = "osiMaster" + to_string(nIter_);
         //osiMaster_->writeMps(filenameTemp.c_str(),"mps",1);
@@ -266,10 +264,38 @@ void Benders::BendersSolve(double eps, int maxIter){
         upperBound_ = 0;
         // Begin calculating temporary upper bound: objective function value
         // of master problem : We do it this way to account for the ZEROTEST ( and to calculate correct bound if using reg. decomp. )
-        for(int i=0; i<mncol_; i++){ // What do we compute? 
+        for(int i=0; i<mncol_; i++){ // We compute the first stage solution part of the current iteration that may become new upper bound
             upperBound_+= mdobj_[i]*bestSolTemp_[i];
         }
-        LB_ = upperBound_ + mdobj_[mncol_]*bestSolTemp_[mncol_];
+        if ( useRegularizedDecomposition_) {
+            // We should check for optimality here: If c^T x + z = c^T + Q(a) stop, a is optimal
+            double xSolution = upperBound_;
+            for (int i = 0; i < zSub_; i++){
+                xSolution += mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
+            }
+            if ( abs(xSolution-regSolutionValue_) < absEps ){ //Tolerances please : TODO
+                // regSolution is optimal, copy it into bestSol
+                for (int i = 0; i < mncol_; i++)
+                    bestSol_[i] = regSolution_[i];
+                return;
+            }
+        }
+        // Set correct lower bound
+        double lowerBound = upperBound_;
+        if (single_)
+            lowerBound += (mdobj_[mncol_] == 0) ? -infty_ : bestSolTemp_[mncol_];
+        else{
+            for (int i = 0; i < nScen_; i++ ) {
+                lowerBound += (mdobj_[mncol_+i] == 0) ? -infty_ : bestSolTemp_[mncol_+i];
+                if (lowerBound <= -infty_ ) // leave loop when we encountered a lowerBound which is infinity
+                    break;
+            }
+        }
+        //if ( lowerBound < LB_ && lowerBound > -infty_){ // We were better in the last iteration, not good.
+        //    return;
+        //}
+        LB_ = lowerBound; // If we have a value not equal to infinity, then we 
+
 
         bool feasible = true; // Indicate if at most one subproblem was infeasible
         // Cycle over all scenarios
@@ -340,7 +366,7 @@ void Benders::BendersSolve(double eps, int maxIter){
             // In the first iteration the variables for the scenarios have 
             // the value -infinity, therefor the first cut(s) is(are) valid
             // We have to differentiate between multi and single cut..
-            if( feasible && (single_ || subObjVal > bestSolTemp_[mncol_+scen_] || nIter_==nFeas ) ){
+            if( feasible && (single_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+scen_] || nIter_==nFeas ) ){
                 // Calculate an optimality cut; Input: number of optimality cuts
                 // which were calculate during the current iteration, number of
                 // current scenario;
@@ -382,18 +408,22 @@ void Benders::BendersSolve(double eps, int maxIter){
         }
         //
         if (feasible && useRegularizedDecomposition_){
+            
+
             // If no optimality cut was generated, we update the regularized solution a to x (exact serious step)
             if (oCut == 0){
                 seriousStep_ = true;
+                changeSigma_ = true;
                 for (int i = 0; i < mncol_; i++){
                     regSolution_[i] = bestSolTemp_[i];
                 }
+                // We made a serious step, so we update the regSolutionValue_
+                regSolutionValue_ = upperBound_;
             }
             // We generated some optimality cuts
-            else{
+            else {
                 // We have to check if c^T \bar x + Q(\bar x) <= c^T a + Q( a ), if so we update the regularized solution a to x (approximate serious step)
-                // The first value is saved in upperBound_
-                // Compute regSolutionValue_
+                // Compute regSolutionValue_ = c^T a + Q( a ) to be able to compare the values
                 regSolutionValue_ = 0;
                 for (int i = 0; i < mncol_; i++){
                     regSolutionValue_ += regSolution_[i]*mdobj_[i];
@@ -406,7 +436,11 @@ void Benders::BendersSolve(double eps, int maxIter){
                     for (int i = 0; i < mncol_; i++){
                         regSolution_[i] = bestSolTemp_[i];
                     }
-                }// If not we make a (null feasible step) and let a be the same as before
+                    // We made an approximate serious step, so our regSolutionValue changed also
+                    regSolutionValue_ = upperBound_;
+                    changeSigma_ = false;
+                }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma
+                changeSigma_ = true;
             }
         }
         // Apply Trust Region method
@@ -445,7 +479,7 @@ void Benders::BendersSolve(double eps, int maxIter){
     }	
     cout << "Objective value after "<< nIter_ << " iterations is: "  << LB_ << endl;
 
-    delete [] regSubproblemSolutionValues_;
+    
     // ###################################################################################
     // End: BendersSolve
     // ###################################################################################
@@ -1276,9 +1310,27 @@ int Benders::solveMaster(){
             delete[] quadiels; // contains column (variable) which belongs to the coefficient 
             delete[] quadbeg; // stores the beginning of a new column of the matrix (+1 for convenience)
             delete[] quadcnt;
+
+            // Ensure the integer indices are still present
+            if (mnInt_)
+                osiMaster_->setInteger(miInt_, mnInt_);
+            int numberOfInt = CPXgetnumint(envPtr,lpPtr);
+            int numberOfBin = CPXgetnumbin(envPtr,lpPtr);
+            if (numberOfInt == 0 || numberOfBin == 0){
+                char* type = new char[mnInt_];
+                for (int i = 0; i< mnInt_; i++)
+                    type[i] = 'I'; // 
+                int status = CPXchgctype(envPtr, lpPtr, mnInt_, miInt_, type);
+
+                delete[] type;
+            }
+            numberOfInt = CPXgetnumint(envPtr,lpPtr);
+            numberOfBin = CPXgetnumbin(envPtr,lpPtr);
+            // TODO: Binary settings might improve cplex performance?
+            DLOG_IF(ERROR,numberOfInt != mnInt_) << "Number of integer variables differs between master problem on paper and problem in memory!.";
         }
 
-        osiMaster_->writeLp("osiMaster");
+        //osiMaster_->writeLp("osiMaster");
         //osiMaster_->writeMps("osiMaster");
         // Solve master problem 
         // If there are no integer variables use initialSolve
@@ -1331,6 +1383,24 @@ int Benders::solveMaster(){
             }
         }
         try {
+            //if (useRegularizedDecomposition_ && changeSigma_){
+            //// we change the sigma value
+            //    changeSigma_ = false;
+            //    if (seriousStep_)// increase sigma, make solutions further away more likely
+            //        sigma_ *= 2;
+            //    else
+            //        sigma_ *= 1/2; // decrease sigma, make solutions near more likely
+
+            //    // change quadratic coefficients in the matrix (mncol_ times many)
+            //    double term = 1/sigma_;
+            //    int status = 0;
+            //    for (int i = 0; i < mncol_; i++){
+            //        status = CPXchgqpcoef(envPtr,lpPtr,i,i,term);
+            //        if ( status != 0)
+            //            LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
+            //    }
+            //    
+            //}
             if(mnInt_ == 0  && (warmStart_ || warmStartFol_ )){
                 // Set warmstart informations
                 osiMaster_->setWarmStart(warmStartMaster_);
@@ -1350,6 +1420,9 @@ int Benders::solveMaster(){
             // Else solve via branch and bound
             else{
                 if (useRegularizedDecomposition_){
+                    int type = CPXgetprobtype(envPtr,lpPtr);
+                    if ( type != 7 )
+                        DLOG(FATAL) << "We lost integer information!";
                     CPXmipopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(ERROR,stat > 0) << "Cplex returned with " << stat;
@@ -1393,16 +1466,36 @@ int Benders::solveMaster(){
     bool dualObjectiveLimit = osiMaster_->isDualObjectiveLimitReached();
     bool optimal = osiMaster_->isProvenOptimal();
     if(osiMaster_->isProvenPrimalInfeasible() ) {
+
         cout << "Error: master problem is infeasible or unbounded!" << endl;
         return -1;
     }
     if ( osiMaster_->isProvenDualInfeasible()){
         // We do not take an arbitrary feasible solution, but one on the unbounbed ray.
-        // We need the LP solution to get dual rays right now..
-        osiMaster_->initialSolve();
+        int* indices;
+        double* elements;
+
+        indices = new int[zSub_];
+        elements = new double[zSub_];
+        for (int i = 0; i < zSub_; i++) {
+            indices[0] = mncol_+i;
+            elements[0] = 1;
+        }        
+        osiMaster_->addRow(1,indices,elements,-infty_+ 1000000, infty_);
+        delete indices;
+        delete elements;
+        // Resolve problem
+        if (mnInt_)
+            osiMaster_->branchAndBound();
+        else
+            osiMaster_->resolve();
+        const double* colSolution = osiMaster_->getColSolution();
+        // get Primal Rays: solution might not be feasible for the master problem..
+        //std::vector<double*> primalRay = osiMaster_->getPrimalRays(1);
+        //osiMaster_->initialSolve();
         cout << "Error: master problem is unbounded!" << endl;
-        if ( nIter_ > 0)
-            return -1;
+        //if ( nIter_ > 0)
+        //    return -1;
     }
     if (osiMaster_->isAbandoned()){
         cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
@@ -1837,6 +1930,201 @@ int Benders::solveSubproblem(int scen_, bool fCut){
 
     // Solve subproblem
 
+ // Solve dual problem directly by creating it from scratch
+    //OsiCpxSolverInterface* solverTry = new OsiCpxSolverInterface();
+
+    //    // We have to build up the CGLP 
+    //    const double * rowLower = combdrlo_;
+    //    const double * rowUpper = combdrup_;
+    //    const double * objCoefs = combdobj_;
+    //    // We can use the osiSubproblem we created so far without the convertion of the variable ranges.
+    //    // How do we do this?
+    //    // We keep the Matrix.
+    //    // If we have variable bounds, we need to introduce slack dual variables for all the constraints..
+    //    // We move the old RHS to the Objective. Depending on wether we had greater or lesser constraints, the dual variable are greater or lesser than 0
+    //    // We create a new RHS by the old objective, depending on the variable bounds.
+    //    double* rowlb = new double[sncol_];
+    //    double* rowub = new double[sncol_];
+
+    //    double* rowValues = new double[sncol_];
+    //    int* rowIndices = new int[sncol_];
+
+    //    std::vector<int> lessZero;
+    //    std::vector<int> greaterZero;
+    //    std::vector<int> fixVars;
+    //    for (int i = 0; i < sncol_; i++){ // All the rows of the dual problems
+    //        // In a normal dual problem we would make this the RHS. //This is for the pi_0 column 
+    //        rowIndices[i] = i;
+    //        rowValues[i] = -combdobj_[i];
+    //        // End pi_0 column
+    //        double lb = combdclo_[i];
+    //        double ub = combdcup_[i];
+    //        if ( lb == ub ){ // Fix variable, we have to add an additional free dual variable t with equality constraint in the i-th row
+    //            fixVars.push_back(i);
+    //            rowlb[i] = combdobj_[i]; rowub[i] = combdobj_[i];
+    //        }
+    //        else if ( lb <= -infty_ ) {
+    //            if ( ub >= infty_ ){ // We have a free variable, we have an equality constraint
+    //                rowlb[i] = combdobj_[i]; rowub[i] = combdobj_[i];
+    //            }
+    //            else if ( ub != 0){ // We have a variable with an upper bound, we add an additional dual variable w <= 0 and we have an equality constraint
+    //                lessZero.push_back(i);
+    //                rowlb[i] = combdobj_[i]; rowub[i] = combdobj_[i];
+    //            }
+    //            else { // We have a <= 0 variable, we have a >= constraint
+    //                rowlb[i] = combdobj_[i]; rowub[i] = infty_;
+    //            }
+    //        }
+    //        else if ( ub >= infty_ ) {
+    //            if ( lb != 0 ) { // We have a variable with a lower bound, we add a dual variable v >= 0 and we have an equality constraint.
+    //                greaterZero.push_back(i);
+    //                rowlb[i] = combdobj_[i]; rowub[i] = combdobj_[i];
+    //            }
+    //            else { // We have a >= variable, we have a <= constraint
+    //                rowlb[i] = -infty_; rowub[i] = combdobj_[i];
+    //            }
+    //        }
+    //        else { // We have a ranged variable, both lb and ub are different and also different from infinity
+    //            if ( lb == 0 ){ // We add a dual var w <= 0and a <= constraint
+    //                lessZero.push_back(i);
+    //                rowlb[i] = -infty_; rowub[i] = combdobj_[i];
+    //            }
+    //            else if ( ub == 0 ){ // We add a dual var v >= 0 and a >= constraint
+    //                greaterZero.push_back(i);
+    //                rowlb[i] = combdobj_[i]; rowub[i] = infty_;
+    //            }
+    //            else { // Ranged variable => we add two dual variables and an equality constraint
+    //                lessZero.push_back(i); greaterZero.push_back(i);
+    //                rowlb[i] = combdobj_[i]; rowub[i] = combdobj_[i];
+    //            }
+    //        }
+    //    }
+    //    int additionalCols = fixVars.size() + lessZero.size() + greaterZero.size()+1;
+    //    int overallDualCols = snrow_ + rowAdd_ + additionalCols;
+
+    //    double* collb = new double[overallDualCols];
+    //    double* colub = new double[overallDualCols];
+    //    double* obj = new double[overallDualCols];
+    //    // We add one column ( pi_0 ) to the problem
+    //    int* index = new int[overallDualCols];
+    //    double* values = new double[overallDualCols];
+
+    //    // Process dual variables of the original number of rows and set lower/upper bounds accordingly as well as coefficients in the normalization row
+    //    for (int i = 0; i < snrow_+rowAdd_; i++){ 
+    //        index[i] = i;
+    //        if ( rowLower[i] > -infty_ && rowUpper[i] < infty_ ) {
+    //            // We have a equality row => dual variable free
+    //            if ( rowLower[i] == rowUpper[i] ){
+    //                collb[i] = -infty_; colub[i] = infty_; obj[i] = rowLower[i];
+    //                values[i] = 1;
+    //            }
+    //            // I do not know what to do in this case..
+    //            else {
+    //                std::cout << " Ranged Row " << std::endl;
+    //            }
+    //        }
+    //        else { // One of the variables (or both) has to be infinity, otherwise we would not be in the else case
+    //            if (rowLower[i] <= -infty_ && rowUpper[i] >= infty_ ) {
+    //                std::cout << "just to be sure" << std::endl;
+    //            }
+    //            if (rowUpper[i] >= infty_ ){
+    //                // We have a lower bounded row: b_j <= x <= infty row  => dual variable >= 0
+    //                collb[i] = 0; colub[i] = infty_; obj[i] = rowLower[i];
+    //                values[i] = 1;
+    //            }
+    //            if (rowLower[i] <= -infty_){
+    //                // We have an upper bounded row: -infty <= x <= b_j row => dual variable <= 0
+    //                collb[i] = -infty_; colub[i] = 0; obj[i] = rowUpper[i];
+    //                values[i] = -1;
+    //            }
+    //        }
+    //    }
+    //    // Add free vars
+    //    int j = snrow_+rowAdd_;
+    //    for (int i = j; i < j + fixVars.size(); i++) {
+    //        index[i] = i;
+    //        values[i] = 1;
+    //        obj[i] = combdclo_[fixVars[i-j]];
+    //        collb[i] = -infty_;
+    //        colub[i] = infty_;
+    //    }
+    //    j += fixVars.size();
+    //    //// Add less Zero vars
+    //    for (int i = j; i < j+lessZero.size(); i++){
+    //        index[i] = i;
+    //        values[i] = -1;
+    //        obj[i] = combdclo_[lessZero[i-j]];
+    //        collb[i] = -infty_;
+    //        colub[i] = 0;
+    //    }
+    //    j += lessZero.size();
+    //    //// Add greater zero vars
+    //    for (int i = j; i < j+greaterZero.size(); i++){
+    //        index[i] = i;
+    //        values[i] = 1;
+    //        obj[i] = combdcup_[greaterZero[i-j]];
+    //        collb[i] = 0;
+    //        colub[i] = infty_;
+    //    }
+    //    j += greaterZero.size();
+
+    //    ////// Add \pi_0
+    //    //index[j] = j;
+    //    //values[j] = 1;
+    //    //if (single_)
+    //    //    obj[j] = -osiMaster_->getColSolution()[mncol_]; // This has to be the value of the current solution (of the theta)
+    //    //else 
+    //    //    obj[j] = -osiMaster_->getColSolution()[mncol_+scen_];
+    //    //collb[j] = 0;
+    //    //colub[j] = infty_;
+    //    //j++;
+
+    //    //TODO: problem without the dual variables for the ranged variable bounds provided better results (in my opinion)
+    //    // We need to add the normalization row to the problem
+
+    //    // We create the matrix from the combined matrix
+    //    CoinPackedMatrix wMatrix(false, sncol_, snrow_+rowAdd_, combSt2nels_+rowAdd_, combSt2dels_, combSt2iels_, combSt2rstrt_, combSt2len_);
+    //    wMatrix.transpose(); //TODO: Maybe this will not suffice
+    //    // We can use rightAppendMatrix to append columns to the right of the matrix
+    //    // We need to add the additional dual variables to the problem (only if we also add the additonal variables to the problem
+    //    if ( j > snrow_+rowAdd_+1 ){
+    //        appendColVectorToMatrix(fixVars,wMatrix);
+    //        appendColVectorToMatrix(lessZero,wMatrix);
+    //        appendColVectorToMatrix(greaterZero,wMatrix);
+    //    }
+    //    // We add another col (\pi_0) to the problem in the matrix
+    //    //wMatrix.appendCol(sncol_,rowIndices,rowValues);
+    //    // And finally the normalization row
+    //    //CoinPackedVector normalizationRow(j,index,values);
+    //    delete[] index;
+    //    delete[] values;
+
+    //    solverTry->loadProblem(wMatrix,collb,colub,obj,rowlb,rowub);
+    //    //solverTry->addRow(normalizationRow,1,1);
+    //    solverTry->setObjSense(-1); // We have a maximization problem.. 
+    //    solverTry->setHintParam(OsiDoDualInInitial,0);
+    //    solverTry->initialSolve();
+    //    solverTry->writeMps("dualSub");
+    //    
+    //    int solutionValue = solverTry->getObjValue();
+    //    DLOG(INFO) << "Solution value of CGLP is " << solutionValue;
+    //    bool optimality = solverTry->isProvenOptimal();
+    //    if (!optimality){
+    //        std::cout << "An error occured, your problem is stupid! Or our solver is." << std::endl;
+    //    }
+    //    if (solverTry->getObjValue() < 0){
+    //        std::cout << "Something went wrong. Most probably: your subproblem has a feasible solution.." << std::endl;
+    //    }
+    //    const double* dualValues = solverTry->getColSolution();
+    //    //assert( dualValues[j-1] == 0);
+
+    //    delete[] rowlb;
+    //    delete[] rowub;
+    //    delete[] colub;
+    //    delete[] collb;
+    //    delete[] obj;
+// End dual problem
+
     // Set up problem matrix; note: if there were created new
     // constraints during the method "converstSubproblem",
     // number of rows and number of elements are expanded 
@@ -1868,7 +2156,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     }
     osiSubproblem_->loadProblem(*matrix, combdclo_, combdcup_, combdobj_, combdrlo_, combdrup_);
     // Parameter: use dual simplex
-    //osiSubproblem_->writeLp("osiSub");
+    osiSubproblem_->writeLp("osiSub");
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
     osiSubproblem_->setObjSense(1.0); // we minimize the subproblems
     // In the first iteration there are no warmstart informations
@@ -2013,6 +2301,7 @@ void Benders::calcOptiCut( int oCut, int scen_){
 
     // Dual solution of current subproblem
     const double *SolDual = osiSubproblem_->getRowPrice();
+    double scenProb = scenProb_[scen_];
 
     // First calculate RHS of the cut: p*d
     // Initialize RHS by zero
@@ -2035,6 +2324,7 @@ void Benders::calcOptiCut( int oCut, int scen_){
             }
         }
     }
+    cutRowUB_[oCut] *= scenProb; // multiply with probability (normalize)
     // Initialize array of indices and elements
     for(int i=0 ; i<mncol_ ; i++){
         // Initialize indizes with indices of
@@ -2100,6 +2390,12 @@ void Benders::calcOptiCut( int oCut, int scen_){
         // same size like row start array of stage 1 coefficients in
         // deterministic matrix
         assert(cstg1els == sSt1rstrt_[j+1]);
+       
+
+    }
+     // Iterate over all elements of the cut (except for theta) and multiply with scenario probability
+    for (int i = 0; i < mncol_; i++){
+        cutElements_[(mncol_+1)*oCut+i] *= scenProb;
     }
 
     // ###################################################################################
@@ -2134,17 +2430,17 @@ void Benders::addOptiCut(int oCut){
         for(int i=0; i<oCut; i++){
             // Sum up all values of RHS and multiply each with the corresponding
             // probability
-            cutRowUB+= cutRowUB_[i]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            cutRowUB+= cutRowUB_[i];//*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
             // Cycle over all stage 1 variables
             for(int j=0; j< mncol_; j++){
                 // In the first cycle all arrays are initialized
                 if(i == 0){
-                    cutElements[j] = cutElements_[j]*scenProb_[cutIndex_[mncol_]-mncol_];
+                    cutElements[j] = cutElements_[j];//*scenProb_[cutIndex_[mncol_]-mncol_];
                     cutIndex[j] = j;
                 }
                 // In all other cycles sum up cut elements
                 else{			
-                    cutElements[j]+= cutElements_[i*(mncol_+1)+j]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+                    cutElements[j]+= cutElements_[i*(mncol_+1)+j];//*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
                 }
             }
         }	
@@ -2199,8 +2495,12 @@ void Benders::addOptiCut(int oCut){
             double deviation = computeDeviation(cutIndex,cutElements, -cutRowUB_[i]);
             osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
             // We have to change the coefficient in the master problem of the theta from 0 to the correct value
-            osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
-            mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[index+mncol_]-mncol_];
+            osiMaster_->setObjCoeff(cutIndex_[index+mncol_],1);
+            mdobj_[cutIndex_[index+mncol_]] = 1;
+            //osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
+            //mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[index+mncol_]-mncol_];
+
+
             //std::string name = "problem" + to_string(i);
             //osiMaster_->writeLp(name.c_str());
         }	
@@ -3337,9 +3637,10 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     if (smiModel){
         //Set params for Benders
         int maxIt = 10000;
-        double tolerance = 0.0000001;
+        double relEps = 0.0001;
+        double absEps = 0.01;
         bool useBenders = true;
-        bool useRegularized = false;
+        bool useRegularized = true;
         bool single = false;
         bool knapsack = false;
         bool trustRegion = false;
@@ -3386,7 +3687,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             benders->setInitialSolution(evResult.second);
         }
         if (useBenders)
-            benders->BendersSolve(tolerance, maxIt );
+            benders->BendersSolve(absEps,relEps, maxIt );
         else
             benders->detEq();
     }
@@ -3397,8 +3698,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 }
 
 double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
-    if ( benders == 0) return 0;
-    else return benders->LB_;
+    if ( benders == 0) return benders->infty_;
+    else return benders->UB_; // Return upper bound, as this is the value of our solution
 }
 
 int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){

@@ -364,6 +364,9 @@ private:
     // indicate if we make a serious step
     bool seriousStep_;
 
+    // indiciate if we should change sigma
+    bool changeSigma_; // seriousStep && changeSigma => increase, !seriousStep && changeSigma => decrease
+
     /// Fischetti-Paper like computation of feasible or optimality cuts..
     bool fischetti_;
 
@@ -469,6 +472,8 @@ public:
 		osiDetEq_ = cpx->clone(false);
 		// Initialize infinity
 		infty_ = osiMaster_->getInfinity();
+        // set regSolutionValue to -infinity
+        regSolutionValue_ = infty_;
 		// Benders (true) or detEq (false)
 		if(!strcmp(bend,"+ben")){
 			benders_ = true;
@@ -548,7 +553,7 @@ public:
 	int solveSubproblem(int, bool);
 	// Benders decomposition; Input: tolerance epsilon, maximal number 
 	// of iterations
-	void BendersSolve(double, int);
+	void BendersSolve(double, double, int);
 	// Calculate optimality cuts; Input: number of cuts which were 
 	// generated during the current iteration, number of current scenario
 	void calcOptiCut( int, int);
