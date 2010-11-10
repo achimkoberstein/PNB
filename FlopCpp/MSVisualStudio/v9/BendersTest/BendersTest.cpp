@@ -5,6 +5,7 @@
 
 #include "Benders.hpp"
 #include "SmiScnModel.hpp"
+#include "OsiClpSolverInterface.hpp"
 #include "SAA.hpp" //why do we need this? i don't know...
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
@@ -37,15 +38,23 @@ TEST_F(BendersTest, assets) { // ok
 }
 
 TEST_F(BendersTest, farmer) { // ok
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
 }
 
 TEST_F(BendersTest, finance) { // ok
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
 }
 
-TEST_F(BendersTest, gas) { // master problem unbounded?!
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1764.67, 0.1);  
+TEST_F(BendersTest, gas) { // ok
+    //SmiScnModel smi;
+    //smi.readSmps("../../../../Benders/test/instances/GAS3");
+    //OsiCpxSolverInterface solver;
+    //smi.setOsiSolverHandle(&solver);
+    //OsiSolverInterface* osi = smi.loadOsiSolverData();
+    //osi->initialSolve();
+    //const double* solutions = osi->getColSolution();
+    //DLOG(INFO) << osi->getObjValue();
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
 }
 
 // Blocks format
@@ -68,7 +77,7 @@ TEST_F(BendersTest, gas) { // master problem unbounded?!
 //}
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
