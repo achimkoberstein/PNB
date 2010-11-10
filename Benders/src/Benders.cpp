@@ -227,6 +227,8 @@ void Benders::BendersSolve(double eps, int maxIter){
         // Read current stage 1 solution 
         const double* mSol = 0;
         mSol = osiMaster_->getColSolution();
+        
+        // TODO: Debug, remove eventually
         int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
         if (resultCmp == 0)
             std::cout << "same results" << std::endl;
@@ -251,21 +253,23 @@ void Benders::BendersSolve(double eps, int maxIter){
         // and upper bound; if there are bounds on stage 2 variables, there 
         // could occur an offset of the objective function which has to
         // be manually added to the objective function
+        // Christian: We compute lower Bound regardless of bounds on second stage variables..
         if(nIter_!=nFeas && fCut ==false){
             if(trustRegion_ ){
                 // Copy lower bound, before it is updated
                 LBmax = LB_;
             }
-            LB_ = osiMaster_->getObjValue()+objTrans_;		
+            /*LB_ = osiMaster_->getObjValue()+objTrans_;	*/	
         }	
 
         // Initialize temporary upper bound with zero
         upperBound_ = 0;
         // Begin calculating temporary upper bound: objective function value
         // of master problem : We do it this way to account for the ZEROTEST ( and to calculate correct bound if using reg. decomp. )
-        for(int i=0; i<mncol_; i++){
+        for(int i=0; i<mncol_; i++){ // What do we compute? 
             upperBound_+= mdobj_[i]*bestSolTemp_[i];
         }
+        LB_ = upperBound_ + mdobj_[mncol_]*bestSolTemp_[mncol_];
 
         bool feasible = true; // Indicate if at most one subproblem was infeasible
         // Cycle over all scenarios
@@ -280,7 +284,6 @@ void Benders::BendersSolve(double eps, int maxIter){
             // Solve subproblem; Input: number of current
             // scenario, number of feasibility cuts
             if(solveSubproblem(scen_, fCut) == -1){ 
-                delete [] bestSolTemp_;
                 return;
             }	
             // Initialize bool of feasibility cuts with false
@@ -318,11 +321,7 @@ void Benders::BendersSolve(double eps, int maxIter){
             const double *subObjCoeff = osiSubproblem_->getObjCoefficients();
             int indexPart = mncol_+zSub_+sncol_*scen_;
             for(int i=0; i<sncol_; i++){
-                double v = sSol[i];
-                if(v < 0){
-                    v = -v;
-                }
-                if(v < ZEROTEST){
+                if(abs(sSol[i]) < ZEROTEST){
                     bestSolTemp_[indexPart+i] = 0;
                 }
                 else{
@@ -1123,6 +1122,9 @@ void Benders::copySubmodel(SmiScnModel* smi){
     // stage 2 variable, then the upper bound is added to the matrix as 
     // another constraint and the lower bound is converted to zero
     dTrans_ = new double[sncol_];
+    for (int i = 0; i < sncol_; i++) {
+        dTrans_[i] = 0;
+    }
     // Declaration of an array for indices of the stage 2
     // variables whose bounds were converted
     iTrans_ = new int[sncol_];
@@ -1276,7 +1278,7 @@ int Benders::solveMaster(){
             delete[] quadcnt;
         }
 
-        //osiMaster_->writeLp("osiMaster");
+        osiMaster_->writeLp("osiMaster");
         //osiMaster_->writeMps("osiMaster");
         // Solve master problem 
         // If there are no integer variables use initialSolve
@@ -2198,6 +2200,7 @@ void Benders::addOptiCut(int oCut){
             osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
             // We have to change the coefficient in the master problem of the theta from 0 to the correct value
             osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
+            mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[index+mncol_]-mncol_];
             //std::string name = "problem" + to_string(i);
             //osiMaster_->writeLp(name.c_str());
         }	
@@ -3336,7 +3339,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         int maxIt = 10000;
         double tolerance = 0.0000001;
         bool useBenders = true;
-        bool useRegularized = true;
+        bool useRegularized = false;
         bool single = false;
         bool knapsack = false;
         bool trustRegion = false;
