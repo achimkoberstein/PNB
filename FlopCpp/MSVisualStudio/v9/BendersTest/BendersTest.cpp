@@ -22,9 +22,6 @@ namespace flopc {
             smi.readSmps(name);
             OsiCpxSolverInterface cpxSolver;
             OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
-            //Benders* benders = new Benders("m", "+wsI", "-ki", "-tr", "+ben","+reg");
-            //benders->readSMPS(name);
-            //benders->BendersSolve(0.00001, 1000);
             benders.initialSolve();
             return benders.getObjValue();
         }
@@ -34,22 +31,22 @@ namespace flopc {
 
 } //end namespace
 
-//TEST_F(BendersTest, assets) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
-//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1); // BLOCKS sections in stoch file, SMI can't handle it yet
-//}
+TEST_F(BendersTest, assets) { // ok
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1); // BLOCKS sections in stoch file, SMI can't handle it yet
+}
 
-//TEST_F(BendersTest, farmer) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
-//}
+TEST_F(BendersTest, farmer) { // ok
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+}
 
-//TEST_F(BendersTest, finance) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
-//}
+TEST_F(BendersTest, finance) { // ok
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
+}
 
-//TEST_F(BendersTest, gas) { // master problem unbounded?!
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1764.67, 0.1);  
-//}
+TEST_F(BendersTest, gas) { // master problem unbounded?!
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1764.67, 0.1);  
+}
 
 // Blocks format
 //TEST_F(BendersTest, rand) { // no progress in interations, obj. values 0
@@ -71,14 +68,14 @@ namespace flopc {
 //}
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_2000"), -348.092, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_2000"), -348.092, 0.1);
 }
 
 // BLocks
