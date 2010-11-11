@@ -1539,14 +1539,15 @@ int Benders::solveMaster(){
         std::vector<int> effectiveCuts;
         bool continueSolving = false;
         for (int i = 0; i < appliedCuts_; i++){
-            if ( slack[i] > ZEROTEST || slack[i] == 0) // Count all cuts that are either active or clearly inactive 
-                continueSolving = true;
+            if ( slack[i] >= 0 ){ // We continue solving if we have active cuts
+                continueSolving = true; break;
+            }
         }
         //delete[] slack;
         if (continueSolving)
             checkCuts_ = false;
         else 
-            return +1; // Compute solution values from this x and quit.
+            return -1; // Compute solution values from this x and quit.
         //if ( effectiveCuts.empty() ){ // We stop when all cuts we have are active ( equality )
         //    // Latest optimality cuts are all equalities really
         //    return -1;
