@@ -1419,9 +1419,8 @@ int Benders::solveMaster(){
                 osiMaster_->setHintParam(OsiDoDualInInitial,false);
                 if (useRegularizedDecomposition_){
                     CPXqpopt(envPtr,lpPtr);
-                    //lpPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getLpPtr(15);
                     stat = CPXgetstat( envPtr, lpPtr );
-                    DLOG_IF(ERROR,stat > 0) << "Cplex returned with " << stat;
+                    DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                 }
                 else
                     osiMaster_->resolve();
@@ -1430,12 +1429,9 @@ int Benders::solveMaster(){
             // Else solve via branch and bound
             else{
                 if (useRegularizedDecomposition_){
-                    int type = CPXgetprobtype(envPtr,lpPtr);
-                    if ( type != 7 )
-                        DLOG(FATAL) << "We lost integer information!";
                     CPXmipopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
-                    DLOG_IF(ERROR,stat > 0) << "Cplex returned with " << stat;
+                    DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                 }
                 else
                     osiMaster_->branchAndBound();
@@ -1506,24 +1502,62 @@ int Benders::solveMaster(){
         return -1;
     }
     if ( osiMaster_->isProvenDualInfeasible()  || stat == CPX_STAT_UNBOUNDED){
-        // We do not take an arbitrary feasible solution, but one on the unbounbed ray.
+        stat = 0; // reset stat to zero
+        // We take a feasible solution from the solution set.
         int* indices;
         double* elements;
 
         indices = new int[zSub_];
         elements = new double[zSub_];
         for (int i = 0; i < zSub_; i++) {
-            indices[0] = mncol_+i;
-            elements[0] = 1;
+            indices[i] = mncol_+i;
+            elements[i] = 1;
         }        
-        osiMaster_->addRow(1,indices,elements,-infty_+ 1000000, infty_);
+        osiMaster_->addRow(zSub_,indices,elements,-infty_+ 1000000, infty_);
         delete indices;
         delete elements;
-        // Resolve problem
-        if (mnInt_)
-            osiMaster_->branchAndBound();
-        else
-            osiMaster_->resolve();
+        // Resolve problem (according to regDecomp or not we need different methods..
+        if(mnInt_==0){
+            osiMaster_->setHintParam(OsiDoDualInInitial,false);
+            if (useRegularizedDecomposition_){
+                CPXqpopt(envPtr,lpPtr);
+                stat = CPXgetstat( envPtr, lpPtr );
+                DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
+            }
+            else
+                osiMaster_->resolve();
+
+        }
+        // Else solve via branch and bound
+        else{
+            if (useRegularizedDecomposition_){
+                CPXmipopt(envPtr,lpPtr);
+                stat = CPXgetstat( envPtr, lpPtr );
+                DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
+            }
+            else
+                osiMaster_->branchAndBound();
+        }
+        if (osiMaster_->isProvenDualInfeasible() || stat == CPX_STAT_UNBOUNDED){
+            LOG(ERROR) << "Masterproblem is unbounded.";
+            return -1;
+        }
+        if (osiMaster_->isAbandoned() ){
+            cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
+            return -1;
+    }
+        // Test for solution value
+        return 0;
+        //const double* solValues = osiMaster_->getColSolution();
+        //DLOG(INFO) << osiMaster_->getObjValue();
+        // We solved the problem, we delete the newly added row again
+        //osiMaster_->writeLp("notUnboundedMaster");
+        //int* rowIndex = new int[1];
+        //rowIndex[0] = osiMaster_->getNumRows()-1;
+        //osiMaster_->deleteRows(1,rowIndex);
+        //delete [] rowIndex;
+        //osiMaster_->writeLp("unboundedMaster");
+
     }
     if (osiMaster_->isAbandoned() ){
         cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
@@ -3688,7 +3722,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         double relEps = 0.0001;
         double absEps = 0.01;
         bool useBenders = true;
-        bool useRegularized = true;
+        bool useRegularized = false;
         bool single = false;
         bool knapsack = false;
         bool trustRegion = false;
