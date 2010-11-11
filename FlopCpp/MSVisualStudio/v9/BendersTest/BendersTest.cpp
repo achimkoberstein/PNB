@@ -38,7 +38,7 @@ TEST_F(BendersTest, assets) { // ok
 }
 
 TEST_F(BendersTest, farmer) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
 }
 
 TEST_F(BendersTest, finance) { // ok
@@ -54,7 +54,7 @@ TEST_F(BendersTest, gas) { // ok
     //osi->initialSolve();
     //const double* solutions = osi->getColSolution();
     //DLOG(INFO) << osi->getObjValue();
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
 }
 
 // Blocks format
