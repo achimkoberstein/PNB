@@ -206,7 +206,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
         // cuts to zero
         oCut = 0;
         // Solve master problem
-        if(solveMaster() == -1){
+        int status = solveMaster();
+        if(status == -1){
             if (useRegularizedDecomposition_)
                 delete[] regSubproblemSolutionValues_;
             delete[] tempFirstStageSol;
@@ -269,6 +270,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
         }
         if ( useRegularizedDecomposition_) {
             // We should check for optimality here: If c^T x + z = c^T + Q(a) stop, a is optimal
+            // TODO: Improve on this, because otherwise reg. decomp runs forever..
             double xSolution = upperBound_;
             for (int i = 0; i < zSub_; i++){
                 xSolution += mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
@@ -366,6 +368,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             // In the first iteration the variables for the scenarios have 
             // the value -infinity, therefor the first cut(s) is(are) valid
             // We have to differentiate between multi and single cut..
+            // TODO: Important distinction here: we compare the SolutionValue of the current scenario subproblem with the approximation. If the solutionValue is greater than the approximation, we have to calculate an optimality cut, as the approximation is not good enough yet.
+            // Equally important: Compare apples with apples. Currently we compare the scenario subproblem value times its probability with the approximation factor for the subproblem where the probability is already priced in via the optimality constraints ( objCoef of approximation is 1 ).
             if( feasible && (single_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+scen_] || nIter_==nFeas ) ){
                 // Calculate an optimality cut; Input: number of optimality cuts
                 // which were calculate during the current iteration, number of
@@ -388,15 +392,18 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
             }
         }
+        // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
         // If current upper bound is less or equal than the old upper bound, update
         // the upper bound and the best feasible solution; the update takes plays 
         // only if there is no feasibility cut
-        if(feasible && upperBound_<=UB_){
+        if(status == 1 || (feasible && upperBound_<=UB_)){
             // Update the best feasible solution
             memcpy(bestSol_, bestSolTemp_, 
                 (mncol_+zSub_+sncol_*nScen_)*sizeof(double) );
             // Update the upper bound
             UB_ = upperBound_;
+            if (status == 1)
+                return;
         }
 
         // After solving all subproblems one or more optimality cuts will be}
@@ -405,11 +412,14 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
         // knapsack inequalities should be added, this method will derive one
         if( feasible && oCut>0 ){
             addOptiCut(oCut);
+            if ( appliedCuts_ == 0 ) {
+                // No optimality cuts were applied to the problem, albeit cuts should be generated.
+                // We reset oCut to zero to allow serious steps in the regularized decomposition method
+                oCut = 0;
+                DLOG(WARNING) << "Optimality cuts that should be generated were not applied to the problem. The violation is below ZEROTEST.";
+            }
         }
-        //
         if (feasible && useRegularizedDecomposition_){
-            
-
             // If no optimality cut was generated, we update the regularized solution a to x (exact serious step)
             if (oCut == 0){
                 seriousStep_ = true;
@@ -1456,7 +1466,7 @@ int Benders::solveMaster(){
             cout << e.what() << endl;
         }
     }
-    osiMaster_->writeLp("osiMaster");
+    //osiMaster_->writeLp("osiMaster");
 
     // If master problem is infeasible, print an error
     bool primalInfeasible = osiMaster_->isProvenPrimalInfeasible();
@@ -1465,46 +1475,10 @@ int Benders::solveMaster(){
     bool primalObjectiveLimit = osiMaster_->isPrimalObjectiveLimitReached();
     bool dualObjectiveLimit = osiMaster_->isDualObjectiveLimitReached();
     bool optimal = osiMaster_->isProvenOptimal();
-    if(osiMaster_->isProvenPrimalInfeasible() ) {
-
-        cout << "Error: master problem is infeasible or unbounded!" << endl;
-        return -1;
-    }
-    if ( osiMaster_->isProvenDualInfeasible()){
-        // We do not take an arbitrary feasible solution, but one on the unbounbed ray.
-        int* indices;
-        double* elements;
-
-        indices = new int[zSub_];
-        elements = new double[zSub_];
-        for (int i = 0; i < zSub_; i++) {
-            indices[0] = mncol_+i;
-            elements[0] = 1;
-        }        
-        osiMaster_->addRow(1,indices,elements,-infty_+ 1000000, infty_);
-        delete indices;
-        delete elements;
-        // Resolve problem
-        if (mnInt_)
-            osiMaster_->branchAndBound();
-        else
-            osiMaster_->resolve();
-        const double* colSolution = osiMaster_->getColSolution();
-        // get Primal Rays: solution might not be feasible for the master problem..
-        //std::vector<double*> primalRay = osiMaster_->getPrimalRays(1);
-        //osiMaster_->initialSolve();
-        cout << "Error: master problem is unbounded!" << endl;
-        //if ( nIter_ > 0)
-        //    return -1;
-    }
-    if (osiMaster_->isAbandoned()){
-        cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
-        return -1;
-    }
     // We have to find a suitable feasible solution if the problem is unbounded ?!?
 
     if (stat == 0 || stat == 1 || stat == 101 || stat == 102 ) { // Solution procuded using no reg. decomposition or optimal or mip-optimal or mip-optimal-gap
-        return 0;
+        // Everything alright
     }
     else if (stat == 4 || stat == 119 ) {
       // Resolve problem to get proper term code without presolve
@@ -1524,7 +1498,62 @@ int Benders::solveMaster(){
         DLOG_IF(ERROR,stat > 0) << "Cplex returned with error code " << stat;
     }
     else 
+        LOG(INFO) << "Cplex returned with error code " << stat;
+
+    if(osiMaster_->isProvenPrimalInfeasible() || stat == CPX_STAT_INFEASIBLE) {
+
+        cout << "Error: master problem is infeasible or unbounded!" << endl;
         return -1;
+    }
+    if ( osiMaster_->isProvenDualInfeasible()  || stat == CPX_STAT_UNBOUNDED){
+        // We do not take an arbitrary feasible solution, but one on the unbounbed ray.
+        int* indices;
+        double* elements;
+
+        indices = new int[zSub_];
+        elements = new double[zSub_];
+        for (int i = 0; i < zSub_; i++) {
+            indices[0] = mncol_+i;
+            elements[0] = 1;
+        }        
+        osiMaster_->addRow(1,indices,elements,-infty_+ 1000000, infty_);
+        delete indices;
+        delete elements;
+        // Resolve problem
+        if (mnInt_)
+            osiMaster_->branchAndBound();
+        else
+            osiMaster_->resolve();
+    }
+    if (osiMaster_->isAbandoned() ){
+        cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
+        return -1;
+    }
+    if (useRegularizedDecomposition_ && appliedCuts_ && checkCuts_){ // We check for validity of cuts here..
+        // Get Slack of constraints
+        double* slack = new double[appliedCuts_];
+        int status;
+        int curNumRows = CPXgetnumrows(envPtr,lpPtr)-1;
+        status = CPXgetslack (envPtr, lpPtr, slack, CPXgetnumrows(envPtr,lpPtr)-1-appliedCuts_, CPXgetnumrows(envPtr,lpPtr)-1);
+        DLOG_IF(ERROR,status) << "Cplex returned error code " << status << " while reading slack values for latest optimality cuts.";
+        std::vector<int> effectiveCuts;
+        bool continueSolving = false;
+        for (int i = 0; i < appliedCuts_; i++){
+            if ( slack[i] > ZEROTEST || slack[i] == 0) // Count all cuts that are either active or clearly inactive 
+                continueSolving = true;
+        }
+        //delete[] slack;
+        if (continueSolving)
+            checkCuts_ = false;
+        else 
+            return +1; // Compute solution values from this x and quit.
+        //if ( effectiveCuts.empty() ){ // We stop when all cuts we have are active ( equality )
+        //    // Latest optimality cuts are all equalities really
+        //    return -1;
+        //}
+
+    }
+    return 0;
 
     // ###################################################################################
     // End: solveMaster
@@ -2421,6 +2450,8 @@ void Benders::addOptiCut(int oCut){
     int *cutIndex = new int[mncol_+1];
     // Initialize RHS with zero
     double cutRowUB = 0;
+    // Reset appliedCut variable to zero
+    appliedCuts_ = 0;
     // In case of the single cut version, only one cut is calculated
     // If knapsack inequalities are used, calculate this cut with the
     // same coefficients like the ones of the single cut
@@ -2491,12 +2522,21 @@ void Benders::addOptiCut(int oCut){
             // Copy the cut and add it to the master problem
             memcpy(cutElements, cutElements_+index, (mncol_+1)*sizeof(double));
             memcpy(cutIndex, cutIndex_+index, (mncol_+1)*sizeof(int));
-            // We check the cut first
+            // We check the cut first (if it really cuts anything)
             double deviation = computeDeviation(cutIndex,cutElements, -cutRowUB_[i]);
-            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
-            // We have to change the coefficient in the master problem of the theta from 0 to the correct value
-            osiMaster_->setObjCoeff(cutIndex_[index+mncol_],1);
-            mdobj_[cutIndex_[index+mncol_]] = 1;
+            //double factor = computeCoefficientTest(mncol_+1,cutElements);
+            if (deviation < 1 ){
+                // We apply a test after solving the master..
+                checkCuts_ = true;
+            }
+            if (abs(deviation) > ZEROTEST){ // If cut would have no meaningfull effect on the solution, we do not apply it.
+                osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
+                // We have to change the coefficient in the master problem of the theta from 0 to the correct value
+                osiMaster_->setObjCoeff(cutIndex_[index+mncol_],1);
+                mdobj_[cutIndex_[index+mncol_]] = 1;
+                appliedCuts_++;
+            }
+
             //osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
             //mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[index+mncol_]-mncol_];
 
@@ -3390,17 +3430,24 @@ double Benders::computeDeviation( int* cutIndices, double* cutElements,double rh
 void Benders::relaxCut( CoinPackedVector& vec, double* rhs){}
 
 double Benders::computeCoefficientTest( CoinPackedVector& vec ){
+    return computeCoefficientTest( vec.getNumElements(), vec.getElements() );
+}
+
+double Benders::computeCoefficientTest( int length, const double* elements ){
     double max = -infty_;
     double min = infty_;
-    if (mncol_ == 0)
-        return 0;
-    for (int i = 0; i < mncol_+1; i++){
-        if ( bestSolTemp_[i] > max )
-            max = bestSolTemp_[i];
-        else if ( bestSolTemp_[i] < min )
-            min = bestSolTemp_[i];
+    if (length > 0){
+        max = abs(elements[0]);
+        for (int i = 1; i < length; i++){
+            if ( abs(elements[i]) > max )
+                max = abs(elements[i]);
+            if ( abs(elements[i]) > 0 && abs(elements[i]) < min )
+                min = abs(elements[i]);
+        }
     }
-    return abs(max)/abs(min);
+    if ( min != infty_ )
+        return max/min;
+    else return infty_;
 }
 
 Benders::~Benders(){
