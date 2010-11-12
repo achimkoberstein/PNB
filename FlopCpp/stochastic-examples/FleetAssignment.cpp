@@ -29,11 +29,11 @@ int main(int argc, char* argv[]) {
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     //VLDEnable();
 
-    SmiScnModel* smiModel = new SmiScnModel();
-    smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
-    smiModel->readSmps("fAFeasibleProblem",SmiCoreCombineReplace::Instance());
-    OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
-    benders2.initialSolve();
+    //SmiScnModel* smiModel = new SmiScnModel();
+    //smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
+    //smiModel->readSmps("fAFeasibleProblem",SmiCoreCombineReplace::Instance());
+    //OsiStochasticBendersTwoStageSolverInterface benders2(smiModel->getOsiSolverInterface(),smiModel);
+    //benders2.initialSolve();
     
     MP_model mod(new OsiCpxSolverInterface());
 
@@ -375,11 +375,11 @@ int main(int argc, char* argv[]) {
     demand.setName("demand");
     
     //subject to force_percentage_expected_demand_satisfaction 
-    MP_constraint percentDemandSat(ST,A,A2);
-    ////TODO: summe über alle d()
-    percentDemandSat(ST+1,A,A2) = x_min() * d(ST+1,A,A2) <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
-    //percentDemandSat(ST+1,A,A2) = 0 <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
-    percentDemandSat.setName("percentDemandSat");
+    //MP_constraint percentDemandSat(ST,A,A2);
+    //////TODO: summe über alle d()
+    //percentDemandSat(ST+1,A,A2) = x_min() * d(ST+1,A,A2) <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    ////percentDemandSat(ST+1,A,A2) = 0 <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    //percentDemandSat.setName("percentDemandSat");
 
     //max_aircraft_capacity
     MP_constraint maxAircraftCapacity(ST,A,A2);
@@ -412,7 +412,7 @@ int main(int argc, char* argv[]) {
     );
 
     mod.attach(mod.Solver);
-    //mod.getSmi()->writeSmps("fAFeasibleProblem",true,true);
+    mod.getSmi()->writeSmps("fA",true,true);
     mod.solve(MP_model::MINIMIZE);
     buy_hedge.display("buy_hedge");
     jet_fuel_consumption.display("jet_fuel_consumption");
