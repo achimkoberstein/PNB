@@ -29,6 +29,7 @@ enum SmiSectionType { SMI_NO_SECTION, SMI_NAME_SECTION,
 					  SMI_TIME_SECTION, 
 					SMI_SCENARIOS_SECTION, 
 					SMI_INDEPENDENT_SECTION,
+					SMI_BLOCKS_SECTION,
 					  SMI_UNKNOWN_SECTION
 };
 
@@ -49,6 +50,7 @@ public:
 	  inline const char *periodName (  ) const {return periodName_;}
 	  inline const char *scenarioNew (  ) const {return columnName_;}
 	  inline const char *scenarioAnc (  ) const {return rowName_;}
+	  inline const char *blockName (  ) const {return columnName_;}
 
 	  inline double getProb(){ return prob_;}
 
@@ -134,7 +136,7 @@ private:
 	int nstag_;
 	int *cstag_;
 	int *rstag_;
-    double solverInf_;
+        double solverInf_;
 
 	bool iftime,ifstoch;
 	SmiSmpsCardReader *smpsCardReader_;
