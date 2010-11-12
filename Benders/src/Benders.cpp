@@ -20,6 +20,7 @@
 #include "OsiSolverInterface.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "CoinError.hpp"
+#include <CoinTime.hpp>
 #include "CoinPackedVector.hpp"
 #include "SmiScnModel.hpp"
 #include "CoinPackedMatrix.hpp"
@@ -1360,6 +1361,7 @@ int Benders::solveMaster(){
         // Else solve via branch and bound
         else{
             if (useRegularizedDecomposition_){
+                //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.015); TODO: Set param for reg. decomp. relative gap
                 CPXmipopt(envPtr,lpPtr);
                 int stat = CPXgetstat( envPtr, lpPtr );
                 DLOG_IF(ERROR,stat > 0) << "Cplex returned with " << stat;
@@ -1429,6 +1431,8 @@ int Benders::solveMaster(){
             // Else solve via branch and bound
             else{
                 if (useRegularizedDecomposition_){
+                    //TODO: Set param for reg. decomp. relative gap
+                    //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
                     CPXmipopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
@@ -1531,6 +1535,9 @@ int Benders::solveMaster(){
         // Else solve via branch and bound
         else{
             if (useRegularizedDecomposition_){
+                // we already have a relative gap, we can use that as the mip-gap?
+                //TODO: Set param for reg. decomp. relative gap
+                //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
                 CPXmipopt(envPtr,lpPtr);
                 stat = CPXgetstat( envPtr, lpPtr );
                 DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
@@ -1546,7 +1553,7 @@ int Benders::solveMaster(){
             cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
             return -1;
     }
-        // Test for solution value
+
         return 0;
         //const double* solValues = osiMaster_->getColSolution();
         //DLOG(INFO) << osiMaster_->getObjValue();
@@ -2220,7 +2227,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     }
     osiSubproblem_->loadProblem(*matrix, combdclo_, combdcup_, combdobj_, combdrlo_, combdrup_);
     // Parameter: use dual simplex
-    osiSubproblem_->writeLp("osiSub");
+    //osiSubproblem_->writeLp("osiSub");
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
     osiSubproblem_->setObjSense(1.0); // we minimize the subproblems
     // In the first iteration there are no warmstart informations
@@ -3683,6 +3690,7 @@ Benders::~Benders(){
         delete [] combrstrt_;
     if(comblen_)
         delete [] comblen_;
+    //TODO: delete reg. decomp. stuff
 }
 
 void Benders::appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatrix &matrix ){
@@ -3722,7 +3730,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         double relEps = 0.0001;
         double absEps = 0.01;
         bool useBenders = true;
-        bool useRegularized = false;
+        bool useRegularized = true;
         bool single = false;
         bool knapsack = false;
         bool trustRegion = false;
@@ -3755,23 +3763,28 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         if (!warmStart)
             warmStartStr = "-ws";
 
-
+        // We want to store the time necessary to solve the problem
+        double time = CoinCpuTime();
         benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str());
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
-        OsiCpxSolverInterface* osiCpxPtr = new OsiCpxSolverInterface();
-        CPXLPptr lpPtr = osiCpxPtr->getLpPtr();
-        CPXENVptr envPtr = osiCpxPtr->getEnvironmentPtr();
-        CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.06);
-        std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1); // 1 for minimization
-        // copy initial values for regularized decomposition
-        if (useRegularized){
+        if ( useRegularized ){
+            OsiCpxSolverInterface* osiCpxPtr = new OsiCpxSolverInterface();
+            CPXLPptr lpPtr = osiCpxPtr->getLpPtr();
+            CPXENVptr envPtr = osiCpxPtr->getEnvironmentPtr();
+            // TODO: Set Relative MIPGAP with param via param setting function, if not given, do not change, so not apply.
+            CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
+            std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1); // 1 for minimization
+            delete osiCpxPtr;
+            // copy initial values for regularized decomposition
+
             benders->setInitialSolution(evResult.second);
         }
         if (useBenders)
             benders->BendersSolve(absEps,relEps, maxIt );
         else
             benders->detEq();
+        LOG(INFO) << "Solution time (WallClock): " << CoinCpuTime()-time << "s.";
     }
     else {
         std::cout << "SmiScnModel not initialized." << std::endl;
