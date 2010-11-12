@@ -1,4 +1,5 @@
 #include "SmiDiscreteDistribution.hpp"
+#include "SmiBlockStructure.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiScnModel.hpp"
 #include "SmiSmpsIO.hpp"
@@ -1290,6 +1291,15 @@ void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &ds
         delt1[dfirst.findIndex(indx2[j])] = delt2[j];
 }
 
+
+void
+SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure *smiBS){
+	cout<<"ProcessBlocksIntoScenarios"<<endl;
+	combineBlocks(smiBS);
+	
+
+}
+
 void
 SmiScnModel::processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *smiDD, bool test)
 
@@ -1611,7 +1621,94 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     return (stg+1 - start_stg);
 }
 
+ void SmiScnModel::combineBlocks(SmiBlockStructure* smiBS){
+	int nBlocks = smiBS->getNumBlocks();
+	cout<<nBlocks<<endl;
+	SmiScenarioIndex is;
+	SmiCoreData *core = smiBS->getCore();
+	SmiCoreCombineRule *r = smiBS->getCombineWithCoreRule();
+	if(nBlocks==0) return;
+	if(nBlocks==1){
+		SmiBlock *block = smiBS->getBlock(0);
+		cout<<"Anzahl Events "<<block->getNumEvents()<<endl;
+		for(size_t i=0; i < block->getNumEvents();i++){
+			CoinPackedVector dobj = block->getBlockEventObjective(i);
+			CoinPackedVector dclo = block->getBlockEventColLower(i);
+			CoinPackedVector dcup = block->getBlockEventColUpper(i);
+			CoinPackedVector drlo = block->getBlockEventRowLower(i);
+			CoinPackedVector drup = block->getBlockEventRowUpper(i);
+			CoinPackedMatrix matrix = block->getBlockEventMatrix(i);
+			SmiScenarioIndex branch = block->getStage();
+			SmiScenarioIndex anc = 0;
+			double prob = block->getBlockEventProb(i);
 
+			is = this->generateScenario(core,&matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,r);
+		}
+	}
+	else{
+		SmiBlock* combBlock = new SmiBlock(1);
+		CoinPackedVector combdobj;
+		CoinPackedVector combdclo;
+		CoinPackedVector combdcup;
+		CoinPackedVector combdrlo;
+		CoinPackedVector combdrup;
+		CoinPackedMatrix combmatrix;
+		SmiBlock* block1 = smiBS->getBlock(nBlocks-1);
+		SmiBlock* block2 = smiBS->getBlock(nBlocks-2);
+		double combprob;
+		
+		for(size_t i=0;i<block1->getNumEvents();i++){
+			for(size_t j=0;j<block2->getNumEvents();j++){
+				combdobj = block1->getBlockEventObjective(i);
+				combdclo = block1->getBlockEventColLower(i);
+				combdcup = block1->getBlockEventColUpper(i);
+				combdrlo = block1->getBlockEventRowLower(i);
+				combdrup = block1->getBlockEventRowUpper(i);
+				combmatrix = block1->getBlockEventMatrix(i);
+				CoinPackedVector dobj2 = block2->getBlockEventObjective(j);
+				CoinPackedVector dclo2 = block2->getBlockEventColLower(j);
+				CoinPackedVector dcup2 = block2->getBlockEventColUpper(j);
+				CoinPackedVector drlo2 = block2->getBlockEventRowLower(j);
+				CoinPackedVector drup2 = block2->getBlockEventRowUpper(j);
+				CoinPackedMatrix matrix2 = block2->getBlockEventMatrix(j);
+				for(int k=0;k<dobj2.getNumElements();k++){
+					int* ind = dobj2.getIndices();
+					double* elem = dobj2.getElements(); 
+					combdobj.insert(ind[k],elem[k]);
+				}
+				for(int k=0;k<dclo2.getNumElements();k++){
+					int* ind = dclo2.getIndices();
+					double* elem = dclo2.getElements(); 
+					combdclo.insert(ind[k],elem[k]);
+				}
+				for(int k=0;k<dcup2.getNumElements();k++){
+					int* ind = dcup2.getIndices();
+					double* elem = dcup2.getElements(); 
+					combdcup.insert(ind[k],elem[k]);
+				}
+				for(int k=0;k<drlo2.getNumElements();k++){
+					int* ind = drlo2.getIndices();
+					double* elem = drlo2.getElements(); 
+					combdrlo.insert(ind[k],elem[k]);
+				}
+				for(int k=0;k<drup2.getNumElements();k++){
+					int* ind = drup2.getIndices();
+					double* elem = drup2.getElements(); 
+					combdrup.insert(ind[k],elem[k]);
+				}
+				for(int k=0;k<matrix2.getNumRows();k++){
+					for(int l=0;l<matrix2.getNumCols();l++)
+						if(matrix2.getCoefficient(k,l)!=0)
+							combmatrix.modifyCoefficient(k,l,matrix2.getCoefficient(k,l));
+				}
+				combprob = block1->getBlockEventProb(i)*block2->getBlockEventProb(j);
+				combBlock->addBlockEvent(combmatrix,combdclo,combdcup,combdobj,combdrlo,combdrup,combprob);
 
-
-
+			}
+		}
+		smiBS->deleteSmiBlock();
+		smiBS->deleteSmiBlock();
+		smiBS->addSmiBlock(combBlock);
+		combineBlocks(smiBS);
+	}
+}
