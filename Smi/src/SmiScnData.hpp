@@ -244,8 +244,8 @@ public:
 
 	inline SmiNodeData * getNode(SmiStageIndex t){return nodes_[t];}
 
-	inline void setColumnNames(char** namesStrict, char** namesFree) { this->colNamesStrict = namesStrict; this->colNamesFree = namesFree; }
-	inline char** getColumnNames(bool strictFormat = true) { if (strictFormat) return this->colNamesStrict; else return this->colNamesFree; }
+	inline void setColumnNames(std::vector<std::string> namesStrict, std::vector<std::string> namesFree) { this->colNamesStrict = namesStrict; this->colNamesFree = namesFree; }
+	inline const std::vector<std::string> * getColumnNames(bool strictFormat = true) { if (strictFormat) return &colNamesStrict; else return &colNamesFree; }
 
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
@@ -289,8 +289,8 @@ private:
 	vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
 	vector<double *> pDenseRow_; //dense probability vector
 	vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
-	char **colNamesStrict;
-	char **colNamesFree;
+	std::vector<std::string> colNamesStrict;
+	std::vector<std::string> colNamesFree;
 };
 
 #endif //#define SmiScnData_HPP

@@ -1172,8 +1172,9 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     delete [] dels;
     delete [] indx;
     delete [] rstrt;
-       
-    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, this->core->getColumnNames(strictFormat), NULL);
+    
+    const std::vector<std::string> vec; //dummy
+    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, *(this->core->getColumnNames(strictFormat)), vec);
 
     delete [] clo;
     delete [] cup;

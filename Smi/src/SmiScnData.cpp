@@ -324,15 +324,6 @@ SmiCoreData::~SmiCoreData()
     for (int ijk=0; ijk<nodes_.size(); ijk++){
 	  delete nodes_[ijk];
     }
-
-    if (colNamesStrict != NULL && colNamesFree != NULL) {
-        for (int i = 0; i < this->getNumCols(); i++) {
-            delete [] colNamesStrict[i];
-            delete [] colNamesFree[i];
-        }
-        delete [] colNamesStrict;
-        delete [] colNamesFree;
-    }
 }
 
 void
