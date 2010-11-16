@@ -216,7 +216,7 @@ std::string to_string(const int i) {
     return ss.str();
 }
 
-void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, char **colNamesStrict, char **colNamesFree) {
+void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, std::vector<std::string> &colNamesStrict, std::vector<std::string> &colNamesFree) {
     // we start with the names for the the free-type
     string nameFree;
     
@@ -243,7 +243,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
     // generate the names with the suffixes for every instance of this variable and copy them into the array
     for (int k = 0; k < size(); k++) {
         string free = nameFree + this->generateNamesSuffixFree(k);
-        colNamesFree[offset+k] = CoinStrdup(free.c_str());
+        colNamesFree.push_back(CoinStrdup(free.c_str()));
     }
 
 
@@ -255,7 +255,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
         nameStrict = nameFree;
         nameSetStrict.insert(nameStrict);
         for (int k = 0; k < size(); k++) {
-            colNamesStrict[offset+k] = CoinStrdup(colNamesFree[offset+k]);
+            colNamesStrict.push_back(colNamesFree[offset+k]);
         }
     }
     else {
@@ -288,7 +288,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             //fill the array
             for (int k = 0; k < size(); k++) {
                 string strict = nameStrict + "_" + to_string(k);
-                colNamesStrict[offset+k] = CoinStrdup(strict.c_str());
+                colNamesStrict.push_back(CoinStrdup(strict.c_str()));
             }
         }
     }
