@@ -19,6 +19,96 @@
 
 using namespace flopc;
 
+void writeSolutionInfoDetEq(OsiSolverInterface *osiSolver, const char *name, const double &duration) {
+    string filename = name;
+    filename = filename.append(".txt");
+    ofstream ofs;
+    ofs.open(filename.c_str(), std::ios::app);
+    ofs << "Obj. Value: " << osiSolver->getObjValue() << endl;
+    ofs << "Duration (secs): " << duration << endl;
+    ofs << "-------------------------" << endl;
+    ofs.close();
+}
+
+void writeSolutionInfo(OsiStochasticBendersTwoStageSolverInterface &benders, const char *name) {
+    string filename = name;
+    filename = filename.append(".txt");
+    ofstream ofs;
+    ofs.open(filename.c_str(), std::ios::app);
+    ofs << "Obj. Value: " << benders.getObjValue() << endl;
+    ofs << "Duration (secs): " << benders.getSolutionTime() << endl;
+    ofs << "Iterations: " << benders.getNumIterations() << endl;
+    ofs << "Multicut: " << benders.getIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI) << endl;
+    ofs << "Trustregion: " << benders.getIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION) << endl;
+    ofs << "Regularized: " << benders.getIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED) << endl;
+    ofs << "-------------------------" << endl;
+    ofs.close();
+}
+
+void solveFromSMPS(const char *name) {
+    SmiScnModel* smiModel = new SmiScnModel();
+    smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
+    smiModel->readSmps(name,SmiCoreCombineReplace::Instance());
+    
+    // solve the det. equivalent
+    OsiSolverInterface *osiStoch = smiModel->loadOsiSolverData();
+    osiStoch->setObjSense(MP_model::MINIMIZE);
+    double begin = CoinCpuTime();
+    osiStoch->branchAndBound();
+    double duration = CoinCpuTime() - begin;
+    writeSolutionInfoDetEq(osiStoch, name, duration);
+    
+    OsiStochasticBendersTwoStageSolverInterface benders(smiModel->getOsiSolverInterface(),smiModel);
+
+    // solve with benders (and different parameters)
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.initialSolve();
+    //writeSolutionInfo(benders, name);
+
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 0);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.initialSolve();
+    //writeSolutionInfo(benders, name);
+
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       0);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.initialSolve();
+    //writeSolutionInfo(benders, name);
+    
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       0);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 0);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+    
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
+    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.initialSolve();
+    //writeSolutionInfo(benders, name);
+    
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 0);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+    
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       0);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+    
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
+    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+}
 
 void lh6_10x10() {
     MP_model mod(new OsiCpxSolverInterface());
@@ -1216,9 +1306,16 @@ int main(int argc, char* argv[]) {
     //VLDEnable();
     
     //lh12();
+    
+    // write smps files
     lh6_1x1();
     lh6_4x4();
     lh6_10x10();
+
+    // solve smps files
+    solveFromSMPS("fa1x1");
+    solveFromSMPS("fa4x4");
+    solveFromSMPS("fa10x10");
     
     return 0;
 }
