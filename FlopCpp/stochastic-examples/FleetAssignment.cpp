@@ -19,15 +19,794 @@
 
 using namespace flopc;
 
-int main(int argc, char* argv[]) {
 
-    /*VLDDisable();*/
-    google::InitGoogleLogging(argv[0]);
-    FLAGS_minloglevel = 0;
-    google::SetLogDestination(1, "log");
-    google::LogToStderr();
-    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
-    //VLDEnable();
+void lh6_10x10() {
+    MP_model mod(new OsiCpxSolverInterface());
+
+    // Anzahl Stufen
+    enum { numST=2};
+    MP_stage ST(numST);
+    ST.setName("ST");
+
+    // Anzahl Szenarien
+    enum { numScen=10};
+    MP_scenario_set scen(numScen);
+    scen.setName("scen");
+
+    // Airports (4 mal nötig für Variablen und Constraints)
+    enum { FRA, HAM, MUC, DRS, HAJ, STR, numA};
+    MP_set A(numA);
+    A.setName("A");
+    MP_set A2(numA);
+    A2.setName("A2");
+    MP_set A3(numA);
+    A3.setName("A3");
+    MP_set A4(numA);
+    A4.setName("A4");       
+
+    // Flugzeugtypen
+    enum { A320, A340, A380, numT};
+    MP_set T(numT);
+    T.setName("T");
+
+    // Entfernungen
+    double distance[numA][numA] =
+    {
+        {0,413,300,388,282,157},
+        {413,0,600,378,132,553},
+        {300,600,0,340,480,194},
+        {388,378,340,0,317,425},
+        {282,132,480,317,0,421},
+        {157,553,194,425,421,0}
+    };
+    MP_data dist(&distance[0][0], A, A2);
+    dist.setName("dist");
+
+    // Verkaufspreis für einen Flug
+    MP_data p(A, A2);
+    forall(A*A2, p(A,A2) = dist(A,A2) * 0.07);
+    p.setName("p");
+
+    // discountfactor
+    MP_data dcf;
+    dcf() = 1.0;
+    dcf.setName("dcf");
+
+    // Rabatt für Passagiere die nicht non-stop fliegen
+    MP_data pd;
+    pd() = 0.1;
+    pd.setName("pd");
+
+    // maximale Kapazität je Flugzeugtyp
+    double maxCapacity[numT] = { 150, 250, 500 };
+    MP_data m(&maxCapacity[0], T);
+    m.setName("m");
+
+    // Kerosinverbrauch je Flugzeugtyp
+    double kerosinConsumption[numT] = { 6.75, 10, 17.5 };
+    MP_data cons(&kerosinConsumption[0], T);
+    cons.setName("cons");
+
+    // Kosten pro KM je Flugzeugtyp
+    double costPerKM[numT] = { 10.125, 11.25, 18 };
+    MP_data cpm(&costPerKM[0], T);
+    cpm.setName("cpm");
+
+    // maximale Reichweite je Flugzeugtyp
+    double maxRange[numT] = { 5500, 14000, 14000 };
+    MP_data r(&maxRange[0], T);
+    r.setName("r");
+
+    // maximale Flüge je Flugzeugtyp
+    double maxFlights[numT] = { 1e10, 1e10, 1e10};
+    MP_data ub(&maxFlights[0], T);
+    ub.setName("ub");
+
+    // Nachfrage
+    double stochasticDemand[numST-1][numA][numA][numScen] =
+{
+	{
+		{
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1638, 1243, 1266, 1505, 1165, 1626, 1650, 1585, 1516, 1649},
+			{1344, 1200, 1341, 994, 1181, 1278, 820, 1051, 1016, 1127},
+			{416, 372, 581, 518, 427, 445, 514, 498, 513, 524},
+			{163, 161, 179, 180, 178, 225, 172, 154, 187, 170},
+			{102, 123, 106, 102, 124, 137, 101, 119, 95, 107}
+		},
+		{
+			{2007, 1917, 1823, 2279, 1286, 1478, 1608, 1795, 1469, 1780},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1449, 2364, 2245, 1888, 2060, 1576, 2503, 2328, 1847, 1929},
+			{94, 70, 101, 89, 58, 71, 79, 69, 61, 99},
+			{7, 10, 10, 10, 7, 10, 11, 8, 10, 11},
+			{1032, 1196, 1950, 1448, 1015, 2198, 1918, 1587, 1467, 1731}
+		},
+		{
+			{923, 1152, 1144, 1122, 1304, 1113, 1365, 1078, 1046, 1170},
+			{1937, 2730, 1749, 2157, 1972, 1947, 1957, 2392, 1760, 2067},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{235, 219, 264, 229, 273, 246, 282, 305, 322, 229},
+			{567, 688, 492, 615, 383, 585, 720, 767, 534, 614},
+			{41, 44, 39, 38, 38, 40, 35, 30, 44, 44}
+		},
+		{
+			{533, 592, 475, 455, 450, 238, 443, 383, 506, 468},
+			{121, 72, 86, 93, 97, 82, 102, 108, 75, 79},
+			{255, 251, 181, 264, 171, 246, 257, 275, 326, 292},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{301, 235, 272, 348, 286, 279, 230, 304, 308, 367}
+		},
+		{
+			{144, 182, 110, 155, 149, 158, 130, 119, 186, 161},
+			{7, 9, 10, 12, 11, 11, 13, 9, 9, 10},
+			{480, 691, 631, 548, 768, 542, 498, 495, 539, 582},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{399, 444, 294, 255, 340, 343, 349, 208, 327, 326}
+		},
+		{
+			{84, 109, 86, 98, 88, 105, 79, 117, 81, 82},
+			{1768, 1331, 1427, 1953, 1258, 1948, 1559, 1573, 1375, 1781},
+			{30, 39, 49, 48, 42, 36, 38, 29, 29, 53},
+			{310, 297, 275, 283, 282, 272, 363, 310, 249, 289},
+			{325, 334, 273, 311, 361, 293, 409, 333, 403, 320},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+		}
+	}
+};
+    MP_random_data d(&stochasticDemand[0][0][0][0], ST, A, A2);
+    d.setName("d");
+
+    // minimale Nachfrageerfüllung
+    MP_data x_min;
+    x_min() = 0.5;
+    x_min.setName("x_min");
+
+    // Kerosinpreise
+    double kerosinPrice[numST-1][numScen] = { {0.055, 0.11, 0.165, 0.275, 0.4125, 0.55, 0.6875, 0.825, 1.045, 1.375} };
+    MP_random_data k_price(&kerosinPrice[0][0], ST);
+    k_price.setName("k_price");
+
+    // forwared jet fuel price
+    MP_data f_price;
+    f_price() = 0.55;
+    f_price.setName("f_price");
+
+    // margin for forwarded jet fuel price
+    MP_data f_price_margin;
+    f_price_margin() = 10;
+    f_price_margin.setName("f_price_margin");
+
+
+    /////// VARIABLES
+
+    MP_variable y(A,A2,T);
+    y.integer();
+    for (int i = 0; i < numA; i++) {
+        for (int j = 0; j < numA; j++) {
+            for (int k = 0; k < numT; k++) {
+                if (i == j || dist(i,j) > r(k)) {
+                    y.upperLimit(i,j,k) = 0;
+                }
+            }
+        }
+    }
+    y.setName("y");
+
+    MP_variable x0(ST,A,A2);
+    MP_variable x1(ST,A,A3,A2);
+    MP_variable x2(ST,A,A3,A4,A2);
+    for (int i = 0; i < numA; i++) {
+        for (int j = 0; j < numA; j++) {
+            if (i == j) {
+                x0.upperLimit(1,i,j) = 0;
+            }
+            for (int k = 0; k < numA; k++) {
+                if (i == j || i == k || j == k) {
+                    x1.upperLimit(1,i,k,j) = 0;
+                }
+                for (int l = 0; l < numA; l++) {
+                    if (i == j || i == k || i == l || j == k || j == l || k == l) {
+                        x2.upperLimit(1,i,k,l,j) = 0;
+                    }
+                }
+            }
+        }
+    }
+    x0.setName("x0");
+    x1.setName("x1");
+    x2.setName("x2");
+
+    MP_variable buy_stoch(ST), buy_hedge, jet_fuel_consumption;
+    buy_stoch.setName("buy_stoch");
+    buy_hedge.setName("buy_hedge");
+    jet_fuel_consumption.setName("jet_fuel_consumption");
+    //jet_fuel_consumption.lowerLimit() = 2954400;
+    jet_fuel_consumption.lowerLimit() = 0;
+
+
+    ////// CONSTRAINTS
+
+    //demand
+    MP_constraint demand(ST,A,A2);
+    demand(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2)) <= d(ST+1,A,A2);
+    demand.setName("demand");
+    
+    //subject to force_percentage_expected_demand_satisfaction 
+    //MP_constraint percentDemandSat(ST,A,A2);
+    //////TODO: summe über alle d()
+    //percentDemandSat(ST+1,A,A2) = x_min() * d(ST+1,A,A2) <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    ////percentDemandSat(ST+1,A,A2) = 0 <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    //percentDemandSat.setName("percentDemandSat");
+
+    //max_aircraft_capacity
+    MP_constraint maxAircraftCapacity(ST,A,A2);
+    maxAircraftCapacity(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A2,A3) + x1(ST+1,A3,A,A2) + sum(A4, x2(ST+1,A,A2,A3,A4) + x2(ST+1,A3,A,A2,A4) + x2(ST+1,A3,A4,A,A2))) <= sum(T, m(T) * y(A,A2,T));
+    maxAircraftCapacity.setName("maxAircraftCapacity");
+    
+    //ub for airlcraft types{t in T}: sum{i in A, j in A}(y[i,j,t])<=ub[t];
+    MP_constraint availableAircrafts(T);
+    availableAircrafts(T) = sum(A*A2, y(A,A2,T)) <= ub(T);
+    availableAircrafts.setName("availableAircrafts");
+
+    //buy_jet_fuel: buy_stoch + buy_hedge = jet_fuel_consumption;
+    MP_constraint buyJetFuel(ST);
+    buyJetFuel(ST+1) = buy_stoch(ST+1) + buy_hedge() == jet_fuel_consumption();
+    buyJetFuel.setName("buyJetFuel");
+    
+    //fuel consumption
+    MP_constraint fuelConsumption;
+    //fuelConsumption() = sum(A*A2*T, y(A,A2,T) * dist(A,A2) * cons(T)) == jet_fuel_consumption();
+    fuelConsumption() = sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cons(T))) == jet_fuel_consumption();
+    fuelConsumption.setName("fuelConsumption");
+
+
+    /////// OBJECTIVE
+
+    mod.setObjective(
+          (buy_stoch(ST+1) * k_price(ST+1) + buy_hedge() * f_price() * (1 + (f_price_margin() / 100))) //fuel costs
+        + (sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cpm(T)))) //operationcost
+        - (sum(A*A2, p(A,A2) * dcf() * (x0(ST+1,A,A2) + (1 - pd()) * sum(A3, x1(ST+1,A,A3,A2)) + (1 - 2*pd()) * sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue
+        + (sum(A*A2, 2 * dcf() * (x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue fix
+    );
+
+    mod.attach(mod.Solver);
+    mod.getSmi()->writeSmps("fa10x10",true,true);
+    //mod.solve(MP_model::MINIMIZE);
+  
+
+    //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
+    //benders.initialSolve();
+}
+
+void lh6_4x4() {
+    MP_model mod(new OsiCpxSolverInterface());
+
+    // Anzahl Stufen
+    enum { numST=2};
+    MP_stage ST(numST);
+    ST.setName("ST");
+
+    // Anzahl Szenarien
+    enum { numScen=4};
+    MP_scenario_set scen(numScen);
+    scen.setName("scen");
+
+    // Airports (4 mal nötig für Variablen und Constraints)
+    enum { FRA, HAM, MUC, DRS, HAJ, STR, numA};
+    MP_set A(numA);
+    A.setName("A");
+    MP_set A2(numA);
+    A2.setName("A2");
+    MP_set A3(numA);
+    A3.setName("A3");
+    MP_set A4(numA);
+    A4.setName("A4");       
+
+    // Flugzeugtypen
+    enum { A320, A340, A380, numT};
+    MP_set T(numT);
+    T.setName("T");
+
+    // Entfernungen
+    double distance[numA][numA] =
+    {
+        {0,413,300,388,282,157},
+        {413,0,600,378,132,553},
+        {300,600,0,340,480,194},
+        {388,378,340,0,317,425},
+        {282,132,480,317,0,421},
+        {157,553,194,425,421,0}
+    };
+    MP_data dist(&distance[0][0], A, A2);
+    dist.setName("dist");
+
+    // Verkaufspreis für einen Flug
+    MP_data p(A, A2);
+    forall(A*A2, p(A,A2) = dist(A,A2) * 0.07);
+    p.setName("p");
+
+    // discountfactor
+    MP_data dcf;
+    dcf() = 1.0;
+    dcf.setName("dcf");
+
+    // Rabatt für Passagiere die nicht non-stop fliegen
+    MP_data pd;
+    pd() = 0.1;
+    pd.setName("pd");
+
+    // maximale Kapazität je Flugzeugtyp
+    double maxCapacity[numT] = { 150, 250, 500 };
+    MP_data m(&maxCapacity[0], T);
+    m.setName("m");
+
+    // Kerosinverbrauch je Flugzeugtyp
+    double kerosinConsumption[numT] = { 6.75, 10, 17.5 };
+    MP_data cons(&kerosinConsumption[0], T);
+    cons.setName("cons");
+
+    // Kosten pro KM je Flugzeugtyp
+    double costPerKM[numT] = { 10.125, 11.25, 18 };
+    MP_data cpm(&costPerKM[0], T);
+    cpm.setName("cpm");
+
+    // maximale Reichweite je Flugzeugtyp
+    double maxRange[numT] = { 5500, 14000, 14000 };
+    MP_data r(&maxRange[0], T);
+    r.setName("r");
+
+    // maximale Flüge je Flugzeugtyp
+    double maxFlights[numT] = { 1e10, 1e10, 1e10};
+    MP_data ub(&maxFlights[0], T);
+    ub.setName("ub");
+
+    // Nachfrage
+    double stochasticDemand[numST-1][numA][numA][numScen] =
+{
+	{
+		{
+			{0, 0, 0, 0},
+			{1638, 1243, 1266, 1505},
+			{1344, 1200, 1341, 994},
+			{416, 372, 581, 518},
+			{163, 161, 179, 180},
+			{102, 123, 106, 102}
+		},
+		{
+			{2007, 1917, 1823, 2279},
+			{0, 0, 0, 0},
+			{1449, 2364, 2245, 1888},
+			{94, 70, 101, 89},
+			{7, 10, 10, 10},
+			{1032, 1196, 1950, 1448}
+		},
+		{
+			{923, 1152, 1144, 1122},
+			{1937, 2730, 1749, 2157},
+			{0, 0, 0, 0},
+			{235, 219, 264, 229},
+			{567, 688, 492, 615},
+			{41, 44, 39, 38}
+		},
+		{
+			{533, 592, 475, 455},
+			{121, 72, 86, 93},
+			{255, 251, 181, 264},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{301, 235, 272, 348}
+		},
+		{
+			{144, 182, 110, 155},
+			{7, 9, 10, 12},
+			{480, 691, 631, 548},
+			{0, 0, 0, 0},
+			{0, 0, 0, 0},
+			{399, 444, 294, 255}
+		},
+		{
+			{84, 109, 86, 98},
+			{1768, 1331, 1427, 1953},
+			{30, 39, 49, 48},
+			{310, 297, 275, 283},
+			{325, 334, 273, 311},
+			{0, 0, 0, 0}
+		}
+	}
+};
+    MP_random_data d(&stochasticDemand[0][0][0][0], ST, A, A2);
+    d.setName("d");
+
+    // minimale Nachfrageerfüllung
+    MP_data x_min;
+    x_min() = 0.5;
+    x_min.setName("x_min");
+
+    // Kerosinpreise
+    //double kerosinPrice[numST-1][numScen] = { {0.055, 0.11, 0.165, 0.275, 0.4125, 0.55, 0.6875, 0.825, 1.045, 1.375} };
+    double kerosinPrice[numST-1][numScen] = { {0.11, 0.4125, 0.6875, 0.99} };
+    MP_random_data k_price(&kerosinPrice[0][0], ST);
+    k_price.setName("k_price");
+
+    // forwared jet fuel price
+    MP_data f_price;
+    f_price() = 0.55;
+    f_price.setName("f_price");
+
+    // margin for forwarded jet fuel price
+    MP_data f_price_margin;
+    f_price_margin() = 10;
+    f_price_margin.setName("f_price_margin");
+
+
+    /////// VARIABLES
+
+    MP_variable y(A,A2,T);
+    y.integer();
+    for (int i = 0; i < numA; i++) {
+        for (int j = 0; j < numA; j++) {
+            for (int k = 0; k < numT; k++) {
+                if (i == j || dist(i,j) > r(k)) {
+                    y.upperLimit(i,j,k) = 0;
+                }
+            }
+        }
+    }
+    y.setName("y");
+
+    MP_variable x0(ST,A,A2);
+    MP_variable x1(ST,A,A3,A2);
+    MP_variable x2(ST,A,A3,A4,A2);
+    for (int i = 0; i < numA; i++) {
+        for (int j = 0; j < numA; j++) {
+            if (i == j) {
+                x0.upperLimit(1,i,j) = 0;
+            }
+            for (int k = 0; k < numA; k++) {
+                if (i == j || i == k || j == k) {
+                    x1.upperLimit(1,i,k,j) = 0;
+                }
+                for (int l = 0; l < numA; l++) {
+                    if (i == j || i == k || i == l || j == k || j == l || k == l) {
+                        x2.upperLimit(1,i,k,l,j) = 0;
+                    }
+                }
+            }
+        }
+    }
+    x0.setName("x0");
+    x1.setName("x1");
+    x2.setName("x2");
+
+    MP_variable buy_stoch(ST), buy_hedge, jet_fuel_consumption;
+    buy_stoch.setName("buy_stoch");
+    buy_hedge.setName("buy_hedge");
+    jet_fuel_consumption.setName("jet_fuel_consumption");
+    //jet_fuel_consumption.lowerLimit() = 2954400;
+    jet_fuel_consumption.lowerLimit() = 0;
+
+
+    ////// CONSTRAINTS
+
+    //demand
+    MP_constraint demand(ST,A,A2);
+    demand(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2)) <= d(ST+1,A,A2);
+    demand.setName("demand");
+    
+    //subject to force_percentage_expected_demand_satisfaction 
+    //MP_constraint percentDemandSat(ST,A,A2);
+    //////TODO: summe über alle d()
+    //percentDemandSat(ST+1,A,A2) = x_min() * d(ST+1,A,A2) <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    ////percentDemandSat(ST+1,A,A2) = 0 <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    //percentDemandSat.setName("percentDemandSat");
+
+    //max_aircraft_capacity
+    MP_constraint maxAircraftCapacity(ST,A,A2);
+    maxAircraftCapacity(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A2,A3) + x1(ST+1,A3,A,A2) + sum(A4, x2(ST+1,A,A2,A3,A4) + x2(ST+1,A3,A,A2,A4) + x2(ST+1,A3,A4,A,A2))) <= sum(T, m(T) * y(A,A2,T));
+    maxAircraftCapacity.setName("maxAircraftCapacity");
+    
+    //ub for airlcraft types{t in T}: sum{i in A, j in A}(y[i,j,t])<=ub[t];
+    MP_constraint availableAircrafts(T);
+    availableAircrafts(T) = sum(A*A2, y(A,A2,T)) <= ub(T);
+    availableAircrafts.setName("availableAircrafts");
+
+    //buy_jet_fuel: buy_stoch + buy_hedge = jet_fuel_consumption;
+    MP_constraint buyJetFuel(ST);
+    buyJetFuel(ST+1) = buy_stoch(ST+1) + buy_hedge() == jet_fuel_consumption();
+    buyJetFuel.setName("buyJetFuel");
+    
+    //fuel consumption
+    MP_constraint fuelConsumption;
+    //fuelConsumption() = sum(A*A2*T, y(A,A2,T) * dist(A,A2) * cons(T)) == jet_fuel_consumption();
+    fuelConsumption() = sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cons(T))) == jet_fuel_consumption();
+    fuelConsumption.setName("fuelConsumption");
+
+
+    /////// OBJECTIVE
+
+    mod.setObjective(
+          (buy_stoch(ST+1) * k_price(ST+1) + buy_hedge() * f_price() * (1 + (f_price_margin() / 100))) //fuel costs
+        + (sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cpm(T)))) //operationcost
+        - (sum(A*A2, p(A,A2) * dcf() * (x0(ST+1,A,A2) + (1 - pd()) * sum(A3, x1(ST+1,A,A3,A2)) + (1 - 2*pd()) * sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue
+        + (sum(A*A2, 2 * dcf() * (x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue fix
+    );
+
+    mod.attach(mod.Solver);
+    mod.getSmi()->writeSmps("fa4x4",true,true);
+    //mod.solve(MP_model::MINIMIZE);
+  
+
+    //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
+    //benders.initialSolve();
+}
+
+
+void lh6_1x1() {
+    MP_model mod(new OsiCpxSolverInterface());
+
+    // Anzahl Stufen
+    enum { numST=2};
+    MP_stage ST(numST);
+    ST.setName("ST");
+
+    // Anzahl Szenarien
+    enum { numScen=1};
+    MP_scenario_set scen(numScen);
+    scen.setName("scen");
+
+    // Airports (4 mal nötig für Variablen und Constraints)
+    enum { FRA, HAM, MUC, DRS, HAJ, STR, numA};
+    MP_set A(numA);
+    A.setName("A");
+    MP_set A2(numA);
+    A2.setName("A2");
+    MP_set A3(numA);
+    A3.setName("A3");
+    MP_set A4(numA);
+    A4.setName("A4");       
+
+    // Flugzeugtypen
+    enum { A320, A340, A380, numT};
+    MP_set T(numT);
+    T.setName("T");
+
+    // Entfernungen
+    double distance[numA][numA] =
+    {
+        {0,413,300,388,282,157},
+        {413,0,600,378,132,553},
+        {300,600,0,340,480,194},
+        {388,378,340,0,317,425},
+        {282,132,480,317,0,421},
+        {157,553,194,425,421,0}
+    };
+    MP_data dist(&distance[0][0], A, A2);
+    dist.setName("dist");
+
+    // Verkaufspreis für einen Flug
+    MP_data p(A, A2);
+    forall(A*A2, p(A,A2) = dist(A,A2) * 0.07);
+    p.setName("p");
+
+    // discountfactor
+    MP_data dcf;
+    dcf() = 1.0;
+    dcf.setName("dcf");
+
+    // Rabatt für Passagiere die nicht non-stop fliegen
+    MP_data pd;
+    pd() = 0.1;
+    pd.setName("pd");
+
+    // maximale Kapazität je Flugzeugtyp
+    double maxCapacity[numT] = { 150, 250, 500 };
+    MP_data m(&maxCapacity[0], T);
+    m.setName("m");
+
+    // Kerosinverbrauch je Flugzeugtyp
+    double kerosinConsumption[numT] = { 6.75, 10, 17.5 };
+    MP_data cons(&kerosinConsumption[0], T);
+    cons.setName("cons");
+
+    // Kosten pro KM je Flugzeugtyp
+    double costPerKM[numT] = { 10.125, 11.25, 18 };
+    MP_data cpm(&costPerKM[0], T);
+    cpm.setName("cpm");
+
+    // maximale Reichweite je Flugzeugtyp
+    double maxRange[numT] = { 5500, 14000, 14000 };
+    MP_data r(&maxRange[0], T);
+    r.setName("r");
+
+    // maximale Flüge je Flugzeugtyp
+    double maxFlights[numT] = { 1e10, 1e10, 1e10};
+    MP_data ub(&maxFlights[0], T);
+    ub.setName("ub");
+
+    // Nachfrage
+    double stochasticDemand[numST-1][numA][numA][numScen] =
+{
+	{
+		{
+			{0},
+			{1638},
+			{1344},
+			{416},
+			{163},
+			{102}
+		},
+		{
+			{2007},
+			{0},
+			{1449},
+			{94},
+			{7},
+			{1032}
+		},
+		{
+			{923},
+			{1937},
+			{0},
+			{235},
+			{567},
+			{41}
+		},
+		{
+			{533},
+			{121},
+			{255},
+			{0},
+			{0},
+			{301}
+		},
+		{
+			{144},
+			{7},
+			{480},
+			{0},
+			{0},
+			{399}
+		},
+		{
+			{84},
+			{1768},
+			{30},
+			{310},
+			{325},
+			{0}
+		}
+	}
+};
+    MP_random_data d(&stochasticDemand[0][0][0][0], ST, A, A2);
+    d.setName("d");
+
+    // minimale Nachfrageerfüllung
+    MP_data x_min;
+    x_min() = 0.5;
+    x_min.setName("x_min");
+
+    // Kerosinpreise
+    //double kerosinPrice[numST-1][numScen] = { {0.055, 0.11, 0.165, 0.275, 0.4125, 0.55, 0.6875, 0.825, 1.045, 1.375} };
+    double kerosinPrice[numST-1][numScen] = { {0.55} };
+    MP_random_data k_price(&kerosinPrice[0][0], ST);
+    k_price.setName("k_price");
+
+    // forwared jet fuel price
+    MP_data f_price;
+    f_price() = 0.55;
+    f_price.setName("f_price");
+
+    // margin for forwarded jet fuel price
+    MP_data f_price_margin;
+    f_price_margin() = 10;
+    f_price_margin.setName("f_price_margin");
+
+
+    /////// VARIABLES
+
+    MP_variable y(A,A2,T);
+    y.integer();
+    for (int i = 0; i < numA; i++) {
+        for (int j = 0; j < numA; j++) {
+            for (int k = 0; k < numT; k++) {
+                if (i == j || dist(i,j) > r(k)) {
+                    y.upperLimit(i,j,k) = 0;
+                }
+            }
+        }
+    }
+    y.setName("y");
+
+    MP_variable x0(ST,A,A2);
+    MP_variable x1(ST,A,A3,A2);
+    MP_variable x2(ST,A,A3,A4,A2);
+    for (int i = 0; i < numA; i++) {
+        for (int j = 0; j < numA; j++) {
+            if (i == j) {
+                x0.upperLimit(1,i,j) = 0;
+            }
+            for (int k = 0; k < numA; k++) {
+                if (i == j || i == k || j == k) {
+                    x1.upperLimit(1,i,k,j) = 0;
+                }
+                for (int l = 0; l < numA; l++) {
+                    if (i == j || i == k || i == l || j == k || j == l || k == l) {
+                        x2.upperLimit(1,i,k,l,j) = 0;
+                    }
+                }
+            }
+        }
+    }
+    x0.setName("x0");
+    x1.setName("x1");
+    x2.setName("x2");
+
+    MP_variable buy_stoch(ST), buy_hedge, jet_fuel_consumption;
+    buy_stoch.setName("buy_stoch");
+    buy_hedge.setName("buy_hedge");
+    jet_fuel_consumption.setName("jet_fuel_consumption");
+    //jet_fuel_consumption.lowerLimit() = 2954400;
+    jet_fuel_consumption.lowerLimit() = 0;
+
+
+    ////// CONSTRAINTS
+
+    //demand
+    MP_constraint demand(ST,A,A2);
+    demand(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2)) <= d(ST+1,A,A2);
+    demand.setName("demand");
+    
+    //subject to force_percentage_expected_demand_satisfaction 
+    //MP_constraint percentDemandSat(ST,A,A2);
+    //////TODO: summe über alle d()
+    //percentDemandSat(ST+1,A,A2) = x_min() * d(ST+1,A,A2) <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    ////percentDemandSat(ST+1,A,A2) = 0 <= x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2));
+    //percentDemandSat.setName("percentDemandSat");
+
+    //max_aircraft_capacity
+    MP_constraint maxAircraftCapacity(ST,A,A2);
+    maxAircraftCapacity(ST+1,A,A2) = x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A2,A3) + x1(ST+1,A3,A,A2) + sum(A4, x2(ST+1,A,A2,A3,A4) + x2(ST+1,A3,A,A2,A4) + x2(ST+1,A3,A4,A,A2))) <= sum(T, m(T) * y(A,A2,T));
+    maxAircraftCapacity.setName("maxAircraftCapacity");
+    
+    //ub for airlcraft types{t in T}: sum{i in A, j in A}(y[i,j,t])<=ub[t];
+    MP_constraint availableAircrafts(T);
+    availableAircrafts(T) = sum(A*A2, y(A,A2,T)) <= ub(T);
+    availableAircrafts.setName("availableAircrafts");
+
+    //buy_jet_fuel: buy_stoch + buy_hedge = jet_fuel_consumption;
+    MP_constraint buyJetFuel(ST);
+    buyJetFuel(ST+1) = buy_stoch(ST+1) + buy_hedge() == jet_fuel_consumption();
+    buyJetFuel.setName("buyJetFuel");
+    
+    //fuel consumption
+    MP_constraint fuelConsumption;
+    //fuelConsumption() = sum(A*A2*T, y(A,A2,T) * dist(A,A2) * cons(T)) == jet_fuel_consumption();
+    fuelConsumption() = sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cons(T))) == jet_fuel_consumption();
+    fuelConsumption.setName("fuelConsumption");
+
+
+    /////// OBJECTIVE
+
+    mod.setObjective(
+          (buy_stoch(ST+1) * k_price(ST+1) + buy_hedge() * f_price() * (1 + (f_price_margin() / 100))) //fuel costs
+        + (sum(A*A2, sum(T, y(A,A2,T) * dist(A,A2) * cpm(T)))) //operationcost
+        - (sum(A*A2, p(A,A2) * dcf() * (x0(ST+1,A,A2) + (1 - pd()) * sum(A3, x1(ST+1,A,A3,A2)) + (1 - 2*pd()) * sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue
+        + (sum(A*A2, 2 * dcf() * (x0(ST+1,A,A2) + sum(A3, x1(ST+1,A,A3,A2)) + sum(A3*A4, x2(ST+1,A,A3,A4,A2))))) //revenue fix
+    );
+
+    mod.attach(mod.Solver);
+    mod.getSmi()->writeSmps("fa1x1",true,true);
+    //mod.solve(MP_model::MINIMIZE);
+  
+
+    //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
+    //benders.initialSolve();
+}
+
+void lh12() {
 
     //SmiScnModel* smiModel = new SmiScnModel();
     //smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
@@ -424,6 +1203,22 @@ int main(int argc, char* argv[]) {
 
     //OsiStochasticBendersTwoStageSolverInterface benders(mod.Solver,mod.getSmi());
     //benders.initialSolve();
+}
 
+int main(int argc, char* argv[]) {
+
+    /*VLDDisable();*/
+    google::InitGoogleLogging(argv[0]);
+    FLAGS_minloglevel = 0;
+    google::SetLogDestination(1, "log");
+    google::LogToStderr();
+    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
+    //VLDEnable();
+    
+    //lh12();
+    lh6_1x1();
+    lh6_4x4();
+    lh6_10x10();
+    
     return 0;
 }
