@@ -3711,7 +3711,13 @@ void Benders::appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatr
 OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
 : OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
 {
-
+    
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS] = 1;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::MULTI] = 1;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::KNAPSACK] = 0;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION] = 0;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART] = 1;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED] = 0;
 }
 
 OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolverInterface()
@@ -3729,12 +3735,12 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         int maxIt = 10000;
         double relEps = 0.0001;
         double absEps = 0.01;
-        bool useBenders = true;
-        bool useRegularized = true;
-        bool single = false;
-        bool knapsack = false;
-        bool trustRegion = false;
-        bool warmStart = true;
+        bool useBenders = intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS];
+        bool useRegularized = intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED];
+        bool multi = intParam[OsiStochasticBendersTwoStageSolverInterface::MULTI];
+        bool knapsack = intParam[OsiStochasticBendersTwoStageSolverInterface::KNAPSACK];
+        bool trustRegion = intParam[OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION];
+        bool warmStart = intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART];
         //	// Input parameters:
         //	// #1: Maximal Iterations
         //	// #2: Single/multi: s m
@@ -3754,7 +3760,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             bendersStr = "-ben";
         if (!useRegularized)
             regularizedStr = "-reg";
-        if (single)
+        if (!multi)
             modeStr = "s";
         if (!knapsack)
             knapsackStr = "-ki";
@@ -3785,6 +3791,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         else
             benders->detEq();
         LOG(INFO) << "Solution time (WallClock): " << CoinCpuTime()-time << "s.";
+        this->solTime = CoinCpuTime()-time;
     }
     else {
         std::cout << "SmiScnModel not initialized." << std::endl;
