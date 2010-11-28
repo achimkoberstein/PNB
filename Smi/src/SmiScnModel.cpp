@@ -296,9 +296,20 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     this->rstrt_ = new int[this->core_->getNumRows()+1];
     this->rstrt_[0] = 0;
 
-    // Call addNode on all these nodes
+    // Call addNode on all these nodes, this generates the problem with the deterministic data from the core nodes
     for (int t = 0; t < this->core_->getNumStages(); t++) {
         addNode(this->core_->getNode(t));
+    }
+    // If the core model does not contain the exepected values for the random variables (how to check that?),
+    // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
+    // and then add the weighted values from the other scenarios
+    for (int i = 0; i < this->getNumScenarios(); i++) {
+        std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
+        for (unsigned int j = 0; j < nodes.size(); j++) {
+            if (nodes[j]->getScenarioIndex() == i) {
+                addNodeEVP(nodes[j]);
+            }
+        }
     }
 
     matrix_ = new CoinPackedMatrix(false,0,0);
@@ -1047,6 +1058,66 @@ SmiScnModel::addNode(SmiNodeData *node)
     // sanity check
     //assert(! ( this->nels_ > this->nels_max ) );
 
+}
+
+void
+SmiScnModel::addNodeEVP(SmiScnNode *tnode)
+{
+    SmiNodeData *snode = tnode->getNode();
+    int stage = snode->getStage();
+
+    // Decide whether to replace or to add the (weighted) stochastic data: when we are in the first stage,
+    // and the SmiCoreCombineRule from the node is replace, then we replace the values. Otherwise, we
+    // have to add the (weighted) values.
+    SmiCoreCombineRule* combineRule;
+    if (tnode->getScenarioIndex() == 0 && snode->getCoreCombineRule() == SmiCoreCombineReplace::Instance()) {
+        combineRule = SmiCoreCombineReplace::Instance();
+    } else {
+        combineRule = SmiCoreCombineAdd::Instance();
+    }
+
+    // Do it for the 5 arrays column lower, column upper, objective, row lower & row upper
+    if (snode->getColLowerLength()) {
+        CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
+        vclo *= tnode->getProb();
+        combineRule->Process(dclo_, core_->getColStart(stage), vclo);
+    }
+
+    if (snode->getColUpperLength()) {
+        CoinPackedVector vcup = CoinPackedVector(snode->getColUpperLength(), snode->getColUpperIndices(), snode->getColUpperElements(), false);
+        vcup *= tnode->getProb();
+        combineRule->Process(dcup_, core_->getColStart(stage), vcup);
+    }
+
+    if (snode->getObjectiveLength()) {
+        CoinPackedVector vobj = CoinPackedVector(snode->getObjectiveLength(), snode->getObjectiveIndices(), snode->getObjectiveElements(), false);
+        vobj *= tnode->getProb();
+        combineRule->Process(dobj_, core_->getColStart(stage), vobj);
+    }
+
+    if (snode->getRowLowerLength()) {
+        CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
+        vrlo *= tnode->getProb();
+        combineRule->Process(drlo_, core_->getRowStart(stage), vrlo);
+    }
+
+    if (snode->getRowUpperLength()) {
+        CoinPackedVector vrup = CoinPackedVector(snode->getRowUpperLength(), snode->getRowUpperIndices(), snode->getRowUpperElements(), false);
+        vrup *= tnode->getProb();
+        combineRule->Process(drup_, core_->getRowStart(stage), vrup);
+    }
+
+    // And now for the matrix entries
+    if (snode->getNumMatrixElements()) {
+        for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
+            for (int j = 0; j < snode->getRowLength(i); j++) {
+                if (combineRule == SmiCoreCombineReplace::Instance())
+                    this->matrix_->modifyCoefficient(i, snode->getRowIndices(i)[j], snode->getRowElements(i)[j] * tnode->getProb());
+                else
+                    this->matrix_->modifyCoefficient(i, snode->getRowIndices(i)[j], this->matrix_->getCoefficient(i, snode->getRowIndices(i)[j]) + snode->getRowElements(i)[j] * tnode->getProb());
+            }
+        }
+    }
 }
 
 OsiSolverInterface *

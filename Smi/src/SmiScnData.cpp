@@ -346,6 +346,7 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
 				 CoinPackedVector *drup):
 				 stg_(stg),
 				 core_(core), isCoreNode_(false),
+				 combineRule_(SmiCoreCombineReplace::Instance()),
 				 numarrays_(5), // 5 arrays: dclo, dcup, dobj, drlo, drup
 				 nrow_(core->getNumRows(stg_)),
 				 ncol_(core->getNumCols(stg_)),
