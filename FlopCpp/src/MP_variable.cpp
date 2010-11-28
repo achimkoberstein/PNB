@@ -274,7 +274,8 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
                     do {
                         if (ext % 10 == 0) { 
                             nameStrict = nameStrict.substr(0, nameStrict.length()-1);
-                            if (nameStrict.length() == 0) genNames = false;  // names do not fit into array of length 8 - so skip it
+                            if (nameStrict.length() == 0) 
+                                genNames = false;  // names do not fit into array of length 8 - so skip it
                         }
                         ext++;
                     } while (!isUniqueName(nameStrict + to_string(ext), nameSetStrict) && genNames);
@@ -289,6 +290,12 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             for (int k = 0; k < size(); k++) {
                 string strict = nameStrict + "_" + to_string(k);
                 colNamesStrict.push_back(CoinStrdup(strict.c_str()));
+            }
+        } else {
+            // push empty strings, let the SmiSmpsWriter or whatever try it...
+            string s = "";
+            for (int k = 0; k < size(); k++) {
+                colNamesStrict.push_back(s.c_str());
             }
         }
     }
