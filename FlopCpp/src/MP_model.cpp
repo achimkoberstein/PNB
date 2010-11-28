@@ -986,6 +986,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
 
         osiCore->setColumnNames(colNamesStrict, colNamesFree);
+        Solver->setColNames(colNamesFree, 0, colNamesFree.size(), 0);
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         smiModel = generateScenarioTree(randomCoefs,osiCore);

@@ -3998,10 +3998,14 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         testModel.setObjective(sum(T, x1(T)));
 
+        testModel.Solver->setIntParam(OsiIntParam::OsiNameDiscipline, 1);
+        
         testModel.attach();
 
-        testModel.minimize();
+        //testModel.Solver->writeLp("columnNamesTest");
 
+        testModel.solve(MP_model::MINIMIZE);
+        
         //testModel.getSmi()->writeSmps("smpsFree", false, false);
         //testModel.getSmi()->writeSmps("smpsStrict", false, true);
 
