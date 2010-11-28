@@ -241,6 +241,7 @@ public:
     void addNode(SmiScnNode *node, bool notDetEq = false);
     void deleteNode(SmiScnNode *tnode);
     void addNode(SmiNodeData *node);
+    void addNodeEVP(SmiScnNode *node);
     inline SmiScenarioTree<SmiScnNode *> * getSmiTree() { return &smiTree_; }
 private:
     CoinMessageHandler *handler_;
