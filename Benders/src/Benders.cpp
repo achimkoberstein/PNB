@@ -2464,10 +2464,11 @@ void Benders::calcOptiCut( int oCut, int scen_){
        
 
     }
-     // Iterate over all elements of the cut (except for theta) and multiply with scenario probability
-    for (int i = 0; i < mncol_; i++){
-        cutElements_[(mncol_+1)*oCut+i] *= scenProb;
-    }
+    // We can choose to let the scenario probability be given to the cut Elements and theta is 1 or theta has the scen prob and cut elements are original.
+    // // Iterate over all elements of the cut (except for theta) and multiply with scenario probability
+    //for (int i = 0; i < mncol_; i++){
+    //    cutElements_[(mncol_+1)*oCut+i] *= scenProb;
+    //}
 
     // ###################################################################################
     // End: calcOptiCut
@@ -2503,17 +2504,17 @@ void Benders::addOptiCut(int oCut){
         for(int i=0; i<oCut; i++){
             // Sum up all values of RHS and multiply each with the corresponding
             // probability
-            cutRowUB+= cutRowUB_[i];//*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            cutRowUB+= cutRowUB_[i]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
             // Cycle over all stage 1 variables
             for(int j=0; j< mncol_; j++){
                 // In the first cycle all arrays are initialized
                 if(i == 0){
-                    cutElements[j] = cutElements_[j];//*scenProb_[cutIndex_[mncol_]-mncol_];
+                    cutElements[j] = cutElements_[j]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
                     cutIndex[j] = j;
                 }
                 // In all other cycles sum up cut elements
                 else{			
-                    cutElements[j]+= cutElements_[i*(mncol_+1)+j];//*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+                    cutElements[j]+= cutElements_[i*(mncol_+1)+j]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
                 }
             }
         }	
@@ -2532,6 +2533,7 @@ void Benders::addOptiCut(int oCut){
             // We have to modify the value of the coefficient in the solver
             osiMaster_->setObjCoeff(mncol_,1);
             //osiMaster_->writeMps("test");
+            appliedCuts_++; // increase appliedCuts counter
         }
         // If knapsack inequalities are used, check if all stage 1 
         // variables are integer
@@ -2571,13 +2573,14 @@ void Benders::addOptiCut(int oCut){
                 // We apply a test after solving the master..
                 checkCuts_ = true;
             }
-            if (abs(deviation) > ZEROTEST){ // If cut would have no meaningfull effect on the solution, we do not apply it.
-                osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
-                // We have to change the coefficient in the master problem of the theta from 0 to the correct value
-                osiMaster_->setObjCoeff(cutIndex_[index+mncol_],1);
-                mdobj_[cutIndex_[index+mncol_]] = 1;
-                appliedCuts_++;
-            }
+            //if (abs(deviation) > ZEROTEST){ // If cut would have no meaningfull effect on the solution, we do not apply it.
+            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
+            //We have to change the coefficient in the master problem of the theta from 0 to the correct value
+            mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            osiMaster_->setObjCoeff(cutIndex_[index+mncol_],mdobj_[cutIndex_[index+mncol_]]);
+            
+            appliedCuts_++;
+            //}
 
             //osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
             //mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[index+mncol_]-mncol_];
@@ -3733,7 +3736,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     if (smiModel){
         //Set params for Benders
         int maxIt = 10000;
-        double relEps = 0.0001;
+        double relEps = 0.000001;
         double absEps = 0.01;
         bool useBenders = intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS];
         bool useRegularized = intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED];
