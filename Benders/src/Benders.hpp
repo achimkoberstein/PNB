@@ -653,15 +653,20 @@ public:
 		benders->writeSolutionFileBenders(path, time );
 	}
 	
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED} BendersParam;
+	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED} BendersIntParam;
+
+    typedef enum { ABSGAP, RELGAP } BendersDoubleParam;
 	
-	inline void setIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersParam &param, const int &val) { this->intParam[param] = val; }
-	inline int getIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersParam &param) { return this->intParam[param]; }
+	inline void setIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersIntParam &param, const int &val) { this->intParam[param] = val; }
+	inline int getIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersIntParam &param) { return this->intParam[param]; }
+    inline void setDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param, const double &val) { this->doubleParam[param] = val; }
+	inline int getDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param) { return this->doubleParam[param]; }
 	inline double getSolutionTime() { return this->solTime; }
 	
 private:
     Benders* benders;
     int intParam[6];
+    double doubleParam[6];
     double solTime;
 };
 
