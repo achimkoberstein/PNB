@@ -350,7 +350,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             const double *subObjCoeff = osiSubproblem_->getObjCoefficients();
             int indexPart = mncol_+zSub_+sncol_*scen_;
             for(int i=0; i<sncol_; i++){
-                if(abs(sSol[i]) < ZEROTEST){
+                if(abs(sSol[i]) < ZEROTEST && abs(sSol[i]) > 0){ // TODO: remove second argument, just for debugging purposes inserted
                     bestSolTemp_[indexPart+i] = 0;
                 }
                 else{
@@ -384,8 +384,11 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             // function which has to be manually added to the objective function
             upperBound_+= subObjVal*scenProb_[scen_];
 
-            if (useRegularizedDecomposition_){
+            double subObjValueCplex = osiSubproblem_->getObjValue()*scenProb_[scen_]; 
+
+            if (useRegularizedDecomposition_){ // We only need to compute these values in case our regular solution somehow changed..
                 // We want to solve the subproblem with the regularized solution
+                buildSubproblem(scen_);
                 addSt1ToSubproblem(scen_,regSolution_);
                 solveSubproblem(scen_,fCut);
                 //TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
@@ -1231,9 +1234,9 @@ int Benders::solveMaster(){
             }
             osiMaster_->initialSolve(); // Solve problem and check return values
             stat = CPXgetstat( envPtr, lpPtr );
-            DLOG_IF(ERROR,stat > 0) << "Cplex returned with " << stat;
+            DLOG_IF(ERROR,stat != 1) << "RD: Tested initial solution status: cplex returned with " << stat;
             if (!osiMaster_->isProvenOptimal() ){
-                LOG(ERROR) << "Your provided initial solution for the regularized decomposition is not feasible for the master problem. We use normal benders instead.";
+                LOG(ERROR) << "RD: Your provided initial solution for the regularized decomposition is not feasible for the master problem. We use normal benders instead.";
                 useRegularizedDecomposition_ = false;
             }
             for (int i = 0; i < mncol_; i++){
@@ -1260,7 +1263,7 @@ int Benders::solveMaster(){
                 quadbeg[i+1] = quadbeg[i]+1;
                 quadcnt[i] = 1;
             }
-            // We add the new columns first
+            // We add the new columns to the problem
             double * collb = new double[mncol_];
             double * colub = new double[mncol_];
             double * colobj = new double[mncol_];
@@ -1401,7 +1404,7 @@ int Benders::solveMaster(){
             //    if (seriousStep_)// increase sigma, make solutions further away more likely
             //        sigma_ *= 2;
             //    else
-            //        sigma_ *= 1/2; // decrease sigma, make solutions near more likely
+            //        sigma_ *= 0.5; // decrease sigma, make solutions near more likely
 
             //    // change quadratic coefficients in the matrix (mncol_ times many)
             //    double term = 1/sigma_;
