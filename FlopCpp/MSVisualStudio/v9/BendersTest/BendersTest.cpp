@@ -38,25 +38,25 @@ namespace flopc {
 
 } //end namespace
 
-//TEST_F(BendersTest, fleetAssignment) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/fA"), -689.432, 0.1);
+TEST_F(BendersTest, fleetAssignment) { // ok
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/fA"), -689.432, 0.1);
 ////    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1); // BLOCKS sections in stoch file, SMI can't handle it yet
-//}
-//
+}
 TEST_F(BendersTest, assets) { // ok
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
 }
 //
-//TEST_F(BendersTest, farmer) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
-//}
-//
-//TEST_F(BendersTest, finance) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
-//}
 
-//TEST_F(BendersTest, gas) { // ok
+TEST_F(BendersTest, farmer) { // ok
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+}
+
+TEST_F(BendersTest, finance) { // ok
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
+}
+
+TEST_F(BendersTest, gas) { // ok
 //    //SmiScnModel smi;
 //    //smi.readSmps("../../../../Benders/test/instances/GAS3");
 //    //OsiCpxSolverInterface solver;
@@ -65,8 +65,8 @@ TEST_F(BendersTest, assets) { // ok
 //    //osi->initialSolve();
 //    //const double* solutions = osi->getColSolution();
 //    //DLOG(INFO) << osi->getObjValue();
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
-//}
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
+}
 
 TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal solution is found (correct), we get a stack overflow (at least for the first two instances)
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
