@@ -215,14 +215,15 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             return;		
         }
 
-
-        if (masterValue_ == osiMaster_->getObjValue()) {
-            std::cout << "repeated objective value : " << osiMaster_->getObjValue() << std::endl;
+        // Check if we have a repeated objective value
+        bool repeated = false;
+        if ( abs(masterValue_-osiMaster_->getObjValue()) < absEps ) {
+            std::cout << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
+            repeated = true;
         }
-        // TODO Debug stuff
+        // Save value for the next iteration.
         masterValue_ = osiMaster_->getObjValue();
-        //std::string filenameTemp = "osiMaster" + to_string(nIter_);
-        //osiMaster_->writeMps(filenameTemp.c_str(),"mps",1);
+
 
         // Read current stage 1 solution 
         const double* mSol = 0;
@@ -270,13 +271,18 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             upperBound_+= mdobj_[i]*bestSolTemp_[i];
         }
         if ( useRegularizedDecomposition_) {
-            // We should check for optimality here: If c^T x + z = c^T + Q(a) stop, a is optimal
+            // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
             // TODO: Improve on this, because otherwise reg. decomp runs forever..
             double xSolution = upperBound_;
             for (int i = 0; i < zSub_; i++){
                 xSolution += mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
             }
-            if ( abs(xSolution-regSolutionValue_) < absEps ){ //Tolerances please : TODO
+            // We finish solving if the original condition holds
+            // We also stop if we difference is below an absolute treshold and we did not just updated the regularized solution
+            // We also stop if we have a repeated objective function value and we did not just updated the regularized solution and the difference is lower than a tolerance (1 at the moment)
+            if ( xSolution-regSolutionValue_ == 0 || ( !computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < absEps )
+                //|| (!computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < 1 ) )
+                ){ // TODO: We need tolerances for the second case instead of 1
                 // regSolution is optimal, copy it into bestSol
                 for (int i = 0; i < mncol_; i++)
                     bestSol_[i] = regSolution_[i];
@@ -386,16 +392,28 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
             double subObjValueCplex = osiSubproblem_->getObjValue()*scenProb_[scen_]; 
 
-            if (useRegularizedDecomposition_){ // We only need to compute these values in case our regular solution somehow changed..
+            if (useRegularizedDecomposition_ && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
                 // We want to solve the subproblem with the regularized solution
                 buildSubproblem(scen_);
                 addSt1ToSubproblem(scen_,regSolution_);
                 solveSubproblem(scen_,fCut);
-                //TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
+                regSubproblemSolutionValues_[scen_] = 0;
+                ////TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
+                //// Compute values with zerotest
+                //double subObjValReg = 0;
+                //const double *subObjCoeffReg = osiSubproblem_->getObjCoefficients();
+                //const double* sSolReg = osiSubproblem_->getColSolution();
+                //int indexPartReg = mncol_+zSub_+sncol_*scen_;
+                //for(int i=0; i<sncol_; i++){
+                //    if(abs(sSolReg[i]) >= ZEROTEST) // TODO: remove second argument, just for debugging purposes inserted
+                //         regSubproblemSolutionValues_[scen_]+= sSolReg[i]*subObjCoeffReg[i];
+                //}
+                //regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
                 regSubproblemSolutionValues_[scen_] = osiSubproblem_->getObjValue()*scenProb_[scen_];
 
             }
         }
+        computeRegularizedSubproblems_ = false;
         // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
         // If current upper bound is less or equal than the old upper bound, update
         // the upper bound and the best feasible solution; the update takes plays 
@@ -431,6 +449,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 for (int i = 0; i < mncol_; i++){
                     regSolution_[i] = bestSolTemp_[i];
                 }
+                computeRegularizedSubproblems_ = true;
                 // We made a serious step, so we update the regSolutionValue_
                 regSolutionValue_ = upperBound_;
             }
@@ -450,6 +469,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     for (int i = 0; i < mncol_; i++){
                         regSolution_[i] = bestSolTemp_[i];
                     }
+                    computeRegularizedSubproblems_= true; 
                     // We made an approximate serious step, so our regSolutionValue changed also
                     regSolutionValue_ = upperBound_;
                     changeSigma_ = false;
@@ -1414,7 +1434,6 @@ int Benders::solveMaster(){
             //        if ( status != 0)
             //            LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
             //    }
-            //    
             //}
             if(mnInt_ == 0  && (warmStart_ || warmStartFol_ )){
                 // Set warmstart informations
@@ -2467,7 +2486,7 @@ void Benders::calcOptiCut( int oCut, int scen_){
        
 
     }
-    // We can choose to let the scenario probability be given to the cut Elements and theta is 1 or theta has the scen prob and cut elements are original.
+    // We can choose to let the scenario probability be given to the cut Elements and theta is 1 or theta carries the scen prob and cut elements are original.
     // // Iterate over all elements of the cut (except for theta) and multiply with scenario probability
     //for (int i = 0; i < mncol_; i++){
     //    cutElements_[(mncol_+1)*oCut+i] *= scenProb;
@@ -2505,19 +2524,20 @@ void Benders::addOptiCut(int oCut){
         // Cycle over all cuts which were calculated during the
         // method "calcOptiCut"
         for(int i=0; i<oCut; i++){
+            double probForCut = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
             // Sum up all values of RHS and multiply each with the corresponding
             // probability
-            cutRowUB+= cutRowUB_[i]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            cutRowUB+= cutRowUB_[i]*probForCut;
             // Cycle over all stage 1 variables
             for(int j=0; j< mncol_; j++){
                 // In the first cycle all arrays are initialized
                 if(i == 0){
-                    cutElements[j] = cutElements_[j]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+                    cutElements[j] = cutElements_[j]*probForCut;
                     cutIndex[j] = j;
                 }
                 // In all other cycles sum up cut elements
                 else{			
-                    cutElements[j]+= cutElements_[i*(mncol_+1)+j]*scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+                    cutElements[j]+= cutElements_[i*(mncol_+1)+j]*probForCut;
                 }
             }
         }	
@@ -2566,9 +2586,12 @@ void Benders::addOptiCut(int oCut){
         //assert(oCut == nScen_); // If we do not have a cut for every scenario, something is wrong
         for(int i=0; i<oCut; i++){
             int index = i*(mncol_+1);
+            double probForCut = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
             // Copy the cut and add it to the master problem
             memcpy(cutElements, cutElements_+index, (mncol_+1)*sizeof(double));
             memcpy(cutIndex, cutIndex_+index, (mncol_+1)*sizeof(int));
+            for (int j = 0; j < mncol_; j++ )
+                cutElements[j] *= probForCut;
             // We check the cut first (if it really cuts anything)
             double deviation = computeDeviation(cutIndex,cutElements, -cutRowUB_[i]);
             //double factor = computeCoefficientTest(mncol_+1,cutElements);
@@ -2579,9 +2602,8 @@ void Benders::addOptiCut(int oCut){
             //if (abs(deviation) > ZEROTEST){ // If cut would have no meaningfull effect on the solution, we do not apply it.
             osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
             //We have to change the coefficient in the master problem of the theta from 0 to the correct value
-            mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            mdobj_[cutIndex_[index+mncol_]] = 1;
             osiMaster_->setObjCoeff(cutIndex_[index+mncol_],mdobj_[cutIndex_[index+mncol_]]);
-            
             appliedCuts_++;
             //}
 

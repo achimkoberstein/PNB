@@ -366,10 +366,10 @@ private:
 
     // indicate if we make a serious step
     bool seriousStep_;
+    bool computeRegularizedSubproblems_;
 
     // indiciate if we should change sigma
     bool changeSigma_; // seriousStep && changeSigma => increase, !seriousStep && changeSigma => decrease
-
     bool checkCuts_;
 
     /// Fischetti-Paper like computation of feasible or optimality cuts..
@@ -462,7 +462,7 @@ public:
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
-    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),changeSigma_(false),checkCuts_(false),fischetti_(false)
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
