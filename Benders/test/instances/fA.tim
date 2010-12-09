@@ -1,0 +1,5 @@
+TIME          fA      
+PERIODS
+    jet_fu_0  R0000000                 STAGE_0
+    x2_430    R0000293                 STAGE_1
+ENDATA
