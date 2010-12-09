@@ -215,16 +215,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             return;		
         }
 
-        // Check if we have a repeated objective value
-        bool repeated = false;
-        if ( abs(masterValue_-osiMaster_->getObjValue()) < absEps ) {
-            std::cout << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
-            repeated = true;
-        }
-        // Save value for the next iteration.
-        masterValue_ = osiMaster_->getObjValue();
-
-
         // Read current stage 1 solution 
         const double* mSol = 0;
         mSol = osiMaster_->getColSolution();
@@ -244,6 +234,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 bestSolTemp_[i] = 0;
             }
             else{
+                // We round here
                 bestSolTemp_[i] = v;
             }
         }
@@ -277,10 +268,21 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             for (int i = 0; i < zSub_; i++){
                 xSolution += mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
             }
+            // Check if we have a repeated objective value
+            bool repeated = false;
+            if ( abs(masterValue_-xSolution) < ZEROTEST ) {
+                std::cout << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
+                repeated = true;
+            }
+            // Save value for the next iteration.
+            masterValue_ = xSolution;
             // We finish solving if the original condition holds
-            // We also stop if we difference is below an absolute treshold and we did not just updated the regularized solution
+            // We also stop if the difference is below an absolute 
             // We also stop if we have a repeated objective function value and we did not just updated the regularized solution and the difference is lower than a tolerance (1 at the moment)
-            if ( xSolution-regSolutionValue_ == 0 || ( !computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < absEps )
+            if ( xSolution-regSolutionValue_ == 0 
+                || abs(xSolution-regSolutionValue_) < 0.00001 
+                || repeated && regSolutionValue_-xSolution < 0
+                //|| ( !computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < absEps )
                 //|| (!computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < 1 ) )
                 ){ // TODO: We need tolerances for the second case instead of 1
                 // regSolution is optimal, copy it into bestSol
@@ -295,7 +297,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             lowerBound += (mdobj_[mncol_] == 0) ? -infty_ : bestSolTemp_[mncol_];
         else{
             for (int i = 0; i < nScen_; i++ ) {
-                lowerBound += (mdobj_[mncol_+i] == 0) ? -infty_ : bestSolTemp_[mncol_+i];
+                lowerBound += (mdobj_[mncol_+i] == 0) ? -infty_ : mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
                 if (lowerBound <= -infty_ ) // leave loop when we encountered a lowerBound which is infinity
                     break;
             }
@@ -359,8 +361,10 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 if(abs(sSol[i]) < ZEROTEST && abs(sSol[i]) > 0){ // TODO: remove second argument, just for debugging purposes inserted
                     bestSolTemp_[indexPart+i] = 0;
                 }
-                else{
+                else { // We round arguments if they differ slightly from the rounded value
+                    // If we allow rounding we do so here: We should set a parameter here..
                     bestSolTemp_[indexPart+i] = sSol[i];
+                    //bestSolTemp_[indexPart+i] = sSol[i];
                 }
                 subObjVal+=bestSolTemp_[indexPart+i]*subObjCoeff[i];
             }	
@@ -400,17 +404,17 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 regSubproblemSolutionValues_[scen_] = 0;
                 ////TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
                 //// Compute values with zerotest
-                //double subObjValReg = 0;
-                //const double *subObjCoeffReg = osiSubproblem_->getObjCoefficients();
-                //const double* sSolReg = osiSubproblem_->getColSolution();
-                //int indexPartReg = mncol_+zSub_+sncol_*scen_;
-                //for(int i=0; i<sncol_; i++){
-                //    if(abs(sSolReg[i]) >= ZEROTEST) // TODO: remove second argument, just for debugging purposes inserted
-                //         regSubproblemSolutionValues_[scen_]+= sSolReg[i]*subObjCoeffReg[i];
-                //}
-                //regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
-                regSubproblemSolutionValues_[scen_] = osiSubproblem_->getObjValue()*scenProb_[scen_];
-
+                double subObjValReg = 0;
+                const double *subObjCoeffReg = osiSubproblem_->getObjCoefficients();
+                const double* sSolReg = osiSubproblem_->getColSolution();
+                int indexPartReg = mncol_+zSub_+sncol_*scen_;
+                for(int i=0; i<sncol_; i++){
+                    if(abs(sSolReg[i]) >= ZEROTEST) // TODO: remove second argument, just for debugging purposes inserted
+                         regSubproblemSolutionValues_[scen_]+= sSolReg[i]*subObjCoeffReg[i];
+                }
+                regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
+                if ( regSubproblemSolutionValues_[scen_] != osiSubproblem_->getObjValue()*scenProb_[scen_] )
+                    DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
             }
         }
         computeRegularizedSubproblems_ = false;
@@ -452,6 +456,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 computeRegularizedSubproblems_ = true;
                 // We made a serious step, so we update the regSolutionValue_
                 regSolutionValue_ = upperBound_;
+                changeSigma_ = true;
             }
             // We generated some optimality cuts
             else {
@@ -473,7 +478,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     // We made an approximate serious step, so our regSolutionValue changed also
                     regSolutionValue_ = upperBound_;
                     changeSigma_ = false;
-                }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma
+                }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma. We want to decrease sigma to keep closer to the regularized solution.
                 changeSigma_ = true;
             }
         }
@@ -1296,6 +1301,7 @@ int Benders::solveMaster(){
             for (int i = 0; i < mncol_; i++){
                 cpvb[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
             }
+            osiMaster_->writeLp("masterRDwithout","lp");
             osiMaster_->addCols(mncol_,cpvb, collb, colub , colobj);
             // Delete arrays for columns
             delete[] collb;
@@ -1362,6 +1368,11 @@ int Benders::solveMaster(){
             numberOfBin = CPXgetnumbin(envPtr,lpPtr);
             // TODO: Binary settings might improve cplex performance?
             DLOG_IF(ERROR,numberOfInt != mnInt_) << "Number of integer variables differs between master problem on paper and problem in memory!.";
+            // TODO set parameter accordingly (numerical emphasis..)
+            error = CPXsetintparam( envPtr, CPX_PARAM_NUMERICALEMPHASIS, 1);
+            DLOG_IF(ERROR,error != 0) << " Setting numerical emphasis parameter returned " << error;
+            // And now we print the problem
+            CPXwriteprob(envPtr, lpPtr,"masterRD","lp");
         }
 
         //osiMaster_->writeLp("osiMaster");
@@ -1412,29 +1423,27 @@ int Benders::solveMaster(){
     else{	
         // If we use reg. decomposition and we made a serious step in the last round, we need to update the reg. solution via the row bounds.
         if (useRegularizedDecomposition_ && seriousStep_ ) {
-            seriousStep_ = false; // reset serious step indicator
             for (int i = 0; i < mncol_; i++){ // Update row bounds with new reg. solution
                 osiMaster_->setRowBounds(startRows_+i,-regSolution_[i],-regSolution_[i]);
             }
         }
         try {
-            //if (useRegularizedDecomposition_ && changeSigma_){
-            //// we change the sigma value
-            //    changeSigma_ = false;
-            //    if (seriousStep_)// increase sigma, make solutions further away more likely
-            //        sigma_ *= 2;
-            //    else
-            //        sigma_ *= 0.5; // decrease sigma, make solutions near more likely
+            if (useRegularizedDecomposition_ && changeSigma_){
+            // we change the sigma value
+                if (seriousStep_)// increase sigma, make solutions further away more likely
+                    sigma_ *= 2;
+                else
+                    sigma_ *= 0.5; // decrease sigma, make solutions near more likely
 
-            //    // change quadratic coefficients in the matrix (mncol_ times many)
-            //    double term = 1/sigma_;
-            //    int status = 0;
-            //    for (int i = 0; i < mncol_; i++){
-            //        status = CPXchgqpcoef(envPtr,lpPtr,i,i,term);
-            //        if ( status != 0)
-            //            LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
-            //    }
-            //}
+                // change quadratic coefficients in the matrix (mncol_ times many)
+                double term = 1/sigma_;
+                int status = 0;
+                for ( int i = mncol_+zSub_;i < 2*mncol_+zSub_; i++) {
+                    status = CPXchgqpcoef(envPtr,lpPtr,i,i,term);
+                    if ( status != 0)
+                        LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
+                }
+            }
             if(mnInt_ == 0  && (warmStart_ || warmStartFol_ )){
                 // Set warmstart informations
                 osiMaster_->setWarmStart(warmStartMaster_);
@@ -1442,9 +1451,18 @@ int Benders::solveMaster(){
             if(mnInt_==0){
                 osiMaster_->setHintParam(OsiDoDualInInitial,false);
                 if (useRegularizedDecomposition_){
+                    string filename = "masterRD-" + to_string(nIter_) + ".lp";
+                    CPXwriteprob(envPtr, lpPtr,filename.c_str(),"lp");
                     CPXqpopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
+                    if ( stat == 6 ){ // We suffer from numerical problems
+                        stat = CPXsetintparam( envPtr, CPX_PARAM_NUMERICALEMPHASIS, 1);
+                        DLOG_IF(ERROR,stat != 0) << " Setting numerical emphasis parameter returned " << stat;
+                        CPXqpopt(envPtr,lpPtr);
+                        stat = CPXgetstat( envPtr, lpPtr );
+                        DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
+                    }
                 }
                 else
                     osiMaster_->resolve();
@@ -1457,7 +1475,7 @@ int Benders::solveMaster(){
                     //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
                     CPXmipopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
-                    DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
+                    DLOG_IF(FATAL,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                 }
                 else
                     osiMaster_->branchAndBound();
@@ -1487,6 +1505,9 @@ int Benders::solveMaster(){
         {
             cout << e.what() << endl;
         }
+        // Reset binary variables..
+        changeSigma_ = false;
+        seriousStep_ = false;
     }
     //osiMaster_->writeLp("osiMaster");
 
@@ -1501,6 +1522,10 @@ int Benders::solveMaster(){
 
     if (stat == 0 || stat == 1 || stat == 101 || stat == 102 ) { // Solution procuded using no reg. decomposition or optimal or mip-optimal or mip-optimal-gap
         // Everything alright
+    }
+    else if ( stat == 6 ){
+        // We have numerical problems..
+        DLOG(WARNING) << "Cplex reported numerical problems during the solution of the master problem.";
     }
     else if (stat == 4 || stat == 119 ) {
       // Resolve problem to get proper term code without presolve
@@ -1520,7 +1545,7 @@ int Benders::solveMaster(){
         DLOG_IF(ERROR,stat > 0) << "Cplex returned with error code " << stat;
     }
     else 
-        LOG(INFO) << "Cplex returned with error code " << stat;
+        LOG(FATAL) << "Cplex returned with error code " << stat;
 
     if(osiMaster_->isProvenPrimalInfeasible() || stat == CPX_STAT_INFEASIBLE) {
 
@@ -1588,7 +1613,7 @@ int Benders::solveMaster(){
         //osiMaster_->writeLp("unboundedMaster");
 
     }
-    if (osiMaster_->isAbandoned() ){
+    if (!useRegularizedDecomposition_ && osiMaster_->isAbandoned() ){
         cout << "Error: abandoned solution process with error " << osiMaster_->isAbandoned();
         return -1;
     }
@@ -3734,6 +3759,10 @@ void Benders::appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatr
         CoinPackedMatrix appendMatrix(true,sncol_,fixVars.size(),fixVars.size(),fixValues,&fixVars[0], fixColStart, fixLength);
         matrix.rightAppendPackedMatrix(appendMatrix);
     }
+}
+
+double Benders::roundDouble(const double& val){
+    return floor( val*precision_+0.5 ) / precision_; // We round the value to the 
 }
 
 OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
