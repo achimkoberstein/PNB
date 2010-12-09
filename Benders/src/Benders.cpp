@@ -289,9 +289,9 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             // We also stop if we have a repeated objective function value ( we assume that we do not get better than this, so we have an already better reg. solution )
             // We also stop if the difference is below a relative value ( for big objectives ( at the moment : 10^5 )
             if ( lowerBound-regSolutionValue_ == 0 
-                || abs(lowerBound-regSolutionValue_) < 0.00001 
+                || abs(lowerBound-regSolutionValue_) < absEps
                 || repeated && regSolutionValue_-lowerBound < 0
-                || abs(lowerBound) > 100000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < 0.000001
+                || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
                 ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
                     // Probable solution: Solve non-quadratic master problem to get a real lower bound. compare the values to be absolutely sure.
                 // regSolution is optimal, copy it into bestSol
@@ -3773,6 +3773,8 @@ OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverI
     this->intParam[OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION] = 0;
     this->intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART] = 1;
     this->intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED] = 0;
+    this->dblParam[OsiStochasticBendersTwoStageSolverInterface::ABSGAP] = 0.00001;
+    this->dblParam[OsiStochasticBendersTwoStageSolverInterface::RELGAP] = 0.000001;
 }
 
 OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolverInterface()
@@ -3788,8 +3790,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     if (smiModel){
         //Set params for Benders
         int maxIt = 10000;
-        double relEps = 0.000001;
-        double absEps = 0.01;
+        double relEps = dblParam[OsiStochasticBendersTwoStageSolverInterface::RELGAP];
+        double absEps = dblParam[OsiStochasticBendersTwoStageSolverInterface::ABSGAP];
         bool useBenders = intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS];
         bool useRegularized = intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED];
         bool multi = intParam[OsiStochasticBendersTwoStageSolverInterface::MULTI];
