@@ -261,36 +261,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
         for(int i=0; i<mncol_; i++){ // We compute the first stage solution part of the current iteration that may become new upper bound
             upperBound_+= mdobj_[i]*bestSolTemp_[i];
         }
-        if ( useRegularizedDecomposition_) {
-            // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
-            // TODO: Improve on this, because otherwise reg. decomp runs forever..
-            double xSolution = upperBound_;
-            for (int i = 0; i < zSub_; i++){
-                xSolution += mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
-            }
-            // Check if we have a repeated objective value
-            bool repeated = false;
-            if ( abs(masterValue_-xSolution) < ZEROTEST ) {
-                std::cout << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
-                repeated = true;
-            }
-            // Save value for the next iteration.
-            masterValue_ = xSolution;
-            // We finish solving if the original condition holds
-            // We also stop if the difference is below an absolute 
-            // We also stop if we have a repeated objective function value and we did not just updated the regularized solution and the difference is lower than a tolerance (1 at the moment)
-            if ( xSolution-regSolutionValue_ == 0 
-                || abs(xSolution-regSolutionValue_) < 0.00001 
-                || repeated && regSolutionValue_-xSolution < 0
-                //|| ( !computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < absEps )
-                //|| (!computeRegularizedSubproblems_ && repeated && abs(xSolution-regSolutionValue_) < 1 ) )
-                ){ // TODO: We need tolerances for the second case instead of 1
-                // regSolution is optimal, copy it into bestSol
-                for (int i = 0; i < mncol_; i++)
-                    bestSol_[i] = regSolution_[i];
-                return;
-            }
-        }
         // Set correct lower bound
         double lowerBound = upperBound_;
         if (single_)
@@ -302,10 +272,36 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     break;
             }
         }
-        //if ( lowerBound < LB_ && lowerBound > -infty_){ // We were better in the last iteration, not good.
-        //    return;
-        //}
-        LB_ = lowerBound; // If we have a value not equal to infinity, then we 
+        if ( useRegularizedDecomposition_) {
+            // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
+            // We compare the lowerBound ( nothing else is the xSolution ) with 
+            // TODO: Improve on this, because otherwise reg. decomp runs forever..
+            // Check if we have a repeated objective value
+            bool repeated = false;
+            if ( abs(masterValue_-lowerBound) < ZEROTEST ) {
+                std::cout << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
+                repeated = true;
+            }
+            // Save value for the next iteration.
+            masterValue_ = lowerBound;
+            // We finish solving if the original condition holds
+            // We also stop if the difference is below an absolute value (for small objective)
+            // We also stop if we have a repeated objective function value ( we assume that we do not get better than this, so we have an already better reg. solution )
+            // We also stop if the difference is below a relative value ( for big objectives ( at the moment : 10^5 )
+            if ( lowerBound-regSolutionValue_ == 0 
+                || abs(lowerBound-regSolutionValue_) < 0.00001 
+                || repeated && regSolutionValue_-lowerBound < 0
+                || abs(lowerBound) > 100000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < 0.000001
+                ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
+                    // Probable solution: Solve non-quadratic master problem to get a real lower bound. compare the values to be absolutely sure.
+                // regSolution is optimal, copy it into bestSol
+                for (int i = 0; i < mncol_; i++)
+                    bestSol_[i] = regSolution_[i];
+                return;
+            }
+        }
+        // Update lower bound ( it should strictly increase, but not necessarily so in the case of reg decomp
+        LB_ = lowerBound; 
 
 
         bool feasible = true; // Indicate if at most one subproblem was infeasible
@@ -417,7 +413,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
             }
         }
-        computeRegularizedSubproblems_ = false;
         // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
         // If current upper bound is less or equal than the old upper bound, update
         // the upper bound and the best feasible solution; the update takes plays 
@@ -453,7 +448,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 for (int i = 0; i < mncol_; i++){
                     regSolution_[i] = bestSolTemp_[i];
                 }
-                computeRegularizedSubproblems_ = true;
+                //computeRegularizedSubproblems_ = true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
                 // We made a serious step, so we update the regSolutionValue_
                 regSolutionValue_ = upperBound_;
                 changeSigma_ = true;
@@ -462,19 +457,22 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             else {
                 // We have to check if c^T \bar x + Q(\bar x) <= c^T a + Q( a ), if so we update the regularized solution a to x (approximate serious step)
                 // Compute regSolutionValue_ = c^T a + Q( a ) to be able to compare the values
-                regSolutionValue_ = 0;
-                for (int i = 0; i < mncol_; i++){
-                    regSolutionValue_ += regSolution_[i]*mdobj_[i];
+                if (computeRegularizedSubproblems_) { // If we computed the regularized solution subproblems, we have to calculate the combinded objective value               
+                    computeRegularizedSubproblems_ = false;
+                    regSolutionValue_ = 0;
+                    for (int i = 0; i < mncol_; i++){
+                        regSolutionValue_ += regSolution_[i]*mdobj_[i];
+                    }
+                    for (int i = 0; i < nScen_; i++) {
+                        regSolutionValue_ += regSubproblemSolutionValues_[i];
+                    }
                 }
-                for (int i = 0; i < nScen_; i++) {
-                    regSolutionValue_ += regSubproblemSolutionValues_[i];
-                }
-                if ( upperBound_ <= regSolutionValue_ ){
+                if ( upperBound_ <= regSolutionValue_ ){ // 
                     seriousStep_ = true;
                     for (int i = 0; i < mncol_; i++){
                         regSolution_[i] = bestSolTemp_[i];
                     }
-                    computeRegularizedSubproblems_= true; 
+                    //computeRegularizedSubproblems_= true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
                     // We made an approximate serious step, so our regSolutionValue changed also
                     regSolutionValue_ = upperBound_;
                     changeSigma_ = false;
@@ -1430,11 +1428,11 @@ int Benders::solveMaster(){
         try {
             if (useRegularizedDecomposition_ && changeSigma_){
             // we change the sigma value
-                if (seriousStep_)// increase sigma, make solutions further away more likely
+                if (seriousStep_ && sigma_ <= 512)// increase sigma, make solutions further away more likely
                     sigma_ *= 2;
-                else
+                else if ( !seriousStep_ && sigma_ > 0.0009765625) // we allow at max 2^-10 to 2^10 
                     sigma_ *= 0.5; // decrease sigma, make solutions near more likely
-
+                
                 // change quadratic coefficients in the matrix (mncol_ times many)
                 double term = 1/sigma_;
                 int status = 0;

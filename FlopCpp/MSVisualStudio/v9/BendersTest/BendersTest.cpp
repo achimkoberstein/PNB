@@ -28,7 +28,7 @@ namespace flopc {
             //double deteqvalue = osiPtr->getObjValue();
             OsiCpxSolverInterface cpxSolver;
             OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED,1);
+            //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED,1);
             benders.initialSolve();
             return benders.getObjValue();
         }
