@@ -375,6 +375,9 @@ private:
     /// Fischetti-Paper like computation of feasible or optimality cuts..
     bool fischetti_;
 
+    // to which digit we want to round ? If precision is 1, we round 6.7 to 7. If it is 2 we round 6.78 to 6.8
+    int precision_; 
+
 public:
 	// Constructor
 	Benders():
@@ -392,7 +395,7 @@ public:
 	mutSt1rstrt_(NULL), scenMatSt1Start_(NULL), mutnSt1len_(NULL), mutnSt2_(0), mutSt2dels_(NULL), 
 	mutSt2iels_(NULL), mutSt2rstrt_(NULL), scenMatSt2Start_(NULL), mutnSt2len_(NULL), combSt2dels_(NULL), 
 	combSt2iels_(NULL), combSt2rstrt_(NULL), combSt2len_(NULL), combSt2nels_(0), combdobj_(NULL), 
-	INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -10)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
+	INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -6)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
 	zSub_(0), combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
 	mutlcup_(0), muticup_(NULL), mutdcup_(NULL), scenCupStart_(NULL), mutlclo_(0),
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
@@ -462,7 +465,7 @@ public:
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
-    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false)
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) )
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -599,6 +602,7 @@ public:
         void relaxCut( CoinPackedVector& vec, double* rhs);
         double computeCoefficientTest( CoinPackedVector& vec );
         double computeCoefficientTest( int , const double* );
+        double roundDouble(const double&);
 
 };
 
