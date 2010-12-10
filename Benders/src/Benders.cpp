@@ -1456,15 +1456,15 @@ int Benders::solveMaster(){
                     // CPX_PARAM_QPMETHOD to choose optimizer..
                     CPXsetintparam(envPtr, CPX_PARAM_QPMETHOD, CPX_ALG_DUAL ); // We only want to use dual simplex, if we can warmstart..
                     // We have to extend rstat..
-                    //double numrows = CPXgetnumrows(envPtr, lpPtr);
-                    //int* rstat = new int[numrows];
-                    //// copy all the old member in rstat..
-                    //memcpy(rstat,rstat_,sizeof(int)*(numrows-appliedCuts_));
-                    //for (int i = numrows-appliedCuts_; i < numrows; i++){
-                    //    rstat[i] = 0;
-                    //}
-                    //CPXcopybase(envPtr, lpPtr, cstat_,rstat);
-                    //delete rstat;
+                    int numrows = CPXgetnumrows(envPtr, lpPtr);
+                    int* rstat = new int[numrows];
+                    // copy all the old member in rstat..
+                    memcpy(rstat,rstat_,sizeof(int)*(numrows-appliedCuts_));
+                    for (int i = numrows-appliedCuts_; i < numrows; i++){
+                        rstat[i] = 1;
+                    }
+                    CPXcopybase(envPtr, lpPtr, cstat_,rstat);
+                    delete rstat;
                     CPXqpopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
@@ -1541,6 +1541,9 @@ int Benders::solveMaster(){
         delete rstat_;
         cstat_ = new int[CPXgetnumcols( envPtr, lpPtr )];
         rstat_ = new int[CPXgetnumrows( envPtr, lpPtr )];
+        int numColumns = CPXgetnumcols(envPtr,lpPtr);
+        int numRows = CPXgetnumrows(envPtr,lpPtr);
+        CPXqpopt(envPtr,lpPtr);
         CPXgetbase( envPtr, lpPtr, cstat_, rstat_ );
     }
     else if ( stat == 6 ){
