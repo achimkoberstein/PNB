@@ -185,7 +185,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     // Counter for feasibility cuts
     int nFeas = 0;
 
-    masterValue_ = -infty_;
+    masterValue_ = infty_;
     double* tempFirstStageSol = new double[mncol_+zSub_];
 
     // Initialization of temporary solution vector for first stage solution
@@ -451,7 +451,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 //computeRegularizedSubproblems_ = true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
                 // We made a serious step, so we update the regSolutionValue_
                 regSolutionValue_ = upperBound_;
-                changeSigma_ = true;
             }
             // We generated some optimality cuts
             else {
@@ -477,7 +476,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     regSolutionValue_ = upperBound_;
                     changeSigma_ = false;
                 }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma. We want to decrease sigma to keep closer to the regularized solution.
-                changeSigma_ = true;
+                else 
+                    changeSigma_ = true;
             }
         }
         // Apply Trust Region method
@@ -1449,8 +1449,22 @@ int Benders::solveMaster(){
             if(mnInt_==0){
                 osiMaster_->setHintParam(OsiDoDualInInitial,false);
                 if (useRegularizedDecomposition_){
-                    string filename = "masterRD-" + to_string(nIter_) + ".lp";
-                    CPXwriteprob(envPtr, lpPtr,filename.c_str(),"lp");
+                    //string filename = "masterRD-" + to_string(nIter_) + ".lp";
+                    //CPXwriteprob(envPtr, lpPtr,filename.c_str(),"lp");
+                    // We use barrier algorithm here. What if we want to use dual simplex here?
+                    // To take advantage of warm start solutions, we want to use the simplex algorithm..
+                    // CPX_PARAM_QPMETHOD to choose optimizer..
+                    CPXsetintparam(envPtr, CPX_PARAM_QPMETHOD, CPX_ALG_DUAL ); // We only want to use dual simplex, if we can warmstart..
+                    // We have to extend rstat..
+                    //double numrows = CPXgetnumrows(envPtr, lpPtr);
+                    //int* rstat = new int[numrows];
+                    //// copy all the old member in rstat..
+                    //memcpy(rstat,rstat_,sizeof(int)*(numrows-appliedCuts_));
+                    //for (int i = numrows-appliedCuts_; i < numrows; i++){
+                    //    rstat[i] = 0;
+                    //}
+                    //CPXcopybase(envPtr, lpPtr, cstat_,rstat);
+                    //delete rstat;
                     CPXqpopt(envPtr,lpPtr);
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
@@ -1461,6 +1475,7 @@ int Benders::solveMaster(){
                         stat = CPXgetstat( envPtr, lpPtr );
                         DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                     }
+
                 }
                 else
                     osiMaster_->resolve();
@@ -1519,7 +1534,14 @@ int Benders::solveMaster(){
     // We have to find a suitable feasible solution if the problem is unbounded ?!?
 
     if (stat == 0 || stat == 1 || stat == 101 || stat == 102 ) { // Solution procuded using no reg. decomposition or optimal or mip-optimal or mip-optimal-gap
-        // Everything alright
+        // Everything alright. We can store a warmstart here, but we won't as cplex takes care of that issue itself.
+        //// Store the base 
+        //// The arrays must have the length of the cols and of the rows of the problem. So it might be best to declare them here new and delete them.
+        delete cstat_;
+        delete rstat_;
+        cstat_ = new int[CPXgetnumcols( envPtr, lpPtr )];
+        rstat_ = new int[CPXgetnumrows( envPtr, lpPtr )];
+        CPXgetbase( envPtr, lpPtr, cstat_, rstat_ );
     }
     else if ( stat == 6 ){
         // We have numerical problems..
@@ -2319,10 +2341,13 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             }
         }
         else{
+            // In the first iteration, we can use the warmstart information from the previous scenario
+            if ( scen_ > 0 )
+                osiSubproblem_->setWarmStart(warmStartSub_[scen_-1]);
             // Solve subproblem
             osiSubproblem_->initialSolve();
         }
-        // Warmstart between scenarios
+        // Warmstart between iterations
         if(warmStart_){
             // If an optimal basis is available, get warm 
             // start informations for current scenario
@@ -2354,7 +2379,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
         // Solve subbroblem
         osiSubproblem_->initialSolve();
 
-        // Warmstart between iterations
+        // Warmstart between scenarios
         if(warmStartFol_ && fCut==false){
             // Delete warmstart informations
             if(warmStartEmptySub_[scen_]==false){
@@ -2373,7 +2398,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             }
         }
 
-        // Warmstart between scenarios
+        // Warmstart between iterations
         if(warmStart_ && fCut==false){
             // Delete warmstart informations
             if(warmStartEmptySub_[scen_]==false){

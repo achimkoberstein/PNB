@@ -148,9 +148,15 @@ public:
 	/// Destructor
 
 	~SmiTreeNode<T>() {
-		delete sibling_;
-		delete child_;
+        // We need to look at the overall depth, as we already deleted the leaf nodes
+        if (depth_ < treeDepth_-1) // If we are in the stage before the last, we do not want to delete the child
+            delete child_;
+        if ( depth_ < treeDepth_ ) // If we are in the stage before the last, we also want to delete the siblings
+            delete sibling_;
+
 	}
+
+    static int treeDepth_;
 
 	//@}
 
@@ -181,6 +187,7 @@ private:
 	int depth_;
 	T ptr_;
 	child_label_map child_labels_;
+    
 
 };
 
@@ -401,6 +408,12 @@ public:
 
 	/// Destructor
 	virtual ~SmiScenarioTree<T> () {
+        // We have to set the global static depth
+        SmiTreeNode<T>::treeDepth_ = getLeaf(0)->depth();
+        // This works fine as long as the tree is not large enough (it breaks for two-stage problems with 2000 scenarios)
+        for (int i = 0; i < leaf_.size(); i++){
+            delete leaf_[i];
+        }
 		delete root_;
 	}
 	//@}
