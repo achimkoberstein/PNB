@@ -278,7 +278,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             // TODO: Improve on this, because otherwise reg. decomp runs forever..
             // Check if we have a repeated objective value
             bool repeated = false;
-            if ( abs(masterValue_-lowerBound) < ZEROTEST ) {
+            if ( abs(masterValue_-lowerBound) < absEps ) {
                 std::cout << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
                 repeated = true;
             }
@@ -291,6 +291,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             if ( lowerBound-regSolutionValue_ == 0 
                 || abs(lowerBound-regSolutionValue_) < absEps
                 || repeated && regSolutionValue_-lowerBound < 0
+                || repeated && (int)1/sigma_ == 1024 // We have a close solution and we made null-feasible steps (did not change solution)
                 || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
                 ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
                     // Probable solution: Solve non-quadratic master problem to get a real lower bound. compare the values to be absolutely sure.
@@ -301,7 +302,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             }
         }
         // Update lower bound ( it should strictly increase, but not necessarily so in the case of reg decomp
-        LB_ = lowerBound; 
+        if ( lowerBound > LB_ )
+            LB_ = lowerBound; 
 
 
         bool feasible = true; // Indicate if at most one subproblem was infeasible
@@ -441,7 +443,9 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             }
         }
         if (feasible && useRegularizedDecomposition_){
-            // If no optimality cut was generated, we update the regularized solution a to x (exact serious step)
+            // If no optimality cut was generated, we update the regularized solution a to x (exact serious step) 
+            assert(seriousStep_ == false);
+            assert(changeSigma_ == false);
             if (oCut == 0){
                 seriousStep_ = true;
                 changeSigma_ = true;
@@ -1490,8 +1494,10 @@ int Benders::solveMaster(){
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(FATAL,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                 }
-                else
+                else{
+                    // Set warm-start..
                     osiMaster_->branchAndBound();
+                }
             }
             if(mnInt_ == 0 && (warmStart_ || warmStartFol_)){
                 // Delete warmstart informations
@@ -1532,43 +1538,45 @@ int Benders::solveMaster(){
     bool dualObjectiveLimit = osiMaster_->isDualObjectiveLimitReached();
     bool optimal = osiMaster_->isProvenOptimal();
     // We have to find a suitable feasible solution if the problem is unbounded ?!?
+    if ( useRegularizedDecomposition_ ){
+        if (stat == 0 || stat == 1 || stat == 101 || stat == 102 ) { // Solution procuded using no reg. decomposition or optimal or mip-optimal or mip-optimal-gap
+            // Everything alright. We can store a warmstart here, but we won't as cplex takes care of that issue itself.
+            //// Store the base 
+            //// The arrays must have the length of the cols and of the rows of the problem. So it might be best to declare them here new and delete them.
+            delete cstat_;
+            delete rstat_;
+            cstat_ = new int[CPXgetnumcols( envPtr, lpPtr )];
+            rstat_ = new int[CPXgetnumrows( envPtr, lpPtr )];
+            int numColumns = CPXgetnumcols(envPtr,lpPtr);
+            int numRows = CPXgetnumrows(envPtr,lpPtr);
+            CPXqpopt(envPtr,lpPtr);
+            CPXgetbase( envPtr, lpPtr, cstat_, rstat_ );
+        }
+        else if ( stat == 6 ){
+            // We have numerical problems..
+            DLOG(WARNING) << "Cplex reported numerical problems during the solution of the master problem.";
+        }
+        else if (stat == 4 || stat == 119 ) {
+            // Resolve problem to get proper term code without presolve
+            // In CPLEX 9, this is a way to discard the presolve information: 
 
-    if (stat == 0 || stat == 1 || stat == 101 || stat == 102 ) { // Solution procuded using no reg. decomposition or optimal or mip-optimal or mip-optimal-gap
-        // Everything alright. We can store a warmstart here, but we won't as cplex takes care of that issue itself.
-        //// Store the base 
-        //// The arrays must have the length of the cols and of the rows of the problem. So it might be best to declare them here new and delete them.
-        delete cstat_;
-        delete rstat_;
-        cstat_ = new int[CPXgetnumcols( envPtr, lpPtr )];
-        rstat_ = new int[CPXgetnumrows( envPtr, lpPtr )];
-        int numColumns = CPXgetnumcols(envPtr,lpPtr);
-        int numRows = CPXgetnumrows(envPtr,lpPtr);
-        CPXqpopt(envPtr,lpPtr);
-        CPXgetbase( envPtr, lpPtr, cstat_, rstat_ );
-    }
-    else if ( stat == 6 ){
-        // We have numerical problems..
-        DLOG(WARNING) << "Cplex reported numerical problems during the solution of the master problem.";
-    }
-    else if (stat == 4 || stat == 119 ) {
-      // Resolve problem to get proper term code without presolve
-      // In CPLEX 9, this is a way to discard the presolve information: 
-      
-        int objsen = CPXgetobjsen(envPtr, lpPtr);
-        CPXchgobjsen(envPtr, lpPtr, -objsen);
-        CPXchgobjsen(envPtr, lpPtr, objsen);
+            int objsen = CPXgetobjsen(envPtr, lpPtr);
+            CPXchgobjsen(envPtr, lpPtr, -objsen);
+            CPXchgobjsen(envPtr, lpPtr, objsen);
 
-        CPXsetintparam( envPtr, CPX_PARAM_PREIND, CPX_OFF );
-        if (mnInt_ == 0)
-            CPXdualopt( envPtr, lpPtr );
+            CPXsetintparam( envPtr, CPX_PARAM_PREIND, CPX_OFF );
+            if (mnInt_ == 0)
+                CPXdualopt( envPtr, lpPtr );
+            else 
+                CPXmipopt( envPtr, lpPtr);
+            CPXsetintparam( envPtr, CPX_PARAM_PREIND, CPX_ON );
+            stat = CPXgetstat(envPtr, lpPtr);
+            DLOG_IF(ERROR,stat > 0) << "Cplex returned with error code " << stat;
+        }
         else 
-            CPXmipopt( envPtr, lpPtr);
-        CPXsetintparam( envPtr, CPX_PARAM_PREIND, CPX_ON );
-        stat = CPXgetstat(envPtr, lpPtr);
-        DLOG_IF(ERROR,stat > 0) << "Cplex returned with error code " << stat;
+            LOG(FATAL) << "Cplex returned with error code " << stat;
+
     }
-    else 
-        LOG(FATAL) << "Cplex returned with error code " << stat;
 
     if(osiMaster_->isProvenPrimalInfeasible() || stat == CPX_STAT_INFEASIBLE) {
 
@@ -1642,10 +1650,10 @@ int Benders::solveMaster(){
     }
     if (useRegularizedDecomposition_ && appliedCuts_ && checkCuts_){ // We check for validity of cuts here..
         // Get Slack of constraints
-        double* slack = new double[appliedCuts_];
+        double* slack = new double[mnrow_+mncol_+zSub_*nIter_];
         int status;
         int curNumRows = CPXgetnumrows(envPtr,lpPtr)-1;
-        status = CPXgetslack (envPtr, lpPtr, slack, CPXgetnumrows(envPtr,lpPtr)-1-appliedCuts_, CPXgetnumrows(envPtr,lpPtr)-1);
+        status = CPXgetslack (envPtr, lpPtr, slack, mnrow_+mncol_, CPXgetnumrows(envPtr,lpPtr)-1);
         DLOG_IF(ERROR,status) << "Cplex returned error code " << status << " while reading slack values for latest optimality cuts.";
         std::vector<int> effectiveCuts;
         bool continueSolving = false;
@@ -1654,11 +1662,11 @@ int Benders::solveMaster(){
                 continueSolving = true; break;
             }
         }
-        //delete[] slack;
-        if (continueSolving)
-            checkCuts_ = false;
-        else 
-            return -1; // Compute solution values from this x and quit.
+        delete[] slack;
+        //if (continueSolving)
+        //    checkCuts_ = false;
+        //else 
+        //    return -1; // Compute solution values from this x and quit.
         //if ( effectiveCuts.empty() ){ // We stop when all cuts we have are active ( equality )
         //    // Latest optimality cuts are all equalities really
         //    return -1;
@@ -2300,6 +2308,8 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     //osiSubproblem_->writeLp("osiSub");
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
     osiSubproblem_->setObjSense(1.0); // we minimize the subproblems
+    // We want to silence Cplex
+    osiSubproblem_->messageHandler()->setLogLevel(0);
     // In the first iteration there are no warmstart informations
     // available. So distinguish between first and all other iterations.
     if(nIter_==0){
@@ -2606,7 +2616,7 @@ void Benders::addOptiCut(int oCut){
             mdobj_[mncol_] = 1;
             // We have to modify the value of the coefficient in the solver
             osiMaster_->setObjCoeff(mncol_,1);
-            //osiMaster_->writeMps("test");
+            osiMaster_->writeLp("test");
             appliedCuts_++; // increase appliedCuts counter
         }
         // If knapsack inequalities are used, check if all stage 1 
@@ -2655,6 +2665,7 @@ void Benders::addOptiCut(int oCut){
             //We have to change the coefficient in the master problem of the theta from 0 to the correct value
             mdobj_[cutIndex_[index+mncol_]] = 1;
             osiMaster_->setObjCoeff(cutIndex_[index+mncol_],mdobj_[cutIndex_[index+mncol_]]);
+
             appliedCuts_++;
             //}
 
@@ -2665,6 +2676,7 @@ void Benders::addOptiCut(int oCut){
             //std::string name = "problem" + to_string(i);
             //osiMaster_->writeLp(name.c_str());
         }	
+                    osiMaster_->writeLp("testMulti");
     }
     delete [] cutElements;
     delete [] cutIndex;
@@ -3886,7 +3898,11 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 
 double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
     if ( benders == 0) return benders->infty_;
-    else return benders->UB_; // Return upper bound, as this is the value of our solution
+    else {if ( intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS] == 1 )
+        return benders->UB_; // Return upper bound, as this is the value of our solution
+    else
+        return benders->objDetEq_;
+    }
 }
 
 int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){
