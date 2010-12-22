@@ -29,7 +29,10 @@ namespace flopc {
             OsiCpxSolverInterface cpxSolver;
             OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
             benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BENDERS,1);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,0);
+            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,1);
+            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION,1);
+            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART,1);
+            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED,0);
             benders.initialSolve();
             return benders.getObjValue();
             return 0;
@@ -93,7 +96,7 @@ TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_2000"), -348.092, 0.1);
@@ -111,7 +114,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.stormG2";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
-    google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
+    google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)
 #endif
     google::LogToStderr();
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
