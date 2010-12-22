@@ -661,7 +661,7 @@ public:
 		benders->writeSolutionFileBenders(path, time );
 	}
 	
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED} BendersIntParam;
+	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, WARMSTART_TYPE} BendersIntParam;
 
     typedef enum { ABSGAP, RELGAP } BendersDoubleParam;
 	
