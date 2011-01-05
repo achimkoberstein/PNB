@@ -6,7 +6,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include <deque>
+
 #include "OsiCpxSolverInterface.hpp"
+
 
 using namespace std;
 
@@ -382,6 +385,12 @@ private:
     int * cstat_;
     int * rstat_;
 
+    // Integer Benders
+    bool integerBenders_;
+    std::deque< std::vector<double> > columnLowerBounds_; // One could store std::pair inside the vector, to get lower and upper bounds in one data structure, but never mind..
+    std::deque< std::vector<double> > columnUpperBounds_;
+    std::deque< double > currentLowerBound_;
+
 public:
 	// Constructor
 	Benders():
@@ -410,7 +419,7 @@ public:
     warmStartEmptySub_(NULL),warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
-	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7))
+	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),integerBenders_(false)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -469,7 +478,7 @@ public:
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
-    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0)
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();

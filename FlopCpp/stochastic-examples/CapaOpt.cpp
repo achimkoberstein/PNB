@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 	if (argc == 4)
 		seed = (int) strtoul(argv[3], 0, 0);
 
-    MP_model capa(new OsiClpSolverInterface(), new NormalMessenger(), seed);
+    MP_model capa(new OsiCpxSolverInterface(), new NormalMessenger(), seed);
 
     // Stufen
     enum {numStage=2};
@@ -6767,23 +6767,30 @@ int main(int argc, char* argv[]) {
     
 	if (solveWithBenders) {
 		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+        benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI, 0);
 		double begin = CoinCpuTime();
 		benders.initialSolve();
 		double duration = CoinCpuTime() - begin;
 
-		//ofstream ofs;
-		//ofs.open("CapaOpt_Benders.txt", std::ios::app);
-		//ofs << "Sample size: " << capa.getSampleSize() << endl;
-		//ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
-		//ofs << "Obj. Value: " << benders.getObjValue() << endl;
-		//ofs << "Iterations: " << benders.getNumIterations() << endl;
-		//ofs << "Duration (secs): " << duration << endl;
-		//ofs << "-------------------------" << endl;
-		//ofs.close();
+
+
+		ofstream ofs;
+		ofs.open("CapaOpt_Benders.txt", std::ios::app);
+		ofs << "Sample size: " << capa.getSampleSize() << endl;
+		ofs << "Seed: " << 	(seed==0 ? capa.getSeed() : seed) << endl;
+		ofs << "Obj. Value: " << benders.getObjValue() << endl;
+		ofs << "Iterations: " << benders.getNumIterations() << endl;
+		ofs << "Duration (secs): " << duration << endl;
+		ofs << "-------------------------" << endl;
+		ofs.close();
 	} else {
+		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
+        benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BENDERS, 0);
 		double begin = CoinCpuTime();
-		capa.solve(MP_model::MINIMIZE);
+		benders.initialSolve();
 		double duration = CoinCpuTime() - begin;
+
+
 
 		ofstream ofs;
 		ofs.open("CapaOpt_DetEq.txt", std::ios::app);

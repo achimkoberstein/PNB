@@ -979,7 +979,7 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebuggerAlways() const
 OsiSolverInterface::OsiSolverInterface () :
   rowCutDebugger_(NULL),
   handler_(NULL),
-  defaultHandler_(true),
+  defaultHandler_(false),
   columnType_(NULL),
   appDataEtc_(NULL),
   ws_(NULL)

@@ -3242,13 +3242,15 @@ void OsiCpxSolverInterface::freeAllMemory()
 void 
 OsiCpxSolverInterface::reset()
 {
-  setInitialData(); // clear base class
+
+  
 	if (lp_ != NULL) { // kill old LP 
 		int err = CPXfreeprob( env_, &lp_ );
 		checkCPXerror( err, "CPXfreeprob", "loadProblem" );
 		lp_ = NULL;
-		freeAllMemory();
-	}
+        freeAllMemory();
+    }
+      setInitialData(); // clear base class
 }
 #if CPX_VERSION >= 900
 /**********************************************************************/
