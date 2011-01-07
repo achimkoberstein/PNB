@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "OsiSolverInterface.hpp"
-#include "OsiStochasticSolverInterface.hpp"
+//#include "OsiStochasticSolverInterface.hpp"
 
 #include "flopc.hpp"
 
