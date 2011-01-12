@@ -6764,10 +6764,12 @@ int main(int argc, char* argv[]) {
 
     capa.setSampleOnlyScenarioGeneration(true,capa.getSampleSize() ); //We specified SampleSize already above
     capa.attach(capa.Solver);
+    capa.getSmi()->writeSmps("capaOpt");
     
 	if (solveWithBenders) {
 		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
-        benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI, 0);
+        benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI, 1); 
+        //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI, 0);
 		double begin = CoinCpuTime();
 		benders.initialSolve();
 		double duration = CoinCpuTime() - begin;

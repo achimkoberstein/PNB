@@ -387,9 +387,32 @@ private:
 
     // Integer Benders
     bool integerBenders_;
+    bool calculateLowerBound_;
+    double integerBendersLowerBound_;
     std::deque< std::vector<double> > columnLowerBounds_; // One could store std::pair inside the vector, to get lower and upper bounds in one data structure, but never mind..
     std::deque< std::vector<double> > columnUpperBounds_;
     std::deque< double > currentLowerBound_;
+
+    int numNodes_;
+    int currentNode_;
+
+    // Multi/Single Switch
+    bool multiSingleSwitch_;
+
+    int* multiSingleIndices_;
+    double* multiSingleElements_;
+    double multiSingleRHS_;
+    int multiSingleRow_;
+
+    // Barrier method in detEQ (and probably master problem)
+    bool barrier_;
+
+    // Bunching for cuts
+    bool bunching_;
+    bool dynamicBunching_;
+    int bunchSize_;
+    int numBunch_;
+    int* bunchIndices_;
 
 public:
 	// Constructor
@@ -451,7 +474,7 @@ public:
 		//delete clp;
 	}
 
-	Benders(const char * single, const char * warmstart, const char * knap, const char * trust, const char * bend, const char * reg):
+	Benders(const char * single, const char * warmstart, const char * knap, const char * trust, const char * bend, const char * reg, const char * bar,const char * bunch, const int bunchSize):
 	  
 	mnrow_(0), mncol_(0), mdobj_(NULL), mdrlo_(NULL), mdrup_(NULL), 
 	mdclo_(NULL), mdcup_(NULL), mnels_(0), mlen_(NULL), mdels_(NULL), 
@@ -478,7 +501,7 @@ public:
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
-    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false)
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),multiSingleSwitch_(false), barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -541,9 +564,22 @@ public:
         if(!strcmp(reg,"+reg")){
 			useRegularizedDecomposition_ = true;
 		}
-		if(!strcmp(knap,"-reg")){
+		if(!strcmp(reg,"-reg")){
 			useRegularizedDecomposition_ = false;
 		}
+        if(!strcmp(bar,"+br")){
+			barrier_ = true;
+		}
+
+        if(!strcmp(bunch,"+bunch")){ // At the moment we do not implement dynamic bunching.
+			bunching_ = true;
+            bunchSize_ = bunchSize;
+		}
+        
+        if ( single_ && multiSingleSwitch_){
+            multiSingleSwitch_ = false;
+        }
+
 		// Delete solver interfaces		
 		delete cpx;
 		//delete clp;
@@ -670,20 +706,20 @@ public:
 		benders->writeSolutionFileBenders(path, time );
 	}
 	
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, WARMSTART_TYPE} BendersIntParam;
+	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
 
-    typedef enum { ABSGAP, RELGAP } BendersDoubleParam;
+    typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
 	
 	inline void setIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersIntParam &param, const int &val) { this->intParam[param] = val; }
 	inline int getIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersIntParam &param) { return this->intParam[param]; }
     inline void setDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param, const double &val) { this->dblParam[param] = val; }
-	inline int getDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param) { return this->dblParam[param]; }
+	inline double getDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param) { return this->dblParam[param]; }
 	inline double getSolutionTime() { return this->solTime; }
 	
 private:
     Benders* benders;
-    int intParam[6];
-    double dblParam[6];
+    int intParam[OsiStochasticBendersTwoStageSolverInterface::last1];
+    double dblParam[OsiStochasticBendersTwoStageSolverInterface::last2];
     double solTime;
 };
 
