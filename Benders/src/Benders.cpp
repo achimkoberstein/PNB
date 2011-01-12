@@ -196,11 +196,19 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     if (useRegularizedDecomposition_)
         regSubproblemSolutionValues_ = new double[nScen_];
 
-    // Find first stage solution
-    // computeInitialSolution();
-    integerBenders_ = true;
+    if (mnBin_) // Change this to allow integer l-shaped method to work
+        integerBenders_ = false; 
     if (integerBenders_)
         columnLowerBounds_.push_back(std::vector<double>() ); //just quickndirty hack
+
+    bool feasible = true; // Indicate if at most one subproblem was infeasible
+
+    if (multiSingleSwitch_){
+        multiSingleIndices_ = new int[mncol_+zSub_]; // TODO: Delete this at end.
+        multiSingleElements_ = new double[mncol_+zSub_];
+    }
+
+    // Bunching is initialized in copyMaster
 
     // While the gap between upper and lower bound is larger than epsilon
     // repeat the benders decomposition method. Also continue if maximal 
@@ -226,8 +234,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
             // TODO: Debug, remove eventually
             int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
-            if (resultCmp == 0)
-                std::cout << "same results" << std::endl;
             memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
             // Write current stage 1 solution to temporary solution vector; it 
             // also contains the value(s) of the variables for the scenario(s);
@@ -243,6 +249,31 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     bestSolTemp_[i] = v;
                 }
             }
+            if ( multiSingleSwitch_ ){
+                if ( appliedCuts_ ){ // Remove the same number of cuts from osiMaster
+                    // Get values for all the theta's
+                    osiMaster_->writeLp("test-LPBefore");
+                    double theta = 0 ;
+                    for (int i = mncol_; i < mncol_+zSub_; i++){
+                        // Sum these values up
+                        theta += bestSolTemp_[i];
+
+                    }
+                    int numRows = osiMaster_->getNumRows();
+                    int * rowIndices = new int[appliedCuts_];
+                    for (int i = 0; i < appliedCuts_; i++){
+                        rowIndices[i] = numRows-appliedCuts_+i;
+                    }
+                    osiMaster_->deleteRows(appliedCuts_,rowIndices);
+                    delete rowIndices;
+                    // Add single cut
+                    osiMaster_->addRow(mncol_+zSub_,multiSingleIndices_,multiSingleElements_,-infty_,multiSingleRHS_);
+                    // Change theta constraint to new bound
+                    //osiMaster_->setRowLower(multiSingleRow_,theta);
+                    osiMaster_->writeLp("test-LPAfter");
+                }
+            }
+
 
             // Update lower bound, but not in the first iteration and only if
             // there are no feasibility cuts added in the previous iterations,
@@ -271,12 +302,15 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             if (single_)
                 lowerBound += (mdobj_[mncol_] == 0) ? -infty_ : bestSolTemp_[mncol_];
             else{
-                for (int i = 0; i < nScen_; i++ ) {
+                for (int i = 0; i < zSub_; i++ ) {
                     lowerBound += (mdobj_[mncol_+i] == 0) ? -infty_ : mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
                     if (lowerBound <= -infty_ ) // leave loop when we encountered a lowerBound which is infinity
                         break;
                 }
             }
+            // 
+            //LOG(INFO) << "Theta is: " << lowerBound-upperBound_;
+
             if ( useRegularizedDecomposition_) {
                 // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
                 // We compare the lowerBound ( nothing else is the xSolution ) with 
@@ -314,10 +348,82 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 }
             }
             // Update lower bound ( it should strictly increase, but not necessarily so in the case of reg decomp )
-            LB_ = lowerBound; 
+            //if (mnInt_ == 0 || !integerBenders_)
+                LB_ = lowerBound; 
 
+            if ( integerBenders_ && feasible && mnInt_>0 && lowerBound+ZEROTEST >= UB_ ){
+                // We fathom current node
+                columnLowerBounds_.pop_front();
+                columnUpperBounds_.pop_front();
+                currentLowerBound_.pop_front();
+                nIter_++;
+                continue;
+            }
 
-            bool feasible = true; // Indicate if at most one subproblem was infeasible
+            // We want to implement L-shaped benders, so we do it. Let's rock.
+            if ( integerBenders_ && feasible && mnInt_ > 0){
+                int lowerValue;
+                double violation = 0.5;
+                int violationIndex = -1;
+                // We have to check for violation of integrality restrictions
+                for (int i = 0; i < mnInt_; i++){
+                    // Split double in fractional and intPart
+                    double intPart, fractional;
+                    fractional = modf(bestSolTemp_[miInt_[i]],&intPart);
+                    if ( fractional-ZEROTEST > 0 || fractional+ZEROTEST < 1 ){
+                        if ( abs(0.5-fractional) < violation ){ // We do most fractional branching
+                            violation = abs(0.5-fractional); //TODO: Bedingter Operator
+                            violationIndex = miInt_[i];
+                            lowerValue = intPart;
+                        }
+                    }
+                }
+                if ( violationIndex != -1 ) { // We found a violation, create new nodes, remove current node (obviously..)
+                    LOG(INFO) << "Variable " << violationIndex << " is not integer.";
+                    if ( !columnLowerBounds_.empty() ){
+                        columnLowerBounds_.pop_front();
+                        columnUpperBounds_.pop_front();
+                        currentLowerBound_.pop_front();
+                    }
+                    // Create two new nodes
+                    // get the current column bounds and change them accordingly
+                    const double* colLower = osiMaster_->getColLower();
+                    const double* colUpper = osiMaster_->getColUpper();
+                    std::vector<double> lower(mncol_+zSub_);
+                    std::vector<double> upper(mncol_+zSub_);
+                    for (int i = 0; i < mncol_+zSub_; i++ ){
+                        if ( i != violationIndex ){
+                            lower[i] = colLower[i]; upper[i] = colUpper[i];
+                        }
+                        else {
+                            lower[i] = colLower[i]; upper[i] = lowerValue;
+                        }
+                    }
+                    std::vector<double> lower2(lower);
+                    std::vector<double> upper2(upper);
+                    // Change bounds 
+                    lower2[violationIndex] = lowerValue+1;
+                    upper2[violationIndex] = colUpper[violationIndex];
+
+                    columnLowerBounds_.push_back(lower);
+                    columnLowerBounds_.push_back(lower2);
+                    columnUpperBounds_.push_back(upper);
+                    columnUpperBounds_.push_back(upper2);
+                    currentLowerBound_.push_back(lowerBound); // It does not get lower than this..
+                    currentLowerBound_.push_back(lowerBound);
+                    numNodes_ += 2;
+                    // We return to the start
+                    nIter_++;
+                    continue;
+                }
+                //else
+                    //if ( LB_ < lowerBound )
+                    //    LB_ = lowerBound; // Update lower Bound only if we have no violation.. This should then strictly increase..
+                    //else
+                        // What should we do in this case?
+            }
+
+            feasible = true;
             // Cycle over all scenarios: solve all subproblems
             for(int scen_=0; scen_<nScen_; scen_++){
                 // Build subproblem, combine deterministic data with stochastic
@@ -390,7 +496,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 // We have to differentiate between multi and single cut..
                 // TODO: Important distinction here: we compare the SolutionValue of the current scenario subproblem with the approximation. If the solutionValue is greater than the approximation, we have to calculate an optimality cut, as the approximation is not good enough yet.
                 // Equally important: Compare apples with apples. Currently we compare the scenario subproblem value times its probability with the approximation factor for the subproblem where the probability is already priced in via the optimality constraints ( objCoef of approximation is 1 ).
-                if( feasible && (single_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+scen_] || nIter_==nFeas ) ){
+                if( feasible && (single_ || bunching_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+bunchIndices_[scen_]] || nIter_==nFeas ) ){
                     // Calculate an optimality cut; Input: number of optimality cuts
                     // which were calculate during the current iteration, number of
                     // current scenario;
@@ -426,75 +532,12 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                         DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
                 }
             }
+
             // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
             // If current upper bound is less or equal than the old upper bound, update
             // the upper bound and the best feasible solution; the update takes plays 
             // only if there is no feasibility cut
-            if ( integerBenders_ && feasible && mnInt_>0 && lowerBound+ZEROTEST >= UB_){
-                // We fathom current node
-                columnLowerBounds_.pop_front();
-                columnUpperBounds_.pop_front();
-                currentLowerBound_.pop_front();
-                nIter_++;
-                continue;
-            }
-
-            // We want to implement L-shaped benders, so we do it. Let's rock.
-            if ( integerBenders_ && feasible && mnInt_ > 0){
-                int lowerValue;
-                double violation = 0.5;
-                int violationIndex = -1;
-                // We have to check for violation of integrality restrictions
-                for (int i = 0; i < mnInt_; i++){
-                    // Split double in fractional and intPart
-                    double intPart, fractional;
-                    fractional = modf(bestSolTemp_[miInt_[i]],&intPart);
-                    if ( fractional-ZEROTEST > 0 || fractional+ZEROTEST < 1 ){
-                        if ( abs(0.5-fractional) < violation ){ // We do most fractional branching
-                            violation = abs(0.5-fractional); //TODO: Bedingter Operator
-                            violationIndex = miInt_[i];
-                            lowerValue = intPart;
-                        }
-                    }
-                }
-                if ( violationIndex != -1 ) { // We found a violation, create new nodes, remove current node (obviously..)
-                    if ( !columnLowerBounds_.empty() ){
-                        columnLowerBounds_.pop_front();
-                        columnUpperBounds_.pop_front();
-                        currentLowerBound_.pop_front();
-                    }
-                    // Create two new nodes
-                    // get the current column bounds and change them accordingly
-                    const double* colLower = osiMaster_->getColLower();
-                    const double* colUpper = osiMaster_->getColUpper();
-                    std::vector<double> lower(mncol_+zSub_);
-                    std::vector<double> upper(mncol_+zSub_);
-                    for (int i = 0; i < mncol_+zSub_; i++ ){
-                        if ( i != violationIndex ){
-                            lower[i] = colLower[i]; upper[i] = colUpper[i];
-                        }
-                        else {
-                            lower[i] = colLower[i]; upper[i] = lowerValue;
-                        }
-                    }
-                    std::vector<double> lower2(lower);
-                    std::vector<double> upper2(upper);
-                    // Change bounds 
-                    lower2[violationIndex] = lowerValue+1;
-                    upper2[violationIndex] = colUpper[violationIndex];
-
-                    columnLowerBounds_.push_back(lower);
-                    columnLowerBounds_.push_back(lower2);
-                    columnUpperBounds_.push_back(upper);
-                    columnUpperBounds_.push_back(upper2);
-                    currentLowerBound_.push_back(lowerBound); // It does not get lower than this..
-                    currentLowerBound_.push_back(lowerBound);
-                    LOG(INFO) << "We added two nodes.";
-                    // We return to the start
-                    nIter_++;
-                    continue;
-                }
-            }
+            
 
             if(status == 1 || (feasible && upperBound_< UB_)){
                 // Update the best feasible solution
@@ -515,6 +558,55 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     LOG(INFO) << "We fathomed the current node. It's approximation was worse than the original.";
                     continue;
                 }
+            }
+
+            // Practical issue due to numerical instabilities: We fathom current node if we reach some bounds: Absolute gap is less than specified..
+            //if ( integerBenders_ && resultCmp == 0 ){ // We have the exact same solution to the master problem, so our optimality cut's did not work as expected.
+            //    // Do we stay at the same problem? store it for once
+            //    if ( currentNode_ == numNodes_ )
+            //        break; // exit the while loop
+            //    else
+            //        currentNode_ = numNodes_;
+            //}
+            if ( integerBenders_ && feasible && mnInt_>0 && abs(upperBound_-lowerBound)< absEps ){
+                columnLowerBounds_.pop_front();
+                columnUpperBounds_.pop_front();
+                currentLowerBound_.pop_front();
+                nIter_++;
+                continue;
+            }
+            if (integerBenders_ && mnBin_ > 0 && single_ && !calculateLowerBound_){
+            // Calculate "Integer L-shaped optimality cut" for binary variables
+                // We need Q_x = bestSolTemp computation
+                double qx = 0;
+                for (int i = 0; i < mncol_; i++){
+                    qx += bestSolTemp_[i]*mdobj_[i];
+                }
+                double coefficient = qx-integerBendersLowerBound_;
+                // We need Lower Bound for qx for any x possible. This is computed before, because it does not change..
+                double* elements = new double[mncol_+zSub_];
+                int* indices = new int[mncol_+zSub_];
+                //for (int i = 0; i < mncol_+zSub_; i++)
+                //    indices[i] = i;
+                // We calculate the cut (for the single version only)
+                int sr = 0;
+                for (int i = 0; i < mnBin_; i++){
+                    indices[i] = miBin_[i];
+                    if ( bestSolTemp_[miBin_[i]] == 1 ){
+                        elements[i] = coefficient;
+                        sr++;
+                    }
+                    else if ( bestSolTemp_[miBin_[i]] == 0)
+                        elements[i] = -coefficient;
+                }
+                indices[mnInt_] = mncol_;
+                elements[mnInt_] = -1;
+
+                double rhs = coefficient*(sr-1)-integerBendersLowerBound_;
+                osiMaster_->addRow(mnInt_+1,indices,elements,-infty_,rhs);
+
+                delete elements;
+                delete indices;
             }
 
             // After solving all subproblems one or more optimality cuts will be}
@@ -578,7 +670,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 }
             }
             // Apply Trust Region method
-            if(trustRegion_ ){
+            if (mnBin_ > 0 && trustRegion_ ){
                 // Apply trust region method as long as the method returns 1,
                 // if it returns 0, change value of the boolean
                 if(trustRegion(bestSolTemp_, LBmax, oCut, fCut)==0){
@@ -623,6 +715,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             }
     }	
     cout << "Objective value after "<< nIter_ << " iterations is: "  << UB_ << endl;
+    LOG(INFO) << "We created " << numNodes_ << " many nodes.";
 
 
     // ###################################################################################
@@ -670,13 +763,29 @@ void Benders::copyMaster(SmiScnModel * smi){
     mncol_ = smi->getCore()->getNumCols(0);
     // Number of scenarios
     nScen_ = smi->getNumScenarios();
+    if ( bunching_ ){// Create bunches and check for validity
+        if ( bunchSize_ > nScen_){
+            bunching_ = false; single_ = true; bunchSize_ = nScen_;
+        }
+        else { // We have to create the bunches.
+            // TODO: Insert sophisticated bunching assignment here
+            single_ = false;
+            int curBunch = 0;
+            numBunch_ = ceil((double)nScen_/bunchSize_); // We round up. E.g. 10 scenarios, bunch size = 3, we have 4 bunches
+            bunchIndices_ = new int[nScen_];
+            for (int i=0; i < nScen_; i++){
+                bunchIndices_[i] = curBunch++;
+                curBunch %= numBunch_;
+            }
+        }
+    }
     // If single cut is chosen the counter zSub is set to 1; if 
     // multi cut is chosen it will be initialized by number of scenarios
     if(single_){
         zSub_ = 1;	
     }
     else{
-        zSub_ = nScen_;	
+        zSub_ = numBunch_;	
     }
 
     // Declare an array for the coefficients of the objective function; 
@@ -1314,6 +1423,8 @@ void Benders::copySubmodel(SmiScnModel* smi){
         // for each scenario
         warmStartSub_ = new CoinWarmStart*[nScen_];
         warmStartEmptySub_ = new bool[nScen_];
+        for (int i = 0; i < nScen_; i++)
+            warmStartEmptySub_[i] = true;
     }
     // Warmstart between scenarios
     if(warmStartFol_){
@@ -1498,6 +1609,21 @@ int Benders::solveMaster(){
 
             }
             else{
+                // We add the multiSingleSwitchConstraint..
+                //if (multiSingleSwitch_){
+                //    // Add lower bound for all the thetas
+                //    int* thetaIndices = new int[zSub_];
+                //    double* thetaElements = new double [zSub_];
+                //    for (int i = 0; i < zSub_; i++){
+                //        thetaIndices[i] = mncol_+i;
+                //        thetaElements[i] = 1;
+                //    }
+                //    osiMaster_->addRow(zSub_,thetaIndices,thetaElements,-infty_,infty_);
+                //    multiSingleRow_ = osiMaster_->getNumRows()-1;
+                //    delete thetaIndices;
+                //    delete thetaElements;
+                //}
+
                 osiMaster_->initialSolve();
 
             }
@@ -1612,9 +1738,11 @@ int Benders::solveMaster(){
                     }
 
                 }
-                else
+                else{
+                    // If we are in multiSingleSwitch, we want to solve the problem and remove the multi cuts afterwards
                     osiMaster_->resolve();
-
+                   
+                }
             }
             // Else solve via branch and bound
             else{
@@ -1647,6 +1775,13 @@ int Benders::solveMaster(){
                                     LOG(INFO) << "We removed all pendant nodes from our list.";
                                     break;
                                 }
+                                //// We want to do depth first search, so we take the last node
+                                //columnLowerBounds_.push_front(columnLowerBounds_.back());
+                                //columnUpperBounds_.push_front(columnUpperBounds_.back());
+                                //currentLowerBound_.push_front(currentLowerBound_.back());
+                                //columnLowerBounds_.pop_back();
+                                //columnUpperBounds_.pop_back();
+                                //currentLowerBound_.pop_back();
                                 osiMaster_->setColLower(&(columnLowerBounds_.front()[0]));
                                 osiMaster_->setColUpper(&(columnUpperBounds_.front()[0]));
                                 osiMaster_->initialSolve();
@@ -2010,6 +2145,28 @@ void Benders::buildSubproblem(int scen_){
     if(scenCupStart_[scen_+1]-scenCupStart_[scen_] != 0){
         for(int i=scenCupStart_[scen_]; i<scenCupStart_[scen_+1]; i++){
             combdcup_[muticup_[i]-mncol_] = mutdcup_[i];
+        }
+    }
+
+    if (integerBenders_ && calculateLowerBound_){
+        calculateLowerBound_ = false;
+        // TODO: What if we have random stuff in objective function/W ?
+        // For now we assume only RHS and T is stochastic..
+        // What if we have general second stage problems, and not adjusted ones?..
+        for (int i = 0; i < sncol_; i++){
+            if ( combdclo_[i] <= -infty_ && combdobj_[i] > 0 ){
+                calculateLowerBound_ = true; break;
+            }
+            if ( combdcup_[i] >= infty_ && combdobj_[i] < 0 ){ 
+                calculateLowerBound_ = true; break;
+            }
+            if ( combdclo_[i] <= -infty_ && combdcup_[i] >= infty_){ // We have a free variable
+                calculateLowerBound_ = true; break;
+            }
+            if ( combdobj_[i] > 0)
+                integerBendersLowerBound_ += combdclo_[i]*combdobj_[i];
+            else
+                integerBendersLowerBound_ += combdcup_[i]*combdobj_[i];
         }
     }
 
@@ -2478,6 +2635,8 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             combdrup_[i] = infty_; 
     }
     osiSubproblem_->loadProblem(*matrix, combdclo_, combdcup_, combdobj_, combdrlo_, combdrup_);
+
+
     // Parameter: use dual simplex
     //osiSubproblem_->writeLp("osiSub");
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
@@ -2748,15 +2907,37 @@ void Benders::addOptiCut(int oCut){
     double cutRowUB = 0;
     // Reset appliedCut variable to zero
     appliedCuts_ = 0;
+
+    // We need the bunching arrays..
+    double ** cutElementsBunch = 0;
+    int ** cutIndexBunch = 0;
+    double* cutRowUBBunch = 0;
+    if (bunching_){
+        cutElementsBunch = new double*[numBunch_];
+        cutIndexBunch = new int*[numBunch_];
+        cutRowUBBunch = new double[numBunch_];
+        for (int i = 0; i < numBunch_;i++){ 
+            cutElementsBunch[i] = new double[mncol_+1];
+            cutIndexBunch[i] = new int[mncol_+1];
+            for (int j = 0; j < mncol_; j++){ // Initialize values.
+                cutElementsBunch[i][j] = 0;
+                cutIndexBunch[i][j] = j;
+            }
+            cutElementsBunch[i][mncol_] = -1;
+            cutIndexBunch[i][mncol_]=mncol_+i;
+            cutRowUBBunch[i] = 0;
+
+        }
+    }
     // In case of the single cut version, only one cut is calculated
     // If knapsack inequalities are used, calculate this cut with the
     // same coefficients like the ones of the single cut
-    if(single_ || knapsack_){
+    if(single_ || knapsack_ || multiSingleSwitch_ ){
         // Cycle over all cuts which were calculated during the
         // method "calcOptiCut"
         for(int i=0; i<oCut; i++){
-            double probForCut = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
-            // Sum up all values of RHS and multiply each with the corresponding
+            //double probForCut = scenProb_[cutIndex_[i*(mncol_+1)+mncol_]-mncol_];
+            // Was done until recently, but the values get "normalized" during generation. Sum up all values of RHS and multiply each with the corresponding
             // probability
             cutRowUB+= cutRowUB_[i];
             // Cycle over all stage 1 variables
@@ -2777,6 +2958,16 @@ void Benders::addOptiCut(int oCut){
         cutElements[mncol_] = -1;
         cutIndex[mncol_] = mncol_;
 
+        if (multiSingleSwitch_){
+           multiSingleRHS_ = cutRowUB;
+           memcpy(multiSingleElements_, cutElements, (mncol_+1)*sizeof(double));
+           memcpy(multiSingleIndices_, cutIndex, (mncol_)*sizeof(int));
+           for ( int i = mncol_; i < mncol_+zSub_; i++){
+               multiSingleElements_[i] = -1;
+               multiSingleIndices_[i] = i;
+           }
+        }
+
         // Add cut to master problem
         // Note: RHS of the cut is multiplied by -1, since p*d
         // has to be on the other side of the inequalitiy
@@ -2790,7 +2981,7 @@ void Benders::addOptiCut(int oCut){
         }
         // If knapsack inequalities are used, check if all stage 1 
         // variables are integer
-        if(knapsack_ && mncol_==mnInt_){
+        if(single_ && knapsack_ && mncol_==mnInt_){
             // Declaration of an array for indices
             int* kIndex = new int[mncol_];
             // Declaration of an array for coefficients
@@ -2811,7 +3002,44 @@ void Benders::addOptiCut(int oCut){
     }
     // In case of the multi cut version all cuts which were calculated
     // during the method "calcOptiCut" are added to master problem
-    if(!single_){
+
+    if (bunching_){
+        // Add all cutElements to the corresponding cut bunches         
+        for (int i = 0; i< oCut; i++){
+            int curScen = cutIndex_[i*(mncol_+1)+mncol_]-mncol_;
+            int curBunch = bunchIndices_[curScen];
+            int cutIndex = i*(mncol_+1);
+            cutRowUBBunch[curBunch] += cutRowUB_[i];
+            for (int j = 0; j < mncol_; j++){
+                cutElementsBunch[curBunch][j] += cutElements_[cutIndex+j];
+            }
+            //// We check the cut first (if it really cuts anything)
+            //double deviation = computeDeviation(cutIndex,cutElements, -cutRowUB_[i]);
+            ////double factor = computeCoefficientTest(mncol_+1,cutElements);
+            //if (deviation < 1 ){
+            //    // We apply a test after solving the master..
+            //    checkCuts_ = true;
+            //}
+        }
+   
+        // Add the cuts to the master problem
+
+        for (int i = 0; i < numBunch_; i++) {
+            
+            osiMaster_->addRow(mncol_+1, cutIndexBunch[i], cutElementsBunch[i], cutRowLB, -cutRowUBBunch[i]); 
+            appliedCuts_++;
+            //We have to change the coefficient in the master problem of the theta from 0 to the correct value
+            if ( mdobj_[mncol_+i] == 0){
+                mdobj_[mncol_+i] = 1;
+                osiMaster_->setObjCoeff(mncol_+i,mdobj_[mncol_+i]);
+            }
+            
+        }
+
+
+    }
+
+    if(!single_ && !bunching_){
         // Cycle over all cuts which were created
         //assert(oCut == nScen_); // If we do not have a cut for every scenario, something is wrong
         for(int i=0; i<oCut; i++){
@@ -2843,10 +3071,19 @@ void Benders::addOptiCut(int oCut){
             //std::string name = "problem" + to_string(i);
             //osiMaster_->writeLp(name.c_str());
         }	
-
+        // Try new stuff: Add all multi cut's, solve the problem, remove multi cuts and introduce single cut's instead, with bound on Theta
     }
     delete [] cutElements;
     delete [] cutIndex;
+    if (bunching_){
+        for (int j = 0; j < numBunch_; j++){
+            delete [] cutElementsBunch[j];
+            delete [] cutIndexBunch[j];
+        }
+        delete [] cutElementsBunch;
+        delete [] cutIndexBunch;
+        delete [] cutRowUBBunch;
+    }
 
     // ###################################################################################
     // End: addOptiCut
@@ -3013,7 +3250,7 @@ void Benders::addFeasCut( int scen_){
         if (single_)
             obj[j] = -osiMaster_->getColSolution()[mncol_]; // This has to be the value of the current solution (of the theta)
         else 
-            obj[j] = -osiMaster_->getColSolution()[mncol_+scen_];
+            obj[j] = -osiMaster_->getColSolution()[mncol_+bunchIndices_[scen_]];
         collb[j] = 0;
         colub[j] = infty_;
         j++;
@@ -3281,7 +3518,7 @@ int Benders::trustRegion(double* mSol, double LBmax, int oCut, bool fCut){
         // If there are some optimality cuts, the row which is
         // deleted has index "number of rows - number of cuts"
         else{
-            tRind[0] = osiMaster_->getNumRows()-oCut-1;
+            tRind[0] = osiMaster_->getNumRows()-appliedCuts_-1; // Delete the last trust region cut
             osiMaster_->deleteRows(1, tRind);
         }
         delete [] tRind;
@@ -3454,10 +3691,17 @@ int Benders::detEq(){
     // Set integer informations
     osiDetEq_->setInteger(miInt_, mnInt_);
 
+    CPXLPptr lpPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiDetEq_))->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
+    CPXENVptr envPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiDetEq_))->getEnvironmentPtr();
+
     // Solve problem 
     // If there are no integer variables use initialSolve
     if(mnInt_==0){
-        osiDetEq_->initialSolve();
+        // We may want to use the barrier method..
+        if ( barrier_ )
+            CPXbaropt(envPtr,lpPtr);
+        else 
+            osiDetEq_->initialSolve();
     }
     // Else solve via branch and bound
     else{
@@ -3981,6 +4225,9 @@ OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverI
     this->intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART] = 1;
     this->intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE] = 1;
     this->intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED] = 0;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BARRIER] = 0;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCHING] = 0;
+    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCH_SIZE] = 0; 
     this->dblParam[OsiStochasticBendersTwoStageSolverInterface::ABSGAP] = 0.00001;
     this->dblParam[OsiStochasticBendersTwoStageSolverInterface::RELGAP] = 0.000001;
 }
@@ -4007,6 +4254,9 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         bool trustRegion = intParam[OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION];
         bool warmStart = intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART];
         bool warmStartType = intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE]; // 1 is wsI, 0 is wsS
+        bool barrier = intParam[OsiStochasticBendersTwoStageSolverInterface::BARRIER];
+        bool bunching = intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCHING];
+        int bunchSize = intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCH_SIZE];
         //	// Input parameters:
         //	// #1: Maximal Iterations
         //	// #2: Single/multi: s m
@@ -4022,6 +4272,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         std::string trustRegionStr("+tr");
         std::string bendersStr("+ben");
         std::string warmStartStr("+wsI"); // We chose warmstart between iterations, but we can also choose warmstart between subproblems..
+        std::string barrierStr("-br");
+        std::string bunchingStr("-bunch");
         if (!useBenders)
             bendersStr = "-ben";
         if (!useRegularized)
@@ -4036,10 +4288,14 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             warmStartStr = "-ws";
         if (!warmStartType)
             warmStartStr = "+wsS";
+        if (barrier)
+            barrierStr = "+br";
+        if (bunching)
+            bunchingStr = "+bunch";
 
         // We want to store the time necessary to solve the problem
         double time = CoinCpuTime();
-        benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str());
+        benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str(),barrierStr.c_str(),bunchingStr.c_str(),bunchSize);
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
         if ( useRegularized ){

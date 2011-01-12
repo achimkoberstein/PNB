@@ -2,11 +2,15 @@
 #include <gtest/gtest.h>
 
 #include <glog/logging.h>
+#include <fstream>
+#include <vector>
 
 #include "Benders.hpp"
 #include "SmiScnModel.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "SAA.hpp" //why do we need this? i don't know...
+#include "CoinTime.hpp"
+
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 
@@ -19,24 +23,71 @@ namespace flopc {
         BendersTest(){ }
         
         double solveSMPS(const char* name) {
-            SmiScnModel smi;
-            smi.readSmps(name);
-            //OsiCpxSolverInterface cpxSolverDetEq;
-            //smi.setOsiSolverHandle(&cpxSolverDetEq);
-            //OsiSolverInterface * osiPtr = smi.loadOsiSolverData();
-            //osiPtr->initialSolve();
-            //double deteqvalue = osiPtr->getObjValue();
-            OsiCpxSolverInterface cpxSolver;
-            OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BENDERS,1);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,0);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION,1);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART,1);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE,0);
-            benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED,0);
-            benders.initialSolve();
-            return benders.getObjValue();
-            return 0;
+            double repetitions = 3;
+            std::vector<double> wallClockTime(repetitions+1,0);
+            std::vector<double> solvingTime(repetitions+1,0);
+            double objective = 0;
+            //benders.initialSolve();
+            ofstream ofs;
+		    ofs.open("BendersTestSet.txt", std::ios::app);
+		    ofs << "Problem Instance " << name << endl;
+            for (int i = 0; i < repetitions; i++){
+                double time = CoinCpuTime();
+                SmiScnModel smi;
+                smi.readSmps(name);
+
+                OsiCpxSolverInterface cpxSolver;
+                OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BENDERS,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::KNAPSACK,0);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED,0);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BARRIER,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BUNCHING,1);
+                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BUNCH_SIZE,100);
+                benders.initialSolve();
+                double wallClockT = CoinCpuTime()-time;
+
+                if (i == 0){ // Stuff to write in the txt file for archiving purposes
+                    ofs << "Obj. Value: " << benders.getObjValue() << endl;
+                    ofs << "Parameters : ";
+                    for (int i = OsiStochasticBendersTwoStageSolverInterface::MULTI; i!= OsiStochasticBendersTwoStageSolverInterface::last1; ++i)
+                        ofs << " " << benders.getIntParam(static_cast<OsiStochasticBendersTwoStageSolverInterface::BendersIntParam>(i));
+                    ofs << endl;
+                    for (int i = OsiStochasticBendersTwoStageSolverInterface::ABSGAP; i!= OsiStochasticBendersTwoStageSolverInterface::last2; ++i)
+                        ofs << " " << benders.getDoubleParam(static_cast<OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam>(i));
+                    ofs << endl;
+
+                }
+                objective += benders.getObjValue()*(1/repetitions);
+                wallClockTime.push_back(wallClockT);
+                solvingTime.push_back(benders.getSolutionTime());
+            }
+            // Compute average time
+            for (int i = 0; i < repetitions; i++){
+                wallClockTime[repetitions] += wallClockTime[i]/repetitions;
+                solvingTime[repetitions] += solvingTime[i]/repetitions;
+            }
+
+
+		    
+		    ofs << "Overall Wall Clock Time (secs): ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << wallClockTime[i] << " "; 
+            ofs << endl;
+            ofs << "Solution Time Only (secs): ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << solvingTime[i] << " "; 
+            ofs << endl;
+            ofs << "Average Wall Clock Time (secs): " << wallClockTime[repetitions];
+            ofs << "Average Solution Time (secs): " << solvingTime[repetitions];
+
+		    ofs << "-------------------------" << endl;
+		    ofs.close();
+            return objective;
         }
     };
 
@@ -78,29 +129,29 @@ TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal soluti
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
-     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_4000"), 259.346, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_6000"), 297.563, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_8000"), 262.451, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_10000"), 298.638, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_2000"), 209.151, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_4000"), 218.247, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_6000"), 239.721, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_8000"), 239.158, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_10000"), 231.706, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_4000"), 259.346, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_6000"), 297.563, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_8000"), 262.451, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_10000"), 298.638, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_2000"), 209.151, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_4000"), 218.247, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_6000"), 239.721, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_8000"), 239.158, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_10000"), 231.706, 0.1);
 }
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_2000"), -348.092, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_2000"), -348.092, 0.1);
 }
 
 TEST_F(BendersTest, stormG2) { // no progress in interations, obj. values 0
