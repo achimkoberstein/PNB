@@ -63,8 +63,8 @@ namespace flopc {
 
                 }
                 objective += benders.getObjValue()*(1/repetitions);
-                wallClockTime.push_back(wallClockT);
-                solvingTime.push_back(benders.getSolutionTime());
+                wallClockTime[i] = wallClockT;
+                solvingTime[i] = benders.getSolutionTime();
             }
             // Compute average time
             for (int i = 0; i < repetitions; i++){
@@ -82,8 +82,8 @@ namespace flopc {
             for (int i = 0; i < repetitions; i++)
                 ofs << solvingTime[i] << " "; 
             ofs << endl;
-            ofs << "Average Wall Clock Time (secs): " << wallClockTime[repetitions];
-            ofs << "Average Solution Time (secs): " << solvingTime[repetitions];
+            ofs << "Average Wall Clock Time (secs): " << wallClockTime[repetitions] << endl;
+            ofs << "Average Solution Time (secs): " << solvingTime[repetitions] << endl;
 
 		    ofs << "-------------------------" << endl;
 		    ofs.close();
@@ -126,10 +126,10 @@ namespace flopc {
 //}
 
 TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal solution is found (correct), we get a stack overflow (at least for the first two instances)
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_4000"), 259.346, 0.1);
