@@ -496,7 +496,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 // We have to differentiate between multi and single cut..
                 // TODO: Important distinction here: we compare the SolutionValue of the current scenario subproblem with the approximation. If the solutionValue is greater than the approximation, we have to calculate an optimality cut, as the approximation is not good enough yet.
                 // Equally important: Compare apples with apples. Currently we compare the scenario subproblem value times its probability with the approximation factor for the subproblem where the probability is already priced in via the optimality constraints ( objCoef of approximation is 1 ).
-                if( feasible && (single_ || bunching_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+bunchIndices_[scen_]] || nIter_==nFeas ) ){
+                if( feasible && (single_ || bunching_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+ (bunching_ ? bunchIndices_[scen_] : scen_)] || nIter_==nFeas ) ){
                     // Calculate an optimality cut; Input: number of optimality cuts
                     // which were calculate during the current iteration, number of
                     // current scenario;
@@ -3250,7 +3250,7 @@ void Benders::addFeasCut( int scen_){
         if (single_)
             obj[j] = -osiMaster_->getColSolution()[mncol_]; // This has to be the value of the current solution (of the theta)
         else 
-            obj[j] = -osiMaster_->getColSolution()[mncol_+bunchIndices_[scen_]];
+            obj[j] = -osiMaster_->getColSolution()[mncol_+ (bunching_ ? bunchIndices_[scen_] : scen_)];
         collb[j] = 0;
         colub[j] = infty_;
         j++;
@@ -4214,22 +4214,14 @@ double Benders::roundDouble(const double& val){
     return floor( val*precision_+0.5 ) / precision_; // We round the value to the 
 }
 
-OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
+OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel )
 : OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
 {
+}
 
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS] = 1;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::MULTI] = 1;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::KNAPSACK] = 1;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION] = 1;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART] = 1;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE] = 1;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED] = 0;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BARRIER] = 0;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCHING] = 0;
-    this->intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCH_SIZE] = 0; 
-    this->dblParam[OsiStochasticBendersTwoStageSolverInterface::ABSGAP] = 0.00001;
-    this->dblParam[OsiStochasticBendersTwoStageSolverInterface::RELGAP] = 0.000001;
+OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel, BendersParameter& parameter )
+: OsiStochasticSolverInterface(osiSolver,smiModel),benders(0),params(parameter)
+{
 }
 
 OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolverInterface()
@@ -4245,18 +4237,18 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     if (smiModel){
         //Set params for Benders
         int maxIt = 10000;
-        double relEps = dblParam[OsiStochasticBendersTwoStageSolverInterface::RELGAP];
-        double absEps = dblParam[OsiStochasticBendersTwoStageSolverInterface::ABSGAP];
-        bool useBenders = intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS];
-        bool useRegularized = intParam[OsiStochasticBendersTwoStageSolverInterface::REGULARIZED];
-        bool multi = intParam[OsiStochasticBendersTwoStageSolverInterface::MULTI];
-        bool knapsack = intParam[OsiStochasticBendersTwoStageSolverInterface::KNAPSACK];
-        bool trustRegion = intParam[OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION];
-        bool warmStart = intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART];
-        bool warmStartType = intParam[OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE]; // 1 is wsI, 0 is wsS
-        bool barrier = intParam[OsiStochasticBendersTwoStageSolverInterface::BARRIER];
-        bool bunching = intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCHING];
-        int bunchSize = intParam[OsiStochasticBendersTwoStageSolverInterface::BUNCH_SIZE];
+        double relEps = params.getDoubleParam(BendersParameter::RELGAP);
+        double absEps = params.getDoubleParam(BendersParameter::ABSGAP);
+        bool useBenders = params.getIntParam(BendersParameter::BENDERS);
+        bool useRegularized = params.getIntParam(BendersParameter::REGULARIZED);
+        bool multi = params.getIntParam(BendersParameter::MULTI);
+        bool knapsack = params.getIntParam(BendersParameter::KNAPSACK);
+        bool trustRegion = params.getIntParam(BendersParameter::TRUSTREGION);
+        bool warmStart = params.getIntParam(BendersParameter::WARMSTART);
+        bool warmStartType = params.getIntParam(BendersParameter::WARMSTART_TYPE); // 1 is wsI, 0 is wsS
+        bool barrier = params.getIntParam(BendersParameter::BARRIER);
+        bool bunching = params.getIntParam(BendersParameter::BUNCHING);
+        int bunchSize = params.getIntParam(BendersParameter::BUNCH_SIZE);
         //	// Input parameters:
         //	// #1: Maximal Iterations
         //	// #2: Single/multi: s m
@@ -4325,7 +4317,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 
 double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
     if ( benders == 0) return benders->infty_;
-    else {if ( intParam[OsiStochasticBendersTwoStageSolverInterface::BENDERS] == 1 )
+    else {if ( params.getIntParam(BendersParameter::BENDERS) == 1 )
         return benders->UB_; // Return upper bound, as this is the value of our solution
     else
         return benders->objDetEq_;
