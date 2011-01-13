@@ -351,6 +351,11 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 			
 			if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
 			{
+                // store the old one
+                if (smiRV != NULL) 
+                {
+                    smiDD->addDiscreteRV(smiRV);
+                }
 				//process discrete distribution
 				smi->processDiscreteDistributionIntoScenarios(smiDD);
 				return 0;

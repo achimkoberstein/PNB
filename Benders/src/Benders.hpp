@@ -691,10 +691,43 @@ public:
     double getObjValue();
 };
 
+class BendersParameter {
+public:
+	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
+	typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
+	
+	BendersParameter() {
+        this->intParam[BendersParameter::BENDERS] = 1;
+        this->intParam[BendersParameter::MULTI] = 1;
+        this->intParam[BendersParameter::KNAPSACK] = 0;
+        this->intParam[BendersParameter::TRUSTREGION] = 0;
+        this->intParam[BendersParameter::WARMSTART] = 1;
+        this->intParam[BendersParameter::REGULARIZED] = 0;
+        this->dblParam[BendersParameter::ABSGAP] = 0.00001;
+        this->dblParam[BendersParameter::RELGAP] = 0.000001;
+        this->intParam[BendersParameter::WARMSTART_TYPE] = 1;
+        this->intParam[BendersParameter::BARRIER] = 0;
+        this->intParam[BendersParameter::BUNCHING] = 0;
+        this->intParam[BendersParameter::BUNCH_SIZE] = 0;
+	}
+   ~BendersParameter(){}
+    
+	inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { this->intParam[param] = val; }
+	inline int getIntParam(const BendersParameter::BendersIntParam &param) { return this->intParam[param]; }
+    inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { this->dblParam[param] = val; }
+	inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return this->dblParam[param]; }
+
+private:
+    int intParam[BendersParameter::last1];
+    double dblParam[BendersParameter::last2];
+
+};
+
 class OsiStochasticBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
 
-     OsiStochasticBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver,SmiScnModel* smiModel);
+     OsiStochasticBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver, SmiScnModel* smiModel);
+     OsiStochasticBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver, SmiScnModel* smiModel, BendersParameter& params);
     ~OsiStochasticBendersTwoStageSolverInterface();
 
     void initialSolve();
@@ -706,20 +739,16 @@ public:
 		benders->writeSolutionFileBenders(path, time );
 	}
 	
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
-
-    typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
-	
-	inline void setIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersIntParam &param, const int &val) { this->intParam[param] = val; }
-	inline int getIntParam(const OsiStochasticBendersTwoStageSolverInterface::BendersIntParam &param) { return this->intParam[param]; }
-    inline void setDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param, const double &val) { this->dblParam[param] = val; }
-	inline double getDoubleParam(const OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam &param) { return this->dblParam[param]; }
+    inline void setParams(BendersParameter &params) { this->params = params; }
+    inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { params.setIntParam(param, val); }
+	inline int getIntParam(const BendersParameter::BendersIntParam &param) { return params.getIntParam(param); }
+    inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { params.setDoubleParam(param, val); }
+	inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
 	inline double getSolutionTime() { return this->solTime; }
 	
 private:
     Benders* benders;
-    int intParam[OsiStochasticBendersTwoStageSolverInterface::last1];
-    double dblParam[OsiStochasticBendersTwoStageSolverInterface::last2];
+    BendersParameter params;
     double solTime;
 };
 

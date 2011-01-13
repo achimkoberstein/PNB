@@ -18,6 +18,32 @@ namespace flopc {
 
 #pragma region initialization
 
+    class Posts: public ::testing::Test{
+    protected:
+        Posts(){ }
+
+        double solveSMPS(const char* name) {
+            SmiScnModel smi;
+            smi.readSmps(name);
+            OsiCpxSolverInterface cpxSolver;
+            OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
+            benders.initialSolve();
+            return benders.getObjValue();
+            return 0;
+        }
+        
+        double solveSMPS(const char* name, BendersParameter &params) {
+            SmiScnModel smi;
+            smi.readSmps(name);
+            OsiCpxSolverInterface cpxSolver;
+            OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
+            benders.setParams(params);
+            benders.initialSolve();
+            return benders.getObjValue();
+            return 0;
+        }
+    };
+    
     class BendersTest: public ::testing::Test{
     protected:
         BendersTest(){ }
@@ -38,27 +64,27 @@ namespace flopc {
 
                 OsiCpxSolverInterface cpxSolver;
                 OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BENDERS,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::KNAPSACK,0);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::WARMSTART_TYPE,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED,0);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BARRIER,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BUNCHING,1);
-                benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BUNCH_SIZE,100);
+                benders.setIntParam(BendersParameter::BENDERS,1);
+                benders.setIntParam(BendersParameter::MULTI,1);
+                benders.setIntParam(BendersParameter::TRUSTREGION,1);
+                benders.setIntParam(BendersParameter::KNAPSACK,0);
+                benders.setIntParam(BendersParameter::WARMSTART,1);
+                benders.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+                benders.setIntParam(BendersParameter::REGULARIZED,0);
+                benders.setIntParam(BendersParameter::BARRIER,1);
+                benders.setIntParam(BendersParameter::BUNCHING,1);
+                benders.setIntParam(BendersParameter::BUNCH_SIZE,100);
                 benders.initialSolve();
                 double wallClockT = CoinCpuTime()-time;
 
                 if (i == 0){ // Stuff to write in the txt file for archiving purposes
                     ofs << "Obj. Value: " << benders.getObjValue() << endl;
                     ofs << "Parameters : ";
-                    for (int i = OsiStochasticBendersTwoStageSolverInterface::MULTI; i!= OsiStochasticBendersTwoStageSolverInterface::last1; ++i)
-                        ofs << " " << benders.getIntParam(static_cast<OsiStochasticBendersTwoStageSolverInterface::BendersIntParam>(i));
+                    for (int i = BendersParameter::MULTI; i!= BendersParameter::last1; ++i)
+                        ofs << " " << benders.getIntParam(static_cast<BendersParameter::BendersIntParam>(i));
                     ofs << endl;
-                    for (int i = OsiStochasticBendersTwoStageSolverInterface::ABSGAP; i!= OsiStochasticBendersTwoStageSolverInterface::last2; ++i)
-                        ofs << " " << benders.getDoubleParam(static_cast<OsiStochasticBendersTwoStageSolverInterface::BendersDoubleParam>(i));
+                    for (int i = BendersParameter::ABSGAP; i!= BendersParameter::last2; ++i)
+                        ofs << " " << benders.getDoubleParam(static_cast<BendersParameter::BendersDoubleParam>(i));
                     ofs << endl;
 
                 }
@@ -94,6 +120,45 @@ namespace flopc {
 #pragma endregion initialization
 
 } //end namespace
+
+TEST_F(Posts, scfxm) { // "master problem is infeasible or unbounded" ?!
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_16"), 18416.655, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_6"), 18615.932, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_16"), 18438.891, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_6"), 18616.224, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_16"), 18438.891, 0.1);
+}
+
+TEST_F(Posts, pltexp) { // ok
+    //// example how to use parameter class; by the way: solved with regularization to optimality, but then cplex crashes...
+    //BendersParameter params;
+    //params.setIntParam(BendersParameter::REGULARIZED, 1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6", params), -9.479354, 0.1);
+
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -23.214073, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -28.134408, 0.1);
+}
+
+TEST_F(Posts, sgpf) { // error: std::bad_alloc
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y3"), -3027.706, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y4"), -4031.391, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y5"), -5201.282, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y6"), -6403.3, 0.1);
+}
+
+TEST_F(Posts, storm) { // ok
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_8"), 15535231.897, 10);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_27"), 15508982.306, 10);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_125"), 15512090.180, 10);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_1000"), 15802589.698, 10);
+}
 
 //TEST_F(BendersTest, fleetAssignment) { // ok
 //    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/fA"), -689.432, 0.1);
@@ -163,7 +228,7 @@ TEST_F(BendersTest, stormG2) { // no progress in interations, obj. values 0
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.stormG2";
+    ::testing::GTEST_FLAG(filter) = "*.rand";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)
