@@ -932,19 +932,19 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     std::sort(integerIndices.begin(),integerIndices.end()); //Sort indices in ascending order
     std::sort(binaryIndices.begin(),binaryIndices.end()); //Sort indices in ascending order
 
+    
     // generate variable/column names
-    char** colNamesStrict = NULL;
-    colNamesStrict = new char*[n];
-    char** colNamesFree = NULL;
-    colNamesFree = new char*[n];
-    for (int i = 0; i < n; i++) {
-        colNamesStrict[i] = NULL;
-        colNamesFree[i] = NULL;
-    }
+    std::vector<std::string> colNamesStrict;
+    std::vector<std::string> colNamesFree;
+
+    colNamesStrict.reserve(n);
+    colNamesFree.reserve(n);
+    
     std::set<string> nameSetStrict;
     nameSetStrict.insert("V");
     std::set<string> nameSetFree;
     nameSetFree.insert("V");
+    
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         (*i)->generateNames(nameSetStrict, nameSetFree, colNamesStrict, colNamesFree);
     }
@@ -986,6 +986,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         }
 
         osiCore->setColumnNames(colNamesStrict, colNamesFree);
+        Solver->setColNames(colNamesFree, 0, colNamesFree.size(), 0);
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         smiModel = generateScenarioTree(randomCoefs,osiCore);

@@ -77,7 +77,7 @@ namespace flopc {
 
         void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
 
-        void generateNames(std::set<string> &nameSetFix, std::set<string> &nameSetFree, char **colNamesFix, char **colNamesFree);
+        void generateNames(std::set<string> &nameSetFix, std::set<string> &nameSetFree, std::vector<std::string> &colNamesFix, std::vector<std::string> &colNamesFree);
 
         /// Upper bound on the variable value.
         MP_data upperLimit;
