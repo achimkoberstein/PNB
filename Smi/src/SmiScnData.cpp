@@ -324,15 +324,6 @@ SmiCoreData::~SmiCoreData()
     for (int ijk=0; ijk<nodes_.size(); ijk++){
 	  delete nodes_[ijk];
     }
-
-    if (colNamesStrict != NULL && colNamesFree != NULL) {
-        for (int i = 0; i < this->getNumCols(); i++) {
-            delete [] colNamesStrict[i];
-            delete [] colNamesFree[i];
-        }
-        delete [] colNamesStrict;
-        delete [] colNamesFree;
-    }
 }
 
 void
@@ -355,6 +346,7 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
 				 CoinPackedVector *drup):
 				 stg_(stg),
 				 core_(core), isCoreNode_(false),
+				 combineRule_(SmiCoreCombineReplace::Instance()),
 				 numarrays_(5), // 5 arrays: dclo, dcup, dobj, drlo, drup
 				 nrow_(core->getNumRows(stg_)),
 				 ncol_(core->getNumCols(stg_)),
