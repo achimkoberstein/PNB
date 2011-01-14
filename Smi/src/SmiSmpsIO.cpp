@@ -470,8 +470,6 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 		} 
 		case SMI_BLOCKS_SECTION://BLOCKS card
 		{
-			printf("Processing BLOCKS section\n");
-
 			// Create Block-Structure
 			SmiBlockStructure *smiBS = new SmiBlockStructure(core);
 			SmiBlock *smiBlock = NULL;
@@ -497,14 +495,10 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 				case SMI_BL_CARD:
 				{
 					if(blName!=NULL){
-						cout<<"Blockname: "<<blName<<endl;
-						cout<<"ist gleich: "<<smpsCardReader_->blockName()<<endl;
-						cout<<"Wahrscheinlichkeit: "<< prob<<endl;
 						smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
 									
 						//first event of a block
 						if(strcmp(blName,smpsCardReader_->blockName())){
-							cout<<"bin drin"<<endl;
 							smiBS->addSmiBlock(smiBlock);
 							//delete smiBlock;
 							
@@ -526,7 +520,6 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 						smiBlock = new SmiBlock(1);
 						blName= new char[strlen(smpsCardReader_->blockName())];
 						strcpy(blName,smpsCardReader_->blockName());
-						cout<<"NULL"<<endl;
 					}
 					
 					prob = smpsCardReader_->value();
@@ -539,7 +532,6 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					int i=this->rowIndex(smpsCardReader_->rowName());
 					double value = smpsCardReader_->value();
 
-					cout<<"Element ("<<i<<","<<j<<") hat den Wert "<<value<<endl;
 					if (j<0) // check RHS
 					{
 						if (!strcmp(this->getRhsName(),"")) {

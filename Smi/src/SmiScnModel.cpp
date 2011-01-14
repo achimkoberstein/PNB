@@ -1357,7 +1357,6 @@ void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &ds
 
 void
 SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure *smiBS){
-	cout<<"ProcessBlocksIntoScenarios"<<endl;
 	combineBlocks(smiBS);
 	
 
@@ -1686,14 +1685,12 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
  void SmiScnModel::combineBlocks(SmiBlockStructure* smiBS){
 	int nBlocks = smiBS->getNumBlocks();
-	cout<<nBlocks<<endl;
 	SmiScenarioIndex is;
 	SmiCoreData *core = smiBS->getCore();
 	SmiCoreCombineRule *r = smiBS->getCombineWithCoreRule();
 	if(nBlocks==0) return;
 	if(nBlocks==1){
 		SmiBlock *block = smiBS->getBlock(0);
-		cout<<"Anzahl Events "<<block->getNumEvents()<<endl;
 		for(size_t i=0; i < block->getNumEvents();i++){
 			CoinPackedVector dobj = block->getBlockEventObjective(i);
 			CoinPackedVector dclo = block->getBlockEventColLower(i);
