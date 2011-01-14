@@ -250,18 +250,18 @@ double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense ){
     return result;
 }
 
-double SmiScnModel::getEVValue(OsiSolverInterface *osiSolver, double objSense ){
+double SmiScnModel::getEVValue(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues){
     //Test if wsValues is empty, if this is the case, run solveWS
-    std::pair<double, double*> results(solveEV(osiSolver,objSense));
+    std::pair<double, double*> results(solveEV(osiSolver,objSense,calculateAverageValues));
     delete[] results.second;
     return results.first;
 }
 
-double SmiScnModel::getEEVValue(OsiSolverInterface* osiSolver, double objSense){
-    return solveEEV(osiSolver,objSense);
+double SmiScnModel::getEEVValue(OsiSolverInterface* osiSolver, double objSense, bool calculateAverageValues){
+    return solveEEV(osiSolver,objSense,calculateAverageValues);
 }
 
-std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense )
+std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues)
 {
     // We create a new osiSolver Handle at this point. 
     OsiSolverInterface* tempPtr = osiStoch_;
@@ -300,14 +300,16 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     for (int t = 0; t < this->core_->getNumStages(); t++) {
         addNode(this->core_->getNode(t));
     }
-    // If the core model does not contain the exepected values for the random variables (how to check that?),
+    // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
     // and then add the weighted values from the other scenarios
-    for (int i = 0; i < this->getNumScenarios(); i++) {
-        std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
-        for (unsigned int j = 0; j < nodes.size(); j++) {
-            if (nodes[j]->getScenarioIndex() == i) {
-                addNodeEVP(nodes[j]);
+    if (calculateAverageValues) {
+        for (int i = 0; i < this->getNumScenarios(); i++) {
+            std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
+            for (unsigned int j = 0; j < nodes.size(); j++) {
+                if (nodes[j]->getScenarioIndex() == i) {
+                    addNodeEVP(nodes[j]);
+                }
             }
         }
     }
@@ -364,11 +366,11 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     return make_pair(objValue,colSolution );
 }
 
-double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense)
+double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues)
 {
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false);
-    std::pair<double, double* > evResult(solveEV(osiSolver, objSense)); //We create a new osiSolver object in here (osiStoch_)
+    std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
     
 
     // save the column solution for stage-1-columns
