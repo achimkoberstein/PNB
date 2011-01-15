@@ -91,7 +91,8 @@ namespace flopc {
         int getCurrentStage(int i1, int i2, int i3, int i4, int i5);
         void setStageSet();
 
-	std::string generateNamesSuffixFree(const int k);
+        std::string generateNamesSuffixFree(const int k);
+        bool isActive(const int k);
 
         void operator()() const;
         const MP_set_base *S1, *S2, *S3, *S4, *S5;
