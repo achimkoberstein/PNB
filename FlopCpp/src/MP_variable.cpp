@@ -242,8 +242,10 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
 
     // generate the names with the suffixes for every instance of this variable and copy them into the array
     for (int k = 0; k < size(); k++) {
-        string free = nameFree + this->generateNamesSuffixFree(k);
-        colNamesFree.push_back(CoinStrdup(free.c_str()));
+        if (this->isActive(k)) {
+            string free = nameFree + this->generateNamesSuffixFree(k);
+            colNamesFree.push_back(CoinStrdup(free.c_str()));
+        }
     }
 
 
@@ -255,7 +257,10 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
         nameStrict = nameFree;
         nameSetStrict.insert(nameStrict);
         for (int k = 0; k < size(); k++) {
-            colNamesStrict.push_back(colNamesFree[offset+k]);
+            if (this->isActive(k)) {
+                string strict = nameStrict + this->generateNamesSuffixFree(k);
+                colNamesStrict.push_back(CoinStrdup(strict.c_str()));
+            }
         }
     }
     else {
@@ -267,7 +272,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             }
             else {
                 nameStrict = nameFree.substr(0, 8 - (to_string(size()).length() + 1));
-                
+
                 if (!isUniqueName(nameStrict, nameSetStrict)) {
                     // if its not a unique name, use an extension
                     int ext = 0;
@@ -288,17 +293,30 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             nameSetStrict.insert(nameStrict);
             //fill the array
             for (int k = 0; k < size(); k++) {
-                string strict = nameStrict + "_" + to_string(k);
-                colNamesStrict.push_back(CoinStrdup(strict.c_str()));
+                if (this->isActive(k)) {
+                    string strict = nameStrict + "_" + to_string(k);
+                    colNamesStrict.push_back(CoinStrdup(strict.c_str()));
+                }
             }
         } else {
             // push empty strings, let the SmiSmpsWriter or whatever try it...
             string s = "";
             for (int k = 0; k < size(); k++) {
-                colNamesStrict.push_back(s.c_str());
+                if (this->isActive(k)) {
+                    colNamesStrict.push_back(s.c_str());
+                }
             }
         }
     }
+}
+
+bool MP_variable::isActive(const int k) {
+    //assert(M != 0);
+    //assert(M->Solver != 0);
+    if (M->getStochastic() && M->colIndirection[offset+k] == outOfBound)
+        return false;
+    
+    return true;
 }
 
 string MP_variable::generateNamesSuffixFree(const int k) {
