@@ -244,7 +244,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
     for (int k = 0; k < size(); k++) {
         if (this->isActive(k)) {
             string free = nameFree + this->generateNamesSuffixFree(k);
-            colNamesFree.push_back(CoinStrdup(free.c_str()));
+            colNamesFree.push_back(free.c_str());
         }
     }
 
@@ -259,7 +259,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
         for (int k = 0; k < size(); k++) {
             if (this->isActive(k)) {
                 string strict = nameStrict + this->generateNamesSuffixFree(k);
-                colNamesStrict.push_back(CoinStrdup(strict.c_str()));
+                colNamesStrict.push_back(strict.c_str());
             }
         }
     }
@@ -295,7 +295,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             for (int k = 0; k < size(); k++) {
                 if (this->isActive(k)) {
                     string strict = nameStrict + "_" + to_string(k);
-                    colNamesStrict.push_back(CoinStrdup(strict.c_str()));
+                    colNamesStrict.push_back(strict.c_str());
                 }
             }
         } else {
