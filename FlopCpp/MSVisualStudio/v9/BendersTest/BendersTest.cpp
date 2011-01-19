@@ -54,8 +54,11 @@ namespace flopc {
             std::vector<double> solvingTime(repetitions+1,0);
             double objective = 0;
             //benders.initialSolve();
+            char sdate[9];
+            char stime[9];
             ofstream ofs;
 		    ofs.open("BendersTestSet.txt", std::ios::app);
+            ofs << _strdate(sdate) << " " << _strtime(stime) << endl;
 		    ofs << "Problem Instance " << name << endl;
             for (int i = 0; i < repetitions; i++){
                 double time = CoinCpuTime();
