@@ -14,6 +14,9 @@ using std::string;
 #include <vector>
 using std::vector;
 
+#include <set>
+using std::set;
+
 #include <boost/exception/all.hpp>
 #include <glog/logging.h>
 
@@ -25,6 +28,10 @@ inline std::string to_string (const T& t)
     return ss.str();
 }
 
+inline bool isUniqueName(const string &name, const std::set<string> &nameSet) {
+    std::set<string>::const_iterator sIter = nameSet.find(name);
+    return (sIter == nameSet.end());
+}
 
 namespace flopc {
 

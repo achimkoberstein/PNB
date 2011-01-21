@@ -246,6 +246,9 @@ public:
 
 	inline void setColumnNames(std::vector<std::string> namesStrict, std::vector<std::string> namesFree) { this->colNamesStrict = namesStrict; this->colNamesFree = namesFree; }
 	inline const std::vector<std::string> * getColumnNames(bool strictFormat = true) { if (strictFormat) return &colNamesStrict; else return &colNamesFree; }
+	
+	inline void setRowNames(std::vector<std::string> namesStrict, std::vector<std::string> namesFree) { this->rowNamesStrict = namesStrict; this->rowNamesFree = namesFree; }
+	inline const std::vector<std::string> * getRowNames(bool strictFormat = true) { if (strictFormat) return &rowNamesStrict; else return &rowNamesFree; }
 
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
@@ -291,6 +294,8 @@ private:
 	vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
 	std::vector<std::string> colNamesStrict;
 	std::vector<std::string> colNamesFree;
+	std::vector<std::string> rowNamesStrict;
+	std::vector<std::string> rowNamesFree;
 };
 
 #endif //#define SmiScnData_HPP
