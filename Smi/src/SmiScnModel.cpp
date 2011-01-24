@@ -16,6 +16,7 @@ using namespace std;
 // Define static variable
 template<typename T>
 int SmiTreeNode<T>::treeDepth_;
+int SmiTreeNode<int *>::treeDepth_;
 
 int SmiScnNode::getCoreColIndex(int i)
 {
@@ -304,9 +305,17 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     for (int t = 0; t < this->core_->getNumStages(); t++) {
         addNode(this->core_->getNode(t));
     }
+
+    matrix_ = new CoinPackedMatrix(false,this->core_->getNumCols(),this->core_->getNumRows());
+    int *len=NULL;
+    if (!calculateAverageValues)
+        // Assign values from current arrays (which get nulled thereafter)
+        matrix_->assignMatrix(false,ncol_,nrow_,nels_,
+            dels_,indx_,rstrt_,len);
     // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
     // and then add the weighted values from the other scenarios
+    //
     if (calculateAverageValues) {
         for (int i = 0; i < this->getNumScenarios(); i++) {
             std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
@@ -318,11 +327,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
         }
     }
 
-    matrix_ = new CoinPackedMatrix(false,0,0);
-    int *len=NULL;
-    // Assign values from current arrays (which get nulled thereafter)
-    matrix_->assignMatrix(false,ncol_,nrow_,nels_,
-        dels_,indx_,rstrt_,len);
+
     // pass data to osiStoch
     osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 

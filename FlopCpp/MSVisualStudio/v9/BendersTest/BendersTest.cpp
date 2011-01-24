@@ -74,8 +74,9 @@ namespace flopc {
                 benders.setIntParam(BendersParameter::WARMSTART,1);
                 benders.setIntParam(BendersParameter::WARMSTART_TYPE,1);
                 benders.setIntParam(BendersParameter::REGULARIZED,0);
+                benders.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
                 benders.setIntParam(BendersParameter::BARRIER,1);
-                benders.setIntParam(BendersParameter::BUNCHING,1);
+                benders.setIntParam(BendersParameter::BUNCHING,0);
                 benders.setIntParam(BendersParameter::BUNCH_SIZE,100);
                 benders.initialSolve();
                 double wallClockT = CoinCpuTime()-time;
@@ -139,7 +140,7 @@ TEST_F(Posts, pltexp) { // ok
     //params.setIntParam(BendersParameter::REGULARIZED, 1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6", params), -9.479354, 0.1);
 
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
@@ -157,7 +158,7 @@ TEST_F(Posts, sgpf) { // error: std::bad_alloc
 }
 
 TEST_F(Posts, storm) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_8"), 15535231.897, 10);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_8"), 15535231.897, 10);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_27"), 15508982.306, 10);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_125"), 15512090.180, 10);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_1000"), 15802589.698, 10);
@@ -194,28 +195,28 @@ TEST_F(Posts, storm) { // ok
 //}
 
 TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal solution is found (correct), we get a stack overflow (at least for the first two instances)
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_4000"), 259.346, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_6000"), 297.563, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_8000"), 262.451, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_10000"), 298.638, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_2000"), 209.151, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_4000"), 218.247, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_6000"), 239.721, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_8000"), 239.158, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_10000"), 231.706, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_4000"), 259.346, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_6000"), 297.563, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_8000"), 262.451, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_10000"), 298.638, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_2000"), 209.151, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_4000"), 218.247, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_6000"), 239.721, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_8000"), 239.158, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_10000"), 231.706, 0.1);
 }
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
@@ -231,7 +232,7 @@ TEST_F(BendersTest, stormG2) { // no progress in interations, obj. values 0
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.rand";
+    //::testing::GTEST_FLAG(filter) = "*.rand";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)

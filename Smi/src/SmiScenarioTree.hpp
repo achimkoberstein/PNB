@@ -156,6 +156,7 @@ public:
 
 	}
 
+    // It should belong to the SmiTree, but the node usually has no pointer to the SmiTree
     static int treeDepth_;
 
 	//@}
@@ -190,6 +191,7 @@ private:
     
 
 };
+
 
 //#############################################################################
 /** A function that tests the methods in the SmiTreeNode class. The
