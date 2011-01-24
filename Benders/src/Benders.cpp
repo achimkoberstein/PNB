@@ -193,7 +193,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
     int stat = 0; // 
 
-    if (useRegularizedDecomposition_)
+    if (useRegularizedDecomposition_ || useRegularizedManhattan_)
         regSubproblemSolutionValues_ = new double[nScen_];
 
     if (mnBin_) // Change this to allow integer l-shaped method to work
@@ -213,7 +213,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     // While the gap between upper and lower bound is larger than epsilon
     // repeat the benders decomposition method. Also continue if maximal 
     // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
-    while( useRegularizedDecomposition_ || (UB_ > LB_ && abs(UB_-LB_)>absEps && computeRelativeGap(UB_,LB_,relEps) && maxIter > nIter_) 
+    while( useRegularizedDecomposition_ || useRegularizedManhattan_ || (UB_ > LB_ && abs(UB_-LB_)>absEps && computeRelativeGap(UB_,LB_,relEps) && maxIter > nIter_) 
         || (integerBenders_ && !columnLowerBounds_.empty() ) ){ 
             // At the beginning of each iteration set counter of optimality
             LOG_IF(INFO, integerBenders_) << "Current queue length: " << columnLowerBounds_.size();
@@ -231,6 +231,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             // Read current stage 1 solution 
             const double* mSol = 0;
             mSol = osiMaster_->getColSolution();
+            DLOG(INFO) << "Objective function value of master program " << osiMaster_->getObjValue();
 
             // TODO: Debug, remove eventually
             int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
@@ -311,7 +312,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             // 
             //LOG(INFO) << "Theta is: " << lowerBound-upperBound_;
 
-            if ( useRegularizedDecomposition_) {
+            if ( useRegularizedDecomposition_ || useRegularizedManhattan_) {
                 // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
                 // We compare the lowerBound ( nothing else is the xSolution ) with 
                 // TODO: Improve on this, because otherwise reg. decomp runs forever..
@@ -327,9 +328,9 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 // We also stop if the difference is below an absolute value (for small objective)
                 // We also stop if we have a repeated objective function value ( we assume that we do not get better than this, so we have an already better reg. solution )
                 // We also stop if the difference is below a relative value ( for big objectives ( at the moment : 10^5 )
-                if ( lowerBound-regSolutionValue_ == 0 
-                    || abs(lowerBound-regSolutionValue_) < absEps
-                    || repeated && regSolutionValue_-lowerBound < 0
+                if ( abs(lowerBound-regSolutionValue_) <= ZEROTEST 
+                    || abs(lowerBound) > 10000 && abs(lowerBound-regSolutionValue_) < absEps
+                    //|| repeated && regSolutionValue_-lowerBound < 0
                     || repeated && (int)1/sigma_ == 1024 // We have a close solution and we made null-feasible steps (did not change solution)
                     || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
                     ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
@@ -511,7 +512,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
                 double subObjValueCplex = osiSubproblem_->getObjValue()*scenProb_[scen_]; 
 
-                if (useRegularizedDecomposition_ && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
+                if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
                     // We want to solve the subproblem with the regularized solution
                     buildSubproblem(scen_);
                     addSt1ToSubproblem(scen_,regSolution_);
@@ -528,8 +529,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             regSubproblemSolutionValues_[scen_]+= sSolReg[i]*subObjCoeffReg[i];
                     }
                     regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
-                    if ( regSubproblemSolutionValues_[scen_] != osiSubproblem_->getObjValue()*scenProb_[scen_] )
-                        DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
+                    //if ( regSubproblemSolutionValues_[scen_] != osiSubproblem_->getObjValue()*scenProb_[scen_] )
+                        //DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
                 }
             }
 
@@ -622,7 +623,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     DLOG(WARNING) << "Optimality cuts that should be generated were not applied to the problem. The violation is below ZEROTEST.";
                 }
             }
-            if (feasible && useRegularizedDecomposition_){
+            if (feasible && (useRegularizedDecomposition_ || useRegularizedManhattan_)){
                 // If no optimality cut was generated, we update the regularized solution a to x (exact serious step) 
                 assert(seriousStep_ == false);
                 assert(changeSigma_ == false);
@@ -652,7 +653,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             regSolutionValue_ += regSubproblemSolutionValues_[i];
                         }
                     }
-                    if ( upperBound_ <= regSolutionValue_ ){ // 
+                    if ( upperBound_-regSolutionValue_ <= relEps*abs(regSolutionValue_)+absEps ){ // 
                         seriousStep_ = true;
                         for (int i = 0; i < mncol_; i++){
                             regSolution_[i] = bestSolTemp_[i];
@@ -784,8 +785,11 @@ void Benders::copyMaster(SmiScnModel * smi){
     if(single_){
         zSub_ = 1;	
     }
-    else{
+    else if (!single_ && bunching_){
         zSub_ = numBunch_;	
+    }
+    else if (!single_ && !bunching_){
+        zSub_ = nScen_;
     }
 
     // Declare an array for the coefficients of the objective function; 
@@ -1454,7 +1458,7 @@ int Benders::solveMaster(){
     //const CPXLPptr constLpPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getMutableLpPtr();
     CPXENVptr envPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getEnvironmentPtr();
     // We want to silence CPLEX
-    osiMaster_->messageHandler()->setLogLevel(0);
+    //osiMaster_->messageHandler()->setLogLevel(0);
 
     int stat = 0;
 
@@ -1472,21 +1476,21 @@ int Benders::solveMaster(){
 
         // We check the initial solution for feasibility.
         if (useRegularizedDecomposition_) {
-            // Check the initial solution for feasibility.
-            // How does this work? Solve Master problem with fixed reg. solution.
-            for (int i = 0; i < mncol_; i++){
-                osiMaster_->setColBounds(i,regSolution_[i],regSolution_[i]);
-            }
-            osiMaster_->initialSolve(); // Solve problem and check return values
-            stat = CPXgetstat( envPtr, lpPtr );
-            DLOG_IF(ERROR,stat != 1) << "RD: Tested initial solution status: cplex returned with " << stat;
-            if (!osiMaster_->isProvenOptimal() ){
-                LOG(ERROR) << "RD: Your provided initial solution for the regularized decomposition is not feasible for the master problem. We use normal benders instead.";
-                useRegularizedDecomposition_ = false;
-            }
-            for (int i = 0; i < mncol_; i++){
-                osiMaster_->setColBounds(i,mdclo_[i],mdcup_[i]);
-            }
+            //// Check the initial solution for feasibility.
+            //// How does this work? Solve Master problem with fixed reg. solution.
+            //for (int i = 0; i < mncol_; i++){
+            //    osiMaster_->setColBounds(i,regSolution_[i],regSolution_[i]);
+            //}
+            //osiMaster_->initialSolve(); // Solve problem and check return values
+            //stat = CPXgetstat( envPtr, lpPtr );
+            //DLOG_IF(ERROR,stat != 1) << "RD: Tested initial solution status: cplex returned with " << stat;
+            //if (!osiMaster_->isProvenOptimal() ){
+            //    LOG(ERROR) << "RD: Your provided initial solution for the regularized decomposition is not feasible for the master problem. We use normal benders instead.";
+            //    useRegularizedDecomposition_ = false;
+            //}
+            //for (int i = 0; i < mncol_; i++){
+            //    osiMaster_->setColBounds(i,mdclo_[i],mdcup_[i]);
+            //}
         }
 
         // To compute ||x-a||^2, we introduce a new variable w that is set to w = x-a and we use ||w||^2 in the objective. 
@@ -1595,8 +1599,82 @@ int Benders::solveMaster(){
             CPXwriteprob(envPtr, lpPtr,"masterRD","lp");
         }
 
-        //osiMaster_->writeLp("osiMaster");
-        //osiMaster_->writeMps("osiMaster");
+
+        // Build regularized problem for manhattan distance
+        if ( useRegularizedManhattan_ ){
+            // We add the new columns to the problem
+            double * collb = new double[2*mncol_];
+            double * colub = new double[2*mncol_];
+            double * colobj = new double[2*mncol_];
+            for (int i = 0; i < mncol_*2; i++){// We need to add w_+ - w_ = x-a to the problem, so we have to add w_+ and w_- to the problem first
+                collb[i] = 0;
+                colub[i] = infty_;
+                colobj[i] = 1; 
+            }
+            // Convention: 0-mncol_-1 is w_+, mncol_- (2*mncol_-1) is w_
+            CoinPackedVectorBase** cpvb = new CoinPackedVectorBase*[2*mncol_];
+            for (int i = 0; i < mncol_*2; i++){
+                cpvb[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
+            }
+            osiMaster_->addCols(2*mncol_,cpvb, collb, colub , colobj);
+            // Delete arrays for columns
+            delete[] collb;
+            delete[] colub;
+            delete[] colobj;
+            for (int i = 0; i < 2*mncol_; i++)
+                delete cpvb[i];
+            delete[] cpvb;
+
+            // We add the new rows to the problem
+            double * rowlb = new double[mncol_];
+            double * rowub = new double[mncol_];
+            int * rowstrt = new int[mncol_+1];
+            int * columns = new int[3*mncol_];
+            double * elements = new double[3*mncol_];
+            rowstrt[0] = 0;
+            for (int i = 0; i < mncol_; i++){
+                rowlb[i] = -regSolution_[i]; rowub[i] = -regSolution_[i]; // we have an equality constraint
+                columns[3*i] = mncol_+zSub_+i; columns[3*i+1] = 2*mncol_+zSub_+i; columns[3*i+2] = i;
+                elements[3*i] = 1; elements[3*i+1] = -1; elements[3*i+2] = -1;
+                rowstrt[i+1] = rowstrt[i]+3; // We have three elements per row, so we have to add three
+            }
+            startRows_ = osiMaster_->getNumRows();           
+            // We have to store the row numbers, so we can update these rows later on if the regularized solution changes
+            osiMaster_->addRows(mncol_, rowstrt, columns, elements, rowlb, rowub );
+            endRows_ = osiMaster_->getNumRows(); 
+
+            // delete new-ed arrays for rows
+            delete[] rowlb;
+            delete[] rowub;
+            delete[] rowstrt;
+            delete[] columns;
+            delete[] elements;
+
+             // Ensure the integer indices are still present
+            //if (mnInt_){
+            //        osiMaster_->setInteger(miInt_, mnInt_);
+            //    int numberOfInt = CPXgetnumint(envPtr,lpPtr);
+            //    int numberOfBin = CPXgetnumbin(envPtr,lpPtr);
+            //    if (numberOfInt == 0 || numberOfBin == 0){
+            //        char* type = new char[mnInt_];
+            //        for (int i = 0; i< mnInt_; i++)
+            //            type[i] = 'I'; // 
+            //        int status = CPXchgctype(envPtr, lpPtr, mnInt_, miInt_, type);
+
+            //        delete[] type;
+            //    }
+            //    numberOfInt = CPXgetnumint(envPtr,lpPtr);
+            //    numberOfBin = CPXgetnumbin(envPtr,lpPtr);
+            //    // TODO: Binary settings might improve cplex performance?
+            //    DLOG_IF(ERROR,numberOfInt != mnInt_) << "Number of integer variables differs between master problem on paper and problem in memory!.";
+            //}
+            // TODO set parameter accordingly (numerical emphasis..)
+            int error;
+            error = CPXsetintparam( envPtr, CPX_PARAM_NUMERICALEMPHASIS, 1);
+            DLOG_IF(ERROR,error != 0) << " Setting numerical emphasis parameter returned " << error;
+            // And now we print the problem
+            CPXwriteprob(envPtr, lpPtr,"masterRDManhattan","lp");
+        }
         // Solve master problem 
         // If there are no integer variables use initialSolve
         if(mnInt_==0){
@@ -1623,7 +1701,6 @@ int Benders::solveMaster(){
                 //    delete thetaIndices;
                 //    delete thetaElements;
                 //}
-
                 osiMaster_->initialSolve();
 
             }
@@ -1677,13 +1754,13 @@ int Benders::solveMaster(){
     // Else the master problem is resolved
     else{	
         // If we use reg. decomposition and we made a serious step in the last round, we need to update the reg. solution via the row bounds.
-        if (useRegularizedDecomposition_ && seriousStep_ ) {
+        if (useRegularizedManhattan_ || (useRegularizedDecomposition_ && seriousStep_ )) {
             for (int i = 0; i < mncol_; i++){ // Update row bounds with new reg. solution
                 osiMaster_->setRowBounds(startRows_+i,-regSolution_[i],-regSolution_[i]);
             }
         }
         try {
-            if (useRegularizedDecomposition_ ){
+            if (useRegularizedDecomposition_ || useRegularizedManhattan_){
                 if (changeSigma_){ // If we should change the sigma value, we do so according to our rules
                     if (seriousStep_ && sigma_ <= 512)// increase sigma, make solutions further away more likely
                         sigma_ *= 2;
@@ -1694,13 +1771,22 @@ int Benders::solveMaster(){
                     // We try to compensate a failure in sslp_10_50_50 which otherwise results in too early termination.
                     sigma_ = 1; 
 
-                // change quadratic coefficients in the matrix (mncol_ times many)
-                double term = 1/sigma_;
-                int status = 0;
-                for ( int i = mncol_+zSub_;i < 2*mncol_+zSub_; i++) {
-                    status = CPXchgqpcoef(envPtr,lpPtr,i,i,term);
-                    if ( status != 0)
-                        LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
+                if ( useRegularizedDecomposition_){
+                    // change quadratic coefficients in the matrix (mncol_ times many)
+                    double term = 1/sigma_;
+                    int status = 0;
+                    for ( int i = mncol_+zSub_;i < 2*mncol_+zSub_; i++) {
+                        status = CPXchgqpcoef(envPtr,lpPtr,i,i,term);
+                        if ( status != 0)
+                            LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
+                    }
+                }
+                else{
+                    double term = 1/sigma_;
+                    for (int i = mncol_+zSub_;i<3*mncol_+zSub_;i++){
+                        osiMaster_->setObjCoeff(i,term);
+                    }
+
                 }
             }
             if(!useRegularizedDecomposition_ && (mnInt_ == 0  && (warmStart_ || warmStartFol_ ))){
@@ -3062,16 +3148,7 @@ void Benders::addOptiCut(int oCut){
             osiMaster_->setObjCoeff(cutIndex_[index+mncol_],mdobj_[cutIndex_[index+mncol_]]);
 
             appliedCuts_++;
-            //}
-
-            //osiMaster_->setObjCoeff(cutIndex_[index+mncol_],scenProb_[ cutIndex_[index+mncol_] -mncol_]);
-            //mdobj_[cutIndex_[index+mncol_]] = scenProb_[cutIndex_[index+mncol_]-mncol_];
-
-
-            //std::string name = "problem" + to_string(i);
-            //osiMaster_->writeLp(name.c_str());
         }	
-        // Try new stuff: Add all multi cut's, solve the problem, remove multi cuts and introduce single cut's instead, with bound on Theta
     }
     delete [] cutElements;
     delete [] cutIndex;
@@ -3950,7 +4027,7 @@ int Benders::writeSolutionFileDetEq(const char * solpath, double time ){
 }
 
 void Benders::setInitialSolution(double* solutionValues){
-    if (useRegularizedDecomposition_){
+    if (useRegularizedManhattan_ || useRegularizedDecomposition_){
         regSolution_ = new double[mncol_];
         // We have to assert that the length of the array is ncol_
         for (int i = 0; i < mncol_; i++) {
@@ -4241,6 +4318,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         double absEps = params.getDoubleParam(BendersParameter::ABSGAP);
         bool useBenders = params.getIntParam(BendersParameter::BENDERS);
         bool useRegularized = params.getIntParam(BendersParameter::REGULARIZED);
+        bool useRegularizedManhattan = params.getIntParam(BendersParameter::REGULARIZED_MANHATTAN);
         bool multi = params.getIntParam(BendersParameter::MULTI);
         bool knapsack = params.getIntParam(BendersParameter::KNAPSACK);
         bool trustRegion = params.getIntParam(BendersParameter::TRUSTREGION);
@@ -4290,13 +4368,13 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str(),barrierStr.c_str(),bunchingStr.c_str(),bunchSize);
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
-        if ( useRegularized ){
+        if ( useRegularized || useRegularizedManhattan ){
             OsiCpxSolverInterface* osiCpxPtr = new OsiCpxSolverInterface();
             CPXLPptr lpPtr = osiCpxPtr->getLpPtr();
             CPXENVptr envPtr = osiCpxPtr->getEnvironmentPtr();
             // TODO: Set Relative MIPGAP with param via param setting function, if not given, do not change, so not apply.
             CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
-            std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1); // 1 for minimization
+            std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1,false); // 1 for minimization
             delete osiCpxPtr;
             // copy initial values for regularized decomposition
 

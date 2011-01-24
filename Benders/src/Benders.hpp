@@ -414,6 +414,9 @@ private:
     int numBunch_;
     int* bunchIndices_;
 
+    // Regularized Manhattan
+    bool useRegularizedManhattan_;
+
 public:
 	// Constructor
 	Benders():
@@ -501,7 +504,8 @@ public:
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
-    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),multiSingleSwitch_(false), barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL)
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),multiSingleSwitch_(false), barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL),
+    useRegularizedManhattan_(false)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -693,7 +697,7 @@ public:
 
 class BendersParameter {
 public:
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
+	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, REGULARIZED_MANHATTAN,WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
 	typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
 	
 	BendersParameter() {
@@ -703,6 +707,7 @@ public:
         this->intParam[BendersParameter::TRUSTREGION] = 0;
         this->intParam[BendersParameter::WARMSTART] = 1;
         this->intParam[BendersParameter::REGULARIZED] = 0;
+        this->intParam[BendersParameter::REGULARIZED_MANHATTAN] = 0;
         this->dblParam[BendersParameter::ABSGAP] = 0.00001;
         this->dblParam[BendersParameter::RELGAP] = 0.000001;
         this->intParam[BendersParameter::WARMSTART_TYPE] = 1;
