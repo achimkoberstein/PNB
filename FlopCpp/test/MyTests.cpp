@@ -55,6 +55,15 @@ namespace flopc {
         ASSERT_EQ(0,remove( (filename+".sto").c_str() ));
         delete clp;
     }
+    
+    void compareEVPTest(MP_model& model, MP_model::MP_direction direction) {
+        double ev_calculated = model.getSmi()->getEVValue(model.Solver, direction, true);
+        double ev = model.getSmi()->getEVValue(model.Solver, direction, false);
+        EXPECT_NEAR(ev, ev_calculated, 0.01);
+        if (std::abs(ev - ev_calculated) > 0.01) {
+            cout << "failed";
+        }
+    }
 
 #pragma region initialization
     class MP_modelTest: public ::testing::Test {
@@ -364,7 +373,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_DOUBLE_EQ(1.3819475579528415,testModel->getObjValue());
         ASSERT_EQ(10,testModel.getScenSet().size());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
     }
 
     TEST_F(MP_modelTest,DiscretizationTest){
@@ -396,7 +405,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel.solve(MP_model::MAXIMIZE);
 
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
 
     }
 
@@ -432,6 +441,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         combined.display("CombinedData");
 
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
     }
 
     TEST_F(MP_modelTest,ExtendedCoefficientGeneration){
@@ -461,6 +471,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(11.5,testModel.Solver->getObjValue());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
         y.display("y");
         rVar.display("RandomVars");
         combined.display("CombinedData");
@@ -489,6 +500,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         // How to test for infeasible models? Is this the point? No it is not..
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
     }
 
     TEST_F(MP_modelTest,SuchThatTest){
@@ -628,6 +640,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         std::cout << std::endl;
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
         //sumR.display("RandomValues?");
         x.display("Werte");
         sumR.display("SumR");
@@ -741,6 +754,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(investmentModel,MP_model::MAXIMIZE);
 
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
@@ -785,39 +799,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(52,testModel->getObjValue());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
 
 
-    }
-
-
-    TEST_F(IntegerTest,IntegerTest2){
-        MP_model intModel(new OsiClpSolverInterface());
-        MP_stage T(2);
-        MP_scenario_set scen(2);
-        double scenarios[1][2] =
-        { // T
-            {1,2} //scen
-        };
-        MP_random_data rvar(&scenarios[0][0],T);
-        MP_variable y(T), x(T);
-        y.integer();
-        x.integer();
-        MP_constraint constraint1(T);
-        constraint1(T) = y(T) + x(T) >= 1.5 + rvar(T);
-        intModel.setObjective(sum(T, y(T)));
-        intModel.attach(intModel.Solver);
-        this->testCorrectStageAssignment(intModel);
-        intModel.solve(MP_model::MINIMIZE);
-        writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
-        const double * colSolution = intModel->getColSolution();
-        for (int i = 0; i < intModel->getNumCols(); i++)
-            cout << "Column " << i << ": " << colSolution[i] << endl;
-        y.display("y");
-        x.display("x");
-        cout << "Finished.";
-        EXPECT_EQ(MP_model::OPTIMAL,intModel.getStatus());
-        EXPECT_EQ(3,x.levelScenario(0,1));
-        EXPECT_EQ(4,x.levelScenario(1,1));
     }
 
     // Test if integer integration is working correctly (high level)
@@ -840,6 +824,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         this->testCorrectStageAssignment(intModel);
         intModel.solve(MP_model::MINIMIZE);
         writeReadSMPSTest(intModel,MP_model::MINIMIZE,"test");
+        compareEVPTest(intModel,MP_model::MINIMIZE);
         EXPECT_EQ(6,intModel->getObjValue());
         EXPECT_TRUE(intModel->isInteger(0));
         EXPECT_TRUE(intModel->isInteger(1));
@@ -971,6 +956,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         dacota.attach(dacota.Solver);
         dacota.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
+        compareEVPTest(dacota,MP_model::MAXIMIZE);
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
@@ -1006,6 +992,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
         EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
@@ -1040,6 +1027,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE);
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
         EXPECT_NEAR(0,testModel2.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
     }
@@ -1123,6 +1111,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel.attach();
         testModel.solve(MP_model::MINIMIZE);
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         //demand.display("Demand");
         //price.display("Price
@@ -1176,6 +1165,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MINIMIZE);
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(1.5,testModel2->getObjValue());
         //Test Bounds
@@ -1202,6 +1192,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel2,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel2,MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         //TODO: Test appearance of RandomVariable vector
         EXPECT_DOUBLE_EQ(4,testModel2->getObjValue());
@@ -1250,6 +1241,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
@@ -1449,6 +1441,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,2));
         EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,6));
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
         //testModel2.detach();
         //double scenarios2[10] = {0,1,2,3,4,5,6,7,8,9};
         //MP_random_data rvar2(&scenarios2[0],T);
@@ -1487,6 +1480,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel.solve(MP_model::MAXIMIZE);
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
         //EXPECT_DOUBLE_EQ(4.8,testModel->getObjValue());
     }
 
@@ -1516,6 +1510,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
         EXPECT_EQ(547,testModel2->getObjValue());
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
     }
 
     TEST_F(MP_modelTest,InvalidArgumentTest){
@@ -6045,6 +6040,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Infinity*";
+    //::testing::GTEST_FLAG(filter) = "*.ComplicatedExpressionsTest";
+    //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
