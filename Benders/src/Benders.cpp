@@ -329,23 +329,54 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 // We also stop if we have a repeated objective function value ( we assume that we do not get better than this, so we have an already better reg. solution )
                 // We also stop if the difference is below a relative value ( for big objectives ( at the moment : 10^5 )
                 if ( abs(lowerBound-regSolutionValue_) <= ZEROTEST 
-                    || abs(lowerBound) > 10000 && abs(lowerBound-regSolutionValue_) < absEps
+                    || abs(lowerBound-regSolutionValue_) < absEps
                     //|| repeated && regSolutionValue_-lowerBound < 0
                     || repeated && (int)1/sigma_ == 1024 // We have a close solution and we made null-feasible steps (did not change solution)
                     || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
                     ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
-                        // Probable solution: Solve non-quadratic master problem to get a real lower bound. compare the values to be absolutely sure.
-                        // regSolution is optimal, copy it into bestSol
-                        // We introduce another test..
-                        //if ( mnInt_ )
-                        //    osiMaster_->branchAndBound();
-                        //else
-                        //    osiMaster_->resolve();
-                        double osiMasterSolutionValue = osiMaster_->getObjValue();
+
+                        if (useRegularizedManhattan_ ) {
+                            LOG(INFO) << "Regularized Manhattan would have stopped with " << lowerBound;
+                            double osiMasterSolutionValue = osiMaster_->getObjValue();
+                            // We resolve the problem and check for correctness...
+                            //sigma_ = infty_;
+                            // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
+                            //osiMaster_->writeLp("finalRD");
+                            int * rowIndices = new int[mncol_];
+                            for (int i = 0; i < mncol_; i++)
+                                rowIndices[i] = startRows_+i;
+                            osiMaster_->deleteRows(mncol_,rowIndices);
+                            delete rowIndices;
+                            int * colIndices = new int[2*mncol_];
+                            for (int i = 0; i < 2*mncol_; i++)
+                                colIndices[i] = mncol_+zSub_+i;
+                            osiMaster_->deleteCols(2*mncol_,colIndices);
+                            delete colIndices;
+                            //int resultMaster = solveMaster();
+                            // TODO: Recast the resolve in a proper way..
+                            if ( mnInt_ )
+                                osiMaster_->branchAndBound();
+                            else
+                                osiMaster_->resolve();
+                            double resolvedMaster = osiMaster_->getObjValue();
+                            //osiMaster_->writeLp("finalRD-wo");
+                            //const double* resolvedSol = osiMaster_->getColSolution();
+                            if ( abs(resolvedMaster - lowerBound ) >= ZEROTEST ){ // We have discrepancy
+                                // Stop regularization
+                                useRegularizedDecomposition_ = false;
+                                useRegularizedManhattan_ = false;
+                                continue; // We want to resolve the master 
+
+                                // Delete regularized arrays // TODO:
+
+                            }
+                        }
                         LOG(INFO) << "RD stops. Difference between current and regularized solution is " << lowerBound-regSolutionValue_;
                         for (int i = 0; i < mncol_; i++)
                             bestSol_[i] = regSolution_[i];
                         return;
+
+
                 }
             }
             // Update lower bound ( it should strictly increase, but not necessarily so in the case of reg decomp )
@@ -629,7 +660,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 assert(changeSigma_ == false);
                 if (oCut == 0){
                     seriousStep_ = true;
-                    changeSigma_ = true;
+                    if ( upperBound_ > 0.9*regSolutionValue_ + 0.1*lowerBound ) 
+                        changeSigma_ = true;
                     for (int i = 0; i < mncol_; i++){
                         regSolution_[i] = bestSolTemp_[i];
                     }
@@ -653,7 +685,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             regSolutionValue_ += regSubproblemSolutionValues_[i];
                         }
                     }
-                    if ( upperBound_-regSolutionValue_ <= relEps*abs(regSolutionValue_)+absEps ){ // 
+                    if ( upperBound_ <= regSolutionValue_+ZEROTEST ){ // 
                         seriousStep_ = true;
                         for (int i = 0; i < mncol_; i++){
                             regSolution_[i] = bestSolTemp_[i];
@@ -661,11 +693,16 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                         //computeRegularizedSubproblems_= true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
                         // We made an approximate serious step, so our regSolutionValue changed also
                         regSolutionValue_ = upperBound_;
-                        changeSigma_ = false;
+                        if ( upperBound_ < 0.1*regSolutionValue_ + 0.9*lowerBound ) 
+                            changeSigma_ = true;
+                        else
+                            changeSigma_ = false;
                         LOG(INFO) << "RD: Approximate serious step.";
                     }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma. We want to decrease sigma to keep closer to the regularized solution.
                     else {
-                        changeSigma_ = true;
+                        if ( upperBound_ > 0.9*regSolutionValue_ + 0.1*lowerBound ) 
+                            changeSigma_ = true;
+
                         LOG(INFO) << "RD: Null feasible step.";
                     }
                 }
@@ -710,7 +747,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 cout << "UB: " << UB_ << endl;
                 cout << "RS: " << regSolutionValue_ << endl;
                 cout << "LB: " << LB_ << endl;
-                cout << "GAP: " << LB_-regSolutionValue_ << endl;
+                cout << "GAP: " << regSolutionValue_-LB_ << endl;
 
 
             }
@@ -1782,7 +1819,10 @@ int Benders::solveMaster(){
                     }
                 }
                 else{
-                    double term = 1/sigma_;
+                    double term = 0;
+                    assert( sigma_ != 0);
+                    if ( sigma_ != infty_ )
+                        term = 1/sigma_;
                     for (int i = mncol_+zSub_;i<3*mncol_+zSub_;i++){
                         osiMaster_->setObjCoeff(i,term);
                     }
@@ -1975,7 +2015,7 @@ int Benders::solveMaster(){
 
     if(osiMaster_->isProvenPrimalInfeasible() || stat == CPX_STAT_INFEASIBLE) {
 
-        cout << "Error: master problem is infeasible or unbounded!" << endl;
+        cout << "Error: master problem is infeasible!" << endl;
         return -1;
     }
     if ( osiMaster_->isProvenDualInfeasible()  || stat == CPX_STAT_UNBOUNDED){
@@ -4337,7 +4377,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         //	// #7: Problem Path
         //	// #8: Solution Path
         std::string modeStr("m");
-        std::string regularizedStr("+reg");
+        std::string regularizedStr("-reg");
         std::string knapsackStr("+ki");
         std::string trustRegionStr("+tr");
         std::string bendersStr("+ben");
@@ -4346,8 +4386,10 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         std::string bunchingStr("-bunch");
         if (!useBenders)
             bendersStr = "-ben";
-        if (!useRegularized)
-            regularizedStr = "-reg";
+        if (useRegularized)
+            regularizedStr = "+regD";
+        if (useRegularizedManhattan)
+            regularizedStr = "+regM";
         if (!multi)
             modeStr = "s";
         if (!knapsack)
@@ -4362,6 +4404,9 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             barrierStr = "+br";
         if (bunching)
             bunchingStr = "+bunch";
+
+        if ( useRegularized && useRegularizedManhattan )
+            LOG(INFO) << "You have chosen two conflicting options, we go for regularized manhattan.";
 
         // We want to store the time necessary to solve the problem
         double time = CoinCpuTime();
