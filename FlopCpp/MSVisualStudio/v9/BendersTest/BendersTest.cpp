@@ -52,6 +52,7 @@ namespace flopc {
             double repetitions = 3;
             std::vector<double> wallClockTime(repetitions+1,0);
             std::vector<double> solvingTime(repetitions+1,0);
+            std::vector<int> iterationCount(repetitions+1,0);
             double objective = 0;
             //benders.initialSolve();
             char sdate[9];
@@ -75,8 +76,8 @@ namespace flopc {
                 benders.setIntParam(BendersParameter::WARMSTART_TYPE,1);
                 benders.setIntParam(BendersParameter::REGULARIZED,0);
                 benders.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
-                benders.setIntParam(BendersParameter::BARRIER,1);
-                benders.setIntParam(BendersParameter::BUNCHING,0);
+                benders.setIntParam(BendersParameter::BARRIER,0);
+                benders.setIntParam(BendersParameter::BUNCHING,1);
                 benders.setIntParam(BendersParameter::BUNCH_SIZE,100);
                 benders.initialSolve();
                 double wallClockT = CoinCpuTime()-time;
@@ -95,16 +96,15 @@ namespace flopc {
                 objective += benders.getObjValue()*(1/repetitions);
                 wallClockTime[i] = wallClockT;
                 solvingTime[i] = benders.getSolutionTime();
+                iterationCount[i] = benders.getNumIterations();
             }
             // Compute average time
             for (int i = 0; i < repetitions; i++){
                 wallClockTime[repetitions] += wallClockTime[i]/repetitions;
                 solvingTime[repetitions] += solvingTime[i]/repetitions;
             }
-
-
-		    
-		    ofs << "Overall Wall Clock Time (secs): ";
+            LOG(INFO) << "Writing Wall Clock Time";
+	        ofs << "Overall Wall Clock Time (secs): ";
             for (int i = 0; i < repetitions; i++)
                 ofs << wallClockTime[i] << " "; 
             ofs << endl;
@@ -112,11 +112,16 @@ namespace flopc {
             for (int i = 0; i < repetitions; i++)
                 ofs << solvingTime[i] << " "; 
             ofs << endl;
+            ofs << "Number of Iterations: ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << iterationCount[i] << " "; 
+            ofs << endl;
             ofs << "Average Wall Clock Time (secs): " << wallClockTime[repetitions] << endl;
             ofs << "Average Solution Time (secs): " << solvingTime[repetitions] << endl;
 
 		    ofs << "-------------------------" << endl;
 		    ofs.close();
+            LOG(INFO) << " File closed";
             return objective;
         }
     };
@@ -197,7 +202,7 @@ TEST_F(Posts, storm) { // ok
 TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal solution is found (correct), we get a stack overflow (at least for the first two instances)
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
@@ -216,7 +221,7 @@ TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);

@@ -565,11 +565,14 @@ public:
 		if(!strcmp(knap,"-ki")){
 			knapsack_ = false;
 		}
-        if(!strcmp(reg,"+reg")){
+        if(!strcmp(reg,"+regD")){
 			useRegularizedDecomposition_ = true;
 		}
 		if(!strcmp(reg,"-reg")){
-			useRegularizedDecomposition_ = false;
+            useRegularizedDecomposition_ = false; useRegularizedManhattan_ = false;
+		}
+        if(!strcmp(reg,"+regM")){
+			useRegularizedManhattan_ = true;
 		}
         if(!strcmp(bar,"+br")){
 			barrier_ = true;
@@ -642,6 +645,7 @@ public:
     // Regularized Decomposition methods
     void setInitialSolution(double*);
     double getObjValue() { return this->LB_; }
+    inline int getNumIterations() { return this->nIter_; }
 
     
 	// Destructor
@@ -750,11 +754,13 @@ public:
     inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { params.setDoubleParam(param, val); }
 	inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
 	inline double getSolutionTime() { return this->solTime; }
+
 	
 private:
     Benders* benders;
     BendersParameter params;
     double solTime;
+    int numIter;
 };
 
 #endif
