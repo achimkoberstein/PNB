@@ -49,7 +49,7 @@ namespace flopc {
         BendersTest(){ }
         
         double solveSMPS(const char* name) {
-            double repetitions = 3;
+            double repetitions = 1;
             std::vector<double> wallClockTime(repetitions+1,0);
             std::vector<double> solvingTime(repetitions+1,0);
             std::vector<int> iterationCount(repetitions+1,0);
@@ -75,7 +75,7 @@ namespace flopc {
                 benders.setIntParam(BendersParameter::WARMSTART,1);
                 benders.setIntParam(BendersParameter::WARMSTART_TYPE,1);
                 benders.setIntParam(BendersParameter::REGULARIZED,0);
-                benders.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
+                benders.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
                 benders.setIntParam(BendersParameter::BARRIER,0);
                 benders.setIntParam(BendersParameter::BUNCHING,1);
                 benders.setIntParam(BendersParameter::BUNCH_SIZE,100);
@@ -173,36 +173,36 @@ TEST_F(Posts, storm) { // ok
 //    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/fA"), -689.432, 0.1);
 //////    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1); // BLOCKS sections in stoch file, SMI can't handle it yet
 //}
-//TEST_F(BendersTest, assets) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
-//}
+TEST_F(BendersTest, assets) { // ok
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
+}
 ////
 //
-//TEST_F(BendersTest, farmer) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
-//}
+TEST_F(BendersTest, farmer) { // ok
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+}
 //
-//TEST_F(BendersTest, finance) { // ok
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
-//}
+TEST_F(BendersTest, finance) { // ok
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
+}
 //
-//TEST_F(BendersTest, gas) { // ok
-////    //SmiScnModel smi;
-////    //smi.readSmps("../../../../Benders/test/instances/GAS3");
-////    //OsiCpxSolverInterface solver;
-////    //smi.setOsiSolverHandle(&solver);
-////    //OsiSolverInterface* osi = smi.loadOsiSolverData();
-////    //osi->initialSolve();
-////    //const double* solutions = osi->getColSolution();
-////    //DLOG(INFO) << osi->getObjValue();
-//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
-//}
+TEST_F(BendersTest, gas) { // ok
+//    //SmiScnModel smi;
+//    //smi.readSmps("../../../../Benders/test/instances/GAS3");
+//    //OsiCpxSolverInterface solver;
+//    //smi.setOsiSolverHandle(&solver);
+//    //OsiSolverInterface* osi = smi.loadOsiSolverData();
+//    //osi->initialSolve();
+//    //const double* solutions = osi->getColSolution();
+//    //DLOG(INFO) << osi->getObjValue();
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
+}
 
 TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal solution is found (correct), we get a stack overflow (at least for the first two instances)
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_4000"), 199.032, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_6000"), 140.275, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_8000"), 170.318, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand0_10000"), 139.129, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand1_2000"), 244.159, 0.1);
