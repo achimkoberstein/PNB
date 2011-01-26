@@ -235,7 +235,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
             // TODO: Debug, remove eventually
             int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
-            memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
+            //memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
             // Write current stage 1 solution to temporary solution vector; it 
             // also contains the value(s) of the variables for the scenario(s);
             // there is a check if the values are close to zero, if this is the
@@ -338,6 +338,13 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                         if (useRegularizedManhattan_ ) {
                             LOG(INFO) << "Regularized Manhattan would have stopped with " << lowerBound;
                             double osiMasterSolutionValue = osiMaster_->getObjValue();
+                            //const double * 
+                                // Output the overall discrepancy
+                            double discrepanceSum = 0;
+                            for (int i = mncol_+zSub_; i < 3*mncol_+zSub_;i++){
+                                discrepanceSum += mSol[i];
+                            }
+                            LOG(INFO) << " Difference between regularized solution and optimal solution so far is " << discrepanceSum;
                             // We resolve the problem and check for correctness...
                             //sigma_ = infty_;
                             // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
@@ -1646,7 +1653,7 @@ int Benders::solveMaster(){
             for (int i = 0; i < mncol_*2; i++){// We need to add w_+ - w_ = x-a to the problem, so we have to add w_+ and w_- to the problem first
                 collb[i] = 0;
                 colub[i] = infty_;
-                colobj[i] = 1; 
+                colobj[i] = 0.1*abs(mdobj_[i%mncol_]); 
             }
             // Convention: 0-mncol_-1 is w_+, mncol_- (2*mncol_-1) is w_
             CoinPackedVectorBase** cpvb = new CoinPackedVectorBase*[2*mncol_];
@@ -1818,14 +1825,14 @@ int Benders::solveMaster(){
                             LOG(ERROR) << "Cplex returned status code " << status << " while changing coefficients of the quadratic matrix in the objective function of the regularized master problem.";
                     }
                 }
-                else{
+                else{ // We use the regularized decomposition
                     double term = 0;
                     assert( sigma_ != 0);
                     if ( sigma_ != infty_ )
                         term = 1/sigma_;
-                    for (int i = mncol_+zSub_;i<3*mncol_+zSub_;i++){
-                        osiMaster_->setObjCoeff(i,term);
-                    }
+                    //for (int i = mncol_+zSub_;i<3*mncol_+zSub_;i++){
+                    //    osiMaster_->setObjCoeff(i,term);
+                    //}
 
                 }
             }
