@@ -616,6 +616,8 @@ void MP::GenerateFunctor::operator()() const {
             for (int j = 0; j < scenarioValues.size(); j++)
                 meanValue += scenarioValues[j]*probs[j];
             // Store mean value
+            // TODO: the following leads to the wrong coefficients in the matrix when solving the EVP (see for example RandomVariableConstraintCombinationTest)
+            // this >> if (meanValue < 0) sideOfConstraint *= -1; << as a next statement would resolve the bug for the test suite, but is it correct?
             sideOfConstraint *= meanValue;
         }
         else {
