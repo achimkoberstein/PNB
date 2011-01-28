@@ -49,7 +49,7 @@ namespace flopc {
         BendersTest(){ }
         
         double solveSMPS(const char* name) {
-            double repetitions = 1;
+            double repetitions = 3;
             std::vector<double> wallClockTime(repetitions+1,0);
             std::vector<double> solvingTime(repetitions+1,0);
             std::vector<int> iterationCount(repetitions+1,0);
@@ -174,8 +174,8 @@ TEST_F(Posts, storm) { // ok
 //////    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1); // BLOCKS sections in stoch file, SMI can't handle it yet
 //}
 TEST_F(BendersTest, assets) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
 }
 ////
 //
@@ -214,7 +214,7 @@ TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal soluti
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_4000"), 218.247, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_6000"), 239.721, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_8000"), 239.158, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_10000"), 231.706, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/rand2_10000"), 231.706, 0.1);
 }
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
