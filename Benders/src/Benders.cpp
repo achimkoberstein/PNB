@@ -165,6 +165,11 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     // Begin: BendersSolve
     // ###################################################################################
 
+    if (!stageTwo_){ // In case of multi-stage problem we do nothing
+        LOG(ERROR) << "You tried to solve a multi-stage problem with a solver for two-stage problems. This can not work.";
+        return;
+    }
+
     // Solve a two stage stochastic linear program with the benders
     // decomposition method
 
@@ -352,7 +357,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             // We resolve the problem and check for correctness...
                             //sigma_ = infty_;
                             // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
-                            //osiMaster_->writeLp("finalRD");
+                            osiMaster_->writeLp("finalRD");
                             int * rowIndices = new int[mncol_];
                             for (int i = 0; i < mncol_; i++)
                                 rowIndices[i] = startRows_+i;
@@ -370,7 +375,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             else
                                 osiMaster_->resolve();
                             double resolvedMaster = osiMaster_->getObjValue();
-                            //osiMaster_->writeLp("finalRD-wo");
+                            osiMaster_->writeLp("finalRD-wo");
                             //const double* resolvedSol = osiMaster_->getColSolution();
                             if ( abs(resolvedMaster - lowerBound ) >= ZEROTEST ){ // We have discrepancy
                                 // Stop regularization
@@ -813,6 +818,13 @@ void Benders::copyMaster(SmiScnModel * smi){
 
     // Copy data of the master problem from SMPS files
 
+    // Show if we actually want to solve the problem.
+    if ( smi->getCore()->getNumStages() != 2){
+        stageTwo_ = false;
+        return;
+    }
+    
+
     // Number of rows 
     mnrow_ = smi->getCore()->getNumRows(0);
     // Number of columns
@@ -975,6 +987,8 @@ void Benders::copySubmodel(SmiScnModel* smi){
     // ###################################################################################
 
     // Copy data of the subproblem from SMPS files
+    if ( !stageTwo_ )
+        return;
 
     // Number of rows
     snrow_ = smi->getCore()->getNumRows(1);
@@ -3611,16 +3625,16 @@ void Benders::addFeasCut( int scen_){
     // has to be on the other side of the inequalitiy
     CoinPackedVector row(mncol_, cutIndex, cutElements);
     osiMaster_->addRow(row,cutRowLB,cutRowUB-epsilonFeasCut_);
-    for (int i = 0; i < feasCutVector.size(); i++){
-        int compared = row.compare(feasCutVector[i]);
-        if ( compared == 0)
-            std::cout << "comparing" << i << ". cut with current cut results in equality" << std::endl;
-    }
-    feasCutVector.push_back(row);
+    //for (int i = 0; i < feasCutVector.size(); i++){
+    //    int compared = row.compare(feasCutVector[i]);
+    //    if ( compared == 0)
+    //        std::cout << "comparing" << i << ". cut with current cut results in equality" << std::endl;
+    //}
+    //feasCutVector.push_back(row);
 
     delete [] cutIndex;
     delete [] cutElements;
-    delete[] dualRay; 
+    delete [] dualRay; 
 
     // ###################################################################################
     // End: addFeasCut
@@ -3741,6 +3755,9 @@ int Benders::detEq(){
     // ###################################################################################
     // Begin: detEq
     // ###################################################################################
+
+    if (!stageTwo_)
+        return 0;
 
     // Solve problem with deterministic equivalent
 
@@ -4270,7 +4287,7 @@ Benders::~Benders(){
         delete [] dTrans_;
     if(iTrans_)
         delete [] iTrans_;
-    if(warmStart_ ){
+    if(stageTwo_ && warmStart_ ){
         if(warmStartMaster_ && warmStartEmptyMaster_ == false){
             delete warmStartMaster_;
             warmStartMaster_ = 0;
@@ -4287,7 +4304,7 @@ Benders::~Benders(){
             warmStartEmptySub_ = 0;
         }
     }
-    if(warmStartFol_){
+    if(stageTwo_ && warmStartFol_){
         if(warmStartMaster_ && warmStartEmptyMaster_ == false)
             delete warmStartMaster_;
         if(warmStartSubFol_)
@@ -4471,12 +4488,15 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 }
 
 double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
-    if ( benders == 0) return benders->infty_;
-    else {if ( params.getIntParam(BendersParameter::BENDERS) == 1 )
-        return benders->UB_; // Return upper bound, as this is the value of our solution
-    else
-        return benders->objDetEq_;
+    if ( benders == 0) 
+        return benders->infty_;
+    else {
+        if ( params.getIntParam(BendersParameter::BENDERS) == 1 )
+            return benders->UB_; // Return upper bound, as this is the value of our solution
+        else
+            return benders->objDetEq_;
     }
+    
 }
 
 int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){
