@@ -36,6 +36,9 @@ private:
 	// Value for zero test
 	double ZEROTEST;
 
+    // Boolean to indicate stage two problem or not
+    bool stageTwo_;
+
 	// Boolean to indicate single cut or multi cut
 	bool single_;
 	// Counter; if single cut is chosen, it is initialized by 1, if 
@@ -361,6 +364,7 @@ private:
 
     // objective function value of regularized solution 
     double regSolutionValue_;
+    double regFirstStageSolutionValue_;
     double* regSubproblemSolutionValues_;
 
     // store rows in master problem used for reg. decomposition
@@ -417,11 +421,15 @@ private:
     // Regularized Manhattan
     bool useRegularizedManhattan_;
     
+    // Reporting/Testing global variables
+    double recourseFunction_;
+    double firstStageSolution_;
+    double lowerBoundedRecourseFunctionApprox_;
 
 public:
 	// Constructor
 	Benders():
-	  
+	stageTwo_(false),zSub_(0),
 	mnrow_(0), mncol_(0), mdobj_(NULL), mdrlo_(NULL), mdrup_(NULL), 
 	mdclo_(NULL), mdcup_(NULL), mnels_(0), mlen_(NULL), mdels_(NULL), 
 	miels_(NULL), mrstrt_(NULL), bestSol_(NULL),snrow_(0), sncol_(0), 
@@ -436,7 +444,7 @@ public:
 	mutSt2iels_(NULL), mutSt2rstrt_(NULL), scenMatSt2Start_(NULL), mutnSt2len_(NULL), combSt2dels_(NULL), 
 	combSt2iels_(NULL), combSt2rstrt_(NULL), combSt2len_(NULL), combSt2nels_(0), combdobj_(NULL), 
 	INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -6)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
-	zSub_(0), combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
+	combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
 	mutlcup_(0), muticup_(NULL), mutdcup_(NULL), scenCupStart_(NULL), mutlclo_(0),
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
@@ -479,7 +487,10 @@ public:
 	}
 
 	Benders(const char * single, const char * warmstart, const char * knap, const char * trust, const char * bend, const char * reg, const char * bar,const char * bunch, const int bunchSize):
-	  
+    osiMaster_(NULL),osiSubproblem_(NULL),osiDetEq_(NULL),
+    infty_(COIN_DBL_MAX),INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -6)),
+    stageTwo_(true),single_(false),    
+	zSub_(0),LB_(-COIN_DBL_MAX),UB_(COIN_DBL_MAX),nIter_(0),
 	mnrow_(0), mncol_(0), mdobj_(NULL), mdrlo_(NULL), mdrup_(NULL), 
 	mdclo_(NULL), mdcup_(NULL), mnels_(0), mlen_(NULL), mdels_(NULL), 
 	miels_(NULL), mrstrt_(NULL), bestSol_(NULL),bestSolTemp_(0),snrow_(0), sncol_(0), 
@@ -493,8 +504,8 @@ public:
 	mutSt1rstrt_(NULL), scenMatSt1Start_(NULL), mutnSt1len_(NULL), mutnSt2_(0), mutSt2dels_(NULL), 
 	mutSt2iels_(NULL), mutSt2rstrt_(NULL), scenMatSt2Start_(NULL), mutnSt2len_(NULL), combSt2dels_(NULL), 
 	combSt2iels_(NULL), combSt2rstrt_(NULL), combSt2len_(NULL), combSt2nels_(0), combdobj_(NULL),
-	INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -6)), cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
-	zSub_(0), combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
+	cutIndex_(NULL), cutElements_(NULL), cutRowUB_(NULL),
+	combdrup_(NULL), combdrlo_(NULL), combdcup_(NULL), combdclo_(NULL),
 	mutlcup_(0), muticup_(NULL), mutdcup_(NULL), scenCupStart_(NULL), mutlclo_(0),
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
@@ -504,9 +515,9 @@ public:
     warmStartEmptySub_(NULL),warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
-	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
+	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(COIN_DBL_MAX),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
     useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),multiSingleSwitch_(false), barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL),
-    useRegularizedManhattan_(false)
+    useRegularizedManhattan_(false), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -566,11 +577,14 @@ public:
 		if(!strcmp(knap,"-ki")){
 			knapsack_ = false;
 		}
-        if(!strcmp(reg,"+reg")){
+        if(!strcmp(reg,"+regD")){
 			useRegularizedDecomposition_ = true;
 		}
 		if(!strcmp(reg,"-reg")){
-			useRegularizedDecomposition_ = false;
+            useRegularizedDecomposition_ = false; useRegularizedManhattan_ = false;
+		}
+        if(!strcmp(reg,"+regM")){
+			useRegularizedManhattan_ = true;
 		}
         if(!strcmp(bar,"+br")){
 			barrier_ = true;
@@ -643,6 +657,7 @@ public:
     // Regularized Decomposition methods
     void setInitialSolution(double*);
     double getObjValue() { return this->LB_; }
+    inline int getNumIterations() { return this->nIter_; }
 
     // time statistics
     struct TimeStatistics {
@@ -777,6 +792,7 @@ private:
     Benders* benders;
     BendersParameter params;
     double solTime;
+    int numIter;
 };
 
 #endif
