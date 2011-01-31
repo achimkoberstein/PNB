@@ -416,6 +416,7 @@ private:
 
     // Regularized Manhattan
     bool useRegularizedManhattan_;
+    
 
 public:
 	// Constructor
@@ -643,6 +644,20 @@ public:
     void setInitialSolution(double*);
     double getObjValue() { return this->LB_; }
 
+    // time statistics
+    struct TimeStatistics {
+        TimeStatistics() : solverMaster(0), solverSubproblems(0), bendersSolve(0), subproblemLoop(0) { }
+        void reset() { bendersSolve = 0; solverMaster = 0; solverSubproblems = 0; subproblemLoop = 0; }
+        double solverMaster; // time the solver needed for the master problems
+        double solverSubproblems; // time the solver needed for the subproblems
+        double bendersSolve; // time needed for the whole BendersSolve method
+        double subproblemLoop; // time needed for generating and solving all subproblems
+    } time;    
+    inline Benders::TimeStatistics getTimeStatistics() { return this->time; }
+    inline double getTimeSolverMaster() { return this->time.solverMaster; } // time the solver needed for the master problems
+    inline double getTimeSolverSubproblems() { return this->time.solverSubproblems; } // time the solver needed for the subproblems
+    inline double getTimeBendersSolve() { return this->time.bendersSolve; } // time needed for the whole BendersSolve method
+    inline double getTimeSubproblemLoop() { return this->time.subproblemLoop; } // time needed for generating and solving all subproblems
     
 	// Destructor
 	~Benders();
@@ -750,6 +765,13 @@ public:
     inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { params.setDoubleParam(param, val); }
 	inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
 	inline double getSolutionTime() { return this->solTime; }
+	
+	// time statistics
+	inline Benders::TimeStatistics getTimeStatistics() { return benders->getTimeStatistics(); }
+    inline double getTimeSolverMaster() { return benders->getTimeSolverMaster(); } // time the solver needed for the master problems
+    inline double getTimeSolverSubproblems() { return benders->getTimeSolverSubproblems(); } // time the solver needed for the subproblems
+    inline double getTimeBendersSolve() { return benders->getTimeBendersSolve(); } // time needed for the whole BendersSolve method
+    inline double getTimeSubproblemLoop() { return benders->getTimeSubproblemLoop(); } // time needed for generating and solving all subproblems
 	
 private:
     Benders* benders;

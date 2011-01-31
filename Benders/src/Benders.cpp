@@ -168,6 +168,12 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     // Solve a two stage stochastic linear program with the benders
     // decomposition method
 
+    // Reset time statistics
+    time.reset();
+        
+    // Start timer for this method (time.bendersSolve)
+    double timeStartTotal = CoinCpuTime();
+
     // Initialize upper bound
     UB_ = infty_;
     // Initialize lower bound
@@ -425,6 +431,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             }
 
             feasible = true;
+            double timeStart = CoinCpuTime();
             // Cycle over all scenarios: solve all subproblems
             for(int scen_=0; scen_<nScen_; scen_++){
                 // Build subproblem, combine deterministic data with stochastic
@@ -533,6 +540,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                         //DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
                 }
             }
+            this->time.subproblemLoop += CoinCpuTime() - timeStart;
 
             // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
             // If current upper bound is less or equal than the old upper bound, update
@@ -714,10 +722,11 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
 
             }
-    }	
+    }
+    this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
+    
     cout << "Objective value after "<< nIter_ << " iterations is: "  << UB_ << endl;
     LOG(INFO) << "We created " << numNodes_ << " many nodes.";
-
 
     // ###################################################################################
     // End: BendersSolve
@@ -1481,7 +1490,9 @@ int Benders::solveMaster(){
             //for (int i = 0; i < mncol_; i++){
             //    osiMaster_->setColBounds(i,regSolution_[i],regSolution_[i]);
             //}
+            //double timeStart = CoinCpuTime();
             //osiMaster_->initialSolve(); // Solve problem and check return values
+            //this->time.solverMaster += CoinCpuTime() - timeStart;
             //stat = CPXgetstat( envPtr, lpPtr );
             //DLOG_IF(ERROR,stat != 1) << "RD: Tested initial solution status: cplex returned with " << stat;
             //if (!osiMaster_->isProvenOptimal() ){
@@ -1701,7 +1712,9 @@ int Benders::solveMaster(){
                 //    delete thetaIndices;
                 //    delete thetaElements;
                 //}
+                double timeStart = CoinCpuTime();
                 osiMaster_->initialSolve();
+                this->time.solverMaster += CoinCpuTime() - timeStart;
 
             }
             //osiMaster_->initialBarSolve();
@@ -1730,10 +1743,15 @@ int Benders::solveMaster(){
                     columnLowerBounds_.push_back(lower);
                     columnUpperBounds_.push_back(upper);
                     currentLowerBound_.push_back(-infty_);
+                    double timeStart = CoinCpuTime();
                     osiMaster_->initialSolve();
+                    this->time.solverMaster += CoinCpuTime() - timeStart;
                 }
-                else
+                else {
+                    double timeStart = CoinCpuTime();
                     osiMaster_->branchAndBound();
+                    this->time.solverMaster += CoinCpuTime() - timeStart;
+                }
             }
         }
 
@@ -1812,13 +1830,17 @@ int Benders::solveMaster(){
                     }
                     CPXcopybase(envPtr, lpPtr, cstat_,rstat);
                     delete rstat;
+                    double timeStart = CoinCpuTime();
                     CPXqpopt(envPtr,lpPtr);
+                    this->time.solverMaster += CoinCpuTime() - timeStart;
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                     if ( stat == 6 ){ // We suffer from numerical problems
                         stat = CPXsetintparam( envPtr, CPX_PARAM_NUMERICALEMPHASIS, 1);
                         DLOG_IF(ERROR,stat != 0) << " Setting numerical emphasis parameter returned " << stat;
+                        double timeStart = CoinCpuTime();
                         CPXqpopt(envPtr,lpPtr);
+                        this->time.solverMaster += CoinCpuTime() - timeStart;
                         stat = CPXgetstat( envPtr, lpPtr );
                         DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
                     }
@@ -1826,7 +1848,9 @@ int Benders::solveMaster(){
                 }
                 else{
                     // If we are in multiSingleSwitch, we want to solve the problem and remove the multi cuts afterwards
+                    double timeStart = CoinCpuTime();
                     osiMaster_->resolve();
+                    this->time.solverMaster += CoinCpuTime() - timeStart;
                    
                 }
             }
@@ -1835,7 +1859,9 @@ int Benders::solveMaster(){
                 if (useRegularizedDecomposition_){
                     //TODO: Set param for reg. decomp. relative gap
                     //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
+                    double timeStart = CoinCpuTime();
                     CPXmipopt(envPtr,lpPtr);
+                    this->time.solverMaster += CoinCpuTime() - timeStart;
                     stat = CPXgetstat( envPtr, lpPtr );
                     DLOG_IF(FATAL,!(stat == 1 || stat == 101 || stat == 102)) << "Cplex returned with " << stat;
                 }
@@ -1882,10 +1908,11 @@ int Benders::solveMaster(){
 
                             }
                         }
-                        else
+                        else {
+                            double timeStart = CoinCpuTime();
                             osiMaster_->branchAndBound();
-
-
+                            this->time.solverMaster += CoinCpuTime() - timeStart;
+                        }
                     }
                 }
             }
@@ -1939,7 +1966,9 @@ int Benders::solveMaster(){
             rstat_ = new int[CPXgetnumrows( envPtr, lpPtr )];
             int numColumns = CPXgetnumcols(envPtr,lpPtr);
             int numRows = CPXgetnumrows(envPtr,lpPtr);
+            double timeStart = CoinCpuTime();
             CPXqpopt(envPtr,lpPtr);
+            this->time.solverMaster += CoinCpuTime() - timeStart;
             CPXgetbase( envPtr, lpPtr, cstat_, rstat_ );
         }
         else if ( stat == 101 || stat == 102 ){
@@ -1960,10 +1989,12 @@ int Benders::solveMaster(){
             CPXchgobjsen(envPtr, lpPtr, objsen);
 
             CPXsetintparam( envPtr, CPX_PARAM_PREIND, CPX_OFF );
+            double timeStart = CoinCpuTime();
             if (mnInt_ == 0)
                 CPXdualopt( envPtr, lpPtr );
             else 
                 CPXmipopt( envPtr, lpPtr);
+            this->time.solverMaster += CoinCpuTime() - timeStart;
             CPXsetintparam( envPtr, CPX_PARAM_PREIND, CPX_ON );
             stat = CPXgetstat(envPtr, lpPtr);
             DLOG_IF(ERROR,stat > 0) << "Cplex returned with error code " << stat;
@@ -1997,12 +2028,17 @@ int Benders::solveMaster(){
         if(mnInt_==0){
             osiMaster_->setHintParam(OsiDoDualInInitial,false);
             if (useRegularizedDecomposition_){
+                double timeStart = CoinCpuTime();
                 CPXqpopt(envPtr,lpPtr);
+                this->time.solverMaster += CoinCpuTime() - timeStart;
                 stat = CPXgetstat( envPtr, lpPtr );
                 DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
             }
-            else
+            else {
+                double timeStart = CoinCpuTime();
                 osiMaster_->resolve();
+                this->time.solverMaster += CoinCpuTime() - timeStart;
+            }
 
         }
         // Else solve via branch and bound
@@ -2011,12 +2047,17 @@ int Benders::solveMaster(){
                 // we already have a relative gap, we can use that as the mip-gap?
                 //TODO: Set param for reg. decomp. relative gap
                 //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
+                double timeStart = CoinCpuTime();
                 CPXmipopt(envPtr,lpPtr);
+                this->time.solverMaster += CoinCpuTime() - timeStart;
                 stat = CPXgetstat( envPtr, lpPtr );
                 DLOG_IF(ERROR,!(stat == 1 || stat == 101)) << "Cplex returned with " << stat;
             }
-            else
+            else {
+                double timeStart = CoinCpuTime();
                 osiMaster_->branchAndBound();
+                this->time.solverMaster += CoinCpuTime() - timeStart;
+            }
         }
         if (osiMaster_->isProvenDualInfeasible() || stat == CPX_STAT_UNBOUNDED){
             LOG(ERROR) << "Masterproblem is unbounded.";
@@ -2753,7 +2794,9 @@ int Benders::solveSubproblem(int scen_, bool fCut){
                 osiSubproblem_->setWarmStart(warmStartSubFol_);
             }
             // Solve subbroblem
+            double timeStart = CoinCpuTime();
             osiSubproblem_->initialSolve();
+            this->time.solverSubproblems += CoinCpuTime() - timeStart;
             if(fCut==false){
                 // Delete warmstart informations
                 if(warmStartEmptySub_[scen_]==false){
@@ -2777,7 +2820,9 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             if ( scen_ > 0 )
                 osiSubproblem_->setWarmStart(warmStartSub_[scen_-1]);
             // Solve subproblem
+            double timeStart = CoinCpuTime();
             osiSubproblem_->initialSolve();
+            this->time.solverSubproblems += CoinCpuTime() - timeStart;
         }
         // Warmstart between iterations
         if(warmStart_){
@@ -2809,7 +2854,9 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             osiSubproblem_->setWarmStart(warmStartSub_[scen_]);
         }
         // Solve subbroblem
+        double timeStart = CoinCpuTime();
         osiSubproblem_->initialSolve();
+        this->time.solverSubproblems += CoinCpuTime() - timeStart;
 
         // Warmstart between scenarios
         if(warmStartFol_ && fCut==false){
