@@ -3233,11 +3233,9 @@ void Benders::addOptiCut(int oCut){
         }
    
         // Add the cuts to the master problem
-
         for (int i = 0; i < numBunch_; i++) {
-
-            double deviation = computeDeviation(cutIndex,cutElements, -cutRowUB_[i]);
-            double factor = computeCoefficientTest(mncol_+1,cutElements);
+            //double deviation = computeDeviation(cutIndexBunch[i],cutElementsBunch[i], -cutRowUBBunch_[i]);
+            //double factor = computeCoefficientTest(mncol_+1,cutElements);
             osiMaster_->addRow(mncol_+1, cutIndexBunch[i], cutElementsBunch[i], cutRowLB, -cutRowUBBunch[i]); 
             appliedCuts_++;
             //We have to change the coefficient in the master problem of the theta from 0 to the correct value
