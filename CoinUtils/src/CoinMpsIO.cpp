@@ -4967,6 +4967,8 @@ CoinMpsIO::setMpsDataColAndRowNames(
   names_[1] = reinterpret_cast<char **> (malloc (numberColumns_ * sizeof(char *)));
    char** rowNames = names_[0];
    char** columnNames = names_[1];
+   numberHash_[0]=numberRows_;
+   numberHash_[1]=numberColumns_;
    int i;
    if (rownames.size()!=0) {
      for (i = 0 ; i < numberRows_; ++i) {

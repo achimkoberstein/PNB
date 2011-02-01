@@ -2731,6 +2731,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             printf("Number of cols: %d\n",smiOsi->getNumCols());
             printf("Optimal value: %g\n",smiOsi->getObjValue());
 
+            // Clean up test
+            delete smiModel;
+            delete osiClp1;
+
         }
 
         void ModelDiscrete(const char * const name)
@@ -2926,6 +2930,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             printf("Number of rows: %d\n",smiOsi->getNumRows());
             printf("Number of cols: %d\n",smiOsi->getNumCols());
             printf("Optimal value: %g\n",smiOsi->getObjValue());
+
+            // Clean up test
+            delete smiModel;
+            delete osiClp1;
 
 
         }
@@ -4006,7 +4014,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         testModel.setObjective(sum(T, x1(T)));
 
-        testModel.Solver->setIntParam(OsiIntParam::OsiNameDiscipline, 1);
+        testModel.Solver->setIntParam(OsiNameDiscipline, 1);
         
         testModel.attach();
 

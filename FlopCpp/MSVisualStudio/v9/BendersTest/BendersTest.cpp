@@ -49,7 +49,7 @@ namespace flopc {
         BendersTest(){ }
         
         double solveSMPS(const char* name ) {
-            double repetitions = 1;
+            double repetitions = 3;
             std::vector<double> wallClockTime(repetitions+1,0);
             std::vector<Benders::TimeStatistics> solvingTime(repetitions+1);
             std::vector<int> iterationCount(repetitions+1,0);
@@ -150,44 +150,44 @@ namespace flopc {
 
 } //end namespace
 
-TEST_F(Posts, scfxm) { // "master problem is infeasible or unbounded" ?!
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_16"), 18416.655, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_6"), 18615.932, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_16"), 18438.891, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_6"), 18616.224, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_16"), 18438.891, 0.1);
-}
-
-TEST_F(Posts, pltexp) { // ok
-    //// example how to use parameter class; by the way: solved with regularization to optimality, but then cplex crashes...
-    //BendersParameter params;
-    //params.setIntParam(BendersParameter::REGULARIZED, 1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6", params), -9.479354, 0.1);
-
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -23.214073, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -28.134408, 0.1);
-}
-
-TEST_F(Posts, sgpf) { // error: std::bad_alloc
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y3"), -3027.706, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y4"), -4031.391, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y5"), -5201.282, 0.1);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y6"), -6403.3, 0.1);
-}
-
-TEST_F(Posts, storm) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_8"), 15535231.897, 10);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_27"), 15508982.306, 10);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_125"), 15512090.180, 10);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_1000"), 15802589.698, 10);
-}
+//TEST_F(BendersTest, scfxm) { 
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_16"), 18416.655, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_6"), 18615.932, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_16"), 18438.891, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_6"), 18616.224, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_16"), 18438.891, 0.1);
+//}
+//
+//TEST_F(BendersTest, pltexp) {
+//    //// example how to use parameter class; by the way: solved with regularization to optimality, but then cplex crashes...
+//    //BendersParameter params;
+//    //params.setIntParam(BendersParameter::REGULARIZED, 1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6", params), -9.479354, 0.1);
+//
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -23.214073, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/pltexp/pltexpA4_16"), -28.134408, 0.1);
+//}
+//
+//TEST_F(BendersTest, sgpf) { 
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y3"), -3027.706, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y4"), -4031.391, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y5"), -5201.282, 0.1);
+//    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/sg/sgpf5y6"), -6403.3, 0.1);
+//}
+//
+//TEST_F(BendersTest, storm) { // ok
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_8"), 15535231.897, 10);
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_27"), 15508982.306, 10);
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_125"), 15512090.180, 10);
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/storm/stormG2_1000"), 15802589.698, 10);
+//}
 
 //TEST_F(BendersTest, fleetAssignment) { // ok
 //    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/fA"), -689.432, 0.1);
