@@ -236,6 +236,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 if (useRegularizedDecomposition_)
                     delete[] regSubproblemSolutionValues_;
                 delete[] tempFirstStageSol;
+                this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
                 return;		
             }
 
@@ -400,6 +401,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                         LOG(INFO) << "RD stops. Difference between current and regularized solution is " << lowerBound-regSolutionValue_;
                         for (int i = 0; i < mncol_; i++)
                             bestSol_[i] = regSolution_[i];
+                        this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
                         return;
 
 
@@ -494,7 +496,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 addSt1ToSubproblem(scen_, bestSolTemp_);
                 // Solve subproblem; Input: number of current
                 // scenario, number of feasibility cuts
-                if(solveSubproblem(scen_, fCut) == -1){ 
+                if(solveSubproblem(scen_, fCut) == -1){
+                    this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
                     return;
                 }	
                 // Initialize bool of feasibility cuts with false
@@ -607,8 +610,10 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     (mncol_+zSub_+sncol_*nScen_)*sizeof(double) );
                 // Update the upper bound
                 UB_ = upperBound_;
-                if (status == 1)
+                if (status == 1){
+                    this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
                     return;
+                }
             }
 
             if (integerBenders_ && mnInt_ > 0){
