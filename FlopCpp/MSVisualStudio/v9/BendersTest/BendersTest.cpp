@@ -51,10 +51,10 @@ namespace flopc {
         double solveSMPS(const char* name ) {
             double repetitions = 1;
             std::vector<double> wallClockTime(repetitions+1,0);
-            std::vector<double> solvingTime(repetitions+1,0);
+            std::vector<Benders::TimeStatistics> solvingTime(repetitions+1);
             std::vector<int> iterationCount(repetitions+1,0);
+            std::vector<double> smpsReading(repetitions+1,0);
             double objective = 0;
-            //benders.initialSolve();
             char sdate[9];
             char stime[9];
             ofstream ofs;
@@ -65,6 +65,7 @@ namespace flopc {
                 double time = CoinCpuTime();
                 SmiScnModel smi;
                 smi.readSmps(name);
+                smpsReading[i] = CoinCpuTime()-time;
 
                 OsiCpxSolverInterface cpxSolver;
                 OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
@@ -95,30 +96,49 @@ namespace flopc {
                 }
                 objective += benders.getObjValue()*(1/repetitions);
                 wallClockTime[i] = wallClockT;
-                solvingTime[i] = benders.getSolutionTime();
+                solvingTime[i] = benders.getTimeStatistics();
                 iterationCount[i] = benders.getNumIterations();
             }
             // Compute average time
             for (int i = 0; i < repetitions; i++){
                 wallClockTime[repetitions] += wallClockTime[i]/repetitions;
-                solvingTime[repetitions] += solvingTime[i]/repetitions;
+                //solvingTime[repetitions] += solvingTime[i]/repetitions;
             }
             LOG(INFO) << "Writing Wall Clock Time";
-	        ofs << "Overall Wall Clock Time (secs): ";
+	        ofs << "Overall Wall Clock Time (secs):            ";
             for (int i = 0; i < repetitions; i++)
                 ofs << wallClockTime[i] << " "; 
             ofs << endl;
-            ofs << "Solution Time Only (secs): ";
+            ofs << "Solution Time Only (secs):                 ";
             for (int i = 0; i < repetitions; i++)
-                ofs << solvingTime[i] << " "; 
+                ofs << solvingTime[i].bendersSolve << " "; 
+            ofs << endl;
+            ofs << "Solution Time Master (secs):               ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << solvingTime[i].solverMaster << " "; 
+            ofs << endl;
+            ofs << "Solution Time Subproblems (secs):          ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << solvingTime[i].solverSubproblems << " "; 
+            ofs << endl;
+            ofs << "Subproblem Loop (secs):                    ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << solvingTime[i].subproblemLoop << " "; 
+            ofs << endl;
+            ofs << "Time w/o cplex and subproblem loop (secs): ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << solvingTime[i].bendersSolve-solvingTime[i].solverMaster-solvingTime[i].subproblemLoop << " "; 
             ofs << endl;
             ofs << "Number of Iterations: ";
             for (int i = 0; i < repetitions; i++)
                 ofs << iterationCount[i] << " "; 
             ofs << endl;
+            ofs << "Time spent reading in SMPS files (secs):   ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << smpsReading[i] << " ";
+            ofs << endl;
             ofs << "Average Wall Clock Time (secs): " << wallClockTime[repetitions] << endl;
-            ofs << "Average Solution Time (secs): " << solvingTime[repetitions] << endl;
-
+            //ofs << "Average Overall Solution Time (secs): " << solvingTime[repetitions] << endl;
 		    ofs << "-------------------------" << endl;
 		    ofs.close();
             LOG(INFO) << " File closed";
