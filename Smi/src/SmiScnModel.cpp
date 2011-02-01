@@ -13,11 +13,6 @@
 
 using namespace std;
 
-// Define static variable
-template<typename T>
-int SmiTreeNode<T>::treeDepth_;
-int SmiTreeNode<int *>::treeDepth_;
-
 int SmiScnNode::getCoreColIndex(int i)
 {
     SmiCoreData *core = node_->getCore();
