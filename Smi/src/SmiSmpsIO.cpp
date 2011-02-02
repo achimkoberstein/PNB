@@ -1171,7 +1171,7 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     delete [] rstrt;
     
     const std::vector<std::string> vec; //dummy
-    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, *(this->core->getColumnNames(strictFormat)), vec);
+    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, *(this->core->getColumnNames(strictFormat)), *(this->core->getRowNames(strictFormat)));
 
     delete [] clo;
     delete [] cup;
@@ -1215,7 +1215,7 @@ void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension, const
             line << std::setw(10) << std::left << this->columnName(core->getColStart(stg));
         else
             line << this->columnName(core->getColStart(stg)) << " ";
-        line << std::setw(25) << std::left << this->rowName(core->getRowStart(stg));
+        line << std::setw(24) << std::left << this->rowName(core->getRowStart(stg)) << " ";
         line << "STAGE_" << stg << "\n";
     }
     line << "ENDATA\n";
@@ -1290,8 +1290,8 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
         // write matrix elements
         for (int i = data->getCore()->getRowStart(data->getStage()); i < data->getCore()->getRowStart(data->getStage()+1); i++) {
             for (int j = 0; j < data->getRowLength(i); j++) {
-                stream << "    " << std::setw(10) << std::left << this->columnName(data->getRowIndices(i)[j]);
-                stream << std::setw(10) << std::left << this->rowName(i);
+                stream << "    " << std::setw(9) << std::left << this->columnName(data->getRowIndices(i)[j]) << " ";
+                stream << std::setw(9) << std::left << this->rowName(i) << " ";
                 stream << data->getRowElements(i)[j] << "\n";
             }
         }
@@ -1299,18 +1299,18 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
 
     // write row lower elements
     for (int i = 0; i < data->getRowLowerLength(); i++) {
-        stream << "    RHS       " << std::setw(10) << std::left << this->rowName(data->getRowLowerIndices()[i]) << data->getRowLowerElements()[i] << "\n";
+        stream << "    RHS       " << std::setw(9) << std::left << this->rowName(data->getRowLowerIndices()[i]) << " " << data->getRowLowerElements()[i] << "\n";
     }
 
     // write row upper elements
     for (int i = 0; i < data->getRowUpperLength(); i++) {
         if (this->getRowSense()[data->getRowUpperIndices()[i]] != 'E')
-            stream << "    RHS       " << std::setw(10) << std::left << this->rowName(data->getRowUpperIndices()[i]) << data->getRowUpperElements()[i] << "\n";
+            stream << "    RHS       " << std::setw(9) << std::left << this->rowName(data->getRowUpperIndices()[i]) << " " << data->getRowUpperElements()[i] << "\n";
     }
 
     // write objective elements
     for (int i = 0; i < data->getObjectiveLength(); i++) {
-        stream << "    " << std::setw(10) << std::left << this->columnName(data->getObjectiveIndices()[i]) << "OBJROW         " << data->getObjectiveElements()[i] << "\n";
+        stream << "    " << std::setw(9) << std::left << this->columnName(data->getObjectiveIndices()[i]) << " OBJROW         " << data->getObjectiveElements()[i] << "\n";
     }
 
     // write column bounds    

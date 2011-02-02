@@ -101,3 +101,108 @@ void MP_constraint::display(string s) const {
         cout<<"No solution available!"<<endl;
     }
 }
+
+void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, std::vector<std::string> &rowNamesStrict, std::vector<std::string> &rowNamesFree) {
+    // we start with the names for the the free-type
+    string nameFree;
+    
+    // build the prefix
+    if (this->getName().length() > 0) {
+        nameFree = this->getName();
+    }
+    else {
+        nameFree = "R";
+    }
+
+    // if the prefix is not unique (i.e. used by another row), extend it with a consecutively number
+    if (!isUniqueName(nameFree, nameSetFree)) {
+        int ext = 0;
+        while (!isUniqueName(nameFree + to_string(ext), nameSetFree)) {
+            ext++;
+        }
+        nameFree = nameFree + to_string(ext);
+    }
+
+    // the name is unique, register it
+    nameSetFree.insert(nameFree);
+
+    // generate the names with the suffixes for every instance of this row and copy them into the array
+    for (int k = 0; k < size(); k++) {
+        string free = nameFree + this->generateNamesSuffixFree(k);
+        rowNamesFree.push_back(free.c_str());
+    }
+
+
+    // now for the strict-type
+    string nameStrict;
+
+    // maybe we are lucky and can use the same names for the strict-type as for the free-type...
+    if (isUniqueName(nameFree, nameSetStrict) && (nameFree.length() + this->generateNamesSuffixFree(size()-1).length()) <= 8) {
+        nameStrict = nameFree;
+        nameSetStrict.insert(nameStrict);
+        for (int k = 0; k < size(); k++) {
+            string strict = nameStrict + this->generateNamesSuffixFree(k);
+            rowNamesStrict.push_back(strict.c_str());
+        }
+    }
+    else {
+        // use the offset as suffix
+        bool genNames = true;
+        if (nameFree.length() + 1 + to_string(size()).length() <= 8) {
+            nameStrict = nameFree;
+        }
+        else {
+            nameStrict = nameFree.substr(0, 8 - (to_string(size()).length() + 1));
+
+            if (!isUniqueName(nameStrict, nameSetStrict)) {
+                // if its not a unique name, use an extension
+                int ext = 0;
+                do {
+                    if (ext % 10 == 0) { 
+                        nameStrict = nameStrict.substr(0, nameStrict.length()-1);
+                        if (nameStrict.length() == 0) 
+                            genNames = false;  // names do not fit into array of length 8 - so skip it
+                    }
+                    ext++;
+                } while (!isUniqueName(nameStrict + to_string(ext), nameSetStrict) && genNames);
+                nameStrict = nameStrict + to_string(ext);
+            }
+        }
+        if (genNames) {
+            // register the name
+            nameSetStrict.insert(nameStrict);
+            //fill the array
+            for (int k = 0; k < size(); k++) {
+                string strict = nameStrict + "_" + to_string(k);
+                rowNamesStrict.push_back(strict.c_str());
+            }
+        } else {
+            // push empty strings, let the SmiSmpsWriter or whatever try it...
+            string s = "";
+            for (int k = 0; k < size(); k++) {
+                rowNamesStrict.push_back(s.c_str());
+            }
+        }
+    }
+}
+
+string MP_constraint::generateNamesSuffixFree(const int k) {
+    IndexKeeper ik = getIndices(k);
+    std::stringstream ss;
+    if (&S1 != &MP_set::getEmpty()) {
+        ss << "_" << ik.i1;
+        if (&S2 != &MP_set::getEmpty()) {
+            ss << "_" << ik.i2;
+            if (&S3 != &MP_set::getEmpty()) {
+                ss << "_" << ik.i3;
+                if (&S4 != &MP_set::getEmpty()) {
+                    ss << "_" << ik.i4;
+                    if (&S5 != &MP_set::getEmpty()) {
+                        ss << "_" << ik.i5;
+                    }
+                }
+            }
+        }
+    }
+    return ss.str();
+}

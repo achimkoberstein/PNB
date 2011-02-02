@@ -305,6 +305,8 @@ namespace flopc {
 
         void display(string s="") const;
 
+        void generateNames(std::set<string> &nameSetFix, std::set<string> &nameSetFree, std::vector<std::string> &rowNamesFix, std::vector<std::string> &rowNamesFree);
+
         MP_model* M;
         int offset;
         MP_expression left,right;
@@ -313,6 +315,8 @@ namespace flopc {
         //Disabling copy constructor and assignment
         MP_constraint(const MP_constraint&);
         MP_constraint& operator=(const MP_constraint&);
+
+        std::string generateNamesSuffixFree(const int k);
 
         MP_boolean B;
         const MP_set_base &S1, &S2, &S3, &S4, &S5; 

@@ -967,7 +967,22 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
         (*i)->generateNames(nameSetStrict, nameSetFree, colNamesStrict, colNamesFree);
     }
-    //we pass the arrays to SMI and delete them there later
+
+    // now do the same for the row names
+    std::vector<std::string> rowNamesStrict;
+    std::vector<std::string> rowNamesFree;
+
+    rowNamesStrict.reserve(m);
+    rowNamesFree.reserve(m);
+
+    nameSetStrict.clear();
+    nameSetStrict.insert("R");
+    nameSetFree.clear();
+    nameSetFree.insert("R");
+    
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
+        (*i)->generateNames(nameSetStrict, nameSetFree, rowNamesStrict, rowNamesFree);
+    }
 
     ////
     // Core Model generated..
@@ -1006,6 +1021,9 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
         osiCore->setColumnNames(colNamesStrict, colNamesFree);
         Solver->setColNames(colNamesFree, 0, colNamesFree.size(), 0);
+        
+        osiCore->setRowNames(rowNamesStrict, rowNamesFree);
+        Solver->setRowNames(rowNamesFree, 0, rowNamesFree.size(), 0);
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         smiModel = generateScenarioTree(randomCoefs,osiCore);

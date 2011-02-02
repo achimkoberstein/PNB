@@ -206,17 +206,6 @@ const VariableRef& flopc::MP_variable::operator()( const MP_index_exp& d1 /*= MP
     return *vPtr;
 }
 
-bool isUniqueName(const string &name, const std::set<string> &nameSet) {
-    std::set<string>::const_iterator sIter = nameSet.find(name);
-    return (sIter == nameSet.end());
-}
-
-std::string to_string(const int i) {
-    std::stringstream ss;
-    ss << i;
-    return ss.str();
-}
-
 void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, std::vector<std::string> &colNamesStrict, std::vector<std::string> &colNamesFree) {
     // we start with the names for the the free-type
     string nameFree;
@@ -267,26 +256,23 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
     else {
         // use the offset as suffix
         bool genNames = true;
-        if (isUniqueName(nameFree, nameSetStrict)) {
-            if (nameFree.length() + 1 + to_string(size()).length() <= 8) {
-                nameStrict = nameFree;
-            }
-            else {
-                nameStrict = nameFree.substr(0, 8 - (to_string(size()).length() + 1));
-
-                if (!isUniqueName(nameStrict, nameSetStrict)) {
-                    // if its not a unique name, use an extension
-                    int ext = 0;
-                    do {
-                        if (ext % 10 == 0) { 
-                            nameStrict = nameStrict.substr(0, nameStrict.length()-1);
-                            if (nameStrict.length() == 0) 
-                                genNames = false;  // names do not fit into array of length 8 - so skip it
-                        }
-                        ext++;
-                    } while (!isUniqueName(nameStrict + to_string(ext), nameSetStrict) && genNames);
-                    nameStrict = nameStrict + to_string(ext);
-                }
+        if (nameFree.length() + 1 + to_string(size()).length() <= 8) {
+            nameStrict = nameFree;
+        }
+        else {
+            nameStrict = nameFree.substr(0, 8 - (to_string(size()).length() + 1));
+            if (!isUniqueName(nameStrict, nameSetStrict)) {
+                // if its not a unique name, use an extension
+                int ext = 0;
+                do {
+                    if (ext % 10 == 0) { 
+                        nameStrict = nameStrict.substr(0, nameStrict.length()-1);
+                        if (nameStrict.length() == 0) 
+                            genNames = false;  // names do not fit into array of length 8 - so skip it
+                    }
+                    ext++;
+                } while (!isUniqueName(nameStrict + to_string(ext), nameSetStrict) && genNames);
+                nameStrict = nameStrict + to_string(ext);
             }
         }
         if (genNames) {
