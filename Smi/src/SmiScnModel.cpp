@@ -334,7 +334,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     osiStoch_->setObjSense(objSense);
     // If we have integer indices, we need the branch-and-bound solver
     if (intIndices.size()){
-        osiStoch_->setInteger(&intIndices[0],intIndices.size());
+        //osiStoch_->setInteger(&intIndices[0],intIndices.size());
         osiStoch_->branchAndBound();
     }
     else

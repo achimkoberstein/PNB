@@ -759,9 +759,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         investmentModel.attach(investmentModel.Solver);
         this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
-        writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
-        compareEVPTest(investmentModel,MP_model::MAXIMIZE);
-
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
         //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
@@ -771,6 +768,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         ////Compare solution values.
         EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+
+        writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(investmentModel,MP_model::MAXIMIZE);
+
         std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(numScen,wsResults.size());
         double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
@@ -964,7 +965,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
-        dacota->writeLp("dacota");
+        //dacota->writeLp("dacota");
         dacota.solve(MP_model::MAXIMIZE);
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
@@ -1007,9 +1008,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
-        compareEVPTest(testModel2,MP_model::MINIMIZE);
         EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
     }
 
     // Test if generation of scenario tree out of scenario fan does work
@@ -1256,10 +1257,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-        compareEVPTest(testModel,MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
+
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
     }
 
     //TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
@@ -6070,7 +6072,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.Dacota*";
+    //::testing::GTEST_FLAG(filter) = "*.IntegerTest*";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
