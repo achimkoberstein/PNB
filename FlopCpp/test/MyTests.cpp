@@ -4179,7 +4179,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        for( int jj=0; jj<smiModel->getNumScenarios(); jj++)
 	        {
 		        submodel.push_back(new SmiScnModel());
-		        submodel[jj]->setOsiSolverHandle(new OsiClpSolverInterface());
+		        submodel[jj]->setOsiSolverHandle(OsiClpSolverInterface() );
 	        }
 
 
@@ -5981,11 +5981,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 		        nCoreRows,iCoreColStarts,iCoreRowIndice,dCoreMatEntries,dCoreClo,
 		        dCoreCup,dCoreObj,
 		        dCoreRlo,dCoreRup);
-	        SmiCoreData *osiCore = new
-		        SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
+	        SmiCoreData *osiCore = new SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
 
 	        // initialize SmiScnModel
 	        SmiScnModel *smiModel = new SmiScnModel();
+            smiModel->setCore(osiCore);
 
 	        // Add Scenarios
 	        int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
@@ -6018,8 +6018,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
 
 	        delete smiModel;
-	        //delete osiCore;
-
 	        delete rlo0;
 	        delete rlo1;
         }
@@ -6072,7 +6070,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.IntegerTest*";
+    ::testing::GTEST_FLAG(filter) = "*.Smi*";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
