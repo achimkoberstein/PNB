@@ -463,35 +463,36 @@ void MP_model::attachStochastic(){
 
 
 void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sample-function?!
-    if (_solver == 0) {//No solver was given
+    if (_solver == 0) {//No solver was given, use Solver to solve the problem
         if (Solver == 0) {// No solver was set: Attachment is not possible, so we return and set state to detached.
             mSolverState = MP_model::DETACHED;
+            LOG(INFO) << "You tried to solve a problem without a solver.";
             return;
         }  
-    } else {  // use pre-attached solver.
+    } 
+    else {  // we use _solver and update Solver if necessary
         if(Solver && Solver!=_solver) {
-            detach(); //If old solver is not new solver, go delete the old solver and continue to work with the new one
-        }
-        else{
-            if ( mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY ){
-                // clean up: 
-                if ( stage.size() ){
-                    smiModel->releaseSolver();
-                    delete smiModel;
-                    smiModel = NULL;
-                    if (n > 0){
-                        delete [] colStage;
-                        delete [] colIndirection;
-                    }
-                    if (m > 0){
-                        delete [] rowStage;
-                        delete [] rowIndirection;
-                    }
-                }
-            }
-
+            //If old solver is not new solver, go delete the old solver and continue to work with the new one
+            detach(); 
         }
         Solver=_solver;
+    }
+    // In case we already attached a model, we redo it, but we have to do some cleanup
+    if ( mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY ){
+        // clean up: 
+        if ( stage.size() ){
+            smiModel->releaseSolver();
+            delete smiModel;
+            smiModel = NULL;
+            if (n > 0){
+                delete [] colStage;
+                delete [] colIndirection;
+            }
+            if (m > 0){
+                delete [] rowStage;
+                delete [] rowIndirection;
+            }
+        }
     }
     LOG(INFO) << "Started coefficient generation process, i.e. attach() was called.";
     //if (mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY && stage.size() > 1 ){
@@ -1027,7 +1028,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
         // Get SmiScnModel that holds a generated ScenarioTree.
         smiModel = generateScenarioTree(randomCoefs,osiCore);
-        // Check if we eliminated RV in some stages ( could be
+        // Check if we eliminated RV in some stages 
         if (smiModel == 0){
             //We were not sucessful in creating a scenario tree. Try normal operation. TODO: Think about reversed matrix..
             Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);

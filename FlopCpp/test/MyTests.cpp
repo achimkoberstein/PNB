@@ -2602,6 +2602,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             OsiClpSolverInterface ocsi;
             ocsi.loadProblem(CoinPackedMatrix( 1,mrow,mcol,dels,nels),dclo,dcup,dobj,drlo,drup);
             SmiCoreData *osiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
+            smiModel->setCore(osiCore);
 
             cout << "ModelScenario: Created CoreData" << endl;
 
@@ -2741,6 +2742,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             delete smiModel;
             delete osiClp1;
 
+            free(indx);
+
         }
 
         void ModelDiscrete(const char * const name)
@@ -2840,6 +2843,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
             // core model 
             SmiCoreData *smiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
+            smiModel->setCore(smiCore);
 
             cout << "ModelDiscrete: generated Core data" << endl;
 
@@ -2940,6 +2944,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             // Clean up test
             delete smiModel;
             delete osiClp1;
+            delete smiDD;
 
 
         }
@@ -3247,7 +3252,13 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             cout<<i<<"  "<<rep[i][0]<<"  "<<rep[i][1]<<"  "<<rep[i][2]<<"  "<<rep[i][3]<<endl;
         }
 
+        // Cleanup
+        for (int i = 0; i < TSize; i++)
+            delete [] rep[i];
+        delete [] rep;
+
         cout<<"Test magic passed."<<endl;
+
     }
 
     TEST_F(FlopCppExamples, mine){
@@ -6070,7 +6081,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.Smi*";
+    //::testing::GTEST_FLAG(filter) = "*.Smi*";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
