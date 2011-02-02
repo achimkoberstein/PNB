@@ -965,10 +965,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
 
-        ev = dacota.smiModel->getEVValue(dacota.Solver, MP_model::MAXIMIZE);
+        ev = dacota.smiModel->getEVValue(dacota.Solver, MP_model::MAXIMIZE, false);
         EXPECT_EQ(ev, 4165);
 
-        eev = dacota.smiModel->getEEVValue(dacota.Solver, MP_model::MAXIMIZE);
+        eev = dacota.smiModel->getEEVValue(dacota.Solver, MP_model::MAXIMIZE, false);
         EXPECT_NEAR(eev, 1545, 0.0001);
 
         ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
@@ -1913,7 +1913,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         Fourer, R, Gay, D M, and Kernighan, B W, AMPL: A Mathematical Programming
         Language. AT\&T Bell Laboratories, Murray Hill, New Jersey, 1987.
         */
-        MP_model testModel(new OsiCbcSolverInterface(new OsiClpSolverInterface));
+        OsiClpSolverInterface osiClpSolver;
+        MP_model testModel(new OsiCbcSolverInterface(&osiClpSolver));
         testModel.verbose();
 
         enum {iron, nickel, numRaw};
@@ -3247,7 +3248,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
     TEST_F(FlopCppExamples, mine){
         for (int ij = 0; ij < 11; ij++) {
 
-            MP_model thisModel(new OsiCbcSolverInterface(new OsiClpSolverInterface()));
+            OsiClpSolverInterface clpSolver;
+            
+            MP_model thisModel(new OsiCbcSolverInterface(&clpSolver));
             enum {nw,ne,se,sw,numK};
 
             MP_set l(4);  // identfiers for level row and column labels  / 1*4 /;
@@ -4284,6 +4287,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 	        delete rlo0;
 	        delete rlo1;
+
+            for (int i = 0; i < submodel.size(); i++)
+                delete submodel[i];
+
         }
 
         TEST_F(SmiUnitTest, SmiScenarioTreeUnitTest) {
@@ -6060,7 +6067,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.Infinity*";
+    ::testing::GTEST_FLAG(filter) = "*.Dacota*";
     //::testing::GTEST_FLAG(filter) = "MP_modelTest.TimosORBProjekt";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
