@@ -213,11 +213,11 @@ public:
     double getRowSolution(SmiScenarioIndex ns, int stage, int colIndex);
 
     // OsiSolverInterface
-    void setOsiSolverHandle(OsiSolverInterface &osi)
+    void setOsiSolverHandle(const OsiSolverInterface &osi)
     {
         osiStoch_ = osi.clone(false);
     }
-    void setOsiSolverHandle(OsiSolverInterface *osi)
+    void setOsiSolverHandle(const OsiSolverInterface *osi)
     {
         osiStoch_ = osi->clone(false);
     }
