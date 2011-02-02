@@ -300,13 +300,13 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     for (int t = 0; t < this->core_->getNumStages(); t++) {
         addNode(this->core_->getNode(t));
     }
-
-    matrix_ = new CoinPackedMatrix(false,this->core_->getNumCols(),this->core_->getNumRows());
+    
+    // create the matrix
+    matrix_ = new CoinPackedMatrix(false,0,0);
     int *len=NULL;
-    if (!calculateAverageValues)
-        // Assign values from current arrays (which get nulled thereafter)
-        matrix_->assignMatrix(false,ncol_,nrow_,nels_,
-            dels_,indx_,rstrt_,len);
+    // Assign values from current arrays (which get nulled thereafter)
+    matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
+    
     // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
     // and then add the weighted values from the other scenarios
@@ -322,10 +322,14 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
         }
     }
 
-
     // pass data to osiStoch
     osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
+    // load integer values in solver
+    for (unsigned int i = 0; i < intIndices.size(); i++) {
+        if (intIndices[i] < ncol_)
+            osiStoch_->setInteger(intIndices[i]);
+    }
     //Set objSense
     osiStoch_->setObjSense(objSense);
     // If we have integer indices, we need the branch-and-bound solver
@@ -363,10 +367,15 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
         printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
     }
 #endif
-    
+
+string name;
+if (calculateAverageValues) name = "ev_calculated";
+else name = "ev";
+osiStoch_->writeLp(name.c_str());
+
     double * colSolution = new double[core_->getColStart(1)];
     memcpy(colSolution, osiStoch_->getColSolution(), (core_->getColStart(1) * sizeof(double)) );
-    int objValue = osiStoch_->getObjValue();
+    double objValue = osiStoch_->getObjValue();
     // Reset osiStoch_ to old solver
     osiStoch_ = tempPtr;
     return make_pair(objValue,colSolution );
@@ -1094,31 +1103,31 @@ SmiScnModel::addNodeEVP(SmiScnNode *tnode)
     if (snode->getColLowerLength()) {
         CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
         vclo *= tnode->getProb();
-        combineRule->Process(dclo_, core_->getColStart(stage), vclo);
+        combineRule->Process(dclo_, 0, vclo);
     }
 
     if (snode->getColUpperLength()) {
         CoinPackedVector vcup = CoinPackedVector(snode->getColUpperLength(), snode->getColUpperIndices(), snode->getColUpperElements(), false);
         vcup *= tnode->getProb();
-        combineRule->Process(dcup_, core_->getColStart(stage), vcup);
+        combineRule->Process(dcup_, 0, vcup);
     }
 
     if (snode->getObjectiveLength()) {
         CoinPackedVector vobj = CoinPackedVector(snode->getObjectiveLength(), snode->getObjectiveIndices(), snode->getObjectiveElements(), false);
         vobj *= tnode->getProb();
-        combineRule->Process(dobj_, core_->getColStart(stage), vobj);
+        combineRule->Process(dobj_, 0, vobj);
     }
 
     if (snode->getRowLowerLength()) {
         CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
         vrlo *= tnode->getProb();
-        combineRule->Process(drlo_, core_->getRowStart(stage), vrlo);
+        combineRule->Process(drlo_, 0, vrlo);
     }
 
     if (snode->getRowUpperLength()) {
         CoinPackedVector vrup = CoinPackedVector(snode->getRowUpperLength(), snode->getRowUpperIndices(), snode->getRowUpperElements(), false);
         vrup *= tnode->getProb();
-        combineRule->Process(drup_, core_->getRowStart(stage), vrup);
+        combineRule->Process(drup_, 0, vrup);
     }
 
     // And now for the matrix entries
