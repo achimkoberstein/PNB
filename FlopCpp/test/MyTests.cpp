@@ -16,7 +16,6 @@
 #include "CoinFloatEqual.hpp"
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
-//#include "Benders.hpp"
 //#include "SAA.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
@@ -62,7 +61,7 @@ namespace flopc {
         double ev = model.getSmi()->getEVValue(model.Solver, direction, false);
         EXPECT_NEAR(ev, ev_calculated, 0.01);
         if (std::abs(ev - ev_calculated) > 0.01) {
-            cout << "failed";
+            LOG(ERROR) << "failed";
         }
     }
 
@@ -947,8 +946,12 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
 
-        // solve EV-, EEV-, WS- and here-and-now-Problem
+                // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
+
+
+
+
 
         ev = dacota.smiModel->getEVValue(dacota.Solver, MP_model::MAXIMIZE, false);
         EXPECT_EQ(ev, 4165);
@@ -961,12 +964,17 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
+        dacota->writeLp("dacota");
         dacota.solve(MP_model::MAXIMIZE);
-        writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
-        compareEVPTest(dacota,MP_model::MAXIMIZE);
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
+
+        writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
+        compareEVPTest(dacota,MP_model::MAXIMIZE);
+              
+
+
     }
 
     // Test complex combinations of random variables in constraints
