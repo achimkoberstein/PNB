@@ -473,17 +473,20 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             detach(); //If old solver is not new solver, go delete the old solver and continue to work with the new one
         }
         else{
-            if ( mSolverState != MP_model::DETACHED ){
+            if ( mSolverState != MP_model::DETACHED && mSolverState != MP_model::SOLVER_ONLY ){
                 // clean up: 
-                delete smiModel;
-                smiModel = NULL;
-                if (n > 0){
-                    delete [] colStage;
-                    delete [] colIndirection;
-                }
-                if (m > 0){
-                    delete [] rowStage;
-                    delete [] rowIndirection;
+                if ( stage.size() ){
+                    smiModel->releaseSolver();
+                    delete smiModel;
+                    smiModel = NULL;
+                    if (n > 0){
+                        delete [] colStage;
+                        delete [] colIndirection;
+                    }
+                    if (m > 0){
+                        delete [] rowStage;
+                        delete [] rowIndirection;
+                    }
                 }
             }
 
