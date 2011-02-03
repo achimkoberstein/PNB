@@ -251,7 +251,6 @@ double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense ){
 }
 
 double SmiScnModel::getEVValue(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues){
-    //Test if wsValues is empty, if this is the case, run solveWS
     std::pair<double, double*> results(solveEV(osiSolver,objSense,calculateAverageValues));
     delete[] results.second;
     return results.first;
@@ -298,7 +297,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
 
     // Call addNode on all these nodes, this generates the problem with the deterministic data from the core nodes
     for (int t = 0; t < this->core_->getNumStages(); t++) {
-        addNode(this->core_->getNode(t));
+        addCoreNode(this->core_->getNode(t));
     }
     
     // create the matrix
@@ -1015,7 +1014,7 @@ SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
 }
 
 void
-SmiScnModel::addNode(SmiNodeData *node)
+SmiScnModel::addCoreNode(SmiNodeData *node)
 {
 
     SmiCoreData *core = node->getCore();
@@ -1364,14 +1363,6 @@ void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &ds
         delt1[dfirst.findIndex(indx2[j])] = delt2[j];
 }
 
-
-void
-SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure *smiBS){
-	combineBlocks(smiBS);
-	
-
-}
-
 void
 SmiScnModel::processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *smiDD, bool test)
 
@@ -1693,7 +1684,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     return (stg+1 - start_stg);
 }
 
- void SmiScnModel::combineBlocks(SmiBlockStructure* smiBS){
+ void SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure* smiBS){
 	int nBlocks = smiBS->getNumBlocks();
 	SmiScenarioIndex is;
 	SmiCoreData *core = smiBS->getCore();
@@ -1779,6 +1770,6 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 		smiBS->deleteSmiBlock();
 		smiBS->deleteSmiBlock();
 		smiBS->addSmiBlock(combBlock);
-		combineBlocks(smiBS);
+		processBlockStructureIntoScenarios(smiBS);
 	}
 }
