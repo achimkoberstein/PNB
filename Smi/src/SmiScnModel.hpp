@@ -259,17 +259,19 @@ public:
     /** Sets the OsiSolverInterface for SMI.
     @param osi an OsiSolverInterface
     */
-    void setOsiSolverHandle(OsiSolverInterface &osi)
+    void setOsiSolverHandle(const OsiSolverInterface &osi)
     {
         osiStoch_ = osi.clone(false);
     }
+    
     /** Sets the OsiSolverInterface for SMI.
     @param osi an OsiSolverInterface
     */
-    void setOsiSolverHandle(OsiSolverInterface *osi)
+    void setOsiSolverHandle(const OsiSolverInterface *osi)
     {
         osiStoch_ = osi->clone(false);
     }
+    
     /** Returns the OsiSolverInterface of this SMI model.
     @return a pointer to the OsiSolverInterface
     */
