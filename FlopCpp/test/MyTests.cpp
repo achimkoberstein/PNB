@@ -16,7 +16,7 @@
 #include "CoinFloatEqual.hpp"
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
-#include "SAA.hpp"
+//#include "SAA.hpp"
 //#include "OsiStochasticSolverInterface.hpp"
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
@@ -61,7 +61,7 @@ namespace flopc {
         double ev = model.getSmi()->getEVValue(model.Solver, direction, false);
         EXPECT_NEAR(ev, ev_calculated, 0.01);
         if (std::abs(ev - ev_calculated) > 0.01) {
-            cout << "failed";
+            LOG(ERROR) << "failed";
         }
     }
 
@@ -337,6 +337,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //double duration = CoinCpuTime() - begin;
     }
 
+
+    //Test fails to test the correct thing, somehow something is messed up, assumingly during the det.eq. generation of Smi. Supposed problem: constraints span two stages? I am not so sure about that
     TEST_F(MP_modelTest,ComplicatedExpressionsTest){
         MP_model testModel(new OsiClpSolverInterface(),new VerboseMessenger());
 
@@ -374,6 +376,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         ASSERT_EQ(10,testModel.getScenSet().size());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
         compareEVPTest(testModel,MP_model::MAXIMIZE);
+        //OsiStochasticBendersTwoStageSolverInterface benders(testModel.Solver,testModel.getSmi());
+        ////double begin = CoinCpuTime();
+        //benders.initialSolve();
+        //double duration = CoinCpuTime() - begin;
     }
 
     TEST_F(MP_modelTest,DiscretizationTest){
@@ -753,9 +759,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         investmentModel.attach(investmentModel.Solver);
         this->testCorrectStageAssignment(investmentModel);
         investmentModel.solve(MP_model::MAXIMIZE);
-        writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
-        compareEVPTest(investmentModel,MP_model::MAXIMIZE);
-
         //for (int i = 0; i < scen.size();i++){
         //    for (int j = 0; j < T.size(); j++){
         //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
@@ -765,6 +768,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         ////Compare solution values.
         EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
         EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+
+        writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(investmentModel,MP_model::MAXIMIZE);
+
         std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(numScen,wsResults.size());
         double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
@@ -940,13 +947,17 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
 
-        // solve EV-, EEV-, WS- and here-and-now-Problem
+                // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
 
-        ev = dacota.smiModel->getEVValue(dacota.Solver, MP_model::MAXIMIZE);
+
+
+
+
+        ev = dacota.smiModel->getEVValue(dacota.Solver, MP_model::MAXIMIZE, false);
         EXPECT_EQ(ev, 4165);
 
-        eev = dacota.smiModel->getEEVValue(dacota.Solver, MP_model::MAXIMIZE);
+        eev = dacota.smiModel->getEEVValue(dacota.Solver, MP_model::MAXIMIZE, false);
         EXPECT_NEAR(eev, 1545, 0.0001);
 
         ws = dacota.smiModel->getWSValue(dacota.Solver, MP_model::MAXIMIZE);
@@ -954,12 +965,17 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         // we have to attach the solver again, otherwise the program crashes
         dacota.attach(dacota.Solver);
+        //dacota->writeLp("dacota");
         dacota.solve(MP_model::MAXIMIZE);
-        writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
-        compareEVPTest(dacota,MP_model::MAXIMIZE);
         hereAndNow = dacota->getObjValue();
         EXPECT_DOUBLE_EQ(1730.0, hereAndNow);
         EXPECT_EQ(MP_model::OPTIMAL,dacota.getStatus());
+
+        writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
+        compareEVPTest(dacota,MP_model::MAXIMIZE);
+              
+
+
     }
 
     // Test complex combinations of random variables in constraints
@@ -992,9 +1008,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
-        compareEVPTest(testModel2,MP_model::MINIMIZE);
         EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        compareEVPTest(testModel2,MP_model::MINIMIZE);
     }
 
     // Test if generation of scenario tree out of scenario fan does work
@@ -1241,10 +1257,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //We need to do some tests here..
         testModel.solve(MP_model::MAXIMIZE);
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
-        compareEVPTest(testModel,MP_model::MAXIMIZE);
         //Print some results..
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_EQ(77.25,testModel->getObjValue()); //Normal Solver gets called, as no random vars were specified
+
+        compareEVPTest(testModel,MP_model::MAXIMIZE);
     }
 
     //TEST_F(MP_modelTest,RandomVariableInAllStagesTest){
@@ -1600,6 +1617,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
     }
 
     TEST(UnitTest,OldUnitTest){
+        MP_model testModel(new OsiClpSolverInterface);
         enum {airA, airB, airC, airD, numA};
         enum {route_1, route_2, route_3, route_4, route_5, numRoutes};
         const int numDemandStates = 5;
@@ -1900,7 +1918,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         Fourer, R, Gay, D M, and Kernighan, B W, AMPL: A Mathematical Programming
         Language. AT\&T Bell Laboratories, Murray Hill, New Jersey, 1987.
         */
-        MP_model testModel(new OsiCbcSolverInterface(new OsiClpSolverInterface));
+        OsiClpSolverInterface osiClpSolver;
+        MP_model testModel(new OsiCbcSolverInterface(&osiClpSolver));
         testModel.verbose();
 
         enum {iron, nickel, numRaw};
@@ -2583,6 +2602,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             OsiClpSolverInterface ocsi;
             ocsi.loadProblem(CoinPackedMatrix( 1,mrow,mcol,dels,nels),dclo,dcup,dobj,drlo,drup);
             SmiCoreData *osiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
+            smiModel->setCore(osiCore);
 
             cout << "ModelScenario: Created CoreData" << endl;
 
@@ -2718,6 +2738,12 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             printf("Number of cols: %d\n",smiOsi->getNumCols());
             printf("Optimal value: %g\n",smiOsi->getObjValue());
 
+            // Clean up test
+            delete smiModel;
+            delete osiClp1;
+
+            free(indx);
+
         }
 
         void ModelDiscrete(const char * const name)
@@ -2817,6 +2843,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
             // core model 
             SmiCoreData *smiCore = new SmiCoreData(&ocsi,nstg,cstg,rstg);
+            smiModel->setCore(smiCore);
 
             cout << "ModelDiscrete: generated Core data" << endl;
 
@@ -2913,6 +2940,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             printf("Number of rows: %d\n",smiOsi->getNumRows());
             printf("Number of cols: %d\n",smiOsi->getNumCols());
             printf("Optimal value: %g\n",smiOsi->getObjValue());
+
+            // Clean up test
+            delete smiModel;
+            delete osiClp1;
+            delete smiDD;
 
 
         }
@@ -3220,13 +3252,21 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             cout<<i<<"  "<<rep[i][0]<<"  "<<rep[i][1]<<"  "<<rep[i][2]<<"  "<<rep[i][3]<<endl;
         }
 
+        // Cleanup
+        for (int i = 0; i < TSize; i++)
+            delete [] rep[i];
+        delete [] rep;
+
         cout<<"Test magic passed."<<endl;
+
     }
 
     TEST_F(FlopCppExamples, mine){
         for (int ij = 0; ij < 11; ij++) {
 
-            MP_model thisModel(new OsiCbcSolverInterface(new OsiClpSolverInterface()));
+            OsiClpSolverInterface clpSolver;
+            
+            MP_model thisModel(new OsiCbcSolverInterface(&clpSolver));
             enum {nw,ne,se,sw,numK};
 
             MP_set l(4);  // identfiers for level row and column labels  / 1*4 /;
@@ -3993,7 +4033,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         testModel.setObjective(sum(T, x1(T)));
 
-        testModel.Solver->setIntParam(OsiIntParam::OsiNameDiscipline, 1);
+        testModel.Solver->setIntParam(OsiNameDiscipline, 1);
         
         testModel.attach();
 
@@ -4150,7 +4190,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        for( int jj=0; jj<smiModel->getNumScenarios(); jj++)
 	        {
 		        submodel.push_back(new SmiScnModel());
-		        submodel[jj]->setOsiSolverHandle(new OsiClpSolverInterface());
+		        submodel[jj]->setOsiSolverHandle(OsiClpSolverInterface() );
 	        }
 
 
@@ -4263,6 +4303,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 	        delete rlo0;
 	        delete rlo1;
+
+            for (int i = 0; i < submodel.size(); i++)
+                delete submodel[i];
+
         }
 
         TEST_F(SmiUnitTest, SmiScenarioTreeUnitTest) {
@@ -5948,11 +5992,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 		        nCoreRows,iCoreColStarts,iCoreRowIndice,dCoreMatEntries,dCoreClo,
 		        dCoreCup,dCoreObj,
 		        dCoreRlo,dCoreRup);
-	        SmiCoreData *osiCore = new
-		        SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
+	        SmiCoreData *osiCore = new SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
 
 	        // initialize SmiScnModel
 	        SmiScnModel *smiModel = new SmiScnModel();
+            smiModel->setCore(osiCore);
 
 	        // Add Scenarios
 	        int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
@@ -5985,8 +6029,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
 
 	        delete smiModel;
-	        //delete osiCore;
-
 	        delete rlo0;
 	        delete rlo1;
         }
@@ -6039,14 +6081,14 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.Infinity*";
-    //::testing::GTEST_FLAG(filter) = "*.ComplicatedExpressionsTest";
+    //::testing::GTEST_FLAG(filter) = "*.Smi*";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
 #endif
-    google::SetStderrLogging(0);
+    google::LogToStderr();
+    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     int result = RUN_ALL_TESTS();
     //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();

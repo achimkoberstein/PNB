@@ -2311,7 +2311,7 @@ int CoinMpsIO::readMps(int & numberSets,CoinSet ** &sets)
 	    } else {
 	      ifError = true;
 	    }
-            if (value>1.0e25)
+            if (value>1.0e19) //We made this setting so we can handle Cplex infinity values?!
               value=infinity_;
 	    colupper_[icolumn] = value;
 	    columnType[icolumn] = COIN_UP_BOUND;
@@ -4967,6 +4967,8 @@ CoinMpsIO::setMpsDataColAndRowNames(
   names_[1] = reinterpret_cast<char **> (malloc (numberColumns_ * sizeof(char *)));
    char** rowNames = names_[0];
    char** columnNames = names_[1];
+   numberHash_[0]=numberRows_;
+   numberHash_[1]=numberColumns_;
    int i;
    if (rownames.size()!=0) {
      for (i = 0 ; i < numberRows_; ++i) {
