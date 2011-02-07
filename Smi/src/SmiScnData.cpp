@@ -321,6 +321,7 @@ SmiCoreData::~SmiCoreData()
 	delete [] cdcup_;
 	delete [] cdobj_;
     delete [] integerIndices_;
+    delete [] binaryIndices_;
     for (int ijk=0; ijk<nodes_.size(); ijk++){
 	  delete nodes_[ijk];
     }

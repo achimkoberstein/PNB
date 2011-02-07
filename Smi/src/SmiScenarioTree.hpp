@@ -148,9 +148,25 @@ public:
 	/// Destructor
 
 	~SmiTreeNode<T>() {
-		delete sibling_;
-		delete child_;
+        delete child_;
+        if ( sibling_){ 
+            // Get all the nodes in a row and delete the siblings
+            std::vector<SmiTreeNode<T>*> container;
+            SmiTreeNode<T>* curSiblPtr = sibling_;
+            container.push_back(curSiblPtr);
+            while ( curSiblPtr != NULL){
+                container.push_back(curSiblPtr->getSiblingP() ) ;
+                curSiblPtr->setSibling(NULL);
+                curSiblPtr = container.back();
+            }
+            for (int i = 0; i < container.size(); i++)
+                delete container[i];
+        }
+
 	}
+
+    // It should belong to the SmiTree, but the node usually has no pointer to the SmiTree
+    static int treeDepth_;
 
 	//@}
 
@@ -181,8 +197,10 @@ private:
 	int depth_;
 	T ptr_;
 	child_label_map child_labels_;
+    
 
 };
+
 
 //#############################################################################
 /** A function that tests the methods in the SmiTreeNode class. The
@@ -401,6 +419,12 @@ public:
 
 	/// Destructor
 	virtual ~SmiScenarioTree<T> () {
+        // We have to set the global static depth
+        //SmiTreeNode<T>::treeDepth_ = getLeaf(0)->depth();
+        //for (int i = 0; i < leaf_.size(); i++){
+        //    delete leaf_[i];
+        //}
+        // This works fine as long as the tree is not large enough (it breaks for two-stage problems with 2000 scenarios)
 		delete root_;
 	}
 	//@}

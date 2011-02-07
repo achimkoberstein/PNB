@@ -264,7 +264,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
 {
     // We create a new osiSolver Handle at this point. 
     OsiSolverInterface* tempPtr = osiStoch_;
-    osiStoch_ = osiSolver->clone(false);
+    osiStoch_ = osiSolver; // think about cloning or not..
 
     //Clean up previous stuff.
     delete[] dclo_;
@@ -309,6 +309,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
     // and then add the weighted values from the other scenarios
+    //
     if (calculateAverageValues) {
         for (int i = 0; i < this->getNumScenarios(); i++) {
             std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
@@ -330,7 +331,13 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     }
     //Set objSense
     osiStoch_->setObjSense(objSense);
-    osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+    // If we have integer indices, we need the branch-and-bound solver
+    if (intIndices.size()){
+        //osiStoch_->setInteger(&intIndices[0],intIndices.size());
+        osiStoch_->branchAndBound();
+    }
+    else
+        osiStoch_->initialSolve(); //Solve this problem.
 
     //Delete new-ed objects
     delete matrix_;
@@ -368,7 +375,7 @@ osiStoch_->writeLp(name.c_str());
     double * colSolution = new double[core_->getColStart(1)];
     memcpy(colSolution, osiStoch_->getColSolution(), (core_->getColStart(1) * sizeof(double)) );
     double objValue = osiStoch_->getObjValue();
-    delete osiStoch_;
+    // Reset osiStoch_ to old solver
     osiStoch_ = tempPtr;
     return make_pair(objValue,colSolution );
 }
@@ -434,11 +441,6 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         // pass data to osiStoch
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
-        // load integer values in solver
-        for (unsigned int i = 0; i < intIndices.size(); i++) {
-            osiStoch_->setInteger(intIndices[i]);
-        }
-
         // fix stage-1-columns to the values of the evp
         for (int col = 0; col < numStage1Cols; col++) {
             if (this->core_->getColStage(col) == 0) {
@@ -448,7 +450,13 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
 
         //Set objSense
         osiStoch_->setObjSense(objSense);
-        osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+        // If we have integer indices, we need the branch-and-bound solver
+        if (intIndices.size()){
+            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+            osiStoch_->branchAndBound();
+        }
+        else
+            osiStoch_->initialSolve(); //Solve this problem.
 
         // sum up the solution values (multiplied with probabilities)
         eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
@@ -547,13 +555,15 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
         // pass data to osiStoch
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
-        // load integer values in solver
-        for (unsigned int i = 0; i < intIndices.size(); i++) {
-            osiStoch_->setInteger(intIndices[i]);
-        }
         //Set objSense
         osiStoch_->setObjSense(objSense);
-        osiStoch_->initialSolve(); //Solve this problem. We need objSense..
+            // If we have integer indices, we need the branch-and-bound solver
+        if (intIndices.size()){
+            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+            osiStoch_->branchAndBound();
+        }
+        else
+            osiStoch_->initialSolve(); //Solve this problem.
         solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
 
         //Delete new-ed objects
@@ -633,10 +643,13 @@ SmiScnModel::loadOsiSolverData()
     // pass data to osiStoch
     osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
 
-    // load integer values in solver
-    for (unsigned int i = 0; i < intIndices.size(); i++) {
-        osiStoch_->setInteger(intIndices[i]);
+    // If we have integer indices, we add these to the solver.
+    if (intIndices.size()){
+        osiStoch_->setInteger(&intIndices[0],intIndices.size());
     }
+
+
+
 
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..
