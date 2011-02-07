@@ -58,7 +58,7 @@ class SmiScnModel
     friend void DecompUnitTest();
 public:
 
-    /**@name Read SMPS files.
+    /**Read SMPS files.
 
     There should be three files: {name}.[core, time, stoch].
     If you have different extension conventions, then you can
@@ -73,21 +73,18 @@ public:
     int readSmps(const char *name,
         SmiCoreCombineRule *r=NULL);
 
-    /**@name Writes SMPS files.
-    
+    /** Writes SMPS files.
     This method generates three files {name}.[core, time, stoch] or {name}.[cor, tim, sto] (see second parameter).
-    
     @param name The name for the model and the written files
-    
     @param winFileExtensions optional; false by default, so extensions will be [core, time, stoch]. With this parameter set to true, it will be [cor, tim, sto].
-    
     @param strictFormat optional, true by default. Set to false if SMPS files should be written in free format.
-    
     @return -1 in case of no existing SMI model, otherwise 0
-    
     */
     int writeSmps(const char *name, bool winFileExtensions = false, bool strictFormat = true);
 
+    /** Get a pointer to the core node.
+    @return The pointer to the core node.
+    */
     SmiCoreData * getCore() {return core_;}
 
     /**@name Direct methods.
@@ -99,19 +96,25 @@ public:
     could easily be changed.
     */
 
-    //@{
-//#############################################################################################
-//#############################################################################################
+    /** Processes SmiBlockBlockStrctures into scenarios
+    @param A pointer to an SmiBlockStructure
+    */
 	void processBlockStructureIntoScenarios(SmiBlockStructure *smiBS);
-	void combineBlocks(SmiBlockStructure *smiBS);
-//#############################################################################################
-//#############################################################################################
 
-    /// generate scenarios from discrete distribution
+    /** Generate scenarios from discrete distribution
+    @param s a pointer to an SmiDiscreteDistribution
+    @param test optional, false by default; set to true if the generation should be tested
+    */
     void processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *s, bool test=false);
 
+    /** Set the model probabilty, the sum of the probabilities of all scenarios.
+    @param p the total probability
+    */
     void setModelProb(double p) {totalProb_=p; }
 
+    /** Adds an SmiScnNode to the model object.
+    @param smiScnNode a pointer to the SmiScnNode
+    */
     int addNodeToSubmodel(SmiScnNode * smiScnNode);
 
     /** generate scenario with ancestor/branch node identification
@@ -176,55 +179,106 @@ public:
     OsiSolverInterface * loadOsiSolverData();
     OsiSolverInterface * loadOsiSolverDataForSubproblem(int stage, int scenStart);
 
-    std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense); //Returns value of Wait-And-See solution, with objSense of 1 (= minimization) for default
-    std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues = true);
-    double solveEEV(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues = true);
+    /** Solves the Wait-And-See-Problem, with objective sense of 1 (= minimization) for default.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @return a vector that containts for every scenario a pair of values, namely the objective value and the probability of the the scenario
+    */
+    std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense = 1);
+    
+    /** Solves the Expected-Value-Problem, with objective sense of 1 (= minimization) for default.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @param calculateAverageValues optional, when true (default) the average values for the random variables are calculated; 
+        otherwise, it is expected that the model already contains the average values
+    @return a pair of the objective value and a pointer to the column solution
+    */
+    std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
+    
+    /** Solves the EEV-Problem wich determines the expected value of the solution that provides 
+    the average scenario problem, with objective sense of 1 (= minimization) for default.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @param calculateAverageValues optional, when true (default) the average values for the random variables are calculated; 
+        otherwise, it is expected that the model already contains the average values
+    @return the objective value of the solved EEVP
+    */
+    double solveEEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
 
-    double getWSValue(OsiSolverInterface *osiSolver, double objSense);
-    double getEVValue(OsiSolverInterface* osiSolver, double objSense, bool calculateAverageValues = true);
-    double getEEVValue(OsiSolverInterface* osiSolver, double objSense, bool calculateAverageValues = true);
+    /** Returns only the solution value of the Wait-And-See-Problem, with objective sense of 1 (= minimization) for default.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @return the solution value of the WS-Problem
+    @see solveWS(OsiSolverInterface *osiSolver, double objSense = 1);
+    */
+    double getWSValue(OsiSolverInterface *osiSolver, double objSense = 1);
 
-    //Let SmiScnModel own core data
+    /** Returns only the solution value of the Expected-Value-Problem, with objective sense of 1 (= minimization) for default.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @return the solution value of the EVP
+    @see solveEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
+    */
+    double getEVValue(OsiSolverInterface* osiSolver, double objSense = 1, bool calculateAverageValues = true);
+    
+    /** Returns only the solution value of the EEVP, with objective sense of 1 (= minimization) for default.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @return the solution value of the EEVP
+    @see solveEEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
+    */
+    double getEEVValue(OsiSolverInterface* osiSolver, double objSense = 1, bool calculateAverageValues = true);
+
+    /** Let SmiScnModel own core data
+    @param val a pointer to an SmiCoreData object
+    */
     void setCore(SmiCoreData * val) { core_ = val; }
 
     // get scenario problem data
-    SmiScenarioIndex getNumScenarios(){ return smiTree_.getNumScenarios();}
-    double getScenarioProb(SmiScenarioIndex ns);
-    SmiScnNode * getLeafNode(SmiScenarioIndex i){ return smiTree_.getLeaf(i)->getDataPtr(); }
-    SmiScnNode * getRootNode(){ return smiTree_.getRoot()->getDataPtr(); }
+    SmiScenarioIndex getNumScenarios(){ return smiTree_.getNumScenarios();} /// returns the number of scenarios
+    double getScenarioProb(SmiScenarioIndex ns); // returns the probabilty of a specific scenario
+    SmiScnNode * getLeafNode(SmiScenarioIndex i){ return smiTree_.getLeaf(i)->getDataPtr(); } /// returns the leaf node of a specific scenario
+    SmiScnNode * getRootNode(){ return smiTree_.getRoot()->getDataPtr(); } /// returns the root node of a specific scenario
 
-    int* getIntegerInd(){ return core_->getIntegerIndices();}
-    int getIntegerLen(){return core_->getIntegerLength(); }
-    int* getBinaryInd(){return core_->getBinaryIndices();}
-    int getBinaryLen(){return core_->getBinaryLength();}
+    int* getIntegerInd(){ return core_->getIntegerIndices();} /// returns the indices of integer variables in the core node
+    int getIntegerLen(){return core_->getIntegerLength(); } /// return the number of integer variables in the core node
+    int* getBinaryInd(){return core_->getBinaryIndices();} /// returns the indices of binary variables in the core node
+    int getBinaryLen(){return core_->getBinaryLength();} /// return the number of integer variables in the core node
 
-    inline vector<int> getIntIndices() {
-        return intIndices;
-    }
-    inline void addIntIndice(int indice) {
-        intIndices.push_back(indice);
-    }
+    inline vector<int> getIntIndices() {return intIndices;} /// return the indices of integer variables in this smi model
+    inline void addIntIndice(int indice) {intIndices.push_back(indice);} /// adds an indice to the list of intgeger variables in this smi model
 
     // getXXX by scenario
-    double getObjectiveValue(SmiScenarioIndex ns);
-    double *getColSolution(SmiScenarioIndex ns, int *length);
-    double *getRowSolution(SmiScenarioIndex ns, int *length);
-    double getColSolution(SmiScenarioIndex ns, int stage, int colIndex);
-    double getRowSolution(SmiScenarioIndex ns, int stage, int colIndex);
+    double getObjectiveValue(SmiScenarioIndex ns);  /// returns the objective value of scenario ns
+    double *getColSolution(SmiScenarioIndex ns, int *length); /// returns a pointer to the column solution of scenario ns. the parameter length is an out-parameter and specifies the number of columns
+    double *getRowSolution(SmiScenarioIndex ns, int *length); /// returns a pointer to the row solution of scenario ns. the parameter length is an out-parameter and specifies the number of rows
+    double getColSolution(SmiScenarioIndex ns, int stage, int colIndex); /// return the column solution solution of column colIndex in a specific scenario and stage 
+    double getRowSolution(SmiScenarioIndex ns, int stage, int colIndex); /// return the row solution solution of column colIndex in a specific scenario and stage 
 
     // OsiSolverInterface
+    /** Sets the OsiSolverInterface for SMI.
+    @param osi an OsiSolverInterface
+    */
     void setOsiSolverHandle(const OsiSolverInterface &osi)
     {
         osiStoch_ = osi.clone(false);
     }
+    
+    /** Sets the OsiSolverInterface for SMI.
+    @param osi an OsiSolverInterface
+    */
     void setOsiSolverHandle(const OsiSolverInterface *osi)
     {
         osiStoch_ = osi->clone(false);
     }
+    
+    /** Returns the OsiSolverInterface of this SMI model.
+    @return a pointer to the OsiSolverInterface
+    */
     OsiSolverInterface * getOsiSolverInterface();
-    // If user wants to delete SmiScnModel but keep OsiSolverInterface
-    inline void releaseSolver() {osiStoch_=NULL;}
-    inline void releaseCore() { core_=NULL; }
+
+    inline void releaseSolver() {osiStoch_=NULL;} /// Releases the solver. Use it if you want to delete the SmiScnModel but keep the OsiSolverInterface
+    inline void releaseCore() { core_=NULL; } /// Releases the core node. Use it if you want to delete the SmiScnModel but keep the SmiCoreData
 
 
     // constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
@@ -237,11 +291,33 @@ public:
 
     // destructor
     ~SmiScnModel();
-    //Christian: this method adds data of current node to big det. eq. problem
+
+    // TODO: i think the following methods should be private
+    /** Adds data of the SmiScnNode node to the big determinstic equivalent matrix. If the parameter notDetEq is set to false (default)
+    the coefficients of this node get multiplied with the the probability for this node.
+    @param node a pointer the SmiScnNode
+    @param notDetEq if the coefficients should weighted with the probability (false) or not (true)
+    */
     void addNode(SmiScnNode *node, bool notDetEq = false);
+    
+    /** Deletes the SmiScnNode tnode.
+    @param tnode the node that will be deleted
+    */
     void deleteNode(SmiScnNode *tnode);
-    void addNode(SmiNodeData *node);
+    
+    /** Adds the data of the given SmiNodeData node, wich is expected to be are core node, to the problem. This mehtod is used for generating the EVP.
+    @param node the core node wich data will be added
+    */
+    void addCoreNode(SmiNodeData *node);
+    
+    /** Adds the data of the given SmiNodeData node to the problem when building the EV-Problem; only used when the average values are recalculated.
+    @param node the node that containts the data
+    */
     void addNodeEVP(SmiScnNode *node);
+    
+    /** Returns a pointer to the full SMI tree.
+    @return the SMI tree
+    */
     inline SmiScenarioTree<SmiScnNode *> * getSmiTree() { return &smiTree_; }
 private:
     CoinMessageHandler *handler_;
@@ -291,30 +367,102 @@ class SmiScnNode
     friend class SmiScnModel;
     friend void DecompUnitTest();
 public:
+    /** For a given indice i of a column in this node, the method returns the index of this column in the core node wich corresponds the original (user's) ordering.
+    @param i the index of the column in this node.
+    @return the index of the column in the core node.
+    */
     int getCoreColIndex(int i);
+    
+    /** For a given indice i of a row in this node, the method returns the index of this row in the core node wich corresponds the original (user's) ordering.
+    @param i the index of the row in this node.
+    @return the index of the row in the core node.
+    */
     int getCoreRowIndex(int i);
+    
+    /** Sets the scenario index of this node to a specific value.
+    @param i the scenario index
+    */
     inline void setScenarioIndex(SmiScenarioIndex i){ scen_=i;}
+    
+    /** Returns the scenario index of this node.
+    @return the scenario index.
+    */
     inline SmiScenarioIndex getScenarioIndex() {return scen_;}
+    
+    /** Return the starting index for columns in the OSI model. 
+    @return the starting index in the OSI model
+    */
     inline int  getColStart() {return coffset_;}
+    
+    /** Return the starting index for rows in the OSI model. 
+    @return the starting index in the OSI model
+    */
     inline int  getRowStart() {return roffset_;}
+    
+    /** Returns the number of columns.
+    @return the number of columns
+    */
     inline int getNumCols(){ return node_->getCore()->getNumCols(node_->getStage());}
+    
+    /** Returns the number of rows.
+    @return the number of rows
+    */
     inline int getNumRows(){ return node_->getCore()->getNumRows(node_->getStage());}
+    
+    //TODO: why is this method commented out?
     //inline int getNumElements() { return node_->getCore()->getNumElements(node_>getStage());}
+    
+    /** Returns the normalized probability. 
+    For leaf nodes, this equal to the probability of the whole scenario.
+    If the total probability (the sum of all absolute probabilities) is euqal to one, this method returns the same value as getProb().
+    @return the normalized probability.
+    */
     inline double getModelProb(){return mdl_prob_;}
+    
+    /** Returns the stage index of this node.
+    @return the stage index
+    */
     inline SmiStageIndex getStage() { return node_->getStage(); }
+    
+    /** Returns the parent node.
+    @return a pointer to the parent node.
+    */
     inline SmiScnNode * getParent(){ return parent_;}
+    
+    /** Sets the probability for this node.
+    @param p the probability
+    */
     inline void setProb(double p){prob_=p;}
+    
+    /** Increases the probability for this node by the value of prob.
+    @param prob the probability to be added.
+    */
     inline double addProb(double prob){ return prob_+=prob;}
+    
+    /** Returns the probability of this node.
+    @return the probability
+    */
     inline double getProb() { return prob_; }
+    
+    /** Sets the parent of this node.
+    @param g the parent node
+    */
     inline void setParent(SmiScnNode * g) {parent_=g;}
 
+    /** Returns the SmiNodeData object of this node.
+    @return a pointer to the SmiNodeData
+    @see SmiNodeData
+    */
     inline SmiNodeData *getNode() {return node_;}
 
+    //TODO: what are the following methods for?
     inline bool isVirtualNode() { return !include_; }
     // So can delete root node
     inline void zapNode() {node_=NULL;}
 
-
+    /** Constructs a new SmiScnNode wich holds the given SmiNodeData object.
+    @param node a pointer to the SmiNodeData object to be associated with the SmiScnNode
+    */
     inline SmiScnNode(SmiNodeData *node) 
     {
         node_=node;
@@ -325,6 +473,9 @@ public:
         scen_=-1;
         include_=true;
     }
+    
+    /** Destructor. Deletes the associated SmiNodeData object only if its not a core node.
+    */
     ~SmiScnNode()
     {
         if (node_)
@@ -338,13 +489,27 @@ public:
 	}
 
 private:
+    /** Sets the starting index for the rows with respect to the OSI model. 
+    @return the starting index 
+    */
     inline void setRowOffset(int r) {roffset_ = r;}
+    
+    /** Sets the starting index for the columns with respect to the OSI model. 
+    @return the starting index 
+    */
     inline void setColOffset(int c) {coffset_ = c;}
 
+    //TODO: the following 2 methods are never used - do we need them?
     inline double getCondProb(){return condProb_;}
     inline void setCondProb(double p){condProb_=p;}
+    
+    /** Sets the normalized probability. For leaf nodes, this equal to the probability of the whole scenario.
+    @param p the normalized probability.
+    */
     inline void setModelProb(double p){mdl_prob_=p;}
 private:
+
+    //TODO: include? i have no idea what's this for
     inline void setIncludeOff() { include_=false; }
     inline void setIncludeOn()  { include_=true; }
     inline bool getInclude() { return include_; }
@@ -363,7 +528,9 @@ private:
     bool include_;
 };
 
-// function object for addnode loop
+
+/** This class is used for adding multiple SmiScnNode's in a loop to the SmiScnModel object.
+*/
 class SmiScnModelAddNode{
 public:
     void operator() (SmiScnNode *node)
@@ -378,7 +545,8 @@ private:
 
 };
 
-// function object for deleteNode loop
+/** This class is used for deleting multiple SmiScnNode's in a loop that are stored in the SmiScnModel object.
+*/
 class SmiScnModelDeleteNode{
 public:
     void operator() (SmiScnNode *node)
