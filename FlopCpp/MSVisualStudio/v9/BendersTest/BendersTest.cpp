@@ -11,7 +11,6 @@
 #include "SAA.hpp" //why do we need this? i don't know...
 #include "CoinTime.hpp"
 
-
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 
 namespace flopc {
@@ -46,10 +45,24 @@ namespace flopc {
     
     class BendersTest: public ::testing::Test{
     protected:
-        BendersTest(){ }
-        
-        double solveSMPS(const char* name ) {
-            double repetitions = 3;
+
+        BendersParameter benParam;
+        double repetitions;
+        BendersTest() : benParam(), repetitions(1) {
+                benParam.setIntParam(BendersParameter::BENDERS,1);
+                benParam.setIntParam(BendersParameter::MULTI,1);
+                benParam.setIntParam(BendersParameter::TRUSTREGION,1);
+                benParam.setIntParam(BendersParameter::KNAPSACK,0);
+                benParam.setIntParam(BendersParameter::WARMSTART,1);
+                benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+                benParam.setIntParam(BendersParameter::REGULARIZED,0);
+                benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+                benParam.setIntParam(BendersParameter::BARRIER,0);
+                benParam.setIntParam(BendersParameter::BUNCHING,1);
+                benParam.setIntParam(BendersParameter::BUNCH_SIZE,100);
+        }
+
+        double solveSMPS(const char* name) {
             std::vector<double> wallClockTime(repetitions+1,0);
             std::vector<Benders::TimeStatistics> solvingTime(repetitions+1);
             std::vector<int> iterationCount(repetitions+1,0);
@@ -69,17 +82,7 @@ namespace flopc {
 
                 OsiCpxSolverInterface cpxSolver;
                 OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
-                benders.setIntParam(BendersParameter::BENDERS,1);
-                benders.setIntParam(BendersParameter::MULTI,1);
-                benders.setIntParam(BendersParameter::TRUSTREGION,1);
-                benders.setIntParam(BendersParameter::KNAPSACK,0);
-                benders.setIntParam(BendersParameter::WARMSTART,1);
-                benders.setIntParam(BendersParameter::WARMSTART_TYPE,1);
-                benders.setIntParam(BendersParameter::REGULARIZED,0);
-                benders.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
-                benders.setIntParam(BendersParameter::BARRIER,0);
-                benders.setIntParam(BendersParameter::BUNCHING,1);
-                benders.setIntParam(BendersParameter::BUNCH_SIZE,100);
+                benders.setParams(benParam);
                 benders.initialSolve();
                 double wallClockT = CoinCpuTime()-time;
 
@@ -137,6 +140,19 @@ namespace flopc {
             for (int i = 0; i < repetitions; i++)
                 ofs << smpsReading[i] << " ";
             ofs << endl;
+            // If we use regularizedManhattan
+            if (benParam.getIntParam(BendersParameter::REGULARIZED_MANHATTAN)){
+                ofs << "Solution time regularization (secs):   ";
+                for (int i = 0; i < repetitions; i++)
+                    ofs << solvingTime[i].regularizedManhattan << " ";
+                ofs << endl;
+                ofs << "Solution time regularization repair (secs):   ";
+                for (int i = 0; i < repetitions; i++)
+                    ofs << solvingTime[i].regularizedManhattanRepair << " ";
+                ofs << endl;
+
+            }
+
             ofs << "Average Wall Clock Time (secs): " << wallClockTime[repetitions] << endl;
             //ofs << "Average Overall Solution Time (secs): " << solvingTime[repetitions] << endl;
 		    ofs << "-------------------------" << endl;
@@ -240,22 +256,44 @@ TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
 }
 
 TEST_F(BendersTest, stormG2) { // no progress in interations, obj. values 0
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/stormG2_1000"), 15802589.698, 0.1); // finishes solving after (very long) 12 iterations, but the absolut gap is 699...
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/stormG2_125"), 15512091.185, 0.1); // Original value should be 15512090.180, but det.eq. value is 15512091.185
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/stormG2_27"), 15508982.306, 0.1); // Original value equals test det eq. value
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/stormG2_3"), 15535235.730, 0.1);  // Value from test test is not known (unknown instance).
+    double solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_3");
+    double referenceValue = 15535235.730;
+    double relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+    
+    solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_27");
+    referenceValue = 15508982.306;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+
+    solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_125");
+    referenceValue = 15512091.185;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+
+    
+    //benParam.setIntParam(BendersParameter::BUNCH_SIZE,1);
+
+    solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_1000");
+    referenceValue = 15802589.698;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+   
+    
 }
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.sgpf";
+    ::testing::GTEST_FLAG(filter) = "*.rand";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)
 #endif
     google::LogToStderr();
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
+    //HeapProfilerStart("bendersTestProfile");
     int result = RUN_ALL_TESTS();
+    //HeapProfilerStop();
     //_CrtMemDumpAllObjectsSince(&memstate);
     //_CrtDumpMemoryLeaks();
     return result;

@@ -400,14 +400,6 @@ private:
     int numNodes_;
     int currentNode_;
 
-    // Multi/Single Switch
-    bool multiSingleSwitch_;
-
-    int* multiSingleIndices_;
-    double* multiSingleElements_;
-    double multiSingleRHS_;
-    int multiSingleRow_;
-
     // Barrier method in detEQ (and probably master problem)
     bool barrier_;
 
@@ -420,6 +412,7 @@ private:
 
     // Regularized Manhattan
     bool useRegularizedManhattan_;
+    double gamma_;
     
     // Reporting/Testing global variables
     double recourseFunction_;
@@ -516,8 +509,8 @@ public:
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(COIN_DBL_MAX),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
-    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),multiSingleSwitch_(false), barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL),
-    useRegularizedManhattan_(false), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_)
+    useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL),
+    useRegularizedManhattan_(false),gamma_(0.5), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -595,10 +588,6 @@ public:
             bunchSize_ = bunchSize;
 		}
         
-        if ( single_ && multiSingleSwitch_){
-            multiSingleSwitch_ = false;
-        }
-
 		// Delete solver interfaces		
 		delete cpx;
 		//delete clp;
@@ -661,18 +650,22 @@ public:
 
     // time statistics
     struct TimeStatistics {
-        TimeStatistics() : solverMaster(0), solverSubproblems(0), bendersSolve(0), subproblemLoop(0) { }
-        void reset() { bendersSolve = 0; solverMaster = 0; solverSubproblems = 0; subproblemLoop = 0; }
+        TimeStatistics() : solverMaster(0), solverSubproblems(0), bendersSolve(0), subproblemLoop(0),regularizedManhattan(0),regularizedManhattanRepair(0) { }
+        void reset() { bendersSolve = 0; solverMaster = 0; solverSubproblems = 0; subproblemLoop = 0; regularizedManhattan = 0;regularizedManhattanRepair = 0;}
         double solverMaster; // time the solver needed for the master problems
         double solverSubproblems; // time the solver needed for the subproblems
         double bendersSolve; // time needed for the whole BendersSolve method
         double subproblemLoop; // time needed for generating and solving all subproblems
+        double regularizedManhattan; // time needed until regularized method stops
+        double regularizedManhattanRepair; // time needed for the "repair" step
     } time;    
     inline Benders::TimeStatistics getTimeStatistics() { return this->time; }
     inline double getTimeSolverMaster() { return this->time.solverMaster; } // time the solver needed for the master problems
     inline double getTimeSolverSubproblems() { return this->time.solverSubproblems; } // time the solver needed for the subproblems
     inline double getTimeBendersSolve() { return this->time.bendersSolve; } // time needed for the whole BendersSolve method
     inline double getTimeSubproblemLoop() { return this->time.subproblemLoop; } // time needed for generating and solving all subproblems
+    inline double getTimeRegMan() { return this->time.regularizedManhattan; } 
+    inline double getTimeRegManRepair() { return this->time.regularizedManhattanRepair; } 
     
 	// Destructor
 	~Benders();
