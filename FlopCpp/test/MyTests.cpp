@@ -2743,6 +2743,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             delete osiClp1;
 
             free(indx);
+            free(incr);
 
         }
 
