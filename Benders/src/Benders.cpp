@@ -323,8 +323,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
                         if (useRegularizedManhattan_ ) {
                             LOG(INFO) << "Regularized Manhattan would have stopped with " << lowerBound;
+							this->dataStat.regularizedSolutionValue = lowerBound;
                             double osiMasterSolutionValue = osiMaster_->getObjValue();
-                            //const double * 
                             // Output the overall discrepancy
                             double discrepanceSum = 0;
                             for (int i = mncol_+zSub_; i < 3*mncol_+zSub_;i++){
@@ -332,7 +332,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             }
                             LOG(INFO) << " Difference between regularized solution and optimal solution so far is " << discrepanceSum;
                             // We resolve the problem and check for correctness...
-                            //sigma_ = infty_;
                             // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
                             //osiMaster_->writeLp("finalRD");
                             for (int i = mncol_+zSub_; i < 3*mncol_+zSub_; i++){
