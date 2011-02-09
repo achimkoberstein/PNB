@@ -650,14 +650,16 @@ public:
 
     // time statistics
     struct TimeStatistics {
-        TimeStatistics() : solverMaster(0), solverSubproblems(0), bendersSolve(0), subproblemLoop(0),regularizedManhattan(0),regularizedManhattanRepair(0) { }
-        void reset() { bendersSolve = 0; solverMaster = 0; solverSubproblems = 0; subproblemLoop = 0; regularizedManhattan = 0;regularizedManhattanRepair = 0;}
+        TimeStatistics() : solverMaster(0), solverSubproblems(0), bendersSolve(0), subproblemLoop(0),regularizedManhattan(0),regularizedManhattanRepair(0), regularizedInitial(0),buildSubproblem(0) { }
+        void reset() { bendersSolve = 0; solverMaster = 0; solverSubproblems = 0; subproblemLoop = 0; regularizedManhattan = 0;regularizedManhattanRepair = 0; regularizedInitial = 0; buildSubproblem = 0;}
         double solverMaster; // time the solver needed for the master problems
         double solverSubproblems; // time the solver needed for the subproblems
         double bendersSolve; // time needed for the whole BendersSolve method
         double subproblemLoop; // time needed for generating and solving all subproblems
         double regularizedManhattan; // time needed until regularized method stops
         double regularizedManhattanRepair; // time needed for the "repair" step
+        double regularizedInitial; 
+        double buildSubproblem; // time needed to build subproblems
     } time;    
     inline Benders::TimeStatistics getTimeStatistics() { return this->time; }
     inline double getTimeSolverMaster() { return this->time.solverMaster; } // time the solver needed for the master problems
@@ -666,6 +668,7 @@ public:
     inline double getTimeSubproblemLoop() { return this->time.subproblemLoop; } // time needed for generating and solving all subproblems
     inline double getTimeRegMan() { return this->time.regularizedManhattan; } 
     inline double getTimeRegManRepair() { return this->time.regularizedManhattanRepair; } 
+    inline double getTimeBuildSubproblem() { return this->time.buildSubproblem; } 
     
 	// Destructor
 	~Benders();
@@ -719,7 +722,7 @@ public:
 };
 
 class BendersParameter {
-public:
+public: 
 	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, REGULARIZED_MANHATTAN,WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
 	typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
 	
@@ -731,12 +734,12 @@ public:
         this->intParam[BendersParameter::WARMSTART] = 1;
         this->intParam[BendersParameter::REGULARIZED] = 0;
         this->intParam[BendersParameter::REGULARIZED_MANHATTAN] = 0;
-        this->dblParam[BendersParameter::ABSGAP] = 0.00001;
-        this->dblParam[BendersParameter::RELGAP] = 0.000001;
         this->intParam[BendersParameter::WARMSTART_TYPE] = 1;
         this->intParam[BendersParameter::BARRIER] = 0;
         this->intParam[BendersParameter::BUNCHING] = 0;
         this->intParam[BendersParameter::BUNCH_SIZE] = 0;
+        this->dblParam[BendersParameter::ABSGAP] = 0.00001;
+        this->dblParam[BendersParameter::RELGAP] = 0.000001;
 	}
    ~BendersParameter(){}
     
@@ -774,7 +777,7 @@ public:
 	inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
 	inline double getSolutionTime() { return this->solTime; }
 	
-	// time statistics
+	// time statistics: TODO keep updated or resort to TimeStatistics struct..
 	inline Benders::TimeStatistics getTimeStatistics() { return benders->getTimeStatistics(); }
     inline double getTimeSolverMaster() { return benders->getTimeSolverMaster(); } // time the solver needed for the master problems
     inline double getTimeSolverSubproblems() { return benders->getTimeSolverSubproblems(); } // time the solver needed for the subproblems

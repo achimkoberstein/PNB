@@ -128,6 +128,10 @@ namespace flopc {
             for (int i = 0; i < repetitions; i++)
                 ofs << solvingTime[i].subproblemLoop << " "; 
             ofs << endl;
+            ofs << "Build Subproblem (secs):                    ";
+            for (int i = 0; i < repetitions; i++)
+                ofs << solvingTime[i].buildSubproblem << " "; 
+            ofs << endl;
             ofs << "Time w/o cplex and subproblem loop (secs): ";
             for (int i = 0; i < repetitions; i++)
                 ofs << solvingTime[i].bendersSolve-solvingTime[i].solverMaster-solvingTime[i].subproblemLoop << " "; 
@@ -142,6 +146,10 @@ namespace flopc {
             ofs << endl;
             // If we use regularizedManhattan
             if (benParam.getIntParam(BendersParameter::REGULARIZED_MANHATTAN)){
+                ofs << "Solution time regularization initial (secs):   ";
+                for (int i = 0; i < repetitions; i++)
+                    ofs << solvingTime[i].regularizedInitial << " ";
+                ofs << endl;
                 ofs << "Solution time regularization (secs):   ";
                 for (int i = 0; i < repetitions; i++)
                     ofs << solvingTime[i].regularizedManhattan << " ";
