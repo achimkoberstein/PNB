@@ -48,7 +48,7 @@ namespace flopc {
 
         BendersParameter benParam;
         double repetitions;
-        BendersTest() : benParam(), repetitions(1) {
+        BendersTest() : benParam(), repetitions(3) {
                 benParam.setIntParam(BendersParameter::BENDERS,1);
                 benParam.setIntParam(BendersParameter::MULTI,1);
                 benParam.setIntParam(BendersParameter::TRUSTREGION,1);
@@ -65,6 +65,7 @@ namespace flopc {
         double solveSMPS(const char* name) {
             std::vector<double> wallClockTime(repetitions+1,0);
             std::vector<Benders::TimeStatistics> solvingTime(repetitions+1);
+			std::vector<Benders::DataStatistics> solutionData(repetitions+1);
             std::vector<int> iterationCount(repetitions+1,0);
             std::vector<double> smpsReading(repetitions+1,0);
             double objective = 0;
@@ -100,6 +101,7 @@ namespace flopc {
                 objective += benders.getObjValue()*(1/repetitions);
                 wallClockTime[i] = wallClockT;
                 solvingTime[i] = benders.getTimeStatistics();
+				solutionData[i] = benders.getDataStatistics();
                 iterationCount[i] = benders.getNumIterations();
             }
             // Compute average time
@@ -149,6 +151,10 @@ namespace flopc {
                 ofs << "Solution time regularization repair (secs):   ";
                 for (int i = 0; i < repetitions; i++)
                     ofs << solvingTime[i].regularizedManhattanRepair << " ";
+                ofs << endl;
+				ofs << "Regularization stopped with (secs):   ";
+                for (int i = 0; i < repetitions; i++)
+                    ofs << solutionData[i].regularizedSolutionValue << " ";
                 ofs << endl;
 
             }

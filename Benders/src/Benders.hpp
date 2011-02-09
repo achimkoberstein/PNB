@@ -666,6 +666,14 @@ public:
     inline double getTimeSubproblemLoop() { return this->time.subproblemLoop; } // time needed for generating and solving all subproblems
     inline double getTimeRegMan() { return this->time.regularizedManhattan; } 
     inline double getTimeRegManRepair() { return this->time.regularizedManhattanRepair; } 
+	
+	struct DataStatistics {
+        DataStatistics() : regularizedSolutionValue(0) { }
+		void reset() { regularizedSolutionValue = 0; }
+        double regularizedSolutionValue;
+    } dataStat;   
+
+	inline Benders::DataStatistics getDataStatistics() { return this->dataStat; }
     
 	// Destructor
 	~Benders();
@@ -780,6 +788,9 @@ public:
     inline double getTimeSolverSubproblems() { return benders->getTimeSolverSubproblems(); } // time the solver needed for the subproblems
     inline double getTimeBendersSolve() { return benders->getTimeBendersSolve(); } // time needed for the whole BendersSolve method
     inline double getTimeSubproblemLoop() { return benders->getTimeSubproblemLoop(); } // time needed for generating and solving all subproblems
+
+	// Data statistics
+	inline Benders::DataStatistics getDataStatistics() { return benders->getDataStatistics(); }
 	
 private:
     Benders* benders;
