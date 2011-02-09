@@ -465,7 +465,10 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             for(int scen_=0; scen_<nScen_; scen_++){
                 // Build subproblem, combine deterministic data with stochastic
                 // data; Input: number of current scenario
+                // We measure the time in buildSubproblem, because the addition of stage 1 solution to the subproblem must be done either way (one way or another...)
+                double localTime = CoinCpuTime();
                 buildSubproblem(scen_);
+                this->time.buildSubproblem += CoinCpuTime() - localTime;
                 // Add current stage 1 solution to subproblem, i.e. update RHS of
                 // subproblem; Input: number of current scenario, current stage 1 
                 // solution 
@@ -551,7 +554,9 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
                 if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
                     // We want to solve the subproblem with the regularized solution
+                    double regTimeInitial = CoinCpuTime();
                     buildSubproblem(scen_);
+                    this->time.buildSubproblem += CoinCpuTime()-regTimeInitial;
                     addSt1ToSubproblem(scen_,regSolution_);
                     solveSubproblem(scen_,fCut);
                     regSubproblemSolutionValues_[scen_] = 0;
@@ -568,6 +573,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
                     //if ( regSubproblemSolutionValues_[scen_] != osiSubproblem_->getObjValue()*scenProb_[scen_] )
                         //DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
+                    this->time.regularizedInitial += CoinCpuTime()-regTimeInitial;
                 }
             }
             this->time.subproblemLoop += CoinCpuTime() - timeStart;
@@ -4475,6 +4481,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
         if ( useRegularized || useRegularizedManhattan ){
+            double regTime = CoinCpuTime();
             OsiCpxSolverInterface* osiCpxPtr = new OsiCpxSolverInterface();
             CPXLPptr lpPtr = osiCpxPtr->getLpPtr();
             CPXENVptr envPtr = osiCpxPtr->getEnvironmentPtr();
@@ -4485,6 +4492,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             // copy initial values for regularized decomposition
 
             benders->setInitialSolution(evResult.second);
+            LOG(INFO) << "Time computing initial solution (WallClock): " << CoinCpuTime()-regTime;
         }
         if (useBenders)
             benders->BendersSolve(absEps,relEps, maxIt );
