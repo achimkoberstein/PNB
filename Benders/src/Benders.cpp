@@ -214,11 +214,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
     bool feasible = true; // Indicate if at most one subproblem was infeasible
 
-    if (multiSingleSwitch_){
-        multiSingleIndices_ = new int[mncol_+zSub_]; // TODO: Delete this at end.
-        multiSingleElements_ = new double[mncol_+zSub_];
-    }
-
     // Bunching is initialized in copyMaster
 
     // While the gap between upper and lower bound is larger than epsilon
@@ -262,31 +257,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     bestSolTemp_[i] = v;
                 }
             }
-            if ( multiSingleSwitch_ ){
-                if ( appliedCuts_ ){ // Remove the same number of cuts from osiMaster
-                    // Get values for all the theta's
-                    osiMaster_->writeLp("test-LPBefore");
-                    double theta = 0 ;
-                    for (int i = mncol_; i < mncol_+zSub_; i++){
-                        // Sum these values up
-                        theta += bestSolTemp_[i];
-
-                    }
-                    int numRows = osiMaster_->getNumRows();
-                    int * rowIndices = new int[appliedCuts_];
-                    for (int i = 0; i < appliedCuts_; i++){
-                        rowIndices[i] = numRows-appliedCuts_+i;
-                    }
-                    osiMaster_->deleteRows(appliedCuts_,rowIndices);
-                    delete rowIndices;
-                    // Add single cut
-                    osiMaster_->addRow(mncol_+zSub_,multiSingleIndices_,multiSingleElements_,-infty_,multiSingleRHS_);
-                    // Change theta constraint to new bound
-                    //osiMaster_->setRowLower(multiSingleRow_,theta);
-                    osiMaster_->writeLp("test-LPAfter");
-                }
-            }
-
 
             // Update lower bound, but not in the first iteration and only if
             // there are no feasibility cuts added in the previous iterations,
@@ -347,7 +317,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 if ( abs(lowerBound-regSolutionValue_) <= ZEROTEST 
                     || abs(lowerBound-regSolutionValue_) < absEps
                     //|| repeated && regSolutionValue_-lowerBound < 0
-                    || repeated && (int)1/sigma_ == 1024 // We have a close solution and we made null-feasible steps (did not change solution)
+                    || repeated && (int)1/sigma_ >= 1024 // We have a close solution and we made null-feasible steps (did not change solution)
                     || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
                     ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
 
@@ -355,7 +325,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             LOG(INFO) << "Regularized Manhattan would have stopped with " << lowerBound;
                             double osiMasterSolutionValue = osiMaster_->getObjValue();
                             //const double * 
-                                // Output the overall discrepancy
+                            // Output the overall discrepancy
                             double discrepanceSum = 0;
                             for (int i = mncol_+zSub_; i < 3*mncol_+zSub_;i++){
                                 discrepanceSum += mSol[i];
@@ -364,17 +334,20 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             // We resolve the problem and check for correctness...
                             //sigma_ = infty_;
                             // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
-                            osiMaster_->writeLp("finalRD");
-                            int * rowIndices = new int[mncol_];
-                            for (int i = 0; i < mncol_; i++)
-                                rowIndices[i] = startRows_+i;
-                            osiMaster_->deleteRows(mncol_,rowIndices);
-                            delete rowIndices;
-                            int * colIndices = new int[2*mncol_];
-                            for (int i = 0; i < 2*mncol_; i++)
-                                colIndices[i] = mncol_+zSub_+i;
-                            osiMaster_->deleteCols(2*mncol_,colIndices);
-                            delete colIndices;
+                            //osiMaster_->writeLp("finalRD");
+                            for (int i = mncol_+zSub_; i < 3*mncol_+zSub_; i++){
+                                osiMaster_->setObjCoeff(i,0);
+                            }
+                            //int * rowIndices = new int[mncol_];
+                            //for (int i = 0; i < mncol_; i++)
+                            //    rowIndices[i] = startRows_+i;
+                            //osiMaster_->deleteRows(mncol_,rowIndices);
+                            //delete rowIndices;
+                            //int * colIndices = new int[2*mncol_];
+                            //for (int i = 0; i < 2*mncol_; i++)
+                            //    colIndices[i] = mncol_+zSub_+i;
+                            //osiMaster_->deleteCols(2*mncol_,colIndices);
+                            //delete colIndices;
                             //int resultMaster = solveMaster();
                             // TODO: Recast the resolve in a proper way..
                             if ( mnInt_ )
@@ -382,9 +355,10 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             else
                                 osiMaster_->resolve();
                             double resolvedMaster = osiMaster_->getObjValue();
-                            osiMaster_->writeLp("finalRD-wo");
-                            //const double* resolvedSol = osiMaster_->getColSolution();
-                            if ( abs(resolvedMaster - lowerBound ) >= ZEROTEST ){ // We have discrepancy
+                            //osiMaster_->writeLp("finalRD-wo");
+                            if ( abs(resolvedMaster - osiMasterSolutionValue ) >= ZEROTEST ){ // We have discrepancy
+                                LOG(WARNING) << "Difference between regularized master and normal master problem is : " << osiMasterSolutionValue-resolvedMaster;
+                                // TODO: We can enable the correct solution process if we want to
                                 // Stop regularization
                                 useRegularizedDecomposition_ = false;
                                 useRegularizedManhattan_ = false;
@@ -393,15 +367,18 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                                 // Delete regularized arrays 
                                 delete [] regSolution_; regSolution_ = NULL;
                                 delete [] regSubproblemSolutionValues_; regSubproblemSolutionValues_ = NULL;
+                                this->time.regularizedManhattan = CoinCpuTime() -timeStartTotal;
+                                this->time.regularizedManhattanRepair = CoinCpuTime(); // Store current time to get regularized repair time correctly..
                                 continue; // We want to resolve the master 
 
                                 
                             }
                         }
-                        LOG(INFO) << "RD stops. Difference between current and regularized solution is " << lowerBound-regSolutionValue_;
+                        LOG(INFO) << "RD stops. Difference between regularized solution and current lower bound is: " << regSolutionValue_-lowerBound;
                         for (int i = 0; i < mncol_; i++)
                             bestSol_[i] = regSolution_[i];
                         this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
+                        this->time.regularizedManhattan = CoinCpuTime()-timeStartTotal;
                         return;
 
 
@@ -721,24 +698,32 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                             regSolutionValue_ += regSubproblemSolutionValues_[i];
                         }
                     }
-                    if ( upperBound_ <= regSolutionValue_+ZEROTEST ){ // 
+                    if ( upperBound_ <= regSolutionValue_+ZEROTEST ){
                         seriousStep_ = true;
+                        // Determine step width
+                        if ( upperBound_ < (1-gamma_)*regSolutionValue_ + gamma_*lowerBound ) {
+                            changeSigma_ = true;
+                            LOG(INFO) << "RD: Exact serious step.";
+                        }
+                        else{
+                            changeSigma_ = false;
+                            LOG(INFO) << "RD: Approximate serious step.";
+                        }
+
                         for (int i = 0; i < mncol_; i++){
                             regSolution_[i] = bestSolTemp_[i];
                         }
-                        //computeRegularizedSubproblems_= true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
+                       
                         // We made an approximate serious step, so our regSolutionValue changed also
                         regSolutionValue_ = upperBound_;
                         regFirstStageSolutionValue_ = firstStageSolution_;
-                        if ( upperBound_ < 0.1*regSolutionValue_ + 0.9*lowerBound ) 
-                            changeSigma_ = true;
-                        else
-                            changeSigma_ = false;
-                        LOG(INFO) << "RD: Approximate serious step.";
+
                     }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma. We want to decrease sigma to keep closer to the regularized solution.
                     else {
-                        if ( upperBound_ > 0.9*regSolutionValue_ + 0.1*lowerBound ) 
+                        if ( upperBound_ > gamma_*regSolutionValue_ + (1-gamma_)*lowerBound ) {
                             changeSigma_ = true;
+                            LOG(INFO) << "RD: Decreasing sigma, increasing weight of regularizing term";
+                        }
 
                         LOG(INFO) << "RD: Null feasible step.";
                     }
@@ -771,7 +756,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             }*/		
 
             // ### Print upper bound and lower bound ###
-            if (!useRegularizedDecomposition_){
+            if (!useRegularizedDecomposition_ && !useRegularizedManhattan_){
                 cout << "UB " << UB_ << endl;
                 cout << "LB_ " << LB_ << endl;	
                 cout << "UB-LB_ " << UB_-LB_ << endl;
@@ -788,6 +773,9 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 //    LOG(ERROR) << "This can not happen."<< endl;
             }
     }
+    // Look for regularized manhattan repair value
+    if ( this->time.regularizedManhattanRepair != 0 )
+        this->time.regularizedManhattanRepair = CoinCpuTime()-time.regularizedManhattanRepair;
     this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
     
     cout << "Objective value after "<< nIter_ << " iterations is: "  << UB_ << endl;
@@ -1694,7 +1682,7 @@ int Benders::solveMaster(){
             for (int i = 0; i < mncol_*2; i++){// We need to add w_+ - w_ = x-a to the problem, so we have to add w_+ and w_- to the problem first
                 collb[i] = 0;
                 colub[i] = infty_;
-                colobj[i] = 1;//0.1*abs(mdobj_[i%mncol_]); 
+                colobj[i] = 1/sigma_;//1 //1.0/mncol_;//0.1*abs(mdobj_[i%mncol_]); 
             }
             // Convention: 0-mncol_-1 is w_+, mncol_- (2*mncol_-1) is w_
             CoinPackedVectorBase** cpvb = new CoinPackedVectorBase*[2*mncol_];
@@ -1772,20 +1760,6 @@ int Benders::solveMaster(){
 
             }
             else{
-                // We add the multiSingleSwitchConstraint..
-                //if (multiSingleSwitch_){
-                //    // Add lower bound for all the thetas
-                //    int* thetaIndices = new int[zSub_];
-                //    double* thetaElements = new double [zSub_];
-                //    for (int i = 0; i < zSub_; i++){
-                //        thetaIndices[i] = mncol_+i;
-                //        thetaElements[i] = 1;
-                //    }
-                //    osiMaster_->addRow(zSub_,thetaIndices,thetaElements,-infty_,infty_);
-                //    multiSingleRow_ = osiMaster_->getNumRows()-1;
-                //    delete thetaIndices;
-                //    delete thetaElements;
-                //}
                 double timeStart = CoinCpuTime();
                 osiMaster_->initialSolve();
                 this->time.solverMaster += CoinCpuTime() - timeStart;
@@ -1857,11 +1831,11 @@ int Benders::solveMaster(){
                     if (seriousStep_ && sigma_ <= 512)// increase sigma, make solutions further away more likely
                         sigma_ *= 2;
                     else if ( !seriousStep_ && sigma_ > 0.0009765625) // we allow at max 2^-10 to 2^10 
-                        sigma_ *= 0.5; // decrease sigma, make solutions near more likely
+                        sigma_ *= 0.5; // decrease sigma, make solutions near more likely, increase weight of regularizing term
                 }
                 else // If we made an approximate serious step we reset the sigma_ value to its start value, which is 1.
                     // We try to compensate a failure in sslp_10_50_50 which otherwise results in too early termination.
-                    sigma_ = 1; 
+                    sigma_ = 2; 
 
                 if ( useRegularizedDecomposition_){
                     // change quadratic coefficients in the matrix (mncol_ times many)
@@ -1878,9 +1852,9 @@ int Benders::solveMaster(){
                     assert( sigma_ != 0);
                     if ( sigma_ != infty_ )
                         term = 1/sigma_;
-                    //for (int i = mncol_+zSub_;i<3*mncol_+zSub_;i++){
-                    //    osiMaster_->setObjCoeff(i,term);
-                    //}
+                    for (int i = mncol_+zSub_;i<3*mncol_+zSub_;i++){
+                        osiMaster_->setObjCoeff(i,term);
+                    }
 
                 }
             }
@@ -1924,7 +1898,6 @@ int Benders::solveMaster(){
 
                 }
                 else{
-                    // If we are in multiSingleSwitch, we want to solve the problem and remove the multi cuts afterwards
                     double timeStart = CoinCpuTime();
                     osiMaster_->resolve();
                     this->time.solverMaster += CoinCpuTime() - timeStart;
@@ -3142,7 +3115,7 @@ void Benders::addOptiCut(int oCut){
     // In case of the single cut version, only one cut is calculated
     // If knapsack inequalities are used, calculate this cut with the
     // same coefficients like the ones of the single cut
-    if(single_ || knapsack_ || multiSingleSwitch_ ){
+    if(single_ || knapsack_ ){
         // Cycle over all cuts which were calculated during the
         // method "calcOptiCut"
         for(int i=0; i<oCut; i++){
@@ -3167,16 +3140,6 @@ void Benders::addOptiCut(int oCut){
         // is the additional variable with coefficient -1
         cutElements[mncol_] = -1;
         cutIndex[mncol_] = mncol_;
-
-        if (multiSingleSwitch_){
-           multiSingleRHS_ = cutRowUB;
-           memcpy(multiSingleElements_, cutElements, (mncol_+1)*sizeof(double));
-           memcpy(multiSingleIndices_, cutIndex, (mncol_)*sizeof(int));
-           for ( int i = mncol_; i < mncol_+zSub_; i++){
-               multiSingleElements_[i] = -1;
-               multiSingleIndices_[i] = i;
-           }
-        }
 
         // Add cut to master problem
         // Note: RHS of the cut is multiplied by -1, since p*d
@@ -3234,8 +3197,8 @@ void Benders::addOptiCut(int oCut){
    
         // Add the cuts to the master problem
         for (int i = 0; i < numBunch_; i++) {
-            //double deviation = computeDeviation(cutIndexBunch[i],cutElementsBunch[i], -cutRowUBBunch_[i]);
-            //double factor = computeCoefficientTest(mncol_+1,cutElements);
+            double deviation = computeDeviation(cutIndexBunch[i],cutElementsBunch[i], -cutRowUBBunch[i]);
+            double factor = computeCoefficientTest(mncol_+1,cutElementsBunch[i]);
             osiMaster_->addRow(mncol_+1, cutIndexBunch[i], cutElementsBunch[i], cutRowLB, -cutRowUBBunch[i]); 
             appliedCuts_++;
             //We have to change the coefficient in the master problem of the theta from 0 to the correct value
