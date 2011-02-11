@@ -509,8 +509,8 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 							
 							//have to think about it
 							smiBlock = new SmiBlock(1);
-							blName= new char[strlen(smpsCardReader_->blockName())];
-							strcpy(blName,smpsCardReader_->blockName());
+							blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
+   							strcpy(blName,smpsCardReader_->blockName());
 						}
 						matrix->clear();
 						drlo.clear();
@@ -523,7 +523,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					}
 					else{
 						smiBlock = new SmiBlock(1);
-						blName= new char[strlen(smpsCardReader_->blockName())];
+						blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
 						strcpy(blName,smpsCardReader_->blockName());
 					}
 					
@@ -593,13 +593,15 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 				
 				//process SmiBlockStructure into Scenarios
 				smi->processBlockStructureIntoScenarios(smiBS);
-				//delete smiBlock;
-				//delete smiBS;
+				delete smiBS;
+                delete matrix;
 				return 0;
 			}
-			else
+            else{
+                delete smiBS;
+                delete matrix;
 				return -2;
-			
+            }
 
 		}
 

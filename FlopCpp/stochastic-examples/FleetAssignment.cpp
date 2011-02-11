@@ -38,9 +38,9 @@ void writeSolutionInfo(OsiStochasticBendersTwoStageSolverInterface &benders, con
     ofs << "Obj. Value: " << benders.getObjValue() << endl;
     ofs << "Duration (secs): " << benders.getSolutionTime() << endl;
     ofs << "Iterations: " << benders.getNumIterations() << endl;
-    ofs << "Multicut: " << benders.getIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI) << endl;
-    ofs << "Trustregion: " << benders.getIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION) << endl;
-    ofs << "Regularized: " << benders.getIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED) << endl;
+    ofs << "Multicut: " << benders.getIntParam(BendersParameter::MULTI) << endl;
+    ofs << "Trustregion: " << benders.getIntParam(BendersParameter::TRUSTREGION) << endl;
+    ofs << "Regularized: " << benders.getIntParam(BendersParameter::REGULARIZED) << endl;
     ofs << "-------------------------" << endl;
     ofs.close();
 }
@@ -61,51 +61,51 @@ void solveFromSMPS(const char *name) {
     OsiStochasticBendersTwoStageSolverInterface benders(smiModel->getOsiSolverInterface(),smiModel);
 
     // solve with benders (and different parameters)
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::MULTI,       1);
+    //benders.setIntParam(BendersParameter::TRUSTREGION, 1);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
 
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 0);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::MULTI,       1);
+    //benders.setIntParam(BendersParameter::TRUSTREGION, 0);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
 
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       0);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::MULTI,       0);
+    //benders.setIntParam(BendersParameter::TRUSTREGION, 1);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
     
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       0);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 0);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.setIntParam(BendersParameter::MULTI,       0);
+    benders.setIntParam(BendersParameter::TRUSTREGION, 0);
+    benders.setIntParam(BendersParameter::REGULARIZED, 1);
     benders.initialSolve();
     writeSolutionInfo(benders, name);
     
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
-    //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::MULTI,       1);
+    //benders.setIntParam(BendersParameter::TRUSTREGION, 1);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
     
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 0);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.setIntParam(BendersParameter::MULTI,       1);
+    benders.setIntParam(BendersParameter::TRUSTREGION, 0);
+    benders.setIntParam(BendersParameter::REGULARIZED, 1);
     benders.initialSolve();
     writeSolutionInfo(benders, name);
     
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       0);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.setIntParam(BendersParameter::MULTI,       0);
+    benders.setIntParam(BendersParameter::TRUSTREGION, 1);
+    benders.setIntParam(BendersParameter::REGULARIZED, 1);
     benders.initialSolve();
     writeSolutionInfo(benders, name);
     
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI,       1);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::TRUSTREGION, 1);
-    benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::REGULARIZED, 1);
+    benders.setIntParam(BendersParameter::MULTI,       1);
+    benders.setIntParam(BendersParameter::TRUSTREGION, 1);
+    benders.setIntParam(BendersParameter::REGULARIZED, 1);
     benders.initialSolve();
     writeSolutionInfo(benders, name);
 }

@@ -444,7 +444,7 @@ public:
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
 	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.5), tRrateLB_(0.8),
     knapsack_(false),warmStart_(false),warmStartFol_(false),warmStartEmptyMaster_(false),
-    warmStartEmptySub_(NULL),warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
+    warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(0),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),integerBenders_(false)
@@ -541,7 +541,7 @@ public:
 		if(!strcmp(single,"m")){
 			single_ = false;	
 		}
-		// Warmstart
+		// Warmstart between iterations (of the same subproblem)
 		if(!strcmp(warmstart, "+wsI") || !strcmp(warmstart, "+wsi") ){
 			warmStart_ = true;
 			warmStartFol_ = false;
@@ -550,6 +550,7 @@ public:
 			warmStart_ = false;
 			warmStartFol_ = false;
 		}
+        // Warmstart between scenarios in the same iteration
 		if(!strcmp(warmstart,"+wsS") || !strcmp(warmstart, "+wss")){
 			warmStart_ = false;
 			warmStartFol_ = true;
@@ -644,7 +645,7 @@ public:
 	void buildProblem(int);
 
     // Regularized Decomposition methods
-    void setInitialSolution(double*);
+    void setInitialSolution(const double*);
     double getObjValue() { return this->LB_; }
     inline int getNumIterations() { return this->nIter_; }
 

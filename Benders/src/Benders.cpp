@@ -197,7 +197,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     int nFeas = 0;
 
     masterValue_ = infty_;
-    double* tempFirstStageSol = new double[mncol_+zSub_];
 
     // Initialization of temporary solution vector for first stage solution
     bestSolTemp_ = new double[mncol_+zSub_+sncol_*nScen_];
@@ -230,7 +229,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             if(status == -1){
                 if (useRegularizedDecomposition_)
                     delete[] regSubproblemSolutionValues_;
-                delete[] tempFirstStageSol;
                 this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
                 return;		
             }
@@ -240,8 +238,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
             mSol = osiMaster_->getColSolution();
             DLOG(INFO) << "Objective function value of master program " << osiMaster_->getObjValue();
 
-            // TODO: Debug, remove eventually
-            int resultCmp = memcmp(mSol,tempFirstStageSol,mncol_+zSub_);
             //memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
             // Write current stage 1 solution to temporary solution vector; it 
             // also contains the value(s) of the variables for the scenario(s);
@@ -1501,14 +1497,13 @@ void Benders::copySubmodel(SmiScnModel* smi){
     if(warmStart_){
         // Declaration of an array which contains warmstart informations
         // for each scenario
-        warmStartSub_ = new CoinWarmStart*[nScen_];
-        warmStartEmptySub_ = new bool[nScen_];
-        for (int i = 0; i < nScen_; i++)
-            warmStartEmptySub_[i] = true;
+       warmStartSub_ = new CoinWarmStart*[nScen_];
+       for (int i = 0; i < nScen_; i++)
+            warmStartSub_[i] = osiSubproblem_->getEmptyWarmStart();
     }
     // Warmstart between scenarios
     if(warmStartFol_){
-        warmStartEmptySub_ = new bool[nScen_];
+        warmStartSubFol_ = osiSubproblem_->getEmptyWarmStart();
     }
 
     // ###################################################################################
@@ -2827,130 +2822,56 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     osiSubproblem_->messageHandler()->setLogLevel(0);
     // In the first iteration there are no warmstart informations
     // available. So distinguish between first and all other iterations.
-    if(nIter_==0){
-        // Warmstart between scenarios
-        if(warmStartFol_ && scen_==0){
-            // If an optimal basis is available, get warmstart 
-            // informations for current scenario
-            if(osiSubproblem_->optimalBasisIsAvailable()){
-                warmStartSubFol_ = osiSubproblem_->getWarmStart();
-                warmStartEmptySub_[scen_] = false;
-            }
-            // Else create an empty warmstart object
-            else{
-                warmStartSubFol_ = osiSubproblem_->getEmptyWarmStart();
-                warmStartEmptySub_[scen_] = true;
-            }		
-        }
-        if(warmStartFol_ && scen_!=0){
 
-            if(warmStartEmptySub_[scen_]==false && fCut==false){
-                // Set warmstart informations for current scenario
-                osiSubproblem_->setWarmStart(warmStartSubFol_);
-            }
-            // Solve subbroblem
-            double timeStart = CoinCpuTime();
-            osiSubproblem_->initialSolve();
-            this->time.solverSubproblems += CoinCpuTime() - timeStart;
-            if(fCut==false){
-                // Delete warmstart informations
-                if(warmStartEmptySub_[scen_]==false){
-                    delete warmStartSubFol_;
-                }
-                // If an optimal basis is available, get warm 
-                // start informations for current scenario
-                if(osiSubproblem_->optimalBasisIsAvailable()){
-                    warmStartSubFol_ = osiSubproblem_->getWarmStart();
-                    warmStartEmptySub_[scen_] = false;
-                }
-                // Else create an empty warmstart object
-                else{
-                    warmStartSubFol_ = osiSubproblem_->getEmptyWarmStart();
-                    warmStartEmptySub_[scen_] = true;
-                }
-            }
+
+    // Set warm start if available
+    // Warmstart between subproblems (scenarios
+    if(warmStartFol_ && fCut==false){
+        // Set warmstart informations for current scenario
+        osiSubproblem_->setWarmStart(warmStartSubFol_);
+    }
+
+    // Warmstart between iterations
+    if(warmStart_ &&  fCut==false){
+        // Set warmstart informations for current scenario
+        osiSubproblem_->setWarmStart(warmStartSub_[scen_]);
+    }
+    // Solve subbroblem
+    double timeStart = CoinCpuTime();
+    osiSubproblem_->initialSolve();
+    this->time.solverSubproblems += CoinCpuTime() - timeStart;
+
+    // Warmstart between scenarios
+    if(warmStartFol_ && fCut==false){
+        // Delete old warmstart informations
+        delete warmStartSubFol_;
+       
+        // If an optimal basis is available, get warm 
+        // start informations for current scenario
+        if(osiSubproblem_->optimalBasisIsAvailable()){
+            warmStartSubFol_ = osiSubproblem_->getWarmStart();
         }
+        // Else create an empty warmstart object
         else{
-            // In the first iteration, we can use the warmstart information from the previous scenario
-            if ( scen_ > 0 )
-                osiSubproblem_->setWarmStart(warmStartSub_[scen_-1]);
-            // Solve subproblem
-            double timeStart = CoinCpuTime();
-            osiSubproblem_->initialSolve();
-            this->time.solverSubproblems += CoinCpuTime() - timeStart;
-        }
-        // Warmstart between iterations
-        if(warmStart_){
-            // If an optimal basis is available, get warm 
-            // start informations for current scenario
-            if(osiSubproblem_->optimalBasisIsAvailable()){
-                warmStartSub_[scen_] = osiSubproblem_->getWarmStart();
-                warmStartEmptySub_[scen_] = false;
-            }
-            // Else create an empty warmstart object
-            else{
-                warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
-                warmStartEmptySub_[scen_] = true;
-            }	
+            warmStartSubFol_ = osiSubproblem_->getEmptyWarmStart();
         }
     }
-    // In all other iterations warmstart informations are used
-    else{
 
-        // Warmstart between iterations
-        if(warmStartFol_ && warmStartEmptySub_[scen_]==false && fCut==false){
-            // Set warmstart informations for current scenario
-            osiSubproblem_->setWarmStart(warmStartSubFol_);
+    // Warmstart between iterations
+    if(warmStart_ && fCut==false){
+        // Delete old warmstart informations
+        delete warmStartSub_[scen_];
+        // If an optimal basis is available, get warm 
+        // start informations for current scenario
+        if(osiSubproblem_->optimalBasisIsAvailable()){
+            warmStartSub_[scen_] = osiSubproblem_->getWarmStart();
         }
-
-        // Warmstart between scenarios
-        if(warmStart_ && warmStartEmptySub_[scen_]==false && fCut==false){
-            // Set warmstart informations for current scenario
-            osiSubproblem_->setWarmStart(warmStartSub_[scen_]);
+        // Else create an empty warmstart object
+        else{
+            warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
         }
-        // Solve subbroblem
-        double timeStart = CoinCpuTime();
-        osiSubproblem_->initialSolve();
-        this->time.solverSubproblems += CoinCpuTime() - timeStart;
-
-        // Warmstart between scenarios
-        if(warmStartFol_ && fCut==false){
-            // Delete warmstart informations
-            if(warmStartEmptySub_[scen_]==false){
-                delete warmStartSubFol_;
-            }
-            // If an optimal basis is available, get warm 
-            // start informations for current scenario
-            if(osiSubproblem_->optimalBasisIsAvailable()){
-                warmStartSubFol_ = osiSubproblem_->getWarmStart();
-                warmStartEmptySub_[scen_] = false;
-            }
-            // Else create an empty warmstart object
-            else{
-                warmStartSubFol_ = osiSubproblem_->getEmptyWarmStart();
-                warmStartEmptySub_[scen_] = true;
-            }
-        }
-
-        // Warmstart between iterations
-        if(warmStart_ && fCut==false){
-            // Delete warmstart informations
-            if(warmStartEmptySub_[scen_]==false){
-                delete warmStartSub_[scen_];
-            }
-            // If an optimal basis is available, get warm 
-            // start informations for current scenario
-            if(osiSubproblem_->optimalBasisIsAvailable()){
-                warmStartSub_[scen_] = osiSubproblem_->getWarmStart();
-                warmStartEmptySub_[scen_] = false;
-            }
-            // Else create an empty warmstart object
-            else{
-                warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
-                warmStartEmptySub_[scen_] = true;
-            }
-        }
-    }	
+    }
+   
 
     // Delete matrix
     delete matrix;
@@ -4121,7 +4042,7 @@ int Benders::writeSolutionFileDetEq(const char * solpath, double time ){
     return 0;
 }
 
-void Benders::setInitialSolution(double* solutionValues){
+void Benders::setInitialSolution(const double* solutionValues){
     if (useRegularizedManhattan_ || useRegularizedDecomposition_){
         regSolution_ = new double[mncol_];
         // We have to assert that the length of the array is ncol_
@@ -4311,24 +4232,18 @@ Benders::~Benders(){
             warmStartMaster_ = 0;
         }
         for(int scen_=0; scen_<nScen_; scen_++){
-            if(warmStartSub_[scen_] && warmStartEmptySub_[scen_]==false){
+            if(warmStartSub_[scen_] ){
                 delete warmStartSub_[scen_];
             }
         }
         if(warmStartSub_)
             delete [] warmStartSub_;
-        if(warmStartEmptySub_){
-            delete [] warmStartEmptySub_;
-            warmStartEmptySub_ = 0;
-        }
     }
     if(stageTwo_ && warmStartFol_){
         if(warmStartMaster_ && warmStartEmptyMaster_ == false)
             delete warmStartMaster_;
         if(warmStartSubFol_)
             delete warmStartSubFol_;
-        if(warmStartEmptySub_)
-            delete [] warmStartEmptySub_;
     }
     if(miInt_)
         delete [] miInt_;
@@ -4490,8 +4405,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1,false); // 1 for minimization
             delete osiCpxPtr;
             // copy initial values for regularized decomposition
-
             benders->setInitialSolution(evResult.second);
+            delete evResult.second;
             LOG(INFO) << "Time computing initial solution (WallClock): " << CoinCpuTime()-regTime;
         }
         if (useBenders)
