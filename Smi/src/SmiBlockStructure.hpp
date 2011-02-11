@@ -107,7 +107,10 @@ public:
 
     /// Deletes the last SmiBlock from the list
 	void deleteSmiBlock(){
-		smiBlock_.pop_back();
+        if ( !smiBlock_.empty() ){
+            delete smiBlock_.back();
+            smiBlock_.pop_back();
+        }
 	}
 
 	/// Returns the i-th SmiBlock
@@ -138,7 +141,11 @@ public:
 		this->setCombineWithCoreRule(r);		
 	}
 
-	~SmiBlockStructure();
+    ~SmiBlockStructure(){
+        // We only have to delete the remaining SMI blocks, in any case..
+        for (int i = 0; i < smiBlock_.size(); i++)
+            delete smiBlock_[i];
+    }
 
 };
 

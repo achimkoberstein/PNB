@@ -103,12 +103,16 @@ void SmiCoreData::gutsOfConstructor( int nrow,int ncol,int nstag, int *cstag,int
 	int i;
 	nrow_ = nrow;
 	ncol_ = ncol;
-    integerIndices_ = new int[integerLength];
-    integerLength_ = integerLength;
-    memcpy(integerIndices_,integerIndices,sizeof(int)*integerLength);
-    binaryIndices_ = new int[binaryLength];
-    binaryLength_ = binaryLength;
-    memcpy(binaryIndices_,binaryIndices,sizeof(int)*binaryLength);
+    if ( integerLength ){
+        integerIndices_ = new int[integerLength];
+        integerLength_ = integerLength;
+        memcpy(integerIndices_,integerIndices,sizeof(int)*integerLength);
+    }
+    if ( binaryLength ) {
+        binaryIndices_ = new int[binaryLength];
+        binaryLength_ = binaryLength;
+        memcpy(binaryIndices_,binaryIndices,sizeof(int)*binaryLength);
+    }
 
 
 
