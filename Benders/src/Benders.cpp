@@ -200,6 +200,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
     // Initialization of temporary solution vector for first stage solution
     bestSolTemp_ = new double[mncol_+zSub_+sncol_*nScen_];
+    // We delete this memory in the destructor
 
     int stat = 0; // 
 
@@ -4279,6 +4280,7 @@ Benders::~Benders(){
         delete [] combrstrt_;
     if(comblen_)
         delete [] comblen_;
+    delete [] bestSolTemp_;
     //TODO: delete reg. decomp. stuff
     if (useRegularizedDecomposition_ || useRegularizedManhattan_ ){
         delete [] regSolution_;

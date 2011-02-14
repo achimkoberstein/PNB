@@ -509,7 +509,9 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 							
 							//have to think about it
 							smiBlock = new SmiBlock(1);
-							blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
+                            // Delete the old blName first
+                            delete [] blName;
+							blName = new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
    							strcpy(blName,smpsCardReader_->blockName());
 						}
 						matrix->clear();
@@ -581,10 +583,18 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 				
 				
 				case SMI_UNKNOWN_MPS_TYPE:
-				default:
-					return -2;
+                default:{
+                    // Clean up used memory before we exit
+                    delete [] blName;
+                    delete smiBS;
+                    delete matrix;
+                    return -2;
+
+                        }
 				}
 			}
+
+            delete [] blName;
 			
 			if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
 			{
