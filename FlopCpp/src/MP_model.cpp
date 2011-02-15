@@ -510,6 +510,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     RandomVariables = std::vector<std::set<RandomVariable*> >(stage.size());
 
     //Insert decision variables into list of variables
+    LOG_IF(FATAL,Objective.operator->()==NULL) << "Your model does not have an objective. Please specify an objective with setObjective( )";
     Objective->insertVariables(Variables);
     if (stage.size()){ //if stochastic insert Random Variables
         Objective->insertRandomVariables(RandomVariables);

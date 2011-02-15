@@ -479,7 +479,7 @@ public:
 		//delete clp;
 	}
 
-	Benders(const char * single, const char * warmstart, const char * knap, const char * trust, const char * bend, const char * reg, const char * bar,const char * bunch, const int bunchSize):
+	Benders(const char * single, const char * warmstart, const char * knap, const char * trust, const char * bend, const char * reg, const char * bar,const char * bunch, const int bunchSize, const char * integerBenders):
     osiMaster_(NULL),osiSubproblem_(NULL),osiDetEq_(NULL),
     infty_(COIN_DBL_MAX),INFTYTEST(pow(10.0, 20)-1), ZEROTEST(pow(10.0, -6)),
     stageTwo_(true),single_(false),    
@@ -587,6 +587,9 @@ public:
         if(!strcmp(bunch,"+bunch")){ // At the moment we do not implement dynamic bunching.
 			bunching_ = true;
             bunchSize_ = bunchSize;
+		}
+        if(!strcmp(bunch,"+intBen")){ 
+            integerBenders_ = true;
 		}
         
 		// Delete solver interfaces		
@@ -731,7 +734,7 @@ public:
 
 class BendersParameter {
 public: 
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, REGULARIZED_MANHATTAN,WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE, last1} BendersIntParam;
+	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, REGULARIZED_MANHATTAN,WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE,INTEGER_BENDERS, last1} BendersIntParam;
 	typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
 	
 	BendersParameter() {
@@ -746,6 +749,7 @@ public:
         this->intParam[BendersParameter::BARRIER] = 0;
         this->intParam[BendersParameter::BUNCHING] = 0;
         this->intParam[BendersParameter::BUNCH_SIZE] = 0;
+        this->intParam[BendersParameter::INTEGER_BENDERS] = 0;
         this->dblParam[BendersParameter::ABSGAP] = 0.00001;
         this->dblParam[BendersParameter::RELGAP] = 0.000001;
 	}

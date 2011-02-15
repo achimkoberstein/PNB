@@ -888,6 +888,30 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
     }
 
+    TEST_F(MP_modelTest,FeasibilityCutTest){
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_variable x,y(T);
+        x.lowerLimit() = -10;
+        y.upperLimit(T) = 15;
+
+        MP_random_data randomData(T);
+        randomData(1) = new DiscreteUniformRandomVariable(10,20,11,new BracketMedianDiscretization(11));
+        randomData(1)->setStage(1);
+
+        MP_constraint firstStage,secondStage(T);
+
+        firstStage() = x() <= 5;
+        secondStage(T+1) = y(T+1) >= -x()+randomData(T+1);
+        EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective.*" );
+        testModel.setObjective( x()+2*y(T+1) );
+        testModel.solve(MP_model::MINIMIZE);
+        EXPECT_EQ(25,testModel->getObjValue());
+        // Output file
+        //SmiScnModel* smiModel = testModel.getSmi();
+        //smiModel->writeSmps("feasibilityProblem",true,false);
+    }
+
     // Dacota  Model to test the EV-, EEV- and WS-Problems
     TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
@@ -6084,6 +6108,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Smi*";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
+    ::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
