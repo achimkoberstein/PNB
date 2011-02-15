@@ -207,8 +207,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     if (useRegularizedDecomposition_ || useRegularizedManhattan_)
         regSubproblemSolutionValues_ = new double[nScen_];
 
-    if (mnBin_) // Change this to allow integer l-shaped method to work
-        integerBenders_ = false; 
+    if (!mnBin_) // We stop integer benders if we have no binary variables, otherwise we leave it as it is
+        integerBenders_ = false;
     if (integerBenders_)
         columnLowerBounds_.push_back(std::vector<double>() ); //just quickndirty hack
 
@@ -487,10 +487,10 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     fCut = true;
                     feasible = false;
                     nFeas++;
-                    if (single_)
-                        break;
-                    else
-                        break; //Allow to generate more feas cuts in the multi setting
+                    //if (single_)
+                    //    break;
+                    //else
+                    //    break; //Allow to generate more feas cuts in the multi setting
                 }
                 // Copy vector of current solution of subproblem
                 const double* sSol_Temp = osiSubproblem_->getColSolution();
@@ -517,7 +517,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     else { // We round arguments if they differ slightly from the rounded value
                         // If we allow rounding we do so here: We should set a parameter here..
                         bestSolTemp_[indexPart+i] = sSol[i];
-                        //bestSolTemp_[indexPart+i] = sSol[i];
                     }
                     subObjVal+=bestSolTemp_[indexPart+i]*subObjCoeff[i];
                 }	
@@ -545,9 +544,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 // multiplied with the associated probability; if there are bounds 
                 // on stage 2 variables, there could occur an offset of the objective 
                 // function which has to be manually added to the objective function
-                upperBound_+= subObjVal*scenProb_[scen_];
-
-                double subObjValueCplex = osiSubproblem_->getObjValue()*scenProb_[scen_]; 
+                if ( feasible )
+                    upperBound_+= subObjVal*scenProb_[scen_];
 
                 if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
                     // We want to solve the subproblem with the regularized solution
@@ -2007,7 +2005,7 @@ int Benders::solveMaster(){
     bool optimal = osiMaster_->isProvenOptimal();
     // We have to find a suitable feasible solution if the problem is unbounded ?!?
     if ( useRegularizedDecomposition_ ){
-        if (stat == 0 || stat == 1 ) { // Solution procuded using no reg. decomposition or optimal 
+        if (stat == 0 || stat == CPX_STAT_OPTIMAL ) { // Solution procuded using no reg. decomposition or optimal 
             // Everything alright. We can store a warmstart here, but we won't as cplex takes care of that issue itself.
             //// Store the base 
             //// The arrays must have the length of the cols and of the rows of the problem. So it might be best to declare them here new and delete them.
@@ -2022,16 +2020,16 @@ int Benders::solveMaster(){
             this->time.solverMaster += CoinCpuTime() - timeStart;
             CPXgetbase( envPtr, lpPtr, cstat_, rstat_ );
         }
-        else if ( stat == 101 || stat == 102 ){
+        else if ( stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL ){
             // solution is mip-optimal or mip-optimal-gap
             std::string filename = "osiMaster-"+ to_string(nIter_);
             CPXwriteprob(envPtr, lpPtr, filename.c_str(), "lp");
         }
-        else if ( stat == 6 ){
+        else if ( stat == CPX_STAT_NUM_BEST ){
             // We have numerical problems..
             DLOG(WARNING) << "Cplex reported numerical problems during the solution of the master problem.";
         }
-        else if (stat == 4 || stat == 119 ) {
+        else if (stat == CPX_STAT_INForUNBD || stat == CPXMIP_INForUNBD ) {
             // Resolve problem to get proper term code without presolve
             // In CPLEX 9, this is a way to discard the presolve information: 
 
@@ -2050,13 +2048,16 @@ int Benders::solveMaster(){
             stat = CPXgetstat(envPtr, lpPtr);
             DLOG_IF(ERROR,stat > 0) << "Cplex returned with error code " << stat;
         }
-        else 
+        else if (stat == CPX_STAT_OPTIMAL_INFEAS ){
+            LOG(WARNING) << "Cplex returned with optimal solution which scaled to an infeasible one. Take care if you problem is sensitive to small numerical changes";
+        }
+            
+        else
             LOG(FATAL) << "Cplex returned with error code " << stat;
 
     }
 
-    if(osiMaster_->isProvenPrimalInfeasible() || stat == CPX_STAT_INFEASIBLE) {
-
+    if( (!useRegularizedDecomposition_ && osiMaster_->isProvenPrimalInfeasible()) || stat == CPX_STAT_INFEASIBLE) {
         cout << "Error: master problem is infeasible!" << endl;
         return -1;
     }
@@ -2137,19 +2138,19 @@ int Benders::solveMaster(){
     }
     if (useRegularizedDecomposition_ && appliedCuts_ && checkCuts_ && mnInt_ > 0){ // We check for validity of cuts here..
         // Get Slack of constraints
-        double* slack = new double[mnrow_+mncol_+zSub_*nIter_];
-        int status;
-        int curNumRows = CPXgetnumrows(envPtr,lpPtr)-1;
-        status = CPXgetslack (envPtr, lpPtr, slack, mnrow_+mncol_, CPXgetnumrows(envPtr,lpPtr)-1);
-        DLOG_IF(ERROR,status) << "Cplex returned error code " << status << " while reading slack values for latest optimality cuts.";
-        std::vector<int> effectiveCuts;
-        bool continueSolving = false;
-        for (int i = 0; i < appliedCuts_; i++){
-            if ( slack[i] >= 0 ){ // We continue solving if we have active cuts
-                continueSolving = true; break;
-            }
-        }
-        delete[] slack;
+        //double* slack = new double[mnrow_+mncol_+zSub_*nIter_];
+        //int status;
+        //int curNumRows = CPXgetnumrows(envPtr,lpPtr)-1;
+        //status = CPXgetslack (envPtr, lpPtr, slack, mnrow_+mncol_, CPXgetnumrows(envPtr,lpPtr)-1);
+        //DLOG_IF(ERROR,status) << "Cplex returned error code " << status << " while reading slack values for latest optimality cuts.";
+        //std::vector<int> effectiveCuts;
+        //bool continueSolving = false;
+        //for (int i = 0; i < appliedCuts_; i++){
+        //    if ( slack[i] >= 0 ){ // We continue solving if we have active cuts
+        //        continueSolving = true; break;
+        //    }
+        //}
+        //delete[] slack;
         //if (continueSolving)
         //    checkCuts_ = false;
         //else 
@@ -4351,6 +4352,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         bool barrier = params.getIntParam(BendersParameter::BARRIER);
         bool bunching = params.getIntParam(BendersParameter::BUNCHING);
         int bunchSize = params.getIntParam(BendersParameter::BUNCH_SIZE);
+        bool integerBenders = params.getIntParam(BendersParameter::INTEGER_BENDERS);
         //	// Input parameters:
         //	// #1: Maximal Iterations
         //	// #2: Single/multi: s m
@@ -4368,6 +4370,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         std::string warmStartStr("+wsI"); // We chose warmstart between iterations, but we can also choose warmstart between subproblems..
         std::string barrierStr("-br");
         std::string bunchingStr("-bunch");
+        std::string integerBendersStr("-intBen");
         if (!useBenders)
             bendersStr = "-ben";
         if (useRegularized)
@@ -4388,13 +4391,15 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             barrierStr = "+br";
         if (bunching)
             bunchingStr = "+bunch";
+        if (integerBenders)
+            integerBendersStr = "+intBen";
 
         if ( useRegularized && useRegularizedManhattan )
             LOG(INFO) << "You have chosen two conflicting options, we go for regularized manhattan.";
 
         // We want to store the time necessary to solve the problem
         double time = CoinCpuTime();
-        benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str(),barrierStr.c_str(),bunchingStr.c_str(),bunchSize);
+        benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str(),barrierStr.c_str(),bunchingStr.c_str(),bunchSize,integerBendersStr.c_str());
         benders->copyMaster(smiModel);
         benders->copySubmodel(smiModel);
         if ( useRegularized || useRegularizedManhattan ){

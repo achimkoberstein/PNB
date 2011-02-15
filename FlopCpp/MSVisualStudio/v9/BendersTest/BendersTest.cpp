@@ -17,30 +17,45 @@ namespace flopc {
 
 #pragma region initialization
 
-    class Posts: public ::testing::Test{
+    class CoverageTest: public ::testing::Test{
     protected:
-        Posts(){ }
+        BendersParameter benParam;
+        CoverageTest(): benParam() { 
+            benParam.setIntParam(BendersParameter::BENDERS,0);
+            benParam.setIntParam(BendersParameter::MULTI,0);
+            benParam.setIntParam(BendersParameter::TRUSTREGION,0);
+            benParam.setIntParam(BendersParameter::KNAPSACK,0);
+            benParam.setIntParam(BendersParameter::WARMSTART,0);
+            benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+            benParam.setIntParam(BendersParameter::REGULARIZED,0);
+            benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
+            benParam.setIntParam(BendersParameter::BARRIER,0);
+            benParam.setIntParam(BendersParameter::BUNCHING,0);
+            benParam.setIntParam(BendersParameter::BUNCH_SIZE,2);
+        }
+
+        void solveSelectedProblems(){
+            // Scenario and feasibility cuts
+            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/feasibilityProblem"), 25, 0.1);
+            // Scenario and binary
+            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -265.569, 0.1);
+            // Scenario
+            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+            // Blocks
+            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
+        }
 
         double solveSMPS(const char* name) {
             SmiScnModel smi;
             smi.readSmps(name);
             OsiCpxSolverInterface cpxSolver;
             OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
+            benders.setParams(benParam);
             benders.initialSolve();
             return benders.getObjValue();
-            return 0;
         }
         
-        double solveSMPS(const char* name, BendersParameter &params) {
-            SmiScnModel smi;
-            smi.readSmps(name);
-            OsiCpxSolverInterface cpxSolver;
-            OsiStochasticBendersTwoStageSolverInterface benders(&cpxSolver,&smi);
-            benders.setParams(params);
-            benders.initialSolve();
-            return benders.getObjValue();
-            return 0;
-        }
+
     };
     
     class BendersTest: public ::testing::Test{
@@ -48,15 +63,15 @@ namespace flopc {
 
         BendersParameter benParam;
         double repetitions;
-        BendersTest() : benParam(), repetitions(1) {
+        BendersTest() : benParam(), repetitions(3) {
                 benParam.setIntParam(BendersParameter::BENDERS,1);
-                benParam.setIntParam(BendersParameter::MULTI,1);
+                benParam.setIntParam(BendersParameter::MULTI,0);
                 benParam.setIntParam(BendersParameter::TRUSTREGION,1);
                 benParam.setIntParam(BendersParameter::KNAPSACK,0);
                 benParam.setIntParam(BendersParameter::WARMSTART,1);
                 benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
                 benParam.setIntParam(BendersParameter::REGULARIZED,0);
-                benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+                benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
                 benParam.setIntParam(BendersParameter::BARRIER,0);
                 benParam.setIntParam(BendersParameter::BUNCHING,1);
                 benParam.setIntParam(BendersParameter::BUNCH_SIZE,100);
@@ -73,7 +88,7 @@ namespace flopc {
             char stime[9];
             ofstream ofs;
 		    ofs.open("BendersTestSet.txt", std::ios::app);
-            ofs << _strdate(sdate) << " " << _strtime(stime) << endl;
+            ofs << _strdate_s(sdate) << " " << _strtime_s(stime) << endl;
 		    ofs << "Problem Instance " << name << endl;
             for (int i = 0; i < repetitions; i++){
                 double time = CoinCpuTime();
@@ -292,13 +307,144 @@ TEST_F(BendersTest, stormG2) { // no progress in interations, obj. values 0
     referenceValue = 15802589.698;
     relGap = abs(referenceValue-solutionValue)/solutionValue;
     EXPECT_LE(relGap,0.000001);
-   
+     
+}
+
+TEST_F(CoverageTest, cover){
+    // We want to cover a whole lot of features 
+    // We need problems with scenarios/blocks, optimality/feasibility cuts and linear/binary/integer variables
+    // Start with detEq
+    solveSelectedProblems();
+    // Start with single without warmstart
+    benParam.setIntParam(BendersParameter::BENDERS,1);
+    solveSelectedProblems();
+    // Solve single problems with warmstart taken from previous subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART,1);
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    solveSelectedProblems();
+    // Solve single problems with warmstart from previous iteration of same subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+    solveSelectedProblems();
+    // Solve single problems with regularization / keep warmstart
+    benParam.setIntParam(BendersParameter::REGULARIZED,1);
+    solveSelectedProblems();
+    // Solve single with regularized manhattan
+    benParam.setIntParam(BendersParameter::REGULARIZED,0);
+    benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+    solveSelectedProblems();
+
+    // Switch to multi cuts 
+
+    // Start with multi without warmstart
+    benParam.setIntParam(BendersParameter::MULTI,1);
+    benParam.setIntParam(BendersParameter::WARMSTART,0);
+    solveSelectedProblems();
+    // Solve multi problems with warmstart taken from previous subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART,1);
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    solveSelectedProblems();
+    // Solve multi problems with warmstart from previous iteration of same subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+    solveSelectedProblems();
+    // Solve multi problems with regularization / keep warmstart
+    benParam.setIntParam(BendersParameter::REGULARIZED,1);
+    solveSelectedProblems();
+    // Solve multi with regularized manhattan
+    benParam.setIntParam(BendersParameter::REGULARIZED,0);
+    benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+    solveSelectedProblems();
+
+    // Switch to bunching procedure
     
+    // Start with multi aggregation without warmstart
+    benParam.setIntParam(BendersParameter::BUNCHING,1);
+    benParam.setIntParam(BendersParameter::WARMSTART,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart taken from previous subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART,1);
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart from previous iteration of same subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with regularization / keep warmstart
+    benParam.setIntParam(BendersParameter::REGULARIZED,1);
+    solveSelectedProblems();
+    // Solve multi aggregation with regularized manhattan
+    benParam.setIntParam(BendersParameter::REGULARIZED,0);
+    benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+    solveSelectedProblems();
+
+    // Use barrier as master problem solver
+
+    // Start with multi aggregation without warmstart
+    benParam.setIntParam(BendersParameter::BARRIER,1);
+    benParam.setIntParam(BendersParameter::WARMSTART,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart taken from previous subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART,1);
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart from previous iteration of same subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with regularization / keep warmstart
+    benParam.setIntParam(BendersParameter::REGULARIZED,1);
+    solveSelectedProblems();
+    // Solve multi aggregation with regularized manhattan
+    benParam.setIntParam(BendersParameter::REGULARIZED,0);
+    benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+    solveSelectedProblems();
+
+    // Solve integer problems with integer benders
+
+    // Start with multi aggregation without warmstart
+    benParam.setIntParam(BendersParameter::BARRIER,0);
+    benParam.setIntParam(BendersParameter::INTEGER_BENDERS,1);
+    benParam.setIntParam(BendersParameter::WARMSTART,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart taken from previous subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART,1);
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart from previous iteration of same subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with regularization / keep warmstart
+    benParam.setIntParam(BendersParameter::REGULARIZED,1);
+    solveSelectedProblems();
+    // Solve multi aggregation with regularized manhattan
+    benParam.setIntParam(BendersParameter::REGULARIZED,0);
+    benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+    solveSelectedProblems();
+
+    // Solve integer problems with knapsack and trust-region
+
+    // Start with multi aggregation without warmstart
+    benParam.setIntParam(BendersParameter::KNAPSACK,1);
+    benParam.setIntParam(BendersParameter::TRUSTREGION,1);
+    benParam.setIntParam(BendersParameter::INTEGER_BENDERS,0);
+    benParam.setIntParam(BendersParameter::WARMSTART,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart taken from previous subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART,1);
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with warmstart from previous iteration of same subproblem
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,1);
+    solveSelectedProblems();
+    // Solve multi aggregation problems with regularization / keep warmstart
+    benParam.setIntParam(BendersParameter::REGULARIZED,1);
+    solveSelectedProblems();
+    // Solve multi aggregation with regularized manhattan
+    benParam.setIntParam(BendersParameter::REGULARIZED,0);
+    benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
+    solveSelectedProblems();
 }
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.pltexp";
+    ::testing::GTEST_FLAG(filter) = "CoverageTest.*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)
