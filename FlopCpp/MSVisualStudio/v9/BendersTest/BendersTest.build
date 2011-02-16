@@ -1,13 +1,11 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-<Import Project="..\..\..\..\ThirdParty\\msbuildtasks\MSBuild.TeamCity.Tasks.Targets"/>
-<UsingTask TaskName="MSBuild.TeamCity.Tasks.RunGoogleTests" 
-        AssemblyFile="..\..\..\..\ThirdParty\\msbuildtasks\MSBuild.TeamCity.Tasks.dll"/>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Import Project="..\..\..\..\ThirdParty\msbuildtasks\MSBuild.TeamCity.Tasks.Targets"/>
+
     <Target Name="MyTarget">
 	
 	<RunGoogleTests
         TestExePath="..\Release\BendersTest.exe"
 	/>
-        
     </Target>
 </Project>
