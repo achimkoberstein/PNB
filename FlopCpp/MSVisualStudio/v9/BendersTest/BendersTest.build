@@ -3,9 +3,14 @@
 <Import Project="..\..\..\..\ThirdParty\msbuildtasks\MSBuild.TeamCity.Tasks.Targets"/>
 
     <Target Name="MyTarget">
-	
-	<RunGoogleTests
-        TestExePath="..\Release\BendersTest.exe"
+		
+	<Exec
+		   Command="..\Release\BendersTest.exe --gtest_output=xml:"
+		   Timeout="30000"
+		   IgnoreExitCode="true"
+	/>
+	<ImportGoogleTests
+		   TestResultsPath="..\Release\BendersTest.xml"
 	/>
     </Target>
 </Project>
