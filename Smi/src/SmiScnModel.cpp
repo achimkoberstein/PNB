@@ -11,6 +11,8 @@
 #include <assert.h>
 #include <algorithm>
 
+#include "CoinTime.hpp"
+
 using namespace std;
 
 int SmiScnNode::getCoreColIndex(int i)
@@ -1715,7 +1717,6 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 			SmiScenarioIndex branch = block->getStage();
 			SmiScenarioIndex anc = 0;
 			double prob = block->getBlockEventProb(i);
-
 			is = this->generateScenario(core,&matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,r);
 		}
 	}
@@ -1739,45 +1740,36 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 				combdrlo = block1->getBlockEventRowLower(i);
 				combdrup = block1->getBlockEventRowUpper(i);
 				combmatrix = block1->getBlockEventMatrix(i);
-				CoinPackedVector dobj2 = block2->getBlockEventObjective(j);
-				CoinPackedVector dclo2 = block2->getBlockEventColLower(j);
-				CoinPackedVector dcup2 = block2->getBlockEventColUpper(j);
-				CoinPackedVector drlo2 = block2->getBlockEventRowLower(j);
-				CoinPackedVector drup2 = block2->getBlockEventRowUpper(j);
-				CoinPackedMatrix matrix2 = block2->getBlockEventMatrix(j);
+				const CoinPackedVector& dobj2(block2->getBlockEventObjective(j));
+				const CoinPackedVector& dclo2(block2->getBlockEventColLower(j));
+				const CoinPackedVector& dcup2(block2->getBlockEventColUpper(j));
+				const CoinPackedVector& drlo2(block2->getBlockEventRowLower(j));
+				const CoinPackedVector& drup2(block2->getBlockEventRowUpper(j));
+				const CoinPackedMatrix& matrix2(block2->getBlockEventMatrix(j));
 				for(int k=0;k<dobj2.getNumElements();k++){
-					int* ind = dobj2.getIndices();
-					double* elem = dobj2.getElements(); 
-					combdobj.insert(ind[k],elem[k]);
+					combdobj.insert(dobj2.getIndices()[k],dobj2.getElements()[k]);
 				}
 				for(int k=0;k<dclo2.getNumElements();k++){
-					int* ind = dclo2.getIndices();
-					double* elem = dclo2.getElements(); 
-					combdclo.insert(ind[k],elem[k]);
+					combdclo.insert(dclo2.getIndices()[k],dclo2.getElements()[k]);
 				}
 				for(int k=0;k<dcup2.getNumElements();k++){
-					int* ind = dcup2.getIndices();
-					double* elem = dcup2.getElements(); 
-					combdcup.insert(ind[k],elem[k]);
+					combdcup.insert(dcup2.getIndices()[k],dcup2.getElements()[k]);
 				}
 				for(int k=0;k<drlo2.getNumElements();k++){
-					int* ind = drlo2.getIndices();
-					double* elem = drlo2.getElements(); 
-					combdrlo.insert(ind[k],elem[k]);
+					combdrlo.insert(drlo2.getIndices()[k],drlo2.getElements()[k]);
 				}
 				for(int k=0;k<drup2.getNumElements();k++){
-					int* ind = drup2.getIndices();
-					double* elem = drup2.getElements(); 
-					combdrup.insert(ind[k],elem[k]);
+					combdrup.insert(drup2.getIndices()[k],drup2.getElements()[k]);
 				}
-				for(int k=0;k<matrix2.getNumRows();k++){
-					for(int l=0;l<matrix2.getNumCols();l++)
-						if(matrix2.getCoefficient(k,l)!=0)
-							combmatrix.modifyCoefficient(k,l,matrix2.getCoefficient(k,l));
+				int pos = 0; // position in the elements / indice arrays
+				for (int k = 0; k < matrix2.getNumRows(); k++) {
+					for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+						combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+						pos++;
+					}
 				}
 				combprob = block1->getBlockEventProb(i)*block2->getBlockEventProb(j);
 				combBlock->addBlockEvent(combmatrix,combdclo,combdcup,combdobj,combdrlo,combdrup,combprob);
-
 			}
 		}
 		smiBS->deleteSmiBlock();
