@@ -588,7 +588,7 @@ public:
 			bunching_ = true;
             bunchSize_ = bunchSize;
 		}
-        if(!strcmp(bunch,"+intBen")){ 
+        if(!strcmp(integerBenders,"+intBen")){ 
             integerBenders_ = true;
 		}
         
