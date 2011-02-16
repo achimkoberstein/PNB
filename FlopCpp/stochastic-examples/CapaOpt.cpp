@@ -6768,7 +6768,7 @@ int main(int argc, char* argv[]) {
     
 	if (solveWithBenders) {
 		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
-        benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI, 1); 
+        benders.setIntParam(BendersParameter::MULTI, 1); 
         //benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::MULTI, 0);
 		double begin = CoinCpuTime();
 		benders.initialSolve();
@@ -6787,7 +6787,7 @@ int main(int argc, char* argv[]) {
 		ofs.close();
 	} else {
 		OsiStochasticBendersTwoStageSolverInterface benders(capa.Solver,capa.getSmi());
-        benders.setIntParam(OsiStochasticBendersTwoStageSolverInterface::BENDERS, 0);
+        benders.setIntParam(BendersParameter::BENDERS, 0);
 		double begin = CoinCpuTime();
 		benders.initialSolve();
 		double duration = CoinCpuTime() - begin;
