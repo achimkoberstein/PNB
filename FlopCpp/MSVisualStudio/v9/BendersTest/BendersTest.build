@@ -1,5 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
 <Import Project="..\..\..\..\ThirdParty\\msbuildtasks\MSBuild.TeamCity.Tasks.Targets"/>
+<UsingTask TaskName="MSBuild.TeamCity.Tasks.RunGoogleTests" 
+        AssemblyFile="..\..\..\..\ThirdParty\\msbuildtasks\MSBuild.TeamCity.Tasks.dll"/>
     <Target Name="MyTarget">
 	
 	<RunGoogleTests
