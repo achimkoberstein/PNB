@@ -10,7 +10,7 @@
 		   IgnoreExitCode="true"
 	/>
 	<ImportGoogleTests
-		   TestResultsPath="..\Release\BendersTest.xml"
+		   TestResultsPath="BendersTest.xml"
 	/>
     </Target>
 </Project>
