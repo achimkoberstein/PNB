@@ -278,6 +278,7 @@ TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
     benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
     benParam.setIntParam(BendersParameter::MULTI,1);
     benParam.setIntParam(BendersParameter::INTEGER_BENDERS,1);
+    EXPECT_EQ(0,1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
