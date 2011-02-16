@@ -75,6 +75,7 @@ namespace flopc {
                 benParam.setIntParam(BendersParameter::BARRIER,0);
                 benParam.setIntParam(BendersParameter::BUNCHING,1);
                 benParam.setIntParam(BendersParameter::BUNCH_SIZE,100);
+                benParam.setIntParam(BendersParameter::INTEGER_BENDERS,1);
         }
 
         double solveSMPS(const char* name) {
@@ -88,7 +89,7 @@ namespace flopc {
             char stime[9];
             ofstream ofs;
 		    ofs.open("BendersTestSet.txt", std::ios::app);
-            ofs << _strdate_s(sdate) << " " << _strtime_s(stime) << endl;
+            ofs << _strdate(sdate) << " " << _strtime(stime) << endl;
 		    ofs << "Problem Instance " << name << endl;
             for (int i = 0; i < repetitions; i++){
                 double time = CoinCpuTime();
@@ -274,6 +275,9 @@ TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal soluti
 }
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
+    benParam.setIntParam(BendersParameter::WARMSTART_TYPE,0);
+    benParam.setIntParam(BendersParameter::MULTI,1);
+    benParam.setIntParam(BendersParameter::INTEGER_BENDERS,1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
@@ -444,7 +448,7 @@ TEST_F(CoverageTest, cover){
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "CoverageTest.*";
+    ::testing::GTEST_FLAG(filter) = "*.sslp";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)

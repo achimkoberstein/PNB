@@ -449,11 +449,6 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     nIter_++;
                     continue;
                 }
-                //else
-                    //if ( LB_ < lowerBound )
-                    //    LB_ = lowerBound; // Update lower Bound only if we have no violation.. This should then strictly increase..
-                    //else
-                        // What should we do in this case?
             }
 
             feasible = true;
@@ -593,6 +588,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 }
             }
 
+            // Check if we can fathom the current node
             if (integerBenders_ && mnInt_ > 0){
                 if ( lowerBound >= upperBound_ ) { // We discard the current node
                     columnLowerBounds_.pop_front();
@@ -603,15 +599,8 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     continue;
                 }
             }
-
-            // Practical issue due to numerical instabilities: We fathom current node if we reach some bounds: Absolute gap is less than specified..
-            //if ( integerBenders_ && resultCmp == 0 ){ // We have the exact same solution to the master problem, so our optimality cut's did not work as expected.
-            //    // Do we stay at the same problem? store it for once
-            //    if ( currentNode_ == numNodes_ )
-            //        break; // exit the while loop
-            //    else
-            //        currentNode_ = numNodes_;
-            //}
+            
+            // Numerical issue: If our bounds are less than absEps, we remove the current node
             if ( integerBenders_ && feasible && mnInt_>0 && abs(upperBound_-lowerBound)< absEps ){
                 columnLowerBounds_.pop_front();
                 columnUpperBounds_.pop_front();
@@ -619,8 +608,9 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                 nIter_++;
                 continue;
             }
-            if (integerBenders_ && mnBin_ > 0 && single_ && !calculateLowerBound_){
             // Calculate "Integer L-shaped optimality cut" for binary variables
+            if (integerBenders_ && mnBin_ > 0 && single_ && !calculateLowerBound_){
+            
                 // We need Q_x = bestSolTemp computation
                 double qx = 0;
                 for (int i = 0; i < mncol_; i++){
