@@ -23,7 +23,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -92,7 +92,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -162,7 +162,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -186,7 +186,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../../../../Benders/src"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -234,7 +234,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\..\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
