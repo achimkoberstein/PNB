@@ -22,7 +22,7 @@ namespace flopc {
         BendersParameter benParam;
         CoverageTest(): benParam() { 
             benParam.setIntParam(BendersParameter::BENDERS,0);
-            benParam.setIntParam(BendersParameter::MULTI,0);
+            benParam.setIntParam(BendersParameter::MULTI,1);
             benParam.setIntParam(BendersParameter::TRUSTREGION,0);
             benParam.setIntParam(BendersParameter::KNAPSACK,0);
             benParam.setIntParam(BendersParameter::WARMSTART,0);
@@ -30,8 +30,8 @@ namespace flopc {
             benParam.setIntParam(BendersParameter::REGULARIZED,0);
             benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
             benParam.setIntParam(BendersParameter::BARRIER,0);
-            benParam.setIntParam(BendersParameter::BUNCHING,0);
-            benParam.setIntParam(BendersParameter::BUNCH_SIZE,2);
+            benParam.setIntParam(BendersParameter::BUNCHING,1);
+            benParam.setIntParam(BendersParameter::BUNCH_SIZE,200);
         }
 
         void solveSelectedProblems(){
@@ -63,9 +63,9 @@ namespace flopc {
 
         BendersParameter benParam;
         double repetitions;
-        BendersTest() : benParam(), repetitions(3) {
+        BendersTest() : benParam(), repetitions(1) {
                 benParam.setIntParam(BendersParameter::BENDERS,1);
-                benParam.setIntParam(BendersParameter::MULTI,0);
+                benParam.setIntParam(BendersParameter::MULTI,1);
                 benParam.setIntParam(BendersParameter::TRUSTREGION,1);
                 benParam.setIntParam(BendersParameter::KNAPSACK,0);
                 benParam.setIntParam(BendersParameter::WARMSTART,1);
@@ -449,6 +449,8 @@ TEST_F(CoverageTest, cover){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     ::testing::GTEST_FLAG(filter) = "BendersTest.*";
+    //::testing::GTEST_FLAG(filter) = "BendersTest.rand";
+    
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints o ut stacktrace)

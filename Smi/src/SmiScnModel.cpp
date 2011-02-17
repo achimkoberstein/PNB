@@ -1762,7 +1762,9 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 					combdrup.insert(drup2.getIndices()[k],drup2.getElements()[k]);
 				}
 				int pos = 0; // position in the elements / indice arrays
+                const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
 				for (int k = 0; k < matrix2.getNumRows(); k++) {
+                    pos = colStartIndices[k];
 					for (int l = 0; l < matrix2.getVectorSize(k); l++) {
 						combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
 						pos++;

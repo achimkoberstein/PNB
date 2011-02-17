@@ -1551,7 +1551,6 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
 
    solver.setObjSense(1.0); // minimize
    solver.initialSolve();
-   std::cout << "obj. value from dual ray computation " << solver.getObjValue() << std::endl;
 
    const double* solverpi = solver.getRowPrice();
    double* pi = new double[numrows];
