@@ -6107,7 +6107,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
+    //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
     google::InitGoogleLogging(argv[0]);
