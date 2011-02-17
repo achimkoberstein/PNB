@@ -199,6 +199,14 @@ namespace flopc {
 TEST_F(BendersTest, scfxm) { 
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_16"), 18416.655, 0.1);
+    SmiScnModel smiModel;
+    OsiClpSolverInterface clpSolver;
+    smiModel.setOsiSolverHandle(clpSolver);
+    smiModel.readSmps("../../../../Benders/test/instances/posts/fxm/fxm2_6");
+    OsiSolverInterface* osiPtr = smiModel.loadOsiSolverData();
+    osiPtr->initialSolve();
+    //osiPtr->writeLp("fxm2");
+    LOG(INFO) << osiPtr->getObjValue();
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_6"), 18615.932, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_16"), 18438.891, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_6"), 18616.224, 0.1);

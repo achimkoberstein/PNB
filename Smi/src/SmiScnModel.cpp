@@ -1708,12 +1708,12 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 	if(nBlocks==1){
 		SmiBlock *block = smiBS->getBlock(0);
 		for(size_t i=0; i < block->getNumEvents();i++){
-			CoinPackedVector dobj = block->getBlockEventObjective(i);
-			CoinPackedVector dclo = block->getBlockEventColLower(i);
-			CoinPackedVector dcup = block->getBlockEventColUpper(i);
-			CoinPackedVector drlo = block->getBlockEventRowLower(i);
-			CoinPackedVector drup = block->getBlockEventRowUpper(i);
-			CoinPackedMatrix matrix = block->getBlockEventMatrix(i);
+			CoinPackedVector& dobj(block->getMutableBlockEventObjective(i));
+			CoinPackedVector& dclo(block->getMutableBlockEventColLower(i));
+			CoinPackedVector& dcup(block->getMutableBlockEventColUpper(i));
+			CoinPackedVector& drlo(block->getMutableBlockEventRowLower(i));
+			CoinPackedVector& drup(block->getMutableBlockEventRowUpper(i));
+			CoinPackedMatrix& matrix(block->getMutableBlockEventMatrix(i));
 			SmiScenarioIndex branch = block->getStage();
 			SmiScenarioIndex anc = 0;
 			double prob = block->getBlockEventProb(i);

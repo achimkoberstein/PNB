@@ -58,6 +58,13 @@ public:
 	inline const CoinPackedVector &getBlockEventObjective(int i){return events_[i]->getObjective();} /// Returns the objective of the i-th SmiBlockEvent
 	inline const CoinPackedVector &getBlockEventRowLower(int i) {return events_[i]->getRowLower();}  /// Returns the row lower bounds of the i-th SmiBlockEvent
 	inline const CoinPackedVector &getBlockEventRowUpper(int i) {return events_[i]->getRowUpper();}  /// Returns the row upper bounds of the i-th SmiBlockEvent
+
+    inline  CoinPackedMatrix &getMutableBlockEventMatrix(int i)   {return events_[i]->getMutableMatrix(); }   /// Returns the matrix of the i-th SmiBlockEvent
+	inline  CoinPackedVector &getMutableBlockEventColLower(int i) {return events_[i]->getMutableColLower();}  /// Returns the column lower bounds of the i-th SmiBlockEvent
+	inline  CoinPackedVector &getMutableBlockEventColUpper(int i) {return events_[i]->getMutableColUpper();}  /// Returns the column upper bounds of the i-th SmiBlockEvent
+	inline  CoinPackedVector &getMutableBlockEventObjective(int i){return events_[i]->getMutableObjective();} /// Returns the objective of the i-th SmiBlockEvent
+	inline  CoinPackedVector &getMutableBlockEventRowLower(int i) {return events_[i]->getMutableRowLower();}  /// Returns the row lower bounds of the i-th SmiBlockEvent
+	inline  CoinPackedVector &getMutableBlockEventRowUpper(int i) {return events_[i]->getMutableRowUpper();}  /// Returns the row upper bounds of the i-th 
 	
 	/// Returns the probability of the i-th SmiBlockEvent
 	double getBlockEventProb(int i) { 

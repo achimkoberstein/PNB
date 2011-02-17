@@ -1,7 +1,4 @@
-
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-<Import Project="..\..\..\..\ThirdParty\msbuildtasks\MSBuild.TeamCity.Tasks.Targets"/>
-
     <Target Name="MyTarget">
 	<Exec
 		   Command="..\Release\MyTest.exe --gtest_output=xml:MyTest.xml"
