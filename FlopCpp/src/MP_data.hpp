@@ -6,6 +6,7 @@
 #define _MP_data_hpp_
 
 #include <vector>
+
 #include "MP_index.hpp"    
 #include "MP_set.hpp"      
 #include "MP_constant.hpp" 

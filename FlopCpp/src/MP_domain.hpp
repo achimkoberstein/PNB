@@ -5,12 +5,15 @@
 #ifndef _MP_domain_hpp_
 #define _MP_domain_hpp_
 
+#include <memory>
+
 #include <vector>
 #include <map>
+
 #include "MP_utilities.hpp"
 #include "MP_boolean.hpp" 
 #include "MP_index.hpp" 
-#include <memory>
+
 
 namespace flopc {
 

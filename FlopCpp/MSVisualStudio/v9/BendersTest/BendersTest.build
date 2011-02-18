@@ -5,7 +5,6 @@
     <Target Name="MyTarget">
 	<Exec
 		   Command="..\Release\BendersTest.exe --gtest_output=xml:BendersTest.xml"
-		   IgnoreExitCode="true"
 	/>
     </Target>
 </Project>
