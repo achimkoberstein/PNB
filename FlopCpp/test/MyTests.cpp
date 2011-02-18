@@ -4198,6 +4198,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 	        // initialize SmiScnModel
 	        SmiScnModel *smiModel = new SmiScnModel();
+            smiModel->setCore(osiCore);
 
 	        // Add Scenarios
 	        int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
@@ -4325,7 +4326,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        myAssert(__FILE__,__LINE__,osiSubmodel[1]->getNumRows()==3);
 
 	        delete smiModel;
-	        delete osiCore;
+	        //delete osiCore;
 
 	        delete rlo0;
 	        delete rlo1;
@@ -6107,7 +6108,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
+    //::testing::GTEST_FLAG(filter) = "*.DecompUnitTest";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
     google::InitGoogleLogging(argv[0]);
