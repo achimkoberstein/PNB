@@ -2,7 +2,6 @@
     <Target Name="MyTarget">
 	<Exec
 		   Command="..\Release\MyTest.exe --gtest_output=xml:MyTest.xml"
-		   IgnoreExitCode="true"
 	/>
     </Target>
 </Project>
