@@ -195,6 +195,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				AdditionalIncludeDirectories="../../../../Benders/src;&quot;../../../../ThirdParty/google-perftools/src&quot;"
+				PreprocessorDefinitions="NDEBUG"
 				MinimalRebuild="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
