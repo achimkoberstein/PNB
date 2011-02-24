@@ -164,7 +164,7 @@ OsiCpxSolverInterface::switchToLP( void )
      CPXLPptr lp = getMutableLpPtr();
 
 #if CPX_VERSION >= 800
-     assert(CPXgetprobtype(env_,lp) == CPXPROB_MILP);
+     assert(CPXgetprobtype(env_,lp) == CPXPROB_MILP || CPXgetprobtype(env_,lp) == CPXPROB_FIXEDMILP);
 #else
      assert(CPXgetprobtype(env_,lp) == CPXPROB_MIP);
 #endif

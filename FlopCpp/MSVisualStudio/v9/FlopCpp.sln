@@ -388,6 +388,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BendersTest", "BendersTest\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtcmalloc_minimal", "..\..\..\ThirdParty\google-perftools\vsprojects\libtcmalloc_minimal\libtcmalloc_minimal.vcproj", "{55E2B3AE-3CA1-4DB6-97F7-0A044D6F446F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v9\libOsiGrb\libOsiGrb.vcproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -676,6 +678,12 @@ Global
 		{55E2B3AE-3CA1-4DB6-97F7-0A044D6F446F}.Release|Win32.ActiveCfg = Release|Win32
 		{55E2B3AE-3CA1-4DB6-97F7-0A044D6F446F}.Release|Win32.Build.0 = Release|Win32
 		{55E2B3AE-3CA1-4DB6-97F7-0A044D6F446F}.Release|x64.ActiveCfg = Release|Win32
+		{969F512F-FC75-4BC5-BFAA-4103FA4905AE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{969F512F-FC75-4BC5-BFAA-4103FA4905AE}.Debug|Win32.Build.0 = Debug|Win32
+		{969F512F-FC75-4BC5-BFAA-4103FA4905AE}.Debug|x64.ActiveCfg = Debug|Win32
+		{969F512F-FC75-4BC5-BFAA-4103FA4905AE}.Release|Win32.ActiveCfg = Release|Win32
+		{969F512F-FC75-4BC5-BFAA-4103FA4905AE}.Release|Win32.Build.0 = Release|Win32
+		{969F512F-FC75-4BC5-BFAA-4103FA4905AE}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

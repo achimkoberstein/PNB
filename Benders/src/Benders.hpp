@@ -284,6 +284,8 @@ private:
 	double tRrateD_;
 	// Rate for lower bound for Trust Region
 	double tRrateLB_;
+    // array that stores the trust region cut coefficient
+    int* tRind_;
 
 	// Boolean to indicate if knapsack inequalities
 	// are used
@@ -419,6 +421,15 @@ private:
     double firstStageSolution_;
     double lowerBoundedRecourseFunctionApprox_;
 
+    // Nice output
+    int outputPrecision_;
+    int outputWidth_;
+
+    // MIP Warmstart for subproblems
+    int mipSubCnt_;
+    int* mipSubIndices_;
+    double* mipSubValues_;
+
 public:
 	// Constructor
 	Benders():
@@ -442,7 +453,7 @@ public:
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
-	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.5), tRrateLB_(0.8),
+	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.5), tRrateLB_(0.8),tRind_(NULL),
     knapsack_(false),warmStart_(false),warmStartFol_(false),warmStartEmptyMaster_(false),
     warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
@@ -503,14 +514,16 @@ public:
 	muticlo_(NULL), mutdclo_(NULL), scenCloStart_(NULL), dTrans_(NULL), iTrans_(NULL),
 	lTrans_(0), rowAdd_(0), objTrans_(0), mnInt_(0), miInt_(NULL),
 	snInt_(0), siInt_(NULL), mnBin_(0), miBin_(NULL), snBin_(0), 
-	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.1), tRrateLB_(0.5),
+	siBin_(NULL), tRdelta_(0.0), tRrateD_(0.1), tRrateLB_(0.5),tRind_(NULL),
     knapsack_(false),warmStart_(false),warmStartFol_(false),warmStartEmptyMaster_(false),
     warmStartEmptySub_(NULL),warmStartMaster_(NULL),warmStartSub_(NULL),warmStartSubFol_(NULL),
     snels_(0),sdels_(NULL),siels_(NULL),srstrt_(NULL),slen_(NULL),
     mutnels_(0),mutdels_(NULL),mutiels_(NULL),mutrstrt_(NULL),mutlen_(NULL),scenMatStart_(NULL),
 	combnels_(0), combdels_(NULL), combiels_(NULL), combrstrt_(NULL), comblen_(NULL),objDetEq_(COIN_DBL_MAX),subValue_(0),epsilonFeasCut_(pow(10.0,-7)),masterValue_(0),appliedCuts_(0),
     useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regFirstStageSolutionValue_(0),regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL),
-    useRegularizedManhattan_(false),gamma_(0.5), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_)
+    useRegularizedManhattan_(false),gamma_(0.5), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_),
+    outputPrecision_(4),outputWidth_(12),
+    mipSubCnt_(0),mipSubIndices_(NULL),mipSubValues_(NULL)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -734,7 +747,7 @@ public:
 
 class BendersParameter {
 public: 
-	typedef enum {MULTI, WARMSTART, KNAPSACK, TRUSTREGION, BENDERS, REGULARIZED, REGULARIZED_MANHATTAN,WARMSTART_TYPE, BARRIER, BUNCHING, BUNCH_SIZE,INTEGER_BENDERS, last1} BendersIntParam;
+	typedef enum {BENDERS, MULTI , WARMSTART, KNAPSACK, TRUSTREGION, REGULARIZED, REGULARIZED_MANHATTAN, BARRIER, BUNCHING, BUNCH_SIZE,INTEGER_BENDERS, last1} BendersIntParam;
 	typedef enum { ABSGAP, RELGAP, last2 } BendersDoubleParam;
 	
 	BendersParameter() {
@@ -745,7 +758,6 @@ public:
         this->intParam[BendersParameter::WARMSTART] = 1;
         this->intParam[BendersParameter::REGULARIZED] = 0;
         this->intParam[BendersParameter::REGULARIZED_MANHATTAN] = 0;
-        this->intParam[BendersParameter::WARMSTART_TYPE] = 1;
         this->intParam[BendersParameter::BARRIER] = 0;
         this->intParam[BendersParameter::BUNCHING] = 0;
         this->intParam[BendersParameter::BUNCH_SIZE] = 0;
@@ -759,6 +771,8 @@ public:
 	inline int getIntParam(const BendersParameter::BendersIntParam &param) { return this->intParam[param]; }
     inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { this->dblParam[param] = val; }
 	inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return this->dblParam[param]; }
+
+    const std::string getParametersInEnglish();
 
 private:
     int intParam[BendersParameter::last1];

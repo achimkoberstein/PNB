@@ -9,6 +9,7 @@
 // All Rights Reserved.
 
 // $Id: OsiGrbSolverInterface.cpp 1476 2010-02-25 12:06:51Z stefan $
+#include "OsiGrbSolverInterface.hpp"
 
 #include <iostream>
 #include <cassert>
@@ -18,7 +19,7 @@
 #include "CoinPragma.hpp"
 #include "CoinError.hpp"
 
-#include "OsiGrbSolverInterface.hpp"
+
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
@@ -258,11 +259,11 @@ void OsiGrbSolverInterface::initialSolve()
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether dual or primal */
-  int algorithm = GRB_LPMETHOD_PRIMAL;
+  int algorithm = GRB_METHOD_PRIMAL;
   gotHint = getHintParam(OsiDoDualInInitial,takeHint,strength);
   assert (gotHint);
   if (strength!=OsiHintIgnore)
-  	algorithm = takeHint ? GRB_LPMETHOD_DUAL : GRB_LPMETHOD_PRIMAL;
+  	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
 
 	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_LPMETHOD, algorithm) );
 
@@ -304,11 +305,11 @@ void OsiGrbSolverInterface::resolve()
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether primal or dual */
-  int algorithm = GRB_LPMETHOD_DUAL;
+  int algorithm = GRB_METHOD_DUAL;
   gotHint = getHintParam(OsiDoDualInResolve,takeHint,strength);
   assert (gotHint);
   if (strength != OsiHintIgnore)
-  	algorithm = takeHint ? GRB_LPMETHOD_DUAL : GRB_LPMETHOD_PRIMAL;
+  	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
 
   GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_LPMETHOD, algorithm) );
 
