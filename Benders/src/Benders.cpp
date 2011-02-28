@@ -1573,7 +1573,7 @@ int Benders::solveMaster(){
     //const CPXLPptr constLpPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getMutableLpPtr();
     CPXENVptr envPtr = (dynamic_cast<OsiCpxSolverInterface*>(osiMaster_))->getEnvironmentPtr();
     // We want to silence CPLEX
-    osiMaster_->messageHandler()->setLogLevel(0);
+    //osiMaster_->messageHandler()->setLogLevel(0);
 
     int stat = 0;
 

@@ -47,67 +47,58 @@ void writeSolutionInfo(OsiStochasticBendersTwoStageSolverInterface &benders, con
 
 void solveFromSMPS(const char *name) {
     SmiScnModel* smiModel = new SmiScnModel();
-    smiModel->setOsiSolverHandle(&OsiCpxSolverInterface());
+    OsiCpxSolverInterface c1;
+    smiModel->setOsiSolverHandle(c1);
     smiModel->readSmps(name,SmiCoreCombineReplace::Instance());
     
-    // solve the det. equivalent
+    //// solve the det. equivalent
     OsiSolverInterface *osiStoch = smiModel->loadOsiSolverData();
     osiStoch->setObjSense(MP_model::MINIMIZE);
     double begin = CoinCpuTime();
     osiStoch->branchAndBound();
     double duration = CoinCpuTime() - begin;
     writeSolutionInfoDetEq(osiStoch, name, duration);
+    osiStoch->writeLp("DeterministicFleetAssignment");
     
     OsiStochasticBendersTwoStageSolverInterface benders(smiModel->getOsiSolverInterface(),smiModel);
 
-    // solve with benders (and different parameters)
+    benders.setIntParam(BendersParameter::BENDERS, 0);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+
+    benders.setIntParam(BendersParameter::BENDERS, 1);
+    benders.setIntParam(BendersParameter::MULTI, 1);
+    benders.setIntParam(BendersParameter::INTEGER_BENDERS, 1);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+
+    benders.setIntParam(BendersParameter::INTEGER_BENDERS, 0);
+    benders.initialSolve();
+    writeSolutionInfo(benders, name);
+    
     //benders.setIntParam(BendersParameter::MULTI,       1);
     //benders.setIntParam(BendersParameter::TRUSTREGION, 1);
     //benders.setIntParam(BendersParameter::REGULARIZED, 0);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
-
+    
     //benders.setIntParam(BendersParameter::MULTI,       1);
     //benders.setIntParam(BendersParameter::TRUSTREGION, 0);
-    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 1);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
-
+    
     //benders.setIntParam(BendersParameter::MULTI,       0);
     //benders.setIntParam(BendersParameter::TRUSTREGION, 1);
-    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 1);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
-    
-    benders.setIntParam(BendersParameter::MULTI,       0);
-    benders.setIntParam(BendersParameter::TRUSTREGION, 0);
-    benders.setIntParam(BendersParameter::REGULARIZED, 1);
-    benders.initialSolve();
-    writeSolutionInfo(benders, name);
-    
+    //
     //benders.setIntParam(BendersParameter::MULTI,       1);
     //benders.setIntParam(BendersParameter::TRUSTREGION, 1);
-    //benders.setIntParam(BendersParameter::REGULARIZED, 0);
+    //benders.setIntParam(BendersParameter::REGULARIZED, 1);
     //benders.initialSolve();
     //writeSolutionInfo(benders, name);
-    
-    benders.setIntParam(BendersParameter::MULTI,       1);
-    benders.setIntParam(BendersParameter::TRUSTREGION, 0);
-    benders.setIntParam(BendersParameter::REGULARIZED, 1);
-    benders.initialSolve();
-    writeSolutionInfo(benders, name);
-    
-    benders.setIntParam(BendersParameter::MULTI,       0);
-    benders.setIntParam(BendersParameter::TRUSTREGION, 1);
-    benders.setIntParam(BendersParameter::REGULARIZED, 1);
-    benders.initialSolve();
-    writeSolutionInfo(benders, name);
-    
-    benders.setIntParam(BendersParameter::MULTI,       1);
-    benders.setIntParam(BendersParameter::TRUSTREGION, 1);
-    benders.setIntParam(BendersParameter::REGULARIZED, 1);
-    benders.initialSolve();
-    writeSolutionInfo(benders, name);
 }
 
 void lh6_10x10() {
@@ -798,7 +789,8 @@ void lh6_1x1() {
     /////// VARIABLES
 
     MP_variable y(A,A2,T);
-    y.integer();
+    //y.integer();
+    y.upperLimit(A,A2,T) = 20; // Set a reasonable upper bound
     for (int i = 0; i < numA; i++) {
         for (int j = 0; j < numA; j++) {
             for (int k = 0; k < numT; k++) {
@@ -1192,7 +1184,7 @@ void lh12() {
     /////// VARIABLES
 
     MP_variable y(A,A2,T);
-    y.integer();
+    //y.integer();
     for (int i = 0; i < numA; i++) {
         for (int j = 0; j < numA; j++) {
             for (int k = 0; k < numT; k++) {
@@ -1297,17 +1289,15 @@ void lh12() {
 
 int main(int argc, char* argv[]) {
 
-    /*VLDDisable();*/
-    google::InitGoogleLogging(argv[0]);
-    FLAGS_minloglevel = 0;
-    google::SetLogDestination(1, "log");
-    google::LogToStderr();
-    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
-    //VLDEnable();
-    
-    //lh12();
-    
-    // write smps files
+    //google::InitGoogleLogging(argv[0]);
+    //FLAGS_minloglevel = 0;
+    //google::SetLogDestination(1, "log");
+    //google::LogToStderr();
+    //google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
+    //
+    ////lh12();
+    //
+    //// write smps files
     lh6_1x1();
     lh6_4x4();
     lh6_10x10();
