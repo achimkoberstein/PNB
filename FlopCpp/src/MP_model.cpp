@@ -510,6 +510,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     RandomVariables = std::vector<std::set<RandomVariable*> >(stage.size());
 
     //Insert decision variables into list of variables
+    LOG_IF(FATAL,Objective.operator->()==NULL) << "Your model does not have an objective. Please specify an objective with setObjective( )";
     Objective->insertVariables(Variables);
     if (stage.size()){ //if stochastic insert Random Variables
         Objective->insertRandomVariables(RandomVariables);
@@ -954,18 +955,15 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     
     // generate variable/column names
-    std::vector<std::string> colNamesStrict;
-    std::vector<std::string> colNamesFree;
+    std::vector<std::string> colNamesStrict(n);
+    std::vector<std::string> colNamesFree(n);
 
-    colNamesStrict.reserve(n);
-    colNamesFree.reserve(n);
-    
     std::set<string> nameSetStrict;
     nameSetStrict.insert("V");
     std::set<string> nameSetFree;
     nameSetFree.insert("V");
     
-    for (varIt i=Variables.begin(); i!=Variables.end(); i++) {
+    for (varIt i=Variables.begin(); i!=Variables.end(); ++i) {
         (*i)->generateNames(nameSetStrict, nameSetFree, colNamesStrict, colNamesFree);
     }
 
@@ -981,7 +979,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     nameSetFree.clear();
     nameSetFree.insert("R");
     
-    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
+    for (conIt i=Constraints.begin(); i!=Constraints.end(); ++i) {
         (*i)->generateNames(nameSetStrict, nameSetFree, rowNamesStrict, rowNamesFree);
     }
 
@@ -992,6 +990,15 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     // Old indices are stored in colIndirection and rowIndirection
     ////
 #pragma endregion coreModelGeneration
+
+    // Sanity check for generated matrix: We need to watch out for rows that have no columns but different bl and bu from zero
+    for (int i = 0; i < m-1; i++){
+        if ( Clg[i] == 0){
+            // Do something
+            bl[i] = 0; bu[i] = 0;
+            LOG(INFO) << "Your model contains empty rows.";
+        }
+    }
 
 
     //Check for stochasticity: This is the case if we have a stage set with size greater than 0.
@@ -1618,6 +1625,10 @@ namespace flopc {
                 CoinPackedVector curObjVec(objVec[flopScen]->getVector(0));
                 CoinPackedVector curRloVec(rloVec[flopScen]->getVector(0));
                 CoinPackedVector curRupVec(rupVec[flopScen]->getVector(0));
+                // Do a sanity check here: If matrix contains zero elements in one row AND the other elements of the same row of the original problem are also all zero we have to adjust the bounds..
+                //CoinPackedMatrix* curMatrix = matrixVec[flopScen];
+                //const int* start = curMatrix->getVectorLengths();
+                //int length = curMatrix->getSizeVectorLengths();
 
                 smiModel->generateScenario(smiCore,matrixVec[flopScen],&curBloVec,&curBupVec,&curObjVec,&curRloVec,&curRupVec,branchStageVec[flopScen],ancScenVec[curScen],probabilities[flopScen]);
             }
