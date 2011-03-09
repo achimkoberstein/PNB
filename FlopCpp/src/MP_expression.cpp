@@ -595,8 +595,11 @@ void MP::GenerateFunctor::operator()() const {
     int stage = 0;
     std::vector<double> scenarioValues;
     RandomVariable* ptrRV = 0;
+    bool stochasticValuesAdded = false;
+    // First Step: Look if we have multiplicators added and apply them to sideOfConstraint. (Generate scenarioValues for elements containing RV)
     for (unsigned int i=0; i<multiplicators.size(); i++) {
-        if (multiplicators[i]->getStage() > stage) {
+        // We apply several multiplicators via sideOfConstraint variable in the deterministic case OR the scenarioValues vector in the stochastic case
+        if (multiplicators[i]->getStage() > stage) { // Do the stochastic case
             // If we have a stage, we have a Expression_random_constant
             // At this moment we have to ensure that correct indexation is used in the subexpressions
             Expression_random_constant* ePtr = dynamic_cast<Expression_random_constant*>(multiplicators[i]);
@@ -606,24 +609,29 @@ void MP::GenerateFunctor::operator()() const {
             ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient
+
             for (int j = 0; j < MP_model::getCurrentModel()->getScenSet().size();j++){
-                double temp = sideOfConstraint*(multiplicators[i]->getValue(j));
-                scenarioValues.push_back(temp);
+                if (stochasticValuesAdded)
+                    scenarioValues[i] *= sideOfConstraint;
+                else
+                    scenarioValues.push_back(sideOfConstraint*(multiplicators[i]->getValue(j)));
             }
-            //Compute mean via computation of scenario values
-            double meanValue = 0;
-            std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
-            for (int j = 0; j < scenarioValues.size(); j++)
-                meanValue += scenarioValues[j]*probs[j];
-            // Store mean value
+            stochasticValuesAdded = true; // Set to true if we added stochastic values for the whole scenarios
+
             // TODO: the following leads to the wrong coefficients in the matrix when solving the EVP (see for example RandomVariableConstraintCombinationTest)
             // this >> if (meanValue < 0) sideOfConstraint *= -1; << as a next statement would resolve the bug for the test suite, but is it correct?
-            sideOfConstraint *= meanValue;
         }
-        else {
+        else { // Do the deterministic case
+            // Caution: If we already added a random variable in a previous multiplicator, we have to change the scenario values accordingly..
             sideOfConstraint *= multiplicators[i]->getValue();
+            if (!scenarioValues.empty()){
+                for (int i = 0; i < scenarioValues.size(); i++){
+                    scenarioValues[i] *= sideOfConstraint;
+                }
+            }
         }
     }
+    // If we have stochastic values, we have to add the mean value
     // If rowNumber is -1 after call to row_number we have an objective function coefficient
     int rowNumber = -1;
     if (R != 0) { //If we are at a normal constraint get correct rowNumber
@@ -633,13 +641,13 @@ void MP::GenerateFunctor::operator()() const {
         assert(C != 0);
         int colNumber = C->getColumn(); //Get Column number. -1 for RHS
         if ( colNumber != outOfBound  ) {
+            // Store value of coefficient.
             double val = sideOfConstraint*C->getValue(outOfBound); //Get Value of Coefficient. In case of RV get mean value.
             // Set variable stage.
             int varStage = C->getStage(); //equal to 0 for constant value
             //Now comes the fun part: If varStage > stage this means one of two things:
             //1: VariableRef with fixed Coefficient
-            //2: We added a RandomVariable without a variable
-            //as a terminalExpression: => No Multiplicative constant whatsoever..
+            //2: We added a RandomVariable without a variable as a terminalExpression: => No Multiplicative constant whatsoever..
             // What is not allowed? varStage > stage && stage > 0 . 
             if (stage == 0 && varStage > 0) {//Assume the second case: This can be specified to varStage > 1 and stage == 0
                 stage = varStage;
@@ -647,21 +655,24 @@ void MP::GenerateFunctor::operator()() const {
                 const Expression_random_constant* ePtr = dynamic_cast<const Expression_random_constant*> (C);
                 if (ePtr != 0){
                     for (int i = 0; i < MP_model::getCurrentModel()->getScenSet().size(); i++ ){
-                        scenarioValues.push_back(sideOfConstraint*C->getValue(i));
+                        if (stochasticValuesAdded)
+                            scenarioValues[i] *= sideOfConstraint*C->getValue(i);
+                        else
+                            scenarioValues.push_back(sideOfConstraint*C->getValue(i));
                     }
-
-                    // If we sample we may want to replace the mean value, otherwise we probably don't
-                    if (MP_model::getCurrentModel()->getSample() ){
-                        double meanValue = 0;
-                        std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
-                        for (int j = 0; j < scenarioValues.size(); j++)
-                            meanValue += scenarioValues[j]*probs[j];
-                        val = meanValue;
-                    }
-
-                    // We have to replace the mean value?
+                    stochasticValuesAdded = true;
                 }
             }
+
+            // Compute mean value via computation of scenario values only IF we added stochasticValues
+            if (stochasticValuesAdded){
+                double meanValue = 0;
+                std::vector<double> probs = MP_model::getCurrentModel()->getProbabilities();
+                for (int j = 0; j < scenarioValues.size(); j++)
+                    meanValue += scenarioValues[j]*probs[j];
+                val = meanValue;
+            }
+
             boost::shared_ptr<MP::Coef> temp(new MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
             Coefs.push_back(temp);           
         }//end if colNumber != outOfBound
