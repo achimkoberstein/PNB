@@ -236,7 +236,6 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             string free = nameFree + this->generateNamesSuffixFree(k);
             // Insert at correct position
             colNamesFree[getOffsetedIndex(k)] = free.c_str();
-            //colNamesFree.push_back(free.c_str());
         }
     }
 
