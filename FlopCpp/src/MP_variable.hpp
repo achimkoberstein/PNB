@@ -93,6 +93,7 @@ namespace flopc {
 
         std::string generateNamesSuffixFree(const int k);
         bool isActive(const int k);
+        inline int getOffsetedIndex(const int k);
 
         void operator()() const;
         const MP_set_base *S1, *S2, *S3, *S4, *S5;
