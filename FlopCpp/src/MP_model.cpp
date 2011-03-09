@@ -992,13 +992,13 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 #pragma endregion coreModelGeneration
 
     // Sanity check for generated matrix: We need to watch out for rows that have no columns but different bl and bu from zero
-    for (int i = 0; i < m-1; i++){
-        if ( Clg[i] == 0){
-            // Do something
-            bl[i] = 0; bu[i] = 0;
-            LOG(INFO) << "Your model contains empty rows.";
-        }
-    }
+    //for (int i = 0; i < m-1; i++){
+    //    if ( Clg[i] == 0){
+    //        // Do something
+    //        bl[i] = 0; bu[i] = 0;
+    //        LOG(INFO) << "Your model contains empty rows.";
+    //    }
+    //}
 
 
     //Check for stochasticity: This is the case if we have a stage set with size greater than 0.
