@@ -2735,11 +2735,11 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     //    const double * rowLower = combdrlo_;
     //    const double * rowUpper = combdrup_;
     //    const double * objCoefs = combdobj_;
-    //    // We can use the osiSubproblem we created so far without the convertion of the variable ranges.
+    //    // We can use the osiSubproblem we created so far without the conversion of the variable ranges.
     //    // How do we do this?
     //    // We keep the Matrix.
     //    // If we have variable bounds, we need to introduce slack dual variables for all the constraints..
-    //    // We move the old RHS to the Objective. Depending on wether we had greater or lesser constraints, the dual variable are greater or lesser than 0
+    //    // We move the old RHS to the Objective. Depending on whether we had greater or lesser constraints, the dual variable are greater or lesser than 0
     //    // We create a new RHS by the old objective, depending on the variable bounds.
     //    double* rowlb = new double[sncol_];
     //    double* rowub = new double[sncol_];

@@ -7,6 +7,65 @@
 #include <CoinPackedVector.hpp>
 
 #include "Benders.hpp" // Just for OsiStochasticSolverInterface, needs to be outsourced to own file
+#include "SmiScenarioTree.hpp" 
+#include "BendersNodeData.hpp"
+
+/************************************************************************/
+/* This class implements the nested benders decomposition in parallelized fashion, for multiple cores.
+ * We need the following classes
+ * Scenario Tree Storage Classes: Smi for the problem data and BendersNodeData for solver data
+ * Algorithmic Logic
+ * Parallelizing structures
+ * Aggregation techniques
+ * Problem scanning for fixed and stochastic matrices, RHS, objective, bounds to avoid unnecessary work (e.g. recreate matrices)
+ * Goal: Subproblem solving and cut generation should be parallelized. Have a number of subproblems ( can be given by scenario tree ), assign a stage and a number to a thread and let it solve the corresponding subproblem.
+/************************************************************************/
+
+namespace parallel_benders {
+
+
+class ParallelNestedBenders {
+
+public:
+    ParallelNestedBenders(SmiScnModel* smi_model_ptr);
+    ~ParallelNestedBenders();
+    void Solve();
+
+
+
+
+private:
+    void Init();
+    // High-level methods we need during the algorithm
+    void AdjustProblem(); // Adjust the problem and store characteristics about it
+    void AdjustProblemInStage(int stage);
+
+    void AggregateStages(int startingStage,int endingStage);
+
+
+    // Problem data
+    SmiScnModel* smi_;
+    OsiSolverInterface* osi_solver_;
+    // Scenario Tree that contains problem and solution data
+    SmiScenarioTree<BendersNodeData*> tree_;
+    std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
+    
+    // Problem characteristics
+    int num_stages_;
+    int num_scenarios_;
+    int infinity_;
+
+    // Solution process
+    int current_iteration_;
+    double lower_bound_;
+    double upper_bound_;
+
+};
+
+// TODO: Problems
+
+// We need a coordinator, that tells the threads what to do. 
+// It waits for the threads to end, then does some stuff and waits again.
 
 
 
@@ -33,4 +92,5 @@ private:
     BendersParameter params;
 
 };
+} // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__
