@@ -67,7 +67,7 @@ void solveFromSMPS(const char *name) {
     writeSolutionInfo(benders, name);
 
     benders.setIntParam(BendersParameter::BENDERS, 1);
-    benders.setIntParam(BendersParameter::MULTI, 1);
+    benders.setIntParam(BendersParameter::MULTI, 0);
     benders.setIntParam(BendersParameter::INTEGER_BENDERS, 1);
     benders.initialSolve();
     writeSolutionInfo(benders, name);

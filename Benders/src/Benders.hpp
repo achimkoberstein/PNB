@@ -8,6 +8,8 @@
 
 #include <deque>
 
+#include <boost/shared_ptr.hpp>
+
 #include "OsiCpxSolverInterface.hpp"
 
 
@@ -21,6 +23,13 @@ class Benders{
     friend class OsiStochasticBendersTwoStageSolverInterface;
 
 private:
+
+    struct BendersNode{
+        std::vector<int> indices; // Store variable indices that have bounds
+        std::vector<std::pair<bool,int> > bounds; // Store Upper (true) and lower (false) bounds, together with values. Example: <true,3> means x <= 3
+        double relaxationValue; // value of relaxation
+        int masterRowBegin; // index at which we inserted the indices.size() constraints on the osiMaster problem..
+    };
 
 	// Solver interface for master problem
 	OsiSolverInterface* osiMaster_;
@@ -430,6 +439,12 @@ private:
     int* mipSubIndices_;
     double* mipSubValues_;
 
+    // Integer Benders Reloaded
+    bool integerBendersReloaded_;
+    std::deque<boost::shared_ptr<BendersNode> > bbTree_;
+
+    double branchAndBoundUpperBound_; // Global upper bound in the B&B-Tree
+
 public:
 	// Constructor
 	Benders():
@@ -523,7 +538,8 @@ public:
     useRegularizedDecomposition_(false),sigma_(1),regSolution_(0),regSolutionValue_(0), regFirstStageSolutionValue_(0),regSubproblemSolutionValues_(0),startRows_(0),endRows_(0),seriousStep_(false),computeRegularizedSubproblems_(true),changeSigma_(false),checkCuts_(false),fischetti_(false),precision_( (int)pow(10.0,5) ),cstat_(0),rstat_(0),integerBenders_(false),calculateLowerBound_(true),integerBendersLowerBound_(0),numNodes_(0),currentNode_(-1),barrier_(false),bunching_(false),dynamicBunching_(false),bunchSize_(0),numBunch_(0),bunchIndices_(NULL),
     useRegularizedManhattan_(false),gamma_(0.5), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_),
     outputPrecision_(4),outputWidth_(12),
-    mipSubCnt_(0),mipSubIndices_(NULL),mipSubValues_(NULL)
+    mipSubCnt_(0),mipSubIndices_(NULL),mipSubValues_(NULL),
+    integerBendersReloaded_(true),branchAndBoundUpperBound_(COIN_DBL_MAX)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();
@@ -636,7 +652,9 @@ public:
 	// Benders decomposition; Input: tolerance epsilon, maximal number 
 	// of iterations
 	void BendersSolve(double, double, int);
-	// Calculate optimality cuts; Input: number of cuts which were 
+
+    int chooseFractionalVariable(const std::vector< std::pair<int,double> >&);
+    // Calculate optimality cuts; Input: number of cuts which were 
 	// generated during the current iteration, number of current scenario
 	void calcOptiCut( int, int);
 	// Add optimality cut to master problem; Input: number of cuts which 

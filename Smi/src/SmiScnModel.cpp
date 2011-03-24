@@ -653,6 +653,9 @@ SmiScnModel::loadOsiSolverData()
 
 
 
+
+
+
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions

@@ -234,7 +234,8 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
     for (int k = 0; k < size(); k++) {
         if (this->isActive(k)) {
             string free = nameFree + this->generateNamesSuffixFree(k);
-            colNamesFree.push_back(free.c_str());
+            // Insert at correct position
+            colNamesFree[getOffsetedIndex(k)] = free.c_str();
         }
     }
 
@@ -249,7 +250,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
         for (int k = 0; k < size(); k++) {
             if (this->isActive(k)) {
                 string strict = nameStrict + this->generateNamesSuffixFree(k);
-                colNamesStrict.push_back(strict.c_str());
+                colNamesStrict[getOffsetedIndex(k)] = strict.c_str();
             }
         }
     }
@@ -282,7 +283,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             for (int k = 0; k < size(); k++) {
                 if (this->isActive(k)) {
                     string strict = nameStrict + "_" + to_string(k);
-                    colNamesStrict.push_back(strict.c_str());
+                    colNamesStrict[getOffsetedIndex(k)] = strict.c_str();
                 }
             }
         } else {
@@ -290,7 +291,7 @@ void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string
             string s = "";
             for (int k = 0; k < size(); k++) {
                 if (this->isActive(k)) {
-                    colNamesStrict.push_back(s.c_str());
+                    colNamesStrict[getOffsetedIndex(k)] = s.c_str();
                 }
             }
         }
@@ -304,6 +305,13 @@ bool MP_variable::isActive(const int k) {
         return false;
     
     return true;
+}
+
+int MP_variable::getOffsetedIndex(const int k){
+    if (M->getStochastic())
+        return M->colIndirection[offset+k];
+    else
+        return offset+k;
 }
 
 string MP_variable::generateNamesSuffixFree(const int k) {

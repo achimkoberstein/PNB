@@ -176,7 +176,7 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
 
     // Reset time statistics
     time.reset();
-        
+
     // Start timer for this method (time.bendersSolve)
     double timeStartTotal = CoinCpuTime();
 
@@ -236,584 +236,665 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
     }
 
 
-    // While the gap between upper and lower bound is larger than epsilon
-    // repeat the benders decomposition method. Also continue if maximal 
-    // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
-    while( useRegularizedDecomposition_ || useRegularizedManhattan_ || (UB_ > LB_ && abs(UB_-LB_)>absEps && computeRelativeGap(UB_,LB_,relEps) && maxIter > nIter_) 
-        || (integerBenders_ && !columnLowerBounds_.empty() ) ){ 
-            // At the beginning of each iteration set counter of optimality
-            LOG_IF(INFO, integerBenders_) << "Current queue length: " << columnLowerBounds_.size();
-            // cuts to zero
-            oCut = 0;
-            // Solve master problem
-            int status = solveMaster();
-            if(status == -1){
-                if (useRegularizedDecomposition_)
-                    delete[] regSubproblemSolutionValues_;
-                this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
-                return;		
-            }
+    // We need another outer loop in case of IntegerBendersReloaded_
+    do{
+        // If we have a non empty tree, we have to add the corresponding constraints to the problem
 
-            // Read current stage 1 solution 
-            const double* mSol = 0;
-            mSol = osiMaster_->getColSolution();
-            //DLOG(INFO) << "Objective function value of master program " << osiMaster_->getObjValue();
+        // Look at next node:
+        while (!bbTree_.empty()){
+            if ( bbTree_.front()->masterRowBegin > branchAndBoundUpperBound_)
+                bbTree_.pop_front();
+            else
+                break;
+        }
 
-            //memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
-            // Write current stage 1 solution to temporary solution vector; it 
-            // also contains the value(s) of the variables for the scenario(s);
-            // there is a check if the values are close to zero, if this is the
-            // case the values are set to zero
-            for(int i=0; i<mncol_+zSub_; i++){
-                double v=mSol[i];
-                if(abs(v) < ZEROTEST && abs(v) > 0){ // TODO: Delete second test, not necessary. Just for debugging reasons inserted.
-                    bestSolTemp_[i] = 0;
+
+        // While the gap between upper and lower bound is larger than epsilon
+        // repeat the benders decomposition method. Also continue if maximal 
+        // number of iterations isn't reached. Add relative epsilon term to be able to break computation when it is practically solved
+        while( useRegularizedDecomposition_ || useRegularizedManhattan_ || (UB_ > LB_ && abs(UB_-LB_)>absEps && computeRelativeGap(UB_,LB_,relEps) && maxIter > nIter_) 
+            || (integerBenders_ && !columnLowerBounds_.empty() ) ){ 
+                // At the beginning of each iteration set counter of optimality
+                LOG_IF(INFO, integerBenders_) << "Current queue length: " << columnLowerBounds_.size();
+                // cuts to zero
+                oCut = 0;
+                // Solve master problem
+                int status = solveMaster();
+                if(status == -1){
+                    if (useRegularizedDecomposition_)
+                        delete[] regSubproblemSolutionValues_;
+                    this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
+                    return;		
                 }
+
+                // Read current stage 1 solution 
+                const double* mSol = 0;
+                mSol = osiMaster_->getColSolution();
+                //DLOG(INFO) << "Objective function value of master program " << osiMaster_->getObjValue();
+
+                //memcpy(tempFirstStageSol,mSol, (mncol_+zSub_)*sizeof(double) ); // Copy old values
+                // Write current stage 1 solution to temporary solution vector; it 
+                // also contains the value(s) of the variables for the scenario(s);
+                // there is a check if the values are close to zero, if this is the
+                // case the values are set to zero
+                for(int i=0; i<mncol_+zSub_; i++){
+                    double v=mSol[i];
+                    if(abs(v) < ZEROTEST && abs(v) > 0){ // TODO: Delete second test, not necessary. Just for debugging reasons inserted.
+                        bestSolTemp_[i] = 0;
+                    }
+                    else{
+                        // We round here
+                        bestSolTemp_[i] = v;
+                    }
+                }
+
+                // Update lower bound, but not in the first iteration and only if
+                // there are no feasibility cuts added in the previous iterations,
+                // otherwise there could occur problems with the gap between lower 
+                // and upper bound; if there are bounds on stage 2 variables, there 
+                // could occur an offset of the objective function which has to
+                // be manually added to the objective function
+                // Christian: We compute lower Bound regardless of bounds on second stage variables..
+                if(nIter_!=nFeas && fCut ==false){
+                    if(trustRegion_ ){
+                        // Copy lower bound, before it is updated
+                        LBmax = LB_;
+                    }
+                    /*LB_ = osiMaster_->getObjValue()+objTrans_;	*/	
+                }	
+
+                // Initialize temporary upper bound with zero
+                upperBound_ = 0;
+                // Begin calculating temporary upper bound: objective function value
+                // of master problem : We do it this way to account for the ZEROTEST ( and to calculate correct bound if using reg. decomp. )
+                for(int i=0; i<mncol_; i++){ // We compute the first stage solution part of the current iteration that may become new upper bound
+                    upperBound_+= mdobj_[i]*bestSolTemp_[i];
+                }
+                firstStageSolution_ = upperBound_;
+                // Set correct lower bound
+                double lowerBound = upperBound_;
+                if (single_)
+                    lowerBound += (mdobj_[mncol_] == 0) ? -infty_ : bestSolTemp_[mncol_];
                 else{
-                    // We round here
-                    bestSolTemp_[i] = v;
+                    for (int i = 0; i < zSub_; i++ ) {
+                        lowerBound += (mdobj_[mncol_+i] == 0) ? -infty_ : mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
+                        if (lowerBound <= -infty_ ) // leave loop when we encountered a lowerBound which is infinity
+                            break;
+                    }
                 }
-            }
+                lowerBoundedRecourseFunctionApprox_ = lowerBound-firstStageSolution_;
+                // 
+                //LOG(INFO) << "FirstStageSolution: " << firstStageSolution_;
+                //LOG(INFO) << "Recourse Function Approximation: " << lowerBoundedRecourseFunctionApprox_;
+                //LOG(INFO) << "Current lower bound: " << lowerBound;
 
-            // Update lower bound, but not in the first iteration and only if
-            // there are no feasibility cuts added in the previous iterations,
-            // otherwise there could occur problems with the gap between lower 
-            // and upper bound; if there are bounds on stage 2 variables, there 
-            // could occur an offset of the objective function which has to
-            // be manually added to the objective function
-            // Christian: We compute lower Bound regardless of bounds on second stage variables..
-            if(nIter_!=nFeas && fCut ==false){
-                if(trustRegion_ ){
-                    // Copy lower bound, before it is updated
-                    LBmax = LB_;
-                }
-                /*LB_ = osiMaster_->getObjValue()+objTrans_;	*/	
-            }	
+                if ( useRegularizedDecomposition_ || useRegularizedManhattan_) {
+                    // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
+                    // We compare the lowerBound ( nothing else is the xSolution ) with 
+                    // TODO: Improve on this, because otherwise reg. decomp runs forever..
+                    // Check if we have a repeated objective value
+                    bool repeated = false;
+                    if ( abs(masterValue_-lowerBound) < absEps ) {
+                        LOG(WARNING) << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
+                        repeated = true;
+                    }
+                    // Save value for the next iteration.
+                    masterValue_ = lowerBound;
+                    // We finish solving if the original condition holds
+                    // We also stop if the difference is below an absolute value (for small objective)
+                    // We also stop if we have a repeated objective function value ( we assume that we do not get better than this, so we have an already better reg. solution )
+                    // We also stop if the difference is below a relative value ( for big objectives ( at the moment : 10^5 )
+                    if ( abs(lowerBound-regSolutionValue_) <= ZEROTEST 
+                        || abs(lowerBound-regSolutionValue_) < absEps
+                        //|| repeated && regSolutionValue_-lowerBound < 0
+                        || repeated && (int)1/sigma_ >= 1024 // We have a close solution and we made null-feasible steps (did not change solution)
+                        || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
+                        ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
 
-            // Initialize temporary upper bound with zero
-            upperBound_ = 0;
-            // Begin calculating temporary upper bound: objective function value
-            // of master problem : We do it this way to account for the ZEROTEST ( and to calculate correct bound if using reg. decomp. )
-            for(int i=0; i<mncol_; i++){ // We compute the first stage solution part of the current iteration that may become new upper bound
-                upperBound_+= mdobj_[i]*bestSolTemp_[i];
-            }
-            firstStageSolution_ = upperBound_;
-            // Set correct lower bound
-            double lowerBound = upperBound_;
-            if (single_)
-                lowerBound += (mdobj_[mncol_] == 0) ? -infty_ : bestSolTemp_[mncol_];
-            else{
-                for (int i = 0; i < zSub_; i++ ) {
-                    lowerBound += (mdobj_[mncol_+i] == 0) ? -infty_ : mdobj_[mncol_+i]*bestSolTemp_[mncol_+i];
-                    if (lowerBound <= -infty_ ) // leave loop when we encountered a lowerBound which is infinity
-                        break;
-                }
-            }
-            lowerBoundedRecourseFunctionApprox_ = lowerBound-firstStageSolution_;
-            // 
-            //LOG(INFO) << "FirstStageSolution: " << firstStageSolution_;
-            //LOG(INFO) << "Recourse Function Approximation: " << lowerBoundedRecourseFunctionApprox_;
-            //LOG(INFO) << "Current lower bound: " << lowerBound;
-
-            if ( useRegularizedDecomposition_ || useRegularizedManhattan_) {
-                // We should check for optimality here: If c^T x + z = c^T a + Q(a) stop, a is optimal
-                // We compare the lowerBound ( nothing else is the xSolution ) with 
-                // TODO: Improve on this, because otherwise reg. decomp runs forever..
-                // Check if we have a repeated objective value
-                bool repeated = false;
-                if ( abs(masterValue_-lowerBound) < absEps ) {
-                    LOG(WARNING) << "Repeated objective value (within absolute tolerance) : " << osiMaster_->getObjValue() << std::endl;
-                    repeated = true;
-                }
-                // Save value for the next iteration.
-                masterValue_ = lowerBound;
-                // We finish solving if the original condition holds
-                // We also stop if the difference is below an absolute value (for small objective)
-                // We also stop if we have a repeated objective function value ( we assume that we do not get better than this, so we have an already better reg. solution )
-                // We also stop if the difference is below a relative value ( for big objectives ( at the moment : 10^5 )
-                if ( abs(lowerBound-regSolutionValue_) <= ZEROTEST 
-                    || abs(lowerBound-regSolutionValue_) < absEps
-                    //|| repeated && regSolutionValue_-lowerBound < 0
-                    || repeated && (int)1/sigma_ >= 1024 // We have a close solution and we made null-feasible steps (did not change solution)
-                    || abs(lowerBound) > 1000000 && (regSolutionValue_-lowerBound)/regSolutionValue_ < relEps
-                    ){ // TODO: We need tolerances for the second case instead of 1. Program automatic mode, param for absGap and relGap.
-
-                        if (useRegularizedManhattan_ ) {
-                            LOG(INFO) << "Regularized Manhattan would have stopped with " << lowerBound;
-							this->dataStat.regularizedSolutionValue = lowerBound;
-                            double osiMasterSolutionValue = osiMaster_->getObjValue();
-                            // Output the overall discrepancy
-                            double discrepanceSum = 0;
-                            for (int i = mncol_+zSub_; i < 3*mncol_+zSub_;i++){
-                                discrepanceSum += mSol[i];
-                            }
-                            LOG(INFO) << " Difference between regularized solution and optimal solution so far is " << discrepanceSum;
-                            // We resolve the problem and check for correctness...
-                            // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
-                            //osiMaster_->writeLp("finalRD");
-                            for (int i = mncol_+zSub_; i < 3*mncol_+zSub_; i++){
-                                osiMaster_->setObjCoeff(i,0);
-                            }
-                            //int * rowIndices = new int[mncol_];
-                            //for (int i = 0; i < mncol_; i++)
-                            //    rowIndices[i] = startRows_+i;
-                            //osiMaster_->deleteRows(mncol_,rowIndices);
-                            //delete rowIndices;
-                            //int * colIndices = new int[2*mncol_];
-                            //for (int i = 0; i < 2*mncol_; i++)
-                            //    colIndices[i] = mncol_+zSub_+i;
-                            //osiMaster_->deleteCols(2*mncol_,colIndices);
-                            //delete colIndices;
-                            //int resultMaster = solveMaster();
-                            // TODO: Recast the resolve in a proper way..
-                            if ( mnInt_ )
-                                osiMaster_->branchAndBound();
-                            else
-                                osiMaster_->resolve();
-                            double resolvedMaster = osiMaster_->getObjValue();
-                            //osiMaster_->writeLp("finalRD-wo");
-                            if ( abs(resolvedMaster - osiMasterSolutionValue ) >= ZEROTEST ){ // We have discrepancy
-                                LOG(WARNING) << "Difference between regularized master and normal master problem is : " << osiMasterSolutionValue-resolvedMaster;
-                                // Try and look at slack for optimality cuts added so far..
-                                const double* rowActivity = osiMaster_->getRowActivity();
-                                double* slack = new double[mnrow_+zSub_*nIter_];
-                                for (int i = 0; i < mnrow_+zSub_*nIter_; i++){
-                                    slack[i] = 0;
-                                    slack[i] = osiMaster_->getRightHandSide()[i]-rowActivity[i];
+                            if (useRegularizedManhattan_ ) {
+                                LOG(INFO) << "Regularized Manhattan would have stopped with " << lowerBound;
+                                this->dataStat.regularizedSolutionValue = lowerBound;
+                                double osiMasterSolutionValue = osiMaster_->getObjValue();
+                                // Output the overall discrepancy
+                                double discrepanceSum = 0;
+                                for (int i = mncol_+zSub_; i < 3*mncol_+zSub_;i++){
+                                    discrepanceSum += mSol[i];
                                 }
-                                // TODO: We can enable the correct solution process if we want to
-                                // Stop regularization
-                                useRegularizedDecomposition_ = false;
-                                useRegularizedManhattan_ = false;
-                                LB_ = resolvedMaster;
+                                LOG(INFO) << " Difference between regularized solution and optimal solution so far is " << discrepanceSum;
+                                // We resolve the problem and check for correctness...
+                                // We want to check if the results of c^T x + theta = to c^T x' + theta, for x' solution of regularized master..
+                                //osiMaster_->writeLp("finalRD");
+                                for (int i = mncol_+zSub_; i < 3*mncol_+zSub_; i++){
+                                    osiMaster_->setObjCoeff(i,0);
+                                }
+                                //int * rowIndices = new int[mncol_];
+                                //for (int i = 0; i < mncol_; i++)
+                                //    rowIndices[i] = startRows_+i;
+                                //osiMaster_->deleteRows(mncol_,rowIndices);
+                                //delete rowIndices;
+                                //int * colIndices = new int[2*mncol_];
+                                //for (int i = 0; i < 2*mncol_; i++)
+                                //    colIndices[i] = mncol_+zSub_+i;
+                                //osiMaster_->deleteCols(2*mncol_,colIndices);
+                                //delete colIndices;
+                                //int resultMaster = solveMaster();
+                                // TODO: Recast the resolve in a proper way..
+                                if ( mnInt_ )
+                                    osiMaster_->branchAndBound();
+                                else
+                                    osiMaster_->resolve();
+                                double resolvedMaster = osiMaster_->getObjValue();
+                                //osiMaster_->writeLp("finalRD-wo");
+                                if ( abs(resolvedMaster - osiMasterSolutionValue ) >= ZEROTEST ){ // We have discrepancy
+                                    LOG(WARNING) << "Difference between regularized master and normal master problem is : " << osiMasterSolutionValue-resolvedMaster;
+                                    // Try and look at slack for optimality cuts added so far..
+                                    const double* rowActivity = osiMaster_->getRowActivity();
+                                    double* slack = new double[mnrow_+zSub_*nIter_];
+                                    for (int i = 0; i < mnrow_+zSub_*nIter_; i++){
+                                        slack[i] = 0;
+                                        slack[i] = osiMaster_->getRightHandSide()[i]-rowActivity[i];
+                                    }
+                                    // TODO: We can enable the correct solution process if we want to
+                                    // Stop regularization
+                                    useRegularizedDecomposition_ = false;
+                                    useRegularizedManhattan_ = false;
+                                    LB_ = resolvedMaster;
 
-                                // Delete regularized arrays 
-                                delete [] regSolution_; regSolution_ = NULL;
-                                delete [] regSubproblemSolutionValues_; regSubproblemSolutionValues_ = NULL;
-                                this->time.regularizedManhattan = CoinCpuTime() -timeStartTotal;
-                                this->time.regularizedManhattanRepair = CoinCpuTime(); // Store current time to get regularized repair time correctly..
-                                continue; // We want to resolve the master 
+                                    // Delete regularized arrays 
+                                    delete [] regSolution_; regSolution_ = NULL;
+                                    delete [] regSubproblemSolutionValues_; regSubproblemSolutionValues_ = NULL;
+                                    this->time.regularizedManhattan = CoinCpuTime() -timeStartTotal;
+                                    this->time.regularizedManhattanRepair = CoinCpuTime(); // Store current time to get regularized repair time correctly..
+                                    continue; // We want to resolve the master 
 
-                                
+
+                                }
                             }
-                        }
-                        LOG(INFO) << "RD stops. Difference between regularized solution and current lower bound is: " << regSolutionValue_-lowerBound;
-                        for (int i = 0; i < mncol_; i++)
-                            bestSol_[i] = regSolution_[i];
-                        this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
-                        this->time.regularizedManhattan = CoinCpuTime()-timeStartTotal;
-                        return;
+                            LOG(INFO) << "RD stops. Difference between regularized solution and current lower bound is: " << regSolutionValue_-lowerBound;
+                            for (int i = 0; i < mncol_; i++)
+                                bestSol_[i] = regSolution_[i];
+                            this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
+                            this->time.regularizedManhattan = CoinCpuTime()-timeStartTotal;
+                            return;
 
 
-                }
-            }
-            // Update lower bound ( it should strictly increase, but not necessarily so in the case of reg decomp )
-            //if (mnInt_ == 0 || !integerBenders_)
-            LB_ = lowerBound; 
-
-            if ( integerBenders_ && feasible && lowerBound+ZEROTEST >= UB_ ){
-                // We fathom current node
-                columnLowerBounds_.pop_front();
-                columnUpperBounds_.pop_front();
-                currentLowerBound_.pop_front();
-                nIter_++;
-                continue;
-            }
-
-            // We want to implement L-shaped benders, so we do it. Let's rock.
-            if ( integerBenders_ && feasible ){
-                int lowerValue;
-                double violation = 0.5;
-                int violationIndex = -1;
-                // We have to check for violation of integrality restrictions
-                for (int i = 0; i < mnInt_; i++){
-                    // Split double in fractional and intPart
-                    double intPart, fractional;
-                    fractional = modf(bestSolTemp_[miInt_[i]],&intPart);
-                    if ( fractional-ZEROTEST > 0 || fractional+ZEROTEST < 1 ){
-                        if ( abs(0.5-fractional) < violation ){ // We do most fractional branching
-                            violation = abs(0.5-fractional); //TODO: Bedingter Operator
-                            violationIndex = miInt_[i];
-                            lowerValue = intPart;
-                        }
                     }
                 }
-                if ( violationIndex != -1 ) { // We found a violation, create new nodes, remove current node (obviously..)
-                    LOG(INFO) << "Variable " << violationIndex << " is not integer.";
-                    if ( !columnLowerBounds_.empty() ){
-                        columnLowerBounds_.pop_front();
-                        columnUpperBounds_.pop_front();
-                        currentLowerBound_.pop_front();
-                    }
-                    // Create two new nodes
-                    // get the current column bounds and change them accordingly
-                    const double* colLower = osiMaster_->getColLower();
-                    const double* colUpper = osiMaster_->getColUpper();
-                    std::vector<double> lower(mncol_+zSub_);
-                    std::vector<double> upper(mncol_+zSub_);
-                    for (int i = 0; i < mncol_+zSub_; i++ ){
-                        if ( i != violationIndex ){
-                            lower[i] = colLower[i]; upper[i] = colUpper[i];
-                        }
-                        else {
-                            lower[i] = colLower[i]; upper[i] = lowerValue;
-                        }
-                    }
-                    std::vector<double> lower2(lower);
-                    std::vector<double> upper2(upper);
-                    // Change bounds 
-                    lower2[violationIndex] = lowerValue+1;
-                    upper2[violationIndex] = colUpper[violationIndex];
+                // Update lower bound ( it should strictly increase, but not necessarily so in the case of reg decomp )
+                //if (mnInt_ == 0 || !integerBenders_)
+                LB_ = lowerBound; 
 
-                    columnLowerBounds_.push_back(lower);
-                    columnLowerBounds_.push_back(lower2);
-                    columnUpperBounds_.push_back(upper);
-                    columnUpperBounds_.push_back(upper2);
-                    currentLowerBound_.push_back(lowerBound); // It does not get lower than this..
-                    currentLowerBound_.push_back(lowerBound);
-                    numNodes_ += 2;
-                    // We return to the start
-                    nIter_++;
-                    continue;
-                }
-            }
-
-            feasible = true;
-            double timeStart = CoinCpuTime();
-            // Cycle over all scenarios: solve all subproblems
-            for(int scen_=0; scen_<nScen_; scen_++){
-                // Build subproblem, combine deterministic data with stochastic
-                // data; Input: number of current scenario
-                // We measure the time in buildSubproblem, because the addition of stage 1 solution to the subproblem must be done either way (one way or another...)
-                double localTime = CoinCpuTime();
-                buildSubproblem(scen_);
-                this->time.buildSubproblem += CoinCpuTime() - localTime;
-                // Add current stage 1 solution to subproblem, i.e. update RHS of
-                // subproblem; Input: number of current scenario, current stage 1 
-                // solution 
-                addSt1ToSubproblem(scen_, bestSolTemp_);
-                // Solve subproblem; Input: number of current
-                // scenario, number of feasibility cuts
-                if(solveSubproblem(scen_, fCut) == -1){
-                    this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
-                    return;
-                }	
-                // Initialize bool of feasibility cuts with false
-                fCut = false;
-                // If dual subproblem is unbounded, add a feasibility cut to master
-                // problem
-                // PrimalInfeasible : feasibility set is empty (dual problem is unbounded or has empty feasibility set)
-                // DualInfeasible : dual feasibility set is empty (primal problem is unbounded or has empty feasibility set)
-                if( osiSubproblem_->isProvenPrimalInfeasible() ){
-                    addFeasCut(scen_);
-                    fCut = true;
-                    feasible = false;
-                    nFeas++;
-                    //if (single_)
-                    //    break;
-                    //else
-                    //    break; //Allow to generate more feas cuts in the multi setting
-                }
-                // Copy vector of current solution of subproblem
-                const double* sSol_Temp = osiSubproblem_->getColSolution();
-                // Declaration of a temporary solution vector of stage 2
-                double* sSol = new double[sncol_];
-                // Copy the current stage 2 solution to temporary solution vector
-                memcpy(sSol, sSol_Temp, sncol_*sizeof(double));
-                // If there are bounds on stage 2 variables, the translation which
-                // took place in buildSubproblem has to be revoked
-                for(int i=0; i<lTrans_; i++){
-                    sSol[iTrans_[i]]=sSol_Temp[iTrans_[i]]+dTrans_[i];
-                }
-                // There is a check if the values are close to zero, if this is the
-                // case the values are transferred to zero; afterwards the new 
-                // objective value is calculated, therefore a new variable is
-                // declared and initialized by zero 
-                double subObjVal = 0;
-                const double *subObjCoeff = osiSubproblem_->getObjCoefficients();
-                int indexPart = mncol_+zSub_+sncol_*scen_;
-                for(int i=0; i<sncol_; i++){
-                    if(abs(sSol[i]) < ZEROTEST && abs(sSol[i]) > 0){ // TODO: remove second argument, just for debugging purposes inserted
-                        bestSolTemp_[indexPart+i] = 0;
-                    }
-                    else { // We round arguments if they differ slightly from the rounded value
-                        // If we allow rounding we do so here: We should set a parameter here..
-                        bestSolTemp_[indexPart+i] = sSol[i];
-                    }
-                    subObjVal+=bestSolTemp_[indexPart+i]*subObjCoeff[i];
-                }	
-                // Delete temporary solution vector of stage 2
-                delete [] sSol;
-                // If single cut is chosen, there will definitely calculated an
-                // optimality cut; if multi cut is chosen, the current scenario
-                // generates only an optimality cut if p(d-Bx)>z holds; if in the previous
-                // iterations only feasibility cuts are added, there will definitely
-                // calculated an optimality cut.
-
-                // In the first iteration the variables for the scenarios have 
-                // the value -infinity, therefor the first cut(s) is(are) valid
-                // We have to differentiate between multi and single cut..
-                // TODO: Important distinction here: we compare the SolutionValue of the current scenario subproblem with the approximation. If the solutionValue is greater than the approximation, we have to calculate an optimality cut, as the approximation is not good enough yet.
-                // Equally important: Compare apples with apples. Currently we compare the scenario subproblem value times its probability with the approximation factor for the subproblem where the probability is already priced in via the optimality constraints ( objCoef of approximation is 1 ).
-                if( feasible && (single_ || bunching_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+ (bunching_ ? bunchIndices_[scen_] : scen_)] || nIter_==nFeas ) ){
-                    // Calculate an optimality cut; Input: number of optimality cuts
-                    // which were calculate during the current iteration, number of
-                    // current scenario;
-                    calcOptiCut(oCut, scen_);
-                    oCut++;
-                }
-                // Update upper bound: add all objective values to upper bound 
-                // multiplied with the associated probability; if there are bounds 
-                // on stage 2 variables, there could occur an offset of the objective 
-                // function which has to be manually added to the objective function
-                if ( feasible )
-                    upperBound_+= subObjVal*scenProb_[scen_];
-
-                if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
-                    // We want to solve the subproblem with the regularized solution
-                    double regTimeInitial = CoinCpuTime();
-                    buildSubproblem(scen_);
-                    this->time.buildSubproblem += CoinCpuTime()-regTimeInitial;
-                    addSt1ToSubproblem(scen_,regSolution_);
-                    solveSubproblem(scen_,fCut);
-                    regSubproblemSolutionValues_[scen_] = 0;
-                    ////TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
-                    //// Compute values with zerotest
-                    double subObjValReg = 0;
-                    const double *subObjCoeffReg = osiSubproblem_->getObjCoefficients();
-                    const double* sSolReg = osiSubproblem_->getColSolution();
-                    int indexPartReg = mncol_+zSub_+sncol_*scen_;
-                    for(int i=0; i<sncol_; i++){
-                        if(abs(sSolReg[i]) >= ZEROTEST) // TODO: remove second argument, just for debugging purposes inserted
-                            regSubproblemSolutionValues_[scen_]+= sSolReg[i]*subObjCoeffReg[i];
-                    }
-                    regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
-                    //if ( regSubproblemSolutionValues_[scen_] != osiSubproblem_->getObjValue()*scenProb_[scen_] )
-                        //DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
-                    this->time.regularizedInitial += CoinCpuTime()-regTimeInitial;
-                }
-            }
-            this->time.subproblemLoop += CoinCpuTime() - timeStart;
-
-            // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
-            // If current upper bound is less or equal than the old upper bound, update
-            // the upper bound and the best feasible solution; the update takes plays 
-            // only if there is no feasibility cut
-
-            recourseFunction_ = upperBound_ - firstStageSolution_;
-            //LOG(INFO) << "Recourse Function: " << recourseFunction_;
-           
-            if(status == 1 || (feasible && upperBound_< UB_)){
-                // Update the best feasible solution
-                memcpy(bestSol_, bestSolTemp_, 
-                    (mncol_+zSub_+sncol_*nScen_)*sizeof(double) );
-                // Update the upper bound
-                UB_ = upperBound_;
-                if (status == 1){
-                    this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
-                    return;
-                }
-            }
-
-            // Check if we can fathom the current node
-            if (integerBenders_ && mnInt_ > 0){
-                if ( lowerBound >= upperBound_ ) { // We discard the current node
+                if ( integerBenders_ && feasible && lowerBound+ZEROTEST >= UB_ ){
+                    // We fathom current node
                     columnLowerBounds_.pop_front();
                     columnUpperBounds_.pop_front();
                     currentLowerBound_.pop_front();
                     nIter_++;
-                    LOG(INFO) << "We fathomed the current node. It's approximation was worse than the original.";
                     continue;
                 }
-            }
-            
-            // Numerical issue: If our bounds are less than absEps, we remove the current node
-            if ( integerBenders_ && feasible && mnInt_>0 && abs(upperBound_-lowerBound)< absEps ){
-                columnLowerBounds_.pop_front();
-                columnUpperBounds_.pop_front();
-                currentLowerBound_.pop_front();
-                nIter_++;
-                continue;
-            }
 
-
-            // After solving all subproblems one or more optimality cuts will be}
-            // added to the master problem; of course this will only take
-            // place if there is any optimality cut and none feasibility cut; if
-            // knapsack inequalities should be added, this method will derive one
-            if( feasible && oCut>0 ){
-                addOptiCut(oCut);
-                if ( appliedCuts_ == 0 ) {
-                    // No optimality cuts were applied to the problem, albeit cuts should be generated.
-                    // We reset oCut to zero to allow serious steps in the regularized decomposition method
-                    oCut = 0;
-                    DLOG(WARNING) << "Optimality cuts that should be generated were not applied to the problem. The violation is below ZEROTEST.";
-                }
-            }
-            if (feasible && (useRegularizedDecomposition_ || useRegularizedManhattan_)){
-                // If no optimality cut was generated, we update the regularized solution a to x (exact serious step) 
-                assert(seriousStep_ == false);
-                assert(changeSigma_ == false);
-                if (oCut == 0){
-                    seriousStep_ = true;
-                    if ( upperBound_ > 0.9*regSolutionValue_ + 0.1*lowerBound ) 
-                        changeSigma_ = true;
-                    for (int i = 0; i < mncol_; i++){
-                        regSolution_[i] = bestSolTemp_[i];
-                    }
-                    //computeRegularizedSubproblems_ = true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
-                    // We made a serious step, so we update the regSolutionValue_
-                    regSolutionValue_ = upperBound_;
-                    LOG(INFO) << "RD: Exact serious step.";
-
-                }
-                // We generated some optimality cuts
-                else {
-                    // We have to check if c^T \bar x + Q(\bar x) <= c^T a + Q( a ), if so we update the regularized solution a to x (approximate serious step)
-                    // Compute regSolutionValue_ = c^T a + Q( a ) to be able to compare the values
-                    if (computeRegularizedSubproblems_) { // If we computed the regularized solution subproblems, we have to calculate the combinded objective value               
-                        computeRegularizedSubproblems_ = false;
-                        regSolutionValue_ = 0;
-                        for (int i = 0; i < mncol_; i++){
-                            regSolutionValue_ += regSolution_[i]*mdobj_[i];
-                        }
-                        regFirstStageSolutionValue_ = regSolutionValue_;
-                        for (int i = 0; i < nScen_; i++) {
-                            regSolutionValue_ += regSubproblemSolutionValues_[i];
+                // We want to implement L-shaped benders, so we do it. Let's rock.
+                if ( integerBenders_ && feasible ){
+                    int lowerValue;
+                    double violation = 0.5;
+                    int violationIndex = -1;
+                    // We have to check for violation of integrality restrictions
+                    for (int i = 0; i < mnInt_; i++){
+                        // Split double in fractional and intPart
+                        double intPart, fractional;
+                        fractional = modf(bestSolTemp_[miInt_[i]],&intPart);
+                        if ( fractional-ZEROTEST > 0 && fractional+ZEROTEST < 1 ){
+                            if ( abs(0.5-fractional) < violation ){ // We do most fractional branching
+                                violation = abs(0.5-fractional); //TODO: Bedingter Operator
+                                violationIndex = miInt_[i];
+                                lowerValue = intPart;
+                            }
                         }
                     }
-                    if ( upperBound_ <= regSolutionValue_+ZEROTEST ){
+                    if ( violationIndex != -1 ) { // We found a violation, create new nodes, remove current node (obviously..)
+                        LOG(INFO) << "Variable " << violationIndex << " is not integer.";
+                        if ( !columnLowerBounds_.empty() ){
+                            columnLowerBounds_.pop_front();
+                            columnUpperBounds_.pop_front();
+                            currentLowerBound_.pop_front();
+                        }
+                        // Create two new nodes
+                        // get the current column bounds and change them accordingly
+                        const double* colLower = osiMaster_->getColLower();
+                        const double* colUpper = osiMaster_->getColUpper();
+                        std::vector<double> lower(mncol_+zSub_);
+                        std::vector<double> upper(mncol_+zSub_);
+                        for (int i = 0; i < mncol_+zSub_; i++ ){
+                            if ( i != violationIndex ){
+                                lower[i] = colLower[i]; upper[i] = colUpper[i];
+                            }
+                            else {
+                                lower[i] = colLower[i]; upper[i] = lowerValue;
+                            }
+                        }
+                        std::vector<double> lower2(lower);
+                        std::vector<double> upper2(upper);
+                        // Change bounds 
+                        lower2[violationIndex] = lowerValue+1;
+                        upper2[violationIndex] = colUpper[violationIndex];
+
+                        columnLowerBounds_.push_back(lower);
+                        columnLowerBounds_.push_back(lower2);
+                        columnUpperBounds_.push_back(upper);
+                        columnUpperBounds_.push_back(upper2);
+                        currentLowerBound_.push_back(lowerBound); // It does not get lower than this..
+                        currentLowerBound_.push_back(lowerBound);
+                        numNodes_ += 2;
+                        // We return to the start
+                        nIter_++;
+                        continue;
+                    }
+                }
+
+                feasible = true;
+                double timeStart = CoinCpuTime();
+                // Cycle over all scenarios: solve all subproblems
+                for(int scen_=0; scen_<nScen_; scen_++){
+                    // Build subproblem, combine deterministic data with stochastic
+                    // data; Input: number of current scenario
+                    // We measure the time in buildSubproblem, because the addition of stage 1 solution to the subproblem must be done either way (one way or another...)
+                    double localTime = CoinCpuTime();
+                    buildSubproblem(scen_);
+                    this->time.buildSubproblem += CoinCpuTime() - localTime;
+                    // Add current stage 1 solution to subproblem, i.e. update RHS of
+                    // subproblem; Input: number of current scenario, current stage 1 
+                    // solution 
+                    addSt1ToSubproblem(scen_, bestSolTemp_);
+                    // Solve subproblem; Input: number of current
+                    // scenario, number of feasibility cuts
+                    if(solveSubproblem(scen_, fCut) == -1){
+                        this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
+                        return;
+                    }	
+                    // Initialize bool of feasibility cuts with false
+                    fCut = false;
+                    // If dual subproblem is unbounded, add a feasibility cut to master
+                    // problem
+                    // PrimalInfeasible : feasibility set is empty (dual problem is unbounded or has empty feasibility set)
+                    // DualInfeasible : dual feasibility set is empty (primal problem is unbounded or has empty feasibility set)
+                    if( osiSubproblem_->isProvenPrimalInfeasible() ){
+                        addFeasCut(scen_);
+                        fCut = true;
+                        feasible = false;
+                        nFeas++;
+                        //if (single_)
+                        //    break;
+                        //else
+                        //    break; //Allow to generate more feas cuts in the multi setting
+                    }
+                    // Copy vector of current solution of subproblem
+                    const double* sSol_Temp = osiSubproblem_->getColSolution();
+                    // Declaration of a temporary solution vector of stage 2
+                    double* sSol = new double[sncol_];
+                    // Copy the current stage 2 solution to temporary solution vector
+                    memcpy(sSol, sSol_Temp, sncol_*sizeof(double));
+                    // If there are bounds on stage 2 variables, the translation which
+                    // took place in buildSubproblem has to be revoked
+                    for(int i=0; i<lTrans_; i++){
+                        sSol[iTrans_[i]]=sSol_Temp[iTrans_[i]]+dTrans_[i];
+                    }
+                    // There is a check if the values are close to zero, if this is the
+                    // case the values are transferred to zero; afterwards the new 
+                    // objective value is calculated, therefore a new variable is
+                    // declared and initialized by zero 
+                    double subObjVal = 0;
+                    const double *subObjCoeff = osiSubproblem_->getObjCoefficients();
+                    int indexPart = mncol_+zSub_+sncol_*scen_;
+                    for(int i=0; i<sncol_; i++){
+                        if(abs(sSol[i]) < ZEROTEST && abs(sSol[i]) > 0){ // TODO: remove second argument, just for debugging purposes inserted
+                            bestSolTemp_[indexPart+i] = 0;
+                        }
+                        else { // We round arguments if they differ slightly from the rounded value
+                            // If we allow rounding we do so here: We should set a parameter here..
+                            bestSolTemp_[indexPart+i] = sSol[i];
+                        }
+                        subObjVal+=bestSolTemp_[indexPart+i]*subObjCoeff[i];
+                    }	
+                    // Delete temporary solution vector of stage 2
+                    delete [] sSol;
+                    // If single cut is chosen, there will definitely calculated an
+                    // optimality cut; if multi cut is chosen, the current scenario
+                    // generates only an optimality cut if p(d-Bx)>z holds; if in the previous
+                    // iterations only feasibility cuts are added, there will definitely
+                    // calculated an optimality cut.
+
+                    // In the first iteration the variables for the scenarios have 
+                    // the value -infinity, therefor the first cut(s) is(are) valid
+                    // We have to differentiate between multi and single cut..
+                    // TODO: Important distinction here: we compare the SolutionValue of the current scenario subproblem with the approximation. If the solutionValue is greater than the approximation, we have to calculate an optimality cut, as the approximation is not good enough yet.
+                    // Equally important: Compare apples with apples. Currently we compare the scenario subproblem value times its probability with the approximation factor for the subproblem where the probability is already priced in via the optimality constraints ( objCoef of approximation is 1 ).
+                    if( feasible && (single_ || bunching_ || subObjVal*scenProb_[scen_] > bestSolTemp_[mncol_+ (bunching_ ? bunchIndices_[scen_] : scen_)] || nIter_==nFeas ) ){
+                        // Calculate an optimality cut; Input: number of optimality cuts
+                        // which were calculate during the current iteration, number of
+                        // current scenario;
+                        calcOptiCut(oCut, scen_);
+                        oCut++;
+                    }
+                    // Update upper bound: add all objective values to upper bound 
+                    // multiplied with the associated probability; if there are bounds 
+                    // on stage 2 variables, there could occur an offset of the objective 
+                    // function which has to be manually added to the objective function
+                    if ( feasible )
+                        upperBound_+= subObjVal*scenProb_[scen_];
+
+                    if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
+                        // We want to solve the subproblem with the regularized solution
+                        double regTimeInitial = CoinCpuTime();
+                        buildSubproblem(scen_);
+                        this->time.buildSubproblem += CoinCpuTime()-regTimeInitial;
+                        addSt1ToSubproblem(scen_,regSolution_);
+                        solveSubproblem(scen_,fCut);
+                        regSubproblemSolutionValues_[scen_] = 0;
+                        ////TODO: Check for infeasibilities, use own solveSubproblem method, own warmstart,check for ZEROTEST
+                        //// Compute values with zerotest
+                        double subObjValReg = 0;
+                        const double *subObjCoeffReg = osiSubproblem_->getObjCoefficients();
+                        const double* sSolReg = osiSubproblem_->getColSolution();
+                        int indexPartReg = mncol_+zSub_+sncol_*scen_;
+                        for(int i=0; i<sncol_; i++){
+                            if(abs(sSolReg[i]) >= ZEROTEST) // TODO: remove second argument, just for debugging purposes inserted
+                                regSubproblemSolutionValues_[scen_]+= sSolReg[i]*subObjCoeffReg[i];
+                        }
+                        regSubproblemSolutionValues_[scen_] *= scenProb_[scen_];
+                        //if ( regSubproblemSolutionValues_[scen_] != osiSubproblem_->getObjValue()*scenProb_[scen_] )
+                        //DLOG(INFO) << "Difference between manual computed solution and solution given by Cplex.";
+                        this->time.regularizedInitial += CoinCpuTime()-regTimeInitial;
+                    }
+                }
+                this->time.subproblemLoop += CoinCpuTime() - timeStart;
+
+                // If we quit master problem computation in solveMaster, we update the upperBound and solution vector and quit.
+                // If current upper bound is less or equal than the old upper bound, update
+                // the upper bound and the best feasible solution; the update takes plays 
+                // only if there is no feasibility cut
+
+                recourseFunction_ = upperBound_ - firstStageSolution_;
+                //LOG(INFO) << "Recourse Function: " << recourseFunction_;
+
+                if(status == 1 || (feasible && upperBound_< UB_)){
+                    // Update the best feasible solution
+                    memcpy(bestSol_, bestSolTemp_, 
+                        (mncol_+zSub_+sncol_*nScen_)*sizeof(double) );
+                    // Update the upper bound
+                    UB_ = upperBound_;
+                    if (status == 1){
+                        this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
+                        return;
+                    }
+                }
+
+                // Check if we can fathom the current node
+                if (integerBenders_ && mnInt_ > 0){
+                    if ( lowerBound >= upperBound_ ) { // We discard the current node
+                        columnLowerBounds_.pop_front();
+                        columnUpperBounds_.pop_front();
+                        currentLowerBound_.pop_front();
+                        nIter_++;
+                        LOG(INFO) << "We fathomed the current node. It's approximation was worse than the original.";
+                        continue;
+                    }
+                }
+
+                // Numerical issue: If our bounds are less than absEps, we remove the current node
+                if ( integerBenders_ && feasible && mnInt_>0 && abs(upperBound_-lowerBound)< absEps ){
+                    columnLowerBounds_.pop_front();
+                    columnUpperBounds_.pop_front();
+                    currentLowerBound_.pop_front();
+                    nIter_++;
+                    continue;
+                }
+
+
+                // After solving all subproblems one or more optimality cuts will be}
+                // added to the master problem; of course this will only take
+                // place if there is any optimality cut and none feasibility cut; if
+                // knapsack inequalities should be added, this method will derive one
+                if( feasible && oCut>0 ){
+                    addOptiCut(oCut);
+                    if ( appliedCuts_ == 0 ) {
+                        // No optimality cuts were applied to the problem, albeit cuts should be generated.
+                        // We reset oCut to zero to allow serious steps in the regularized decomposition method
+                        oCut = 0;
+                        DLOG(WARNING) << "Optimality cuts that should be generated were not applied to the problem. The violation is below ZEROTEST.";
+                    }
+                }
+                if (feasible && (useRegularizedDecomposition_ || useRegularizedManhattan_)){
+                    // If no optimality cut was generated, we update the regularized solution a to x (exact serious step) 
+                    assert(seriousStep_ == false);
+                    assert(changeSigma_ == false);
+                    if (oCut == 0){
                         seriousStep_ = true;
-                        // Determine step width
-                        if ( upperBound_ < (1-gamma_)*regSolutionValue_ + gamma_*lowerBound ) {
+                        if ( upperBound_ > 0.9*regSolutionValue_ + 0.1*lowerBound ) 
                             changeSigma_ = true;
-                            DLOG(INFO) << "RD: Exact serious step.";
-                        }
-                        else{
-                            changeSigma_ = false;
-                            DLOG(INFO) << "RD: Approximate serious step.";
-                        }
-
                         for (int i = 0; i < mncol_; i++){
                             regSolution_[i] = bestSolTemp_[i];
                         }
-                       
-                        // We made an approximate serious step, so our regSolutionValue changed also
+                        //computeRegularizedSubproblems_ = true; // We do not need to recompute, as we already computed the values in this very iteration. So we just store the result.
+                        // We made a serious step, so we update the regSolutionValue_
                         regSolutionValue_ = upperBound_;
-                        regFirstStageSolutionValue_ = firstStageSolution_;
+                        LOG(INFO) << "RD: Exact serious step.";
 
-                    }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma. We want to decrease sigma to keep closer to the regularized solution.
+                    }
+                    // We generated some optimality cuts
                     else {
-                        if ( upperBound_ > gamma_*regSolutionValue_ + (1-gamma_)*lowerBound ) {
-                            changeSigma_ = true;
-                            DLOG(INFO) << "RD: Decreasing sigma, increasing weight of regularizing term";
+                        // We have to check if c^T \bar x + Q(\bar x) <= c^T a + Q( a ), if so we update the regularized solution a to x (approximate serious step)
+                        // Compute regSolutionValue_ = c^T a + Q( a ) to be able to compare the values
+                        if (computeRegularizedSubproblems_) { // If we computed the regularized solution subproblems, we have to calculate the combinded objective value               
+                            computeRegularizedSubproblems_ = false;
+                            regSolutionValue_ = 0;
+                            for (int i = 0; i < mncol_; i++){
+                                regSolutionValue_ += regSolution_[i]*mdobj_[i];
+                            }
+                            regFirstStageSolutionValue_ = regSolutionValue_;
+                            for (int i = 0; i < nScen_; i++) {
+                                regSolutionValue_ += regSubproblemSolutionValues_[i];
+                            }
                         }
+                        if ( upperBound_ <= regSolutionValue_+ZEROTEST ){
+                            seriousStep_ = true;
+                            // Determine step width
+                            if ( upperBound_ < (1-gamma_)*regSolutionValue_ + gamma_*lowerBound ) {
+                                changeSigma_ = true;
+                                DLOG(INFO) << "RD: Exact serious step.";
+                            }
+                            else{
+                                changeSigma_ = false;
+                                DLOG(INFO) << "RD: Approximate serious step.";
+                            }
 
-                        LOG(INFO) << "RD: Null feasible step.";
+                            for (int i = 0; i < mncol_; i++){
+                                regSolution_[i] = bestSolTemp_[i];
+                            }
+
+                            // We made an approximate serious step, so our regSolutionValue changed also
+                            regSolutionValue_ = upperBound_;
+                            regFirstStageSolutionValue_ = firstStageSolution_;
+
+                        }// If not we make a (null feasible step) and let a be the same as before, but we changeSigma. We want to decrease sigma to keep closer to the regularized solution.
+                        else {
+                            if ( upperBound_ > gamma_*regSolutionValue_ + (1-gamma_)*lowerBound ) {
+                                changeSigma_ = true;
+                                DLOG(INFO) << "RD: Decreasing sigma, increasing weight of regularizing term";
+                            }
+
+                            LOG(INFO) << "RD: Null feasible step.";
+                        }
                     }
                 }
-            }
-            // Apply Trust Region method
-            if (mnBin_ > 0 && trustRegion_ ){
-                // Apply trust region method as long as the method returns 1,
-                // if it returns 0, change value of the boolean
-                if(trustRegion(bestSolTemp_, LBmax, oCut, fCut)==0){
-                    trustRegion_ = false;
-                }	
-            }
-
-            // Calculate "Integer L-shaped optimality cut" for binary variables after optimality Cuts and trust region
-            if (integerBenders_ && mnBin_ > 0 && !calculateLowerBound_){
-
-                // We need Q_x = bestSolTemp computation
-                double qx = 0;
-                for (int i = 0; i < mncol_; i++){
-                    qx += bestSolTemp_[i]*mdobj_[i];
+                // Apply Trust Region method
+                if (mnBin_ > 0 && trustRegion_ ){
+                    // Apply trust region method as long as the method returns 1,
+                    // if it returns 0, change value of the boolean
+                    if(trustRegion(bestSolTemp_, LBmax, oCut, fCut)==0){
+                        trustRegion_ = false;
+                    }	
                 }
-                double coefficient = qx-integerBendersLowerBound_;
-                // We need Lower Bound for qx for any x possible. This is computed before, because it does not change..
-                double* elements = new double[mncol_+zSub_];
-                int* indices = new int[mncol_+zSub_];
-                //for (int i = 0; i < mncol_+zSub_; i++)
-                //    indices[i] = i;
-                // We calculate the cut (for the single version only)
-                int sr = 0;
-                for (int i = 0; i < mnBin_; i++){
-                    indices[i] = miBin_[i];
-                    if ( bestSolTemp_[miBin_[i]] >= 1-ZEROTEST ){
-                        elements[i] = coefficient;
-                        sr++;
+
+                // Calculate "Integer L-shaped optimality cut" for binary variables after optimality Cuts and trust region
+                if (integerBenders_ && mnBin_ > 0 && !calculateLowerBound_){
+
+                    // We need Q_x = bestSolTemp computation
+                    double qx = 0;
+                    for (int i = 0; i < mncol_; i++){
+                        qx += bestSolTemp_[i]*mdobj_[i];
                     }
-                    else if ( bestSolTemp_[miBin_[i]] <= ZEROTEST)
-                        elements[i] = -coefficient;
+                    double coefficient = qx-integerBendersLowerBound_;
+                    // We need Lower Bound for qx for any x possible. This is computed before, because it does not change..
+                    double* elements = new double[mncol_+zSub_];
+                    int* indices = new int[mncol_+zSub_];
+                    //for (int i = 0; i < mncol_+zSub_; i++)
+                    //    indices[i] = i;
+                    // We calculate the cut (for the single version only)
+                    int sr = 0;
+                    for (int i = 0; i < mnBin_; i++){
+                        indices[i] = miBin_[i];
+                        if ( bestSolTemp_[miBin_[i]] >= 1-ZEROTEST ){
+                            elements[i] = coefficient;
+                            sr++;
+                        }
+                        else if ( bestSolTemp_[miBin_[i]] <= ZEROTEST)
+                            elements[i] = -coefficient;
+                    }
+                    // Single version, otherwise we need the sum of the thetas
+                    //if ( !single_ && !bunching_){
+                    for (int i = 0; i < zSub_;i++){
+                        indices[mnBin_+i] = mncol_+i;
+                        elements[mnBin_+i] = mdobj_[i];
+                    }
+                    //}
+                    //indices[mnInt_] = mncol_;
+                    //elements[mnInt_] = -1;
+
+                    double rhs = coefficient*(sr-1)-integerBendersLowerBound_;
+                    osiMaster_->addRow(mnInt_+zSub_,indices,elements,-infty_,rhs);
+
+                    delete elements;
+                    delete indices;
                 }
-                // Single version, otherwise we need the sum of the thetas
-                //if ( !single_ && !bunching_){
-                for (int i = 0; i < zSub_;i++){
-                    indices[mnBin_+i] = mncol_+i;
-                    elements[mnBin_+i] = mdobj_[i];
+                // Count up iteration counter
+                nIter_++;
+
+
+
+                /*
+                // ### Print master matrix and RHS ###	
+                const CoinPackedMatrix * mat=osiMaster_->getMatrixByRow();
+                const double* elem=mat->getElements();
+                const int* ind=mat->getIndices();
+                for(int i=0; i<mat->getNumElements() ; i++){
+                cout << "Cut-Coeff for Var "  << ind[i] << " is :" << elem[i] << endl;
                 }
-                //}
-                //indices[mnInt_] = mncol_;
-                //elements[mnInt_] = -1;
+                const double* rhs=osiMaster_->getRightHandSide();
+                for(int i=0; i<osiMaster_->getNumRows(); i++){
+                cout << "RHS master :" << rhs[i] << endl;
+                }*/		
 
-                double rhs = coefficient*(sr-1)-integerBendersLowerBound_;
-                osiMaster_->addRow(mnInt_+zSub_,indices,elements,-infty_,rhs);
+                // ### Print upper bound and lower bound ###
+                // We want to print it out in an ordered manner, just like fortsp
+                if (!useRegularizedDecomposition_ && !useRegularizedManhattan_){
+                    //cout << "UB " << UB_ << endl;
+                    //cout << "LB_ " << LB_ << endl;	
+                    //cout << "UB-LB_ " << UB_-LB_ << endl;
+                    //cout << "Iteration: " << nIter_ << endl;
+                    cout << setprecision(outputPrecision_) << setw(4) << right << nIter_ << " "; // we think the number of iterations is at most 9999
+                    cout << setw(outputWidth_) << UB_ << " ";
+                    cout << setw(outputWidth_) << LB_ << " ";
+                    cout << setw(outputWidth_) << UB_-LB_ << endl;
+                }
+                else {
+                    cout << setprecision(outputPrecision_) << setw(4) << right << nIter_ << " "; // we think the number of iterations is at most 9999
+                    cout << setw(outputWidth_) << UB_ << " ";
+                    cout << setw(outputWidth_) << regSolutionValue_ << " ";
+                    cout << setw(outputWidth_) << LB_ << endl;
 
-                delete elements;
-                delete indices;
+                    /*  cout << "Iteration: " << nIter_ << endl;
+                    cout << "UB: " << UB_ << endl;
+                    cout << "RS: " << regSolutionValue_ << endl;
+                    cout << "LB: " << LB_ << endl;
+                    cout << "Recourse Function Approximation: " << lowerBoundedRecourseFunctionApprox_  << endl;
+                    cout << "Regularized Recourse Function Computation: " << regSolutionValue_-regFirstStageSolutionValue_ << endl;*/
+                    //if ( lowerBoundedRecourseFunctionApprox_ > regSolutionValue_-regFirstStageSolutionValue_ )
+                    //    LOG(ERROR) << "This can not happen."<< endl;
+                }
+        }
+
+        // We need to implement the branch&bound tree here
+        // If we have non-integer variables we need to branch (and add the constraints to the master problem )
+        if ( mnInt_ ){
+            // Remove constraints from current bbTree node
+            if ( !bbTree_.empty() ){
+                int numRows = bbTree_.front()->indices.size();
+                int rowBegin = bbTree_.front()->masterRowBegin;
+                std::vector<int> rowIndices(numRows);
+                for (int i = 0; i < numRows; i++){
+                    rowIndices[i] = rowBegin+i;
+                }
+                osiMaster_->deleteRows(numRows,&rowIndices[0]);
             }
-            // Count up iteration counter
-            nIter_++;
-
-
-
-            /*
-            // ### Print master matrix and RHS ###	
-            const CoinPackedMatrix * mat=osiMaster_->getMatrixByRow();
-            const double* elem=mat->getElements();
-            const int* ind=mat->getIndices();
-            for(int i=0; i<mat->getNumElements() ; i++){
-            cout << "Cut-Coeff for Var "  << ind[i] << " is :" << elem[i] << endl;
+            // Prune node by bound
+            if ( LB_ > branchAndBoundUpperBound_){
+                bbTree_.pop_front(); // Remove node
+                continue; // Go to the next node in tree
             }
-            const double* rhs=osiMaster_->getRightHandSide();
-            for(int i=0; i<osiMaster_->getNumRows(); i++){
-            cout << "RHS master :" << rhs[i] << endl;
-            }*/		
+            // Find all fractional integers
+            std::vector<std::pair<int,double> > fractionalIndices;
+            for (int i = 0; i < mnInt_; i++){
+                // If integer variable is not integer..
+                // Split double in fractional and intPart
+                double intPart, fractional;
+                fractional = modf(bestSolTemp_[miInt_[i]],&intPart);
+                if ( fractional > 0+ZEROTEST && fractional < 1-ZEROTEST )
+                    fractionalIndices.push_back(make_pair(miInt_[i],fractional)); // Add fractional index to fractional
+            }
 
-            // ### Print upper bound and lower bound ###
-            // We want to print it out in an ordered manner, just like fortsp
-            if (!useRegularizedDecomposition_ && !useRegularizedManhattan_){
-                //cout << "UB " << UB_ << endl;
-                //cout << "LB_ " << LB_ << endl;	
-                //cout << "UB-LB_ " << UB_-LB_ << endl;
-                //cout << "Iteration: " << nIter_ << endl;
-                cout << setprecision(outputPrecision_) << setw(4) << right << nIter_ << " "; // we think the number of iterations is at most 9999
-                cout << setw(outputWidth_) << UB_ << " ";
-                cout << setw(outputWidth_) << LB_ << " ";
-                cout << setw(outputWidth_) << UB_-LB_ << endl;
+            if ( !fractionalIndices.empty() ){
+                // Choose fractional integers
+                int fractionalVariable = chooseFractionalVariable(fractionalIndices);
+                LOG(INFO) << "Branching on variable " << fractionalVariable;
+                // Create two new nodes and restart Benders from a chosen node
+                // This can be implemented via a priority queue, but we use BFS at the moment
+                boost::shared_ptr<BendersNode> leftNode(new BendersNode);
+                boost::shared_ptr<BendersNode> rightNode(new BendersNode);
+                // Copy current stuff
+                if (!bbTree_.empty()){
+                    leftNode->bounds = bbTree_.front()->bounds;
+                    leftNode->indices = bbTree_.front()->indices;
+                    rightNode->bounds = bbTree_.front()->bounds;
+                    rightNode->indices = bbTree_.front()->indices;
+                    // Remove current node from bbTree
+                    bbTree_.pop_front();
+                }
+                // We need to add the correct bounds to the problem
+                leftNode->indices.push_back(fractionalVariable);
+                leftNode->bounds.push_back(make_pair(true, floor(bestSolTemp_[fractionalVariable])));
+                rightNode->indices.push_back(fractionalVariable);
+                rightNode->bounds.push_back(make_pair(false, ceil(bestSolTemp_[fractionalVariable])));
+                leftNode->relaxationValue = LB_;
+                rightNode->relaxationValue = LB_;
+                bbTree_.push_back(leftNode);
+                bbTree_.push_back(rightNode);
             }
-            else {
-                cout << setprecision(outputPrecision_) << setw(4) << right << nIter_ << " "; // we think the number of iterations is at most 9999
-                cout << setw(outputWidth_) << UB_ << " ";
-                cout << setw(outputWidth_) << regSolutionValue_ << " ";
-                cout << setw(outputWidth_) << LB_ << endl;
-                
-              /*  cout << "Iteration: " << nIter_ << endl;
-                cout << "UB: " << UB_ << endl;
-                cout << "RS: " << regSolutionValue_ << endl;
-                cout << "LB: " << LB_ << endl;
-                cout << "Recourse Function Approximation: " << lowerBoundedRecourseFunctionApprox_  << endl;
-                cout << "Regularized Recourse Function Computation: " << regSolutionValue_-regFirstStageSolutionValue_ << endl;*/
-                //if ( lowerBoundedRecourseFunctionApprox_ > regSolutionValue_-regFirstStageSolutionValue_ )
-                //    LOG(ERROR) << "This can not happen."<< endl;
+            else { // Prune node by optimality
+                if ( LB_ > branchAndBoundUpperBound_)
+                    branchAndBoundUpperBound_ = LB_;
+                if ( !bbTree_.empty())
+                    bbTree_.pop_front();
             }
+
+        }
     }
-    // Look for regularized manhattan repair value
-    if ( this->time.regularizedManhattanRepair != 0 )
-        this->time.regularizedManhattanRepair = CoinCpuTime()-time.regularizedManhattanRepair;
+    while (integerBendersReloaded_ && !bbTree_.empty());
+
+        // Look for regularized manhattan repair value
+        if ( this->time.regularizedManhattanRepair != 0 )
+            this->time.regularizedManhattanRepair = CoinCpuTime()-time.regularizedManhattanRepair;
     this->time.bendersSolve = CoinCpuTime() - timeStartTotal;
-    
+
     cout << "Objective value after "<< nIter_ << " iterations is: "  << UB_ << endl;
     LOG(INFO) << "We created " << numNodes_ << " many nodes.";
 
@@ -861,7 +942,7 @@ void Benders::copyMaster(SmiScnModel * smi){
         stageTwo_ = false;
         return;
     }
-    
+
 
     // Number of rows 
     mnrow_ = smi->getCore()->getNumRows(0);
@@ -1541,8 +1622,8 @@ void Benders::copySubmodel(SmiScnModel* smi){
     if(warmStart_){
         // Declaration of an array which contains warmstart informations
         // for each scenario
-       warmStartSub_ = new CoinWarmStart*[nScen_];
-       for (int i = 0; i < nScen_; i++)
+        warmStartSub_ = new CoinWarmStart*[nScen_];
+        for (int i = 0; i < nScen_; i++)
             warmStartSub_[i] = osiSubproblem_->getEmptyWarmStart();
     }
     // Warmstart between scenarios
@@ -1767,7 +1848,7 @@ int Benders::solveMaster(){
             delete[] columns;
             delete[] elements;
 
-             // Ensure the integer indices are still present
+            // Ensure the integer indices are still present
             //if (mnInt_){
             //        osiMaster_->setInteger(miInt_, mnInt_);
             //    int numberOfInt = CPXgetnumint(envPtr,lpPtr);
@@ -1839,7 +1920,13 @@ int Benders::solveMaster(){
                     osiMaster_->initialSolve();
                     this->time.solverMaster += CoinCpuTime() - timeStart;
                 }
-                else {
+                else if ( integerBendersReloaded_ ){
+                    double timeStart = CoinCpuTime();
+                    osiMaster_->initialSolve();
+                    this->time.solverMaster += CoinCpuTime() - timeStart;
+                }
+                else
+                {
                     double timeStart = CoinCpuTime();
                     osiMaster_->branchAndBound();
                     this->time.solverMaster += CoinCpuTime() - timeStart;
@@ -1945,7 +2032,7 @@ int Benders::solveMaster(){
                     double timeStart = CoinCpuTime();
                     osiMaster_->resolve();
                     this->time.solverMaster += CoinCpuTime() - timeStart;
-                   
+
                 }
             }
             // Else solve via branch and bound
@@ -2003,6 +2090,11 @@ int Benders::solveMaster(){
                                     break;
 
                             }
+                        }
+                        else if (integerBendersReloaded_){
+                            double timeStart = CoinCpuTime();
+                            osiMaster_->initialSolve();
+                            this->time.solverMaster += CoinCpuTime() - timeStart;
                         }
                         else {
                             double timeStart = CoinCpuTime();
@@ -2098,7 +2190,7 @@ int Benders::solveMaster(){
         else if (stat == CPX_STAT_OPTIMAL_INFEAS ){
             LOG(WARNING) << "Cplex returned with optimal solution which scaled to an infeasible one. Take care if you problem is sensitive to small numerical changes";
         }
-            
+
         else
             LOG(FATAL) << "Cplex returned with error code " << stat;
 
@@ -2861,7 +2953,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             combdrup_[i] = infty_; 
     }
     osiSubproblem_->loadProblem(*matrix, combdclo_, combdcup_, combdobj_, combdrlo_, combdrup_);
-    
+
     if (snInt_)
         osiSubproblem_->setInteger(siInt_, snInt_);
 
@@ -2871,7 +2963,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     osiSubproblem_->setHintParam(OsiDoDualInInitial,true);
     osiSubproblem_->setObjSense(1.0); // we minimize the subproblems
     // We want to silence Cplex
-    //osiSubproblem_->messageHandler()->setLogLevel(0);
+    osiSubproblem_->messageHandler()->setLogLevel(0);
     // In the first iteration there are no warmstart informations
     // available. So distinguish between first and all other iterations.
 
@@ -2926,7 +3018,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
     if(warmStartFol_ && fCut==false){
         // Delete old warmstart informations
         delete warmStartSubFol_;
-       
+
         // If an optimal basis is available, get warm 
         // start informations for current scenario
         if(osiSubproblem_->optimalBasisIsAvailable()){
@@ -2952,7 +3044,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
         }
     }
-   
+
 
     // Delete matrix
     delete matrix;
@@ -3201,7 +3293,7 @@ void Benders::addOptiCut(int oCut){
             //    checkCuts_ = true;
             //}
         }
-   
+
         // Add the cuts to the master problem
         for (int i = 0; i < numBunch_; i++) {
             double deviation = computeDeviation(cutIndexBunch[i],cutElementsBunch[i], -cutRowUBBunch[i]);
@@ -3213,7 +3305,7 @@ void Benders::addOptiCut(int oCut){
                 mdobj_[mncol_+i] = 1;
                 osiMaster_->setObjCoeff(mncol_+i,mdobj_[mncol_+i]);
             }
-            
+
         }
 
 
@@ -3236,7 +3328,7 @@ void Benders::addOptiCut(int oCut){
                 checkCuts_ = true;
             }
             //if (abs(deviation) > ZEROTEST){ // If cut would have no meaningfull effect on the solution, we do not apply it.
-                osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
+            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB_[i]); 
             //We have to change the coefficient in the master problem of the theta from 0 to the correct value
             mdobj_[cutIndex_[index+mncol_]] = 1;
             osiMaster_->setObjCoeff(cutIndex_[index+mncol_],mdobj_[cutIndex_[index+mncol_]]);
@@ -4361,7 +4453,7 @@ Benders::~Benders(){
 
     delete [] tRind_;
 
-  
+
 }
 
 void Benders::appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatrix &matrix ){
@@ -4381,6 +4473,21 @@ void Benders::appendColVectorToMatrix( std::vector<int>& fixVars, CoinPackedMatr
 
 double Benders::roundDouble(const double& val){
     return floor( val*precision_+0.5 ) / precision_; // We round the value to the 
+}
+
+
+int Benders::chooseFractionalVariable( const std::vector< std::pair<int,double> >& indices)
+{
+    // We iterate through the vector and return an index we like 
+    // Most-Fractional Branching
+    int index = 0;
+    double value = 0;
+    for (int i = 0; i< indices.size(); i++){
+        if ( indices[i].second > value ){
+            index = indices[i].first; value = indices[i].second;
+        }
+    }
+    return index;
 }
 
 OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel )
@@ -4405,7 +4512,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
     //We think that we already have a filled SmiScnModel
     if (smiModel){
         //Set params for Benders
-        int maxIt = 10000;
+        int maxIt = 100000;
         double relEps = params.getDoubleParam(BendersParameter::RELGAP);
         double absEps = params.getDoubleParam(BendersParameter::ABSGAP);
         bool useBenders = params.getIntParam(BendersParameter::BENDERS);
@@ -4510,7 +4617,7 @@ double OsiStochasticBendersTwoStageSolverInterface::getObjValue(){
         else
             return benders->objDetEq_;
     }
-    
+
 }
 
 int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){

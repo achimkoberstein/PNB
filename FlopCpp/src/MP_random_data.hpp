@@ -162,6 +162,24 @@ namespace flopc{
         ~DiscreteRandomVariable();
     };
 
+    class EmpiricalRandomVariable : public DiscreteRandomVariable {
+    public:
+        EmpiricalRandomVariable();
+        EmpiricalRandomVariable(const std::vector<double>& values, const std::vector<double>& probabilities);
+        EmpiricalRandomVariable(double* values, double* probabilities,int numEntries);
+        ~EmpiricalRandomVariable();
+
+        virtual void sample(int howMany = 0);
+        virtual double getMeanValue() const;
+        virtual double pdf(double x) const;
+        virtual double cdf(double x) const;
+        virtual double quantile(double p) const;
+
+    private:
+        double* values_;
+        double* probs_;
+    };
+
     class DiscreteUniformRandomVariable : public DiscreteRandomVariable {
     public :
         DiscreteUniformRandomVariable(int from = 0, int to = 1, int sampleSize = 2, DiscretizationMethod* dmPtr = new DoubleDiscretization(2));
