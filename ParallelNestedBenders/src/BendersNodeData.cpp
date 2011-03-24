@@ -96,4 +96,15 @@ const CoinWarmStart* BendersNodeData::warm_start(void)
     return this->warm_start_;
 }
 
+
+BendersStageData::BendersStageData()
+: num_columns_(0),num_rows_(0),
+stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false)
+{
+
+}
+
+BendersStageData::~BendersStageData()
+{
+}
 } // end namespace parallel benders

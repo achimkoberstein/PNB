@@ -4,6 +4,7 @@
 #include <vector>
 
 class CoinPackedMatrix;
+class CoinPackedVector;
 class CoinWarmStart;
 class OsiRowCut;
 class SmiNodeData;
@@ -19,10 +20,6 @@ public:
     BendersNodeData(SmiNodeData* nodeData);
     ~BendersNodeData();
 
-    //void set_cols(const int cols);
-    //void set_rows(const int rows);
-    //const int cols();
-    //const int rows();
     void set_col_solution(const double* colSolution);
     const double* col_solution();
     void set_dual_solution(const double* dualSolution);
@@ -31,7 +28,6 @@ public:
     const CoinWarmStart* warm_start();
 
 
-public:
     double* col_solution_;
     double* dual_solution_;
     int cols_;
@@ -54,6 +50,26 @@ public:
     //double* dobj;
     //double* drlo;
     //double* drup;
+};
+
+struct BendersStageData {
+
+    BendersStageData();
+    ~BendersStageData();
+
+    // Store problem data for each stage
+    int num_columns_;
+    int num_rows_;
+
+    // Store information about stochasticity in stage
+    bool stochastic_matrix_w_;
+    bool stochastic_matrix_t_;
+    bool stochastic_rhs_;
+    bool stochastic_objective_;
+    bool stochastic_bounds_;
+
+    // Store pointers to matrices W and / or T if they do not change ?
+
 };
 
 } // end namespace parallel_benders

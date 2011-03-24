@@ -21,6 +21,8 @@
  * Goal: Subproblem solving and cut generation should be parallelized. Have a number of subproblems ( can be given by scenario tree ), assign a stage and a number to a thread and let it solve the corresponding subproblem.
 /************************************************************************/
 
+class SmiCoreData;
+
 namespace parallel_benders {
 
 
@@ -45,20 +47,40 @@ private:
 
     // Problem data
     SmiScnModel* smi_;
+    SmiCoreData* core_;
     OsiSolverInterface* osi_solver_;
+    std::vector<OsiSolverInterface*> osi_solver_vector_;
     // Scenario Tree that contains problem and solution data
     SmiScenarioTree<BendersNodeData*> tree_;
     std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
+    // Vector that contains StageWiseInformation
+    std::vector< BendersStageData* > stage_data_;
     
     // Problem characteristics
     int num_stages_;
     int num_scenarios_;
     int infinity_;
 
+    // Important solution data
+    double zero_tolerance_;
+    double integer_tolerance_;
+    double absolute_epsilon_;
+    double relative_epsilon_;
+
     // Solution process
     int current_iteration_;
+    const int max_iteration_;
     double lower_bound_;
     double upper_bound_;
+
+    int current_stage_;
+    bool forward_;
+    bool infeasible_problem_;
+
+    // Thread related variables
+    int num_cpu_; // How many cpu's do we have at our disposal?
+    std::vector<boost::thread> thread_vector_;
+    // Further thread management stuff
 
 };
 
@@ -68,6 +90,7 @@ private:
 // It waits for the threads to end, then does some stuff and waits again.
 
 
+bool computeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon);
 
 class OsiStochasticParallelNestedBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
