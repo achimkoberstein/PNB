@@ -1402,4 +1402,67 @@ stop:
         discretizedDistribution.insert(std::pair<double,double>(upperQuantile,0.185));
         rvarPtr->setDiscreteDistribution(discretizedDistribution);
     }
+
+    EmpiricalRandomVariable::EmpiricalRandomVariable():values_(NULL),probs_(NULL)
+    {
+
+    }
+    EmpiricalRandomVariable::EmpiricalRandomVariable( const std::vector<double>& values, const std::vector<double>& probabilities ): values_(NULL),probs_(NULL)
+    {
+        if (values.size() != probabilities.size())
+            LOG(FATAL) << "You tried to define an EmpiricalRandomVariable with values and probabilities, but they contain a different number of elements.";
+        double sumProb = 0;
+        // Fill valuesMap with the given values.
+        for (int i = 0; i < values.size(); i++){
+            valuesMap.insert(std::make_pair(values[i],probabilities[i]));
+            sumProb += probabilities[i];
+        }
+        LOG_IF(FATAL, !compareDouble(sumProb,1.0)) << "You tried to define an EmpiricalRandomVariable where the probabilities do not sum to one.";
+    }
+
+    EmpiricalRandomVariable::EmpiricalRandomVariable( double* values, double* probabilities, int numEntries ): values_(values),probs_(probabilities)
+    {
+        // Fill valuesMap with the given values.
+        double sumProb;
+        for (int i = 0; i < numEntries; i++){
+            valuesMap.insert(std::make_pair(values[i],probabilities[i]));
+            sumProb += probabilities[i];
+        }
+        LOG_IF(FATAL, !compareDouble(sumProb,1.0)) << "You tried to define an EmpiricalRandomVariable where the probabilities do not sum to one.";
+    }
+
+    EmpiricalRandomVariable::~EmpiricalRandomVariable()
+    {
+        delete [] values_; delete [] probs_;
+    }
+
+    void EmpiricalRandomVariable::sample( int howMany /*= 0*/ )
+    {
+        //
+        if ( howMany )// Draw some values..
+            throw not_implemented_error();
+        else
+            return;
+    }
+
+    double EmpiricalRandomVariable::getMeanValue() const
+    {
+        // Compute mean value
+        return RandomVariable::getMeanValue();
+    }
+
+    double EmpiricalRandomVariable::pdf( double x ) const
+    {
+        throw not_implemented_error();
+    }
+
+    double EmpiricalRandomVariable::cdf( double x ) const
+    {
+        throw not_implemented_error();
+    }
+
+    double EmpiricalRandomVariable::quantile( double p ) const
+    {
+        throw not_implemented_error();
+    }
 }

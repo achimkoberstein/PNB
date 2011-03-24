@@ -913,6 +913,29 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //smiModel->writeSmps("feasibilityProblem",true,false);
     }
 
+    TEST_F(MP_modelTest,EmpiricalRandomVariableTest){
+        MP_model testModel(new OsiClpSolverInterface());
+        MP_stage T(2);
+        MP_variable x,y(T);
+        std::vector<double> probs;
+        std::vector<double> values;
+        probs.push_back(0.2);
+        probs.push_back(0.8);
+        values.push_back(5);
+        values.push_back(20);
+        
+        RandomVariable* var[1] = { new EmpiricalRandomVariable(values,probs) };
+        MP_random_data randomData(&var[0],T);
+        
+        MP_constraint firstStage,secondStage(T);
+        firstStage() = x() >= 10;
+        secondStage(T+1) = y(T+1) >= x()+randomData(T+1);
+
+        testModel.setObjective(x()+y(T+1));
+        testModel.solve(MP_model::MINIMIZE);
+        LOG(INFO) << "ObjValue " << testModel->getObjValue();
+    }
+
     // Dacota  Model to test the EV-, EEV- and WS-Problems
     TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
@@ -6103,12 +6126,207 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
     }
 
+    TEST_F(UseCaseTest,Atilla){
+
+
+        //OsiClpSolverInterface clpSolver;
+        MP_model model(new OsiClpSolverInterface);
+
+
+
+        enum {numStage=2};
+
+        enum {numSupplier=4};
+
+        enum {numDiscounts=3};
+
+        enum {numScen=8};
+
+
+
+        MP_set supplier(numSupplier);
+        supplier.setName("supplier");
+
+        MP_set discount(numDiscounts);
+        discount.setName("discount");
+
+
+
+        MP_stage T(numStage);
+        T.setName("stage");
+
+
+
+        MP_variable q_fix(supplier,discount);
+        q_fix.setName("q_fix");
+
+        MP_variable q_flex(supplier,T);
+        q_flex.setName("q_flex");
+
+        MP_variable o(supplier);
+        o.setName("o");
+
+        MP_variable y(supplier);
+        y.setName("y");
+
+        MP_variable x(supplier,discount);
+        x.setName("x");
+
+
+        y.binary();
+        x.binary();
+
+
+
+
+
+        MP_constraint optionsConstraint(supplier),
+
+            capacityConstraint(supplier),
+
+            //discount1Constraint(supplier),
+
+            discountConstraint(supplier,discount),
+
+            demandConstraint(T);
+
+
+        MP_data B(supplier);
+
+        MP_data Q(supplier,discount);
+
+        MP_data capacity(supplier);
+
+        MP_data F(supplier);
+
+        MP_data P(supplier,discount);
+
+        MP_data R(supplier);
+
+        MP_data SP(supplier);
+
+
+
+        double B_data[4]={100,100,100,100};
+
+        B.value(&B_data[0]);
+
+
+        double Q_data[4][3]={{0,100,200},{0,100,200},{0,100,200},{0,100,200}};
+
+        Q.value(&Q_data[0][0]);
+
+
+        double capa_data[4]={250,250,250,250};
+
+        capacity.value(&capa_data[0]);
+
+
+        double F_data[4]={100,100,100,100};
+
+        F.value(&F_data[0]);
+
+
+
+        double P_data[4][3]={{100,98,95},{100,98,95},{100,98,95},{100,98,95}};
+
+        P.value(&P_data[0][0]);
+
+
+
+        double R_data[4]={13,13,13,13};
+
+        R.value(&R_data[0]);
+
+
+
+        double SP_data[4]={92,92,92,92};
+
+        SP.value(&SP_data[0]);
+
+
+        std::vector<double> probs;
+        std::vector<double> values;
+
+        probs.push_back(0.95);
+        probs.push_back(0.05);
+        values.push_back(1);
+        values.push_back(0);
+
+
+
+        RandomVariable* supply[numStage-1][numSupplier] = {
+            
+            { new EmpiricalRandomVariable(values,probs),
+
+            new EmpiricalRandomVariable(values,probs),
+
+            new EmpiricalRandomVariable(values,probs),
+
+            new EmpiricalRandomVariable(values,probs)}
+        };
+
+
+
+        MP_random_data S(&supply[0][0],T,supplier);
+
+        std::vector<double> probdemand;
+        std::vector<double> valuedemand;
+
+        probdemand.push_back(1);
+        /*probdemand.push_back(0.5);*/
+        //probdemand.push_back(0.5);
+        valuedemand.push_back(80);
+        //valuedemand.push_back(120);
+
+        RandomVariable* demand[1] = { new EmpiricalRandomVariable(valuedemand,probdemand)};
+
+        MP_random_data D(&demand[0],T);
+
+
+        //optionsConstraint(supplier)=o(supplier)<=B(supplier)*y(supplier);
+
+        //capacityConstraint(supplier)=sum(discount,q_fix(supplier,discount))+o(supplier)<=capacity(supplier)*y(supplier);
+
+        ////discount1Constraint(supplier)
+
+        //discountConstraint(supplier,discount)=q_fix(supplier,discount)>=Q(supplier,discount)*x(supplier,discount);
+
+        demandConstraint(T+1)=sum(supplier,S(T+1,supplier)*(sum(discount,q_fix(supplier,discount))+q_flex(supplier,T+1)))==maximum(supplier,S(T+1,supplier))*D(T+1);
+
+
+
+
+
+        MP_expression expectedCosts(sum(supplier,
+            //F(supplier)*y(supplier)
+
+            //+R(supplier)*o(supplier)
+
+            S(T+1,supplier)*(sum(discount,P(supplier,discount)*q_fix(supplier,discount)) +SP(supplier)*q_flex(supplier,T+1))
+            ));
+
+        model.setObjective(expectedCosts);
+
+        model.attach(model.Solver);
+        SmiScnModel* smiPtr = model.getSmi();
+        smiPtr->writeSmps("Atilla",false,false);
+        smiPtr->setOsiSolverHandle(model.Solver);
+        // Get Deterministic equivalent
+        OsiSolverInterface* osiPtr = smiPtr->loadOsiSolverData();
+        osiPtr->writeLp("Atilla");
+        model.solve(MP_model::MINIMIZE);
+
+
+
+    }
+
 } //end namespace
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.DecompUnitTest";
+    //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
     google::InitGoogleLogging(argv[0]);
