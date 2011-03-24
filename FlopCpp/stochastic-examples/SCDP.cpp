@@ -266,54 +266,54 @@ int main(int argc, char* argv[]) {
 
 #pragma region financial
 
-    //// max_hedge_time; #maximal hedge period 	
-    //const int max_hedge_time = 4;
+    // max_hedge_time; #maximal hedge period 	
+    const int max_hedge_time = 4;
 
-    //// exr_basis{c in C}; #basis exchange rate - used to calculate the exchange rates for the scenarios
-    //double val_exr_basis[numC] = { 0, 1};
-    //MP_data exr_basis(&val_exr_basis[0], C);
+    // exr_basis{c in C}; #basis exchange rate - used to calculate the exchange rates for the scenarios
+    double val_exr_basis[numC] = { 0, 1};
+    MP_data exr_basis(&val_exr_basis[0], C);
 
-    //// exr_offset{c in C}; #with exr_basis=0 and exr_offset=1 a one currency can be defined as the reference currency - should be 0 at all other currencies;
-    //// C1 is the reference currency
-    //double val_exr_offset[numC] = { 1, 0};
-    //MP_data exr_offset(&val_exr_offset[0], C);
+    // exr_offset{c in C}; #with exr_basis=0 and exr_offset=1 a one currency can be defined as the reference currency - should be 0 at all other currencies;
+    // C1 is the reference currency
+    double val_exr_offset[numC] = { 1, 0};
+    MP_data exr_offset(&val_exr_offset[0], C);
 
-    //// ef; #factor for calculating the exchange rate
-    //const double ef = 1.25;
+    // ef; #factor for calculating the exchange rate
+    const double ef = 1.25;
 
-    //// probability for the exchange rate going up
-    //const double p_up = (1-(1/ef))/(ef-(1/ef));
+    // probability for the exchange rate going up
+    const double p_up = (1-(1/ef))/(ef-(1/ef));
 
-    //// exchange rate
-    //std::vector<double> probsE;
-    //std::vector<double> valuesE;
-    //probsE.push_back(p_up);
-    //probsE.push_back(1 - p_up);
-    //valuesE.push_back(ef);
-    //valuesE.push_back(1/ef);
+    // exchange rate
+    std::vector<double> probsE;
+    std::vector<double> valuesE;
+    probsE.push_back(p_up);
+    probsE.push_back(1 - p_up);
+    valuesE.push_back(ef);
+    valuesE.push_back(1/ef);
 
-    //RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE) };
-    //
-    //MP_random_data exr_factor(&rVarExr[0], T);
-    //
-    //MP_random_data exr(C,T);
-    //exr.setName("exr");
-    //
-    //forall(C*T.such_that(exr_basis(C) == 0.0), exr(C,T) = exr_offset(C)*1); // basis == 0 --> exr = offset
+    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE) };
+    
+    MP_random_data exr_factor(&rVarExr[0], T);
+    
+    MP_random_data exr(C,T);
+    exr.setName("exr");
+    
+    forall(C*T.such_that(T > 0 && exr_basis(C) == 0.0), exr(C,T) = exr_offset(C)*1); // basis == 0 --> exr = offset
 
-    //forall(C.such_that(exr_basis(C) == 1.0), exr(C,0) = exr_offset(C)*1); // basis == 1 --> exr = offset [T = 0]
-    //forall(C*T.such_that(exr_basis(C) == 1.0 && T > 0), exr(C,T) = exr(C,T-1) * exr_factor(T)); // basis == 1 --> exr = exr(T-1) * exr_factor [T > 0]
+    forall(C.such_that(T == 1 && exr_basis(C) == 1.0), exr(C,T) = exr_offset(C) + exr_basis(C) * exr_factor(T)); // basis == 1 --> exr = offset + basis * exr_factor [T = 1]
+    forall(C*T.such_that(T > 1 && exr_basis(C) == 1.0), exr(C,T) = exr(C,T-1) * exr_factor(T)); // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
 
-    //// ir{c in C}; #interest rate for calculating the npv
-    //const double ir[numC] = { 0, 0};
+    // ir{c in C}; #interest rate for calculating the npv
+    const double ir[numC] = { 0, 0};
 
-    //// ir_ref; #interest rate of the reference currency
-    //const double ir_ref = 0;
+    // ir_ref; #interest rate of the reference currency
+    const double ir_ref = 0;
 
-    //// fexr; #exchange rate for a forward contract buying currency c and selling referency currency. contracted in period tbuy, operating in period teffect
-    //MP_random_data fexr(C,T,T); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
-    //MP_index tbuy, teffect;
-    //forall(C*T(tbuy)*T(teffect).such_that(teffect > tbuy && teffect-tbuy <= max_hedge_time), fexr(C,tbuy,teffect) = exr(C,tbuy) /* * exp(..) */ );
+    // fexr; #exchange rate for a forward contract buying currency c and selling referency currency. contracted in period tbuy, operating in period teffect
+    MP_random_data fexr(C,T,T); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
+    MP_index tbuy, teffect;
+    forall(C*T(tbuy)*T(teffect).such_that(teffect > tbuy && teffect-tbuy <= max_hedge_time), fexr(C,tbuy,teffect) = exr(C,tbuy) /* * exp(..) */ );
     
     // rc; #recourse coefficient. how high are the recourse costs for not serving the demand (1.0 means that there are no. 1.1 means 10% additional loss of the price for a not delivered unit
     const double rc = 1;
@@ -472,7 +472,9 @@ int main(int argc, char* argv[]) {
 
     MP_variable testvar(T);
     MP_constraint constr(T);
-    constr(T) = testvar(T) == d(0,0,T);
+    constr.setName("c");
+    //constr(T) = testvar(T) == d(0,0,T);
+    constr(T) = testvar(T) == exr(0,T);
     model.setObjective(testvar(0));
     
     //model.setObjective(sum(M*T, revenue(M,T)));
