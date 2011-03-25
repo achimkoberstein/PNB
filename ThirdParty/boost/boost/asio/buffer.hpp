@@ -2,7 +2,7 @@
 // buffer.hpp
 // ~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,16 +15,12 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include <boost/asio/detail/push_options.hpp>
-
-#include <boost/asio/detail/push_options.hpp>
+#include <boost/asio/detail/config.hpp>
 #include <cstddef>
-#include <boost/config.hpp>
-#include <boost/array.hpp>
-#include <boost/type_traits/is_const.hpp>
 #include <string>
 #include <vector>
-#include <boost/asio/detail/pop_options.hpp>
+#include <boost/detail/workaround.hpp>
+#include <boost/asio/detail/array_fwd.hpp>
 
 #if defined(BOOST_MSVC)
 # if defined(_HAS_ITERATOR_DEBUGGING) && (_HAS_ITERATOR_DEBUGGING != 0)
@@ -43,10 +39,16 @@
 #endif // defined(__GNUC__)
 
 #if defined(BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
-# include <boost/asio/detail/push_options.hpp>
 # include <boost/function.hpp>
-# include <boost/asio/detail/pop_options.hpp>
 #endif // BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
+
+#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x582)) \
+  || BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
+# include <boost/type_traits/is_const.hpp>
+#endif // BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x582))
+       // || BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
+
+#include <boost/asio/detail/push_options.hpp>
 
 namespace boost {
 namespace asio {

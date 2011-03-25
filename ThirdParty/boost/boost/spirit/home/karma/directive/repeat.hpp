@@ -1,5 +1,5 @@
-//  Copyright (c) 2001-2010 Hartmut Kaiser
-//  Copyright (c) 2001-2010 Joel de Guzman
+//  Copyright (c) 2001-2011 Hartmut Kaiser
+//  Copyright (c) 2001-2011 Joel de Guzman
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -12,12 +12,16 @@
 #endif
 
 #include <boost/spirit/home/karma/meta_compiler.hpp>
+#include <boost/spirit/home/karma/detail/output_iterator.hpp>
+#include <boost/spirit/home/karma/detail/get_stricttag.hpp>
 #include <boost/spirit/home/karma/generator.hpp>
 #include <boost/spirit/home/karma/auxiliary/lazy.hpp>
 #include <boost/spirit/home/karma/operator/kleene.hpp>
 #include <boost/spirit/home/support/container.hpp>
 #include <boost/spirit/home/support/common_terminals.hpp>
-#include <boost/spirit/home/support/attributes.hpp>
+#include <boost/spirit/home/support/has_semantic_action.hpp>
+#include <boost/spirit/home/support/handles_container.hpp>
+#include <boost/spirit/home/karma/detail/attributes.hpp>
 #include <boost/spirit/home/support/info.hpp>
 #include <boost/fusion/include/at.hpp>
 
@@ -61,7 +65,6 @@ namespace boost { namespace spirit
       , tag::repeat
       , 2 // arity
     > : mpl::true_ {};
-
 }}
 
 namespace boost { namespace spirit { namespace karma
@@ -132,9 +135,9 @@ namespace boost { namespace spirit { namespace karma
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    template <typename Subject, typename LoopIter>
-    struct repeat_generator 
-      : unary_generator<repeat_generator<Subject, LoopIter> >
+    template <typename Subject, typename LoopIter, typename Strict
+      , typename Derived>
+    struct base_repeat_generator : unary_generator<Derived>
     {
     private:
         // iterate over the given container until its exhausted or the embedded
@@ -151,6 +154,8 @@ namespace boost { namespace spirit { namespace karma
             {
                 if (subject.generate(sink, ctx, d, traits::deref(it)))
                     return true;
+                if (Strict::value)
+                    return false;
                 traits::next(it);
             }
             return false;
@@ -183,7 +188,7 @@ namespace boost { namespace spirit { namespace karma
             >
         {};
 
-        repeat_generator(Subject const& subject, LoopIter const& iter)
+        base_repeat_generator(Subject const& subject, LoopIter const& iter)
           : subject(subject), iter(iter) {}
 
         template <typename OutputIterator, typename Context, typename Delimiter
@@ -230,14 +235,47 @@ namespace boost { namespace spirit { namespace karma
         LoopIter iter;
     };
 
+    template <typename Subject, typename LoopIter>
+    struct repeat_generator 
+      : base_repeat_generator<
+            Subject, LoopIter, mpl::false_
+          , repeat_generator<Subject, LoopIter> >
+    {
+        typedef base_repeat_generator<
+            Subject, LoopIter, mpl::false_, repeat_generator
+        > base_repeat_generator_;
+
+        repeat_generator(Subject const& subject, LoopIter const& iter)
+          : base_repeat_generator_(subject, iter) {}
+    };
+
+    template <typename Subject, typename LoopIter>
+    struct strict_repeat_generator 
+      : base_repeat_generator<
+            Subject, LoopIter, mpl::true_
+          , strict_repeat_generator<Subject, LoopIter> >
+    {
+        typedef base_repeat_generator<
+            Subject, LoopIter, mpl::true_, strict_repeat_generator
+        > base_repeat_generator_;
+
+        strict_repeat_generator(Subject const& subject, LoopIter const& iter)
+          : base_repeat_generator_(subject, iter) {}
+    };
+
     ///////////////////////////////////////////////////////////////////////////
     // Generator generators: make_xxx function (objects)
     ///////////////////////////////////////////////////////////////////////////
     template <typename Subject, typename Modifiers>
     struct make_directive<tag::repeat, Subject, Modifiers>
     {
-        typedef kleene<Subject> result_type;
-        result_type operator()(unused_type, Subject const& subject, unused_type) const
+        typedef typename mpl::if_<
+            detail::get_stricttag<Modifiers>
+          , strict_kleene<Subject>, kleene<Subject>
+        >::type result_type;
+
+        result_type operator()(unused_type, Subject const& subject
+          , unused_type) const
         {
             return result_type(subject);
         }
@@ -248,7 +286,12 @@ namespace boost { namespace spirit { namespace karma
         terminal_ex<tag::repeat, fusion::vector1<T> >, Subject, Modifiers>
     {
         typedef exact_iterator<T> iterator_type;
-        typedef repeat_generator<Subject, iterator_type> result_type;
+
+        typedef typename mpl::if_<
+            detail::get_stricttag<Modifiers>
+          , strict_repeat_generator<Subject, iterator_type>
+          , repeat_generator<Subject, iterator_type>
+        >::type result_type;
 
         template <typename Terminal>
         result_type operator()(
@@ -263,7 +306,12 @@ namespace boost { namespace spirit { namespace karma
         terminal_ex<tag::repeat, fusion::vector2<T, T> >, Subject, Modifiers>
     {
         typedef finite_iterator<T> iterator_type;
-        typedef repeat_generator<Subject, iterator_type> result_type;
+
+        typedef typename mpl::if_<
+            detail::get_stricttag<Modifiers>
+          , strict_repeat_generator<Subject, iterator_type>
+          , repeat_generator<Subject, iterator_type>
+        >::type result_type;
 
         template <typename Terminal>
         result_type operator()(
@@ -284,7 +332,12 @@ namespace boost { namespace spirit { namespace karma
         , fusion::vector2<T, inf_type> >, Subject, Modifiers>
     {
         typedef infinite_iterator<T> iterator_type;
-        typedef repeat_generator<Subject, iterator_type> result_type;
+
+        typedef typename mpl::if_<
+            detail::get_stricttag<Modifiers>
+          , strict_repeat_generator<Subject, iterator_type>
+          , repeat_generator<Subject, iterator_type>
+        >::type result_type;
 
         template <typename Terminal>
         result_type operator()(
@@ -298,10 +351,29 @@ namespace boost { namespace spirit { namespace karma
 
 namespace boost { namespace spirit { namespace traits
 {
+    ///////////////////////////////////////////////////////////////////////////
     template <typename Subject, typename LoopIter>
     struct has_semantic_action<karma::repeat_generator<Subject, LoopIter> >
       : unary_has_semantic_action<Subject> {};
 
+    template <typename Subject, typename LoopIter>
+    struct has_semantic_action<karma::strict_repeat_generator<Subject, LoopIter> >
+      : unary_has_semantic_action<Subject> {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Subject, typename LoopIter, typename Attribute
+      , typename Context, typename Iterator>
+    struct handles_container<
+            karma::repeat_generator<Subject, LoopIter>, Attribute
+          , Context, Iterator> 
+      : mpl::true_ {};
+
+    template <typename Subject, typename LoopIter, typename Attribute
+      , typename Context, typename Iterator>
+    struct handles_container<
+            karma::strict_repeat_generator<Subject, LoopIter>, Attribute
+          , Context, Iterator> 
+      : mpl::true_ {};
 }}}
 
 #endif

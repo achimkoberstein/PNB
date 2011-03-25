@@ -1,5 +1,5 @@
 /*=============================================================================
-    Copyright (c) 2001-2010 Joel de Guzman
+    Copyright (c) 2001-2011 Joel de Guzman
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -14,7 +14,9 @@
 #include <boost/spirit/home/qi/meta_compiler.hpp>
 #include <boost/spirit/home/qi/parser.hpp>
 #include <boost/spirit/home/support/container.hpp>
-#include <boost/spirit/home/support/attributes.hpp>
+#include <boost/spirit/home/qi/detail/attributes.hpp>
+#include <boost/spirit/home/support/has_semantic_action.hpp>
+#include <boost/spirit/home/support/handles_container.hpp>
 #include <boost/spirit/home/support/info.hpp>
 
 namespace boost { namespace spirit
@@ -66,6 +68,9 @@ namespace boost { namespace spirit { namespace qi
                 value_type;
             value_type val = value_type();
 
+            // ensure the attribute is actually a container type
+            traits::make_container(attr);
+
             // Repeat while subject parses ok
             Iterator save = first;
             while (subject.parse(save, last, context, skipper, val) &&
@@ -96,13 +101,29 @@ namespace boost { namespace spirit { namespace qi
       : make_unary_composite<Elements, kleene>
     {};
     //]
+
+//     ///////////////////////////////////////////////////////////////////////////
+//     // Define what attributes are compatible with a kleene
+//     template <typename Attribute, typename Subject, typename Context, typename Iterator>
+//     struct is_attribute_compatible<Attribute, kleene<Subject>, Context, Iterator>
+//       : traits::is_container_compatible<qi::domain, Attribute
+//               , kleene<Subject>, Context, Iterator>
+//     {};
 }}}
 
 namespace boost { namespace spirit { namespace traits
 {
+    ///////////////////////////////////////////////////////////////////////////
     template <typename Subject>
     struct has_semantic_action<qi::kleene<Subject> >
       : unary_has_semantic_action<Subject> {};
+
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Subject, typename Attribute, typename Context
+        , typename Iterator>
+    struct handles_container<qi::kleene<Subject>, Attribute
+        , Context, Iterator>
+      : mpl::true_ {}; 
 }}}
 
 #endif

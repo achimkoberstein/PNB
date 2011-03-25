@@ -2,7 +2,7 @@
 // read_at.hpp
 // ~~~~~~~~~~~
 //
-// Copyright (c) 2003-2010 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,16 +15,13 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include <boost/asio/detail/push_options.hpp>
-
-#include <boost/asio/detail/push_options.hpp>
+#include <boost/asio/detail/config.hpp>
 #include <cstddef>
-#include <boost/config.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/asio/detail/pop_options.hpp>
-
-#include <boost/asio/basic_streambuf.hpp>
+#include <boost/asio/basic_streambuf_fwd.hpp>
 #include <boost/asio/error.hpp>
+
+#include <boost/asio/detail/push_options.hpp>
 
 namespace boost {
 namespace asio {
@@ -571,8 +568,8 @@ void async_read_at(AsyncRandomAccessReadDevice& d,
 } // namespace asio
 } // namespace boost
 
-#include <boost/asio/impl/read_at.ipp>
-
 #include <boost/asio/detail/pop_options.hpp>
+
+#include <boost/asio/impl/read_at.hpp>
 
 #endif // BOOST_ASIO_READ_AT_HPP

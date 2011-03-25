@@ -1,5 +1,5 @@
 /*=============================================================================
-    Copyright (c) 2001-2010 Joel de Guzman
+    Copyright (c) 2001-2011 Joel de Guzman
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -14,7 +14,7 @@
 #include <boost/spirit/home/qi/domain.hpp>
 #include <boost/spirit/home/qi/skip_over.hpp>
 #include <boost/spirit/home/qi/meta_compiler.hpp>
-#include <boost/spirit/home/support/attributes.hpp>
+#include <boost/spirit/home/qi/detail/attributes.hpp>
 #include <boost/spirit/home/support/unused.hpp>
 #include <boost/spirit/home/support/info.hpp>
 #include <boost/spirit/home/support/lazy.hpp>
@@ -218,6 +218,31 @@ namespace boost { namespace spirit { namespace qi
             return result_type(lt.actor, subject, modifiers);
         }
     };
+}}}
+
+namespace boost { namespace spirit { namespace traits
+{
+    ///////////////////////////////////////////////////////////////////////////
+    template <typename Actor, typename Modifiers, typename Attribute
+      , typename Context, typename Iterator>
+    struct handles_container<
+        qi::lazy_parser<Actor, Modifiers>, Attribute, Context, Iterator>
+      : handles_container<
+          typename qi::lazy_parser<Actor, Modifiers>::template
+              attribute<Context, Iterator>::parser_type
+        , Attribute, Context, Iterator> 
+    {};
+
+    template <typename Subject, typename Actor, typename Modifiers
+      , typename Attribute, typename Context, typename Iterator>
+    struct handles_container<
+        qi::lazy_directive<Actor, Subject, Modifiers>, Attribute
+      , Context, Iterator>
+      : handles_container<
+          typename qi::lazy_directive<Actor, Subject, Modifiers>::template
+              attribute<Context, Iterator>::parser_type
+        , Attribute, Context, Iterator> 
+    {};
 }}}
 
 #endif

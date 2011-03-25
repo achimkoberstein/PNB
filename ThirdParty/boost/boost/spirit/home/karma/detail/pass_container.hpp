@@ -1,6 +1,6 @@
 /*=============================================================================
-    Copyright (c) 2001-2010 Hartmut Kaiser
-    Copyright (c) 2001-2010 Joel de Guzman
+    Copyright (c) 2001-2011 Hartmut Kaiser
+    Copyright (c) 2001-2011 Joel de Guzman
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -12,8 +12,9 @@
 #pragma once
 #endif
 
-#include <boost/spirit/home/support/attributes.hpp>
+#include <boost/spirit/home/karma/detail/attributes.hpp>
 #include <boost/spirit/home/support/container.hpp>
+#include <boost/spirit/home/support/handles_container.hpp>
 #include <boost/spirit/home/support/detail/hold_any.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/type_traits/is_convertible.hpp>
@@ -22,6 +23,7 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/repeat.hpp>
 #include <boost/range/iterator_range.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 
 namespace boost { namespace spirit { namespace karma { namespace detail
 {
@@ -36,7 +38,7 @@ namespace boost { namespace spirit { namespace karma { namespace detail
     template <typename RHS, typename LHSAttribute>
     struct has_same_elements<RHS, LHSAttribute, true>
       : mpl::or_<
-            is_convertible<typename LHSAttribute::value_type, RHS>
+            is_convertible<RHS, typename LHSAttribute::value_type>
           , is_same<typename LHSAttribute::value_type, hold_any>
         > {};
 
@@ -58,16 +60,18 @@ namespace boost { namespace spirit { namespace karma { namespace detail
 
 #undef BOOST_SPIRIT_IS_CONVERTIBLE
 
+    ///////////////////////////////////////////////////////////////////////////
     // This function handles the case where the attribute (Attr) given
     // to the sequence is an STL container. This is a wrapper around F.
     // The function F does the actual generating.
-    template <typename F, typename Attr>
+    template <typename F, typename Attr, typename Iterator, typename Strict>
     struct pass_container
     {
         typedef typename F::context_type context_type;
 
-        pass_container(F const& f, Attr& attr)
-          : f(f), attr(attr), iter(traits::begin(attr)) {}
+        pass_container(F const& f, Iterator begin, Iterator end)
+          : f(f), iter(begin), end(end) 
+        {}
 
         // this is for the case when the current element expects an attribute
         // which is taken from the next entry in the container
@@ -75,8 +79,6 @@ namespace boost { namespace spirit { namespace karma { namespace detail
         bool dispatch_attribute_element(Component const& component, mpl::false_) const
         {
             // get the next value to generate from container
-            typename traits::container_iterator<Attr>::type end = 
-                traits::end(attr);
             if (!traits::compare(iter, end) && !f(component, traits::deref(iter))) 
             {
                 // needs to return false as long as everything is ok
@@ -87,18 +89,13 @@ namespace boost { namespace spirit { namespace karma { namespace detail
             return true;
         }
 
-        // this is for the case when the current element expects an attribute
+        // This is for the case when the current element expects an attribute
         // which is a container itself, this element will get the rest of the 
-        // attribute container
+        // attribute container.
         template <typename Component>
         bool dispatch_attribute_element(Component const& component, mpl::true_) const
         {
-            typename traits::container_iterator<Attr>::type end = 
-                traits::end(attr);
-            bool result = f(component, make_iterator_range(iter, end));
-            if (result)
-                iter = traits::end(attr);     // adjust current iter to the end 
-            return result;
+            return f(component, make_iterator_range(iter, end));
         }
 
         // This handles the distinction between elements in a sequence expecting
@@ -111,9 +108,14 @@ namespace boost { namespace spirit { namespace karma { namespace detail
             typedef typename traits::attribute_of<
                 Component, context_type>::type attribute_type;
 
+//             typedef mpl::and_<
+//                 traits::is_container<attribute_type>
+//               , is_convertible<Attr, attribute_type> > predicate;
+
             typedef mpl::and_<
                 traits::is_container<attribute_type>
-              , is_convertible<Attr, attribute_type> > predicate;
+              , traits::handles_container<Component, Attr, context_type>
+            > predicate;
 
             return dispatch_attribute_element(component, predicate());
         }
@@ -149,12 +151,7 @@ namespace boost { namespace spirit { namespace karma { namespace detail
         template <typename Component>
         bool dispatch_main(Component const& component, mpl::true_) const
         {
-            typename traits::container_iterator<Attr>::type end = 
-                traits::end(attr);
-            bool result = f(component, make_iterator_range(iter, end));
-            if (result)
-                iter = traits::end(attr);     // adjust current iter to the end 
-            return result;
+            return f(component, make_iterator_range(iter, end));
         }
 
         // Dispatches to dispatch_main depending on the attribute type
@@ -166,27 +163,23 @@ namespace boost { namespace spirit { namespace karma { namespace detail
             typedef typename traits::attribute_of<
                 Component, context_type>::type lhs_attribute;
 
-            return dispatch_main(component
-              , has_same_elements<rhs, lhs_attribute>());
+            typedef mpl::and_<
+                has_same_elements<rhs, lhs_attribute>
+              , traits::handles_container<Component, Attr, context_type>
+            > predicate;
+
+            // false means everything went ok
+            return dispatch_main(component, predicate());
         }
 
         F f;
-        Attr const& attr;
-        mutable typename traits::container_iterator<Attr>::type iter;
+        mutable Iterator iter;
+        mutable Iterator end;
 
     private:
         // silence MSVC warning C4512: assignment operator could not be generated
         pass_container& operator= (pass_container const&);
     };
-
-    // Utility function to make a pass_container
-    template <typename F, typename Attr>
-    pass_container<F, Attr>
-    inline make_pass_container(F const& f, Attr& attr)
-    {
-        return pass_container<F, Attr>(f, attr);
-    }
-
 }}}}
 
 #endif
