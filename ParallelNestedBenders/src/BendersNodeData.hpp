@@ -60,6 +60,7 @@ struct BendersStageData {
     // Store problem data for each stage
     int num_columns_;
     int num_rows_;
+    int stage_; // Just to be sure
 
     // Store information about stochasticity in stage
     bool stochastic_matrix_w_;

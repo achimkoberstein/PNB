@@ -27,6 +27,7 @@
 #include <boost/fusion/container/deque/detail/at_impl.hpp>
 #include <boost/fusion/container/deque/detail/begin_impl.hpp>
 #include <boost/fusion/container/deque/detail/end_impl.hpp>
+#include <boost/fusion/container/deque/detail/is_sequence_impl.hpp>
 #include <boost/fusion/sequence/intrinsic/begin.hpp>
 #include <boost/mpl/bool.hpp>
 
@@ -68,7 +69,7 @@ namespace boost { namespace fusion {
             {}
 
         template<typename Sequence>
-            deque(Sequence const& seq, typename disable_if<is_convertible<Sequence, T0> >::type* dummy = 0)
+            deque(Sequence const& seq, typename disable_if<is_convertible<Sequence, T0> >::type* /*dummy*/ = 0)
             : base(base::from_iterator(fusion::begin(seq)))
             {}
 

@@ -17,6 +17,7 @@
 //  See http://www.boost.org for updates, documentation, and revision history.
 
 #include <boost/config.hpp>
+#include <boost/mpl/assert.hpp>
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/identity.hpp>
@@ -45,7 +46,7 @@ struct version
     typedef
         BOOST_DEDUCED_TYPENAME mpl::eval_if<
             is_base_and_derived<boost::serialization::basic_traits,T>,
-            traits_class_version<T>,
+            traits_class_version< T >,
             mpl::int_<0>
         >::type type;
     BOOST_STATIC_CONSTANT(int, value = version::type::value);
@@ -66,19 +67,12 @@ struct version
 //#include <boost/serialization/level.hpp>
 //#include <boost/mpl/equal_to.hpp>
 
-#include <boost/mpl/assert.hpp>
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/comparison.hpp>
 
 // specify the current version number for the class
 // version numbers limited to 8 bits !!!
 #define BOOST_CLASS_VERSION(T, N)                                      \
-BOOST_MPL_ASSERT((                                                     \
-    boost::mpl::less<                                                  \
-        boost::mpl::int_<N>,                                           \
-        boost::mpl::int_<256>                                          \
-    >                                                                  \
-));                                                                    \
 namespace boost {                                                      \
 namespace serialization {                                              \
 template<>                                                             \
@@ -86,9 +80,15 @@ struct version<T >                                                     \
 {                                                                      \
     typedef mpl::int_<N> type;                                         \
     typedef mpl::integral_c_tag tag;                                   \
-    BOOST_STATIC_CONSTANT(unsigned int, value = version::type::value); \
+    BOOST_STATIC_CONSTANT(int, value = version::type::value);          \
+    BOOST_MPL_ASSERT((                                                 \
+        boost::mpl::less<                                              \
+            boost::mpl::int_<N>,                                       \
+            boost::mpl::int_<256>                                      \
+        >                                                              \
+    ));                                                                \
     /*                                                                 \
-    BOOST_STATIC_ASSERT((                                              \
+    BOOST_MPL_ASSERT((                                                 \
         mpl::equal_to<                                                 \
             :implementation_level<T >,                                 \
             mpl::int_<object_class_info>                               \

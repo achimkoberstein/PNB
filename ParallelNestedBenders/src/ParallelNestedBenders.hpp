@@ -4,7 +4,11 @@
 
 #include <vector>
 
+
+
 #include <CoinPackedVector.hpp>
+
+#include "boost/threadpool.hpp"
 
 #include "Benders.hpp" // Just for OsiStochasticSolverInterface, needs to be outsourced to own file
 #include "SmiScenarioTree.hpp" 
@@ -27,6 +31,9 @@ namespace parallel_benders {
 
 
 class ParallelNestedBenders {
+    class ProblemSolver {
+
+    };
 
 public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
@@ -41,15 +48,18 @@ private:
     // High-level methods we need during the algorithm
     void AdjustProblem(); // Adjust the problem and store characteristics about it
     void AdjustProblemInStage(int stage);
-
     void AggregateStages(int startingStage,int endingStage);
 
+    void HandleSubproblem( BendersNodeData* benders_node_pointer);
 
+    void BuildSubproblem( OsiSolverInterface* osi_solver, BendersNodeData* benders_node_pointer);
+    void SolveSubproblem( OsiSolverInterface* osi_solver );
+    void StoreData( OsiSolverInterface* osi_solver, BendersNodeData* benders_node_pointer );
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
     OsiSolverInterface* osi_solver_;
-    std::vector<OsiSolverInterface*> osi_solver_vector_;
+    std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_;
     // Scenario Tree that contains problem and solution data
     SmiScenarioTree<BendersNodeData*> tree_;
     std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
@@ -79,8 +89,8 @@ private:
 
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
-    std::vector<boost::thread> thread_vector_;
     // Further thread management stuff
+    boost::threadpool::pool thread_pool_;
 
 };
 

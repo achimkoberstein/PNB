@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../ParallelNestedBenders/src;../../../../Benders/src"
+				AdditionalIncludeDirectories="../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -59,6 +59,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
