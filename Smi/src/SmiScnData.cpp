@@ -679,3 +679,82 @@ SmiNodeData::deleteMemory()
 		this->strt_=NULL;
 	}
 }
+
+CoinPackedMatrix* SmiNodeData::generateCoinPackedMatrix() const
+{
+    double* rowElements = new double[getNumMatrixElements()];
+    int* rowIndices = new int[getNumMatrixElements()];
+    int* rowStrt = new int[nrow_+1];
+    memcpy(rowElements,dels_+mat_strt_,getNumMatrixElements()*sizeof(double));
+    memcpy(rowIndices,inds_+mat_strt_,getNumMatrixElements()*sizeof(int));
+    memcpy(rowStrt,strt_+mat_strt_,(nrow_+1)*sizeof(int));
+    CoinPackedMatrix* matrix =  new CoinPackedMatrix(false,rowStrt,rowIndices,rowElements,getNumMatrixElements());
+    return matrix;
+    // TODO: Use assignMatrix to prevent unnecessary copying.
+}
+
+CoinPackedMatrix* SmiNodeData::generateCoinPackedWMatrix() const
+{
+    std::vector<double> elements;
+    std::vector<int> indices;
+    std::vector<int> start;
+    std::vector<int> length;
+    start.push_back(0);
+
+    // Now we have to go through all the elements and add the W entries
+    int nels = getNumMatrixElements();
+    int overallWEntries = 0;
+    int currentWEntries = 0;
+    int row = 0;
+    for (row =getMatStart(); row < getMatEnd(); row++){ // Iterate over the rows
+        for (int column = strt_[row]; column < strt_[row+1]; column++){ // Iterate over all the columns in this row
+            if ( inds_[column] >= colbeg_ ){ // W Column as columns are sorted by stage, and colbeg_ is begin of columns for this stage
+                elements.push_back( dels_[column] );
+                indices.push_back( inds_[column]-colbeg_ ); // We count from 0 in this matrix, that means we use stage-wise indices instead of global indices
+                overallWEntries++;
+                currentWEntries++;
+            }
+        }
+        start.push_back(overallWEntries); // We count empty rows comes hell or high water..
+        length.push_back(currentWEntries);
+        currentWEntries = 0;
+    }
+    // Count number of different column entries?
+    assert(row == core_->getNumRows(stg_));
+    CoinPackedMatrix* matrix =  new CoinPackedMatrix(false, core_->getNumCols((stg_)),row,overallWEntries,&elements[0],&indices[0],&start[0],&length[0]);
+    return matrix;
+    // TODO: Use assignMatrix to prevent unnecessary copying.
+}
+
+CoinPackedMatrix* SmiNodeData::generateCoinPackedTMatrix() const
+{
+    double* rowElements = new double[getNumMatrixElements()];
+    int* rowIndices = new int[getNumMatrixElements()];
+    int* rowStrt = new int[nrow_+1];
+    memcpy(rowElements,dels_+mat_strt_,getNumMatrixElements()*sizeof(double));
+    memcpy(rowIndices,inds_+mat_strt_,getNumMatrixElements()*sizeof(int));
+    memcpy(rowStrt,strt_+mat_strt_,(nrow_+1)*sizeof(int));
+    // Now we have to go through all the elements and delete stuff we do not want
+    int nels = getNumMatrixElements();
+    int countTEntries = 0;
+    int overallTEntries = 0;
+    int length = rowStrt[1]-rowStrt[0];
+    for (int i = 0; i < nrow_+1; i++){
+        for (int j = rowStrt[i]; j< rowStrt[i+1]-rowStrt[i]; j++){
+            if ( rowIndices[j] == stg_ ){ // W Column
+                rowIndices[overallTEntries] = rowIndices[j];
+                rowElements[overallTEntries] = rowElements[j];
+                countTEntries++;
+                overallTEntries++;
+            }
+            rowStrt[i] = (i>0?rowStrt[i-1]+countTEntries:countTEntries);
+            countTEntries = 0;
+        }
+    }
+    CoinPackedMatrix* matrix =  new CoinPackedMatrix(false,rowStrt,rowIndices,rowElements,overallTEntries);
+    delete rowElements;
+    delete rowIndices;
+    delete rowStrt;
+    return matrix;
+    // TODO: Use assignMatrix to prevent unnecessary copying.
+}

@@ -54,13 +54,13 @@ public:
 	void copyColUpper(double * dcup);
 	void copyObjective(double * dobj);
 
-	const int getNumMatrixElements(){
+	const int getNumMatrixElements() const{
 		if (this->has_matrix_)
 			return this->strt_[getMatEnd()]-this->strt_[getMatStart()];
 		else
 			return 0;
 	}
-	 const int getRowLength(int irow){
+	 const int getRowLength(int irow) const{
 		 if (this->has_matrix_)
 			 return getLength(this->getMatStart()+irow-this->rowbeg_);
 		 else
@@ -83,11 +83,11 @@ public:
 		 // using const_cast to stop warnings about cast-away constness
 		 return const_cast<int *>(getRowIndices(irow));
 	 }
-	 const int *getRowLowerIndices()   {return getIndices(this->getRloStart());}
-	 const int *getRowUpperIndices()   {return getIndices(this->getRupStart());}
-	 const int *getColLowerIndices()   {return getIndices(this->getCloStart());}
-	 const int *getColUpperIndices()   {return getIndices(this->getCupStart());}
-	 const int *getObjectiveIndices()  {return getIndices(this->getObjStart());}
+	 inline const int *getRowLowerIndices()   {return getIndices(this->getRloStart());}
+	 inline const int *getRowUpperIndices()   {return getIndices(this->getRupStart());}
+	 inline const int *getColLowerIndices()   {return getIndices(this->getCloStart());}
+	 inline const int *getColUpperIndices()   {return getIndices(this->getCupStart());}
+	 inline const int *getObjectiveIndices()  {return getIndices(this->getObjStart());}
 
 	 const double *getRowElements(int irow){
 		 if (this->has_matrix_)
@@ -128,15 +128,36 @@ public:
 	int addPtr() { return ++ptr_count; }
 
 	~SmiNodeData();
-// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
-     const int getMatStart() { return mat_strt_;}
-	 const int getMatEnd()   { return mat_strt_+nrow_;}
-	 const int getRloStart() { return rlo_strt_;}
-	 const int getRupStart() { return rup_strt_;}
-	 const int getCloStart() { return clo_strt_;}
-	 const int getCupStart() { return cup_strt_;}
-	 const int getObjStart() { return obj_strt_;}
-// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
+
+
+     inline const int getMatStart() const { return mat_strt_;}
+	 inline const int getMatEnd() const  { return mat_strt_+nrow_;}
+	 inline const int getRloStart() const { return rlo_strt_;}
+	 inline const int getRupStart() const { return rup_strt_;}
+	 inline const int getCloStart() const { return clo_strt_;}
+	 inline const int getCupStart() const { return cup_strt_;}
+	 inline const int getObjStart() const { return obj_strt_;}
+
+     CoinPackedMatrix* generateCoinPackedMatrix() const;
+     CoinPackedMatrix* generateCoinPackedTMatrix() const;
+     CoinPackedMatrix* generateCoinPackedWMatrix() const;
+
+     //Access to stored memory
+     //Return number of Elements in row/bounds/ranges/objective istart
+     inline const int getLength  (int istart) const{
+         return this->strt_[istart+1] - this->strt_[istart];
+     }
+     //Return index array that starts at row/bounds/ranges/objective istart
+     inline const int * getIndices (int istart){
+         return this->inds_+this->strt_[istart];
+     }
+     //Return double array that starts at row/bounds/ranges/objective istart
+     inline const double *getElements(int istart){
+         return this->dels_+this->strt_[istart];
+     }
+     inline const int * getStarts(int istart){
+         return this->strt_+istart;
+     }
 
 protected:
 	void combineWithCoreDoubleArray(double *d_out, const CoinPackedVector &cpv, int o);
@@ -144,30 +165,9 @@ protected:
 	//Memory assignment/deletion
 	void assignMemory();
 	void deleteMemory();
-// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
-	//Covers for starts of arrays
-/*	 const int getMatStart() { return mat_strt_;}
-	 const int getMatEnd()   { return mat_strt_+nrow_;}
-	 const int getRloStart() { return rlo_strt_;}
-	 const int getRupStart() { return rup_strt_;}
-	 const int getCloStart() { return clo_strt_;}
-	 const int getCupStart() { return cup_strt_;}
-	 const int getObjStart() { return obj_strt_;} */
-// ACHTUNG: VERÄNDERUNG VON DANIEL: war vorher private
 
-	//Access to stored memory
-	 //Return number of Elements in row/bounds/ranges/objective istart
-	 const int getLength  (int istart){
-		return this->strt_[istart+1] - this->strt_[istart];
-	}
-	 //Return index array that starts at row/bounds/ranges/objective istart
-	 const int * getIndices (int istart){
-		return this->inds_+this->strt_[istart];
-	}
-	 //Return double array that starts at row/bounds/ranges/objective istart
-	 const double *getElements(int istart){
-		return this->dels_+this->strt_[istart];
-	}
+
+
 
 
 private:
@@ -200,6 +200,8 @@ private:
 
 	int ptr_count; //Propably for memory management?!
 };
+
+// Return pointer to CoinPackedMatrix
 
 
 class SmiCoreData
