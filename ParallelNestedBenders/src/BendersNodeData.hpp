@@ -27,9 +27,14 @@ public:
     void set_warm_start(CoinWarmStart* coinWarmStart);
     const CoinWarmStart* warm_start();
 
-
+    // Information about the solution
     double* col_solution_;
     double* dual_solution_;
+    double* next_stage_approximation_;
+    double dual_value_variable_bounds_;
+    bool feasible_;
+    
+
     int cols_;
     int rows_;
     CoinWarmStart* warm_start_;
@@ -37,6 +42,7 @@ public:
     SmiNodeData* smi_node_data_;
     int scenario_index_;
     int branch_scenario_;	
+    double probability_;
     double conditional_probability_;
 
     double solution_value_;
@@ -44,12 +50,16 @@ public:
     std::vector<OsiRowCut* > optimality_cuts_;
     std::vector<OsiRowCut* > feasibility_cuts_;
 
-    //CoinPackedMatrix* matrixT; Not sure what this is good for
-    //double* dclo;
-    //double* dcup;
-    //double* dobj;
-    //double* drlo;
-    //double* drup;
+    // Values for cut aggregation
+    std::vector<double> current_cut_coefficients_;
+    double current_cut_rhs_;
+
+    CoinPackedMatrix* matrix_;
+    double* column_lower_;
+    double* column_upper_;
+    double* objective_;
+    double* row_lower_;
+    double* row_upper_;
 };
 
 struct BendersStageData {
@@ -61,6 +71,7 @@ struct BendersStageData {
     int num_columns_;
     int num_rows_;
     int stage_; // Just to be sure
+    int num_thetas_; // Number of variables that represent the approximation of the next stage
 
     // Store information about stochasticity in stage
     bool stochastic_matrix_w_;
@@ -70,7 +81,29 @@ struct BendersStageData {
     bool stochastic_bounds_;
 
     // Store pointers to matrices W and / or T if they do not change ?
+    std::vector<int> t_indices_;
+    std::vector<int> w_indices_;
 
+};
+
+struct RowOrderedSparseMatrix{
+
+    RowOrderedSparseMatrix(const std::vector<double>& elements, const std::vector<int>& indices, const std::vector<int>& start);
+    
+    // Store the matrix as vectors
+    std::vector<double> elements_;
+    std::vector<int> indices_;
+    std::vector<int> start_;
+};
+
+struct RowOrderedSparseMatrixPointer{
+
+    RowOrderedSparseMatrixPointer(const double* elements, const int* indices, const int* start);
+
+    // Store the matrix as vectors
+    const double* elements_;
+    const int* indices_;
+    const int* start_;
 };
 
 } // end namespace parallel_benders

@@ -60,6 +60,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
+				GenerateManifest="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
