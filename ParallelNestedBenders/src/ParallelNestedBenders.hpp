@@ -25,6 +25,7 @@
  * Goal: Subproblem solving and cut generation should be parallelized. Have a number of subproblems ( can be given by scenario tree ), assign a stage and a number to a thread and let it solve the corresponding subproblem.
 /************************************************************************/
 
+class OsiSolverInterface;
 class SmiCoreData;
 class SmiNodeData;
 
@@ -82,7 +83,7 @@ private:
     // Problem characteristics
     int num_stages_;
     int num_scenarios_;
-    int infinity_;
+    double infinity_;
     std::vector<int> column_assignment_;
 
     // Important solution data
@@ -96,6 +97,7 @@ private:
     int minor_iteration_;
     double lower_bound_;
     double upper_bound_;
+    double temporary_upper_bound_;
 
     int current_stage_;
     bool forward_;

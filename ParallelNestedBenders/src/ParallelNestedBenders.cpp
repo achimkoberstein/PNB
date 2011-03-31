@@ -1,6 +1,7 @@
 #include "ParallelNestedBenders.hpp"
 
 #include <iostream>
+#include <sstream>
 
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
@@ -8,6 +9,7 @@
 #include <glog/logging.h>
 // Include all the other files
 #include "OsiRowCut.hpp"
+#include "OsiCpxSolverInterface.hpp"
 #include "SmiScnModel.hpp"
 
 
@@ -93,7 +95,7 @@ namespace parallel_benders {
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) : kT(1),kW(2),
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
-        num_stages_(0),num_scenarios_(0),infinity_(COIN_INT_MAX),column_assignment_(0),
+        num_stages_(0),num_scenarios_(0),infinity_(0),column_assignment_(0),
         integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),
@@ -120,6 +122,8 @@ namespace parallel_benders {
 
         // Set infinity to solver infinity
         infinity_ = osi_solver_->getInfinity();
+        lower_bound_ = -infinity_;
+        upper_bound_ = infinity_;
 
         // Magic numbers, but we set these values via options
         integer_tolerance_ = std::pow(10.0,-6);
@@ -199,6 +203,12 @@ namespace parallel_benders {
                 current_iteration_++;
             }
             std::cout << "Iteration: " << current_iteration_ << "." << minor_iteration_ << std::endl;
+            if ( current_stage_ == 0){
+            std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
+            std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+            std::cout << "Relative Gap: " << computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) << std::endl;
+            }
+
             // Change direction 
             if ( current_stage_ == 0 )
                 forward_ = true;
@@ -229,6 +239,14 @@ namespace parallel_benders {
                 thread_pool_.wait(0); // We wait until all threads are done
             }
 
+            // Update upper bound if we solved all problems in this iteration once
+            // Lower bound is updated in the StoreData Method after solving first stage problem
+            if ( current_stage_ == num_stages_ -1){
+                if ( upper_bound_ > temporary_upper_bound_ )
+                    upper_bound_ = temporary_upper_bound_;
+
+            }
+
             // Change direction, depending on where we are
             forward_ ? current_stage_++ : current_stage_--;
 
@@ -241,6 +259,8 @@ namespace parallel_benders {
             }
 
         }
+        // We finished solving
+        LOG(INFO) << "Solution: " << lower_bound_;
 
     }
 
@@ -267,6 +287,11 @@ namespace parallel_benders {
         std::cout << "Solve Subproblem " << boost::this_thread::get_id() << std::endl;
         console_mutex_.unlock();
         osi_solver->initialSolve();
+        std::stringstream stream;
+        stream << "stage" << current_stage_ << current_iteration_ << benders_tree_node_pointer->scenario();
+        console_mutex_.lock();
+        osi_solver->writeLp(stream.str().c_str());
+        console_mutex_.unlock();
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
 
         // What about dual ray stuff for feasibility??what about reduced costs then?
@@ -288,14 +313,19 @@ namespace parallel_benders {
         benders_node_pointer->dual_solution_ = NULL;
         benders_node_pointer->next_stage_approximation_ = NULL;
         
-        if ( forward_ ){
+        if ( forward_ || current_stage_ == num_stages_-1 ){ // We need the upper bound
             // We want to differentiate between column solution and theta variables 
             benders_node_pointer->col_solution_ = new double[stage_data_[current_stage_]->num_columns_];
             memcpy(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_*sizeof(double));
+            double solution_value = 0;
             for (int i = 0; i < stage_data_[current_stage_]->num_columns_;i++){
                 if ( compare_zero(benders_node_pointer->col_solution_[i]))
                     benders_node_pointer->col_solution_[i] = 0;
+                solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
             }
+            if ( current_stage_ == 0) // This work in the multithreaded cases, as we have only one thread for the first stage problem
+                temporary_upper_bound_ = 0;
+            temporary_upper_bound_ += solution_value*benders_node_pointer->probability_;
         }
 
         // Copy theta variables
@@ -305,6 +335,14 @@ namespace parallel_benders {
         // TODO: Retrieve and store the theta variables
         benders_node_pointer->next_stage_approximation_ = new double[num_theta];
         memcpy(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta*sizeof(double) );
+
+        // Set lower bound
+        if ( current_stage_ == 0 ){
+            lower_bound_ = temporary_upper_bound_;
+            for ( int i = 0; i < num_theta;i++){
+                lower_bound_ += benders_node_pointer->next_stage_approximation_[i];
+            }
+        }
 
         if ( !forward_ ){
             // Store Dual Solution ( only if we move backward )
@@ -321,13 +359,14 @@ namespace parallel_benders {
             const double* variable_lower_bounds = osi_solver->getColLower();
             const double* variable_upper_bounds = osi_solver->getColUpper();
             double computed_dual_value_for_variable_bounds = 0;
+            const double* column_solution = osi_solver->getColSolution();
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                 // Look at variable value and their bounds
-                if ( !compare_zero(benders_node_pointer->col_solution_[i] ) ){
+                if ( !compare_zero(column_solution[i] ) ){
                     // We have to look at bounds TODO: ZEROTEST For reduced cost
-                    if ( compare_equality( benders_node_pointer->col_solution_[i], variable_lower_bounds[i],zero_tolerance_) )
+                    if ( compare_equality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                    else if ( compare_equality( benders_node_pointer->col_solution_[i], variable_upper_bounds[i],zero_tolerance_))
+                    else if ( compare_equality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
                         computed_dual_value_for_variable_bounds -= dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
                 }
             }
@@ -419,7 +458,7 @@ namespace parallel_benders {
                 RowOrderedSparseMatrixPointer deterministic_matrix(create_row_ordered_sparse_matrix_pointer( deterministic_node_pointer ));
                 // Combine these two matrices into one ( see Benders.cpp for example ).
                 int current_stage_columns = core_->getColStart(current_stage_);
-                int previous_stage_columns = core_->getColStart(current_stage_);
+                int previous_stage_columns = core_->getColStart(current_stage_-1);
                 int stochastic_column_index = 0;
                 bool stochastic_element_in_row = false;
                 // Now we need the loop. Do go on.
@@ -433,22 +472,31 @@ namespace parallel_benders {
                         // Handle stochastic columns only in the presence of stochastic matrix..
                         if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
                             if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
-                                value += stochastic_matrix.elements_[stochastic_column_index]*column_solution[previous_stage_columns-deterministic_matrix.indices_[column_index]];
+                                assert( stochastic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && stochastic_matrix.indices_[column_index]-previous_stage_columns >= 0);
+                                value += stochastic_matrix.elements_[stochastic_column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                                 stochastic_column_index++;
                             }
-                            else    
-                                value += deterministic_matrix.elements_[column_index]*column_solution[previous_stage_columns-deterministic_matrix.indices_[column_index]];
+                            else {   
+                                assert( deterministic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && deterministic_matrix.indices_[column_index]-previous_stage_columns >= 0 );
+                                value += deterministic_matrix.elements_[column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
+                            }
                         }
 
                     }
                     assert( stochastic_column_index == stochastic_matrix.start_[row+1]); // We added all stochastic elements of this row
                     // Substract from rlo or rup or even the solver interface.. depends on what we are doing
-                    if ( benders_node_pointer->row_lower_[row] <= infinity_ )// 
-                        benders_node_pointer->row_upper_[row] -= value;
+                    // TODO: Equality constraints.. 
+                    if ( benders_node_pointer->row_lower_[row] <= -infinity_ ){// 
+                        if ( benders_node_pointer->row_upper_[row] >= infinity_)
+                            assert(false);
+                        else
+                            benders_node_pointer->row_upper_[row] -= value; // row <= ub
+                    }
                     else if ( benders_node_pointer->row_upper_[row] >= infinity_ )
-                        benders_node_pointer->row_lower_[row] -= value;
+                        benders_node_pointer->row_lower_[row] -= value; // lb <= row
                     else {
-                        benders_node_pointer->row_lower_[row] -= value;
+                        assert(benders_node_pointer->row_lower_[row] == benders_node_pointer->row_upper_[row]);
+                        benders_node_pointer->row_lower_[row] -= value; // lb == row == ub, we can not handle lb <= row <= ub with one real inequality ( have to split up to two rows somewhere..
                         benders_node_pointer->row_upper_[row] -= value;
                     }
                 }
