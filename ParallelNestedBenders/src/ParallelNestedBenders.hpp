@@ -33,9 +33,7 @@ namespace parallel_benders {
 
 
 class ParallelNestedBenders {
-    class ProblemSolver {
-
-    };
+    friend class OsiStochasticParallelNestedBendersTwoStageSolverInterface;
 
 public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
@@ -84,7 +82,7 @@ private:
     int num_stages_;
     int num_scenarios_;
     double infinity_;
-    std::vector<int> column_assignment_;
+    bool contains_integer_;
 
     // Important solution data
     double integer_tolerance_;
@@ -129,24 +127,25 @@ RowOrderedSparseMatrixPointer create_row_ordered_sparse_matrix_pointer( SmiNodeD
 class OsiStochasticParallelNestedBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
 
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver, SmiScnModel* smiModel);
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osiSolver, SmiScnModel* smiModel, BendersParameter& params);
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
+    //OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model, BendersParameter& params);
     ~OsiStochasticParallelNestedBendersTwoStageSolverInterface();
 
     void initialSolve();
 
     double getObjValue();
 
-    inline void setParams(BendersParameter &params) { this->params = params; }
+    //inline void setParams(BendersParameter &params) { this->params = params; }
 
-    inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { params.setIntParam(param, val); }
-    inline int getIntParam(const BendersParameter::BendersIntParam &param) { return params.getIntParam(param); }
-    inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { params.setDoubleParam(param, val); }
-    inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
+    //inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { params.setIntParam(param, val); }
+    //inline int getIntParam(const BendersParameter::BendersIntParam &param) { return params.getIntParam(param); }
+    //inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { params.setDoubleParam(param, val); }
+    //inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
 
 
 private:
-    BendersParameter params;
+    //BendersParameter params_;
+    ParallelNestedBenders* nested_benders_;
 
 };
 } // end namespace parallel_benders

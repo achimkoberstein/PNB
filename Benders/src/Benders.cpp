@@ -2133,7 +2133,10 @@ int Benders::solveMaster(){
         changeSigma_ = false;
         seriousStep_ = false;
     }
-    //osiMaster_->writeLp("osiMaster");
+
+    std::stringstream stream;
+    stream << "master" << nIter_;
+    osiMaster_->writeLp(stream.str().c_str());
 
     // If master problem is infeasible, print an error
     bool primalInfeasible = osiMaster_->isProvenPrimalInfeasible();
@@ -3044,6 +3047,9 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
         }
     }
+    std::stringstream stream;
+    stream << "stage1" << nIter_ << scen_; 
+    osiSubproblem_->writeLp(stream.str().c_str());
 
 
     // Delete matrix
@@ -4510,7 +4516,7 @@ OsiStochasticBendersTwoStageSolverInterface::~OsiStochasticBendersTwoStageSolver
 void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
 {
     //We think that we already have a filled SmiScnModel
-    if (smiModel){
+    if (smi_model_){
         //Set params for Benders
         int maxIt = 100000;
         double relEps = params.getDoubleParam(BendersParameter::RELGAP);
@@ -4579,8 +4585,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
         // We want to store the time necessary to solve the problem
         double time = CoinCpuTime();
         benders = new Benders(modeStr.c_str(), warmStartStr.c_str(), knapsackStr.c_str(), trustRegionStr.c_str(), bendersStr.c_str(),regularizedStr.c_str(),barrierStr.c_str(),bunchingStr.c_str(),bunchSize,integerBendersStr.c_str());
-        benders->copyMaster(smiModel);
-        benders->copySubmodel(smiModel);
+        benders->copyMaster(smi_model_);
+        benders->copySubmodel(smi_model_);
         if ( useRegularized || useRegularizedManhattan ){
             double regTime = CoinCpuTime();
             OsiCpxSolverInterface* osiCpxPtr = new OsiCpxSolverInterface();
@@ -4588,7 +4594,7 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             CPXENVptr envPtr = osiCpxPtr->getEnvironmentPtr();
             // TODO: Set Relative MIPGAP with param via param setting function, if not given, do not change, so not apply.
             CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.025);
-            std::pair<double,double*> evResult = smiModel->solveEV(osiCpxPtr,1,false); // 1 for minimization
+            std::pair<double,double*> evResult = smi_model_->solveEV(osiCpxPtr,1,false); // 1 for minimization
             delete osiCpxPtr;
             // copy initial values for regularized decomposition
             benders->setInitialSolution(evResult.second);
@@ -4624,18 +4630,16 @@ int OsiStochasticBendersTwoStageSolverInterface::getNumIterations(){
     return benders->nIter_;
 }
 
-OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel ): osiSolver(osiSolver),smiModel(smiModel) {}
+OsiStochasticSolverInterface::OsiStochasticSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel ): osi_solver_(osiSolver),smi_model_(smiModel) {}
 
 OsiStochasticSolverInterface::~OsiStochasticSolverInterface(){
-    //if (smiModel != 0){
-    //    delete smiModel;
-    //    smiModel = 0;
-    //}
+
 }
 
 void OsiStochasticSolverInterface::initialSolve()
 {//Default implementation: Solve deterministic equivalent
-
+    OsiSolverInterface* osi_solver = smi_model_->loadOsiSolverData();
+    osi_solver->initialSolve();
 }
 
 OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )
@@ -4652,14 +4656,14 @@ OsiStochasticDetEqSolverInterface::~OsiStochasticDetEqSolverInterface()
 void OsiStochasticDetEqSolverInterface::initialSolve()
 {
     //How to set correct solver in smiModel?
-    smiModel->setOsiSolverHandle(osiSolver);
-    OsiSolverInterface* solver = smiModel->loadOsiSolverData();
+    smi_model_->setOsiSolverHandle(osi_solver_);
+    OsiSolverInterface* solver = smi_model_->loadOsiSolverData();
     solver->initialSolve();
 }
 
 double OsiStochasticDetEqSolverInterface::getObjValue()
 {
-    return osiSolver->getObjValue();
+    return osi_solver_->getObjValue();
 }
 
 const std::string BendersParameter::getParametersInEnglish()

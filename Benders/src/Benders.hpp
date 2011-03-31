@@ -743,11 +743,11 @@ public:
     virtual void initialSolve() = 0;
     virtual double getObjValue() = 0;
 
-    SmiScnModel* getSmiModel() { return smiModel; }
+    SmiScnModel* getSmiModel() { return smi_model_; }
 
 protected:
-    OsiSolverInterface* osiSolver;
-    SmiScnModel* smiModel;
+    OsiSolverInterface* osi_solver_;
+    SmiScnModel* smi_model_;
 
 private:
 

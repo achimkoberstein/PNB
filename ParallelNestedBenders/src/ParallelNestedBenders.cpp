@@ -19,11 +19,13 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AdjustProblem()
     {
+        // Check for integrality right away
+        if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
+            contains_integer_ = true;
+            return;
+        }
         // What do we want to do?
         // 1. Check for stochasticity of the model 
-        // 2. Partition matrix entries in matrices T and W for every stage
-
-
         for (int i = 0; i < num_stages_; i++)
             thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AdjustProblemInStage,this,i) );
         thread_pool_.wait(0);
@@ -39,7 +41,6 @@ namespace parallel_benders {
         benders_stage_ptr->num_rows_ = core_->getNumRows(stage);
         // Build core T and W matrix
         // What do I need? Assign column to either W or T matrix, so we can keep it organized.
-
 
         for ( int i = 0; i < core_->getColStart(stage)+benders_stage_ptr->num_columns_; i++ ){
             // It is not necessary to have a strict staircase structure, so to the T-matrix belong all columns that are < then current stage
@@ -95,7 +96,7 @@ namespace parallel_benders {
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) : kT(1),kW(2),
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
-        num_stages_(0),num_scenarios_(0),infinity_(0),column_assignment_(0),
+        num_stages_(0),num_scenarios_(0),infinity_(0),contains_integer_(false),
         integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),
@@ -110,9 +111,6 @@ namespace parallel_benders {
         // Set number of stages and scenarios
         num_scenarios_ = smi_->getNumScenarios();
         num_stages_ = core_->getNumStages();
-
-        // Problem related data 
-        column_assignment_.resize(core_->getNumCols());
 
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
@@ -192,6 +190,12 @@ namespace parallel_benders {
     void ParallelNestedBenders::Solve()
     {
         AdjustProblem();
+        // We can stop here, if we have integer variables on more than the second stage..
+        if ( contains_integer_ ){
+            LOG(WARNING) << "Your problem contains integer variables. We can not solve mixed-integer problems. Instead we solve the relaxed problem.";
+            //return;
+        }
+        
         // Do initialization stuff necessary for solve process
         while ( std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
             computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
@@ -204,9 +208,9 @@ namespace parallel_benders {
             }
             std::cout << "Iteration: " << current_iteration_ << "." << minor_iteration_ << std::endl;
             if ( current_stage_ == 0){
-            std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-            std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-            std::cout << "Relative Gap: " << computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) << std::endl;
+                std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
+                std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+                std::cout << "Relative Gap: " << computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) << std::endl;
             }
 
             // Change direction 
@@ -288,11 +292,25 @@ namespace parallel_benders {
         console_mutex_.unlock();
         osi_solver->initialSolve();
         std::stringstream stream;
-        stream << "stage" << current_stage_ << current_iteration_ << benders_tree_node_pointer->scenario();
+        stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         console_mutex_.lock();
         osi_solver->writeLp(stream.str().c_str());
         console_mutex_.unlock();
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
+        // Check for errors
+        if ( !osi_solver->isProvenOptimal() ){
+            // We need to check for errors in this case
+            if ( osi_solver->isProvenPrimalInfeasible() ){
+                // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
+                LOG(INFO) << "Generate feasibility cut.";
+                GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario?
+            }
+            if ( osi_solver->isProvenDualInfeasible() ){
+                // Primal problem is unbounded. => dual infeasible
+                // If we are in the master problem, we might have to restrict the theta variables
+                LOG(INFO) << "Primal problem is unbounded";
+            }
+        }
 
         // What about dual ray stuff for feasibility??what about reduced costs then?
     }
@@ -342,6 +360,9 @@ namespace parallel_benders {
             for ( int i = 0; i < num_theta;i++){
                 lower_bound_ += benders_node_pointer->next_stage_approximation_[i];
             }
+            if (num_theta == 0){// We have no thetas yet
+                lower_bound_ = -infinity_;
+            }
         }
 
         if ( !forward_ ){
@@ -383,16 +404,19 @@ namespace parallel_benders {
         SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_; // Stochastic node pointer
         SmiNodeData* deterministic_node_pointer = core_->getNode(current_stage_); // Deterministic node (there is one per stage)
         bool reuse_solver = true;
-        if ( stage_pointer->stochastic_matrix_w_ || osi_solver->getNumCols() == 0){ // We have to load the matrix / change the matrix => load the problem
+        if ( node_pointer->hasMatrix() || osi_solver->getNumCols() == 0){ // We have to load the matrix / change the matrix => load the problem
             reuse_solver = false;
+            // See if we really have a w_matrix here!! TODO
             // We get the deterministic matrix first ( T and W together ).
             // We only need the W part, as h-Tx is the RHS.
             benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
-            if ( stage_pointer->stochastic_matrix_w_){
+            if ( node_pointer->hasMatrix()){
                 RowOrderedSparseMatrixPointer stochastic_matrix(create_row_ordered_sparse_matrix_pointer( node_pointer ));
+                // We only need to look at the W entries
                 for (int row = 0; row < stage_pointer->num_rows_; row++){
-                    for (int column_index = stochastic_matrix.start_[row]; column_index < stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row]; column_index++){
-                        benders_node_pointer->matrix_->modifyCoefficient(row,stochastic_matrix.indices_[column_index],stochastic_matrix.elements_[column_index],true);
+                    for (int column_index = stochastic_matrix.start_[row]; column_index < stochastic_matrix.start_[row+1]; column_index++){
+                        if ( stochastic_matrix.indices_[column_index] >= core_->getColStart(current_stage_) )
+                            benders_node_pointer->matrix_->modifyCoefficient(row,stochastic_matrix.indices_[column_index]-core_->getColStart(current_stage_),stochastic_matrix.elements_[column_index],true);
                     }
                 }
                 
@@ -400,7 +424,7 @@ namespace parallel_benders {
         }
 
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
-        if (stage_pointer->stochastic_bounds_ && node_pointer->getColLowerLength()) {
+        if (  node_pointer->getColLowerLength()) {
             benders_node_pointer->column_lower_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
             for (int i = 0; i < node_pointer->getColLowerLength(); i++) {
@@ -411,7 +435,7 @@ namespace parallel_benders {
             benders_node_pointer->column_lower_ = const_cast<double*> (core_->getDenseColLower(current_stage_));
 
         // Column upper bounds
-        if (stage_pointer->stochastic_bounds_ && node_pointer->getColUpperLength()) {
+        if ( node_pointer->getColUpperLength()) {
             benders_node_pointer->column_upper_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->column_upper_, core_->getDenseColUpper(current_stage_), stage_pointer->num_columns_*sizeof(double));
             for (int i = 0; i < node_pointer->getColUpperLength(); i++) {
@@ -422,7 +446,7 @@ namespace parallel_benders {
             benders_node_pointer->column_upper_ = const_cast<double*> (core_->getDenseColUpper(current_stage_));
 
         // Objective function coefficients
-        if (stage_pointer->stochastic_objective_ && node_pointer->getColUpperLength()) {
+        if ( node_pointer->getObjectiveLength()) {
             benders_node_pointer->objective_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->objective_, core_->getDenseObjCoefficients(current_stage_), stage_pointer->num_columns_*sizeof(double));
             for (int i = 0; i < node_pointer->getObjectiveLength(); i++) {
@@ -464,18 +488,32 @@ namespace parallel_benders {
                 // Now we need the loop. Do go on.
                 for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
                     double value = 0;
-                    if ( stage_pointer->stochastic_matrix_t_ )// We only need stochastic T matrix here
+                    if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
                         stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;
                     
                     // We iterate over the row of the deterministic matrix
                     for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
-                        // Handle stochastic columns only in the presence of stochastic matrix..
+                        // We have to jump over all W indices
+                        while ( node_pointer->hasMatrix() && stochastic_element_in_row  ){ // Jump over all consecutive W column entries in this row (As columns are ordered, we should skip the rest of the matrix anyway // TODO: Ensure this
+                            if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns && stochastic_column_index < stochastic_matrix.start_[row+1] )
+                                stochastic_column_index++;
+                            else if (stochastic_column_index==stochastic_matrix.start_[row+1]) {
+                                stochastic_element_in_row = false;
+                                break;
+                            }
+                            else
+                                break;
+                        }
+                        // Only handle columns of the T-matrix
                         if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
-                            if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
-                                assert( stochastic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && stochastic_matrix.indices_[column_index]-previous_stage_columns >= 0);
+
+                            // If we have an element in the stochastic matrix, we use it instead
+                            if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index] ){
+                                assert( stochastic_matrix.indices_[stochastic_column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && stochastic_matrix.indices_[stochastic_column_index]-previous_stage_columns >= 0);
                                 value += stochastic_matrix.elements_[stochastic_column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                                 stochastic_column_index++;
                             }
+
                             else {   
                                 assert( deterministic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && deterministic_matrix.indices_[column_index]-previous_stage_columns >= 0 );
                                 value += deterministic_matrix.elements_[column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
@@ -483,7 +521,8 @@ namespace parallel_benders {
                         }
 
                     }
-                    assert( stochastic_column_index == stochastic_matrix.start_[row+1]); // We added all stochastic elements of this row
+                    if ( node_pointer->hasMatrix())
+                        assert( stochastic_column_index == stochastic_matrix.start_[row+1]); // We added all stochastic elements of this row
                     // Substract from rlo or rup or even the solver interface.. depends on what we are doing
                     // TODO: Equality constraints.. 
                     if ( benders_node_pointer->row_lower_[row] <= -infinity_ ){// 
@@ -573,15 +612,16 @@ namespace parallel_benders {
 
         // Delete all the stuff we created
         delete benders_node_pointer->matrix_; benders_node_pointer->matrix_ = NULL;
-        if ( stage_pointer->stochastic_bounds_ ){
-            delete benders_node_pointer->column_lower_; benders_node_pointer->column_lower_ = NULL;
-            delete benders_node_pointer->column_upper_; benders_node_pointer->column_upper_ = NULL;
-        }
-        if ( stage_pointer->stochastic_objective_ ){
-            delete benders_node_pointer->objective_; benders_node_pointer->objective_ = NULL;
-        }
-        delete benders_node_pointer->row_upper_; benders_node_pointer->row_upper_ = NULL;
-        delete benders_node_pointer->row_lower_; benders_node_pointer->row_lower_ = NULL;
+        if ( node_pointer->getColLowerLength())
+            delete [] benders_node_pointer->column_lower_; benders_node_pointer->column_lower_ = NULL;
+        if ( node_pointer->getColUpperLength())
+            delete [] benders_node_pointer->column_upper_; benders_node_pointer->column_upper_ = NULL;
+
+        if ( node_pointer->getObjectiveLength())
+            delete [] benders_node_pointer->objective_; benders_node_pointer->objective_ = NULL;
+
+        delete [] benders_node_pointer->row_upper_; benders_node_pointer->row_upper_ = NULL;
+        delete [] benders_node_pointer->row_lower_; benders_node_pointer->row_lower_ = NULL;
 
 
 
@@ -614,25 +654,27 @@ namespace parallel_benders {
 
         // We compute prob* \pi * T + \theta >= prob*\pi*h (+ prob*dual_value_variable_bounds)
         double* row_lower = NULL; double * row_upper = NULL;
-        if ( stage_pointer->stochastic_rhs_){
+        if ( node_pointer->getRowLowerLength() ){
             row_lower = new double[stage_pointer->num_rows_];
-            memcpy(row_lower, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
-            row_upper = new double[stage_pointer->num_rows_];
-            memcpy(row_upper, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
-
+            memcpy(row_lower, core_->getDenseRowLower(current_stage_), stage_pointer->num_rows_*sizeof(double));
             for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
                 row_lower[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
             }
+        }
+        else 
+            row_lower = const_cast<double*> (core_->getDenseRowLower(current_stage_));
 
+        if ( node_pointer->getRowUpperLength() ){
 
+            row_upper = new double[stage_pointer->num_rows_];
+            memcpy(row_upper, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
             for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
                 row_upper[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
             }
         }
-        else{
-            row_lower = const_cast<double*> (core_->getDenseRowLower(current_stage_));
+        else           
             row_upper = const_cast<double*> (core_->getDenseRowUpper(current_stage_));
-        }
+        
         
         // Go on with the matrix
         RowOrderedSparseMatrixPointer deterministic_matrix = create_row_ordered_sparse_matrix_pointer( core_->getNode(current_stage_) );
@@ -650,36 +692,41 @@ namespace parallel_benders {
         // Now we need the loop. Do go on.
         for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
             double value = 0;
-            if ( stage_pointer->stochastic_matrix_t_ )// We only need stochastic T matrix here
+            if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
                 stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;
 
             // We iterate over the row of the deterministic matrix
             for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
                 // Handle stochastic columns only in the presence of stochastic matrix..
-                if ( stage_pointer->stochastic_matrix_w_ && stage_pointer->stochastic_matrix_t_ ){
-                    while ( true ){
-                        if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
-                            // We need to advance the index, if we are still within this row
-                            if ( stochastic_column_index < stochastic_matrix.start_[row+1] )
-                                stochastic_column_index++;
-                            else
-                                break; // We reached the end of the row
+       
+                while ( stochastic_element_in_row ){
+                    if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
+                        // We need to advance the index, if we are still within this row
+                        if ( stochastic_column_index < stochastic_matrix.start_[row+1] )
+                            stochastic_column_index++;
+                        else if ( stochastic_column_index == stochastic_matrix.start_[row+1]){
+                            stochastic_element_in_row = false;
+                            break; // We reached the end of the row
                         }
                         else
-                            break; // We found a stochastic T matrix entry for this row
+                            break;
                     }
+                    else
+                        break; // We found a stochastic T matrix entry for this row
                 }
-
+                
                 if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
                     if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
-                        cut_coefficients[column_start_previous_stage-deterministic_matrix.indices_[column_index]] += stochastic_matrix.elements_[stochastic_column_index]*dual_solution[row];
+                        cut_coefficients[deterministic_matrix.indices_[column_index]-column_start_previous_stage] += stochastic_matrix.elements_[stochastic_column_index]*dual_solution[row];
                         stochastic_column_index++;
                     }
                     else    
-                        cut_coefficients[column_start_previous_stage-deterministic_matrix.indices_[column_index]] += deterministic_matrix.elements_[column_index]*dual_solution[row];
+                        cut_coefficients[deterministic_matrix.indices_[column_index]-column_start_previous_stage] += deterministic_matrix.elements_[column_index]*dual_solution[row];
                 }
 
             }
+            if ( stochastic_element_in_row )
+                assert(stochastic_column_index == stochastic_matrix.start_[row+1]);
         }
 
         BOOST_FOREACH(double& value, cut_coefficients){
@@ -720,9 +767,11 @@ namespace parallel_benders {
         benders_node_pointer->current_cut_rhs_ = cut_rhs;
 
         // Cleanup
-        if ( stage_pointer->stochastic_rhs_){
-            delete [] row_lower; delete [] row_upper;
-        }
+        if ( node_pointer->getRowLowerLength() )
+            delete [] row_lower; 
+        if (node_pointer->getRowUpperLength())
+            delete [] row_upper;
+        
 
 
     }
@@ -820,4 +869,26 @@ namespace parallel_benders {
 
 
 
+
+    double OsiStochasticParallelNestedBendersTwoStageSolverInterface::getObjValue()
+    {
+        return nested_benders_->lower_bound_;
+    }
+
+    void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
+    {
+        nested_benders_->Solve();
+    }
+
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface::OsiStochasticParallelNestedBendersTwoStageSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
+        : OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL)
+    {
+        this->smi_model_->setOsiSolverHandle(this->osi_solver_);
+        nested_benders_ = new ParallelNestedBenders(smi_model_);
+    }
+
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface::~OsiStochasticParallelNestedBendersTwoStageSolverInterface()
+    {
+        delete nested_benders_;
+    }
 } // end namespace parallel_benders
