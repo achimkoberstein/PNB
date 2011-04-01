@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <boost/scoped_array.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
 
@@ -62,7 +63,7 @@ namespace parallel_benders {
                 // Build stochastic T and W matrix
                 if ( node_ptr->getNumMatrixElements() && !( benders_stage_ptr->stochastic_matrix_w_ && benders_stage_ptr->stochastic_matrix_t_) ){
                     // We split the matrix entries into W and T 
-                    for ( int j = 0; j < benders_stage_ptr->num_rows_; j++){
+                    for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
                         //const double* row_elements = node_ptr->getRowElements(j);
                         const int* row_indices = node_ptr->getRowIndices(j);
                         int row_length = node_ptr->getRowLength(j);
@@ -304,9 +305,9 @@ namespace parallel_benders {
         osi_solver->initialSolve();
         std::stringstream stream;
         stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        console_mutex_.lock();
-        osi_solver->writeLp(stream.str().c_str());
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //osi_solver->writeLp(stream.str().c_str());
+        //console_mutex_.unlock();
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -320,9 +321,31 @@ namespace parallel_benders {
                 // Primal problem is unbounded. => dual infeasible
                 // If we are in the master problem, we might have to restrict the theta variables
                 LOG(INFO) << "Primal problem is unbounded";
+                // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
+                int num_thetas = stage_data_[current_stage_]->num_thetas_;
+                boost::scoped_array<int> extra_indices = new int[num_thetas];
+                boost::scoped_array<double> extra_elements = new double[num_thetas];
+                for (int i = 0; i < num_thetas; i++){
+                    extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
+                    extra_elements[i] = 1;
+                }
+                // Throws error, do not know why
+                osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_ + 1000000, infinity_);
+                // Solve the model again
+                osi_solver->resolve();
+                // Look at it again
+                if ( osi_solver->isProvenDualInfeasible() ){
+                    // Stop computing: Error occured
+                    LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                }
+                else {
+                    // Remove last row
+                    int remove_row = osi_solver->getNumRows()-1;
+                    osi_solver->deleteRows(1,&remove_row);
+                }
+
             }
         }
-
         // What about dual ray stuff for feasibility??what about reduced costs then?
     }
 

@@ -317,6 +317,7 @@ namespace flopc {
         MP_constraint& operator=(const MP_constraint&);
 
         std::string generateNamesSuffixFree(const int k);
+        inline int getOffsetedIndex(const int k);
 
         MP_boolean B;
         const MP_set_base &S1, &S2, &S3, &S4, &S5; 

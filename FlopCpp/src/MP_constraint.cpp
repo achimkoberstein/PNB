@@ -128,8 +128,11 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
 
     // generate the names with the suffixes for every instance of this row and copy them into the array
     for (int k = 0; k < size(); k++) {
+        // Look at empty rows
+        if ( getOffsetedIndex(k) == outOfBound )
+            continue;
         string free = nameFree + this->generateNamesSuffixFree(k);
-        rowNamesFree.push_back(free.c_str());
+        rowNamesFree[getOffsetedIndex(k)] = free.c_str();
     }
 
 
@@ -141,8 +144,11 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         nameStrict = nameFree;
         nameSetStrict.insert(nameStrict);
         for (int k = 0; k < size(); k++) {
+            // Look at empty rows
+            if ( getOffsetedIndex(k) == outOfBound )
+                continue;
             string strict = nameStrict + this->generateNamesSuffixFree(k);
-            rowNamesStrict.push_back(strict.c_str());
+            rowNamesStrict[getOffsetedIndex(k)] = strict.c_str();
         }
     }
     else {
@@ -173,17 +179,30 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             nameSetStrict.insert(nameStrict);
             //fill the array
             for (int k = 0; k < size(); k++) {
+                // Look at empty rows
+                if ( getOffsetedIndex(k) == outOfBound )
+                    continue;
                 string strict = nameStrict + "_" + to_string(k);
-                rowNamesStrict.push_back(strict.c_str());
+                rowNamesStrict[getOffsetedIndex(k)] = strict.c_str();
             }
         } else {
             // push empty strings, let the SmiSmpsWriter or whatever try it...
             string s = "";
             for (int k = 0; k < size(); k++) {
-                rowNamesStrict.push_back(s.c_str());
+                // Look at empty rows
+                if ( getOffsetedIndex(k) == outOfBound )
+                    continue;
+                rowNamesStrict[getOffsetedIndex(k)] = s.c_str();
             }
         }
     }
+}
+
+int MP_constraint::getOffsetedIndex(const int k){
+    if (M->getStochastic())
+        return M->rowIndirection[offset+k];
+    else
+        return offset+k;
 }
 
 string MP_constraint::generateNamesSuffixFree(const int k) {
