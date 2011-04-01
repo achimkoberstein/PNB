@@ -1782,4 +1782,9 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 		smiBS->addSmiBlock(combBlock);
 		processBlockStructureIntoScenarios(smiBS);
 	}
-}
+ }
+
+ double SmiScnModel::getScenarioProb( SmiScenarioIndex ns )
+ {
+     return smiTree_.getLeaf(ns)->getDataPtr()->getProb();
+ }

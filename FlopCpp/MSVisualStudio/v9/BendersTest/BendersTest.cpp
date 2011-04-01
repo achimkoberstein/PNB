@@ -22,14 +22,14 @@ namespace flopc {
         BendersParameter benParam;
         CoverageTest(): benParam() { 
             benParam.setIntParam(BendersParameter::BENDERS,0);
-            benParam.setIntParam(BendersParameter::MULTI,1);
+            benParam.setIntParam(BendersParameter::MULTI,0);
             benParam.setIntParam(BendersParameter::TRUSTREGION,0);
             benParam.setIntParam(BendersParameter::KNAPSACK,0);
             benParam.setIntParam(BendersParameter::WARMSTART,0);
             benParam.setIntParam(BendersParameter::REGULARIZED,0);
             benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
             benParam.setIntParam(BendersParameter::BARRIER,0);
-            benParam.setIntParam(BendersParameter::BUNCHING,1);
+            benParam.setIntParam(BendersParameter::BUNCHING,0);
             benParam.setIntParam(BendersParameter::BUNCH_SIZE,200);
         }
 
@@ -502,7 +502,7 @@ TEST_F(CoverageTest, cover){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.sslp";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.assets";
     //::testing::GTEST_FLAG(filter) = "BendersTest.rand";
     
     google::InitGoogleLogging(argv[0]);
