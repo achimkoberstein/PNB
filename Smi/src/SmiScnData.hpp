@@ -138,6 +138,8 @@ public:
 	 inline const int getCupStart() const { return cup_strt_;}
 	 inline const int getObjStart() const { return obj_strt_;}
 
+     bool hasMatrix() const { return has_matrix_; }
+
      CoinPackedMatrix* generateCoinPackedMatrix() const;
      CoinPackedMatrix* generateCoinPackedTMatrix() const;
      CoinPackedMatrix* generateCoinPackedWMatrix() const;
@@ -188,7 +190,7 @@ private:
 	int colbeg_; //index, where columns begin wrt to the columns of the corresponding stage in the core model
 	int nstrt_; //number of strt indices = numarray + nrow+1 (see assignMemory())
 	bool has_matrix_; //If this node has a matrix entry
-	int mat_strt_; //start arrays for corresponding entries
+    int mat_strt_; //start arrays for corresponding entries
 	int clo_strt_;
 	int cup_strt_;
 	int obj_strt_;

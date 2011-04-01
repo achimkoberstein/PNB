@@ -96,6 +96,7 @@ private:
     double lower_bound_;
     double upper_bound_;
     double temporary_upper_bound_;
+    double old_lower_bound_;
 
     int current_stage_;
     bool forward_;

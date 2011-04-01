@@ -98,7 +98,7 @@ namespace parallel_benders {
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(0),num_scenarios_(0),infinity_(0),contains_integer_(false),
         integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),
+        current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),
         num_cpu_(0),thread_pool_(0)
     {
@@ -112,6 +112,13 @@ namespace parallel_benders {
         num_scenarios_ = smi_->getNumScenarios();
         num_stages_ = core_->getNumStages();
 
+        // Do a quick check :
+        double total_prob = 0;
+        for (int i = 0; i < num_scenarios_; i++){
+            total_prob += smi_->getScenarioProb(i);
+        }
+        LOG_IF(WARNING,compare_equality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
+
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
             osi_solver_ = new OsiCpxSolverInterface();
@@ -122,6 +129,7 @@ namespace parallel_benders {
         infinity_ = osi_solver_->getInfinity();
         lower_bound_ = -infinity_;
         upper_bound_ = infinity_;
+        old_lower_bound_ = lower_bound_;
 
         // Magic numbers, but we set these values via options
         integer_tolerance_ = std::pow(10.0,-6);
@@ -199,8 +207,11 @@ namespace parallel_benders {
         // Do initialization stuff necessary for solve process
         while ( std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
             computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
-            current_iteration_ < max_iteration_) 
+            current_iteration_ < max_iteration_ 
+            ) 
         {
+            if ( old_lower_bound_ >= lower_bound_ && old_lower_bound_ > -infinity_)// TODO: If we have feasCuts we might have to look at this again..
+                break;
 
             minor_iteration_++;
             if ( current_stage_ == 0 ){
@@ -356,12 +367,14 @@ namespace parallel_benders {
 
         // Set lower bound
         if ( current_stage_ == 0 ){
+            old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
             lower_bound_ = temporary_upper_bound_;
             for ( int i = 0; i < num_theta;i++){
                 lower_bound_ += benders_node_pointer->next_stage_approximation_[i];
             }
             if (num_theta == 0){// We have no thetas yet
                 lower_bound_ = -infinity_;
+                old_lower_bound_ = -infinity_;
             }
         }
 
@@ -421,6 +434,12 @@ namespace parallel_benders {
                 }
                 
             }
+        }
+        else if ( stage_pointer->stochastic_matrix_w_ && !node_pointer->hasMatrix() ){
+            // We still have to reload the matrix as it might have be changed in the past, and this is not what we want..
+            reuse_solver = false;
+            benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
+
         }
 
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
@@ -579,7 +598,7 @@ namespace parallel_benders {
         }
 
         // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. )
-        if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
+        if ( !benders_node_pointer->optimality_cuts_.empty() && !reuse_solver){// We have some optimality cuts, so we need theta variables
             // We set a theta value for every stage
             int num_cols = stage_pointer->num_thetas_;
             std::vector<double> lower(num_cols,-infinity_);
@@ -597,12 +616,13 @@ namespace parallel_benders {
             delete [] coin_vector;
 
 
+        }
+
+        if ( !benders_node_pointer->optimality_cuts_.empty())
             // Add the cuts
             for (int i = 0; i<benders_node_pointer->optimality_cuts_.size();i++) {
                 osi_solver->applyRowCuts(1,benders_node_pointer->optimality_cuts_[i]);
             }
-        }
-
 
         if ( !benders_node_pointer->feasibility_cuts_.empty())
             // Add the cuts
@@ -872,7 +892,7 @@ namespace parallel_benders {
 
     double OsiStochasticParallelNestedBendersTwoStageSolverInterface::getObjValue()
     {
-        return nested_benders_->lower_bound_;
+        return nested_benders_->upper_bound_;
     }
 
     void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
