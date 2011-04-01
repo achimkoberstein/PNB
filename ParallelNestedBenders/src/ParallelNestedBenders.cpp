@@ -10,7 +10,9 @@
 #include <glog/logging.h>
 // Include all the other files
 #include "OsiRowCut.hpp"
+#include "OsiSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
+#include "CoinWarmStart.hpp"
 #include "SmiScnModel.hpp"
 
 
@@ -101,10 +103,10 @@ namespace parallel_benders {
         integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),
-        num_cpu_(0),thread_pool_(0)
+        num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
+        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false)
     {
         Init();
-
     }
 
     void ParallelNestedBenders::Init()
@@ -118,7 +120,7 @@ namespace parallel_benders {
         for (int i = 0; i < num_scenarios_; i++){
             total_prob += smi_->getScenarioProb(i);
         }
-        LOG_IF(WARNING,compare_equality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
+        LOG_IF(WARNING,!compare_equality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
 
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
@@ -137,6 +139,12 @@ namespace parallel_benders {
 
         absolute_epsilon_ = std::pow(10.0,-6);
         relative_epsilon_ = std::pow(10.0,-6);
+
+        // Set other parameters
+
+        // Warm start
+        warm_start_ = true; // enable by default
+        warm_start_scenarios_ = true; // enable by default
 
         // create our benders node objects and build the tree
         tree_ = SmiScenarioTree<BendersNodeData*>();
@@ -175,6 +183,8 @@ namespace parallel_benders {
             tree_nodes_by_stage_.push_back(vec);
         }
         tree_nodes_by_stage_[0].push_back(tree_.getRoot());
+        // Set probability 1 to root node, to prevent numerical issues
+        tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
         for (int i = 1; i < num_stages_; i++) {
             for (unsigned int j = 0; j < tree_nodes_by_stage_[i-1].size(); j++) {
                 std::vector<SmiTreeNode<BendersNodeData*> *> *children = tree_nodes_by_stage_[i-1][j]->getChildren();
@@ -186,8 +196,12 @@ namespace parallel_benders {
         }
         // Create Benders Stage data
         stage_data_.reserve(num_stages_);
-        for (int i = 0; i < num_stages_; i++)
+        for (int i = 0; i < num_stages_; i++){
             stage_data_.push_back(new BendersStageData);
+            // Set empty warm start object
+            if ( warm_start_ && warm_start_stage_ )
+                stage_data_.back()->warm_start_ = osi_solver_->getEmptyWarmStart();
+        }
 
 
         // Thread related stuff
@@ -211,18 +225,20 @@ namespace parallel_benders {
             current_iteration_ < max_iteration_ 
             ) 
         {
-            if ( old_lower_bound_ >= lower_bound_ && old_lower_bound_ > -infinity_)// TODO: If we have feasCuts we might have to look at this again..
+            if ( old_lower_bound_ >= lower_bound_ && old_lower_bound_ > -infinity_ )// TODO: If we have feasCuts we might have to look at this again..
                 break;
 
             minor_iteration_++;
             if ( current_stage_ == 0 ){
                 current_iteration_++;
+                minor_iteration_ = 0; 
             }
-            std::cout << "Iteration: " << current_iteration_ << "." << minor_iteration_ << std::endl;
+            std::string direction(forward_ ? "F " : "B ");
+            std::cout << "Iteration " << direction << current_iteration_ << "." << minor_iteration_ << std::endl;
             if ( current_stage_ == 0){
                 std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
                 std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-                std::cout << "Relative Gap: " << computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) << std::endl;
+                std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
             }
 
             // Change direction 
@@ -285,9 +301,9 @@ namespace parallel_benders {
     {
 
         // Get thread ID
-        console_mutex_.lock();
-        LOG(INFO) << "Current thread has ID: " << boost::this_thread::get_id();
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //LOG(INFO) << "Current thread has ID: " << boost::this_thread::get_id();
+        //console_mutex_.unlock();
         OsiSolverInterface* osi_solver = GetSolverByThread();
 
         BuildSubproblem(osi_solver, benders_tree_node_pointer);
@@ -298,20 +314,42 @@ namespace parallel_benders {
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
+
+        //console_mutex_.lock();
+        //std::cout << "Solve Subproblem " << boost::this_thread::get_id() << std::endl;
+        //console_mutex_.unlock();
+        // 
         // Warm Start Handling
-        console_mutex_.lock();
-        std::cout << "Solve Subproblem " << boost::this_thread::get_id() << std::endl;
-        console_mutex_.unlock();
+        
+        // Depending on Warm Start behaviour, use the corresponding entry
+        // If WarmstartForScenario or WarmstartForStage do the following
+        
+        if ( warm_start_ ){
+            if ( warm_start_scenarios_ ){
+                if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
+                    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+            }
+            else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
+                stage_warm_start_mutex_.lock(); 
+                osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                stage_warm_start_mutex_.unlock();
+            }
+        }
+        
         osi_solver->initialSolve();
         std::stringstream stream;
         stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //console_mutex_.lock();
-        //osi_solver->writeLp(stream.str().c_str());
-        //console_mutex_.unlock();
+        console_mutex_.lock();
+        osi_solver->writeLp(stream.str().c_str());
+        console_mutex_.unlock();
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
             // We need to check for errors in this case
+            if ( osi_solver->isAbandoned() ){
+                //Problem
+                LOG(ERROR) << "Solution process abandoned.";
+            }
             if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
                 LOG(INFO) << "Generate feasibility cut.";
@@ -323,8 +361,8 @@ namespace parallel_benders {
                 LOG(INFO) << "Primal problem is unbounded";
                 // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
                 int num_thetas = stage_data_[current_stage_]->num_thetas_;
-                boost::scoped_array<int> extra_indices = new int[num_thetas];
-                boost::scoped_array<double> extra_elements = new double[num_thetas];
+                boost::scoped_array<int> extra_indices(new int[num_thetas]);
+                boost::scoped_array<double> extra_elements(new double[num_thetas]);
                 for (int i = 0; i < num_thetas; i++){
                     extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
                     extra_elements[i] = 1;
@@ -338,21 +376,35 @@ namespace parallel_benders {
                     // Stop computing: Error occured
                     LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
                 }
-                else {
-                    // Remove last row
-                    int remove_row = osi_solver->getNumRows()-1;
-                    osi_solver->deleteRows(1,&remove_row);
+                if ( !osi_solver->isProvenOptimal()){
+                    LOG(WARNING) << "Solver returned with an unexpected status code." ;
+                }
+            }
+            // TODO Other possible cases
+
+        }// if not provenOptimal end
+        else { // Proven Optimal: 
+            if ( warm_start_ && osi_solver->optimalBasisIsAvailable()) // Store WarmStart Information, otherwise we reuse the old one..
+                if ( warm_start_scenarios_ ){
+                    delete benders_tree_node_pointer->getDataPtr()->warm_start_;
+                    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+                }
+                else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0){
+                    // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
+                    stage_warm_start_mutex_.lock();
+                    delete stage_data_[current_stage_]->warm_start_;
+                    stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                    stage_warm_start_mutex_.unlock();
                 }
 
-            }
         }
         // What about dual ray stuff for feasibility??what about reduced costs then?
     }
 
     void ParallelNestedBenders::StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
-        console_mutex_.lock();
-        std::cout << "Store data " << std::endl; //boost::this_thread::get_id() << std::endl;
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //std::cout << "Store data " << std::endl; //boost::this_thread::get_id() << std::endl;
+        //console_mutex_.unlock();
         // Store Column Solution
         // We need to copy the solution, as we erase the osiSolverInterface
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
@@ -433,8 +485,6 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        // Do stuff we would like to do
-        std::cout << "Build subproblem and load it in the OsiSolverObject.." << std::endl;
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_; // Stochastic node pointer
@@ -606,7 +656,7 @@ namespace parallel_benders {
             for ( int i = 0; i < stage_pointer->num_rows_; i++ ){
                 osi_solver->setRowBounds(i,benders_node_pointer->row_lower_[i],benders_node_pointer->row_upper_[i]);
             }
-            // Remove feasibility and optimality cuts from previous solution process
+            // Remove all cuts from previous solutions ( includes "Theta" Constraints )
             int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
             if ( cuts_to_remove ){
                 std::vector<int> remove_indices;

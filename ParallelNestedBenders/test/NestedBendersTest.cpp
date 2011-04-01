@@ -89,18 +89,18 @@ TEST_F(NestedBendersTest,BirgeLouveuxFarmersTest){
     pnb.Solve();
 }
 
-TEST_F(NestedBendersTest, assets) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
-}
-
-TEST_F(NestedBendersTest, farmer) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
-}
+//TEST_F(NestedBendersTest, assets) { // ok
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_large"), -689.432, 0.1);
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
+//}
 //
-TEST_F(NestedBendersTest, finance) { // ok
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
-}
+//TEST_F(NestedBendersTest, farmer) { // ok
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+//}
+////
+//TEST_F(NestedBendersTest, finance) { // ok
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Fina4"), -68401.8, 0.1);
+//}
 //
 TEST_F(NestedBendersTest, gas) { // ok
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/GAS3"), 1558.17, 0.1);  
