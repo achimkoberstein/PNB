@@ -7,9 +7,12 @@ ROWS
  L  SB1 
  L  SB2                                                                     
 COLUMNS    
-    X1        COST      150.           ACRE      1.                             
+    X1        COST      150.           ACRE      1.  
+    X1        WHEAT     1
     X2        COST      230.           ACRE      1. 
+    X2        CORN      1
     X3        COST      260.           ACRE      1.  
+    X3        SB1       -20
     Y1        COST      238.           WHEAT     1. 
     Y2        COST      210.           CORN      1. 
     W1        COST      -170.          WHEAT     -1.   

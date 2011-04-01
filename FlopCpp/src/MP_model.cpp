@@ -968,11 +968,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
 
     // now do the same for the row names
-    std::vector<std::string> rowNamesStrict;
-    std::vector<std::string> rowNamesFree;
-
-    rowNamesStrict.reserve(m);
-    rowNamesFree.reserve(m);
+    std::vector<std::string> rowNamesStrict(m);
+    std::vector<std::string> rowNamesFree(m);
 
     nameSetStrict.clear();
     nameSetStrict.insert("R");

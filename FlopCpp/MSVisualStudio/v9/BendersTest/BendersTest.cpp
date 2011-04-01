@@ -502,7 +502,7 @@ TEST_F(CoverageTest, cover){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.assets";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.gas";
     //::testing::GTEST_FLAG(filter) = "BendersTest.rand";
     
     google::InitGoogleLogging(argv[0]);

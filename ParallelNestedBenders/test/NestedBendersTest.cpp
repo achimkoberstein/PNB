@@ -171,7 +171,6 @@ TEST_F(NestedBendersTest, stormG2) { // no progress in interations, obj. values 
     referenceValue = 15802589.698;
     relGap = abs(referenceValue-solutionValue)/solutionValue;
     EXPECT_LE(relGap,0.000001);
-
 }
 
 TEST_F(NestedBendersTest, dcap) {
@@ -230,7 +229,7 @@ TEST_F(NestedBendersTest, sgpf) {
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.assets";
+    //::testing::GTEST_FLAG(filter) = "*.assets";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
