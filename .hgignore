@@ -7,7 +7,6 @@ stable
 .deps
 Debug\
 Release\
-boost
 gtest
 glog
 test_detail.xml
