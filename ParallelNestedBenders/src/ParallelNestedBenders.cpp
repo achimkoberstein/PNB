@@ -1,6 +1,8 @@
 #include "ParallelNestedBenders.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <math.h>
 #include <sstream>
 
 #include <boost/scoped_array.hpp>
@@ -25,7 +27,6 @@ namespace parallel_benders {
         // Check for integrality right away
         if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
             contains_integer_ = true;
-            return;
         }
         // What do we want to do?
         // 1. Check for stochasticity of the model 
@@ -207,6 +208,7 @@ namespace parallel_benders {
         // Thread related stuff
         num_cpu_ = boost::thread::hardware_concurrency();
         thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
+        //thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
 
     }
 
@@ -225,14 +227,29 @@ namespace parallel_benders {
             current_iteration_ < max_iteration_ 
             ) 
         {
-            if ( old_lower_bound_ >= lower_bound_ && old_lower_bound_ > -infinity_ )// TODO: If we have feasCuts we might have to look at this again..
+            if ( upper_bound_ <= lower_bound_ ){
+                LOG(INFO) << "Upper Bound is lower than lower Bound. This can not happen, unfortunately it has. Iteration: " << current_iteration_;
+                //break;
+            }
+            if ( old_lower_bound_ > lower_bound_ + ParallelNestedBenders::zero_tolerance_ && old_lower_bound_ > -infinity_ ){// TODO: If we have feasCuts we might have to look at this again..
+                LOG(INFO) << "New Lower bound is less than old lower bound.";
                 break;
+            }
 
             minor_iteration_++;
             if ( current_stage_ == 0 ){
                 current_iteration_++;
                 minor_iteration_ = 0; 
             }
+
+            // Change direction 
+            if ( current_stage_ == 0 )
+                forward_ = true;
+            if ( current_stage_ == num_stages_ -1)
+                forward_ = false;
+            if ( current_iteration_ == 42 )
+                LOG(INFO) << "We reached iteration 42";
+
             std::string direction(forward_ ? "F " : "B ");
             std::cout << "Iteration " << direction << current_iteration_ << "." << minor_iteration_ << std::endl;
             if ( current_stage_ == 0){
@@ -241,11 +258,7 @@ namespace parallel_benders {
                 std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
             }
 
-            // Change direction 
-            if ( current_stage_ == 0 )
-                forward_ = true;
-            if ( current_stage_ == num_stages_ -1)
-                forward_ = false;
+ 
 
 
             int num_nodes = tree_nodes_by_stage_[current_stage_].size();
@@ -292,7 +305,7 @@ namespace parallel_benders {
 
         }
         // We finished solving
-        LOG(INFO) << "Solution: " << lower_bound_;
+        LOG(INFO) << "Solution: " << upper_bound_;
 
     }
 
@@ -337,11 +350,13 @@ namespace parallel_benders {
         }
         
         osi_solver->initialSolve();
-        std::stringstream stream;
-        stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        console_mutex_.lock();
-        osi_solver->writeLp(stream.str().c_str());
-        console_mutex_.unlock();
+        if ( current_stage_ == 0){ // Only write solution file if we ware in the first stage..
+            //std::stringstream stream;
+            //stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            //console_mutex_.lock();
+            //osi_solver->writeLp(stream.str().c_str());
+            //console_mutex_.unlock();
+        }
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -429,7 +444,20 @@ namespace parallel_benders {
             }
             if ( current_stage_ == 0) // This work in the multithreaded cases, as we have only one thread for the first stage problem
                 temporary_upper_bound_ = 0;
+            upper_bound_mutex_.lock();
             temporary_upper_bound_ += solution_value*benders_node_pointer->probability_;
+            upper_bound_mutex_.unlock();
+
+            //console_mutex_.lock();
+            //// Write to file
+            //ofstream myfile;
+            //std::stringstream filename;
+            //filename << "iteration_" << current_iteration_;
+            //myfile.open (filename.str().c_str(),fstream::out | fstream::app);
+            //myfile << benders_tree_node_pointer->scenario() << " " << solution_value*benders_node_pointer->probability_ << std::endl;
+            //myfile.close();
+            //console_mutex_.unlock();
+
         }
 
         // Copy theta variables
@@ -452,7 +480,6 @@ namespace parallel_benders {
                 old_lower_bound_ = -infinity_;
             }
         }
-
         if ( !forward_ ){
             // Store Dual Solution ( only if we move backward )
             benders_node_pointer->dual_solution_ = new double[osi_solver->getNumRows()];
@@ -906,7 +933,6 @@ namespace parallel_benders {
                     cut_lower_bound += tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->current_cut_rhs_;
                     
                 }
-                
             }
             OsiRowCut* cut_pointer = new OsiRowCut();
             cut_pointer->setLb(cut_lower_bound);
@@ -940,7 +966,7 @@ namespace parallel_benders {
             return true;
         if (upper_bound == 0) // We have no meaningful comparison
             return true;
-        if (std::abs(upper_bound) > 1 && std::abs(lower_bound) > 1) //in this case we do not want relative difference, instead we want absolute difference..
+        if (std::abs(upper_bound) < 1 && std::abs(lower_bound) < 1) //in this case we do not want relative difference, instead we want absolute difference..
             return true;
         return (abs(upper_bound-lower_bound)/abs(upper_bound)) >= epsilon; //See cplex mipgap
     }
@@ -950,9 +976,9 @@ namespace parallel_benders {
         return RowOrderedSparseMatrixPointer(smiNode->getElements(smiNode->getMatStart()),smiNode->getIndices(smiNode->getMatStart()),smiNode->getStarts(smiNode->getMatStart()));
     }
 
-    bool compare_zero( double value )
+    bool compare_zero( double value ) 
     {
-        return std::abs(value) <= ParallelNestedBenders::zero_tolerance_;
+        return std::abs(value) < ParallelNestedBenders::zero_tolerance_;
     }
 
     bool compare_equality( double first, double second, double tolerance )

@@ -108,6 +108,7 @@ private:
     boost::mutex console_mutex_; // Mutex for console output
     boost::mutex solver_map_mutex_; // Mutex for access to solver map
     boost::mutex stage_warm_start_mutex_; // Mutex for access to warm start 
+    boost::mutex upper_bound_mutex_; // Mutex for access to upper bound
     // Further thread management stuff
     boost::threadpool::pool thread_pool_;
 
