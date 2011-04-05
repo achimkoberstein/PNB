@@ -581,6 +581,12 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     // function which has to be manually added to the objective function
                     if ( feasible )
                         upperBound_+= subObjVal*scenProb_[scen_];
+                    ofstream myfile;
+                    std::stringstream filename;
+                    filename << "iteration_" << nIter_+1;
+                    myfile.open(filename.str().c_str(),fstream::out | fstream::app);
+                    myfile << scen_ << " " << subObjVal*scenProb_[scen_] << std::endl;
+                    myfile.close();
 
                     if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
                         // We want to solve the subproblem with the regularized solution
@@ -3047,9 +3053,9 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
         }
     }
-    std::stringstream stream;
-    stream << "stage1" << "_" << nIter_+1 << "_" << scen_; 
-    osiSubproblem_->writeLp(stream.str().c_str());
+    //std::stringstream stream;
+    //stream << "stage1" << "_" << nIter_+1 << "_" << scen_; 
+    //osiSubproblem_->writeLp(stream.str().c_str());
 
 
     // Delete matrix
@@ -3211,7 +3217,7 @@ void Benders::addOptiCut(int oCut){
                 cutElementsBunch[i][j] = 0;
                 cutIndexBunch[i][j] = j;
             }
-            cutElementsBunch[i][mncol_] = -1;
+            cutElementsBunch[i][mncol_] = 1;
             cutIndexBunch[i][mncol_]=mncol_+i;
             cutRowUBBunch[i] = 0;
 
@@ -3232,25 +3238,26 @@ void Benders::addOptiCut(int oCut){
             for(int j=0; j< mncol_; j++){
                 // In the first cycle all arrays are initialized
                 if(i == 0){
-                    cutElements[j] = cutElements_[j];
+                    cutElements[j] = -cutElements_[j];
                     cutIndex[j] = j;
                 }
                 // In all other cycles sum up cut elements
                 else{			
-                    cutElements[j]+= cutElements_[i*(mncol_+1)+j];
+                    cutElements[j]-= cutElements_[i*(mncol_+1)+j];
                 }
             }
         }	
         // The last position of cut coefficient array
         // is the additional variable with coefficient -1
-        cutElements[mncol_] = -1;
+        cutElements[mncol_] = 1;
         cutIndex[mncol_] = mncol_;
 
         // Add cut to master problem
         // Note: RHS of the cut is multiplied by -1, since p*d
         // has to be on the other side of the inequalitiy
         if(single_){
-            osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB);
+            //osiMaster_->addRow(mncol_+1, cutIndex, cutElements, cutRowLB, -cutRowUB);
+            osiMaster_->addRow(mncol_+1, cutIndex, cutElements,cutRowUB,infty_);
             // Set obj function value of z to 1 (if not already done, but does not hurt to do it anyway..)
             mdobj_[mncol_] = 1;
             // We have to modify the value of the coefficient in the solver
@@ -3289,7 +3296,7 @@ void Benders::addOptiCut(int oCut){
             int cutIndex = i*(mncol_+1);
             cutRowUBBunch[curBunch] += cutRowUB_[i];
             for (int j = 0; j < mncol_; j++){
-                cutElementsBunch[curBunch][j] += cutElements_[cutIndex+j];
+                cutElementsBunch[curBunch][j] -= cutElements_[cutIndex+j];
             }
             //// We check the cut first (if it really cuts anything)
             //double deviation = computeDeviation(cutIndex,cutElements, -cutRowUB_[i]);
@@ -3304,7 +3311,7 @@ void Benders::addOptiCut(int oCut){
         for (int i = 0; i < numBunch_; i++) {
             double deviation = computeDeviation(cutIndexBunch[i],cutElementsBunch[i], -cutRowUBBunch[i]);
             double factor = computeCoefficientTest(mncol_+1,cutElementsBunch[i]);
-            osiMaster_->addRow(mncol_+1, cutIndexBunch[i], cutElementsBunch[i], cutRowLB, -cutRowUBBunch[i]); 
+            osiMaster_->addRow(mncol_+1, cutIndexBunch[i], cutElementsBunch[i],cutRowUBBunch[i],infty_); 
             appliedCuts_++;
             //We have to change the coefficient in the master problem of the theta from 0 to the correct value
             if ( mdobj_[mncol_+i] == 0){

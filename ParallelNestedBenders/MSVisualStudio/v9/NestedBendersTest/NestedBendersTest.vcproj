@@ -114,7 +114,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ParallelNestedBenders/src"
+				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ParallelNestedBenders/src;../../../../ThirdParty/threadpool"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -131,6 +131,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
