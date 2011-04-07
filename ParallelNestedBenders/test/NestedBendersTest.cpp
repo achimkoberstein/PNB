@@ -33,9 +33,11 @@ public:
 #endif
             std::string name_string(name);
         std::string total_string = folder+name_string;
-        smi.readSmps(total_string.c_str());
+        int read_in = smi.readSmps(total_string.c_str());
         //OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
         //osi_ptr->initialSolve();
+        if ( read_in!= 0 )
+            return -osi_cpx.getInfinity();
 
         double time = CoinCpuTime();  
         // Load ParallelNestedBendersSolver
