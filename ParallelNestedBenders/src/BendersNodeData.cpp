@@ -41,13 +41,6 @@ BendersNodeData::~BendersNodeData(void)
 
     delete this->warm_start_;
 
-    //delete matrixT;
-
-    //if (smi_node_data_->getColLowerLength()) delete [] dclo;
-    //if (smi_node_data_->getColUpperLength()) delete [] dcup;
-    //if (smi_node_data_->getObjectiveLength()) delete [] dobj;
-    //if (smi_node_data_->getRowLowerLength()) delete [] drlo;
-    //if (smi_node_data_->getRowUpperLength()) delete [] drup;
 }
 
 void BendersNodeData::set_col_solution(const double* colSolution)

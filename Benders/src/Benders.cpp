@@ -581,12 +581,12 @@ void Benders::BendersSolve(double absEps, double relEps,int maxIter){
                     // function which has to be manually added to the objective function
                     if ( feasible )
                         upperBound_+= subObjVal*scenProb_[scen_];
-                    ofstream myfile;
-                    std::stringstream filename;
-                    filename << "iteration_" << nIter_+1;
-                    myfile.open(filename.str().c_str(),fstream::out | fstream::app);
-                    myfile << scen_ << " " << subObjVal*scenProb_[scen_] << std::endl;
-                    myfile.close();
+                    //ofstream myfile;
+                    //std::stringstream filename;
+                    //filename << "iteration_" << nIter_+1;
+                    //myfile.open(filename.str().c_str(),fstream::out | fstream::app);
+                    //myfile << scen_ << " " << subObjVal*scenProb_[scen_] << std::endl;
+                    //myfile.close();
 
                     if ( (useRegularizedDecomposition_ || useRegularizedManhattan_) && computeRegularizedSubproblems_){ // We only need to compute these values in case our regular solution somehow changed..
                         // We want to solve the subproblem with the regularized solution
@@ -2140,9 +2140,9 @@ int Benders::solveMaster(){
         seriousStep_ = false;
     }
 
-    std::stringstream stream;
-    stream << "stage0_" << nIter_+1 << "_0";
-    osiMaster_->writeLp(stream.str().c_str());
+    //std::stringstream stream;
+    //stream << "stage0_" << nIter_+1 << "_0";
+    //osiMaster_->writeLp(stream.str().c_str());
 
     // If master problem is infeasible, print an error
     bool primalInfeasible = osiMaster_->isProvenPrimalInfeasible();
@@ -3053,9 +3053,9 @@ int Benders::solveSubproblem(int scen_, bool fCut){
             warmStartSub_[scen_] = osiSubproblem_->getEmptyWarmStart();
         }
     }
-    //std::stringstream stream;
-    //stream << "stage1" << "_" << nIter_+1 << "_" << scen_; 
-    //osiSubproblem_->writeLp(stream.str().c_str());
+    std::stringstream stream;
+    stream << "stage1" << "_" << nIter_+1 << "_" << scen_; 
+    osiSubproblem_->writeLp(stream.str().c_str());
 
 
     // Delete matrix

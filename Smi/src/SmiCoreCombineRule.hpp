@@ -8,8 +8,9 @@
 // 9 March 2004
 //////////////////////////////////////////////////////////////////////
 
-#if !defined(SmiCoreCombineRule_HPP)
-#define SmiCoreCombineRule_HPP
+#ifndef SmiCoreCombineRule_HPP__
+#define SmiCoreCombineRule_HPP__
+
 
 #include "CoinPragma.hpp"
 #include "CoinPackedVector.hpp"
@@ -219,4 +220,4 @@ private:
 };
 
 
-#endif // !defined(SmiCoreCombineRule_HPP)
+#endif 

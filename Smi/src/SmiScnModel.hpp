@@ -15,6 +15,7 @@
 #include "SmiBlockStructure.hpp"
 #include "SmiScenarioTree.hpp"
 #include "SmiScnData.hpp"
+#include "SmiCoreCombineRule.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedVector.hpp"
 #include "SmiMessage.hpp"
@@ -480,11 +481,12 @@ public:
     {
         if (node_)
         {
-            //Only delete non-core nodes. Core nodes get deleted via SmiCoreData..
-            if (!node_->isCoreNode()){
-                delete node_;
-                node_= NULL;
-            }
+            ////Only delete non-core nodes. Core nodes get deleted via SmiCoreData..
+            //if (!node_->isCoreNode()){
+            //    delete node_;
+            //    node_= NULL;
+            //}
+            delete node_;
        	}
 	}
 

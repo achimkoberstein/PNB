@@ -148,6 +148,7 @@ public:
 	/// Destructor
 
 	~SmiTreeNode<T>() {
+        delete ptr_;
         delete child_;
         if ( sibling_){ 
             // Get all the nodes in a row and delete the siblings
