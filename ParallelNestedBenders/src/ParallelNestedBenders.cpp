@@ -250,7 +250,7 @@ namespace parallel_benders {
                 LOG(INFO) << "We reached iteration 42";
 
             std::string direction(forward_ ? "F " : "B ");
-            std::cout << "Iteration " << direction << current_iteration_ << "." << minor_iteration_ << std::endl;
+            std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
             if ( current_stage_ == 0){
                 std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
                 std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
@@ -899,9 +899,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
-        console_mutex_.lock();
-        LOG(INFO) << "Aggregating cuts";
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //LOG(INFO) << "Aggregating cuts";
+        //console_mutex_.unlock();
         // We specified the number of thetas in the stage_pointer (for now)
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         // We need all the children of this node..

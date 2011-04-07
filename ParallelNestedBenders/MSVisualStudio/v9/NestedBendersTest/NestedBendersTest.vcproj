@@ -134,7 +134,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
+				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib64"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
