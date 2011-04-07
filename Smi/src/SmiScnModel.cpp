@@ -41,7 +41,7 @@ int SmiScnNode::getCoreRowIndex(int i){
 SmiScnModel::~SmiScnModel()
 {
     // loop to deleteNodes
-    for_each(smiTree_.treeBegin(),smiTree_.treeEnd(),SmiScnModelDeleteNode(this));
+    //for_each(smiTree_.treeBegin(),smiTree_.treeEnd(),SmiScnModelDeleteNode(this));
 
     if (osiStoch_)
         delete osiStoch_;
@@ -606,7 +606,16 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
 OsiSolverInterface *
 SmiScnModel::loadOsiSolverData()
 {
-    osiStoch_->reset();
+    // We want to reset our osiSolverInterface
+    // If we have a cplex solver, we can work around that by loading an empty model..
+    //OsiCpxSolverInterface* osiSolver = dynamic_cast<OsiCpxSolverInterface *>(osiStoch_);
+    //if (NULL != osiSolver)
+    //{ // If we really have an OsiCpxSolverInterface, we do the workaround
+    //	//
+       osiStoch_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+    //}
+    //else
+    //    osiStoch_->reset();
 
     delete[] dclo_;
     delete[] dcup_;
@@ -649,11 +658,6 @@ SmiScnModel::loadOsiSolverData()
     if (intIndices.size()){
         osiStoch_->setInteger(&intIndices[0],intIndices.size());
     }
-
-
-
-
-
 
 
     //Print out Matrix.. if in Debug Mode

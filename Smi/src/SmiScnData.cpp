@@ -326,7 +326,7 @@ SmiCoreData::~SmiCoreData()
 	delete [] cdobj_;
     delete [] integerIndices_;
     delete [] binaryIndices_;
-    for (int ijk=0; ijk<nodes_.size(); ijk++){
+    for (int ijk=1; ijk<nodes_.size(); ijk++){ // Delete all the nodes, except the first, which is root of the Scenario Tree
 	  delete nodes_[ijk];
     }
 }
@@ -721,8 +721,10 @@ CoinPackedMatrix* SmiNodeData::generateCoinPackedWMatrix() const
     }
     // Count number of different column entries?
     assert(row == core_->getNumRows(stg_));
-    CoinPackedMatrix* matrix =  new CoinPackedMatrix(false, core_->getNumCols((stg_)),row,overallWEntries,&elements[0],&indices[0],&start[0],&length[0]);
-    return matrix;
+    if ( overallWEntries ) 
+        return new CoinPackedMatrix(false, core_->getNumCols((stg_)),row,overallWEntries,&elements[0],&indices[0],&start[0],&length[0]);
+    else
+        return new CoinPackedMatrix();
     // TODO: Use assignMatrix to prevent unnecessary copying.
 }
 

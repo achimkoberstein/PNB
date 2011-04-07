@@ -239,7 +239,6 @@ namespace parallel_benders {
             minor_iteration_++;
             if ( current_stage_ == 0 ){
                 current_iteration_++;
-                minor_iteration_ = 0; 
             }
 
             // Change direction 
@@ -350,13 +349,13 @@ namespace parallel_benders {
         }
         
         osi_solver->initialSolve();
-        if ( current_stage_ == 0){ // Only write solution file if we ware in the first stage..
+        //if ( current_stage_ == 0){ // Only write solution file if we ware in the first stage..
             //std::stringstream stream;
             //stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
             //console_mutex_.lock();
             //osi_solver->writeLp(stream.str().c_str());
             //console_mutex_.unlock();
-        }
+        //}
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -423,7 +422,7 @@ namespace parallel_benders {
         // Store Column Solution
         // We need to copy the solution, as we erase the osiSolverInterface
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        // Delete old values
+        // Delete old values // Memory leak, as we do not delete them at cleanup?
         delete [] benders_node_pointer->col_solution_;
         delete [] benders_node_pointer->dual_solution_;
         delete [] benders_node_pointer->next_stage_approximation_;
@@ -498,12 +497,13 @@ namespace parallel_benders {
             const double* column_solution = osi_solver->getColSolution();
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                 // Look at variable value and their bounds
-                if ( !compare_zero(column_solution[i] ) ){
+                if ( !compare_zero(column_solution[i]) && !compare_zero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+                    
                     // We have to look at bounds TODO: ZEROTEST For reduced cost
                     if ( compare_equality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
                     else if ( compare_equality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
-                        computed_dual_value_for_variable_bounds -= dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                        computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
                 }
             }
             benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
@@ -759,6 +759,7 @@ namespace parallel_benders {
         BOOST_FOREACH( BendersStageData* stage_data, stage_data_ ){
             delete stage_data;
         }
+        //BOOST_FOREACH // Delete Benders Note Data ?
     }
 
     void ParallelNestedBenders::GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -931,7 +932,7 @@ namespace parallel_benders {
                     for (int k = 0; k < num_columns; k++)
                         cut_elements[k] += tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->current_cut_coefficients_[k];
                     cut_lower_bound += tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->current_cut_rhs_;
-                    
+ 
                 }
             }
             OsiRowCut* cut_pointer = new OsiRowCut();

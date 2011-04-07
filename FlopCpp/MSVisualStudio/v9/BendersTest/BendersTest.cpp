@@ -282,16 +282,16 @@ TEST_F(BendersTest, rand) { // takes long to solve, and after the optimal soluti
 }
 
 TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
-    benParam.setIntParam(BendersParameter::WARMSTART,2);
-    benParam.setIntParam(BendersParameter::MULTI,1);
-    benParam.setIntParam(BendersParameter::BUNCHING,1);
-    benParam.setIntParam(BendersParameter::BUNCH_SIZE,100);
-    benParam.setIntParam(BendersParameter::TRUSTREGION,1);
-    benParam.setIntParam(BendersParameter::INTEGER_BENDERS,0);
-    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
+    //benParam.setIntParam(BendersParameter::WARMSTART,2);
+    //benParam.setIntParam(BendersParameter::MULTI,1);
+    //benParam.setIntParam(BendersParameter::BUNCHING,1);
+    //benParam.setIntParam(BendersParameter::BUNCH_SIZE,100);
+    //benParam.setIntParam(BendersParameter::TRUSTREGION,1);
+    //benParam.setIntParam(BendersParameter::INTEGER_BENDERS,0);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_500"), -349.916, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_1000"), -352.494, 0.1);
@@ -502,7 +502,7 @@ TEST_F(CoverageTest, cover){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.rand";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.sslp";
     //::testing::GTEST_FLAG(filter) = "BendersTest.rand";
     
     google::InitGoogleLogging(argv[0]);

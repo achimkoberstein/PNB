@@ -9,14 +9,14 @@
 //////////////////////////////////////////////////////////////////////
 // SmiCoreCombineReplace
 //////////////////////////////////////////////////////////////////////
-SmiCoreCombineReplace *SmiCoreCombineReplace::_instance = 0;
+SmiCoreCombineReplace *SmiCoreCombineReplace::_instance = NULL;
 
 SmiCoreCombineReplace* SmiCoreCombineReplace::Instance()
 {
-	if (_instance==0) {
+	if (_instance==NULL) {
 		_instance = new SmiCoreCombineReplace;
 	}
-	return _instance;
+    return _instance;
 }
 
 void SmiCoreCombineReplace::ClearInstance()
@@ -142,11 +142,11 @@ int SmiCoreCombineReplace::Process(double *dr,const int dr_len,const int nels, c
 // SmiCoreCombineReplace
 //////////////////////////////////////////////////////////////////////
 
-SmiCoreCombineAdd *SmiCoreCombineAdd::_instance = 0;
+SmiCoreCombineAdd *SmiCoreCombineAdd::_instance = NULL;
 
 SmiCoreCombineAdd* SmiCoreCombineAdd::Instance()
 {
-	if (_instance==0) {
+	if (_instance==NULL) {
 		_instance = new SmiCoreCombineAdd;
 	}
 	return _instance;
