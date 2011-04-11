@@ -1300,8 +1300,8 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     }
 
     smiSmpsIO = new SmiSmpsIO();
-    //if (osiStoch_) 
-    //    smiSmpsIO->setInfinity(osiStoch_->getInfinity()); // Set solver infinity..
+    if (osiStoch_) 
+        smiSmpsIO->setInfinity(osiStoch_->getInfinity()); // Set solver infinity..
 
     if (r != NULL)
         smiSmpsIO->setCoreCombineRule(r);

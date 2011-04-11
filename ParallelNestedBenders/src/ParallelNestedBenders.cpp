@@ -11,10 +11,13 @@
 
 #include <glog/logging.h>
 // Include all the other files
+
+#include "CoinHelperFunctions.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "CoinWarmStart.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
-#include "CoinWarmStart.hpp"
 #include "SmiScnModel.hpp"
 
 
@@ -46,16 +49,17 @@ namespace parallel_benders {
         // Build core T and W matrix
         // What do I need? Assign column to either W or T matrix, so we can keep it organized.
 
-        for ( int i = 0; i < core_->getColStart(stage)+benders_stage_ptr->num_columns_; i++ ){
-            // It is not necessary to have a strict staircase structure, so to the T-matrix belong all columns that are < then current stage
-            if ( core_->getColStage(i) < stage ){
-                benders_stage_ptr->t_indices_.push_back(i);
-            }
-            else{
-                benders_stage_ptr->w_indices_.push_back(i);
-            }
+        // Reserve place. FIXME: This is necessary for CPLEX. Cplex needs pointers to the first and the last index ( which is one over the end, just like iterators )
+        // We fill these arrays, so that cplex can use it to change the RHS, Columns bound and objective function coefficients
+        benders_stage_ptr->column_indices_.reserve(benders_stage_ptr->num_columns_);
+        benders_stage_ptr->row_indices_.reserve(benders_stage_ptr->num_rows_);
+        for ( int i = 0; i < benders_stage_ptr->num_columns_+1; i++ ){
+            benders_stage_ptr->column_indices_.push_back(i);            
         }
-        assert( benders_stage_ptr->t_indices_.size() + benders_stage_ptr->w_indices_.size() == core_->getColStart(stage)+benders_stage_ptr->num_columns_);
+        for ( int i = 0; i < benders_stage_ptr->num_rows_+1; i++ ){
+            benders_stage_ptr->row_indices_.push_back(i);            
+        }
+        // End of CPLEX necessary adjustments
 
         // Look at core data to get values for the matrices..
         for ( int i = 0; i < tree_nodes_by_stage_[stage].size(); i++){
@@ -242,12 +246,12 @@ namespace parallel_benders {
             }
 
             // Change direction 
-            if ( current_stage_ == 0 )
+            if ( current_stage_ == 0 ){
                 forward_ = true;
+                infeasible_problem_ = false;
+            }
             if ( current_stage_ == num_stages_ -1)
                 forward_ = false;
-            if ( current_iteration_ == 42 )
-                LOG(INFO) << "We reached iteration 42";
 
             std::string direction(forward_ ? "F " : "B ");
             std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
@@ -256,9 +260,6 @@ namespace parallel_benders {
                 std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
                 std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
             }
-
- 
-
 
             int num_nodes = tree_nodes_by_stage_[current_stage_].size();
             for ( int i = 0; i < num_nodes; i++ ){
@@ -285,7 +286,7 @@ namespace parallel_benders {
 
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
-            if ( current_stage_ == num_stages_ -1){
+            if ( current_stage_ == num_stages_ -1 && !infeasible_problem_){
                 if ( upper_bound_ > temporary_upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
 
@@ -311,7 +312,8 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::HandleSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-
+         if ( infeasible_problem_ )// We need this variable stagewise, as otherwise we do not propagate the cuts upwards..
+             return;
         // Get thread ID
         //console_mutex_.lock();
         //LOG(INFO) << "Current thread has ID: " << boost::this_thread::get_id();
@@ -327,6 +329,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
 
+        
         //console_mutex_.lock();
         //std::cout << "Solve Subproblem " << boost::this_thread::get_id() << std::endl;
         //console_mutex_.unlock();
@@ -366,8 +369,14 @@ namespace parallel_benders {
             }
             if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
-                LOG(INFO) << "Generate feasibility cut.";
-                GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario?
+                
+                if ( current_stage_ > 0 ){
+                    LOG(INFO) << "Generate feasibility cut.";
+                    GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario?
+                    infeasible_problem_ = true;
+                }
+                else
+                    LOG(ERROR) << "Your master problem is infeasible.";
             }
             if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
@@ -539,16 +548,16 @@ namespace parallel_benders {
             // We still have to reload the matrix as it might have be changed in the past, and this is not what we want..
             reuse_solver = false;
             benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
-
         }
 
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
         if (  node_pointer->getColLowerLength()) {
             benders_node_pointer->column_lower_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
-            for (int i = 0; i < node_pointer->getColLowerLength(); i++) {
-                benders_node_pointer->column_lower_[node_pointer->getColLowerIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColLowerElements()[i];
-            }
+            if ( stage_pointer->stochastic_bounds_ )
+                for (int i = 0; i < node_pointer->getColLowerLength(); i++) {
+                    benders_node_pointer->column_lower_[node_pointer->getColLowerIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColLowerElements()[i];
+                }
         }
         else
             benders_node_pointer->column_lower_ = const_cast<double*> (core_->getDenseColLower(current_stage_));
@@ -557,9 +566,10 @@ namespace parallel_benders {
         if ( node_pointer->getColUpperLength()) {
             benders_node_pointer->column_upper_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->column_upper_, core_->getDenseColUpper(current_stage_), stage_pointer->num_columns_*sizeof(double));
-            for (int i = 0; i < node_pointer->getColUpperLength(); i++) {
-                benders_node_pointer->column_upper_[node_pointer->getColUpperIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColUpperElements()[i];
-            }
+            if ( stage_pointer->stochastic_bounds_ )
+                for (int i = 0; i < node_pointer->getColUpperLength(); i++) {
+                    benders_node_pointer->column_upper_[node_pointer->getColUpperIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColUpperElements()[i];
+                }
         }
         else
             benders_node_pointer->column_upper_ = const_cast<double*> (core_->getDenseColUpper(current_stage_));
@@ -568,9 +578,10 @@ namespace parallel_benders {
         if ( node_pointer->getObjectiveLength()) {
             benders_node_pointer->objective_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->objective_, core_->getDenseObjCoefficients(current_stage_), stage_pointer->num_columns_*sizeof(double));
-            for (int i = 0; i < node_pointer->getObjectiveLength(); i++) {
-                benders_node_pointer->objective_[node_pointer->getObjectiveIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getObjectiveElements()[i];
-            }
+            if ( stage_pointer->stochastic_objective_ )
+                for (int i = 0; i < node_pointer->getObjectiveLength(); i++) {
+                    benders_node_pointer->objective_[node_pointer->getObjectiveIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getObjectiveElements()[i];
+                }
         }
         else
             benders_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(current_stage_));
@@ -669,20 +680,27 @@ namespace parallel_benders {
         else{
             if ( stage_pointer->stochastic_bounds_ ){
                 // Update bounds
+                std::vector<double> col_bounds;
+                col_bounds.reserve(stage_pointer->num_columns_*2);
                 for ( int i = 0; i < stage_pointer->num_columns_; i++ ){
-                    osi_solver->setColBounds(i,benders_node_pointer->column_lower_[i],benders_node_pointer->column_upper_[i]);
+                    col_bounds.push_back(benders_node_pointer->column_lower_[i]);
+                    col_bounds.push_back(benders_node_pointer->column_upper_[i]);
                 }
+                osi_solver->setColSetBounds(&stage_pointer->column_indices_[0],&stage_pointer->column_indices_[stage_pointer->num_columns_],&col_bounds[0]);
             }
             if ( stage_pointer->stochastic_objective_ ){
                 // Update objective
-                for ( int i = 0; i < stage_pointer->num_columns_; i++ ){
-                    osi_solver->setObjCoeff(i,benders_node_pointer->objective_[i]);
-                }
+                osi_solver->setObjCoeffSet(&stage_pointer->column_indices_[0],&stage_pointer->column_indices_[stage_pointer->num_columns_],&benders_node_pointer->objective_[0]);
             }
             // Update Row Bounds (RHS) for the basic problem
+            std::vector<double> row_bounds;
+            row_bounds.reserve(stage_pointer->num_rows_*2);
             for ( int i = 0; i < stage_pointer->num_rows_; i++ ){
-                osi_solver->setRowBounds(i,benders_node_pointer->row_lower_[i],benders_node_pointer->row_upper_[i]);
+                row_bounds.push_back(benders_node_pointer->row_lower_[i]);
+                row_bounds.push_back(benders_node_pointer->row_upper_[i]);
             }
+            osi_solver->setRowSetBounds(&stage_pointer->row_indices_[0],&stage_pointer->row_indices_[stage_pointer->num_rows_],&row_bounds[0]);
+            
             // Remove all cuts from previous solutions ( includes "Theta" Constraints )
             int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
             if ( cuts_to_remove ){
@@ -693,8 +711,6 @@ namespace parallel_benders {
                 osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
 
             }
-
-                
         }
 
         // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. )
@@ -796,59 +812,11 @@ namespace parallel_benders {
         else           
             row_upper = const_cast<double*> (core_->getDenseRowUpper(current_stage_));
         
-        
-        // Go on with the matrix
-        RowOrderedSparseMatrixPointer deterministic_matrix = create_row_ordered_sparse_matrix_pointer( core_->getNode(current_stage_) );
-        RowOrderedSparseMatrixPointer stochastic_matrix = create_row_ordered_sparse_matrix_pointer(node_pointer);
-
-        // Get dual solution values 
-        const double* dual_solution = benders_node_pointer->dual_solution_;
         // Store results of the computation 
         std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
-
-        int current_stage_columns = core_->getColStart(current_stage_);
-        int column_start_previous_stage = core_->getColStart(current_stage_-1);
-        int stochastic_column_index = 0;
-        bool stochastic_element_in_row = false;
-        // Now we need the loop. Do go on.
-        for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
-            double value = 0;
-            if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
-                stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;
-
-            // We iterate over the row of the deterministic matrix
-            for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
-                // Handle stochastic columns only in the presence of stochastic matrix..
-       
-                while ( stochastic_element_in_row ){
-                    if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
-                        // We need to advance the index, if we are still within this row
-                        if ( stochastic_column_index < stochastic_matrix.start_[row+1] )
-                            stochastic_column_index++;
-                        else if ( stochastic_column_index == stochastic_matrix.start_[row+1]){
-                            stochastic_element_in_row = false;
-                            break; // We reached the end of the row
-                        }
-                        else
-                            break;
-                    }
-                    else
-                        break; // We found a stochastic T matrix entry for this row
-                }
-                
-                if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
-                    if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
-                        cut_coefficients[deterministic_matrix.indices_[column_index]-column_start_previous_stage] += stochastic_matrix.elements_[stochastic_column_index]*dual_solution[row];
-                        stochastic_column_index++;
-                    }
-                    else    
-                        cut_coefficients[deterministic_matrix.indices_[column_index]-column_start_previous_stage] += deterministic_matrix.elements_[column_index]*dual_solution[row];
-                }
-
-            }
-            if ( stochastic_element_in_row )
-                assert(stochastic_column_index == stochastic_matrix.start_[row+1]);
-        }
+        const double* dual_solution = benders_node_pointer->dual_solution_;
+        ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
+  
 
         BOOST_FOREACH(double& value, cut_coefficients){
             value *= prob;
@@ -899,6 +867,8 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
+        if ( infeasible_problem_ )
+            return;
         //console_mutex_.lock();
         //LOG(INFO) << "Aggregating cuts";
         //console_mutex_.unlock();
@@ -945,6 +915,101 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     { // Called directly from solve subproblem.
+        // We need the dual rays..
+        assert(osi_solver->isProvenPrimalInfeasible()); // Otherwise we do not need to call this method
+        // Get the dual ray
+        OsiSolverInterface* dual_ray_problem = getDualRayProblem(osi_solver);
+
+        BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
+        SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
+        BendersStageData* stage_pointer = stage_data_[current_stage_];
+
+        // Compute the cut coefficients for the matrix
+        std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
+        const double* dual_solution = dual_ray_problem->getRowPrice();
+        ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
+
+        // Compute fixed value for RHS
+        
+        // Compute the values: \lambda * lower_bound - \mu * upper_bound
+        // Compute the resulting values right away, as we have the osi_solver_interface at hand.
+        const double* dual_values_variable_bounds = osi_solver->getReducedCost();
+        const double* variable_lower_bounds = osi_solver->getColLower();
+        const double* variable_upper_bounds = osi_solver->getColUpper();
+        double computed_dual_value_for_variable_bounds = 0;
+        const double* column_solution = dual_ray_problem->getColSolution();
+        for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
+            // Look at variable value and their bounds
+            if ( !compare_zero(column_solution[i]) && !compare_zero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+
+                // We have to look at bounds TODO: ZEROTEST For reduced cost
+                if ( compare_equality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                    computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
+                else if ( compare_equality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                    computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+            }
+        }
+        // Compute the cut coefficients for the RHS.
+        // We compute prob* \pi * T + \theta >= prob*\pi*h (+ prob*dual_value_variable_bounds)
+        double* row_lower = NULL; double * row_upper = NULL;
+        if ( node_pointer->getRowLowerLength() ){
+            row_lower = new double[stage_pointer->num_rows_];
+            memcpy(row_lower, core_->getDenseRowLower(current_stage_), stage_pointer->num_rows_*sizeof(double));
+            for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
+                row_lower[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
+            }
+        }
+        else 
+            row_lower = const_cast<double*> (core_->getDenseRowLower(current_stage_));
+
+        if ( node_pointer->getRowUpperLength() ){
+
+            row_upper = new double[stage_pointer->num_rows_];
+            memcpy(row_upper, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
+            for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
+                row_upper[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+            }
+        }
+        else           
+            row_upper = const_cast<double*> (core_->getDenseRowUpper(current_stage_));
+
+        // Now we generate the RHS value of the cut
+        // To calculate RHS, use constant RHS/LHS; if the 
+        // corresponding dual variable has a negative value, use
+        // RHS; if the corresponding dual variable has a positive
+        // value, use LHS;
+        double cut_rhs = 0;
+        int for_bound = stage_pointer->num_rows_;
+        int row = 0;
+        for ( ; row < for_bound; row++){
+            if ( dual_solution[row] < 0 )
+                cut_rhs += dual_solution[row]*row_upper[row];
+            else if ( dual_solution[row] > 0)
+                cut_rhs += dual_solution[row]*row_lower[row];
+        }
+        // Append values for optimality and feasibility cuts.. ( if we have any at this node )
+        //for ( ; row < for_bound; row++ ){
+        //    cut_rhs += benders_node_pointer->optimality_cuts_[row-stage_pointer->num_rows_]->lb()*dual_solution[row];
+        //}
+        row += benders_node_pointer->optimality_cuts_.size();
+        for_bound += benders_node_pointer->optimality_cuts_.size()+benders_node_pointer->feasibility_cuts_.size();
+        for ( ; row < for_bound; row++ ){
+            cut_rhs += benders_node_pointer->feasibility_cuts_[row-stage_pointer->num_rows_-benders_node_pointer->optimality_cuts_.size()]->lb()*dual_solution[row];
+        }
+        // Append value for dual variable bounds
+        cut_rhs += computed_dual_value_for_variable_bounds;
+
+        OsiRowCut* cut_pointer = new OsiRowCut();
+        cut_pointer->setLb(cut_rhs);
+        cut_pointer->setUb(infinity_);
+        cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0]);
+        benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.push_back(cut_pointer);
+
+        // Deal with it. What about two-sided rows? TODO: Applies to optimality cuts as well
+
+        // Delete dual ray problem
+        delete dual_ray_problem;
+
 
     }
 
@@ -961,6 +1026,61 @@ namespace parallel_benders {
         return osi_solver;
     }
 
+    void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer )
+    {
+        
+        SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
+        BendersStageData* stage_pointer = stage_data_[current_stage_];
+        assert(cut_coefficients_pointer->size() == stage_data_[current_stage_-1]->num_columns_);
+
+        // Go on with the matrix
+        RowOrderedSparseMatrixPointer deterministic_matrix = create_row_ordered_sparse_matrix_pointer( core_->getNode(current_stage_) );
+        RowOrderedSparseMatrixPointer stochastic_matrix = create_row_ordered_sparse_matrix_pointer(node_pointer);
+
+        int current_stage_columns = core_->getColStart(current_stage_);
+        int column_start_previous_stage = core_->getColStart(current_stage_-1);
+        int stochastic_column_index = 0;
+        bool stochastic_element_in_row = false;
+        // Compute a coefficient for every row
+        for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
+            double value = 0;
+            if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
+                stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;
+
+            // We iterate over the row of the deterministic matrix
+            for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
+                // Handle stochastic columns only in the presence of stochastic matrix..
+
+                while ( stochastic_element_in_row ){
+                    if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
+                        // We need to advance the index, if we are still within this row
+                        if ( stochastic_column_index < stochastic_matrix.start_[row+1] )
+                            stochastic_column_index++;
+                        else if ( stochastic_column_index == stochastic_matrix.start_[row+1]){
+                            stochastic_element_in_row = false;
+                            break; // We reached the end of the row
+                        }
+                        else
+                            break;
+                    }
+                    else
+                        break; // We found a stochastic T matrix entry for this row
+                }
+
+                if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
+                    if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
+                        cut_coefficients_pointer->operator[](deterministic_matrix.indices_[column_index]-column_start_previous_stage) += stochastic_matrix.elements_[stochastic_column_index]*dual_solution[row];
+                        stochastic_column_index++;
+                    }
+                    else    
+                        cut_coefficients_pointer->operator[](deterministic_matrix.indices_[column_index]-column_start_previous_stage) += deterministic_matrix.elements_[column_index]*dual_solution[row];
+                }
+
+            }
+            if ( stochastic_element_in_row )
+                assert(stochastic_column_index == stochastic_matrix.start_[row+1]);
+        }
+    }
 
     bool computeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
@@ -987,6 +1107,78 @@ namespace parallel_benders {
         return std::abs(first-second)<= tolerance;
     }
 
+    OsiSolverInterface* getDualRayProblem(const OsiSolverInterface* osi_solver){
+        OsiSolverInterface* solver = osi_solver->clone(true);
+
+        const int numcols = osi_solver->getNumCols();
+        const int numrows = osi_solver->getNumRows();
+        int* index = new int[CoinMax(numcols,numrows)];
+        int i;
+        for ( i = CoinMax(numcols,numrows)-1; i >= 0; --i) {
+            index[i] = i;
+        }
+        double* obj = new double[CoinMax(numcols,2*numrows)];
+        CoinFillN(obj, numcols, 0.0);
+        solver->setObjCoeffSet(index, index+numcols, obj);
+
+        double* clb = new double[2*numrows];
+        double* cub = new double[2*numrows];
+
+        const double plusone = 1.0;
+        const double minusone = -1.0;
+        const char* sense = osi_solver->getRowSense();
+
+        const CoinPackedVectorBase** cols =
+            new const CoinPackedVectorBase*[2*numrows];
+        int newcols = 0;
+        for (i = 0; i < numrows; ++i) {
+            switch (sense[i]) {
+      case 'L':
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &minusone, false);
+          break;
+      case 'G':
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &plusone, false);
+          break;
+      case 'R':
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &minusone, false);
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &plusone, false);
+          break;
+      case 'N':
+          break;
+      case 'E':	 
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &minusone, false);
+          cols[newcols++] =
+              new CoinShallowPackedVector(1, &index[i], &plusone, false);
+          break;
+            }
+        }
+
+        CoinFillN(obj, newcols, 1.0);
+        CoinFillN(clb, newcols, 0.0);
+        CoinFillN(cub, newcols, osi_solver->getInfinity());
+
+        solver->addCols(newcols, cols, clb, cub, obj);
+        delete[] index;
+        delete[] cols;
+        delete[] clb;
+        delete[] cub;
+        delete[] obj;
+
+        solver->setObjSense(1.0); // minimize
+        solver->initialSolve();
+
+        //const double* solverpi = solver->getRowPrice();
+        //double* pi = new double[numrows];
+        //for ( i = numrows - 1; i >= 0; --i) {
+        //    pi[i] = -solverpi[i];
+        //}
+        return solver;
+    }
 
 
 

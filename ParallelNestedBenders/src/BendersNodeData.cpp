@@ -99,7 +99,7 @@ const CoinWarmStart* BendersNodeData::warm_start(void)
 BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),
-t_indices_(0),w_indices_(0),warm_start_(NULL)
+column_indices_(0),row_indices_(0),warm_start_(NULL)
 {
 
 }

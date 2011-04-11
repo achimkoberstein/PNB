@@ -61,6 +61,8 @@ private:
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
+    void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
+
     OsiSolverInterface* GetSolverByThread();
     
     // Constant values
@@ -132,7 +134,7 @@ bool compare_zero( double value);
 bool computeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon);
 
 RowOrderedSparseMatrixPointer create_row_ordered_sparse_matrix_pointer( SmiNodeData* smiNode);
-
+OsiSolverInterface* getDualRayProblem(const OsiSolverInterface* osi_solver);
 class OsiStochasticParallelNestedBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
 
