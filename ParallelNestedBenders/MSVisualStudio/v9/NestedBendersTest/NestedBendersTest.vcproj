@@ -206,6 +206,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/fixed:no"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"

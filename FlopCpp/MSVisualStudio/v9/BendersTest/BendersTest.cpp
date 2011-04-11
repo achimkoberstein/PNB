@@ -25,7 +25,7 @@ namespace flopc {
             benParam.setIntParam(BendersParameter::MULTI,0);
             benParam.setIntParam(BendersParameter::TRUSTREGION,0);
             benParam.setIntParam(BendersParameter::KNAPSACK,0);
-            benParam.setIntParam(BendersParameter::WARMSTART,0);
+            benParam.setIntParam(BendersParameter::WARMSTART,1);
             benParam.setIntParam(BendersParameter::REGULARIZED,0);
             benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,0);
             benParam.setIntParam(BendersParameter::BARRIER,0);
@@ -65,7 +65,7 @@ namespace flopc {
         BendersTest() : benParam(), repetitions(1) {
                 benParam.setIntParam(BendersParameter::BENDERS,1);
                 benParam.setIntParam(BendersParameter::MULTI,0);
-                benParam.setIntParam(BendersParameter::TRUSTREGION,1);
+                benParam.setIntParam(BendersParameter::TRUSTREGION,0);
                 benParam.setIntParam(BendersParameter::KNAPSACK,0);
                 benParam.setIntParam(BendersParameter::WARMSTART,1);
                 benParam.setIntParam(BendersParameter::REGULARIZED,0);
@@ -319,23 +319,26 @@ TEST_F(BendersTest, sslpReal) { // seems to be ok, but takes very long to solve
 }
 
 TEST_F(BendersTest, stormG2) { // no progress in interations, obj. values 0
-    double solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_3");
-    double referenceValue = 15535235.730;
-    double relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
-    
-    solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_27");
-    referenceValue = 15508982.306;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
+    double solutionValue = 0;
+    double referenceValue = 0;
+    double relGap = 0;
+    //solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_3");
+    //referenceValue = 15535235.730;
+    //abs(referenceValue-solutionValue)/solutionValue;
+    //EXPECT_LE(relGap,0.000001);
+    //
+    //solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_27");
+    //referenceValue = 15508982.306;
+    //relGap = abs(referenceValue-solutionValue)/solutionValue;
+    //EXPECT_LE(relGap,0.000001);
 
-    solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_125");
-    referenceValue = 15512091.185;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
+    //solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_125");
+    //referenceValue = 15512091.185;
+    //relGap = abs(referenceValue-solutionValue)/solutionValue;
+    //EXPECT_LE(relGap,0.000001);
 
-    
-    //benParam.setIntParam(BendersParameter::BUNCH_SIZE,1);
+    //
+    ////benParam.setIntParam(BendersParameter::BUNCH_SIZE,1);
 
     solutionValue = solveSMPS("../../../../Benders/test/instances/stormG2_1000");
     referenceValue = 15802589.698;
@@ -502,7 +505,7 @@ TEST_F(CoverageTest, cover){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.sslp";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
     //::testing::GTEST_FLAG(filter) = "BendersTest.rand";
     
     google::InitGoogleLogging(argv[0]);

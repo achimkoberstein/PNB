@@ -81,8 +81,8 @@ struct BendersStageData {
     bool stochastic_bounds_;
 
     // Store pointers to matrices W and / or T if they do not change ?
-    std::vector<int> t_indices_;
-    std::vector<int> w_indices_;
+    std::vector<int> column_indices_;
+    std::vector<int> row_indices_;
     // Coin Warm Start object
     CoinWarmStart* warm_start_;
 
