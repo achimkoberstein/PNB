@@ -5,8 +5,8 @@
 #include <math.h>
 #include <sstream>
 
-#include <boost/scoped_array.hpp>
 #include <boost/foreach.hpp>
+#include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 
 #include <glog/logging.h>
@@ -107,7 +107,7 @@ namespace parallel_benders {
         num_stages_(0),num_scenarios_(0),infinity_(0),contains_integer_(false),
         integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),forward_(true),infeasible_problem_(false),
+        current_stage_(0),forward_(true),infeasible_problem_(false),infeasible_problems_(smi_->getNumScenarios()),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false)
     {
@@ -125,7 +125,7 @@ namespace parallel_benders {
         for (int i = 0; i < num_scenarios_; i++){
             total_prob += smi_->getScenarioProb(i);
         }
-        LOG_IF(WARNING,!compare_equality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
+        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
 
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
@@ -227,7 +227,7 @@ namespace parallel_benders {
         
         // Do initialization stuff necessary for solve process
         while ( std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
-            computeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
+            ComputeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
             current_iteration_ < max_iteration_ 
             ) 
         {
@@ -248,7 +248,6 @@ namespace parallel_benders {
             // Change direction 
             if ( current_stage_ == 0 ){
                 forward_ = true;
-                infeasible_problem_ = false;
             }
             if ( current_stage_ == num_stages_ -1)
                 forward_ = false;
@@ -268,15 +267,7 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            // If we have an infeasible subproblem, we generate feasibility cuts and go backward then.
-            if ( infeasible_problem_ ){
-                // Generate feasibility cuts (and optimality cuts )
-                
-                // Change direction
-                forward_ = false;
-            }
-
-            if ( !forward_ ){
+            if ( !forward_ && infeasible_problems_.none() ){
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -286,13 +277,20 @@ namespace parallel_benders {
 
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
-            if ( current_stage_ == num_stages_ -1 && !infeasible_problem_){
+            if ( current_stage_ == num_stages_ -1 && infeasible_problems_.none()){
                 if ( upper_bound_ > temporary_upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
-
             }
 
-            // Change direction, depending on where we are
+            // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
+            if ( infeasible_problems_.any() ){
+                // Change direction
+                forward_ = false;
+                // Reset infeasible_problems_ set
+                infeasible_problems_.reset();
+            }
+
+            // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
 
             // We change the stage, so we should clear all of the osiSolverInterfaces
@@ -312,8 +310,6 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::HandleSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-         if ( infeasible_problem_ )// We need this variable stagewise, as otherwise we do not propagate the cuts upwards..
-             return;
         // Get thread ID
         //console_mutex_.lock();
         //LOG(INFO) << "Current thread has ID: " << boost::this_thread::get_id();
@@ -322,23 +318,18 @@ namespace parallel_benders {
 
         BuildSubproblem(osi_solver, benders_tree_node_pointer);
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
-        StoreData(osi_solver,benders_tree_node_pointer);
-        if ( !forward_)
-            GenerateOptimalityCut(benders_tree_node_pointer);
+        if ( !infeasible_problems_[benders_tree_node_pointer->scenario()]){
+            StoreData(osi_solver,benders_tree_node_pointer);
+            if ( !forward_)
+                GenerateOptimalityCut(benders_tree_node_pointer);
+        }
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
-
-        
-        //console_mutex_.lock();
-        //std::cout << "Solve Subproblem " << boost::this_thread::get_id() << std::endl;
-        //console_mutex_.unlock();
-        // 
         // Warm Start Handling
         
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
-        
         if ( warm_start_ ){
             if ( warm_start_scenarios_ ){
                 if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
@@ -372,8 +363,10 @@ namespace parallel_benders {
                 
                 if ( current_stage_ > 0 ){
                     LOG(INFO) << "Generate feasibility cut.";
+                    infeasible_problem_mutex_.lock();
+                    infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
+                    infeasible_problem_mutex_.unlock();
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario?
-                    infeasible_problem_ = true;
                 }
                 else
                     LOG(ERROR) << "Your master problem is infeasible.";
@@ -446,7 +439,7 @@ namespace parallel_benders {
             memcpy(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_*sizeof(double));
             double solution_value = 0;
             for (int i = 0; i < stage_data_[current_stage_]->num_columns_;i++){
-                if ( compare_zero(benders_node_pointer->col_solution_[i]))
+                if ( CompareWithZero(benders_node_pointer->col_solution_[i]))
                     benders_node_pointer->col_solution_[i] = 0;
                 solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
             }
@@ -493,7 +486,7 @@ namespace parallel_benders {
             benders_node_pointer->dual_solution_ = new double[osi_solver->getNumRows()];
             memcpy(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()*sizeof(double));
             for (int i = 0; i < osi_solver->getNumRows();i++){
-                if ( compare_zero(benders_node_pointer->dual_solution_[i]))
+                if ( CompareWithZero(benders_node_pointer->dual_solution_[i]))
                     benders_node_pointer->dual_solution_[i] = 0;
             }
 
@@ -506,12 +499,12 @@ namespace parallel_benders {
             const double* column_solution = osi_solver->getColSolution();
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                 // Look at variable value and their bounds
-                if ( !compare_zero(column_solution[i]) && !compare_zero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+                if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
                     
                     // We have to look at bounds TODO: ZEROTEST For reduced cost
-                    if ( compare_equality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                    if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                    else if ( compare_equality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                    else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
                 }
             }
@@ -533,7 +526,7 @@ namespace parallel_benders {
             // We only need the W part, as h-Tx is the RHS.
             benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
             if ( node_pointer->hasMatrix()){
-                RowOrderedSparseMatrixPointer stochastic_matrix(create_row_ordered_sparse_matrix_pointer( node_pointer ));
+                RowOrderedSparseMatrixPointer stochastic_matrix(CreateRowOrderedSparseMatrixPointer( node_pointer ));
                 // We only need to look at the W entries
                 for (int row = 0; row < stage_pointer->num_rows_; row++){
                     for (int column_index = stochastic_matrix.start_[row]; column_index < stochastic_matrix.start_[row+1]; column_index++){
@@ -608,8 +601,8 @@ namespace parallel_benders {
             if ( column_solution != NULL){
                 // Add T-matrix together with stochastic entries to the problem if there are any
                 // We need the T-matrix from the previous stage asap
-                RowOrderedSparseMatrixPointer stochastic_matrix(create_row_ordered_sparse_matrix_pointer( node_pointer ));
-                RowOrderedSparseMatrixPointer deterministic_matrix(create_row_ordered_sparse_matrix_pointer( deterministic_node_pointer ));
+                RowOrderedSparseMatrixPointer stochastic_matrix(CreateRowOrderedSparseMatrixPointer( node_pointer ));
+                RowOrderedSparseMatrixPointer deterministic_matrix(CreateRowOrderedSparseMatrixPointer( deterministic_node_pointer ));
                 // Combine these two matrices into one ( see Benders.cpp for example ).
                 int current_stage_columns = core_->getColStart(current_stage_);
                 int previous_stage_columns = core_->getColStart(current_stage_-1);
@@ -867,8 +860,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
-        if ( infeasible_problem_ )
+        if ( infeasible_problems_.any() ){
+            LOG(WARNING) << "Attempting to generate optimality cuts in the presence of infeasible problems in this stage.";
             return;
+        }
         //console_mutex_.lock();
         //LOG(INFO) << "Aggregating cuts";
         //console_mutex_.unlock();
@@ -917,8 +912,16 @@ namespace parallel_benders {
     { // Called directly from solve subproblem.
         // We need the dual rays..
         assert(osi_solver->isProvenPrimalInfeasible()); // Otherwise we do not need to call this method
-        // Get the dual ray
-        OsiSolverInterface* dual_ray_problem = getDualRayProblem(osi_solver);
+        bool cplex_licence_problem = true;
+        OsiSolverInterface* dual_ray_problem = osi_solver;
+        if ( !cplex_licence_problem ){
+            // Get the dual ray
+            osi_solver_mutex_.lock();
+            dual_ray_problem = osi_solver->clone(true);
+            osi_solver_mutex_.unlock(); 
+        }
+        GenerateDualRayProblem(dual_ray_problem); // Append columns to the existing problems, to allow feasible solutions.
+
 
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
@@ -933,19 +936,19 @@ namespace parallel_benders {
         
         // Compute the values: \lambda * lower_bound - \mu * upper_bound
         // Compute the resulting values right away, as we have the osi_solver_interface at hand.
-        const double* dual_values_variable_bounds = osi_solver->getReducedCost();
+        const double* dual_values_variable_bounds = dual_ray_problem->getReducedCost();
         const double* variable_lower_bounds = osi_solver->getColLower();
         const double* variable_upper_bounds = osi_solver->getColUpper();
         double computed_dual_value_for_variable_bounds = 0;
         const double* column_solution = dual_ray_problem->getColSolution();
         for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
             // Look at variable value and their bounds
-            if ( !compare_zero(column_solution[i]) && !compare_zero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+            if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
 
                 // We have to look at bounds TODO: ZEROTEST For reduced cost
-                if ( compare_equality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                     computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                else if ( compare_equality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
                     computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
             }
         }
@@ -999,16 +1002,22 @@ namespace parallel_benders {
         // Append value for dual variable bounds
         cut_rhs += computed_dual_value_for_variable_bounds;
 
+        // Add cut to set of feasibility cuts of parent problem
         OsiRowCut* cut_pointer = new OsiRowCut();
         cut_pointer->setLb(cut_rhs);
         cut_pointer->setUb(infinity_);
         cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0]);
-        benders_tree_node_pointer->getDataPtr()->feasibility_cuts_.push_back(cut_pointer);
+        benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_pointer);
 
         // Deal with it. What about two-sided rows? TODO: Applies to optimality cuts as well
 
         // Delete dual ray problem
-        delete dual_ray_problem;
+        if ( !cplex_licence_problem )
+            delete dual_ray_problem;
+        else {
+            // Reset the solver interface
+            dual_ray_problem->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+        }
 
 
     }
@@ -1034,8 +1043,8 @@ namespace parallel_benders {
         assert(cut_coefficients_pointer->size() == stage_data_[current_stage_-1]->num_columns_);
 
         // Go on with the matrix
-        RowOrderedSparseMatrixPointer deterministic_matrix = create_row_ordered_sparse_matrix_pointer( core_->getNode(current_stage_) );
-        RowOrderedSparseMatrixPointer stochastic_matrix = create_row_ordered_sparse_matrix_pointer(node_pointer);
+        RowOrderedSparseMatrixPointer deterministic_matrix = CreateRowOrderedSparseMatrixPointer( core_->getNode(current_stage_) );
+        RowOrderedSparseMatrixPointer stochastic_matrix = CreateRowOrderedSparseMatrixPointer(node_pointer);
 
         int current_stage_columns = core_->getColStart(current_stage_);
         int column_start_previous_stage = core_->getColStart(current_stage_-1);
@@ -1082,7 +1091,7 @@ namespace parallel_benders {
         }
     }
 
-    bool computeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
+    bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
         if (upper_bound == 0) // We have no meaningful comparison
@@ -1092,24 +1101,23 @@ namespace parallel_benders {
         return (abs(upper_bound-lower_bound)/abs(upper_bound)) >= epsilon; //See cplex mipgap
     }
 
-    RowOrderedSparseMatrixPointer create_row_ordered_sparse_matrix_pointer( SmiNodeData* smiNode )
+    RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode )
     {
         return RowOrderedSparseMatrixPointer(smiNode->getElements(smiNode->getMatStart()),smiNode->getIndices(smiNode->getMatStart()),smiNode->getStarts(smiNode->getMatStart()));
     }
 
-    bool compare_zero( double value ) 
+    bool CompareWithZero( double value ) 
     {
         return std::abs(value) < ParallelNestedBenders::zero_tolerance_;
     }
 
-    bool compare_equality( double first, double second, double tolerance )
+    bool CompareForEquality( double first, double second, double tolerance )
     {
         return std::abs(first-second)<= tolerance;
     }
 
-    OsiSolverInterface* getDualRayProblem(const OsiSolverInterface* osi_solver){
-        OsiSolverInterface* solver = osi_solver->clone(true);
-
+    void GenerateDualRayProblem(OsiSolverInterface* osi_solver){
+        // If we clone and do not have a solution, we get an error.
         const int numcols = osi_solver->getNumCols();
         const int numrows = osi_solver->getNumRows();
         int* index = new int[CoinMax(numcols,numrows)];
@@ -1119,7 +1127,7 @@ namespace parallel_benders {
         }
         double* obj = new double[CoinMax(numcols,2*numrows)];
         CoinFillN(obj, numcols, 0.0);
-        solver->setObjCoeffSet(index, index+numcols, obj);
+        osi_solver->setObjCoeffSet(index, index+numcols, obj);
 
         double* clb = new double[2*numrows];
         double* cub = new double[2*numrows];
@@ -1162,22 +1170,16 @@ namespace parallel_benders {
         CoinFillN(clb, newcols, 0.0);
         CoinFillN(cub, newcols, osi_solver->getInfinity());
 
-        solver->addCols(newcols, cols, clb, cub, obj);
+        osi_solver->addCols(newcols, cols, clb, cub, obj);
         delete[] index;
         delete[] cols;
         delete[] clb;
         delete[] cub;
         delete[] obj;
 
-        solver->setObjSense(1.0); // minimize
-        solver->initialSolve();
+        osi_solver->setObjSense(1.0); // minimize
+        osi_solver->initialSolve();
 
-        //const double* solverpi = solver->getRowPrice();
-        //double* pi = new double[numrows];
-        //for ( i = numrows - 1; i >= 0; --i) {
-        //    pi[i] = -solverpi[i];
-        //}
-        return solver;
     }
 
 
