@@ -3091,6 +3091,11 @@ void OsiCpxSolverInterface::gutsOfConstructor()
 	env_ = CPXopenCPLEXdevelop( &err );
 #endif
 
+    if (err != 0){
+        char* buffer_str = new char[400];
+        CPXgeterrorstring(env_,err,buffer_str);
+        std::cout << std::string(buffer_str);
+    }
 	checkCPXerror( err, "CPXopenCPLEXdevelop", "gutsOfConstructor" );
 	assert( env_ != NULL );
 

@@ -19,6 +19,7 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
 #include "SmiScnModel.hpp"
+#include "SmiCoreCombineRule.hpp"
 
 
 namespace parallel_benders {
@@ -67,7 +68,7 @@ namespace parallel_benders {
             BendersNodeData* benders_node_ptr = tree_nodes_by_stage_[stage][i]->getDataPtr();
             SmiNodeData* node_ptr = benders_node_ptr->smi_node_data_;
             if ( !node_ptr->isCoreNode()){ // Makes only sense for non-core nodes
-                // Build stochastic T and W matrix
+                // Find stochastic T and W matrix
                 if ( node_ptr->getNumMatrixElements() && !( benders_stage_ptr->stochastic_matrix_w_ && benders_stage_ptr->stochastic_matrix_t_) ){
                     // We split the matrix entries into W and T 
                     for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
@@ -84,6 +85,8 @@ namespace parallel_benders {
                             break; // We can skip the rest of the computation, if both booleans are true
                     }
                 }
+                if ( node_ptr->getCoreCombineRule() != SmiCoreCombineReplace::Instance() )
+                    LOG(FATAL) << "The supplied SMPS format is not understood. You used something that is not REPLACE in your stoch file.";
 
 
                 // Are there random bounds?
