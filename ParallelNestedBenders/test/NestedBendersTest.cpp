@@ -278,7 +278,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
+    ::testing::GTEST_FLAG(filter) = "*.semi";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

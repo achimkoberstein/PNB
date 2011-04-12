@@ -366,8 +366,8 @@ TEST_F(BendersTest, dcap) {
 
 TEST_F(BendersTest, semi) {
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/semi/semi2"), 224434.32, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/semi/semi3"), 224486.00, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/semi/semi4"), 224564.3, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/semi/semi3"), 224486.00, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/semi/semi4"), 224564.3, 0.1);
 }
 
 TEST_F(BendersTest, sizes) {
@@ -532,7 +532,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
     //::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.FeasibilityCutTest";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.semi";
     
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
