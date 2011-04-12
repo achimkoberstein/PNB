@@ -502,11 +502,37 @@ TEST_F(CoverageTest, cover){
     solveSelectedProblems();
 }
 
+TEST_F(BendersTest,FeasibilityCutTest){
+    using namespace flopc;
+        OsiCpxSolverInterface osi_solver;
+    MP_model testModel(&osi_solver);
+    MP_stage T(2);
+    MP_variable x,y(T);
+    x.lowerLimit() = -10;
+    y.upperLimit(T) = 15;
+
+    MP_random_data randomData(T);
+    randomData(1) = new DiscreteUniformRandomVariable(10,20,11,new BracketMedianDiscretization(11));
+    randomData(1)->setStage(1);
+
+    MP_constraint firstStage,secondStage(T);
+
+    firstStage() = x() <= 5;
+    secondStage(T+1) = y(T+1) >= -x()+randomData(T+1);
+    // Death test only under linux..
+    //EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective" );
+    testModel.setObjective( x()+2*y(T+1) );
+    testModel.attach();
+
+    OsiStochasticBendersTwoStageSolverInterface solver(&osi_solver, testModel.getSmi());
+    solver.initialSolve();
+}
+
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
-    //::testing::GTEST_FLAG(filter) = "BendersTest.rand";
+    //::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.FeasibilityCutTest";
     
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

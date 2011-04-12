@@ -8,6 +8,8 @@
 
 #include <CoinPackedVector.hpp>
 
+#include <boost/dynamic_bitset.hpp>
+
 #include "boost/threadpool.hpp"
 
 #include "Benders.hpp" // Just for OsiStochasticSolverInterface, needs to be outsourced to own file
@@ -28,6 +30,7 @@
 class OsiSolverInterface;
 class SmiCoreData;
 class SmiNodeData;
+
 
 namespace parallel_benders {
 
@@ -103,6 +106,7 @@ private:
     int current_stage_;
     bool forward_;
     bool infeasible_problem_;
+    boost::dynamic_bitset<> infeasible_problems_;
 
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
@@ -111,6 +115,8 @@ private:
     boost::mutex solver_map_mutex_; // Mutex for access to solver map
     boost::mutex stage_warm_start_mutex_; // Mutex for access to warm start 
     boost::mutex upper_bound_mutex_; // Mutex for access to upper bound
+    boost::mutex infeasible_problem_mutex_; // Mutex for access to infeasible problem setter 
+    boost::mutex osi_solver_mutex_; // Mutex that is used if we want to clone an OsiSolverInterface
     // Further thread management stuff
     boost::threadpool::pool thread_pool_;
 
@@ -127,14 +133,14 @@ private:
 // We need a coordinator, that tells the threads what to do. 
 // It waits for the threads to end, then does some stuff and waits again.
 
-bool compare_equality( double first, double second, double tolerance);
+bool CompareForEquality( double first, double second, double tolerance);
 
-bool compare_zero( double value);
+bool CompareWithZero( double value);
 
-bool computeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon);
+bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon);
 
-RowOrderedSparseMatrixPointer create_row_ordered_sparse_matrix_pointer( SmiNodeData* smiNode);
-OsiSolverInterface* getDualRayProblem(const OsiSolverInterface* osi_solver);
+RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
+void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
 class OsiStochasticParallelNestedBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
 public:
 

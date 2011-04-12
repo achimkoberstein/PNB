@@ -2140,9 +2140,9 @@ int Benders::solveMaster(){
         seriousStep_ = false;
     }
 
-    //std::stringstream stream;
-    //stream << "stage0_" << nIter_+1 << "_0";
-    //osiMaster_->writeLp(stream.str().c_str());
+    std::stringstream stream;
+    stream << "stage0_" << nIter_+1 << "_0";
+    osiMaster_->writeLp(stream.str().c_str());
 
     // If master problem is infeasible, print an error
     bool primalInfeasible = osiMaster_->isProvenPrimalInfeasible();
