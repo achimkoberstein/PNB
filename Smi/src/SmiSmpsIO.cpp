@@ -491,6 +491,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 			int block=0;
 			double prob=0.0;
 			const char* periodName=NULL;
+            int branch = 0;
 					
 			while( smpsCardReader_->nextSmpsField (  ) == SMI_BLOCKS_SECTION ) 
 			{
@@ -499,6 +500,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 				{
 				case SMI_BL_CARD:
 				{
+                    branch = periodMap_[smpsCardReader_->periodName()];
 					if(blName!=NULL){
 						smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
 									
@@ -507,9 +509,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 							smiBS->addSmiBlock(smiBlock);
 							//delete smiBlock;
 							
-							//have to think about it
-                            // All SmiBlocks get stage 1 here... this is incorrect.
-							smiBlock = new SmiBlock(1);
+							smiBlock = new SmiBlock(branch);
                             // Delete the old blName first
                             delete [] blName;
 							blName = new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
@@ -525,13 +525,12 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 						matrix->setDimensions(nrow,ncol);
 					}
 					else{
-						smiBlock = new SmiBlock(1);
+						smiBlock = new SmiBlock(branch);
 						blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
 						strcpy(blName,smpsCardReader_->blockName());
 					}
 					
 					prob = smpsCardReader_->value();
-					periodName= smpsCardReader_->periodName();
 					break;
 				}
 				case SMI_COLUMN_CARD:

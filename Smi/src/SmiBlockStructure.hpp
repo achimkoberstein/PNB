@@ -83,8 +83,8 @@ public:
 	/// Creates an SmiBlock with stage = -1
 	SmiBlock(){stg_=-1;}
 	
-	/// Creates an SmiBlock with probability p
-	SmiBlock(int p) {stg_=p;}
+	/// Creates an SmiBlock at a given stage
+	SmiBlock(int stage) {stg_=stage;}
 	~SmiBlock(){
 		for (size_t i=0; i<events_.size(); ++i)
 			delete events_[i];
@@ -98,8 +98,8 @@ class SmiBlockStructure{
 
 private:
 
-	/// A vector containing the SmiBlock elements
-	vector<SmiBlock*> smiBlock_;
+	/// A vector that contains the blocks for each stage
+	vector< vector<SmiBlock*> > smiBlock_;
 	
 	/// The SmiCoreData object
 	SmiCoreData *core_;
@@ -110,28 +110,29 @@ private:
 public:
 	/// Adds SmiBlock s to the end of the list
 	void addSmiBlock(SmiBlock *s)
-	{ smiBlock_.push_back(s); }
+	{ smiBlock_[s->getStage()].push_back(s); }
 
-    /// Deletes the last SmiBlock from the list
-	void deleteSmiBlock(){
-        if ( !smiBlock_.empty() ){
-            delete smiBlock_.back();
-            smiBlock_.pop_back();
+    /// Deletes the last SmiBlock from the given stage
+	void deleteSmiBlock(int stage){
+        assert( stage >= 0 && stage < core_->getNumStages());
+        if ( !smiBlock_[stage].empty() ){
+            delete smiBlock_[stage].back();
+            smiBlock_[stage].pop_back();
         }
 	}
 
-	/// Returns the i-th SmiBlock
-	SmiBlock * getBlock(int i) {return smiBlock_[i];}
+	/// Returns the i-th SmiBlock of stage 
+    SmiBlock * getBlock(int i, int stage) {return smiBlock_[stage][i];}
 
 	/// Returns the number of SmiBlocks
-	int getNumBlocks() { return (int)smiBlock_.size(); }
+    int getNumBlocks(int stage) { return smiBlock_[stage].size(); }
 
 	/// Returns the SmiCoreData object
 	SmiCoreData *getCore(){ return core_; }
 
 	/// Sets the SmiCoreCombineRule
 	inline void setCombineWithCoreRule(SmiCoreCombineRule *r){
-			combineRule_ = r;
+        combineRule_ = r;
 	}
 
 	/// Returns the SmiCoreCombine rule
@@ -142,16 +143,24 @@ public:
 	@param c the SmiCoreData object
 	@param r the SmiCoreCombineRule; if no combine rule is passed, the default rule SmiCoreCombineReplace is used
 	*/
-	SmiBlockStructure(SmiCoreData *c, SmiCoreCombineRule *r=SmiCoreCombineReplace::Instance())
+    SmiBlockStructure(SmiCoreData *c, SmiCoreCombineRule *r=SmiCoreCombineReplace::Instance()):
+    smiBlock_(0),core_(NULL),combineRule_(NULL)
 	{
 		core_=c;
-		this->setCombineWithCoreRule(r);		
+		this->setCombineWithCoreRule(r);
+        // Initialize SmiBlockVector
+        for (int i = 0; i < core_->getNumStages();i++)
+            
+            smiBlock_.push_back( std::vector<SmiBlock*>() );
 	}
 
     ~SmiBlockStructure(){
         // We only have to delete the remaining SMI blocks, in any case..
-        for (int i = 0; i < smiBlock_.size(); i++)
-            delete smiBlock_[i];
+        for (int j = 0; j < smiBlock_.size();j++){
+            for (int i = 0; i < smiBlock_[j].size(); i++)
+                delete smiBlock_[j][i];
+        }
+
     }
 
 };
