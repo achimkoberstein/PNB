@@ -508,6 +508,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 							//delete smiBlock;
 							
 							//have to think about it
+                            // All SmiBlocks get stage 1 here... this is incorrect.
 							smiBlock = new SmiBlock(1);
                             // Delete the old blName first
                             delete [] blName;

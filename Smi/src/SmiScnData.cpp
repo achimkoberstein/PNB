@@ -760,3 +760,74 @@ CoinPackedMatrix* SmiNodeData::generateCoinPackedTMatrix() const
     return matrix;
     // TODO: Use assignMatrix to prevent unnecessary copying.
 }
+
+void SmiNodeData::transformToReplace()
+{   // If we already use replace, do not change it
+    if ( combineRule_ == SmiCoreCombineReplace::Instance() )
+        return;
+    // If we are a core node, i.e. deterministic node for the stage, we have nothing to do
+    if ( isCoreNode() )
+        return;
+
+    // Now we need to transform the node.
+    // Which stage do we have?
+    SmiNodeData* deterministic_node = core_->getNode(stg_);
+    // That means: replace the values in the add case with the value from core node plus the value stored now.
+    // Find the things we need to replace..
+    // Do we have a matrix?
+    int num_rows_ = core_->getNumRows(stg_);
+    assert( num_rows_ = nrow_ );
+    if ( has_matrix_ ){
+        int current_index = 0;
+        // Get pointer to the deterministic matrix first and replace accordingly
+        for (int i = rowbeg_; i < rowbeg_+num_rows_;i++){
+            const int* row_indices = deterministic_node->getRowIndices(i);
+            const double* row_elements =  deterministic_node->getRowElements(i);
+            for (int j = 0; j < deterministic_node->getRowLength(i); j++){
+                // Iterate over all elements in the row
+                if ( row_indices[j] == inds_[current_index] ){
+                    // Do Something
+                    ++current_index;
+                }
+                // We need to iterate over all stochastic elements and add the corresponding values.
+            }
+            // 
+            assert(strt_[i+1]==current_index);
+        }
+    }
+    if ( getLength(clo_strt_) ){
+
+        // Method that takes: stochastic_indices, stochastic_elements, stochastic_length, determinstic_indices_, determinstic_elements, deterministic_length, index_transformation_from_0_to_correct_index
+        int overall_index = strt_[clo_strt_];
+        int length = getLength(clo_strt_);
+        const double* stoch_elements = getElements(clo_strt_);
+        const int* stoch_indices = getIndices(clo_strt_);
+        const double* deterministic_elements = deterministic_node->getElements(deterministic_node->getCloStart());
+        const int* deterministic_indices = deterministic_node->getIndices(deterministic_node->getCloStart());
+        const int deterministic_length = deterministic_node->getLength(deterministic_node->getCloStart());
+
+        for (int i = 0; i < length; i++){
+            // Replace value for Add-Instance in the stoch_elements..
+            if (true) {
+                
+            }
+        }
+
+    }
+    if ( getLength(cup_strt_)){
+
+    }
+    if ( getLength(obj_strt_)){
+
+    }
+    if ( getLength(rlo_strt_)){
+
+    }
+    if ( getLength(rup_strt_)){
+
+    }
+    if ( combineRule_ == SmiCoreCombineAdd::Instance() ){
+
+    }
+
+}

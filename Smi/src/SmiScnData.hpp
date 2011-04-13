@@ -144,6 +144,8 @@ public:
      CoinPackedMatrix* generateCoinPackedTMatrix() const;
      CoinPackedMatrix* generateCoinPackedWMatrix() const;
 
+     void transformToReplace();
+
      //Access to stored memory
      //Return number of Elements in row/bounds/ranges/objective istart
      inline const int getLength  (int istart) const{

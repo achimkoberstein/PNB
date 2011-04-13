@@ -142,6 +142,8 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
         SmiNodeData *node = new SmiNodeData(t,core,matrix,
             v_dclo,v_dcup,v_dobj,v_drlo,v_drup);
         node->setCoreCombineRule(r);
+        // Now we can transform to replace
+        node->transformToReplace();
         // generate new tree node
         SmiScnNode *tnode = new SmiScnNode(node);
         node_vec.push_back(tnode);
