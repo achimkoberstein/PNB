@@ -1709,85 +1709,189 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 }
 
  void SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure* smiBS){
-	int nBlocks = smiBS->getNumBlocks();
 	SmiScenarioIndex is;
 	SmiCoreData *core = smiBS->getCore();
 	SmiCoreCombineRule *r = smiBS->getCombineWithCoreRule();
-	if(nBlocks==0) return;
-	if(nBlocks==1){
-		SmiBlock *block = smiBS->getBlock(0);
-		for(size_t i=0; i < block->getNumEvents();i++){
-			CoinPackedVector& dobj(block->getMutableBlockEventObjective(i));
-			CoinPackedVector& dclo(block->getMutableBlockEventColLower(i));
-			CoinPackedVector& dcup(block->getMutableBlockEventColUpper(i));
-			CoinPackedVector& drlo(block->getMutableBlockEventRowLower(i));
-			CoinPackedVector& drup(block->getMutableBlockEventRowUpper(i));
-			CoinPackedMatrix& matrix(block->getMutableBlockEventMatrix(i));
-			SmiScenarioIndex branch = block->getStage();
-			SmiScenarioIndex anc = 0;
-			double prob = block->getBlockEventProb(i);
-			is = this->generateScenario(core,&matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,r);
-		}
-	}
-	else{
-		SmiBlock* combBlock = new SmiBlock(1);
-		CoinPackedVector combdobj;
-		CoinPackedVector combdclo;
-		CoinPackedVector combdcup;
-		CoinPackedVector combdrlo;
-		CoinPackedVector combdrup;
-		CoinPackedMatrix combmatrix;
-		SmiBlock* block1 = smiBS->getBlock(nBlocks-1);
-		SmiBlock* block2 = smiBS->getBlock(nBlocks-2);
-		double combprob;
-		
-		for(size_t i=0;i<block1->getNumEvents();i++){
-			for(size_t j=0;j<block2->getNumEvents();j++){
-				combdobj = block1->getBlockEventObjective(i);
-				combdclo = block1->getBlockEventColLower(i);
-				combdcup = block1->getBlockEventColUpper(i);
-				combdrlo = block1->getBlockEventRowLower(i);
-				combdrup = block1->getBlockEventRowUpper(i);
-				combmatrix = block1->getBlockEventMatrix(i);
-				const CoinPackedVector& dobj2(block2->getBlockEventObjective(j));
-				const CoinPackedVector& dclo2(block2->getBlockEventColLower(j));
-				const CoinPackedVector& dcup2(block2->getBlockEventColUpper(j));
-				const CoinPackedVector& drlo2(block2->getBlockEventRowLower(j));
-				const CoinPackedVector& drup2(block2->getBlockEventRowUpper(j));
-				const CoinPackedMatrix& matrix2(block2->getBlockEventMatrix(j));
-				for(int k=0;k<dobj2.getNumElements();k++){
-					combdobj.insert(dobj2.getIndices()[k],dobj2.getElements()[k]);
-				}
-				for(int k=0;k<dclo2.getNumElements();k++){
-					combdclo.insert(dclo2.getIndices()[k],dclo2.getElements()[k]);
-				}
-				for(int k=0;k<dcup2.getNumElements();k++){
-					combdcup.insert(dcup2.getIndices()[k],dcup2.getElements()[k]);
-				}
-				for(int k=0;k<drlo2.getNumElements();k++){
-					combdrlo.insert(drlo2.getIndices()[k],drlo2.getElements()[k]);
-				}
-				for(int k=0;k<drup2.getNumElements();k++){
-					combdrup.insert(drup2.getIndices()[k],drup2.getElements()[k]);
-				}
-				int pos = 0; // position in the elements / indice arrays
+    // We now generate scenarios out of the block events. If we have more than one block for a stage, we have to combine them first.
+    // Combine blocks stagewise.
+    for (int stage = 1; stage < core->getNumStages(); stage++){
+        // Combine blocks (if necessary)
+        while ( smiBS->getNumBlocks(stage) > 1 ){
+            // Create a new block and declare all needed vectors and matrices
+            SmiBlock* combBlock = new SmiBlock(stage);
+            CoinPackedVector combdobj;
+            CoinPackedVector combdclo;
+            CoinPackedVector combdcup;
+            CoinPackedVector combdrlo;
+            CoinPackedVector combdrup;
+            CoinPackedMatrix combmatrix;
+
+            SmiBlock* block1 = smiBS->getBlock(smiBS->getNumBlocks(stage)-1,stage);
+            SmiBlock* block2 = smiBS->getBlock(smiBS->getNumBlocks(stage)-2,stage);
+            double combprob;
+
+            for(size_t i=0;i<block1->getNumEvents();i++){
+                for(size_t j=0;j<block2->getNumEvents();j++){
+                    combdobj = block1->getBlockEventObjective(i);
+                    combdclo = block1->getBlockEventColLower(i);
+                    combdcup = block1->getBlockEventColUpper(i);
+                    combdrlo = block1->getBlockEventRowLower(i);
+                    combdrup = block1->getBlockEventRowUpper(i);
+                    combmatrix = block1->getBlockEventMatrix(i);
+                    const CoinPackedVector& dobj2(block2->getBlockEventObjective(j));
+                    const CoinPackedVector& dclo2(block2->getBlockEventColLower(j));
+                    const CoinPackedVector& dcup2(block2->getBlockEventColUpper(j));
+                    const CoinPackedVector& drlo2(block2->getBlockEventRowLower(j));
+                    const CoinPackedVector& drup2(block2->getBlockEventRowUpper(j));
+                    const CoinPackedMatrix& matrix2(block2->getBlockEventMatrix(j));
+                    for(int k=0;k<dobj2.getNumElements();k++){
+                        combdobj.insert(dobj2.getIndices()[k],dobj2.getElements()[k]);
+                    }
+                    for(int k=0;k<dclo2.getNumElements();k++){
+                        combdclo.insert(dclo2.getIndices()[k],dclo2.getElements()[k]);
+                    }
+                    for(int k=0;k<dcup2.getNumElements();k++){
+                        combdcup.insert(dcup2.getIndices()[k],dcup2.getElements()[k]);
+                    }
+                    for(int k=0;k<drlo2.getNumElements();k++){
+                        combdrlo.insert(drlo2.getIndices()[k],drlo2.getElements()[k]);
+                    }
+                    for(int k=0;k<drup2.getNumElements();k++){
+                        combdrup.insert(drup2.getIndices()[k],drup2.getElements()[k]);
+                    }
+                    int pos = 0; // position in the elements / indice arrays
+                    const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
+                    for (int k = 0; k < matrix2.getNumRows(); k++) {
+                        pos = colStartIndices[k];
+                        for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+                            combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                            pos++;
+                        }
+                    }
+                    combprob = block1->getBlockEventProb(i)*block2->getBlockEventProb(j);
+                    combBlock->addBlockEvent(combmatrix,combdclo,combdcup,combdobj,combdrlo,combdrup,combprob);
+                }// End For block2 events
+            }// End For block1 events
+            // Delete the two last blocks and add the newly created block
+            smiBS->deleteSmiBlock(stage);
+            smiBS->deleteSmiBlock(stage);
+            smiBS->addSmiBlock(combBlock);
+        }// End While
+    }
+    // Now we know the number of block events per stage. We need to generate the scenarios. Important: Ancestor scenario.
+    // We have to compute the ancestor scenario first
+    std::vector<std::pair<int,int> > num_childs_per_stage;
+    int num_stages = core->getNumStages();
+    num_childs_per_stage.push_back(make_pair(1,1));
+    for ( int i = 1; i < num_stages; i++){
+        num_childs_per_stage.push_back( make_pair(smiBS->getBlock(0,i)->getNumEvents(),1));
+    }
+    // Set last one correct
+    num_childs_per_stage[num_stages-1].second = num_childs_per_stage[num_stages-1].first;
+    for ( int i = num_stages-2; i > 0; i--)
+        num_childs_per_stage[i].second = num_childs_per_stage[i+1].second * num_childs_per_stage[i].first;
+
+    
+    // Now we want to combine all the blocks into one. starting with the first stage block
+    int current_stage = 1;
+    while( current_stage < core->getNumStages()-1 ){
+        // Combine the block of the current stage with the block of the other stage
+        // Create a new block and declare all needed vectors and matrices
+        SmiBlock* combBlock = new SmiBlock(current_stage+1);
+        CoinPackedVector combdobj;
+        CoinPackedVector combdclo;
+        CoinPackedVector combdcup;
+        CoinPackedVector combdrlo;
+        CoinPackedVector combdrup;
+        CoinPackedMatrix combmatrix;
+
+        SmiBlock* block1 = smiBS->getBlock(0,current_stage);
+        SmiBlock* block2 = smiBS->getBlock(0,current_stage+1);
+        double combprob;
+
+        for(size_t i=0;i<block1->getNumEvents();i++){
+            for(size_t j=0;j<block2->getNumEvents();j++){
+                combdobj = block1->getBlockEventObjective(i);
+                combdclo = block1->getBlockEventColLower(i);
+                combdcup = block1->getBlockEventColUpper(i);
+                combdrlo = block1->getBlockEventRowLower(i);
+                combdrup = block1->getBlockEventRowUpper(i);
+                combmatrix = block1->getBlockEventMatrix(i);
+                const CoinPackedVector& dobj2(block2->getBlockEventObjective(j));
+                const CoinPackedVector& dclo2(block2->getBlockEventColLower(j));
+                const CoinPackedVector& dcup2(block2->getBlockEventColUpper(j));
+                const CoinPackedVector& drlo2(block2->getBlockEventRowLower(j));
+                const CoinPackedVector& drup2(block2->getBlockEventRowUpper(j));
+                const CoinPackedMatrix& matrix2(block2->getBlockEventMatrix(j));
+                for(int k=0;k<dobj2.getNumElements();k++){
+                    combdobj.insert(dobj2.getIndices()[k],dobj2.getElements()[k]);
+                }
+                for(int k=0;k<dclo2.getNumElements();k++){
+                    combdclo.insert(dclo2.getIndices()[k],dclo2.getElements()[k]);
+                }
+                for(int k=0;k<dcup2.getNumElements();k++){
+                    combdcup.insert(dcup2.getIndices()[k],dcup2.getElements()[k]);
+                }
+                for(int k=0;k<drlo2.getNumElements();k++){
+                    combdrlo.insert(drlo2.getIndices()[k],drlo2.getElements()[k]);
+                }
+                for(int k=0;k<drup2.getNumElements();k++){
+                    combdrup.insert(drup2.getIndices()[k],drup2.getElements()[k]);
+                }
+                int pos = 0; // position in the elements / indice arrays
                 const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
-				for (int k = 0; k < matrix2.getNumRows(); k++) {
+                for (int k = 0; k < matrix2.getNumRows(); k++) {
                     pos = colStartIndices[k];
-					for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-						combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
-						pos++;
-					}
-				}
-				combprob = block1->getBlockEventProb(i)*block2->getBlockEventProb(j);
-				combBlock->addBlockEvent(combmatrix,combdclo,combdcup,combdobj,combdrlo,combdrup,combprob);
-			}
-		}
-		smiBS->deleteSmiBlock();
-		smiBS->deleteSmiBlock();
-		smiBS->addSmiBlock(combBlock);
-		processBlockStructureIntoScenarios(smiBS);
-	}
+                    for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+                        combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                        pos++;
+                    }
+                }
+                combprob = block1->getBlockEventProb(i)*block2->getBlockEventProb(j);
+                combBlock->addBlockEvent(combmatrix,combdclo,combdcup,combdobj,combdrlo,combdrup,combprob);
+            }// End For block2 events
+        }// End For block1 events
+        // Delete the two last blocks and add the newly created block
+        smiBS->deleteSmiBlock(current_stage);
+        smiBS->deleteSmiBlock(current_stage+1);
+        smiBS->addSmiBlock(combBlock);
+
+        current_stage++;
+    }
+    // Now we have one block in the last stage
+
+    // Generate scenarios
+    SmiBlock *block = NULL;
+    block = smiBS->getBlock(0,current_stage);
+
+    // We need to get the values of this RV for every scenario we already have..
+    int current_scen = 0;
+
+    for(size_t i=0; i < block->getNumEvents();i++){
+        int branch = num_stages-1;
+        int anc = 0;
+        for ( int j = num_stages-1; j>0; j--){
+            if ( i % num_childs_per_stage[j].second == 0 ){
+               branch--;
+            }
+            if ( i / num_childs_per_stage[j].second && i % num_childs_per_stage[j].second != 0 ) // If we are greater than numer of childs and we are not modulo 0..
+                anc = num_childs_per_stage[j].second*(i/num_childs_per_stage[j].second);
+        }
+        if ( branch == 0) // Special case we need for the first stage only
+            branch++;
+        // Find correct ancestor scenario.
+        CoinPackedVector& dobj(block->getMutableBlockEventObjective(i));
+        CoinPackedVector& dclo(block->getMutableBlockEventColLower(i));
+        CoinPackedVector& dcup(block->getMutableBlockEventColUpper(i));
+        CoinPackedVector& drlo(block->getMutableBlockEventRowLower(i));
+        CoinPackedVector& drup(block->getMutableBlockEventRowUpper(i));
+        CoinPackedMatrix& matrix(block->getMutableBlockEventMatrix(i));
+        // Get correct probability..
+        double prob = block->getBlockEventProb(i);
+        is = this->generateScenario(core,&matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,r);
+    }
+        
+	
  }
 
  double SmiScnModel::getScenarioProb( SmiScenarioIndex ns )
