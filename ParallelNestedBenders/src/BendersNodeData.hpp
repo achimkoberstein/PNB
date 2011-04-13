@@ -43,7 +43,9 @@ public:
 
     SmiNodeData* smi_node_data_;
     int scenario_index_;
-    int branch_scenario_;	
+    int branch_scenario_;
+    int num_node_in_stage_;
+    int child_node_start_;
     double probability_;
     double conditional_probability_;
 

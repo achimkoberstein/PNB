@@ -194,10 +194,15 @@ namespace parallel_benders {
         // Set probability 1 to root node, to prevent numerical issues
         tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
         for (int i = 1; i < num_stages_; i++) {
+            int number_of_nodes_in_this_stage = 0;
+            int number_of_child_nodes_for_next_stage = 0;
             for (unsigned int j = 0; j < tree_nodes_by_stage_[i-1].size(); j++) {
                 std::vector<SmiTreeNode<BendersNodeData*> *> *children = tree_nodes_by_stage_[i-1][j]->getChildren();
                 for (int k = 0; k < children->size(); k++) {
                     tree_nodes_by_stage_[i].push_back((*children)[k]);
+                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
+                    tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
+                    number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
                 }
                 delete children;
             }
@@ -881,7 +886,7 @@ namespace parallel_benders {
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
 
         // Do some magic to finde a good partition for the number of cuts we want to produce: TODO
-        int overall_start_index = benders_tree_node_pointer->scenario();
+        int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
         int overall_end_index = overall_start_index+num_childs; 
         for ( int i = 0; i < num_cuts; i++){
             // For now: just split subproblems after num_subproblems_per_cut
