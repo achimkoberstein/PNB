@@ -292,6 +292,11 @@ namespace parallel_benders {
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){
+                if ( current_stage_ == 0){
+                    infeasible_problem_ = true;
+                    // We have to stop the algorithm, our master problem is infeasible..
+                    break;
+                }
                 // Change direction
                 forward_ = false;
                 // Reset infeasible_problems_ set
@@ -311,7 +316,12 @@ namespace parallel_benders {
 
         }
         // We finished solving
-        LOG(INFO) << "Solution: " << upper_bound_;
+        if (!infeasible_problem_)
+            LOG(INFO) << "Solution: " << upper_bound_;
+        else{
+            upper_bound_ = -infinity_;
+            LOG(INFO) << "Problem is infeasible.";
+        }
 
     }
 
@@ -351,13 +361,13 @@ namespace parallel_benders {
         }
         
         osi_solver->initialSolve();
-        //if ( current_stage_ == 0){ // Only write solution file if we ware in the first stage..
-            //std::stringstream stream;
-            //stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            //console_mutex_.lock();
-            //osi_solver->writeLp(stream.str().c_str());
-            //console_mutex_.unlock();
-        //}
+        if ( current_stage_ == 0){ // Only write solution file if we ware in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        }
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -368,16 +378,16 @@ namespace parallel_benders {
             }
             if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
-                
+                infeasible_problem_mutex_.lock();
+                infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
+                infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){
                     LOG(INFO) << "Generate feasibility cut.";
-                    infeasible_problem_mutex_.lock();
-                    infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
-                    infeasible_problem_mutex_.unlock();
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario?
                 }
                 else
                     LOG(ERROR) << "Your master problem is infeasible.";
+                
             }
             if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
@@ -665,7 +675,8 @@ namespace parallel_benders {
                     else if ( benders_node_pointer->row_upper_[row] >= infinity_ )
                         benders_node_pointer->row_lower_[row] -= value; // lb <= row
                     else {
-                        assert(benders_node_pointer->row_lower_[row] == benders_node_pointer->row_upper_[row]);
+                        if (benders_node_pointer->row_lower_[row] == benders_node_pointer->row_upper_[row])
+                                //LOG(INFO) << "You have used a ranged constraint.";
                         benders_node_pointer->row_lower_[row] -= value; // lb == row == ub, we can not handle lb <= row <= ub with one real inequality ( have to split up to two rows somewhere..
                         benders_node_pointer->row_upper_[row] -= value;
                     }
@@ -929,7 +940,7 @@ namespace parallel_benders {
             osi_solver_mutex_.unlock(); 
         }
         GenerateDualRayProblem(dual_ray_problem); // Append columns to the existing problems, to allow feasible solutions.
-
+        double objValue = dual_ray_problem->getObjValue();
 
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
@@ -938,7 +949,14 @@ namespace parallel_benders {
         // Compute the cut coefficients for the matrix
         std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
         const double* dual_solution = dual_ray_problem->getRowPrice();
-        ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
+        // Copy solution to enable zero bound check
+        double* checked_dual_solution = new double[dual_ray_problem->getNumRows()];
+        memcpy(checked_dual_solution,dual_solution,sizeof(double)*dual_ray_problem->getNumRows());
+        for ( int i = 0; i < dual_ray_problem->getNumRows(); i++)
+            if ( checked_dual_solution[i] >0 && CompareWithZero(checked_dual_solution[i]) )
+                checked_dual_solution[i] = 0;
+
+        ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
 
         // Compute fixed value for RHS
         
@@ -948,7 +966,8 @@ namespace parallel_benders {
         const double* variable_lower_bounds = osi_solver->getColLower();
         const double* variable_upper_bounds = osi_solver->getColUpper();
         double computed_dual_value_for_variable_bounds = 0;
-        const double* column_solution = dual_ray_problem->getColSolution();
+        const double* column_solution = dual_ray_problem->getColSolution(); // We need to check that to: Write method for that..
+
         for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
             // Look at variable value and their bounds
             if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
@@ -993,10 +1012,10 @@ namespace parallel_benders {
         int for_bound = stage_pointer->num_rows_;
         int row = 0;
         for ( ; row < for_bound; row++){
-            if ( dual_solution[row] < 0 )
-                cut_rhs += dual_solution[row]*row_upper[row];
-            else if ( dual_solution[row] > 0)
-                cut_rhs += dual_solution[row]*row_lower[row];
+            if ( checked_dual_solution[row] < 0 )
+                cut_rhs += checked_dual_solution[row]*row_upper[row];
+            else if ( checked_dual_solution[row] > 0)
+                cut_rhs += checked_dual_solution[row]*row_lower[row];
         }
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         //for ( ; row < for_bound; row++ ){
@@ -1005,7 +1024,7 @@ namespace parallel_benders {
         row += benders_node_pointer->optimality_cuts_.size();
         for_bound += benders_node_pointer->optimality_cuts_.size()+benders_node_pointer->feasibility_cuts_.size();
         for ( ; row < for_bound; row++ ){
-            cut_rhs += benders_node_pointer->feasibility_cuts_[row-stage_pointer->num_rows_-benders_node_pointer->optimality_cuts_.size()]->lb()*dual_solution[row];
+            cut_rhs += benders_node_pointer->feasibility_cuts_[row-stage_pointer->num_rows_-benders_node_pointer->optimality_cuts_.size()]->lb()*checked_dual_solution[row];
         }
         // Append value for dual variable bounds
         cut_rhs += computed_dual_value_for_variable_bounds;
@@ -1027,6 +1046,12 @@ namespace parallel_benders {
             dual_ray_problem->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         }
 
+        // Delete the computed lower and upper bounds
+        if ( node_pointer->getRowLowerLength())
+            delete row_lower;
+        if ( node_pointer->getRowUpperLength())
+            delete row_upper;
+
 
     }
 
@@ -1045,7 +1070,6 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer )
     {
-        
         SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         assert(cut_coefficients_pointer->size() == stage_data_[current_stage_-1]->num_columns_);

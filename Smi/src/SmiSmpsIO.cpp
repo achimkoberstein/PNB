@@ -285,10 +285,12 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 							drup.insert(i,value);
 							break;
 						case 'L':
-							drlo.insert(i,value);
+                            drup.insert(i,value);
+							//drlo.insert(i,value); <- Wrong
 							break;
 						case 'G':
-							drup.insert(i,value);
+							//drup.insert(i,value); <- Wrong
+                            drlo.insert(i,value);
 							break;
 						default:
 							assert(!"bad row sense: shouldn't get here");
