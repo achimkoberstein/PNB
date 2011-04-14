@@ -139,7 +139,7 @@ TEST_F(NestedBendersTest, rand) { // takes long to solve
     EXPECT_NEAR(solveSMPS("rand2_10000"), 231.706, 0.1);
 }
 
-TEST_F(NestedBendersTest, sslp) { // Contains Integer First Stage
+TEST_F(NestedBendersTest, sslp) { // Contains "Only" Integer First Stage
 
     EXPECT_NEAR(solveSMPS("sslp_15_45_5"), -265.569, 0.1);
     EXPECT_NEAR(solveSMPS("sslp_15_45_10"), -261.905, 0.1);
@@ -151,7 +151,7 @@ TEST_F(NestedBendersTest, sslp) { // Contains Integer First Stage
     EXPECT_NEAR(solveSMPS("sslp_10_50_2000"), -348.092, 0.1);
 }
 
-//TEST_F(NestedBendersTest, sslpReal) { // seems to be ok, but takes very long to solve
+//TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long to solve
 //    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_50"), -364.640, 0.1);
 //    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_100"), -354.190, 0.1);
 //    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_500"), -349.136, 0.1);
@@ -191,7 +191,7 @@ TEST_F(NestedBendersTest, stormG2) { // no progress in interations, obj. values 
     EXPECT_LE(relGap,0.000001);
 }
 
-TEST_F(NestedBendersTest, dcap) { // Contains integer
+TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer
     EXPECT_NEAR(solveSMPS("dcap/dcap233_200"), 1834.868, 0.1);
     EXPECT_NEAR(solveSMPS("dcap/dcap233_300"), 1644.342, 0.1);
     EXPECT_NEAR(solveSMPS("dcap/dcap233_500"), 1737.719, 0.1);
@@ -206,13 +206,13 @@ TEST_F(NestedBendersTest, dcap) { // Contains integer
     EXPECT_NEAR(solveSMPS("dcap/dcap342_500"), 1904.722, 0.1);
 }
 
-TEST_F(NestedBendersTest, semi) { // Needs feasibility cuts, contains integer
+TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains integer
     EXPECT_NEAR(solveSMPS("semi/semi2"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("semi/semi3"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("semi/semi4"), 224564.3, 0.1);
 }
 
-TEST_F(NestedBendersTest, sizes) { // Not solvable at the moment due to heap corruption in Smi
+TEST_F(NestedBendersTest, sizes_SIPLIB) { // Not solvable at the moment due to heap corruption in Smi
     EXPECT_NEAR(solveSMPS("sizes/sizes3"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes5"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes10"), 224564.3, 0.1);
@@ -280,7 +280,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf"; // Look at it: Lower bound gets to high..
-    ::testing::GTEST_FLAG(filter) = "*.pltexp";
+    ::testing::GTEST_FLAG(filter) = "*.scfxm*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

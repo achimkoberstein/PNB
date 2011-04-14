@@ -198,14 +198,14 @@ namespace flopc {
 TEST_F(BendersTest, scfxm) { 
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_16"), 18416.655, 0.1);
-    SmiScnModel smiModel;
-    OsiClpSolverInterface clpSolver;
-    smiModel.setOsiSolverHandle(clpSolver);
-    smiModel.readSmps("../../../../Benders/test/instances/posts/fxm/fxm2_6");
-    OsiSolverInterface* osiPtr = smiModel.loadOsiSolverData();
-    osiPtr->initialSolve();
-    //osiPtr->writeLp("fxm2");
-    LOG(INFO) << osiPtr->getObjValue();
+    //SmiScnModel smiModel;
+    //OsiClpSolverInterface clpSolver;
+    //smiModel.setOsiSolverHandle(clpSolver);
+    //smiModel.readSmps("../../../../Benders/test/instances/posts/fxm/fxm2_6");
+    //OsiSolverInterface* osiPtr = smiModel.loadOsiSolverData();
+    //osiPtr->initialSolve();
+    ////osiPtr->writeLp("fxm2");
+    //LOG(INFO) << osiPtr->getObjValue();
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_6"), 18615.932, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm3_16"), 18438.891, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm4_6"), 18616.224, 0.1);
@@ -376,6 +376,10 @@ TEST_F(BendersTest, sizes) {
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sizes/sizes10"), 224564.3, 0.1);
 }
 
+//TEST_F(BendersTest, scfxm) { // Has Row Lower and Row Upper for some rows..
+//    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
+//}
+
 TEST_F(CoverageTest, cover){
     // We want to cover a whole lot of features 
     // We need problems with scenarios/blocks, optimality/feasibility cuts and linear/binary/integer variables
@@ -532,7 +536,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
     //::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.semi";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.scfxm";
     
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
