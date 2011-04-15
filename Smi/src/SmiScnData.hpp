@@ -170,6 +170,8 @@ protected:
 	void assignMemory();
 	void deleteMemory();
 
+    void transformElements(int start, SmiNodeData* deterministic_node, int deterministic_start);
+
 
 
 
