@@ -26,7 +26,7 @@ public:
         // Read in model
 
         SmiScnModel smi;
-        OsiCpxSolverInterface osi_cpx;
+        OsiGrbSolverInterface osi_cpx;
         smi.setOsiSolverHandle(osi_cpx);
         // We set the correct folder here: All files are in Benders/instances
         std::string folder("../../../../Benders/test/instances/");
@@ -48,7 +48,7 @@ public:
         nested_benders.initialSolve();
         time = CoinCpuTime()-time;
         LOG(INFO) << "Solution Time: " << time;
-        //EXPECT_NEAR(solution,nested_benders.getObjValue(),0.1);
+        EXPECT_NEAR(solution,nested_benders.getObjValue(),0.1);
         return nested_benders.getObjValue();
     }
 protected:
@@ -123,7 +123,7 @@ TEST_F(NestedBendersTest, gas) { // ok
 
 TEST_F(NestedBendersTest, rand) { // takes long to solve
     EXPECT_NEAR(solveSMPS("rand0_2000"), 162.146, 0.1);
-   EXPECT_NEAR(solveSMPS("rand0_4000"), 199.032, 0.1);
+    EXPECT_NEAR(solveSMPS("rand0_4000"), 199.032, 0.1);
     EXPECT_NEAR(solveSMPS("rand0_6000"), 140.275, 0.1);
     EXPECT_NEAR(solveSMPS("rand0_8000"), 170.318, 0.1);
     EXPECT_NEAR(solveSMPS("rand0_10000"), 139.129, 0.1);
@@ -180,21 +180,21 @@ TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer
     EXPECT_NEAR(solveSMPS("dcap/dcap342_500"), 1904.722, 0.1);
 }
 
-TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains integer
+TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage
     EXPECT_NEAR(solveSMPS("semi/semi2"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("semi/semi3"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("semi/semi4"), 224564.3, 0.1);
 }
 
-TEST_F(NestedBendersTest, sizes_SIPLIB) {
+TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages
     EXPECT_NEAR(solveSMPS("sizes/sizes3"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes5"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes10"), 224564.3, 0.1);
 }
-TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, not solvable correctly due to SMI stuff
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);// Model probability problems
+TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, not solvable correctly due to SMI stuff: Independent scenario do not get created correctly.
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);// Model probability problems
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"), 18438.891, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"), 18616.224, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18438.891, 0.1);
@@ -215,7 +215,7 @@ TEST_F(NestedBendersTest, pltexp_POSTS) {
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
 }
 //
-TEST_F(NestedBendersTest, sgpf_POSTS) { 
+TEST_F(NestedBendersTest, sgpf_POSTS) { // We get other results.
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y3"), -3027.706, 0.1);
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y4"), -4031.391, 0.1);
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y5"), -5201.282, 0.1);
@@ -279,7 +279,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.semi*";
+    ::testing::GTEST_FLAG(filter) = "*.stormG2_*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

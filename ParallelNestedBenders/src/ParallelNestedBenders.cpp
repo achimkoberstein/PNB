@@ -925,10 +925,26 @@ namespace parallel_benders {
  
                 }
             }
+            int new_index = 0;
+            for (int index = 0; index < num_columns+1; index++){
+                if ( CompareWithZero(cut_elements[index]) ){
+                    // Set cut element to zero.
+                    cut_elements[index] = 0;
+                }
+                else if ( index > new_index ){
+                    cut_elements[new_index] = cut_elements[index];
+                    cut_indices[new_index] = cut_indices[index];
+                    new_index++;
+                }
+                else{
+                    new_index++;
+                }
+            }
             OsiRowCut* cut_pointer = new OsiRowCut();
             cut_pointer->setLb(cut_lower_bound);
             cut_pointer->setUb(infinity_);
-            cut_pointer->setRow(num_columns+1,&cut_indices[0],&cut_elements[0]);
+            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
+            LOG_IF(INFO,new_index<num_columns+1) << "We spared to store " << num_columns+1-new_index << " many indices, in percent " << (double)new_index/(num_columns+1) << "% less storage";
             benders_tree_node_pointer->getDataPtr()->optimality_cuts_.push_back(cut_pointer);
         }
     }
