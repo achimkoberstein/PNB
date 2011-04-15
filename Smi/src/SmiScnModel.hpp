@@ -73,6 +73,7 @@ public:
     */
     int readSmps(const char *name,
         SmiCoreCombineRule *r=NULL);
+    int readSmps(const char *coreFile, const char* timeFile, const char* stochFile,SmiCoreCombineRule *r=NULL);
 
     /** Writes SMPS files.
     This method generates three files {name}.[core, time, stoch] or {name}.[cor, tim, sto] (see second parameter).
