@@ -253,7 +253,6 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
-			
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
@@ -311,7 +310,6 @@
 			<File
 				RelativePath="..\..\..\src\SmiScnData.cpp"
 				>
-
 			</File>
 			<File
 				RelativePath="..\..\..\src\SmiScnModel.cpp"
@@ -320,7 +318,6 @@
 			<File
 				RelativePath="..\..\..\src\SmiSmpsIO.cpp"
 				>
-				
 			</File>
 		</Filter>
 		<Filter

@@ -557,9 +557,13 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
     void *temp_ptr = realloc(this->dels_,offset_dst*sizeof(double));
     if (temp_ptr) 
         this->dels_ = (double*)temp_ptr;
+    else
+        this->dels_ = NULL;
     temp_ptr = realloc(this->inds_,offset_dst*sizeof(int));
     if (temp_ptr)
         this->inds_ = (int*)temp_ptr;
+    else
+        this->inds_ = NULL;
 }
 
 int SmiNodeData::combineWithDenseCoreRow(double *dr,const int nels,const int *inds, const double *dels, double *dest_dels,int *dest_indx)

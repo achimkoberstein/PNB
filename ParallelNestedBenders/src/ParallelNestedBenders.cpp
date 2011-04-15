@@ -294,6 +294,7 @@ namespace parallel_benders {
             if ( infeasible_problems_.any() ){
                 if ( current_stage_ == 0){
                     infeasible_problem_ = true;
+                    LOG(INFO) << "First stage problem is infeasible.";
                     // We have to stop the algorithm, our master problem is infeasible..
                     break;
                 }
@@ -361,13 +362,13 @@ namespace parallel_benders {
         }
         
         osi_solver->initialSolve();
-        if ( current_stage_ == 0){ // Only write solution file if we ware in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            console_mutex_.lock();
-            osi_solver->writeLp(stream.str().c_str());
-            console_mutex_.unlock();
-        }
+        //if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    console_mutex_.lock();
+        //    osi_solver->writeLp(stream.str().c_str());
+        //    console_mutex_.unlock();
+        //}
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -379,6 +380,11 @@ namespace parallel_benders {
             if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
                 infeasible_problem_mutex_.lock();
+                if ( infeasible_problems_.any()){ // TODO: Set parameter here:
+                    infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
+                    infeasible_problem_mutex_.unlock();
+                    return;//TODO  We only want one feasibility cut per stage. This has to be refined to feasibility cuts for siblings of an infeasible problem!! 
+                }
                 infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
                 infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){

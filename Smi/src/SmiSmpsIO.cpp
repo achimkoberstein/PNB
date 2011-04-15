@@ -108,6 +108,14 @@ SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
 				
 				colEnd = this->columnIndex(smpsCardReader_->columnName());
 				rowEnd = this->rowIndex(smpsCardReader_->rowName());
+                // Check if we have correct colEnd and rowEnd
+                if ( colEnd == -1 && rowEnd == -1){// Maybe the user erred on input ordering..
+                    colEnd = this->columnIndex(smpsCardReader_->rowName());
+                    rowEnd = this->rowIndex(smpsCardReader_->columnName());
+                }
+                if ( colEnd == -1 || rowEnd == -1){ // Input File is wrong, we have to abort..
+                    return NULL;
+                }
 				
 				std::string SunStudioNeedsThis = smpsCardReader_->periodName() ;
 				periodMap_.insert(make_pair(SunStudioNeedsThis,nstag_+1));

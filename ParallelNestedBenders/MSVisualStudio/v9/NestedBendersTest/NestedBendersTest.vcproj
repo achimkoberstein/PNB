@@ -62,7 +62,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
+				AdditionalDependencies="gurobi40.lib"
+				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib;C:\gurobi401\win32\lib"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
