@@ -1519,7 +1519,7 @@ SmiScnModel::processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *s
     Increment the jj'th random variable by incr[jj]
     and generate new sample data.
     ***** */
-
+    // Unfortunately this does not work. Why? Because of the way the scenario generation method works..
     for (int iss=1;iss<ns;iss++) {
         int iii=iss; jj=0;
         while ( !(iii%nsamp[jj]) ) {

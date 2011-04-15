@@ -11,6 +11,8 @@
 
 #include <glog/logging.h>
 
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 #include "CoinTime.hpp"
 #include "SmiScnModel.hpp"
 #include "flopc.hpp"
@@ -34,9 +36,9 @@ public:
             std::string name_string(name);
         std::string total_string = folder+name_string;
         int read_in = smi.readSmps(total_string.c_str());
-        OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
-        osi_ptr->initialSolve();
-        double solution = osi_ptr->getObjValue();
+        //OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
+        //osi_ptr->initialSolve();
+        //double solution = osi_ptr->getObjValue();
         if ( read_in!= 0 )
             return -osi_cpx.getInfinity();
 
@@ -46,10 +48,8 @@ public:
         nested_benders.initialSolve();
         time = CoinCpuTime()-time;
         LOG(INFO) << "Solution Time: " << time;
+        //EXPECT_NEAR(solution,nested_benders.getObjValue(),0.1);
         return nested_benders.getObjValue();
-        //return 0;
-
-
     }
 protected:
     NestedBendersTest() {}
@@ -163,33 +163,7 @@ TEST_F(NestedBendersTest, sslp) { // Contains "Only" Integer First Stage
 //    EXPECT_NEAR(solveSMPS("sslp/sslp_15_45_15"), -253.602, 0.1);
 //}
 
-TEST_F(NestedBendersTest, stormG2) { // no progress in interations, obj. values 0
-    double solutionValue = 0;
-    double referenceValue = 0;
-    double relGap = 0;
-    //solutionValue = solveSMPS("stormG2_3");
-    //referenceValue = 15535235.730;
-    //abs(referenceValue-solutionValue)/solutionValue;
-    //EXPECT_LE(relGap,0.000001);
 
-    //solutionValue = solveSMPS("stormG2_27");
-    //referenceValue = 15508982.306;
-    //relGap = abs(referenceValue-solutionValue)/solutionValue;
-    //EXPECT_LE(relGap,0.000001);
-
-    //solutionValue = solveSMPS("stormG2_125");
-    //referenceValue = 15512091.185;
-    //relGap = abs(referenceValue-solutionValue)/solutionValue;
-    //EXPECT_LE(relGap,0.000001);
-
-
-    //benParam.setIntParam(BendersParameter::BUNCH_SIZE,1);
-
-    solutionValue = solveSMPS("stormG2_1000");
-    referenceValue = 15802589.698;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
-}
 
 TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer
     EXPECT_NEAR(solveSMPS("dcap/dcap233_200"), 1834.868, 0.1);
@@ -217,35 +191,60 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Not solvable at the moment due to h
     EXPECT_NEAR(solveSMPS("sizes/sizes5"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes10"), 224564.3, 0.1);
 }
-TEST_F(NestedBendersTest, scfxm) { // Has Row Lower and Row Upper for some rows..
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);
+TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, not solvable correctly due to SMI stuff
+    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK
+    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK
+    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);// Model probability problems
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"), 18438.891, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"), 18616.224, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18438.891, 0.1);
 }
 //
-TEST_F(NestedBendersTest, pltexp) {
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+TEST_F(NestedBendersTest, pltexp_POSTS) {
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"), -28.134408, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"), -23.214073, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"), -28.134408, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"), -23.214073, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
 }
 //
-TEST_F(NestedBendersTest, sgpf) { 
+TEST_F(NestedBendersTest, sgpf_POSTS) { 
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y3"), -3027.706, 0.1);
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y4"), -4031.391, 0.1);
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y5"), -5201.282, 0.1);
     EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y6"), -6403.3, 0.1);
+}
+
+TEST_F(NestedBendersTest, stormG2_POSTS) {
+    double solutionValue = 0;
+    double referenceValue = 0;
+    double relGap = 0;
+    solutionValue = solveSMPS("stormG2_3");
+    referenceValue = 15535235.730;
+    abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+
+    solutionValue = solveSMPS("stormG2_27");
+    referenceValue = 15508982.306;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+
+    solutionValue = solveSMPS("stormG2_125");
+    referenceValue = 15512091.185;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
+
+    solutionValue = solveSMPS("stormG2_1000");
+    referenceValue = 15802589.698;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
 }
 
 TEST_F(NestedBendersTest,FeasibilityCutTest){
@@ -279,8 +278,8 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.sgpf"; // Look at it: Lower bound gets to high..
-    ::testing::GTEST_FLAG(filter) = "*.scfxm*";
+    //::testing::GTEST_FLAG(filter) = "*.sgpf";
+    ::testing::GTEST_FLAG(filter) = "*.sizes_*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
