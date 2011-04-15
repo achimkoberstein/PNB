@@ -36,9 +36,9 @@ public:
             std::string name_string(name);
         std::string total_string = folder+name_string;
         int read_in = smi.readSmps(total_string.c_str());
-        //OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
-        //osi_ptr->initialSolve();
-        //double solution = osi_ptr->getObjValue();
+        OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
+        osi_ptr->initialSolve();
+        double solution = osi_ptr->getObjValue();
         if ( read_in!= 0 )
             return -osi_cpx.getInfinity();
 
@@ -186,7 +186,7 @@ TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains int
     EXPECT_NEAR(solveSMPS("semi/semi4"), 224564.3, 0.1);
 }
 
-TEST_F(NestedBendersTest, sizes_SIPLIB) { // Not solvable at the moment due to heap corruption in Smi
+TEST_F(NestedBendersTest, sizes_SIPLIB) {
     EXPECT_NEAR(solveSMPS("sizes/sizes3"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes5"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("sizes/sizes10"), 224564.3, 0.1);
@@ -279,7 +279,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.sizes_*";
+    ::testing::GTEST_FLAG(filter) = "*.semi*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
