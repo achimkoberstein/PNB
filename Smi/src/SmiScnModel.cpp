@@ -94,7 +94,9 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
     // If we add the first scenario..
     if (this->getNumScenarios()==0)
     {
-
+        // According to SMPS, for the first scenario, the branch SHOULD be at the first stage, this is branch=0 in Smi term. With the first --branch, we can have branch = -1.
+        if ( branch == -1 )
+            branch = 0;
         assert(anc == 0);
         assert(branch == 0);
         anc = 0;
@@ -1284,20 +1286,28 @@ SmiScnModel::getRowSolution(int ns, int stage, int rowIndex)
 int
 SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 {
+    return readSmps(c,c,c,r);
+}
+
+int
+SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* stochFile,SmiCoreCombineRule *r)
+{
     int i;
     SmiSmpsIO *smiSmpsIO=NULL;
-    string fname(c);
+    string coreFname(coreFile);
+    string timeFname(timeFile);
+    string stochFname(stochFile);
 
     const char* core_ext[] = {"cor","core"};
     for (i = sizeof(core_ext)/sizeof(const char*) - 1; i >= 0; --i) {
         string ext(core_ext[i]);
-        string fullname=fname+"."+ext;
+        string fullname=coreFname+"."+ext;
         if (fileCoinReadable(fullname))
             break;
     }
     if (i == -1)
     {
-        cerr << "SmiScnModel::readSmps() - No file "<< c <<" with extensions .core or .cor were found." << endl;
+        cerr << "SmiScnModel::readSmps() - No file "<< coreFname <<" with extensions .core or .cor were found." << endl;
         return -1;
     }
 
@@ -1308,7 +1318,7 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     if (r != NULL)
         smiSmpsIO->setCoreCombineRule(r);
 
-    if (smiSmpsIO->readMps(c,core_ext[i]) == -1)
+    if (smiSmpsIO->readMps(coreFname.c_str(),core_ext[i]) == -1)
     {
         delete smiSmpsIO;
         return -1;
@@ -1319,18 +1329,18 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 
     for (i = sizeof(time_ext)/sizeof(const char*) - 1; i >= 0; --i) {
         string ext(time_ext[i]);
-        string fullname=fname+"."+ext;
+        string fullname=timeFname+"."+ext;
         if (fileCoinReadable(fullname))
             break;
     }
     if (i == -1)
     {
-        cerr << "SmiScnModel::readSmps() - No file "<< c <<" with extensions .time or .tim were found." << endl;
+        cerr << "SmiScnModel::readSmps() - No file "<< timeFname <<" with extensions .time or .tim were found." << endl;
         delete smiSmpsIO;
         return -1;
     }
 
-    smiCore = smiSmpsIO->readTimeFile(this,c,time_ext[i]);
+    smiCore = smiSmpsIO->readTimeFile(this,timeFname.c_str(),time_ext[i]);
     if (!smiCore)
     {
         delete smiSmpsIO;
@@ -1340,17 +1350,17 @@ SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
     const char* stoch_ext[] = {"sto", "stoc","stoch"};
     for (i = sizeof(stoch_ext)/sizeof(const char*) - 1; i >= 0; --i) {
         string ext(stoch_ext[i]);
-        string fullname=fname+"."+ext;
+        string fullname=stochFname+"."+ext;
         if (fileCoinReadable(fullname))
             break;
     }
     if (i == -1)
     {
-        cerr << "SmiScnModel::readSmps() - No file "<< c <<" with extensions .stoch, .stoc, or .sto were found." << endl;
+        cerr << "SmiScnModel::readSmps() - No file "<< stochFname <<" with extensions .stoch, .stoc, or .sto were found." << endl;
         delete smiSmpsIO;
         return -1;
     }
-    if (smiSmpsIO->readStochFile(this,smiCore,c,stoch_ext[i]) == -1)
+    if (smiSmpsIO->readStochFile(this,smiCore,stochFname.c_str(),stoch_ext[i]) == -1)
     {
         delete smiSmpsIO;
         return -1;

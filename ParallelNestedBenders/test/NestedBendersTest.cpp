@@ -23,6 +23,9 @@
 class NestedBendersTest: public ::testing::Test {
 public:
     double solveSMPS(const char* name) {
+        return solveSMPS(name, name,name);
+    }
+        double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Read in model
 
         SmiScnModel smi;
@@ -33,12 +36,16 @@ public:
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
             folder = "../../../../../Benders/test/instances/";
 #endif
-            std::string name_string(name);
-        std::string total_string = folder+name_string;
-        int read_in = smi.readSmps(total_string.c_str());
-        OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
-        osi_ptr->initialSolve();
-        double solution = osi_ptr->getObjValue();
+        std::string core_name_string(core_name);
+        std::string time_name_string(time_name);
+        std::string stoch_name_string(stoch_name);
+        std::string total_core_string = folder+core_name_string;
+        std::string total_time_string = folder+time_name_string;
+        std::string total_stoch_string = folder+stoch_name_string;
+        int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
+        //osi_ptr->initialSolve();
+        //double solution = osi_ptr->getObjValue();
         if ( read_in!= 0 )
             return -osi_cpx.getInfinity();
 
@@ -48,7 +55,7 @@ public:
         nested_benders.initialSolve();
         time = CoinCpuTime()-time;
         LOG(INFO) << "Solution Time: " << time;
-        EXPECT_NEAR(solution,nested_benders.getObjValue(),0.1);
+        //EXPECT_NEAR(solution,nested_benders.getObjValue(),0.1);
         return nested_benders.getObjValue();
     }
 protected:
@@ -102,11 +109,6 @@ TEST_F(NestedBendersTest,BirgeLouveuxFarmersTest){
     //assert(nb.getSolutionValue() == 6.25);
     parallel_benders::ParallelNestedBenders pnb(testModel.getSmi());
     pnb.Solve();
-}
-
-TEST_F(NestedBendersTest, assets) { // ok
-    EXPECT_NEAR(solveSMPS("assets_large"), -689.432, 0.1);
-    EXPECT_NEAR(solveSMPS("assets_small"), -723.839, 0.1);
 }
 
 TEST_F(NestedBendersTest, farmer) { // ok
@@ -247,6 +249,55 @@ TEST_F(NestedBendersTest, stormG2_POSTS) {
     EXPECT_LE(relGap,0.000001);
 }
 
+// Andrew Felt Test Set
+TEST_F(NestedBendersTest, airlift_FELT){// 2-Stage
+    EXPECT_NEAR(solveSMPS("felt/airlift/AIRL"),249101.672072,0.1); //BLOCK
+    EXPECT_NEAR(solveSMPS("felt/airlift/AIRL2"),269665.498390,0.1);//INDEP
+}
+
+TEST_F(NestedBendersTest,assets_FELT){
+    EXPECT_NEAR(solveSMPS("assets_large"), -689.432, 0.1);
+    EXPECT_NEAR(solveSMPS("assets_small"), -723.839, 0.1);
+}
+
+TEST_F(NestedBendersTest,bonds_FELT){
+    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), 2967.9, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y4"), 3991.3, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), 5152.6, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), 6369.0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y3"), -3027.6, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4023.9, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y5"), -5180.8, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y6"), -6403.3, 0.1);
+}
+
+TEST_F(NestedBendersTest,cargo_FELT){
+
+}
+
+TEST_F(NestedBendersTest,chem_FELT){
+
+}
+
+TEST_F(NestedBendersTest,electric_FELT){
+
+}
+
+TEST_F(NestedBendersTest,environ_FELT){
+
+}
+TEST_F(NestedBendersTest,phone_FELT){
+
+}
+
+TEST_F(NestedBendersTest,stocfor_FELT){
+
+}
+
+
+
+
+
 TEST_F(NestedBendersTest,FeasibilityCutTest){
     using namespace flopc;
     MP_model testModel(new OsiCpxSolverInterface());
@@ -279,7 +330,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.stormG2_*";
+    ::testing::GTEST_FLAG(filter) = "*.bonds*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
