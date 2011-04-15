@@ -536,7 +536,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
     //::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.scfxm";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.semi";
     
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
