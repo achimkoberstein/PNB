@@ -731,7 +731,7 @@ SmiSmpsCardReader::nextSmpsField (  )
 			  case SMI_BL_CARD: // not handled yet
 				  break;
 				 
-			  case SMI_COLUMN_CARD: // card info has "col,row,value,prob"
+			  case SMI_COLUMN_CARD: // card info has "col,row,value,?(period),prob"
 				    
 				  if (!(next = strtok(position_,blanks)))
 				  {
@@ -758,7 +758,8 @@ SmiSmpsCardReader::nextSmpsField (  )
 				  value_ = osi_strtod(valstr,&after,0);
 				  // see if error
 				  assert(after>valstr);
-					  
+					
+                  // Now we need to see if there is a period name or a probability.
 				  if (!(next = strtok(NULL,blanks)))
 				  {
 					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
@@ -767,9 +768,24 @@ SmiSmpsCardReader::nextSmpsField (  )
 				  strcpy(valstr,next);
 
 				  prob_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
+                  // see if we have a period entry insteaf of a probability
+                  if ( after == valstr ){
+                      // Try to map a period 
+                      strcpy(periodName_,next);
 
+                      // If the previous entry was a period name, now comes the probability..
+                      if (!(next = strtok(NULL,blanks)))
+                      {
+                          smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                          break;
+                      }
+                      strcpy(valstr,next);
+
+                      prob_ = osi_strtod(valstr,&after,0);
+                      // see if error: Malformed Line
+                      assert(after>valstr);
+
+                  }
 				  position_ = eol_;  //end of card -- no more information allowed
 				  break;
 
