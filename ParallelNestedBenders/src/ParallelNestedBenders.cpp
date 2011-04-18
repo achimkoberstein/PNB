@@ -214,6 +214,9 @@ namespace parallel_benders {
             // Set empty warm start object
             if ( warm_start_ && warm_start_stage_ )
                 stage_data_.back()->warm_start_ = osi_solver_->getEmptyWarmStart();
+            // Set number of thetas per stage, if we want to do it statically
+            int num_theta = 100;
+            stage_data_.back()->num_thetas_ = num_theta;
         }
 
 
@@ -897,6 +900,7 @@ namespace parallel_benders {
         // We need all the children of this node..
         int num_childs = benders_tree_node_pointer->numChildren();
         num_cuts = std::min(num_cuts,num_childs); // We have to propose this back
+        assert(num_cuts); // This has to be greater than zero.
         // TODO: Ignore "cuts" that were not created, due to multicut condition ( theta_k >= solution value of subproblem)
         int num_subproblems_per_cut = std::ceil( ((double)num_childs)/num_cuts );
 
@@ -944,7 +948,7 @@ namespace parallel_benders {
             cut_pointer->setLb(cut_lower_bound);
             cut_pointer->setUb(infinity_);
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
-            LOG_IF(INFO,new_index<num_columns+1) << "We spared to store " << num_columns+1-new_index << " many indices, in percent " << (double)new_index/(num_columns+1) << "% less storage";
+            //LOG_IF(INFO,new_index<num_columns+1) << "We spared to store " << num_columns+1-new_index << " many indices, in percent " << 1-(double)new_index/(num_columns+1) << "% less storage";
             benders_tree_node_pointer->getDataPtr()->optimality_cuts_.push_back(cut_pointer);
         }
     }
