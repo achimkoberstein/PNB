@@ -1360,7 +1360,7 @@ SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* st
         delete smiSmpsIO;
         return -1;
     }
-    if (smiSmpsIO->readStochFile(this,smiCore,stochFname.c_str(),stoch_ext[i]) == -1)
+    if (smiSmpsIO->readStochFile(this,smiCore,stochFname.c_str(),stoch_ext[i]) != 0)
     {
         delete smiSmpsIO;
         return -1;

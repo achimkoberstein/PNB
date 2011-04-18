@@ -481,6 +481,10 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 					delete matrix;
 					return 0;
 				}
+            else{
+
+                return -1; // If we have a scenario section, nothing else is allowed here. We assume a missing ENDATA
+            }
 
 		} 
 		case SMI_BLOCKS_SECTION://BLOCKS card
