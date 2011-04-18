@@ -1,0 +1,4 @@
+STOCH         STOCHFOR
+SCENARIOS     DISCRETE                REPLACE
+ SC BLOCK1    ROOT      1              PERIOD1
+ENDATA
