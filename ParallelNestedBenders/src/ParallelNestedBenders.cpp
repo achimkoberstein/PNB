@@ -1113,7 +1113,6 @@ namespace parallel_benders {
             // We iterate over the row of the deterministic matrix
             for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
                 // Handle stochastic columns only in the presence of stochastic matrix..
-
                 while ( stochastic_element_in_row ){
                     if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
                         // We need to advance the index, if we are still within this row
@@ -1129,6 +1128,9 @@ namespace parallel_benders {
                     else
                         break; // We found a stochastic T matrix entry for this row
                 }
+                // If we added all the stochastic elements of this row, we have to stop.
+                if ( stochastic_element_in_row && stochastic_column_index == stochastic_matrix.start_[row+1])
+                    stochastic_element_in_row = false;
 
                 if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
                     if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
@@ -1138,6 +1140,7 @@ namespace parallel_benders {
                     else    
                         cut_coefficients_pointer->operator[](deterministic_matrix.indices_[column_index]-column_start_previous_stage) += deterministic_matrix.elements_[column_index]*dual_solution[row];
                 }
+
 
             }
             if ( stochastic_element_in_row )

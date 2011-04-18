@@ -278,7 +278,7 @@ TEST_F(NestedBendersTest,bonds_FELT){ // Values that are tested against: results
     EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7956.896, 0.1); 
 }
 
-TEST_F(NestedBendersTest,cargo_FELT){
+TEST_F(NestedBendersTest,cargo_FELT){ // values not verified
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 0, 0.1);
@@ -308,7 +308,7 @@ EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
 EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
 }
 
-TEST_F(NestedBendersTest,environ_FELT){//two-stage  // Problem: We can not read INDEP and BLOCKS by now..
+TEST_F(NestedBendersTest,environ_FELT){//two-stage  // Problem: We can not read INDEP and BLOCKS by now.., values not verified
     EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
     EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS
@@ -320,18 +320,18 @@ TEST_F(NestedBendersTest,environ_FELT){//two-stage  // Problem: We can not read 
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-3780"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-5292"), 0, 0.1);
 }
-TEST_F(NestedBendersTest,phone_FELT){// two-stage, mixed-integer
-    //EXPECT_NEAR(solveSMPS("felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
-    //EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
+TEST_F(NestedBendersTest,phone_FELT){// two-stage, mixed-integer, values not verified
+    EXPECT_NEAR(solveSMPS("felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
+    EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
 
     EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
     EXPECT_NEAR(solveSMPS("felt/phone/phone1-int","felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
 }
 
-TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), 0, 0.1); //two-stage
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), 0, 0.1); // seven-stage
+TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values not verified
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), -41131.98, 0.1); //two-stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -45599.77, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -47314.99, 0.1); // seven-stage
 }
 
 
@@ -370,7 +370,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.phone*";
+    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
