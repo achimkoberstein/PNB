@@ -29,7 +29,7 @@ public:
         // Read in model
 
         SmiScnModel smi;
-        OsiGrbSolverInterface osi_cpx;
+        OsiCpxSolverInterface osi_cpx;
         smi.setOsiSolverHandle(osi_cpx);
         // We set the correct folder here: All files are in Benders/instances
         std::string folder("../../../../Benders/test/instances/");
@@ -46,8 +46,10 @@ public:
         //OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
         //osi_ptr->initialSolve();
         //double solution = osi_ptr->getObjValue();
-        if ( read_in!= 0 )
+        if ( read_in!= 0 ){
+            LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
             return -osi_cpx.getInfinity();
+        }
 
         double time = CoinCpuTime();  
         // Load ParallelNestedBendersSolver
@@ -260,15 +262,17 @@ TEST_F(NestedBendersTest,assets_FELT){
     EXPECT_NEAR(solveSMPS("assets_small"), -723.839, 0.1);
 }
 
-TEST_F(NestedBendersTest,bonds_FELT){
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), 2967.9, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y4"), 3991.3, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), 5152.6, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), 6369.0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y3"), -3027.6, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4023.9, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y5"), -5180.8, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y6"), -6403.3, 0.1);
+TEST_F(NestedBendersTest,bonds_FELT){ // Values that are tested against: results from MSLIB-OSL, values commented out: presented in felts testset
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), -2967.9, 0.1); // 2976.91
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y4"), -3994.179, 0.1); // 3991.3
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), -5172.07, 0.1); // 5125.6
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), -6463.240, 0.1); // 6369.0
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y7"), -7947.863, 0.1); 
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y3"), -3027.6, 0.1); // 3027.6
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4031.303, 0.1); // 4023.9
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y5"), -5201.197, 0.1); // 5180.8
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y6"), -6484.465, 0.1); // 6403.3
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7956.896, 0.1); 
 }
 
 TEST_F(NestedBendersTest,cargo_FELT){
