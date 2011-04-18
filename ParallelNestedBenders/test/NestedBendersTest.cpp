@@ -25,7 +25,10 @@ public:
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
     }
-        double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
+    double solveSMPS(const char* core_time_name, const char* stoch_name) {
+        return solveSMPS(core_time_name, core_time_name,stoch_name);
+    }
+    double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Read in model
 
         SmiScnModel smi;
@@ -33,9 +36,9 @@ public:
         smi.setOsiSolverHandle(osi_cpx);
         // We set the correct folder here: All files are in Benders/instances
         std::string folder("../../../../Benders/test/instances/");
-#if _M_X64 || __x86_64__ // Works only on windows i suppose
-            folder = "../../../../../Benders/test/instances/";
-#endif
+        #if _M_X64 || __x86_64__ // Works only on windows i suppose
+        folder = "../../../../../Benders/test/instances/";
+        #endif
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
         std::string stoch_name_string(stoch_name);
@@ -276,26 +279,59 @@ TEST_F(NestedBendersTest,bonds_FELT){ // Values that are tested against: results
 }
 
 TEST_F(NestedBendersTest,cargo_FELT){
-
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-128"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-512"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1024"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2048"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4096"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8192"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16384"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32768"), 0, 0.1);
 }
 
-TEST_F(NestedBendersTest,chem_FELT){
-
+TEST_F(NestedBendersTest,chem_FELT){ //two-stage LP-relaxation of mixed integer problem
+EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009,166667, 0.1); // For mixed-integer case should be: 3300
+// Mixed-integer problem is available here: 
+EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), 3300, 0.1); // For mixed-integer case should be: 3300
 }
 
-TEST_F(NestedBendersTest,electric_FELT){
-
+TEST_F(NestedBendersTest,electric_FELT){ //three-stage No staircase problem. <- We can not cope with that by now..
+EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
+EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
 }
 
-TEST_F(NestedBendersTest,environ_FELT){
-
+TEST_F(NestedBendersTest,environ_FELT){//two-stage  // Problem: We can not read INDEP and BLOCKS by now..
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-lrge"),21034.731951, 0.1); // Based on Import, INDEP and BLOCKS
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-xlrge"), 0, 0.1); // Even Larger, INDEP and BLOCKS
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-first"), 0, 0.1); // INDEP
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1200"),10399.839640, 0.1); // INDEP and BLOCKS for the rest
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1875"), 10399.839640, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-3780"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-5292"), 0, 0.1);
 }
-TEST_F(NestedBendersTest,phone_FELT){
+TEST_F(NestedBendersTest,phone_FELT){// two-stage, mixed-integer
+    //EXPECT_NEAR(solveSMPS("felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
+    //EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
 
+    EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
+    EXPECT_NEAR(solveSMPS("felt/phone/phone1-int","felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
 }
 
-TEST_F(NestedBendersTest,stocfor_FELT){
-
+TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), 0, 0.1); //two-stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), 0, 0.1); // seven-stage
 }
 
 
@@ -334,7 +370,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.bonds*";
+    ::testing::GTEST_FLAG(filter) = "*.phone*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

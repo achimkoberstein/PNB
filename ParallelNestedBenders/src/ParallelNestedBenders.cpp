@@ -661,7 +661,7 @@ namespace parallel_benders {
                                 stochastic_column_index++;
                             }
 
-                            else {   
+                            else {  // We assume Staircase-Problems. 
                                 assert( deterministic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && deterministic_matrix.indices_[column_index]-previous_stage_columns >= 0 );
                                 value += deterministic_matrix.elements_[column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                             }
