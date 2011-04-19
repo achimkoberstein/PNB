@@ -2,7 +2,9 @@
 #define BendersNodeData_h__
 
 #include <vector>
+#include <map>
 
+#include <boost/scoped_ptr.hpp>
 
 
 class CoinPackedMatrix;
@@ -53,6 +55,10 @@ public:
     double theta_;
     std::vector<OsiRowCut* > optimality_cuts_;
     std::vector<OsiRowCut* > feasibility_cuts_;
+    // Multicut Aggregation Strategies..
+    int num_scen_pro_cut_;
+    double percent_scen_pro_cut_;
+    bool percent_or_fixed_; // True = percent, false = fixed
 
     // Values for cut aggregation
     std::vector<double> current_cut_coefficients_;
@@ -110,6 +116,57 @@ struct RowOrderedSparseMatrixPointer{
     const double* elements_;
     const int* indices_;
     const int* start_;
+};
+
+class Timer {
+public:
+    explicit Timer(int stgs) : stages_(stgs),start_time_(stages_,0.0),overall_time_(stages_,0.0) {}
+    ~Timer() { }
+
+    void Start(int stg);
+    void Stop(int stg);
+
+    double GetTime(int stg) { return overall_time_[stg]; }
+
+    double GetAggregatedTime();
+
+    std::string GetFullTimeString();
+
+private:
+    int stages_;
+    std::vector<double> start_time_;
+    std::vector<double> overall_time_;
+};
+
+struct TimerStruct {
+    void init(int numStages);
+
+    std::string GetHeadingString();
+    std::string GetTimeString();
+
+    boost::scoped_ptr<Timer> total;
+    boost::scoped_ptr<Timer> solver;
+    boost::scoped_ptr<Timer> problemGeneration;
+    boost::scoped_ptr<Timer> aggCut;
+    boost::scoped_ptr<Timer> optiCut;
+    boost::scoped_ptr<Timer> feasCut;
+}; 
+
+struct Parameter {
+    // Set default values
+    void init();
+
+
+    //// Set values you want to set
+    //void SetParameterValue(std::string parameter, double value){
+    //    parameter_map_[parameter] = value;
+    //}
+    //double GetParameterValue(std::string parameter){
+    //    return parameter_map_[parameter];
+    //}
+
+    // Stores every parameter as a std::string with a value that is stored as a double
+    std::map<std::string,double> parameter_map_;
 };
 
 } // end namespace parallel_benders

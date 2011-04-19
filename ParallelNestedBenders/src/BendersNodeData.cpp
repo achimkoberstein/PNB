@@ -1,5 +1,11 @@
 #include "BendersNodeData.hpp"
 
+#include <math.h>
+
+#include <sstream>
+
+#include "CoinTime.hpp"
+#include "CoinHelperFunctions.hpp"
 #include "CoinWarmStart.hpp"
 #include "OsiRowCut.hpp"
 #include "SmiLinearData.hpp"
@@ -11,7 +17,7 @@ namespace parallel_benders{
 
 BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),warm_start_(NULL),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),percent_scen_pro_cut_(0),percent_or_fixed_(false),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL)
 
 {
@@ -19,7 +25,7 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),warm_start_(NULL),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),percent_scen_pro_cut_(0),percent_or_fixed_(false),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL)
 {
 
@@ -120,5 +126,80 @@ RowOrderedSparseMatrixPointer::RowOrderedSparseMatrixPointer(const double* eleme
 elements_(elements),indices_(indices),start_(start)
 {
 
+}
+
+void Timer::Start( int stg )
+{
+    start_time_[stg] = CoinCpuTime();
+}
+
+void Timer::Stop( int stg )
+{
+    overall_time_[stg] += CoinCpuTime() - start_time_[stg];
+}
+
+double Timer::GetAggregatedTime()
+{
+    double t = 0;
+    for (int i = 0; i < stages_; i++) {
+        t += overall_time_[i];
+    }
+    return t;
+}
+
+std::string Timer::GetFullTimeString()
+{
+    std::stringstream s;
+    s << GetAggregatedTime() << "; ";
+    for (int i = 0; i < stages_; i++) {
+        s << GetTime(i) << "; ";
+    }
+    return s.str();
+}
+
+std::string TimerStruct::GetTimeString()
+{
+    std::stringstream s;
+    s << total->GetAggregatedTime() << solver->GetAggregatedTime() << problemGeneration->GetAggregatedTime() 
+        << optiCut->GetAggregatedTime() << feasCut->GetAggregatedTime() << aggCut->GetAggregatedTime() << std::endl;
+
+    return s.str();
+}
+
+void TimerStruct::init( int numStages )
+{
+    total.reset(new Timer(1));
+    solver.reset(new Timer(numStages));
+    problemGeneration.reset(new Timer(numStages));
+    optiCut.reset(new Timer(numStages));
+    aggCut.reset(new Timer(numStages));
+    feasCut.reset(new Timer(numStages));
+}
+
+std::string TimerStruct::GetHeadingString()
+{
+    return "WallClock; Solver; BuildProblem; OptimalityCut; FeasibilityCut; AggregatCuts";
+}
+
+void Parameter::init()
+{
+    // DetEq or Benders
+    parameter_map_["Benders"] = 1.0; // 0: No Benders, but detEq.
+    // WarmStart
+    parameter_map_["WarmStart"] = 1.0; // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario
+
+    // Aggregation of Cuts ( or single-multi cut )
+    parameter_map_["AggregatedOptimalityCuts"] = 1.0;// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
+    parameter_map_["ScenariosProCut"] = 0.0; // Integer value: How many scenarios do we want in a cut? If 0 = use percentage value
+    parameter_map_["PercentScenariosProCut"] = 1.0; // Double value between 0 and 100. How many percent of scenarios we want pro cut. 
+    parameter_map_["Relaxation"] = 1.0; // Solved LP relaxation instead of MIP problem, if we have a MIP problem
+    parameter_map_["DynamicAggregation"] = 0.0; // Do we use Dynamic aggregation?
+    //parameter_map_["TrustRegion"] = 0; // Do we want to use TrustRegion TODO: Implement this
+
+    // Tolerances
+    parameter_map_["ZeroTolerance"] = std::pow(10.0,-6);
+    parameter_map_["IntegerTolerance"] = std::pow(10.0,-6);
+    parameter_map_["AbsoluteEpsilon"] = std::pow(10.0,-6);
+    parameter_map_["RelativeEpsilon"] = std::pow(10.0,-6);
 }
 } // end namespace parallel benders

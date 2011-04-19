@@ -23,8 +23,6 @@
 
 
 namespace parallel_benders {
-    // Define static variables
-    double ParallelNestedBenders::zero_tolerance_ = std::pow(10.0,-6);
 
     void ParallelNestedBenders::AdjustProblem()
     {
@@ -107,14 +105,14 @@ namespace parallel_benders {
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) : kT(1),kW(2),
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
-        num_stages_(0),num_scenarios_(0),infinity_(0),contains_integer_(false),
-        integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
+        num_stages_(0),num_scenarios_(0),infinity_(0),contains_integer_(false),parameter_(),
+        zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),infeasible_problems_(smi_->getNumScenarios()),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false)
     {
-        Init();
+
     }
 
     void ParallelNestedBenders::Init()
@@ -142,17 +140,67 @@ namespace parallel_benders {
         upper_bound_ = infinity_;
         old_lower_bound_ = lower_bound_;
 
-        // Magic numbers, but we set these values via options
-        integer_tolerance_ = std::pow(10.0,-6);
+        int num_theta = 1; // Single cut as default
+        double percent_theta = 100; // Single cut as default
+        int num_scen_pro_cut = num_scenarios_; // Single cut as default.
 
-        absolute_epsilon_ = std::pow(10.0,-6);
-        relative_epsilon_ = std::pow(10.0,-6);
+        // Iterate over all parameters and set them accordingly
+        for ( std::map<std::string,double>::iterator it = parameter_.parameter_map_.begin(); it != parameter_.parameter_map_.end(); ++it){
+            // Switch for strings do not work. As we do not have thousands of parameters, if else will do
+            std::string string((*it).first);
+            double value = (*it).second;
 
-        // Set other parameters
-
-        // Warm start
-        warm_start_ = true; // enable by default
-        warm_start_scenarios_ = true; // enable by default
+            // Tolerances
+            if ( string == "ZeroTolerance" )
+                zero_tolerance_ = value;
+            if ( string == "IntegerTolerance")
+                integer_tolerance_ = value;
+            if ( string == "AbsoluteEpsilon" )
+                absolute_epsilon_ = value;
+            if ( string == "RelativeEpsilon" )
+                relative_epsilon_ = value;
+            // WarmStart
+            if ( string == "WarmStart" ){
+                if ( value > 0 )
+                    warm_start_ = true;
+                if ( value == 1.0 )
+                    warm_start_scenarios_ = true;
+                if ( value == 2.0 )
+                    warm_start_stage_ = true;
+            }
+            // Multicut Aggregation
+            if ( string == "AggregatedOptimalityCuts" ){ // Number of Cuts per stage..
+                if ( value == 0 ){
+                    // Use something you like
+                    num_theta = 0;
+                    // Check if other values are OK
+                    if ( parameter_.parameter_map_["ScenariosProCut"] <= 0.0 ){
+                        // We need to check for correctness of percentage
+                        if ( parameter_.parameter_map_["PercentScenariosPerCut"] >= 100){
+                            // use single cut
+                            num_theta = 1;
+                        }
+                        if ( parameter_.parameter_map_["PercentScenariosPerCut"] <= 0){
+                            // use multi cut
+                            num_theta = num_scenarios_;
+                        }
+                        else {
+                            percent_theta =  parameter_.parameter_map_["PercentScenariosPerCut"];
+                        }
+                    }
+                    else {
+                        num_scen_pro_cut = std::min(num_scenarios_,(int)parameter_.parameter_map_["ScenariosProCut"]);
+                    }
+                }
+                else
+                    num_theta = value;
+            }
+            // Dynamic aggregation
+            if ( string == "DynamicAggregation" ){
+                // TODO: Do something in this case.
+                // TODO: Find Strategies and implement them
+            }
+        }
 
         // create our benders node objects and build the tree
         tree_ = SmiScenarioTree<BendersNodeData*>();
@@ -193,6 +241,14 @@ namespace parallel_benders {
         tree_nodes_by_stage_[0].push_back(tree_.getRoot());
         // Set probability 1 to root node, to prevent numerical issues
         tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
+        // Set multicut aggregation for the first stage also
+        // Set multicut aggregation
+        if ( num_theta == 0.0 ){
+            if ( num_scen_pro_cut == num_scenarios_ ) // Set percentage value
+                tree_nodes_by_stage_[0].back()->getDataPtr()->percent_scen_pro_cut_ = percent_theta;
+            else // Set fixed value
+                tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+        }
         for (int i = 1; i < num_stages_; i++) {
             int number_of_nodes_in_this_stage = 0;
             int number_of_child_nodes_for_next_stage = 0;
@@ -203,6 +259,13 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
                     tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
                     number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
+                    // Set multicut aggregation
+                    if ( num_theta == 0.0 ){
+                        if ( num_scen_pro_cut == num_scenarios_ ) // Set percentage value
+                            tree_nodes_by_stage_[i].back()->getDataPtr()->percent_scen_pro_cut_ = percent_theta;
+                        else // Set fixed value
+                            tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+                    }
                 }
                 delete children;
             }
@@ -215,7 +278,6 @@ namespace parallel_benders {
             if ( warm_start_ && warm_start_stage_ )
                 stage_data_.back()->warm_start_ = osi_solver_->getEmptyWarmStart();
             // Set number of thetas per stage, if we want to do it statically
-            int num_theta = 100;
             stage_data_.back()->num_thetas_ = num_theta;
         }
 
@@ -899,8 +961,20 @@ namespace parallel_benders {
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         // We need all the children of this node..
         int num_childs = benders_tree_node_pointer->numChildren();
-        num_cuts = std::min(num_cuts,num_childs); // We have to propose this back
-        assert(num_cuts); // This has to be greater than zero.
+        // If num_cuts is zero, we have a node wise rule..
+        if (num_cuts == 0){ // Node wise rule
+            if ( benders_tree_node_pointer->getDataPtr()->percent_or_fixed_ ){
+                // Percent: Compute percentage
+                double percent = benders_tree_node_pointer->getDataPtr()->percent_scen_pro_cut_;
+                assert( percent>0 && percent<= 1);
+                num_cuts = std::ceil(1/percent);
+            }
+            else {
+                // Fixed
+                assert( benders_tree_node_pointer->getDataPtr()->num_scen_pro_cut_ >= 0);
+                num_cuts = std::min(num_childs,benders_tree_node_pointer->getDataPtr()->num_scen_pro_cut_);
+            }
+        }
         // TODO: Ignore "cuts" that were not created, due to multicut condition ( theta_k >= solution value of subproblem)
         int num_subproblems_per_cut = std::ceil( ((double)num_childs)/num_cuts );
 
@@ -1152,6 +1226,11 @@ namespace parallel_benders {
         }
     }
 
+    bool ParallelNestedBenders::CompareWithZero( double value ) 
+    {
+        return std::abs(value) < zero_tolerance_;
+    }
+
     bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
@@ -1165,11 +1244,6 @@ namespace parallel_benders {
     RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode )
     {
         return RowOrderedSparseMatrixPointer(smiNode->getElements(smiNode->getMatStart()),smiNode->getIndices(smiNode->getMatStart()),smiNode->getStarts(smiNode->getMatStart()));
-    }
-
-    bool CompareWithZero( double value ) 
-    {
-        return std::abs(value) < ParallelNestedBenders::zero_tolerance_;
     }
 
     bool CompareForEquality( double first, double second, double tolerance )
@@ -1243,6 +1317,9 @@ namespace parallel_benders {
 
     }
 
+    void OsiStochasticParallelNestedBendersTwoStageSolverInterface::setParameters(const parallel_benders::Parameter& parameters){
+        nested_benders_->parameter_ = parameters;
+    }
 
 
     double OsiStochasticParallelNestedBendersTwoStageSolverInterface::getObjValue()
@@ -1250,9 +1327,20 @@ namespace parallel_benders {
         return nested_benders_->upper_bound_;
     }
 
+    int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumIterations()
+    {
+        return nested_benders_->current_iteration_;
+    }
     void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
     {
-        nested_benders_->Solve();
+        if ( nested_benders_->parameter_.parameter_map_["Benders"] == 0.0){
+            OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
+            osi->initialSolve();
+        }
+        else {
+            nested_benders_->Init();
+            nested_benders_->Solve();
+        }
     }
 
     OsiStochasticParallelNestedBendersTwoStageSolverInterface::OsiStochasticParallelNestedBendersTwoStageSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )

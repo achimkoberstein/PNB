@@ -43,10 +43,6 @@ public:
     ~ParallelNestedBenders();
     void Solve();
 
-    // Declare static variables
-    static double zero_tolerance_;
-
-
 private:
     void Init();
     // High-level methods we need during the algorithm
@@ -67,7 +63,8 @@ private:
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
     OsiSolverInterface* GetSolverByThread();
-    
+    bool CompareWithZero( double value );
+
     // Constant values
     const int kT;
     const int kW;
@@ -89,7 +86,11 @@ private:
     double infinity_;
     bool contains_integer_;
 
+    // Parameter map:
+    Parameter parameter_;
+
     // Important solution data
+    double zero_tolerance_;
     double integer_tolerance_;
     double absolute_epsilon_;
     double relative_epsilon_;
@@ -107,6 +108,8 @@ private:
     bool forward_;
     bool infeasible_problem_;
     boost::dynamic_bitset<> infeasible_problems_;
+
+    TimerStruct timer_;
 
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
@@ -135,8 +138,6 @@ private:
 
 bool CompareForEquality( double first, double second, double tolerance);
 
-bool CompareWithZero( double value);
-
 bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon);
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
@@ -151,7 +152,8 @@ public:
     void initialSolve();
 
     double getObjValue();
-
+    void setParameters(const parallel_benders::Parameter& parameters);
+    int getNumIterations();
     //inline void setParams(BendersParameter &params) { this->params = params; }
 
     //inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { params.setIntParam(param, val); }

@@ -8,6 +8,8 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <sys/stat.h>
 
 #include <glog/logging.h>
 
@@ -18,10 +20,15 @@
 #include "flopc.hpp"
 
 
+#include "BendersNodeData.hpp"
 #include "ParallelNestedBenders.hpp"
+
 
 class NestedBendersTest: public ::testing::Test {
 public:
+
+    parallel_benders::Parameter benders_parameter_; // Used to store parameters
+
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
     }
@@ -29,46 +36,147 @@ public:
         return solveSMPS(core_time_name, core_time_name,stoch_name);
     }
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
-        // Read in model
+        // Start with single cut
+        std::vector<double> solutions;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 0.0;
+        benders_parameter_.parameter_map_["ScenariosProCut"] = 0.0;
+        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.8;
+        // Go on with static cut
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.6;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.4;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.2;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 1;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        SmiScnModel smi;
-        OsiCpxSolverInterface osi_cpx;
-        smi.setOsiSolverHandle(osi_cpx);
+        double average = 0;
+        for (int i = 0; i < solutions.size(); i++)
+            average += solutions[i];
+        average = average / solutions.size();
+        return average;
+ 
+    }
+
+    bool FileExists(const char* filename) 
+    {
+        struct stat info;
+        int ret = -1;
+
+        //get the file attributes
+        ret = stat(filename, &info);
+        if(ret == 0) 
+        {
+            //stat() is able to get the file attributes,
+            //so the file obviously exists
+            return true;
+        } 
+        else 
+        {
+            //stat() is not able to get the file attributes,
+            //so the file obviously does not exist or
+            //more capabilities is required
+            return false;
+        }
+    }
+
+protected:
+    NestedBendersTest() {
+        benders_parameter_.init();
+    }
+    virtual ~NestedBendersTest(){}
+    virtual void SetUp(){}
+    virtual void TearDown(){}
+
+    double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name ){
         // We set the correct folder here: All files are in Benders/instances
         std::string folder("../../../../Benders/test/instances/");
-        #if _M_X64 || __x86_64__ // Works only on windows i suppose
+#if _M_X64 || __x86_64__ // Works only on windows i suppose
         folder = "../../../../../Benders/test/instances/";
-        #endif
+#endif
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
         std::string stoch_name_string(stoch_name);
         std::string total_core_string = folder+core_name_string;
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
+        // This can be done in a loop.
+        double time = CoinCpuTime();  
+        SmiScnModel smi;
+        OsiCpxSolverInterface osi_cpx;
+        smi.setOsiSolverHandle(osi_cpx);
         int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        //OsiSolverInterface* osi_ptr = smi.loadOsiSolverData();
-        //osi_ptr->initialSolve();
-        //double solution = osi_ptr->getObjValue();
         if ( read_in!= 0 ){
             LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
             return -osi_cpx.getInfinity();
         }
-
-        double time = CoinCpuTime();  
         // Load ParallelNestedBendersSolver
+        double solver_time = CoinCpuTime();
         parallel_benders::OsiStochasticParallelNestedBendersTwoStageSolverInterface nested_benders(&osi_cpx,&smi);
+        nested_benders.setParameters(benders_parameter_);
         nested_benders.initialSolve();
-        time = CoinCpuTime()-time;
+        solver_time = CoinCpuTime()-solver_time; // Solver only time
+        time = CoinCpuTime()-time; // Overall WallClockTime;
         LOG(INFO) << "Solution Time: " << time;
-        //EXPECT_NEAR(solution,nested_benders.getObjValue(),0.1);
+
+        // Write to log file
+        ofstream log_file;
+        std::string log_file_name; // <- set name according to Parameters..
+        // File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
+        std::stringstream s;
+        int aggregated_cuts = (int) benders_parameter_.parameter_map_["AggregatedOptimalityCuts"];
+        if ( aggregated_cuts == 0 ){ // We do some Percent/Fixed Aggregation (or dynamic.. beware)
+            if ( benders_parameter_.parameter_map_["ScenariosProCut"] > 0 )
+                s << "StaticAggregationFixed-" << benders_parameter_.parameter_map_["ScenariosProCut"];
+            else
+                s << "StaticAggregationPercent-"  << benders_parameter_.parameter_map_["PercentScenariosProCut"];
+        }
+        else{
+            if ( aggregated_cuts == 1)// Single
+                s << "Single";
+            else if ( aggregated_cuts >= smi.getNumScenarios())
+                s << "Multi";
+            else
+                s << "StaticAggregation-" << aggregated_cuts;
+        }
+        s << ".csv";
+        log_file_name = s.str();
+
+        if ( !FileExists(log_file_name.c_str() )){
+            // We need to write the header line for this file
+            std::stringstream s;
+            s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+            // Write all the parameters you like
+            for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
+                s << (*it).first << "; ";
+            }
+            s << "Date; Time";
+            log_file.open(log_file_name.c_str(),ios::app | ios::out);
+            log_file << s.str() << std::endl;
+        }
+        else {
+            log_file.open(log_file_name.c_str(),ios::app | ios::out);
+        }
+        // Write solution line
+        log_file << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+        // Write parameter values
+        for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
+            log_file << (*it).second << "; ";
+        }
+        // Write date/time stamp
+        char sdate[9];
+        char stime[9];
+        log_file << _strdate(sdate) << "; " << _strtime(stime);
+        log_file << std::endl;
+        log_file.close();
+
         return nested_benders.getObjValue();
     }
-protected:
-    NestedBendersTest() {}
-    virtual ~NestedBendersTest(){}
-    virtual void SetUp(){}
-    virtual void TearDown(){}
 };
+
 
 TEST_F(NestedBendersTest,BirgeLouveuxFarmersTest){
     using namespace flopc; // Do not do this ;)
@@ -129,9 +237,9 @@ TEST_F(NestedBendersTest, gas) { // ok
 }
 
 TEST_F(NestedBendersTest, rand) { // takes long to solve
-    //EXPECT_NEAR(solveSMPS("rand0_2000"), 162.146, 0.1);
+    EXPECT_NEAR(solveSMPS("rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("rand0_4000"), 199.032, 0.1);
-    EXPECT_NEAR(solveSMPS("rand0_6000"), 140.275, 0.1);
+    //EXPECT_NEAR(solveSMPS("rand0_6000"), 140.275, 0.1);
     //EXPECT_NEAR(solveSMPS("rand0_8000"), 170.318, 0.1);
     //EXPECT_NEAR(solveSMPS("rand0_10000"), 139.129, 0.1);
     //EXPECT_NEAR(solveSMPS("rand1_2000"), 244.159, 0.1);
@@ -370,7 +478,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.rand";
+    ::testing::GTEST_FLAG(filter) = "*.gas";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
