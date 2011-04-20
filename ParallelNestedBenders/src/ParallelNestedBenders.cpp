@@ -170,31 +170,20 @@ namespace parallel_benders {
             }
             // Multicut Aggregation
             if ( string == "AggregatedOptimalityCuts" ){ // Number of Cuts per stage..
-                if ( value == 0 ){
+                if ( value <= 0 ){
                     // Use something you like
                     num_theta = 0;
                     // Check if other values are OK
-                    if ( parameter_.parameter_map_["ScenariosProCut"] <= 0.0 ){
-                        // We need to check for correctness of percentage
-                        if ( parameter_.parameter_map_["PercentScenariosPerCut"] >= 100){
-                            // use single cut
-                            num_theta = 1;
-                        }
-                        if ( parameter_.parameter_map_["PercentScenariosPerCut"] <= 0){
-                            // use multi cut
-                            num_theta = num_scenarios_;
-                        }
-                        else {
-                            percent_theta =  parameter_.parameter_map_["PercentScenariosPerCut"];
-                        }
-                    }
-                    else {
-                        num_scen_pro_cut = std::min(num_scenarios_,(int)parameter_.parameter_map_["ScenariosProCut"]);
-                    }
-                }
-                else
-                    num_theta = value;
-            }
+					if ( parameter_.parameter_map_["ScenariosProCut"] <= 0.0 ){
+						LOG(INFO) << "You specified something that is impossible. Using single cuts.";
+						num_theta = 1;
+					}
+					num_scen_pro_cut = (int) parameter_.parameter_map_["ScenariosProCut"];
+				}
+				else
+					num_theta = (int) value;
+			}
+                        
             // Dynamic aggregation
             if ( string == "DynamicAggregation" ){
                 // TODO: Do something in this case.
@@ -243,10 +232,8 @@ namespace parallel_benders {
         tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
         // Set multicut aggregation for the first stage also
         // Set multicut aggregation
-        if ( num_theta == 0.0 ){
+        if ( num_theta == 0 ){
             if ( num_scen_pro_cut == num_scenarios_ ) // Set percentage value
-                tree_nodes_by_stage_[0].back()->getDataPtr()->percent_scen_pro_cut_ = percent_theta;
-            else // Set fixed value
                 tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
         }
         for (int i = 1; i < num_stages_; i++) {
@@ -260,11 +247,8 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
                     number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
                     // Set multicut aggregation
-                    if ( num_theta == 0.0 ){
-                        if ( num_scen_pro_cut == num_scenarios_ ) // Set percentage value
-                            tree_nodes_by_stage_[i].back()->getDataPtr()->percent_scen_pro_cut_ = percent_theta;
-                        else // Set fixed value
-                            tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+                    if ( num_theta == 0 ){
+	                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
                     }
                 }
                 delete children;
@@ -961,22 +945,21 @@ namespace parallel_benders {
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         // We need all the children of this node..
         int num_childs = benders_tree_node_pointer->numChildren();
+		// Num Subproblem per cu 
+		int num_subproblems_per_cut = std::ceil( ((double)num_childs)/num_cuts );
         // If num_cuts is zero, we have a node wise rule..
         if (num_cuts == 0){ // Node wise rule
-            if ( benders_tree_node_pointer->getDataPtr()->percent_or_fixed_ ){
-                // Percent: Compute percentage
-                double percent = benders_tree_node_pointer->getDataPtr()->percent_scen_pro_cut_;
-                assert( percent>0 && percent<= 1);
-                num_cuts = std::ceil(1/percent);
-            }
-            else {
-                // Fixed
-                assert( benders_tree_node_pointer->getDataPtr()->num_scen_pro_cut_ >= 0);
-                num_cuts = std::min(num_childs,benders_tree_node_pointer->getDataPtr()->num_scen_pro_cut_);
-            }
-        }
+			// Set num_subproblems_per_cut if we did not set
+			num_subproblems_per_cut = std::min(num_childs,benders_tree_node_pointer->getDataPtr()->num_scen_pro_cut_);
+			// Compute number of cuts we need for this number of subproblems per cut
+			num_cuts = std::ceil(((double)num_childs)/num_subproblems_per_cut);
+			assert(num_cuts >= 1);
+			
+		}
+		assert(num_subproblems_per_cut >= 1);
+        
         // TODO: Ignore "cuts" that were not created, due to multicut condition ( theta_k >= solution value of subproblem)
-        int num_subproblems_per_cut = std::ceil( ((double)num_childs)/num_cuts );
+    
 
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
 

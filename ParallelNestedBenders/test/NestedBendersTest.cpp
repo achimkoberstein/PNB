@@ -28,6 +28,7 @@ class NestedBendersTest: public ::testing::Test {
 public:
 
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
+	std::string testbed_log_file_string_;
 
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
@@ -38,19 +39,22 @@ public:
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut
         std::vector<double> solutions;
+		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 1;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 0.0;
-        benders_parameter_.parameter_map_["ScenariosProCut"] = 0.0;
-        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.8;
+        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 2;
         // Go on with static cut
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.6;
+        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 4;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.4;
+        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 8;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 0.2;
+        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 16;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_map_["PercentScenariosProCut"] = 1;
+        benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 32;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 64;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 128;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         double average = 0;
@@ -88,7 +92,23 @@ protected:
         benders_parameter_.init();
     }
     virtual ~NestedBendersTest(){}
-    virtual void SetUp(){}
+    virtual void SetUp(){
+		testbed_log_file_string_ = "Results.csv";
+		if ( !FileExists(testbed_log_file_string_.c_str() ) ){
+		// Write title line.
+			std::stringstream s;
+            s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+            // Write all the parameters you like
+            for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
+                s << (*it).first << "; ";
+            }
+            s << "Date; Time";
+			ofstream log_file;
+			log_file.open(testbed_log_file_string_.c_str(), ios::app | ios::out);
+			log_file << s.str() << std::endl;
+			log_file.close();
+		}
+	}
     virtual void TearDown(){}
 
     double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name ){
@@ -129,15 +149,15 @@ protected:
         std::stringstream s;
         int aggregated_cuts = (int) benders_parameter_.parameter_map_["AggregatedOptimalityCuts"];
         if ( aggregated_cuts == 0 ){ // We do some Percent/Fixed Aggregation (or dynamic.. beware)
-            if ( benders_parameter_.parameter_map_["ScenariosProCut"] > 0 )
-                s << "StaticAggregationFixed-" << benders_parameter_.parameter_map_["ScenariosProCut"];
-			else if ( benders_parameter_.parameter_map_["PercentScenariosProCut"] >= 1.0 )
-				s << "Single";
+			if ( benders_parameter_.parameter_map_["ScenariosProCut"] > 0 ){
+                s << "StaticScenariosProCut-" << benders_parameter_.parameter_map_["ScenariosProCut"];
+				if ( benders_parameter_.parameter_map_["ScenariosProCut"] >= smi.getNumScenarios())
+					s << "Multi";
 
-			else if ( benders_parameter_.parameter_map_["PercentScenariosProCut"] <= 0.0 )
-				s << "Multi"  << benders_parameter_.parameter_map_["PercentScenariosProCut"];
-			else
-				s << "StaticAggregationPercent-"  << benders_parameter_.parameter_map_["PercentScenariosProCut"];
+			}
+			else {
+				LOG(FATAL) << "Misspecified Parameters?!";
+			}
         }
         else{
             if ( aggregated_cuts == 1)// Single
@@ -149,10 +169,11 @@ protected:
         }
         s << ".csv";
         log_file_name = s.str();
+		// Reset stringstream
+		s.str("");
 
         if ( !FileExists(log_file_name.c_str() )){
             // We need to write the header line for this file
-            std::stringstream s;
             s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
             // Write all the parameters you like
             for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
@@ -161,22 +182,34 @@ protected:
             s << "Date; Time";
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
             log_file << s.str() << std::endl;
+			// Reset stringstream
+			s.str("");
         }
         else {
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
         }
         // Write solution line
-        log_file << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+		s.clear(); 
+        s << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
         // Write parameter values
         for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
-            log_file << (*it).second << "; ";
+            s << (*it).second << "; ";
         }
         // Write date/time stamp
         char sdate[9];
         char stime[9];
-        log_file << _strdate(sdate) << "; " << _strtime(stime);
-        log_file << std::endl;
+        s << _strdate(sdate) << "; " << _strtime(stime);
+        s << std::endl;
+		log_file << s.str();
         log_file.close();
+
+
+		// Write to testbed log file
+		ofstream testbed_log_file;
+		testbed_log_file.open(testbed_log_file_string_.c_str(),ios::app | ios::out);
+		testbed_log_file << s.str();
+		testbed_log_file.close();
+
 
         return nested_benders.getObjValue();
     }

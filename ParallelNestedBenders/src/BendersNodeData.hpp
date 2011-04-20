@@ -57,8 +57,6 @@ public:
     std::vector<OsiRowCut* > feasibility_cuts_;
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;
-    double percent_scen_pro_cut_;
-    bool percent_or_fixed_; // True = percent, false = fixed
 
     // Values for cut aggregation
     std::vector<double> current_cut_coefficients_;
