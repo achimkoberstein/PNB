@@ -17,7 +17,7 @@ namespace parallel_benders{
 
 BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),warm_start_(NULL),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),percent_scen_pro_cut_(0),percent_or_fixed_(false),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL)
 
 {
@@ -25,7 +25,7 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),warm_start_(NULL),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),percent_scen_pro_cut_(0),percent_or_fixed_(false),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL)
 {
 
@@ -190,8 +190,7 @@ void Parameter::init()
 
     // Aggregation of Cuts ( or single-multi cut )
     parameter_map_["AggregatedOptimalityCuts"] = 1.0;// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
-    parameter_map_["ScenariosProCut"] = 0.0; // Integer value: How many scenarios do we want in a cut? If 0 = use percentage value
-    parameter_map_["PercentScenariosProCut"] = 1.0; // Double value between 0 and 100. How many percent of scenarios we want pro cut. 
+    parameter_map_["ScenariosProCut"] = 0.0; // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
     parameter_map_["Relaxation"] = 1.0; // Solved LP relaxation instead of MIP problem, if we have a MIP problem
     parameter_map_["DynamicAggregation"] = 0.0; // Do we use Dynamic aggregation?
     //parameter_map_["TrustRegion"] = 0; // Do we want to use TrustRegion TODO: Implement this
