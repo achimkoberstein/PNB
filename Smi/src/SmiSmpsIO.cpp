@@ -235,403 +235,425 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 
 	if (ifstoch)
 	{
-		switch( smpsCardReader_->nextSmpsField() )
-		{
-		case SMI_INDEPENDENT_SECTION: // INDEPENDENT card
-		{
-			printf("Processing INDEPENDENT section\n");
 
-			// Create discrete distribution
-			SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(core);
-			SmiDiscreteRV *smiRV = NULL;
+        switch( smpsCardReader_->nextSmpsField() ) // This does not work as expected, if we expect several fields ( i.e. SMI_INDEPENDENT_SECTION and SMI_SCENARIO_SECTION ). So we have to combine these two..
+        {
+        case SMI_INDEPENDENT_SECTION: // INDEPENDENT card
+        case SMI_BLOCKS_SECTION:
+            {
+                // We need to declare a SmiBlockDistribution
+                SmiBlockStructure smiBS(core);
+                // Try to process as long we ware at the end
+                while ( smpsCardReader_->whichSmpsSection() != SMI_ENDATA_SECTION ){
 
-			CoinPackedVector drlo,drup,dclo,dcup,dobj;
-			CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
-			assert(!matrix->isColOrdered());
+                    if ( smpsCardReader_->whichSmpsSection() == SMI_INDEPENDENT_SECTION ){
+                        printf("Processing INDEPENDENT section\n");
 
-			int nrow = core->getNumRows();
-			int ncol = core->getNumCols();
-			matrix->setDimensions(nrow,ncol);
+                        // Create discrete distribution
+                        SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(core);
+                        SmiDiscreteRV *smiRV = NULL;
 
-			int oldi=-1;
-			int oldj=-1;
-					
-			while( smpsCardReader_->nextSmpsField (  ) == SMI_INDEPENDENT_SECTION ) 
-			{
-				
-				switch (smpsCardReader_->whichSmpsType())
-				{
-				case SMI_BL_CARD:
-				{
-					//this is a block 
-					// not handled yet
-					return -2;
-				}
-				case SMI_COLUMN_CARD:
-				{
-					int j=this->columnIndex(smpsCardReader_->columnName());
-					int i=this->rowIndex(smpsCardReader_->rowName());
+                        CoinPackedVector drlo,drup,dclo,dcup,dobj;
+                        CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
+                        assert(!matrix->isColOrdered());
 
-					double value = smpsCardReader_->value();
+                        int nrow = core->getNumRows();
+                        int ncol = core->getNumCols();
+                        matrix->setDimensions(nrow,ncol);
 
-					
-					if (j<0) // check RHS
-					{
-						if (!strcmp(this->getRhsName(),"")) {
-							 free(rhsName_);
-		 					 rhsName_=strdup(smpsCardReader_->columnName());
-						} else
-							assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
-						assert(!(i<0));
+                        int oldi=-1;
+                        int oldj=-1;
 
-						char c=this->getRowSense()[i];
+                        while( smpsCardReader_->nextSmpsField (  ) == SMI_INDEPENDENT_SECTION ) 
+                        {
 
-						switch(c)
-						{
-						case 'E':
-							drlo.insert(i,value);
-							drup.insert(i,value);
-							break;
-						case 'L':
-                            drup.insert(i,value);
-							//drlo.insert(i,value); <- Wrong
-							break;
-						case 'G':
-							//drup.insert(i,value); <- Wrong
-                            drlo.insert(i,value);
-							break;
-						default:
-							assert(!"bad row sense: shouldn't get here");
-							break;
-						}
-					}
-					else if(i<0 || i==getNumRows()) // check OBJ
-					{
-						assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
-						dobj.insert(j,value);
-					}
-					else	// add element
-					{
-						matrix->modifyCoefficient(i,j,value,true);
-					}
-					if ( !( (oldi==i)&&(oldj==j) ) ) // this is a new RV
-					{
-						oldi=i;
-						oldj=j;
-						// store the old one
-						if (smiRV != NULL) 
-						{
-							smiDD->addDiscreteRV(smiRV);
-						}
-						// create a new one -- row stage dominates unless is column bound
-						if (i>0)
-							smiRV = new SmiDiscreteRV(core->getRowStage(i));
-						else
-							smiRV = new SmiDiscreteRV(core->getColStage(j));
-						smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,smpsCardReader_->getProb());
-						matrix->clear();
-						dclo.clear();
-						dcup.clear();
-						dobj.clear();
-						drlo.clear();
-						drup.clear();
+                            switch (smpsCardReader_->whichSmpsType())
+                            {
+                            case SMI_BL_CARD:
+                                {
+                                    //this is a block 
+                                    // not handled yet
+                                    return -2;
+                                }
+                            case SMI_COLUMN_CARD:
+                                {
+                                    int j=this->columnIndex(smpsCardReader_->columnName());
+                                    int i=this->rowIndex(smpsCardReader_->rowName());
 
-					}
-					else
-					{
-						smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,smpsCardReader_->getProb());
-						matrix->clear();
-						dclo.clear();
-						dcup.clear();
-						dobj.clear();
-						drlo.clear();
-						drup.clear();
-					}
+                                    double value = smpsCardReader_->value();
 
 
+                                    if (j<0) // check RHS
+                                    {
+                                        if (!strcmp(this->getRhsName(),"")) {
+                                            free(rhsName_);
+                                            rhsName_=strdup(smpsCardReader_->columnName());
+                                        } else
+                                            assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
+                                        assert(!(i<0));
+                                        
+
+                                        char c=this->getRowSense()[i];
+
+                                        switch(c)
+                                        {
+                                        case 'E':
+                                            drlo.insert(i,value);
+                                            drup.insert(i,value);
+                                            break;
+                                        case 'L':
+                                            drup.insert(i,value);
+                                            //drlo.insert(i,value); <- Wrong
+                                            break;
+                                        case 'G':
+                                            //drup.insert(i,value); <- Wrong
+                                            drlo.insert(i,value);
+                                            break;
+                                        default:
+                                            assert(!"bad row sense: shouldn't get here");
+                                            break;
+                                        }
+                                    }
+                                    else if(i<0 || i==getNumRows()) // check OBJ
+                                    {
+                                        assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
+                                        dobj.insert(j,value);
+                                    }
+                                    else	// add element
+                                    {
+                                        matrix->modifyCoefficient(i,j,value,true);
+                                    }
+                                    if ( !( (oldi==i)&&(oldj==j) ) ) // this is a new RV
+                                    {
+                                        oldi=i;
+                                        oldj=j;
+                                        // store the old one
+                                        if (smiRV != NULL) 
+                                        {
+                                            smiDD->addDiscreteRV(smiRV);
+                                        }
+                                        // create a new one -- row stage dominates unless is column bound
+                                        if (i>0 && i < nrow)// If i == nrow, we have objective function value..
+                                            smiRV = new SmiDiscreteRV(core->getRowStage(i));
+                                        else
+                                            smiRV = new SmiDiscreteRV(core->getColStage(j));
+                                        assert(smiRV->getStage() >= 0 && smiRV->getStage()<= nstag_);
+                                        smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,smpsCardReader_->getProb());
+                                        matrix->clear();
+                                        dclo.clear();
+                                        dcup.clear();
+                                        dobj.clear();
+                                        drlo.clear();
+                                        drup.clear();
+
+                                    }
+                                    else
+                                    {
+                                        smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,smpsCardReader_->getProb());
+                                        matrix->clear();
+                                        dclo.clear();
+                                        dcup.clear();
+                                        dobj.clear();
+                                        drlo.clear();
+                                        drup.clear();
+                                    }
 
 
-				}
-				break;
-				case SMI_UNKNOWN_MPS_TYPE:
-				default:
-					return -2;
-				}
-			}
-			
-			if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
-			{
-                // store the old one
-                if (smiRV != NULL) 
-                {
-                    smiDD->addDiscreteRV(smiRV);
-                }
-				//process discrete distribution
-				smi->processDiscreteDistributionIntoScenarios(smiDD);
-				return 0;
-			}
-			else
-				return -2;
-			
 
-		}
 
-		case SMI_SCENARIOS_SECTION: // SCENARIOS card
-		{
-			double prob=0.0;
-			int scen=0,anc=0;
-			int branch=0;
-			CoinPackedVector drlo,drup,dclo,dcup,dobj;
-			CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
-			assert(!matrix->isColOrdered());
+                                }
+                                break;
+                            case SMI_UNKNOWN_MPS_TYPE:
+                            default:
+                                return -2;
+                            }
+                        }
 
-			int nrow = core->getNumRows();
-			int ncol = core->getNumCols();
-			matrix->setDimensions(nrow,ncol);
+                        if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
+                        {
+                            // store the old one
+                            if (smiRV != NULL) 
+                            {
+                                smiDD->addDiscreteRV(smiRV);
+                            }
+                            //process discrete distribution
+                            smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                            //smi->processDiscreteDistributionIntoScenarios(smiDD);
+                            return 0;
+                        }
+                        else if ( smpsCardReader_->whichSmpsSection() == SMI_BLOCKS_SECTION){
 
-			while( smpsCardReader_->nextSmpsField (  ) == SMI_SCENARIOS_SECTION ) 
-			{
-				if (smpsCardReader_->whichSmpsType() == SMI_SC_CARD)
-				{
-					if (scen)
-					{
-						
-						smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
-						matrix->clear();
-						dclo.clear();
-						dcup.clear();
-						dobj.clear();
-						drlo.clear();
-						drup.clear();
-						
-						matrix->setDimensions(nrow,ncol);
+                            // store the old one
+                            if (smiRV != NULL) 
+                            {
+                                smiDD->addDiscreteRV(smiRV);
+                            }
+                            smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                        }
+                        else
+                            return -2;
 
-					}
 
-					std::string SunStudioNeedsThis = smpsCardReader_->scenarioNew() ;
-					scenarioMap_.insert(make_pair(SunStudioNeedsThis,scen++));
-					prob = smpsCardReader_->value();
-					if (!strncmp(smpsCardReader_->scenarioAnc(),"ROOT",4))
-						anc = 0;
-					else
-						anc = scenarioMap_[smpsCardReader_->scenarioAnc()];
-					branch = periodMap_[smpsCardReader_->periodName()];
-				}
-				else if(smpsCardReader_->whichSmpsType() == SMI_COLUMN_CARD)
-				{
-					int j=this->columnIndex(smpsCardReader_->columnName());
-					int i=this->rowIndex(smpsCardReader_->rowName());
-					double value = smpsCardReader_->value();
 
-					
-					if (j<0) // check RHS
-					{
-						if (!strcmp(this->getRhsName(),"")) {
-							 free(rhsName_);
-		 					 rhsName_=strdup(smpsCardReader_->columnName());
-						} else
-							assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
-						assert(!(i<0));
+                    }
+                    if ( smpsCardReader_->whichSmpsSection() == SMI_BLOCKS_SECTION ){
+                        printf("Processing BLOCK section\n");
+                        // Create Block-Structure
+                        SmiBlock *smiBlock = NULL;
 
-						char c=this->getRowSense()[i];
+                        CoinPackedVector drlo,drup,dclo,dcup,dobj;
+                        CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
+                        assert(!matrix->isColOrdered());
 
-						switch(c)
-						{
-						case 'E':
-							drlo.insert(i,value);
-							drup.insert(i,value);
-							break;
-						case 'L':
-							//drlo.insert(i,value);
-							drup.insert(i,value);
-							break;
-						case 'G':
-							//drup.insert(i,value);
-							drlo.insert(i,value);
-							break;
-						default:
-							assert(!"bad row sense: shouldn't get here");
-							break;
-						}
-					}
-					else if(i<0 || i==getNumRows()) // check OBJ
-					{
-						assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
-						dobj.insert(j,value);
-					}
-					else	// add element
-					{
-						matrix->modifyCoefficient(i,j,value,true);
-					}
-				}
-				
-				else // unknown type
-					return -1;
+                        int nrow = core->getNumRows();
+                        int ncol = core->getNumCols();
+                        matrix->setDimensions(nrow,ncol);
 
-			} // while
+                        char* blName=NULL;
+                        int block=0;
+                        double prob=0.0;
+                        const char* periodName=NULL;
+                        int branch = 0;
 
-			if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
-				{
-					if (scen)
-					{
-						
-						smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
-						
-					}
-					delete matrix;
-					return 0;
-				}
-            else{
+                        while( smpsCardReader_->nextSmpsField (  ) == SMI_BLOCKS_SECTION ) 
+                        {
 
-                return -1; // If we have a scenario section, nothing else is allowed here. We assume a missing ENDATA
-            }
+                            switch (smpsCardReader_->whichSmpsType())
+                            {
+                            case SMI_BL_CARD:
+                                {
+                                    branch = periodMap_[smpsCardReader_->periodName()];
+                                    if(blName!=NULL){
+                                        smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
 
-		} 
-		case SMI_BLOCKS_SECTION://BLOCKS card
-		{
-			// Create Block-Structure
-			SmiBlockStructure *smiBS = new SmiBlockStructure(core);
-			SmiBlock *smiBlock = NULL;
+                                        //first event of a block
+                                        if(strcmp(blName,smpsCardReader_->blockName())){
+                                            smiBS.addSmiBlock(smiBlock);
+                                            //delete smiBlock;
 
-			CoinPackedVector drlo,drup,dclo,dcup,dobj;
-			CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
-			assert(!matrix->isColOrdered());
+                                            smiBlock = new SmiBlock(branch);
+                                            // Delete the old blName first
+                                            delete [] blName;
+                                            blName = new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
+                                            strcpy(blName,smpsCardReader_->blockName());
+                                        }
+                                        matrix->clear();
+                                        drlo.clear();
+                                        drup.clear();
+                                        dclo.clear();
+                                        dcup.clear();
+                                        dobj.clear();
 
-			int nrow = core->getNumRows();
-			int ncol = core->getNumCols();
-			matrix->setDimensions(nrow,ncol);
+                                        matrix->setDimensions(nrow,ncol);
+                                    }
+                                    else{
+                                        smiBlock = new SmiBlock(branch);
+                                        blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
+                                        strcpy(blName,smpsCardReader_->blockName());
+                                    }
 
-			char* blName=NULL;
-			int block=0;
-			double prob=0.0;
-			const char* periodName=NULL;
-            int branch = 0;
-					
-			while( smpsCardReader_->nextSmpsField (  ) == SMI_BLOCKS_SECTION ) 
-			{
+                                    prob = smpsCardReader_->value();
+                                    break;
+                                }
+                            case SMI_COLUMN_CARD:
+                                {
+                                    int j=this->columnIndex(smpsCardReader_->columnName());
+                                    int i=this->rowIndex(smpsCardReader_->rowName());
+                                    double value = smpsCardReader_->value();
 
-				switch (smpsCardReader_->whichSmpsType())
-				{
-				case SMI_BL_CARD:
-				{
-                    branch = periodMap_[smpsCardReader_->periodName()];
-					if(blName!=NULL){
-						smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
-									
-						//first event of a block
-						if(strcmp(blName,smpsCardReader_->blockName())){
-							smiBS->addSmiBlock(smiBlock);
-							//delete smiBlock;
-							
-							smiBlock = new SmiBlock(branch);
-                            // Delete the old blName first
-                            delete [] blName;
-							blName = new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
-   							strcpy(blName,smpsCardReader_->blockName());
-						}
-						matrix->clear();
-						drlo.clear();
-						drup.clear();
-						dclo.clear();
-						dcup.clear();
-						dobj.clear();
+                                    if (j<0) // check RHS
+                                    {
+                                        if (!strcmp(this->getRhsName(),"")) {
+                                            free(rhsName_);
+                                            rhsName_=strdup(smpsCardReader_->columnName());
+                                        } else
+                                            assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
+                                        assert(!(i<0));
 
-						matrix->setDimensions(nrow,ncol);
-					}
-					else{
-						smiBlock = new SmiBlock(branch);
-						blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
-						strcpy(blName,smpsCardReader_->blockName());
-					}
-					
-					prob = smpsCardReader_->value();
-					break;
-				}
-				case SMI_COLUMN_CARD:
-				{
-					int j=this->columnIndex(smpsCardReader_->columnName());
-					int i=this->rowIndex(smpsCardReader_->rowName());
-					double value = smpsCardReader_->value();
+                                        char c=this->getRowSense()[i];
 
-					if (j<0) // check RHS
-					{
-						if (!strcmp(this->getRhsName(),"")) {
-							 free(rhsName_);
-		 					 rhsName_=strdup(smpsCardReader_->columnName());
-						} else
-							assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
-						assert(!(i<0));
+                                        switch(c)
+                                        {
+                                        case 'E':
+                                            drlo.insert(i,value);
+                                            drup.insert(i,value);
+                                            break;
+                                        case 'L':
+                                            //drlo.insert(i,value);
+                                            drup.insert(i,value);
+                                            break;
+                                        case 'G':
+                                            //drup.insert(i,value);
+                                            drlo.insert(i,value);
+                                            break;
+                                        default:
+                                            assert(!"bad row sense: shouldn't get here");
+                                            break;
+                                        }
+                                    }
+                                    else if(i<0 || i==getNumRows()) // check OBJ
+                                    {
+                                        assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
+                                        dobj.insert(j,value);
+                                    }
+                                    else	// add element
+                                    {
+                                        matrix->modifyCoefficient(i,j,value);
+                                    }
+                                    break;
+                                }
 
-						char c=this->getRowSense()[i];
 
-						switch(c)
-						{
-						case 'E':
-							drlo.insert(i,value);
-							drup.insert(i,value);
-							break;
-						case 'L':
-							//drlo.insert(i,value);
-							drup.insert(i,value);
-							break;
-						case 'G':
-							//drup.insert(i,value);
-							drlo.insert(i,value);
-							break;
-						default:
-							assert(!"bad row sense: shouldn't get here");
-							break;
-						}
-					}
-					else if(i<0 || i==getNumRows()) // check OBJ
-					{
-						assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
-						dobj.insert(j,value);
-					}
-					else	// add element
-					{
-						matrix->modifyCoefficient(i,j,value);
-					}
-					break;
-				}
-				
-				
-				case SMI_UNKNOWN_MPS_TYPE:
-                default:{
-                    // Clean up used memory before we exit
-                    delete [] blName;
-                    delete smiBS;
-                    delete matrix;
-                    return -2;
+                            case SMI_UNKNOWN_MPS_TYPE:
+                            default:{
+                                // Clean up used memory before we exit
+                                delete [] blName;
+                                delete matrix;
+                                return -2;
+
+                                    }
+                            }
+                        }
+
+                        delete [] blName;
+
+                        if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
+                        {
+                            smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                            smiBS.addSmiBlock(smiBlock);
+                            delete matrix;
 
                         }
-				}
-			}
+                        else{
+                            delete matrix;
+                            return -2;
+                        }
 
-            delete [] blName;
-			
-			if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
-			{
-				smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
-				smiBS->addSmiBlock(smiBlock);
-				
-				//process SmiBlockStructure into Scenarios
-				smi->processBlockStructureIntoScenarios(smiBS);
-				delete smiBS;
-                delete matrix;
-				return 0;
-			}
-            else{
-                delete smiBS;
-                delete matrix;
-				return -2;
-            }
 
-		}
+                    }
+                }// End While
+                //process SmiBlockStructure into Scenarios
+                smi->processBlockStructureIntoScenarios(&smiBS);
+                return 0;
 
-		default:// didn't recognize section
-		return -1;
-		}
+               
+            }// End case 
+
+        case SMI_SCENARIOS_SECTION: // SCENARIOS card
+            {
+                double prob=0.0;
+                int scen=0,anc=0;
+                int branch=0;
+                CoinPackedVector drlo,drup,dclo,dcup,dobj;
+                CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
+                assert(!matrix->isColOrdered());
+
+                int nrow = core->getNumRows();
+                int ncol = core->getNumCols();
+                matrix->setDimensions(nrow,ncol);
+
+                while( smpsCardReader_->nextSmpsField (  ) == SMI_SCENARIOS_SECTION ) 
+                {
+                    if (smpsCardReader_->whichSmpsType() == SMI_SC_CARD)
+                    {
+                        if (scen)
+                        {
+
+                            smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
+                            matrix->clear();
+                            dclo.clear();
+                            dcup.clear();
+                            dobj.clear();
+                            drlo.clear();
+                            drup.clear();
+
+                            matrix->setDimensions(nrow,ncol);
+
+                        }
+
+                        std::string SunStudioNeedsThis = smpsCardReader_->scenarioNew() ;
+                        scenarioMap_.insert(make_pair(SunStudioNeedsThis,scen++));
+                        prob = smpsCardReader_->value();
+                        if (!strncmp(smpsCardReader_->scenarioAnc(),"ROOT",4))
+                            anc = 0;
+                        else
+                            anc = scenarioMap_[smpsCardReader_->scenarioAnc()];
+                        branch = periodMap_[smpsCardReader_->periodName()];
+                    }
+                    else if(smpsCardReader_->whichSmpsType() == SMI_COLUMN_CARD)
+                    {
+                        int j=this->columnIndex(smpsCardReader_->columnName());
+                        int i=this->rowIndex(smpsCardReader_->rowName());
+                        double value = smpsCardReader_->value();
+
+
+                        if (j<0) // check RHS
+                        {
+                            if (!strcmp(this->getRhsName(),"")) {
+                                free(rhsName_);
+                                rhsName_=strdup(smpsCardReader_->columnName());
+                            } else
+                                assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
+                            assert(!(i<0));
+
+                            char c=this->getRowSense()[i];
+
+                            switch(c)
+                            {
+                            case 'E':
+                                drlo.insert(i,value);
+                                drup.insert(i,value);
+                                break;
+                            case 'L':
+                                //drlo.insert(i,value);
+                                drup.insert(i,value);
+                                break;
+                            case 'G':
+                                //drup.insert(i,value);
+                                drlo.insert(i,value);
+                                break;
+                            default:
+                                assert(!"bad row sense: shouldn't get here");
+                                break;
+                            }
+                        }
+                        else if(i<0 || i==getNumRows()) // check OBJ
+                        {
+                            assert(!strcmp(smpsCardReader_->rowName(),this->getObjectiveName()));
+                            dobj.insert(j,value);
+                        }
+                        else	// add element
+                        {
+                            matrix->modifyCoefficient(i,j,value,true);
+                        }
+                    }
+
+                    else // unknown type
+                        return -1;
+
+                } // while
+
+                if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
+                {
+                    if (scen)
+                    {
+
+                        smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
+
+                    }
+                    delete matrix;
+                    return 0;
+                }
+                else{
+
+                    return -1; // If we have a scenario section, nothing else is allowed here. We assume a missing ENDATA
+                }
+
+            } 
+     
+        default:// didn't recognize section
+            return -1;
+        }
 
 		
 

@@ -121,20 +121,13 @@ namespace parallel_benders {
         num_scenarios_ = smi_->getNumScenarios();
         num_stages_ = core_->getNumStages();
 
-        // Do a quick check :
-        double total_prob = 0;
-        for (int i = 0; i < num_scenarios_; i++){
-            total_prob += smi_->getScenarioProb(i);
-        }
-        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
-
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
             osi_solver_ = new OsiCpxSolverInterface();
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
 
-        // Set infinity to solver infinity
+          // Set infinity to solver infinity
         infinity_ = osi_solver_->getInfinity();
         lower_bound_ = -infinity_;
         upper_bound_ = infinity_;
@@ -190,6 +183,15 @@ namespace parallel_benders {
                 // TODO: Find Strategies and implement them
             }
         }
+
+        // Do a quick check :
+        double total_prob = 0;
+        for (int i = 0; i < num_scenarios_; i++){
+            total_prob += smi_->getScenarioProb(i);
+        }
+        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
+
+
 
         // create our benders node objects and build the tree
         tree_ = SmiScenarioTree<BendersNodeData*>();

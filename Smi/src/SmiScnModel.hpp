@@ -109,6 +109,8 @@ public:
     */
     void processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *s, bool test=false);
 
+    void processDiscreteDistributionIntoBlocks(SmiDiscreteDistribution *smiDD, SmiBlockStructure * smiBS);
+
     /** Set the model probabilty, the sum of the probabilities of all scenarios.
     @param p the total probability
     */
@@ -321,6 +323,7 @@ public:
     @return the SMI tree
     */
     inline SmiScenarioTree<SmiScnNode *> * getSmiTree() { return &smiTree_; }
+
 private:
     CoinMessageHandler *handler_;
     SmiMessage *messages_;
