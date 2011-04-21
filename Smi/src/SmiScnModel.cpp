@@ -10,6 +10,8 @@
 #include "CoinPackedVector.hpp"
 #include <assert.h>
 #include <algorithm>
+#include <map>
+#include <vector>
 
 #include "CoinTime.hpp"
 
@@ -1397,6 +1399,109 @@ void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &ds
         delt1[dfirst.findIndex(indx2[j])] = delt2[j];
 }
 
+void SmiScnModel::processDiscreteDistributionIntoBlocks(SmiDiscreteDistribution *smiDD,SmiBlockStructure * smiBS){
+
+    SmiCoreData *core=smiDD->getCore();
+
+    int nindp = smiDD->getNumRV();
+    int nstages = core->getNumStages();
+    assert(nstages>0);
+
+    // Iterate over all RV to get the number of blocks we need..
+    int num_blocks = 1;
+    std::map<int,std::vector<SmiDiscreteRV*> > stage_rv_map;
+    for (int i = 1; i< nstages; i++)
+        stage_rv_map[i] = std::vector<SmiDiscreteRV*> (0);
+    for (int i = 0; i< nindp;i++){
+        num_blocks *= smiDD->getDiscreteRV(i)->getNumEvents();
+        assert( smiDD->getDiscreteRV(i)->getStage()>= 0 && smiDD->getDiscreteRV(i)->getStage()< nstages);
+        stage_rv_map[smiDD->getDiscreteRV(i)->getStage()].push_back(smiDD->getDiscreteRV(i));
+
+    }
+    // We need to do that stagewise..
+    for (int stage = 1; stage < nstages; stage++){
+        // Fille the map
+        // Create a new block here
+        SmiBlock* smi_block = new SmiBlock(stage);
+
+        // Fill it with zeroes
+        std::vector<SmiDiscreteRV*>& rv_vector = stage_rv_map[stage]; 
+
+        // Store the current events in a vector
+        std::vector<int> current_events(rv_vector.size(),0);
+        bool running = true;
+        while (running){
+            // Iterate over all the elements we have
+            CoinPackedMatrix matrix;
+            matrix.setDimensions(core->getNumRows(),core->getNumCols());
+            CoinPackedVector obj;
+            CoinPackedVector clo;
+            CoinPackedVector cup;
+            CoinPackedVector rlo;
+            CoinPackedVector rup;
+
+            int cur_variable = 0;
+            double prob = 1;
+            while (cur_variable < rv_vector.size()){
+                // We need to get the current event
+                int current_event = current_events[cur_variable];
+                SmiDiscreteRV* rv = smiDD->getDiscreteRV(cur_variable);
+                // Append the vector stuff to the existing ones.
+                obj.append(rv->getEventObjective(current_event));
+                clo.append(rv->getEventColLower(current_event));
+                cup.append(rv->getEventColUpper(current_event));
+                rlo.append(rv->getEventRowLower(current_event));
+                rup.append(rv->getEventRowUpper(current_event));
+                // Modify matrix elements
+                assert(rv->getEventMatrix(current_event).getNumElements() == 0);
+                const CoinPackedMatrix& matrix2(rv->getEventMatrix(current_event));
+                if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
+                    int pos = 0; // position in the elements / indice arrays
+                    const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
+                    for (int k = 0; k < matrix2.getNumRows(); k++) {
+                        pos = colStartIndices[k];
+                        for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+                            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                            pos++;
+                        }
+                    }
+                    assert( pos == matrix2.getNumElements());
+                }
+
+                // Modify probability
+                prob *= rv->getEventProb(current_event);
+                cur_variable++;
+
+            }
+            // Create SmiBlockEvent with modified matrix and stuff
+            smi_block->addBlockEvent(matrix,clo,cup,obj,rlo,rup,prob);
+
+            // go forward with the events..
+            for (int event_number = current_events.size()-1; event_number >= 0; event_number--){
+                if ( event_number == 0 && current_events[event_number] == rv_vector[event_number]->getNumEvents()-1){
+                    // We have to break outer while loop
+                    running = false;
+
+                }
+                if ( current_events[event_number] < rv_vector[event_number]->getNumEvents()-1 ){
+                    ++current_events[event_number];
+                    break;
+                }
+                else
+                    current_events[event_number] = 0;
+
+            }
+        }
+
+        // Add smi block to SmiBlockDistribution..
+        smiBS->addSmiBlock(smi_block);
+
+    // Iterate over all 
+    }
+
+
+}
+
 void
 SmiScnModel::processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *smiDD, bool test)
 
@@ -1817,7 +1922,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     CoinPackedVector combdcup;
     CoinPackedVector combdrlo;
     CoinPackedVector combdrup;
-    CoinPackedMatrix combmatrix;
+    CoinPackedMatrix combmatrix; // Set matrix size
+    combmatrix.setDimensions(core->getNumRows(),core->getNumCols());
 
     // Outer loop
     while ( current_event_by_stage[0] == 0){
@@ -1857,7 +1963,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
                 combdrup.append(current_block->getBlockEventRowUpper(current_event));
             }
             
-            if ( combmatrix.getNumElements() ){// Only do matrix processing if we matrix elements. 
+            if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
                 int pos = 0; // position in the elements / indice arrays
                 const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
                 for (int k = 0; k < matrix2.getNumRows(); k++) {
@@ -1867,6 +1973,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
                         pos++;
                     }
                 }
+                assert( pos == matrix2.getNumElements());
             }
             combprob *= current_block->getBlockEventProb(current_event);
             current_stage++;

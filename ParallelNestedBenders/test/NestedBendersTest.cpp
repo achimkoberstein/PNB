@@ -40,7 +40,7 @@ public:
         // Start with single cut
         std::vector<double> solutions;
 		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 1;
-        //benders_parameter_.parameter_map_["Benders"] = 0;
+        benders_parameter_.parameter_map_["Benders"] = 0;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
   //      benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 2;
   //      // Go on with static cut
@@ -456,12 +456,12 @@ EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
 }
 
 TEST_F(NestedBendersTest,environ_FELT){//two-stage  // Problem: We can not read INDEP and BLOCKS by now.., values not verified
-    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
-    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-lrge"),21034.731951, 0.1); // Based on Import, INDEP and BLOCKS
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-lrge"),21034.731951, 0.1); // Based on Import, INDEP and BLOCKS
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-xlrge"), 0, 0.1); // Even Larger, INDEP and BLOCKS
-    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-first"), 0, 0.1); // INDEP
+    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-first"), 0, 0.1); // INDEP
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1200"),10399.839640, 0.1); // INDEP and BLOCKS for the rest
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1875"), 10399.839640, 0.1);
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-3780"), 0, 0.1);
@@ -517,7 +517,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.scfxm_POSTS";
+    ::testing::GTEST_FLAG(filter) = "*.environ*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

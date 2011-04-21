@@ -105,7 +105,7 @@ public:
 		events_.push_back(e); 
 		prob_+=prob;
 	}
-
+    
 	inline const CoinPackedMatrix &getEventMatrix(int i)   {return events_[i]->getMatrix(); }
 	inline const CoinPackedVector &getEventColLower(int i) {return events_[i]->getColLower();}
 	inline const CoinPackedVector &getEventColUpper(int i) {return events_[i]->getColUpper();}
