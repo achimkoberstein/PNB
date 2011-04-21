@@ -1319,6 +1319,8 @@ namespace parallel_benders {
         if ( nested_benders_->parameter_.parameter_map_["Benders"] == 0.0){
             OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
             osi->initialSolve();
+            // Set solution value
+            nested_benders_->upper_bound_ = osi->getObjValue();
         }
         else {
             nested_benders_->Init();
