@@ -448,17 +448,17 @@ TEST_F(NestedBendersTest,cargo_FELT){ // values not verified
 }
 
 TEST_F(NestedBendersTest,chem_FELT){ //two-stage LP-relaxation of mixed integer problem
-EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009.166667, 0.1); // For mixed-integer case should be: 3300
+//EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009.166667, 0.1); // For mixed-integer case should be: 3300
 // Mixed-integer problem is available here: 
 EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), 3300, 0.1); // For mixed-integer case should be: 3300
 }
 
-TEST_F(NestedBendersTest,electric_FELT){ //three-stage No staircase problem. <- We can not cope with that by now..
+TEST_F(NestedBendersTest,electric_FELT){ //three-stage, No staircase problem. <- We can not cope with that by now..
 EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
 EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
 }
 
-TEST_F(NestedBendersTest,environ_FELT){//two-stage  // Problem: We can not read INDEP and BLOCKS by now.., values not verified
+TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values not verified
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
     //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS
@@ -484,6 +484,11 @@ TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values not verified
     EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -47314.99, 0.1); // seven-stage
 }
 
+TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
+    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
+    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible
+   
+}
 
 
 
@@ -520,7 +525,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
+    ::testing::GTEST_FLAG(filter) = "*.chem*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

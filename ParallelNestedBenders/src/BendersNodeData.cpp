@@ -196,7 +196,7 @@ void Parameter::init()
     //parameter_map_["TrustRegion"] = 0; // Do we want to use TrustRegion TODO: Implement this
 
     // Tolerances
-    parameter_map_["ZeroTolerance"] = std::pow(10.0,-6);
+    parameter_map_["ZeroTolerance"] = std::pow(10.0,-8);
     parameter_map_["IntegerTolerance"] = std::pow(10.0,-6);
     parameter_map_["AbsoluteEpsilon"] = std::pow(10.0,-6);
     parameter_map_["RelativeEpsilon"] = std::pow(10.0,-6);

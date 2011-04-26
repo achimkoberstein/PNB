@@ -36,6 +36,13 @@ namespace parallel_benders {
         // Check for integrality right away
         if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
             contains_integer_ = true;
+            // Set stage wise integers
+            // All binary are integer, but not all integer are binary
+            const int* integer_indices = core_->getIntegerIndices();
+            for (int i = 0; i < num_stages_;i++){
+                if ( !core_->getIntCols(i).empty() )
+                    integer_problems_[i] = true;
+            }
         }
         // What do we want to do?
         // 1. Check for stochasticity of the model 
@@ -54,6 +61,7 @@ namespace parallel_benders {
         benders_stage_ptr->num_rows_ = core_->getNumRows(stage);
         // Build core T and W matrix
         // What do I need? Assign column to either W or T matrix, so we can keep it organized.
+        // 
 
         // Reserve place. FIXME: This is necessary for CPLEX. Cplex needs pointers to the first and the last index ( which is one over the end, just like iterators )
         // We fill these arrays, so that cplex can use it to change the RHS, Columns bound and objective function coefficients
@@ -112,7 +120,7 @@ namespace parallel_benders {
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) : kT(1),kW(2),
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
-        num_stages_(0),num_scenarios_(0),infinity_(0),contains_integer_(false),parameter_(),
+        num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),infeasible_problems_(smi_->getNumScenarios()),
@@ -124,10 +132,6 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Init()
     {
-        // Set number of stages and scenarios
-        num_scenarios_ = smi_->getNumScenarios();
-        num_stages_ = core_->getNumStages();
-
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
             osi_solver_ = new OsiCpxSolverInterface();
@@ -418,8 +422,16 @@ namespace parallel_benders {
                 stage_warm_start_mutex_.unlock();
             }
         }
-        
-        osi_solver->initialSolve();
+        // MIP Solving only at first stage..
+        if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
+             // We need to set the integer indices.
+             std::vector<int> integer_indices = core_->getIntCols(current_stage_);
+             osi_solver->setInteger(&integer_indices[0],integer_indices.size());
+             osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+
+        }
+        else
+            osi_solver->initialSolve();
         //if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
@@ -447,7 +459,7 @@ namespace parallel_benders {
                 infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){
                     LOG(INFO) << "Generate feasibility cut.";
-                    GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario?
+                    GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario? Parameter/TODO
                 }
                 else
                     LOG(ERROR) << "Your master problem is infeasible.";
@@ -473,6 +485,7 @@ namespace parallel_benders {
                 if ( osi_solver->isProvenDualInfeasible() ){
                     // Stop computing: Error occured
                     LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                    upper_bound_ = infinity_;
                 }
                 if ( !osi_solver->isProvenOptimal()){
                     LOG(WARNING) << "Solver returned with an unexpected status code." ;
@@ -496,7 +509,6 @@ namespace parallel_benders {
                 }
 
         }
-        // What about dual ray stuff for feasibility??what about reduced costs then?
     }
 
     void ParallelNestedBenders::StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
@@ -1334,7 +1346,11 @@ namespace parallel_benders {
                 CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
                 CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
                 CPXbaropt(envPtr,lpPtr);
+                CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
                 // Check for errors
+                int result = CPXgetstat(envPtr,lpPtr);
+                if ( result )
+                    LOG(INFO) << "Cplex returned with status code " << result;
 
             }
             else{
@@ -1345,8 +1361,6 @@ namespace parallel_benders {
 #endif
             // Set solution value
             nested_benders_->upper_bound_ = osi->getObjValue();
- 
-
 
         }
         else {

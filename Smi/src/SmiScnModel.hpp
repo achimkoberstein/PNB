@@ -244,9 +244,9 @@ public:
     SmiScnNode * getLeafNode(SmiScenarioIndex i){ return smiTree_.getLeaf(i)->getDataPtr(); } /// returns the leaf node of a specific scenario
     SmiScnNode * getRootNode(){ return smiTree_.getRoot()->getDataPtr(); } /// returns the root node of a specific scenario
 
-    int* getIntegerInd(){ return core_->getIntegerIndices();} /// returns the indices of integer variables in the core node
+    const int* getIntegerInd(){ return core_->getIntegerIndices();} /// returns the indices of integer variables in the core node
     int getIntegerLen(){return core_->getIntegerLength(); } /// return the number of integer variables in the core node
-    int* getBinaryInd(){return core_->getBinaryIndices();} /// returns the indices of binary variables in the core node
+    const int* getBinaryInd(){return core_->getBinaryIndices();} /// returns the indices of binary variables in the core node
     int getBinaryLen(){return core_->getBinaryLength();} /// return the number of integer variables in the core node
 
     inline vector<int> getIntIndices() {return intIndices;} /// return the indices of integer variables in this smi model

@@ -3239,6 +3239,7 @@ void OsiCpxSolverInterface::freeAllMemory()
   hotStartRStat_     = NULL;
   hotStartRStatSize_ = 0;
   freeColType();
+  probtypemip_ = false;
 }
 
 //#############################################################################
