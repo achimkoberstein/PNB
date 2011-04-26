@@ -85,6 +85,8 @@ private:
     int num_scenarios_;
     double infinity_;
     bool contains_integer_;
+    // Integer information is still stored in the core file.
+    boost::dynamic_bitset<> integer_problems_; // Stagewise
 
     // Parameter map:
     Parameter parameter_;
