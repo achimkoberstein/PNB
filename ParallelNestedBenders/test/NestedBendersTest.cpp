@@ -42,6 +42,9 @@ public:
 		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 1;
         benders_parameter_.parameter_map_["Benders"] = 0;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_map_["Benders"] = 1;
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        EXPECT_NEAR(solutions[0],solutions[1],0.1);
   //      benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 2;
   //      // Go on with static cut
   //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -517,7 +520,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.environ*";
+    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

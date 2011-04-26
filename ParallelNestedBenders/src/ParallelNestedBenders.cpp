@@ -21,6 +21,13 @@
 #include "SmiScnModel.hpp"
 #include "SmiCoreCombineRule.hpp"
 
+// Include files only necessary if we have cplex
+#define CPLEX_PRESENT
+#ifdef CPLEX_PRESENT
+#include "cplex.h"
+#include "OsiCpxSolverInterface.hpp"
+#endif
+
 
 namespace parallel_benders {
 
@@ -1320,9 +1327,27 @@ namespace parallel_benders {
     {
         if ( nested_benders_->parameter_.parameter_map_["Benders"] == 0.0){
             OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
-            osi->initialSolve();
+            // Use Barrier method if we use cplex.. ugly code results
+#ifdef CPLEX_PRESENT
+            OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi);
+            if ( cpx_solver){
+                CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
+                CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
+                CPXbaropt(envPtr,lpPtr);
+                // Check for errors
+
+            }
+            else{
+#endif
+                osi->initialSolve();
+#ifdef CPLEX_PRESENT
+            }
+#endif
             // Set solution value
             nested_benders_->upper_bound_ = osi->getObjValue();
+ 
+
+
         }
         else {
             nested_benders_->Init();
