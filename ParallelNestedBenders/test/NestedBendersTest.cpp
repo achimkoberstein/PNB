@@ -447,13 +447,13 @@ TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values not verified
     //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32768"), 0, 0.1);
 }
 
-TEST_F(NestedBendersTest,chem_FELT){ //two-stage LP-relaxation of mixed integer problem
-    EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009.166667, 0.1); // For mixed-integer case should be: 3300
+TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem
+    EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009.166667, 0.1); 
     // Mixed-integer problem is available here: 
     EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), 3300, 0.1); // For mixed-integer case should be: 3300
 }
 
-TEST_F(NestedBendersTest,electric_FELT){ //three-stage, No staircase problem. <- We can not cope with that by now..
+TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. <- We can not cope with that by now..
 EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
 EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
 }
@@ -470,19 +470,20 @@ TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values
     EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-3780"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-5292"), 0, 0.1);
 }
-TEST_F(NestedBendersTest,phone_FELT){// two-stage, mixed-integer, values not verified
-    EXPECT_NEAR(solveSMPS("felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
-    EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
+TEST_F(NestedBendersTest,phone_FELT){//INDEP, two-stage, mixed-integer, values not verified
+    EXPECT_NEAR(solveSMPS("felt/phone/phone"), 36.9, 0.1); // Stochastic problem: 2^15 scenarios
+    EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9
 
-    EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
-    EXPECT_NEAR(solveSMPS("felt/phone/phone1-int","felt/phone/phone","felt/phone/phone1"), 0, 0.1); // 36.9
+    EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
+    EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9, but integers
 }
 
-TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values not verified
-    //EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), -41131.98, 0.1); //two-stage
-    //EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -45599.77, 0.1); // two stage
-    //EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -47314.99, 0.1); // seven-stage
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -47314.99, 0.1); // seven-stage, stoch 2. Adds Non-Anticipitativity Constraints to the problem (or it should do so..)
+TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ranges
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), -41131.98, 0.1); //two-stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -39772.4, 0.1); // two stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -41989.8, 0.1); // seven-stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -40665.1, 0.1); // seven-stage, stochasticity from stocfor2
+
 }
 
 TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
@@ -529,7 +530,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
+    ::testing::GTEST_FLAG(filter) = "*.environ*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
