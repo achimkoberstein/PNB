@@ -144,30 +144,6 @@ bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity,
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
-class OsiStochasticParallelNestedBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
-public:
 
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
-    //OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model, BendersParameter& params);
-    ~OsiStochasticParallelNestedBendersTwoStageSolverInterface();
-
-    void initialSolve();
-
-    double getObjValue();
-    void setParameters(const parallel_benders::Parameter& parameters);
-    int getNumIterations();
-    //inline void setParams(BendersParameter &params) { this->params = params; }
-
-    //inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { params.setIntParam(param, val); }
-    //inline int getIntParam(const BendersParameter::BendersIntParam &param) { return params.getIntParam(param); }
-    //inline void setDoubleParam(const BendersParameter::BendersDoubleParam &param, const double &val) { params.setDoubleParam(param, val); }
-    //inline double getDoubleParam(const BendersParameter::BendersDoubleParam &param) { return params.getDoubleParam(param); }
-
-
-private:
-    //BendersParameter params_;
-    ParallelNestedBenders* nested_benders_;
-
-};
 } // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__

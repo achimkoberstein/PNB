@@ -1321,63 +1321,7 @@ namespace parallel_benders {
 
     }
 
-    void OsiStochasticParallelNestedBendersTwoStageSolverInterface::setParameters(const parallel_benders::Parameter& parameters){
-        nested_benders_->parameter_ = parameters;
-    }
 
 
-    double OsiStochasticParallelNestedBendersTwoStageSolverInterface::getObjValue()
-    {
-        return nested_benders_->upper_bound_;
-    }
 
-    int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumIterations()
-    {
-        return nested_benders_->current_iteration_;
-    }
-    void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
-    {
-        if ( nested_benders_->parameter_.parameter_map_["Benders"] == 0.0){
-            OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
-            // Use Barrier method if we use cplex.. ugly code results
-#ifdef CPLEX_PRESENT
-            OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi);
-            if ( cpx_solver){
-                CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
-                CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
-                CPXbaropt(envPtr,lpPtr);
-                CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
-                // Check for errors
-                int result = CPXgetstat(envPtr,lpPtr);
-                if ( result )
-                    LOG(INFO) << "Cplex returned with status code " << result;
-
-            }
-            else{
-#endif
-                osi->initialSolve();
-#ifdef CPLEX_PRESENT
-            }
-#endif
-            // Set solution value
-            nested_benders_->upper_bound_ = osi->getObjValue();
-
-        }
-        else {
-            nested_benders_->Init();
-            nested_benders_->Solve();
-        }
-    }
-
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface::OsiStochasticParallelNestedBendersTwoStageSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
-        : OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL)
-    {
-        this->smi_model_->setOsiSolverHandle(this->osi_solver_);
-        nested_benders_ = new ParallelNestedBenders(smi_model_);
-    }
-
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface::~OsiStochasticParallelNestedBendersTwoStageSolverInterface()
-    {
-        delete nested_benders_;
-    }
 } // end namespace parallel_benders
