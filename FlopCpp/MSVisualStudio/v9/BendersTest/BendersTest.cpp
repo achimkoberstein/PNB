@@ -5,15 +5,15 @@
 #include <fstream>
 #include <vector>
 
+#include "flopc.hpp"
+
 #include "Benders.hpp"
+#include "OsiStochasticSolverInterface.hpp"
+#include "OsiBenStochasticSolverInterface.hpp"
 #include "SmiScnModel.hpp"
-#include "OsiClpSolverInterface.hpp"
-#include "SAA.hpp" //why do we need this? i don't know...
 #include "CoinTime.hpp"
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
-
-namespace flopc {
 
 #pragma region initialization
 
@@ -21,6 +21,7 @@ namespace flopc {
     protected:
         BendersParameter benParam;
         CoverageTest(): benParam() { 
+            // Parameter for Coverage Test, not for normal test runs..
             benParam.setIntParam(BendersParameter::BENDERS,0);
             benParam.setIntParam(BendersParameter::MULTI,0);
             benParam.setIntParam(BendersParameter::TRUSTREGION,0);
@@ -63,7 +64,7 @@ namespace flopc {
         BendersParameter benParam;
         double repetitions;
         BendersTest() : benParam(), repetitions(1) {
-                benParam.setIntParam(BendersParameter::BENDERS,1);
+                benParam.setIntParam(BendersParameter::BENDERS,0);
                 benParam.setIntParam(BendersParameter::MULTI,0);
                 benParam.setIntParam(BendersParameter::TRUSTREGION,0);
                 benParam.setIntParam(BendersParameter::KNAPSACK,0);
@@ -192,8 +193,6 @@ namespace flopc {
     };
 
 #pragma endregion initialization
-
-} //end namespace
 
 TEST_F(BendersTest, scfxm) { 
     EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/posts/fxm/fxm2_6"), 18416.686, 0.1);
@@ -504,11 +503,12 @@ TEST_F(CoverageTest, cover){
     benParam.setIntParam(BendersParameter::REGULARIZED,0);
     benParam.setIntParam(BendersParameter::REGULARIZED_MANHATTAN,1);
     solveSelectedProblems();
+
 }
 
 TEST_F(BendersTest,FeasibilityCutTest){
     using namespace flopc;
-        OsiCpxSolverInterface osi_solver;
+    OsiCpxSolverInterface osi_solver;
     MP_model testModel(&osi_solver);
     MP_stage T(2);
     MP_variable x,y(T);
@@ -532,11 +532,19 @@ TEST_F(BendersTest,FeasibilityCutTest){
     solver.initialSolve();
 }
 
+
+TEST_F(BendersTest, current_problems) {
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/stocfor/stocfor2"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/cargo/4node-2"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/cargo/4node"), 224486.00, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sizes/sizes10"), 224564.3, 0.1);
+}
+
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
     //::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.semi";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.current_problems";
     
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

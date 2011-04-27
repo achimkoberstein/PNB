@@ -19,9 +19,9 @@
 #include "SmiScnModel.hpp"
 #include "flopc.hpp"
 
-
 #include "BendersNodeData.hpp"
 #include "ParallelNestedBenders.hpp"
+#include "OsiPnbStochasticSolverInterface.hpp"
 
 
 class NestedBendersTest: public ::testing::Test {
@@ -139,7 +139,7 @@ protected:
         }
         // Load ParallelNestedBendersSolver
         double solver_time = CoinCpuTime();
-        parallel_benders::OsiStochasticParallelNestedBendersTwoStageSolverInterface nested_benders(&osi_cpx,&smi);
+        OsiStochasticParallelNestedBendersTwoStageSolverInterface nested_benders(&osi_cpx,&smi);
         nested_benders.setParameters(benders_parameter_);
         nested_benders.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
@@ -349,15 +349,15 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages
     EXPECT_NEAR(solveSMPS("sizes/sizes10"), 224564.3, 0.1);
 }
 TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, not solvable correctly due to SMI stuff: Independent scenario do not get created correctly.
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);// Model probability problems
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"), 18438.891, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"), 18616.224, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18438.891, 0.1);
 }
 //
-TEST_F(NestedBendersTest, pltexp_POSTS) { // BLOCKS
+TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
@@ -428,29 +428,29 @@ TEST_F(NestedBendersTest,bonds_FELT){ // Values that are tested against: results
     EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7956.896, 0.1); 
 }
 
-TEST_F(NestedBendersTest,cargo_FELT){ // values not verified
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 0, 0.1);
+TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values not verified
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-128"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-512"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1024"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2048"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4096"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8192"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16384"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32768"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-128"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-512"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1024"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2048"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4096"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8192"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16384"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32768"), 0, 0.1);
 }
 
 TEST_F(NestedBendersTest,chem_FELT){ //two-stage LP-relaxation of mixed integer problem
-//EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009.166667, 0.1); // For mixed-integer case should be: 3300
-// Mixed-integer problem is available here: 
-EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), 3300, 0.1); // For mixed-integer case should be: 3300
+    EXPECT_NEAR(solveSMPS("felt/chem/chem"), 13009.166667, 0.1); // For mixed-integer case should be: 3300
+    // Mixed-integer problem is available here: 
+    EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), 3300, 0.1); // For mixed-integer case should be: 3300
 }
 
 TEST_F(NestedBendersTest,electric_FELT){ //three-stage, No staircase problem. <- We can not cope with that by now..
@@ -459,16 +459,16 @@ EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
 }
 
 TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values not verified
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS
     EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-lrge"),21034.731951, 0.1); // Based on Import, INDEP and BLOCKS
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-xlrge"), 0, 0.1); // Even Larger, INDEP and BLOCKS
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-first"), 0, 0.1); // INDEP
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1200"),10399.839640, 0.1); // INDEP and BLOCKS for the rest
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1875"), 10399.839640, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-3780"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-5292"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-xlrge"), 0, 0.1); // Even Larger, INDEP and BLOCKS
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-first"), 0, 0.1); // INDEP
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1200"),10399.839640, 0.1); // INDEP and BLOCKS for the rest
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-1875"), 10399.839640, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-3780"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/environ/env","felt/environ/env-5292"), 0, 0.1);
 }
 TEST_F(NestedBendersTest,phone_FELT){// two-stage, mixed-integer, values not verified
     EXPECT_NEAR(solveSMPS("felt/phone/phone"), 0, 0.1); // No stochasticity involved: 36.9
@@ -479,15 +479,19 @@ TEST_F(NestedBendersTest,phone_FELT){// two-stage, mixed-integer, values not ver
 }
 
 TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values not verified
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), -41131.98, 0.1); //two-stage
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -45599.77, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -47314.99, 0.1); // seven-stage
+    //EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor1"), -41131.98, 0.1); //two-stage
+    //EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -45599.77, 0.1); // two stage
+    //EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -47314.99, 0.1); // seven-stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -47314.99, 0.1); // seven-stage, stoch 2. Adds Non-Anticipitativity Constraints to the problem (or it should do so..)
 }
 
 TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
     EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
     EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible
-   
+}
+
+TEST_F(NestedBendersTest,saphir){// two-stage
+    EXPECT_NEAR(solveSMPS("saphir/saphir_50"),-149, 0.1); 
 }
 
 
@@ -525,7 +529,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.chem*";
+    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

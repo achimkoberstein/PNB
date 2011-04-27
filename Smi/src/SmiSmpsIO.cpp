@@ -369,6 +369,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             }
                         }
 
+
                         if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
                         {
                             // store the old one
@@ -378,8 +379,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             }
                             //process discrete distribution
                             smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
-                            //smi->processDiscreteDistributionIntoScenarios(smiDD);
-                            return 0;
+                            continue;
                         }
                         else if ( smpsCardReader_->whichSmpsSection() == SMI_BLOCKS_SECTION){
 
@@ -389,6 +389,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                 smiDD->addDiscreteRV(smiRV);
                             }
                             smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                            continue;
                         }
                         else
                             return -2;
@@ -498,7 +499,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                     }
                                     else	// add element
                                     {
-                                        matrix->modifyCoefficient(i,j,value);
+                                        matrix->modifyCoefficient(i,j,value,true); // We must keep zeroes!
                                     }
                                     break;
                                 }

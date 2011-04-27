@@ -1149,9 +1149,9 @@ SmiScnModel::addNodeEVP(SmiScnNode *tnode)
         for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
             for (int j = 0; j < snode->getRowLength(i); j++) {
                 if (combineRule == SmiCoreCombineReplace::Instance())
-                    this->matrix_->modifyCoefficient(i, snode->getRowIndices(i)[j], snode->getRowElements(i)[j] * tnode->getProb());
+                    this->matrix_->modifyCoefficient(i, snode->getRowIndices(i)[j], snode->getRowElements(i)[j] * tnode->getProb(),true);
                 else
-                    this->matrix_->modifyCoefficient(i, snode->getRowIndices(i)[j], this->matrix_->getCoefficient(i, snode->getRowIndices(i)[j]) + snode->getRowElements(i)[j] * tnode->getProb());
+                    this->matrix_->modifyCoefficient(i, snode->getRowIndices(i)[j], this->matrix_->getCoefficient(i, snode->getRowIndices(i)[j]) + snode->getRowElements(i)[j] * tnode->getProb(),true); // We must keep zero entries
             }
         }
     }
@@ -1461,7 +1461,7 @@ void SmiScnModel::processDiscreteDistributionIntoBlocks(SmiDiscreteDistribution 
                     for (int k = 0; k < matrix2.getNumRows(); k++) {
                         pos = colStartIndices[k];
                         for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-                            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
                             pos++;
                         }
                     }
@@ -1880,7 +1880,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
                     for (int k = 0; k < matrix2.getNumRows(); k++) {
                         pos = colStartIndices[k];
                         for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-                            combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                            combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
                             pos++;
                         }
                     }
@@ -1956,7 +1956,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
                 for (int k = 0; k < matrix2.getNumRows(); k++) {
                     pos = colStartIndices[k];
                     for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-                        combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                        combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
                         pos++;
                     }
                 }
@@ -1986,7 +1986,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
                     for (int k = 0; k < matrix2.getNumRows(); k++) {
                         pos = colStartIndices[k];
                         for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-                            combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos]);
+                            combmatrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
                             pos++; number_of_modifications++;
                         }
                     }

@@ -80,13 +80,12 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.vsprops"
 			CharacterSet="2"
-			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -102,14 +101,15 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
+				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
+				Optimization="0"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -142,12 +142,13 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.vsprops"
 			CharacterSet="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -163,15 +164,14 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				TargetEnvironment="3"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="2"
+				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -280,6 +280,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\OsiBenStochasticSolverInterface.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiPnbStochasticSolverInterface.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiStochasticSolverInterface.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\ParallelNestedBenders.cpp"
 				>
 			</File>
@@ -291,6 +303,18 @@
 			>
 			<File
 				RelativePath="..\..\..\src\BendersNodeData.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiBenStochasticSolverInterface.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiPnbStochasticSolverInterface.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiStochasticSolverInterface.hpp"
 				>
 			</File>
 			<File
