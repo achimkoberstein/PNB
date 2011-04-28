@@ -123,9 +123,9 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),forward_(true),infeasible_problem_(false),infeasible_problems_(smi_->getNumScenarios()),
+        current_stage_(0),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
-        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false)
+        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false)
     {
 
     }
@@ -290,11 +290,14 @@ namespace parallel_benders {
     {
         AdjustProblem();
         // We can stop here, if we have integer variables on more than the second stage..
-        if ( contains_integer_ ){
-            LOG(WARNING) << "Your problem contains integer variables. We can not solve mixed-integer problems. Instead we solve the relaxed problem.";
+        if ( integer_problems_[0] ){ // In the first stage.
+            LOG(INFO) << "Your problem contains first-stage integer variables.";
             //return;
         }
+        for (int i = 1; i < num_stages_;i++)
+            LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
         
+        int cut_counter = 0;
         // Do initialization stuff necessary for solve process
         while ( std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
             ComputeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
@@ -311,16 +314,29 @@ namespace parallel_benders {
             }
 
             minor_iteration_++;
-            if ( current_stage_ == 0 ){
+            if ( current_stage_ == 0 ){ // Things to do if we are in the first stage
                 current_iteration_++;
+                // Cleanup Added cuts counter
+                for (int i = 0; i < num_stages_; i++){
+                    cut_counter += added_optimality_cuts_[i];
+                    added_optimality_cuts_[i] = 0;
+                }
             }
 
-            // Change direction 
+            // Change direction depending on last or first stage
             if ( current_stage_ == 0 ){
                 forward_ = true;
+                // If we had infeasible problems in the last backward run, we added all the feas cuts and can start fresh
+                infeasible_problem_ = false;
             }
             if ( current_stage_ == num_stages_ -1)
                 forward_ = false;
+
+            //// Change direction depending on whatever we like
+            //if ( current_iteration_ > 3 && lower_bound_ > -infinity_ && upper_bound_ < infinity_){
+            //    // Try some fancy stuff: Solve the first stage several times
+
+            //}
 
             std::string direction(forward_ ? "F " : "B ");
             std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
@@ -337,12 +353,20 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            if ( !forward_ && infeasible_problems_.none() ){
+            // If we had unbounded problems, we have to stop here
+            if ( unbounded_problem_ ){
+                LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1;
+                break;
+            }
+
+            if ( !forward_ && !infeasible_problem_ && infeasible_problems_.none() ){ 
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
                 thread_pool_.wait(0); // We wait until all threads are done
+                // If we added no cuts, we might want to notice that
+                LOG_IF(INFO,added_optimality_cuts_[current_stage_]==0) << "We added no new optimality cuts in stage " << current_stage_;
             }
 
             // Update upper bound if we solved all problems in this iteration once
@@ -354,6 +378,8 @@ namespace parallel_benders {
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){
+                // Set boolean variable to indicate that during this backward run, we do not generate optimality cuts!.
+                infeasible_problem_ = true;
                 if ( current_stage_ == 0){
                     infeasible_problem_ = true;
                     LOG(INFO) << "First stage problem is infeasible.";
@@ -378,6 +404,7 @@ namespace parallel_benders {
             }
 
         }
+        LOG(INFO) << "Added " << cut_counter << " many optimality cuts.";
         // We finished solving
         if (!infeasible_problem_)
             LOG(INFO) << "Solution: " << upper_bound_;
@@ -391,6 +418,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::HandleSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
+        // Check if we already got infeasible subproblems only, if we generate either feas or opt cuts
+        if ( !generate_feasibility_and_optimality_cuts_ && only_one_feasibility_cut_ )
+            if ( infeasible_problems_.any() )
+                return; 
         // Get thread ID
         //console_mutex_.lock();
         //LOG(INFO) << "Current thread has ID: " << boost::this_thread::get_id();
@@ -399,6 +430,7 @@ namespace parallel_benders {
 
         BuildSubproblem(osi_solver, benders_tree_node_pointer);
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
+        // We only need to store data if we have a feasible solution for the subproblem.
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()]){
             StoreData(osi_solver,benders_tree_node_pointer);
             if ( !forward_)
@@ -432,13 +464,13 @@ namespace parallel_benders {
         }
         else
             osi_solver->initialSolve();
-        //if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
-        //}
+        if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        }
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -450,16 +482,16 @@ namespace parallel_benders {
             if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
                 infeasible_problem_mutex_.lock();
-                if ( infeasible_problems_.any()){ // TODO: Set parameter here:
+                if ( only_one_feasibility_cut_ && infeasible_problems_.any() ){ 
                     infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
                     infeasible_problem_mutex_.unlock();
-                    return;//TODO  We only want one feasibility cut per stage. This has to be refined to feasibility cuts for siblings of an infeasible problem!! 
+                    return;
                 }
                 infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
                 infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){
-                    LOG(INFO) << "Generate feasibility cut.";
-                    GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); // One for every scenario? Parameter/TODO
+                    LOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
+                    GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
                 }
                 else
                     LOG(ERROR) << "Your master problem is infeasible.";
@@ -467,28 +499,36 @@ namespace parallel_benders {
             }
             if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
-                // If we are in the master problem, we might have to restrict the theta variables
-                LOG(INFO) << "Primal problem is unbounded";
-                // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
-                int num_thetas = stage_data_[current_stage_]->num_thetas_;
-                boost::scoped_array<int> extra_indices(new int[num_thetas]);
-                boost::scoped_array<double> extra_elements(new double[num_thetas]);
-                for (int i = 0; i < num_thetas; i++){
-                    extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
-                    extra_elements[i] = 1;
-                }
-                // Throws error, do not know why
-                osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_ + 1000000, infinity_);
-                // Solve the model again
-                osi_solver->resolve();
-                // Look at it again
-                if ( osi_solver->isProvenDualInfeasible() ){
-                    // Stop computing: Error occured
-                    LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
-                    upper_bound_ = infinity_;
+                // If we are in a problem with theta variables, we might have sucess in restricting the theta variables
+                if ( current_stage_ < num_stages_-1){
+                    // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
+                    int num_thetas = stage_data_[current_stage_]->num_thetas_;
+                    boost::scoped_array<int> extra_indices(new int[num_thetas]);
+                    boost::scoped_array<double> extra_elements(new double[num_thetas]);
+                    for (int i = 0; i < num_thetas; i++){
+                        extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
+                        extra_elements[i] = 1;
+                    }
+                    // Throws error, do not know why
+                    osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_ + 1000000, infinity_);
+                    // Solve the model again
+                    osi_solver->resolve();
                 }
                 if ( !osi_solver->isProvenOptimal()){
-                    LOG(WARNING) << "Solver returned with an unexpected status code." ;
+                    if ( osi_solver->isProvenDualInfeasible() ){
+                        LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                        upper_bound_ = infinity_;
+                        unbounded_problem_ = true;
+                    }
+                    // In case of CPLEX, we can return the error code..
+                    OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+                    if ( cpx_solver ){
+                        CPXENVptr env = cpx_solver->getEnvironmentPtr();
+                        CPXLPptr lp = cpx_solver->getLpPtr();
+                        // Check status code
+                        int error = CPXgetstat(env,lp);
+                        LOG(WARNING) << "Solver returned with status code." << error;
+                    }
                 }
             }
             // TODO Other possible cases
@@ -512,9 +552,6 @@ namespace parallel_benders {
     }
 
     void ParallelNestedBenders::StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
-        //console_mutex_.lock();
-        //std::cout << "Store data " << std::endl; //boost::this_thread::get_id() << std::endl;
-        //console_mutex_.unlock();
         // Store Column Solution
         // We need to copy the solution, as we erase the osiSolverInterface
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
@@ -559,7 +596,7 @@ namespace parallel_benders {
         int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
         assert(num_theta >= 0);
         
-        // TODO: Retrieve and store the theta variables
+        // Retrieve and store the theta variables
         benders_node_pointer->next_stage_approximation_ = new double[num_theta];
         memcpy(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta*sizeof(double) );
 
@@ -812,6 +849,17 @@ namespace parallel_benders {
             for (int i = 0; i < num_cols; i++){
                 coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
             }
+            // Set bounds of inactive cuts to 0
+            int num_active_cuts = benders_node_pointer->active_cuts_.count();
+            if ( num_active_cuts < benders_node_pointer->num_thetas_ ){
+                // We have at less active cuts than num_thetas
+                for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
+                    if ( benders_node_pointer->active_cuts_[i] == false){
+                        // Set variable fixed to zero
+                        lower[i] = 0; upper[i] = 0; objective[i] = 0;
+                    }
+                }
+            }
             osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
             assert(osi_solver->getNumCols() == stage_pointer->num_columns_+num_cols);
             for (int i = 0; i < num_cols; i++){
@@ -978,6 +1026,18 @@ namespace parallel_benders {
 			
 		}
 		assert(num_subproblems_per_cut >= 1);
+        // Num cuts is num_thetas_ !
+        bool change_aggregation_level = false;
+        if ( num_cuts != benders_tree_node_pointer->getDataPtr()->num_thetas_ ){
+            // We change the level of aggregation
+            change_aggregation_level = true;
+
+            // Transform all old optimality cuts to new ones.
+
+            // Set new values
+            benders_tree_node_pointer->getDataPtr()->num_thetas_ = num_cuts;
+            benders_tree_node_pointer->getDataPtr()->active_cuts_ = boost::dynamic_bitset<>(num_cuts);
+        }
         
         // TODO: Ignore "cuts" that were not created, due to multicut condition ( theta_k >= solution value of subproblem)
     
@@ -987,6 +1047,7 @@ namespace parallel_benders {
         // Do some magic to finde a good partition for the number of cuts we want to produce: TODO
         int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
         int overall_end_index = overall_start_index+num_childs; 
+        int added_cuts = 0;
         for ( int i = 0; i < num_cuts; i++){
             // For now: just split subproblems after num_subproblems_per_cut
             // Start a new OsiRowCut
@@ -1022,13 +1083,43 @@ namespace parallel_benders {
                     new_index++;
                 }
             }
-            OsiRowCut* cut_pointer = new OsiRowCut();
-            cut_pointer->setLb(cut_lower_bound);
-            cut_pointer->setUb(infinity_);
-            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
-            //LOG_IF(INFO,new_index<num_columns+1) << "We spared to store " << num_columns+1-new_index << " many indices, in percent " << 1-(double)new_index/(num_columns+1) << "% less storage";
-            benders_tree_node_pointer->getDataPtr()->optimality_cuts_.push_back(cut_pointer);
-        }
+            // Check if cut is not redundant: Conditional Expected Value of Subproblems (theta) is greater than before. For implementation reasons, we only do this if we do not change aggregation level..
+
+            // Theta = cut lower bound - cut_vector * column_solution
+            // Compute cut_vector * column_solution
+            const double * column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
+            double sum = 0.0;
+            for ( int index = 0;  index < new_index-1;  index++ ) { // We iterate over column_solution, but not over the theta index, which is always the last one.
+                int column_index = cut_indices[index];
+                sum += column_solution[column_index] * cut_elements[index];
+            }
+            // Add computed cut right hand side
+            sum = cut_lower_bound-sum+zero_tolerance_;
+            // Check with previous stuff only, if we did nit changed the aggregation level.
+            if ( change_aggregation_level || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i] : 0) ){
+                // Add cut
+                OsiRowCut* cut_pointer = new OsiRowCut();
+                cut_pointer->setLb(cut_lower_bound);
+                cut_pointer->setUb(infinity_);
+                cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
+                //LOG_IF(INFO,new_index<num_columns+1) << "We spared to store " << num_columns+1-new_index << " many indices, in percent " << 1-(double)new_index/(num_columns+1) << "% less storage";
+                benders_tree_node_pointer->getDataPtr()->optimality_cuts_.push_back(cut_pointer);
+                // Set cut to active
+                benders_tree_node_pointer->getDataPtr()->active_cuts_[i] = true;
+                added_cuts++;
+            }
+            else { // Cut is redundant
+                //Clean up
+                LOG(INFO) << "Just for debugging reasons";
+
+            }
+            
+
+        }// End for num_cuts
+        // Add number of added cuts.
+        add_cut_counter_mutex_.lock();
+        added_optimality_cuts_[current_stage_] += added_cuts;
+        add_cut_counter_mutex_.unlock();
     }
 
     void ParallelNestedBenders::GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )

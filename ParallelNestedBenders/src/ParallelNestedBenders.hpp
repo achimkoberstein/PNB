@@ -91,7 +91,7 @@ private:
     // Parameter map:
     Parameter parameter_;
 
-    // Important solution data
+    // Important parameters for numerical aspects
     double zero_tolerance_;
     double integer_tolerance_;
     double absolute_epsilon_;
@@ -107,9 +107,15 @@ private:
     double old_lower_bound_;
 
     int current_stage_;
+    // Direction of algorithm
     bool forward_;
+    // Do we have infeasible/unbounded problems? And which?
     bool infeasible_problem_;
+    bool unbounded_problem_;
     boost::dynamic_bitset<> infeasible_problems_;
+
+    // How many cuts did we added?
+    std::vector<int> added_optimality_cuts_;
 
     TimerStruct timer_;
 
@@ -122,6 +128,7 @@ private:
     boost::mutex upper_bound_mutex_; // Mutex for access to upper bound
     boost::mutex infeasible_problem_mutex_; // Mutex for access to infeasible problem setter 
     boost::mutex osi_solver_mutex_; // Mutex that is used if we want to clone an OsiSolverInterface
+    boost::mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
     // Further thread management stuff
     boost::threadpool::pool thread_pool_;
 
@@ -130,6 +137,12 @@ private:
     bool warm_start_;
     bool warm_start_stage_;
     bool warm_start_scenarios_;
+    // One or Many Feasibility Cuts (has runtime implications that are problem dependent).
+    bool only_one_feasibility_cut_;
+    // If we generate feasibility cuts, do we also want optimality cuts generated? 
+    bool generate_feasibility_and_optimality_cuts_;
+    // Secquencing protocol: 0 = FastForward/FastBackward, 1 = FastForward, 2 = FastBackward
+    int sequencing_protocol_; 
 
 };
 

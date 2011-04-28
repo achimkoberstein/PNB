@@ -1,7 +1,14 @@
 #include "OsiPnbStochasticSolverInterface.hpp"
 
+#include <glog/logging.h>
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
+
+#define CPLEX_PRESENT
+#ifdef CPLEX_PRESENT
+#include "cplex.h"
+#include "OsiCpxSolverInterface.hpp"
+#endif
 
 
 void OsiStochasticParallelNestedBendersTwoStageSolverInterface::setParameters(const parallel_benders::Parameter& parameters){

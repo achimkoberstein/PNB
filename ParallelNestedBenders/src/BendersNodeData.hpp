@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 
+#include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_ptr.hpp>
 
 
@@ -41,6 +42,8 @@ public:
 
     int cols_;
     int rows_;
+    int num_thetas_;
+    boost::dynamic_bitset<> active_cuts_; // Has to have the size of num_thetas_
     CoinWarmStart* warm_start_;
 
     SmiNodeData* smi_node_data_;
@@ -52,7 +55,6 @@ public:
     double conditional_probability_;
 
     double solution_value_;
-    double theta_;
     std::vector<OsiRowCut* > optimality_cuts_;
     std::vector<OsiRowCut* > feasibility_cuts_;
     // Multicut Aggregation Strategies..
