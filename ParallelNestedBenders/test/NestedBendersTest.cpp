@@ -39,12 +39,12 @@ public:
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut
         std::vector<double> solutions;
-		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 1;
-        benders_parameter_.parameter_map_["Benders"] = 0;
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 100;
         benders_parameter_.parameter_map_["Benders"] = 1;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        EXPECT_NEAR(solutions[0],solutions[1],0.1);
+        //benders_parameter_.parameter_map_["Benders"] = 0;
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //EXPECT_NEAR(solutions[0],solutions[1],0.1);
   //      benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 2;
   //      // Go on with static cut
   //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -405,12 +405,12 @@ TEST_F(NestedBendersTest, stormG2_POSTS) {
 }
 
 // Andrew Felt Test Set
-TEST_F(NestedBendersTest, airlift_FELT){// 2-Stage
+TEST_F(NestedBendersTest, airlift_FELT){// Two-Stage
     EXPECT_NEAR(solveSMPS("felt/airlift/AIRL"),249101.672072,0.1); //BLOCK
     EXPECT_NEAR(solveSMPS("felt/airlift/AIRL2"),269665.498390,0.1);//INDEP
 }
 
-TEST_F(NestedBendersTest,assets_FELT){
+TEST_F(NestedBendersTest,assets_FELT){// Two-Stage
     EXPECT_NEAR(solveSMPS("assets_large"), -689.432, 0.1);
     EXPECT_NEAR(solveSMPS("assets_small"), -723.839, 0.1);
 }
@@ -488,10 +488,10 @@ TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ra
 
 TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
     EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
-    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible
+    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
 }
 
-TEST_F(NestedBendersTest,saphir){// two-stage
+TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),-149, 0.1); 
 }
 
@@ -530,7 +530,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.environ*";
+    ::testing::GTEST_FLAG(filter) = "*.rand*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
