@@ -39,7 +39,7 @@ public:
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut
         std::vector<double> solutions;
-		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 100;
+		benders_parameter_.parameter_map_["AggregatedOptimalityCuts"] = 2000;
         benders_parameter_.parameter_map_["Benders"] = 1;
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_map_["Benders"] = 0;

@@ -60,6 +60,8 @@ public:
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;
 
+    std::vector< std::vector<int> > nodes_in_cut_; // Stores which subnodes of current node are aggregated to a cut.
+
     // Values for cut aggregation
     std::vector<double> current_cut_coefficients_;
     double current_cut_rhs_;

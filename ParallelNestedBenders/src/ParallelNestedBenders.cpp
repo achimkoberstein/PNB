@@ -1031,6 +1031,28 @@ namespace parallel_benders {
         if ( num_cuts != benders_tree_node_pointer->getDataPtr()->num_thetas_ ){
             // We change the level of aggregation
             change_aggregation_level = true;
+            // If we are the first time here, we just create the stuff
+            std::vector<std::vector<int> >& node_in_cut_vector(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_);
+            if ( node_in_cut_vector.empty() ){
+                // Fill the vector according to the number of cuts according to a "strategy"
+                // It may well be the case, that more information is needed, as we go along
+                
+                // Round-Robin
+                int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
+                int overall_end_index = overall_start_index+num_childs; 
+                for (int i = 0; i < num_cuts; i++){
+                    node_in_cut_vector.push_back(std::vector<int>());
+                    node_in_cut_vector.back().reserve(num_subproblems_per_cut);
+                    for ( int j = overall_start_index+i*num_subproblems_per_cut; j < overall_start_index+(i+1)*num_subproblems_per_cut; j++){
+                        if ( j < overall_end_index){ // necessary for the last cut, as it may not fit
+                            node_in_cut_vector.back().push_back(j);
+                        }
+                    }
+                }
+            }
+            else {
+                // We have to transform the old optimality cuts to the new number of theta's we would like to have
+            }
 
             // Transform all old optimality cuts to new ones.
 
@@ -1039,17 +1061,10 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->active_cuts_ = boost::dynamic_bitset<>(num_cuts);
         }
         
-        // TODO: Ignore "cuts" that were not created, due to multicut condition ( theta_k >= solution value of subproblem)
-    
-
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
-
         // Do some magic to finde a good partition for the number of cuts we want to produce: TODO
-        int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
-        int overall_end_index = overall_start_index+num_childs; 
         int added_cuts = 0;
         for ( int i = 0; i < num_cuts; i++){
-            // For now: just split subproblems after num_subproblems_per_cut
             // Start a new OsiRowCut
             double cut_lower_bound = 0;
             std::vector<double> cut_elements(num_columns+1,0);
@@ -1059,14 +1074,13 @@ namespace parallel_benders {
             for (int j = 0; j < num_columns; j++)
                 cut_indices.push_back(j);
             cut_indices.push_back(num_columns+i);
-
-            for ( int j = overall_start_index+i*num_subproblems_per_cut; j < overall_start_index+(i+1)*num_subproblems_per_cut; j++){
-                if ( j < overall_end_index){
-                    for (int k = 0; k < num_columns; k++)
-                        cut_elements[k] += tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->current_cut_coefficients_[k];
-                    cut_lower_bound += tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->current_cut_rhs_;
- 
-                }
+            // For all the indices, that belong to this cut.
+            std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
+            for ( int j = 0; j < nodes_in_cut.size(); j++){
+                for (int k = 0; k < num_columns; k++)
+                        cut_elements[k] += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_coefficients_[k];
+                cut_lower_bound += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_rhs_;
+                 
             }
             int new_index = 0;
             for (int index = 0; index < num_columns+1; index++){
@@ -1110,7 +1124,7 @@ namespace parallel_benders {
             }
             else { // Cut is redundant
                 //Clean up
-                LOG(INFO) << "Just for debugging reasons";
+                //LOG(INFO) << "Just for debugging reasons";
 
             }
             
