@@ -277,6 +277,12 @@ namespace parallel_benders {
             // Set number of thetas per stage, if we want to do it statically
             stage_data_.back()->num_thetas_ = num_theta;
         }
+        // Pltexp try
+        //
+        //stage_data_[1]->num_thetas_ = 6;
+        //stage_data_[2]->num_thetas_ = 6;
+        //stage_data_[3]->num_thetas_ = 6;
+        //stage_data_[4]->num_thetas_ = 6;
 
 
         // Thread related stuff
@@ -308,8 +314,8 @@ namespace parallel_benders {
                 LOG(INFO) << "Upper Bound is lower than lower Bound. This can not happen, unfortunately it has. Iteration: " << current_iteration_;
                 //break;
             }
-            if ( old_lower_bound_ > lower_bound_ + ParallelNestedBenders::zero_tolerance_ && old_lower_bound_ > -infinity_ ){// TODO: If we have feasCuts we might have to look at this again..
-                LOG(INFO) << "New Lower bound is less than old lower bound.";
+            if ( old_lower_bound_ > lower_bound_ + ParallelNestedBenders::zero_tolerance_ && old_lower_bound_ > -infinity_  && !infeasible_problem_){// TODO: If we have feasCuts we might have to look at this again..
+                LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
                 break;
             }
 
@@ -333,10 +339,12 @@ namespace parallel_benders {
                 forward_ = false;
 
             //// Change direction depending on whatever we like
-            //if ( current_iteration_ > 3 && lower_bound_ > -infinity_ && upper_bound_ < infinity_){
-            //    // Try some fancy stuff: Solve the first stage several times
+            if ( (current_iteration_ % 2 == 0) && lower_bound_ > -infinity_ && upper_bound_ < infinity_){
+                // Try some fancy stuff: Solve the first stage several times
+ /*               if ( current_stage_ == 2)
+                    forward_ = false;*/
 
-            //}
+            }
 
             std::string direction(forward_ ? "F " : "B ");
             std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
@@ -464,13 +472,13 @@ namespace parallel_benders {
         }
         else
             osi_solver->initialSolve();
-        if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            console_mutex_.lock();
-            osi_solver->writeLp(stream.str().c_str());
-            console_mutex_.unlock();
-        }
+        //if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    console_mutex_.lock();
+        //    osi_solver->writeLp(stream.str().c_str());
+        //    console_mutex_.unlock();
+        //}
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -852,7 +860,7 @@ namespace parallel_benders {
             // Set bounds of inactive cuts to 0
             int num_active_cuts = benders_node_pointer->active_cuts_.count();
             if ( num_active_cuts < benders_node_pointer->num_thetas_ ){
-                // We have at less active cuts than num_thetas
+                // We have less active cuts than num_thetas, so we have to fix some of these inactive variables to zero and remove them from the objective.
                 for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
                     if ( benders_node_pointer->active_cuts_[i] == false){
                         // Set variable fixed to zero
@@ -1014,7 +1022,8 @@ namespace parallel_benders {
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         // We need all the children of this node..
         int num_childs = benders_tree_node_pointer->numChildren();
-		// Num Subproblem per cu 
+        num_cuts = std::min(num_cuts,num_childs);
+		// Num Subproblem per cuts
 		int num_subproblems_per_cut = std::ceil( ((double)num_childs)/num_cuts );
         // If num_cuts is zero, we have a node wise rule..
         if (num_cuts == 0){ // Node wise rule
@@ -1023,36 +1032,40 @@ namespace parallel_benders {
 			// Compute number of cuts we need for this number of subproblems per cut
 			num_cuts = std::ceil(((double)num_childs)/num_subproblems_per_cut);
 			assert(num_cuts >= 1);
-			
-		}
+	    }
+
+        // We have to adopt the number of cuts per subproblem.
 		assert(num_subproblems_per_cut >= 1);
+        assert(num_cuts <= num_childs);
         // Num cuts is num_thetas_ !
+        // Move that to init..
+        std::vector<std::vector<int> >& node_in_cut_vector(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_);
+        if ( node_in_cut_vector.empty() ){
+            // Fill the vector according to the number of cuts according to a "strategy"
+            // It may well be the case, that more information is needed, as we go along
+
+            // Round-Robin
+            int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
+            int overall_end_index = overall_start_index+num_childs; 
+            for (int i = 0; i < num_cuts; i++){
+                node_in_cut_vector.push_back(std::vector<int>());
+                node_in_cut_vector.back().reserve(num_subproblems_per_cut);
+                for ( int j = overall_start_index+i*num_subproblems_per_cut; j < overall_start_index+(i+1)*num_subproblems_per_cut; j++){
+                    if ( j < overall_end_index){ // necessary for the last cut, as it may not fit
+                        node_in_cut_vector.back().push_back(j);
+                    }
+                }
+            }
+        }
+
         bool change_aggregation_level = false;
         if ( num_cuts != benders_tree_node_pointer->getDataPtr()->num_thetas_ ){
             // We change the level of aggregation
             change_aggregation_level = true;
-            // If we are the first time here, we just create the stuff
-            std::vector<std::vector<int> >& node_in_cut_vector(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_);
-            if ( node_in_cut_vector.empty() ){
-                // Fill the vector according to the number of cuts according to a "strategy"
-                // It may well be the case, that more information is needed, as we go along
-                
-                // Round-Robin
-                int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
-                int overall_end_index = overall_start_index+num_childs; 
-                for (int i = 0; i < num_cuts; i++){
-                    node_in_cut_vector.push_back(std::vector<int>());
-                    node_in_cut_vector.back().reserve(num_subproblems_per_cut);
-                    for ( int j = overall_start_index+i*num_subproblems_per_cut; j < overall_start_index+(i+1)*num_subproblems_per_cut; j++){
-                        if ( j < overall_end_index){ // necessary for the last cut, as it may not fit
-                            node_in_cut_vector.back().push_back(j);
-                        }
-                    }
-                }
-            }
-            else {
-                // We have to transform the old optimality cuts to the new number of theta's we would like to have
-            }
+           
+                 // We have to transform the old optimality cuts to the new number of theta's we would like to have
+                // We already called a function that gives us a new number of whatever it is we need.
+           
 
             // Transform all old optimality cuts to new ones.
 
