@@ -116,6 +116,7 @@ private:
 
     // How many cuts did we added?
     std::vector<int> added_optimality_cuts_;
+    std::vector<int> added_feasibility_cuts_;
 
     TimerStruct timer_;
 

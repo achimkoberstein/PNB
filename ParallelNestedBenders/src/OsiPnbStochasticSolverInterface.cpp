@@ -3,6 +3,7 @@
 #include <glog/logging.h>
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
+#include "BendersNodeData.hpp"
 
 //#define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
@@ -27,7 +28,7 @@ int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumIterations(
 }
 void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
 {
-    if ( nested_benders_->parameter_.parameter_map_["Benders"] == 0.0){
+    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1) == 0){
         OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
         //osi->writeMps("deterministicEquivalent","mps",1);
         // Use Barrier method if we use cplex.. ugly code results
