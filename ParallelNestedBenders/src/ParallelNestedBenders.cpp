@@ -269,7 +269,7 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
                     tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
                     number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
-						// Set multicut aggregation
+				    // Set multicut aggregation
                     if ( num_theta == 0 ){
 	                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
                     }
@@ -286,8 +286,8 @@ namespace parallel_benders {
 
         // Thread related stuff
         num_cpu_ = boost::thread::hardware_concurrency();
-        thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
-        //thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
+        //thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
+        thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
 
     }
 
@@ -313,7 +313,7 @@ namespace parallel_benders {
                 LOG(INFO) << "Upper Bound is lower than lower Bound. This can not happen, unfortunately it has. Iteration: " << current_iteration_;
                 //break;
             }
-            if ( old_lower_bound_ > lower_bound_ + ParallelNestedBenders::zero_tolerance_ && old_lower_bound_ > -infinity_  && !infeasible_problem_){// TODO: If we have feasCuts we might have to look at this again..
+            if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){// TODO: If we have feasCuts we might have to look at this again..
                 LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
                 break;
             }
@@ -1029,6 +1029,7 @@ namespace parallel_benders {
         // We need all the children of this node..
         int num_childs = benders_tree_node_pointer->numChildren();
         num_cuts = std::min(num_cuts,num_childs);
+        // Write that back to stage_data? No, as number of childs can differ between nodes.
 		// Num Subproblem per cuts
 		int num_subproblems_per_cut = std::ceil( ((double)num_childs)/num_cuts );
         // If num_cuts is zero, we have a node wise rule..
