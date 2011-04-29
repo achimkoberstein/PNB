@@ -184,22 +184,24 @@ std::string TimerStruct::GetHeadingString()
 void Parameter::init()
 {
     // DetEq or Benders
-    parameter_map_["Benders"] = 1.0; // 0: No Benders, but detEq.
-    // WarmStart
-    parameter_map_["WarmStart"] = 1.0; // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario
+    parameter_.put(PNB_BENDERS,1); // 0: No Benders (detEq), 1 Benders
+    
+    //parameter_map_["Benders"] = 1.0; // 0: No Benders, but detEq.
+    //// WarmStart
+    //parameter_map_["WarmStart"] = 1.0; // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario
 
-    // Aggregation of Cuts ( or single-multi cut )
-    parameter_map_["AggregatedOptimalityCuts"] = 1.0;// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
-    parameter_map_["ScenariosProCut"] = 0.0; // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
-    parameter_map_["Relaxation"] = 1.0; // Solved LP relaxation instead of MIP problem, if we have a MIP problem
-    parameter_map_["DynamicAggregation"] = 0.0; // Do we use Dynamic aggregation?
-    //parameter_map_["TrustRegion"] = 0; // Do we want to use TrustRegion TODO: Implement this
+    //// Aggregation of Cuts ( or single-multi cut )
+    //parameter_map_["AggregatedOptimalityCuts"] = 1.0;// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
+    //parameter_map_["ScenariosProCut"] = 0.0; // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
+    //parameter_map_["Relaxation"] = 1.0; // Solved LP relaxation instead of MIP problem, if we have a MIP problem
+    //parameter_map_["DynamicAggregation"] = 0.0; // Do we use Dynamic aggregation?
+    ////parameter_map_["TrustRegion"] = 0; // Do we want to use TrustRegion TODO: Implement this
 
-    // Tolerances
-    parameter_map_["ZeroTolerance"] = std::pow(10.0,-8);
-    parameter_map_["IntegerTolerance"] = std::pow(10.0,-6);
-    parameter_map_["AbsoluteEpsilon"] = std::pow(10.0,-6);
-    parameter_map_["RelativeEpsilon"] = std::pow(10.0,-6);
+    //// Tolerances
+    //parameter_map_["ZeroTolerance"] = std::pow(10.0,-8);
+    //parameter_map_["IntegerTolerance"] = std::pow(10.0,-6);
+    //parameter_map_["AbsoluteEpsilon"] = std::pow(10.0,-6);
+    //parameter_map_["RelativeEpsilon"] = std::pow(10.0,-6);
 }
 
 void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )

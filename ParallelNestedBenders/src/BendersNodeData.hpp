@@ -5,6 +5,7 @@
 #include <map>
 
 #include <boost/dynamic_bitset.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/scoped_ptr.hpp>
 
 
@@ -15,6 +16,23 @@ class OsiRowCut;
 class SmiNodeData;
 
 namespace parallel_benders{
+
+    // Parameter names go in here. We use std::string as parameter
+    // We start with integer parameters
+    const std::string PNB_BENDERS = "PNB_BENDERS";          //
+    const std::string PNB_WARM_START = "PNB_WARM_START";    //
+    const std::string PNB_AGGREGATE_OPTIMALITY_CUTS = "PNB_AGGREGATE_OPTIMALITY_CUTS";    //
+    const std::string PNB_SCENARIOS_PRO_CUT = "PNB_SCENARIOS_PRO_CUT" ;            //
+    const std::string PNB_RELAXATION = "PNB_RELAXATION";                   //
+    const std::string PNB_DYNAMIC_AGGREGATION = "PNB_DYNAMIC_AGGREGATION";          //
+    const std::string PNB_TRUST_REGION = "PNB_TRUST_REGION";                 //
+
+    // Here come the double parameters
+    const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //
+    const std::string PNB_TOLERANCE_INTEGER = "PNB_TOLERANCE_INTEGER";       //
+    const std::string PNB_EPSILON_ABSOLUTE = "PNB_EPSILON_ABSOLUTE";           //
+    const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
+
 
 
 // We can make it a struct anyway?!
@@ -158,7 +176,7 @@ struct TimerStruct {
 }; 
 
 struct Parameter {
-    // Set default values
+    // Set default values for all strings we have..
     void init();
 
 
@@ -170,8 +188,8 @@ struct Parameter {
     //    return parameter_map_[parameter];
     //}
 
-    // Stores every parameter as a std::string with a value that is stored as a double
-    std::map<std::string,double> parameter_map_;
+    // Stores every parameter as a std::string with a value that is stored as either double or int..
+    boost::property_tree::ptree parameter_;
 };
 
 } // end namespace parallel_benders
