@@ -2004,7 +2004,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
             if ( cur_scen % num_childs_per_stage[j].second == 0 ){
                 branch--;
             }
-            if ( cur_scen / num_childs_per_stage[j].second && cur_scen % num_childs_per_stage[j].second != 0 ) // If we are greater than number of childs and we are not modulo 0..
+            // What is our ancestor scenario? We set it according to the following formula
+            if ( anc < num_childs_per_stage[j].second && cur_scen / num_childs_per_stage[j].second && (cur_scen % num_childs_per_stage[j].second) != 0 ) // If we are greater than number of childs and we are not modulo 0..
                 anc = num_childs_per_stage[j].second*(cur_scen/num_childs_per_stage[j].second);
         }
         if ( branch == 0) // Special case we need for the first stage only
