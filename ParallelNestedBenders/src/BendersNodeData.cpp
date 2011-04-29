@@ -201,4 +201,29 @@ void Parameter::init()
     parameter_map_["AbsoluteEpsilon"] = std::pow(10.0,-6);
     parameter_map_["RelativeEpsilon"] = std::pow(10.0,-6);
 }
+
+void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )
+{
+	std::vector<std::vector<int> >& node_in_cut_vector(benders_node_data->nodes_in_cut_);
+	if ( node_in_cut_vector.empty() ){
+		// Fill the vector according to the number of cuts according to a "strategy"
+		// It may well be the case, that more information is needed, as we go along
+		// Round-Robin
+		int overall_start_index = benders_node_data->child_node_start_;
+		int overall_end_index = overall_start_index+num_child; 
+		for (int i = 0; i < num_cuts; i++){
+			node_in_cut_vector.push_back(std::vector<int>());
+			node_in_cut_vector.back().reserve(num_subproblems_per_cut);
+			for ( int j = overall_start_index+i*num_subproblems_per_cut; j < overall_start_index+(i+1)*num_subproblems_per_cut; j++){
+				if ( j < overall_end_index){ // necessary for the last cut, as it may not fit
+					node_in_cut_vector.back().push_back(j);
+				}
+			}
+		}
+	}
+	else{
+		assert(false);
+	}
+}
+
 } // end namespace parallel benders
