@@ -4,7 +4,7 @@
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
 
-#define CPLEX_PRESENT
+//#define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
 #include "cplex.h"
 #include "OsiCpxSolverInterface.hpp"
@@ -37,7 +37,7 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
             CPXbaropt(envPtr,lpPtr);
-            CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
+            //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
             if ( result )
