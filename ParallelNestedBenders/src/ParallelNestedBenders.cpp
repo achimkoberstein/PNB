@@ -145,7 +145,6 @@ namespace parallel_benders {
         old_lower_bound_ = lower_bound_;
 
         int num_theta = 1; // Single cut as default
-        double percent_theta = 100; // Single cut as default
         int num_scen_pro_cut = num_scenarios_; // Single cut as default.
 
         // Iterate over all parameters and set them accordingly
@@ -249,6 +248,17 @@ namespace parallel_benders {
             if ( num_scen_pro_cut == num_scenarios_ ) // Set percentage value
                 tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
         }
+		// Create Benders Stage data
+		stage_data_.reserve(num_stages_);
+		for (int i = 0; i < num_stages_; i++){
+			stage_data_.push_back(new BendersStageData);
+			// Set empty warm start object
+			if ( warm_start_ && warm_start_stage_ )
+				stage_data_.back()->warm_start_ = osi_solver_->getEmptyWarmStart();
+			// Set number of thetas per stage, if we want to do it statically
+			stage_data_.back()->num_thetas_ = num_theta;
+		}
+
         for (int i = 1; i < num_stages_; i++) {
             int number_of_nodes_in_this_stage = 0;
             int number_of_child_nodes_for_next_stage = 0;
@@ -259,7 +269,7 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
                     tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
                     number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
-                    // Set multicut aggregation
+						// Set multicut aggregation
                     if ( num_theta == 0 ){
 	                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
                     }
@@ -267,22 +277,11 @@ namespace parallel_benders {
                 delete children;
             }
         }
-        // Create Benders Stage data
-        stage_data_.reserve(num_stages_);
-        for (int i = 0; i < num_stages_; i++){
-            stage_data_.push_back(new BendersStageData);
-            // Set empty warm start object
-            if ( warm_start_ && warm_start_stage_ )
-                stage_data_.back()->warm_start_ = osi_solver_->getEmptyWarmStart();
-            // Set number of thetas per stage, if we want to do it statically
-            stage_data_.back()->num_thetas_ = num_theta;
-        }
-        // Pltexp try
-        //
-        //stage_data_[1]->num_thetas_ = 6;
-        //stage_data_[2]->num_thetas_ = 6;
-        //stage_data_[3]->num_thetas_ = 6;
-        //stage_data_[4]->num_thetas_ = 6;
+
+
+		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
+
+
 
 
         // Thread related stuff
@@ -341,8 +340,8 @@ namespace parallel_benders {
             //// Change direction depending on whatever we like
             if ( (current_iteration_ % 2 == 0) && lower_bound_ > -infinity_ && upper_bound_ < infinity_){
                 // Try some fancy stuff: Solve the first stage several times
- /*               if ( current_stage_ == 2)
-                    forward_ = false;*/
+                if ( current_stage_ == 2)
+                    forward_ = false;
 
             }
 
@@ -447,7 +446,7 @@ namespace parallel_benders {
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
-        // Warm Start Handling
+	    // Warm Start Handling
         
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
@@ -846,10 +845,19 @@ namespace parallel_benders {
             }
         }
 
-        // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. )
-        if ( !benders_node_pointer->optimality_cuts_.empty() && !reuse_solver){// We have some optimality cuts, so we need theta variables
-            // We set a theta value for every stage
-            int num_cols = stage_pointer->num_thetas_;
+        // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. ) TODO: Reuse stuff
+		if ( !benders_node_pointer->optimality_cuts_.empty() ){//&& !reuse_solver){// We have some optimality cuts, so we need theta variables
+            // Remove theta columns from solver, if we reuse it
+			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_;
+			if ( cols_to_remove ) {
+				std::vector<int> remove_indices;
+				remove_indices.reserve(cols_to_remove);
+				for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
+					remove_indices.push_back(i);
+				osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
+			}
+			// We set a theta value for every stage
+			int num_cols = benders_node_pointer->num_thetas_;
             std::vector<double> lower(num_cols,-infinity_);
             std::vector<double> upper(num_cols,infinity_);
             std::vector<double> objective(num_cols,1);
@@ -874,8 +882,6 @@ namespace parallel_benders {
                 delete coin_vector[i];
             }
             delete [] coin_vector;
-
-
         }
 
         if ( !benders_node_pointer->optimality_cuts_.empty())
@@ -1036,37 +1042,18 @@ namespace parallel_benders {
 
         // We have to adopt the number of cuts per subproblem.
 		assert(num_subproblems_per_cut >= 1);
-        assert(num_cuts <= num_childs);
-        // Num cuts is num_thetas_ !
-        // Move that to init..
-        std::vector<std::vector<int> >& node_in_cut_vector(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_);
-        if ( node_in_cut_vector.empty() ){
-            // Fill the vector according to the number of cuts according to a "strategy"
-            // It may well be the case, that more information is needed, as we go along
-
-            // Round-Robin
-            int overall_start_index = benders_tree_node_pointer->getDataPtr()->child_node_start_;
-            int overall_end_index = overall_start_index+num_childs; 
-            for (int i = 0; i < num_cuts; i++){
-                node_in_cut_vector.push_back(std::vector<int>());
-                node_in_cut_vector.back().reserve(num_subproblems_per_cut);
-                for ( int j = overall_start_index+i*num_subproblems_per_cut; j < overall_start_index+(i+1)*num_subproblems_per_cut; j++){
-                    if ( j < overall_end_index){ // necessary for the last cut, as it may not fit
-                        node_in_cut_vector.back().push_back(j);
-                    }
-                }
-            }
-        }
+        //assert(num_cuts <= num_childs);
+        // Num cuts is num_thetas_ 
 
         bool change_aggregation_level = false;
         if ( num_cuts != benders_tree_node_pointer->getDataPtr()->num_thetas_ ){
             // We change the level of aggregation
             change_aggregation_level = true;
+			createRoundRobinAggregation(benders_tree_node_pointer->getDataPtr(),num_childs,num_cuts,num_subproblems_per_cut);
            
-                 // We have to transform the old optimality cuts to the new number of theta's we would like to have
-                // We already called a function that gives us a new number of whatever it is we need.
-           
-
+            // We have to transform the old optimality cuts to the new number of theta's we would like to have
+            // We already called a function that gives us a new number of whatever it is we need.
+    
             // Transform all old optimality cuts to new ones.
 
             // Set new values

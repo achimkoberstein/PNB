@@ -74,6 +74,9 @@ public:
     double* row_upper_;
 };
 
+// Methods that work on a BendersNodeData
+void createRoundRobinAggregation(BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subpropblems_per_cut);
+
 struct BendersStageData {
 
     BendersStageData();
