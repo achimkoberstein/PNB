@@ -186,22 +186,29 @@ void Parameter::init()
     // DetEq or Benders
     parameter_.put(PNB_BENDERS,1); // 0: No Benders (detEq), 1 Benders
     
-    //parameter_map_["Benders"] = 1.0; // 0: No Benders, but detEq.
-    //// WarmStart
-    //parameter_map_["WarmStart"] = 1.0; // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario
+	// WarmStart
+    parameter_.put(PNB_WARM_START, 1); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario
 
     //// Aggregation of Cuts ( or single-multi cut )
-    //parameter_map_["AggregatedOptimalityCuts"] = 1.0;// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
-    //parameter_map_["ScenariosProCut"] = 0.0; // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
-    //parameter_map_["Relaxation"] = 1.0; // Solved LP relaxation instead of MIP problem, if we have a MIP problem
-    //parameter_map_["DynamicAggregation"] = 0.0; // Do we use Dynamic aggregation?
-    ////parameter_map_["TrustRegion"] = 0; // Do we want to use TrustRegion TODO: Implement this
+    parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
+    parameter_.put(PNB_SCENARIOS_PRO_CUT, 0); // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
+	parameter_.put(PNB_DYNAMIC_AGGREGATION, 0); // Do we use Dynamic aggregation? And which strategy?
+	// MIP Stuff
+    parameter_.put(PNB_RELAXATION, 0); // Solved LP relaxation instead of MIP problem, if we have a MIP problem
+	// Multistage strategies
+    parameter_.put(PNB_TREE_WALK_STRATEGY,0);
+	// Parallel Parameters
+	parameter_.put(PNB_NUM_CPU,0);
+	parameter_.put(PNB_CPU_USED,0);
+	// Acceleration Techniques
+    parameter_.put(PNB_TRUST_REGION, 0); // Do we want to use TrustRegion TODO: Implement this
+
 
     //// Tolerances
-    //parameter_map_["ZeroTolerance"] = std::pow(10.0,-8);
-    //parameter_map_["IntegerTolerance"] = std::pow(10.0,-6);
-    //parameter_map_["AbsoluteEpsilon"] = std::pow(10.0,-6);
-    //parameter_map_["RelativeEpsilon"] = std::pow(10.0,-6);
+    parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-8));
+	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-6));
+    parameter_.put(PNB_EPSILON_ABSOLUTE, std::pow(10.0,-6));
+    parameter_.put(PNB_EPSILON_RELATIVE, std::pow(10.0,-6));
 }
 
 void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )

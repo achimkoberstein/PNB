@@ -21,11 +21,14 @@ namespace parallel_benders{
     // We start with integer parameters
     const std::string PNB_BENDERS = "PNB_BENDERS";          //
     const std::string PNB_WARM_START = "PNB_WARM_START";    //
-    const std::string PNB_AGGREGATE_OPTIMALITY_CUTS = "PNB_AGGREGATE_OPTIMALITY_CUTS";    //
+    const std::string PNB_AGGREGATED_OPTIMALITY_CUTS = "PNB_AGGREGATED_OPTIMALITY_CUTS";    //
     const std::string PNB_SCENARIOS_PRO_CUT = "PNB_SCENARIOS_PRO_CUT" ;            //
     const std::string PNB_RELAXATION = "PNB_RELAXATION";                   //
     const std::string PNB_DYNAMIC_AGGREGATION = "PNB_DYNAMIC_AGGREGATION";          //
     const std::string PNB_TRUST_REGION = "PNB_TRUST_REGION";                 //
+	const std::string PNB_NUM_CPU = "PNB_NUM_CPU"; // 0 = take what hardware_concurrency offers you, otherwise equal to the number of CPU we would like to use.
+	const std::string PNB_CPU_USED = "PNB_CPU_USED"; // indicates how many CPU we used ( we have to set that from the solver)
+	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY";
 
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //

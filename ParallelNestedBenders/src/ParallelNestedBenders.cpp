@@ -165,7 +165,7 @@ namespace parallel_benders {
             warm_start_stage_ = true;
         
         // Multicut Aggregation
-        int value = param.get(PNB_AGGREGATE_OPTIMALITY_CUTS,1);
+        int value = param.get(PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         if ( value <= 0 ){
             // Use something you like
             num_theta = 0;
