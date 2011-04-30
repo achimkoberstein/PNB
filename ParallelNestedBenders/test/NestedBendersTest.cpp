@@ -12,6 +12,8 @@
 #include <sys/stat.h>
 
 #include <glog/logging.h>
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "OsiCpxSolverInterface.hpp"
 #include "OsiGrbSolverInterface.hpp"
@@ -39,8 +41,8 @@ public:
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut
         std::vector<double> solutions;
-		benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,100);
-        benders_parameter_.parameter_.put(PNB_BENDERS,1);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,100);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //bbenders_parameter_.parameter_.put(PNB_BENDERS,0);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -152,11 +154,11 @@ protected:
         std::string log_file_name; // <- set name according to Parameters..
         // File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
         std::stringstream s;
-        int aggregated_cuts = (int) benders_parameter_.parameter_map_["AggregatedOptimalityCuts"];
+		int aggregated_cuts = benders_parameter_.parameter_.get(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         if ( aggregated_cuts == 0 ){ // We do some Percent/Fixed Aggregation (or dynamic.. beware)
-			if ( benders_parameter_.parameter_.get<int>(PNB_SCENARIOS_PRO_CUT) > 0 ){
-                s << "StaticScenariosProCut-" << benders_parameter_.parameter_.get<int>(PNB_SCENARIOS_PRO_CUT);
-				if ( benders_parameter_.parameter_.get<int>(PNB_SCENARIOS_PRO_CUT) >= smi.getNumScenarios())
+			if ( benders_parameter_.parameter_.get<int>(parallel_benders::PNB_SCENARIOS_PRO_CUT) > 0 ){
+				s << "StaticScenariosProCut-" << benders_parameter_.parameter_.get<int>(parallel_benders::PNB_SCENARIOS_PRO_CUT);
+				if ( benders_parameter_.parameter_.get<int>(parallel_benders::PNB_SCENARIOS_PRO_CUT) >= smi.getNumScenarios())
 					s << "Multi";
 
 			}
@@ -176,31 +178,49 @@ protected:
         log_file_name = s.str();
 		// Reset stringstream
 		s.str("");
+		// Header line of File should be this one
+		// We need to write the header line for this file
+		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+		// //TODO: Iterate over property tree
+		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
+		{   
+			std::string name = v.first;
+			s << name << "; ";
+		}
+		s << "Date; Time" << std::endl;
 
-        if ( !FileExists(log_file_name.c_str() )){
-            // We need to write the header line for this file
-            s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
-            // Write all the parameters you like
-            // //TODO: Iterate over property tree
-            //for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
-            //    s << (*it).first << "; ";
-            //}
-            s << "Date; Time";
+        if ( !FileExists(log_file_name.c_str() )){ // Otherwise we would like to check if the first line matches with our line.
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
-            log_file << s.str() << std::endl;
+            log_file << s.str();
 			// Reset stringstream
 			s.str("");
         }
         else {
+			ifstream check_log_file;
+			check_log_file.open(log_file_name.c_str());
+			std::string line;
+			std::getline(check_log_file,line);
+			check_log_file.close();
+			std::string parameter_string(s.str());
+			
+			if ( !line.compare(parameter_string) ){
+				// We need to write this string first, because somehow our parameter ordering/number of them changed. If we notice this, we want to warn the user?!
+				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
+			}
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
         }
         // Write solution line
-		s.clear(); 
+		s.str("");
         s << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
-        // Write parameter values
-        for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
-            s << (*it).second << "; ";
-        }
+		// Write parameter values
+		// Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
+		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
+		{   
+			std::string name = v.first;
+			std::string value = benders_parameter_.parameter_.get<std::string>(name);
+			s << value << "; ";
+		}
+
         // Write date/time stamp
         char sdate[9];
         char stime[9];
@@ -532,7 +552,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.environ*";
+    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
@@ -540,5 +560,6 @@ int main(int argc, char *argv[]) {
     google::LogToStderr();
     google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
     int result = RUN_ALL_TESTS();
-    return result;
+
+	return result;
 }
