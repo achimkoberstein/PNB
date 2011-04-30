@@ -40,30 +40,22 @@ public:
         return solveSMPS(core_time_name, core_time_name,stoch_name);
     }
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
-        // Start with single cut
+        // Start with single cut and Benders
         std::vector<double> solutions;
-		benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,100);
+		// Try different multicut aggregation level
 		benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //bbenders_parameter_.parameter_.put(PNB_BENDERS,0);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //EXPECT_NEAR(solutions[0],solutions[1],0.1);
-  //      benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,2);
-  //      // Go on with static cut
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-  //      benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,4);
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-  //      benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,8);
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-  //      benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,16);
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-  //      benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,32);
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,64);
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//benders_parameter_.parameter_.put(PNB_AGGREGATE_OPTIMALITY_CUTS,128);
-  //      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
+		for (int j = 1; j < 7 ; j++){
+			benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j);
+			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,0);
+			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+			// Do some checks with second_stage_iteration
+			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,5);
+			for ( int i = 1; i < 4; i++ ){
+				benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_SECOND_ITERATION_STAGE,i);
+				solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+			}
+		}
+		
         double average = 0;
         for (int i = 0; i < solutions.size(); i++)
             average += solutions[i];
@@ -167,6 +159,9 @@ protected:
         solver_time = CoinCpuTime()-solver_time; // Solver only time
         time = CoinCpuTime()-time; // Overall WallClockTime;
         LOG(INFO) << "Solution Time: " << time;
+
+		// We get the parameters from the solver back to evaluate it.
+		benders_parameter_ = nested_benders.getParameters();
 
         // Write to log file
         ofstream log_file;
@@ -391,8 +386,8 @@ TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage,
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"), -28.134408, 0.1); //-22.273
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"), -22.273, 0.1); //-22.273
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
@@ -556,7 +551,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.stocfor*";
+    ::testing::GTEST_FLAG(filter) = "*.pltexp*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

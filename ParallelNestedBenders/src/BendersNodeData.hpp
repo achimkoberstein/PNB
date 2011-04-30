@@ -28,7 +28,8 @@ namespace parallel_benders{
     const std::string PNB_TRUST_REGION = "PNB_TRUST_REGION";                 //
 	const std::string PNB_NUM_CPU = "PNB_NUM_CPU"; // 0 = take what hardware_concurrency offers you, otherwise equal to the number of CPU we would like to use.
 	const std::string PNB_CPU_USED = "PNB_CPU_USED"; // indicates how many CPU we used ( we have to set that from the solver)
-	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY";
+	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY"; // Different Strategies. 0 = FastForw/FastBack, 1 = FastForw, 2 = FastBack, 3 = EpsFastForw, 4 = EpsFastBack, 5 = FastForw/FastBackWith2nd.Iteration
+	const std::string PNB_TREE_WALK_SECOND_ITERATION_STAGE = "PNB_TREE_WALK_SECOND_ITERATION_STAGE";
 
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //

@@ -142,8 +142,9 @@ private:
     bool only_one_feasibility_cut_;
     // If we generate feasibility cuts, do we also want optimality cuts generated? 
     bool generate_feasibility_and_optimality_cuts_;
-    // Secquencing protocol: 0 = FastForward/FastBackward, 1 = FastForward, 2 = FastBackward
+    // Secquencing protocol: 0 = FastForward/FastBackward, 1 = FastForward, 2 = FastBackward, 3= EpsFastForward, 4= EpsilonFastBackward, 5= 0-withSecondIteration
     int sequencing_protocol_; 
+	int second_iteration_stage_;
 
 };
 
