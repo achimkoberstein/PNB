@@ -2,10 +2,11 @@
 #define OsiPnbStochasticSolverInterface_h__
 
 #include "OsiStochasticSolverInterface.hpp"
+#include "BendersNodeData.hpp"
 
 namespace parallel_benders {
     class ParallelNestedBenders;
-    class Parameter;
+    struct Parameter;
 }
 
 
@@ -21,7 +22,8 @@ public:
     double getObjValue();
     void setParameters(const parallel_benders::Parameter& parameters);
     int getNumIterations();
-    //inline void setParams(BendersParameter &params) { this->params = params; }
+	parallel_benders::Parameter getParameters() const;
+	//inline void setParams(BendersParameter &params) { this->params = params; }
 
     //inline void setIntParam(const BendersParameter::BendersIntParam &param, const int &val) { params.setIntParam(param, val); }
     //inline int getIntParam(const BendersParameter::BendersIntParam &param) { return params.getIntParam(param); }

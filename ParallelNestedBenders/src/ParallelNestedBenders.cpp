@@ -125,7 +125,8 @@ namespace parallel_benders {
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
-        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false)
+        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
+		sequencing_protocol_(0),second_iteration_stage_(1)
     {
 
     }
@@ -174,6 +175,10 @@ namespace parallel_benders {
         }
         else
             num_theta = value;
+
+		// Tree walking procedure
+		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
+		second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY,1);
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -307,7 +312,7 @@ namespace parallel_benders {
                 }
             }
 
-            // Change direction depending on last or first stage
+            // Change direction depending on last or first stage. This is sequencing protocol 0.
             if ( current_stage_ == 0 ){
                 forward_ = true;
                 // If we had infeasible problems in the last backward run, we added all the feas cuts and can start fresh
@@ -316,12 +321,11 @@ namespace parallel_benders {
             if ( current_stage_ == num_stages_ -1)
                 forward_ = false;
 
-            //// Change direction depending on whatever we like
-            if ( (current_iteration_ % 2 == 0) && lower_bound_ > -infinity_ && upper_bound_ < infinity_){
-                // Try some fancy stuff: Solve the first stage several times
-                if ( current_stage_ == 2)
+            // Change direction depending on whatever we like. TODO: Magic number. We need more const int for that
+            if ( sequencing_protocol_ == 5 && (current_iteration_ % 2 == 0) && lower_bound_ > -infinity_ && upper_bound_ < infinity_ && !infeasible_problem_){
+                // Try some fancy stuff: Solve up to "second_iteration_stage_" in every second iteration
+                if ( current_stage_ == second_iteration_stage_)
                     forward_ = false;
-
             }
 
             std::string direction(forward_ ? "F " : "B ");
