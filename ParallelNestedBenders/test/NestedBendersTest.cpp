@@ -31,6 +31,7 @@ public:
 
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::string testbed_log_file_string_;
+	std::string parameter_name_string_;
 
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
@@ -100,20 +101,38 @@ protected:
     virtual ~NestedBendersTest(){}
     virtual void SetUp(){
 		testbed_log_file_string_ = "Results.csv";
-		if ( !FileExists(testbed_log_file_string_.c_str() ) ){
+
 		// Write title line.
-			std::stringstream s;
-            s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
-            // Write all the parameters you like
-            // //TODO: Iterate over property tree
-            //for ( std::map<std::string,double>::iterator it = benders_parameter_.parameter_map_.begin(); it != benders_parameter_.parameter_map_.end(); ++it){
-            //    s << (*it).first << "; ";
-            //}
-            s << "Date; Time";
-			ofstream log_file;
+		std::stringstream s;
+		// Header line of File should be this one
+		// We need to write the header line for this file
+		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+		// //TODO: Iterate over property tree
+		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
+		{   
+			std::string name = v.first;
+			s << name << "; ";
+		}
+		s << "Date; Time";
+		parameter_name_string_ = s.str();
+		
+		if ( !FileExists(testbed_log_file_string_.c_str() ) ){
+		    ofstream log_file;
 			log_file.open(testbed_log_file_string_.c_str(), ios::app | ios::out);
-			log_file << s.str() << std::endl;
+			log_file << parameter_name_string_ << std::endl;
 			log_file.close();
+		}
+		else {
+			// We need to check if first line is still valid
+			ifstream log_file;
+			log_file.open(testbed_log_file_string_.c_str());
+			std::string line;
+			std::getline(log_file,line);
+			log_file.close();
+			if ( line.compare(parameter_name_string_) ){
+				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
+			}
+
 		}
 	}
     virtual void TearDown(){}
@@ -160,7 +179,6 @@ protected:
 				s << "StaticScenariosProCut-" << benders_parameter_.parameter_.get<int>(parallel_benders::PNB_SCENARIOS_PRO_CUT);
 				if ( benders_parameter_.parameter_.get<int>(parallel_benders::PNB_SCENARIOS_PRO_CUT) >= smi.getNumScenarios())
 					s << "Multi";
-
 			}
 			else {
 				LOG(FATAL) << "Misspecified Parameters?!";
@@ -178,22 +196,11 @@ protected:
         log_file_name = s.str();
 		// Reset stringstream
 		s.str("");
-		// Header line of File should be this one
-		// We need to write the header line for this file
-		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
-		// //TODO: Iterate over property tree
-		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
-		{   
-			std::string name = v.first;
-			s << name << "; ";
-		}
-		s << "Date; Time" << std::endl;
 
         if ( !FileExists(log_file_name.c_str() )){ // Otherwise we would like to check if the first line matches with our line.
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
-            log_file << s.str();
-			// Reset stringstream
-			s.str("");
+            log_file << parameter_name_string_;
+
         }
         else {
 			ifstream check_log_file;
@@ -201,16 +208,14 @@ protected:
 			std::string line;
 			std::getline(check_log_file,line);
 			check_log_file.close();
-			std::string parameter_string(s.str());
 			
-			if ( !line.compare(parameter_string) ){
+			if ( line.compare(parameter_name_string_) ){
 				// We need to write this string first, because somehow our parameter ordering/number of them changed. If we notice this, we want to warn the user?!
 				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
 			}
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
         }
         // Write solution line
-		s.str("");
         s << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
 		// Write parameter values
 		// Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
@@ -220,22 +225,21 @@ protected:
 			std::string value = benders_parameter_.parameter_.get<std::string>(name);
 			s << value << "; ";
 		}
-
         // Write date/time stamp
         char sdate[9];
         char stime[9];
         s << _strdate(sdate) << "; " << _strtime(stime);
         s << std::endl;
+
+		// Write to log_file
 		log_file << s.str();
         log_file.close();
-
 
 		// Write to testbed log file
 		ofstream testbed_log_file;
 		testbed_log_file.open(testbed_log_file_string_.c_str(),ios::app | ios::out);
 		testbed_log_file << s.str();
 		testbed_log_file.close();
-
 
         return nested_benders.getObjValue();
     }
