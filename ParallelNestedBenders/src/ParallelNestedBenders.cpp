@@ -174,26 +174,28 @@ namespace parallel_benders {
         }
         else
             num_theta = value;
-        
 
-        // Dynamic aggregation
-        // TODO: Do something in this case.
-        // TODO: Find Strategies and implement them
-        
-        
+		// Thread related stuff
+		num_cpu_ = param.get(PNB_NUM_CPU,0);
+		int available_cpus = boost::thread::hardware_concurrency();
+		if ( num_cpu_ <= 0 )
+			num_cpu_ = available_cpus;
+		else
+			num_cpu_ = std::min(num_cpu_,available_cpus);
+		param.put(PNB_CPU_USED,num_cpu_);
+		thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
+		//thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
 
-        // Do a quick check :
+        // Do a quick check with probabilities of the model.
         double total_prob = 0;
         for (int i = 0; i < num_scenarios_; i++){
             total_prob += smi_->getScenarioProb(i);
         }
         LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
 
-
-
         // create our benders node objects and build the tree
         tree_ = SmiScenarioTree<BendersNodeData*>();
-        std::vector<std::vector<BendersNodeData*>> nodeVec;
+        std::vector<std::vector<BendersNodeData*> > nodeVec;
         nodeVec.reserve(num_scenarios_);
 
         // Create one BendersNodeData vector for every scenario
@@ -201,7 +203,7 @@ namespace parallel_benders {
             std::vector<BendersNodeData*> vec;
             nodeVec.push_back(vec);
         } 
-
+		// Fill the node vectors with real nodes
         std::vector<SmiScnNode *>::iterator it = smi_->getSmiTree()->treeBegin();
         while (it != smi_->getSmiTree()->treeEnd()) {
             BendersNodeData *node = new BendersNodeData((*it)->getNode());
@@ -213,12 +215,11 @@ namespace parallel_benders {
             nodeVec[(*it)->getScenarioIndex()].push_back(node);
             it++;
         }
-
+		// Fill the tree
         for (int i = 0; i < smi_->getNumScenarios(); i++) {
             BendersNodeData *node = nodeVec[i][0];
             tree_.addPathtoLeaf(node->branch_scenario_, node->smi_node_data_->getStage()-1, nodeVec[i]);
         }
-
 
         // Make a list of list of nodes, seperated by stage
         // the first list contains stage 0 nodes, the second stage 1 nodes, the third stage 2 nodes, ...
@@ -231,10 +232,8 @@ namespace parallel_benders {
         // Set probability 1 to root node, to prevent numerical issues
         tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
         // Set multicut aggregation for the first stage also
-        // Set multicut aggregation
         if ( num_theta == 0 ){
-            if ( num_scen_pro_cut == num_scenarios_ ) // Set percentage value
-                tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+			tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
         }
 		// Create Benders Stage data
 		stage_data_.reserve(num_stages_);
@@ -268,14 +267,6 @@ namespace parallel_benders {
 
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
-
-
-
-
-        // Thread related stuff
-        num_cpu_ = boost::thread::hardware_concurrency();
-        //thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
-        thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
 
     }
 
