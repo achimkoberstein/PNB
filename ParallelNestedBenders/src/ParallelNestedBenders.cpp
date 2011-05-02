@@ -178,7 +178,7 @@ namespace parallel_benders {
 
 		// Tree walking procedure
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
-		second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY,1);
+		second_iteration_stage_ = param.get(PNB_TREE_WALK_SECOND_ITERATION_STAGE,1);
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -250,7 +250,7 @@ namespace parallel_benders {
 			// Set number of thetas per stage, if we want to do it statically
 			stage_data_.back()->num_thetas_ = num_theta;
 		}
-
+		// Create tree nodes by stage vectors
         for (int i = 1; i < num_stages_; i++) {
             int number_of_nodes_in_this_stage = 0;
             int number_of_child_nodes_for_next_stage = 0;
@@ -269,6 +269,12 @@ namespace parallel_benders {
                 delete children;
             }
         }
+
+		// Initialize all upper and lower bounds
+		stage_lower_upper_bounds_.reserve(num_stages_);
+		for (int i = 0; i < num_stages_;i++){
+			stage_lower_upper_bounds_.push_back( std::make_pair(-infinity_,infinity_));
+		}
 
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -561,6 +567,15 @@ namespace parallel_benders {
         benders_node_pointer->col_solution_ = NULL;
         benders_node_pointer->dual_solution_ = NULL;
         benders_node_pointer->next_stage_approximation_ = NULL;
+
+
+		// Copy theta variables
+		int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
+		assert(num_theta >= 0);
+
+		// Retrieve and store the theta variables
+		benders_node_pointer->next_stage_approximation_ = new double[num_theta];
+		memcpy(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta*sizeof(double) );
         
         if ( forward_ || current_stage_ == num_stages_-1 ){ // We need the upper bound
             // We want to differentiate between column solution and theta variables 
@@ -572,31 +587,20 @@ namespace parallel_benders {
                     benders_node_pointer->col_solution_[i] = 0;
                 solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
             }
+			//double current_lower_bound = solution_value;
+			//for (int i = 0; i < num_theta; i++){
+			//	current_lower_bound += benders_node_pointer->next_stage_approximation_[i];
+			//}
             if ( current_stage_ == 0) // This work in the multithreaded cases, as we have only one thread for the first stage problem
                 temporary_upper_bound_ = 0;
             upper_bound_mutex_.lock();
             temporary_upper_bound_ += solution_value*benders_node_pointer->probability_;
+			//temporary_stage_lower_bound_ +=
+			//temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_
             upper_bound_mutex_.unlock();
-
-            //console_mutex_.lock();
-            //// Write to file
-            //ofstream myfile;
-            //std::stringstream filename;
-            //filename << "iteration_" << current_iteration_;
-            //myfile.open (filename.str().c_str(),fstream::out | fstream::app);
-            //myfile << benders_tree_node_pointer->scenario() << " " << solution_value*benders_node_pointer->probability_ << std::endl;
-            //myfile.close();
-            //console_mutex_.unlock();
 
         }
 
-        // Copy theta variables
-        int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
-        assert(num_theta >= 0);
-        
-        // Retrieve and store the theta variables
-        benders_node_pointer->next_stage_approximation_ = new double[num_theta];
-        memcpy(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta*sizeof(double) );
 
         // Set lower bound
         if ( current_stage_ == 0 ){

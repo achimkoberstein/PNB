@@ -130,6 +130,7 @@ private:
     boost::mutex infeasible_problem_mutex_; // Mutex for access to infeasible problem setter 
     boost::mutex osi_solver_mutex_; // Mutex that is used if we want to clone an OsiSolverInterface
     boost::mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
+	boost::mutex stage_lower_upper_bounds_mutex_; 
     // Further thread management stuff
     boost::threadpool::pool thread_pool_;
 
@@ -145,6 +146,11 @@ private:
     // Secquencing protocol: 0 = FastForward/FastBackward, 1 = FastForward, 2 = FastBackward, 3= EpsFastForward, 4= EpsilonFastBackward, 5= 0-withSecondIteration
     int sequencing_protocol_; 
 	int second_iteration_stage_;
+	// Stage wise upper and lower bound, necessary for certain sequencing protocols
+	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
+	double temporary_stage_lower_bound_;
+	double temporary_stage_upper_bound_;
+
 
 };
 

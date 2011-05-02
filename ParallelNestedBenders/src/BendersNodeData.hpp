@@ -30,6 +30,7 @@ namespace parallel_benders{
 	const std::string PNB_CPU_USED = "PNB_CPU_USED"; // indicates how many CPU we used ( we have to set that from the solver)
 	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY"; // Different Strategies. 0 = FastForw/FastBack, 1 = FastForw, 2 = FastBack, 3 = EpsFastForw, 4 = EpsFastBack, 5 = FastForw/FastBackWith2nd.Iteration
 	const std::string PNB_TREE_WALK_SECOND_ITERATION_STAGE = "PNB_TREE_WALK_SECOND_ITERATION_STAGE";
+	//const std::string PNB_TREE_WALK_STRATEGY_STAGE = "PNB_TREE_WALK_STRATEGY_STAGE"; // up to which stage do we want to follow the given strategy? else we resort to Fastpass
 
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //
@@ -37,6 +38,15 @@ namespace parallel_benders{
     const std::string PNB_EPSILON_ABSOLUTE = "PNB_EPSILON_ABSOLUTE";           //
     const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
 
+
+	// Some fixed integer to avoid magic number
+	const int PNB_INT_FASTPASS = 0;
+	const int PNB_INT_FAST_FORWARD = 1;
+	const int PNB_INT_FAST_BACKWARD = 2;
+	const int PNB_INT_EPSILON_FAST_FORWARD = 3;
+	const int PNB_INT_EPSILON_FAST_BACKWARD = 4;
+	const int PNB_INT_SECOND_ITERATION = 5;
+	//const int PNB_INT_
 
 
 // We can make it a struct anyway?!

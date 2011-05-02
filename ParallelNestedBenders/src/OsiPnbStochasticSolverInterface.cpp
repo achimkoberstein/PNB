@@ -5,7 +5,7 @@
 #include "ParallelNestedBenders.hpp"
 #include "BendersNodeData.hpp"
 
-//#define CPLEX_PRESENT
+#define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
 #include "cplex.h"
 #include "OsiCpxSolverInterface.hpp"
