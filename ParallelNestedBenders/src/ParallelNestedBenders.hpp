@@ -118,7 +118,7 @@ private:
     std::vector<int> added_optimality_cuts_;
     std::vector<int> added_feasibility_cuts_;
 
-    TimerStruct timer_;
+    Timer timer_;
 
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
@@ -150,6 +150,9 @@ private:
 	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
 	double temporary_stage_lower_bound_;
 	double temporary_stage_upper_bound_;
+    bool compute_stage_bounds_;
+    int cuts_added_last_round_; 
+    int fast_backward_completed_stage_;
 
 
 };

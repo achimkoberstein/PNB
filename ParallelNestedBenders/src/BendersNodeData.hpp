@@ -175,19 +175,6 @@ private:
     std::vector<double> overall_time_;
 };
 
-struct TimerStruct {
-    void init(int numStages);
-
-    std::string GetHeadingString();
-    std::string GetTimeString();
-
-    boost::scoped_ptr<Timer> total;
-    boost::scoped_ptr<Timer> solver;
-    boost::scoped_ptr<Timer> problemGeneration;
-    boost::scoped_ptr<Timer> aggCut;
-    boost::scoped_ptr<Timer> optiCut;
-    boost::scoped_ptr<Timer> feasCut;
-}; 
 
 struct Parameter {
     // Set default values for all strings we have..

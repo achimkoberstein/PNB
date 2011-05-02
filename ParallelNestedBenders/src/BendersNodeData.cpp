@@ -157,30 +157,6 @@ std::string Timer::GetFullTimeString()
     return s.str();
 }
 
-std::string TimerStruct::GetTimeString()
-{
-    std::stringstream s;
-    s << total->GetAggregatedTime() << solver->GetAggregatedTime() << problemGeneration->GetAggregatedTime() 
-        << optiCut->GetAggregatedTime() << feasCut->GetAggregatedTime() << aggCut->GetAggregatedTime() << std::endl;
-
-    return s.str();
-}
-
-void TimerStruct::init( int numStages )
-{
-    total.reset(new Timer(1));
-    solver.reset(new Timer(numStages));
-    problemGeneration.reset(new Timer(numStages));
-    optiCut.reset(new Timer(numStages));
-    aggCut.reset(new Timer(numStages));
-    feasCut.reset(new Timer(numStages));
-}
-
-std::string TimerStruct::GetHeadingString()
-{
-    return "WallClock; Solver; BuildProblem; OptimalityCut; FeasibilityCut; AggregatCuts";
-}
-
 void Parameter::init()
 {
     // DetEq or Benders
