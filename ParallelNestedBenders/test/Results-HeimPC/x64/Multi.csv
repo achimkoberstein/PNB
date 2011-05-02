@@ -1,0 +1,13 @@
+Problem Name; Overall Wall Clock Time (s); Iterations; Solver Wall Clock Time (s); Solution value; PNB_BENDERS; PNB_WARM_START; PNB_AGGREGATED_OPTIMALITY_CUTS; PNB_SCENARIOS_PRO_CUT; PNB_DYNAMIC_AGGREGATION; PNB_RELAXATION; PNB_TREE_WALK_STRATEGY; PNB_TREE_WALK_SECOND_ITERATION_STAGE; PNB_NUM_CPU; PNB_CPU_USED; PNB_TRUST_REGION; PNB_TOLERANCE_ZERO; PNB_TOLERANCE_INTEGER; PNB_EPSILON_ABSOLUTE; PNB_EPSILON_RELATIVE; Date; Time
+posts/pltexp/pltexpA2_6; 0.172; 2; 0.109; -9.47935; 1; 1; 6; 0; 0; 0; 0; 2; 1; 1; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:46
+posts/pltexp/pltexpA2_6; 0.187; 2; 0.109; -9.47935; 1; 1; 6; 0; 0; 0; 5; 1; 1; 1; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:46
+posts/pltexp/pltexpA2_6; 0.14; 2; 0.093; -9.47935; 1; 1; 6; 0; 0; 0; 5; 2; 1; 1; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:47
+posts/pltexp/pltexpA2_6; 0.203; 2; 0.141; -9.47935; 1; 1; 6; 0; 0; 0; 0; 2; 2; 2; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:52
+posts/pltexp/pltexpA2_6; 0.202; 2; 0.14; -9.47935; 1; 1; 6; 0; 0; 0; 5; 1; 2; 2; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:52
+posts/pltexp/pltexpA2_6; 0.187; 2; 0.125; -9.47935; 1; 1; 6; 0; 0; 0; 5; 2; 2; 2; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:52
+posts/pltexp/pltexpA2_6; 0.203; 2; 0.156; -9.47935; 1; 1; 6; 0; 0; 0; 0; 2; 3; 3; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:59
+posts/pltexp/pltexpA2_6; 0.218; 2; 0.156; -9.47935; 1; 1; 6; 0; 0; 0; 5; 1; 3; 3; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:59
+posts/pltexp/pltexpA2_6; 0.219; 2; 0.156; -9.47935; 1; 1; 6; 0; 0; 0; 5; 2; 3; 3; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:36:59
+posts/pltexp/pltexpA2_6; 0.25; 2; 0.187; -9.47935; 1; 1; 6; 0; 0; 0; 0; 2; 4; 4; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:37:06
+posts/pltexp/pltexpA2_6; 0.234; 2; 0.171; -9.47935; 1; 1; 6; 0; 0; 0; 5; 1; 4; 4; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:37:06
+posts/pltexp/pltexpA2_6; 0.25; 2; 0.187; -9.47935; 1; 1; 6; 0; 0; 0; 5; 2; 4; 4; 0; 1e-008; 1e-006; 1e-006; 1e-006; 05/01/11; 11:37:07
