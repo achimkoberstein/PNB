@@ -530,6 +530,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
 	    // Warm Start Handling
+		std::stringstream s;
+		s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
+		osi_solver->writeLp(s.str().c_str());
         
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
