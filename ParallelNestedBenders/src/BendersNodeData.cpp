@@ -173,7 +173,9 @@ void Parameter::init()
     parameter_.put(PNB_RELAXATION, 0); // Solved LP relaxation instead of MIP problem, if we have a MIP problem
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
-	parameter_.put(PNB_TREE_WALK_SECOND_ITERATION_STAGE,1); // Only applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0.
+	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,1); // Only applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0.
+    parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,1); // 
+    parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-6)); 
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);

@@ -146,13 +146,14 @@ private:
     // Secquencing protocol: 0 = FastForward/FastBackward, 1 = FastForward, 2 = FastBackward, 3= EpsFastForward, 4= EpsilonFastBackward, 5= 0-withSecondIteration
     int sequencing_protocol_; 
 	int second_iteration_stage_;
+    double strategy_epsilon_;
 	// Stage wise upper and lower bound, necessary for certain sequencing protocols
 	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
 	double temporary_stage_lower_bound_;
 	double temporary_stage_upper_bound_;
     bool compute_stage_bounds_;
     int cuts_added_last_round_; 
-    int fast_backward_completed_stage_;
+
 
 
 };
