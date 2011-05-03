@@ -329,11 +329,6 @@ namespace parallel_benders {
             minor_iteration_++;
             if ( current_stage_ == 0 ){ // Things to do if we are in the first stage
                 current_iteration_++;
-                // Cleanup Added cuts counter
-                for (int i = 0; i < num_stages_; i++){
-                    cut_counter += added_optimality_cuts_[i];
-                    added_optimality_cuts_[i] = 0;
-                }
             }
 
             // Change direction depending on last or first stage. This is sequencing protocol 0.
@@ -433,17 +428,32 @@ namespace parallel_benders {
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
                 thread_pool_.wait(0); // We wait until all threads are done
                 // If we added no cuts, we might want to notice that
-                LOG_IF(INFO,added_optimality_cuts_[current_stage_]==0) << "We added no new optimality cuts in stage " << current_stage_;
-                
+                //LOG_IF(INFO,added_optimality_cuts_[current_stage_]==0) << "We added no new optimality cuts in stage " << current_stage_;
             }
 
             if ( sequencing_protocol_ == PNB_INT_FAST_BACKWARD ){
                 cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
                 if ( cuts_added_last_round_ == 0){
                     forward_ = true; // skip this stage, i.e. move forward this stage
-                    
+					if ( current_stage_ == num_stages_-1 ){
+						// We are done, because we could not add cuts in the last stage
+						LOG(INFO) << "We are done with adding cuts.!";
+						// Set upper bound to the upper bound we have
+						double sum_stage_solutions = 0;
+						for (int i = 0; i < num_stages_; i++)
+							sum_stage_solutions += stage_lower_upper_bounds_[i].second;
+						upper_bound_ = sum_stage_solutions;
+						break; // Break while loop
+
+					}
                 }
             }
+
+			// Cleanup Added cuts counter
+			for (int i = 0; i < num_stages_; i++){
+				cut_counter += added_optimality_cuts_[i];
+				added_optimality_cuts_[i] = 0;
+			}
 
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
