@@ -32,6 +32,7 @@ public:
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::string testbed_log_file_string_;
 	std::string parameter_name_string_;
+    static const int max_stages_ = 7;
 
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
@@ -46,6 +47,7 @@ public:
 		benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.01);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		// And do everything with different number of cpus to get a measure of effectivenesss for parallelization
@@ -53,11 +55,10 @@ public:
 			//benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,k);
 			//for (int j = 4; j < 7 ; j++){
 				//benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j);
-				benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
-				solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-				benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
-				solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-				benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//		// Do some checks with second_stage_iteration
 		//		benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,5);
 		//		for ( int i = 1; i < 3; i++ ){
@@ -116,7 +117,13 @@ protected:
 			std::string name = v.first;
 			s << name << "; ";
 		}
-		s << "Date; Time";
+		// Detailed Time for several stages. 
+        s << "Time Setup; ";
+        for (int i = 0; i < max_stages_; i++){
+            s << "Time Stage " << i << "; ";
+        }
+        // Date/Timestamp
+        s << "Date; Time; ";
 		parameter_name_string_ = s.str();
 		
 		if ( !FileExists(testbed_log_file_string_.c_str() ) ){
@@ -231,7 +238,14 @@ protected:
 			std::string value = benders_parameter_.parameter_.get<std::string>(name);
 			s << value << "; ";
 		}
-        // Write date/time stamp
+        // Write Detailed Time Statistics
+        const parallel_benders::Timer& timer(nested_benders.getTimer());
+        s << timer.GetTime(smi.getCore()->getNumStages()) << "; "; // num_stages is time for setup and stuff
+        for (int i = 0; i < smi.getCore()->getNumStages(); i++){
+            s << timer.GetTime(i) << "; ";
+        }
+
+        // Write date/time stamp of log file writing time
         char sdate[9];
         char stime[9];
         s << _strdate(sdate) << "; " << _strtime(stime);
@@ -562,7 +576,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.pltexp*";
+    ::testing::GTEST_FLAG(filter) = "*.bonds_FELT*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

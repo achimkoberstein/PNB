@@ -536,6 +536,7 @@ namespace parallel_benders {
 
 
         }
+        timer_.Stop(current_stage_);
         LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
         // We finished solving
         if (!infeasible_problem_)
@@ -572,9 +573,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
 
-		std::stringstream s;
-		s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
-		osi_solver->writeLp(s.str().c_str());
+		//std::stringstream s;
+		//s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
+		//osi_solver->writeLp(s.str().c_str());
     
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry

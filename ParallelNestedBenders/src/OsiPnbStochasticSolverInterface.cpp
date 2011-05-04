@@ -73,7 +73,12 @@ OsiStochasticParallelNestedBendersTwoStageSolverInterface::~OsiStochasticParalle
     delete nested_benders_;
 }
 
-parallel_benders::Parameter OsiStochasticParallelNestedBendersTwoStageSolverInterface::getParameters() const
+const parallel_benders::Parameter& OsiStochasticParallelNestedBendersTwoStageSolverInterface::getParameters() const
 {
 	return nested_benders_->parameter_;
+}
+
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersTwoStageSolverInterface::getTimer() const
+{
+    return nested_benders_->timer_;
 }

@@ -135,10 +135,12 @@ void Timer::Start( int stg )
 
 void Timer::Stop( int stg )
 {
-    overall_time_[stg] += CoinCpuTime() - start_time_[stg];
+    if ( start_time_[stg] != 0)
+        overall_time_[stg] += CoinCpuTime() - start_time_[stg];
+    start_time_[stg] = 0;
 }
 
-double Timer::GetAggregatedTime()
+double Timer::GetAggregatedTime() const
 {
     double t = 0;
     for (int i = 0; i < stages_; i++) {
@@ -147,7 +149,7 @@ double Timer::GetAggregatedTime()
     return t;
 }
 
-std::string Timer::GetFullTimeString()
+std::string Timer::GetFullTimeString() const
 {
     std::stringstream s;
     s << GetAggregatedTime() << "; ";
