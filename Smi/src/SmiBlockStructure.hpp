@@ -109,29 +109,22 @@ private:
 
 public:
 	/// Adds SmiBlock s to the end of the list
-	void addSmiBlock(SmiBlock *s)
-	{ smiBlock_[s->getStage()].push_back(s); }
+	void addSmiBlock(SmiBlock *s);
 
     /// Deletes the last SmiBlock from the given stage
-	void deleteSmiBlock(int stage){
-        assert( stage >= 0 && stage < core_->getNumStages());
-        if ( !smiBlock_[stage].empty() ){
-            delete smiBlock_[stage].back();
-            smiBlock_[stage].pop_back();
-        }
-	}
+	void deleteSmiBlock(int stage);
 
 	/// Returns the i-th SmiBlock of stage 
     SmiBlock * getBlock(int i, int stage) {return smiBlock_[stage][i];}
 
 	/// Returns the number of SmiBlocks
-    int getNumBlocks(int stage) { return smiBlock_[stage].size(); }
+    int getNumBlocks(int stage);
 
 	/// Returns the SmiCoreData object
-	SmiCoreData *getCore(){ return core_; }
+	inline SmiCoreData *getCore(){ return core_; }
 
 	/// Sets the SmiCoreCombineRule
-	inline void setCombineWithCoreRule(SmiCoreCombineRule *r){
+	void setCombineWithCoreRule(SmiCoreCombineRule *r){
         combineRule_ = r;
 	}
 
@@ -143,25 +136,9 @@ public:
 	@param c the SmiCoreData object
 	@param r the SmiCoreCombineRule; if no combine rule is passed, the default rule SmiCoreCombineReplace is used
 	*/
-    SmiBlockStructure(SmiCoreData *c, SmiCoreCombineRule *r=SmiCoreCombineReplace::Instance()):
-    smiBlock_(0),core_(NULL),combineRule_(NULL)
-	{
-		core_=c;
-		this->setCombineWithCoreRule(r);
-        // Initialize SmiBlockVector
-        for (int i = 0; i < core_->getNumStages();i++)
-            
-            smiBlock_.push_back( std::vector<SmiBlock*>() );
-	}
+    SmiBlockStructure(SmiCoreData *c, SmiCoreCombineRule *r=SmiCoreCombineReplace::Instance());
 
-    ~SmiBlockStructure(){
-        // We only have to delete the remaining SMI blocks, in any case..
-        for (int j = 0; j < smiBlock_.size();j++){
-            for (int i = 0; i < smiBlock_[j].size(); i++)
-                delete smiBlock_[j][i];
-        }
-
-    }
+    ~SmiBlockStructure();
 
 };
 

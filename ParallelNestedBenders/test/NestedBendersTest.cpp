@@ -45,31 +45,36 @@ public:
         std::vector<double> solutions;
 		// Try different multicut aggregation level
 		benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.01);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		// And do everything with different number of cpus to get a measure of effectivenesss for parallelization
-		//for (int k = 1; k < 5; k++){
-			//benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,k);
-			//for (int j = 4; j < 7 ; j++){
-				//benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//		// Do some checks with second_stage_iteration
-		//		benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,5);
-		//		for ( int i = 1; i < 3; i++ ){
-		//			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i);
-		//			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//		}
-			//}
-		//}
+ 		// And do everything with different number of cpus to get a measure of effectivenesss for parallelization
+		for (int k = 1; k < 5; k++){
+			benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,k);
+			for (int j = 6; j < 7 ; j++){
+				if ( j == 9) // PLTEXP Special
+					j = 16;
+				benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j);
+				benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+				solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+				for ( int i = 1; i < 5; i++){
+					benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-i));
+					benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+					solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+					benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+					solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+				}
+
+				// Do some checks with second_stage_iteration
+				benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+				for ( int i = 1; i < 3; i++ ){
+					benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i);
+					solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+				}
+			}
+		}
 		
+		double epsilon = std::pow(10.0,-1);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,epsilon);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         double average = 0;
         for (int i = 0; i < solutions.size(); i++)
             average += solutions[i];
@@ -408,11 +413,11 @@ TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, n
 TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
@@ -464,10 +469,10 @@ TEST_F(NestedBendersTest,assets_FELT){// Two-Stage
 }
 
 TEST_F(NestedBendersTest,bonds_FELT){ //SCENARIOS, Values that are tested against: results from MSLIB-OSL, values commented out: presented in felts testset
-    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), -2967.9, 0.1); // 2976.91
+    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), -2967.9, 0.1); // 2976.91
     //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y4"), -3994.179, 0.1); // 3991.3
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), -5172.07, 0.1); // 5125.6
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), -6463.240, 0.1); // 6369.0
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), -5172.07, 0.1); // 5125.6
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), -6463.240, 0.1); // 6369.0
     //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y7"), -7947.863, 0.1); 
     //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y3"), -3027.6, 0.1); // 3027.6
     //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4031.303, 0.1); // 4023.9
@@ -578,7 +583,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.bonds*";
+    ::testing::GTEST_FLAG(filter) = "*.pltexp*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

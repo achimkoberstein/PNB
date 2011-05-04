@@ -127,7 +127,7 @@ namespace parallel_benders {
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),
-        stage_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),
+        stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
         warm_up_(false),warm_up_solution_(NULL)
     {
 
@@ -293,8 +293,10 @@ namespace parallel_benders {
             // Initialize all upper and lower bounds
             stage_lower_upper_bounds_.reserve(num_stages_);
 
-            for (int i = 0; i < num_stages_;i++)
+			for (int i = 0; i < num_stages_;i++){
                 stage_lower_upper_bounds_.push_back( std::make_pair(-infinity_,infinity_));
+				old_lower_upper_bounds_.push_back( std::make_pair(-infinity_,infinity_));
+			}
             stage_lower_upper_bounds_[num_stages_-1].first = 0; // We do not have another stage in the last one.
         }
             
@@ -363,8 +365,19 @@ namespace parallel_benders {
                     double current_upper_bound = 0;
                     for (int i = current_stage_; i < num_stages_; i++)
                         current_upper_bound += stage_lower_upper_bounds_[i].second;
-                    if ( ComputeRelativeGap(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_) )// If true, values are not equal. 
+					if ( ComputeRelativeGap(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_) ){// If true, values are not equal. 
                         forward_ = true; // We want to move forward again, with the newest cuts..
+						// Check for nearby values
+						if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
+							&& std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
+							forward_ = false;
+						}
+					}
+					else {
+					// We have to check if old_lower_bound and so are the same. if yes, we must go forward to reach something new, don't we?
+
+					}
+
                 }
             }
 
@@ -433,58 +446,57 @@ namespace parallel_benders {
                 //LOG_IF(INFO,added_optimality_cuts_[current_stage_]==0) << "We added no new optimality cuts in stage " << current_stage_;
             }
 
+			if ( forward_ && (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD )){
+				// Set the old values.
+				old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
+				old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
+			}
+
             if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
                 cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
                 // Or we should test the discrepancy thesis ( either relative or absolute )
-
-                // We can only check this, if we are not in the last stage
-                // We can only check this, if these values are already set to a value apart from infinity
-                bool end_of_story = false;
-                if ( cuts_added_last_round_ == 0 ){
-                    forward_ = true;
-                    if ( current_stage_ == num_stages_-1)
-                        end_of_story = true;
-                }
-                if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
+				// We always check the gap between this and the stage before.
+				if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
                     && stage_lower_upper_bounds_[current_stage_-1].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
                     // What do we want to compute? Discrepancy it is.
-                    double current_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
-                    double next_stage_x = stage_lower_upper_bounds_[current_stage_].second;
-                    double next_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
+                    double before_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
+                    double current_stage_x = stage_lower_upper_bounds_[current_stage_].second;
+                    double current_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
                     if ( current_stage_ == num_stages_-1 )
-                        next_stage_theta = 0;
-                    // If we want to compute the gap in the last stage, we do this in stage=num_stages_-2. Then next stage theta is 0.
-
-                    if ( !ComputeRelativeGap(next_stage_x,current_stage_theta-next_stage_theta,infinity_,strategy_epsilon_) ||
-                        std::abs(next_stage_x-current_stage_theta+next_stage_theta) <= absolute_epsilon_ ||
-                        next_stage_x < current_stage_theta-next_stage_theta ){
-                            DLOG(INFO) << "Discrepancy is low enough. Moving to next stage.";
-                            // If we are in stage before the last, we can end the algorithm, 
-                            // else we want to move forward
-                            forward_ = true; // skip this stage, i.e. move forward this stage
-                            //if ( current_stage_ == num_stages_-1){ // If we are in the last stage, we have to check for the total end, with the relative epsilon.
-                            //    if ( !ComputeRelativeGap(next_stage_x, current_stage_theta-next_stage_theta,infinity_,relative_epsilon_) ||
-                            //        std::abs(next_stage_x-current_stage_theta+next_stage_theta) <= absolute_epsilon_ ||
-                            //        next_stage_x < current_stage_theta-next_stage_theta )
-                            //        end_of_story = true;
-                            //}
+                        current_stage_theta = 0;
+					// Compute the gap of this stage with the stage before to decide where to go
+                    if ( !ComputeRelativeGap(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
+                        std::abs(current_stage_x-before_stage_theta+current_stage_theta) <= absolute_epsilon_ ||
+                        current_stage_x < before_stage_theta-current_stage_theta ){
+							// We fulfilled our epsilon distance, so we can move to the next stage
+							// Question: What happens, if we get so close, we do not add any cuts to the lower stage problem and go here forever?
+							// Same must in principle hold for the EPSILON_FORWARD algorithm. Not foreseen in Morton 1996.
+							// Solve this by storing current lower / upper bounds and compare if we come here again
+							// TODO: We need an compare_near
+							forward_ = true; // skip this stage, i.e. move forward this stage
+							if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
+								&& std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
+								// We have the same old_lower_upper_bound.first and second. we do not go forward, but apply the cuts we already have.
+								forward_ = false;
+							}
+							old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
+							old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
                     }//End If Gap checking
-                }// End If Stage and Value Checking
+					// We can still check for cuts if the gap is not there
+					//if ( cuts_added_last_round_ == 0 ){
+					//	forward_ = true;
+					//	if ( current_stage_ == num_stages_-1 ){
+					//		// We added no cuts at the last stage. This means we should end at the next while loop check.
+					//		sequencing_protocol_ = PNB_INT_FASTPASS;
+					//		// If not, we use fastpass from then on
+					//		forward_ = false;
+					//	}
 
-                //if ( end_of_story){
-                //    // We are done, because we could not add cuts in the last stage
-                //    // Set upper bound to the upper bound we have and lower bound also.
-                //    double sum_stage_solutions = 0;
-                //    for (int i = 0; i < num_stages_; i++)
-                //        sum_stage_solutions += stage_lower_upper_bounds_[i].second;
-                //    upper_bound_ = sum_stage_solutions;
-                //    lower_bound_ = stage_lower_upper_bounds_[0].first;
-                //    sequencing_protocol_ = 0; // We reset to normal sequencing protocol ( has numerical issues ) 
-                //    // We might have to stop this strategy here as otherwise we wont come to an end.
-                //    // Test against lower_bound
-                //    //break; // Break while loop
-                //}
-            }//End If FastBackward/FastEpsilonBackward Procedure
+					//	old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
+					//	old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
+					//}
+                }// End If Stage and Value Checking
+			}//End If FastBackward/FastEpsilonBackward Procedure
 
 			// Cleanup Added cuts counter
 			for (int i = 0; i < num_stages_; i++){
@@ -577,9 +589,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
 
-		std::stringstream s;
-		s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
-		osi_solver->writeLp(s.str().c_str());
+		//std::stringstream s;
+		//s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
+		//osi_solver->writeLp(s.str().c_str());
     
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry
@@ -1515,7 +1527,7 @@ namespace parallel_benders {
             return true;
         if (std::abs(upper_bound) < 1 && std::abs(lower_bound) < 1) //in this case we do not want relative difference, instead we want absolute difference..
             return true;
-        return (abs(upper_bound-lower_bound)/abs(upper_bound)) >= epsilon; //See cplex mipgap
+		return (std::abs(upper_bound-lower_bound)/std::abs(upper_bound)) >= epsilon; //See cplex mipgap
     }
 
     RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode )
