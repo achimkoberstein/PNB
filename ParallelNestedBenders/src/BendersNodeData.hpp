@@ -163,11 +163,11 @@ public:
     void Start(int stg);
     void Stop(int stg);
 
-    double GetTime(int stg) { return overall_time_[stg]; }
+    double GetTime(int stg) const { return overall_time_[stg]; }
 
-    double GetAggregatedTime();
+    double GetAggregatedTime() const;
 
-    std::string GetFullTimeString();
+    std::string GetFullTimeString() const;
 
 private:
     int stages_;
