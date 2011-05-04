@@ -375,13 +375,13 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     }
 #endif
 
-string name;
-if (calculateAverageValues) name = "ev_calculated";
-else name = "ev";
-osiStoch_->writeLp(name.c_str());
+    string name;
+    if (calculateAverageValues) name = "ev_calculated";
+    else name = "ev";
+    osiStoch_->writeLp(name.c_str());
 
-    double * colSolution = new double[core_->getColStart(1)];
-    memcpy(colSolution, osiStoch_->getColSolution(), (core_->getColStart(1) * sizeof(double)) );
+    double * colSolution = new double[core_->getNumCols()];
+    memcpy(colSolution, osiStoch_->getColSolution(), (core_->getNumCols()* sizeof(double)) );
     double objValue = osiStoch_->getObjValue();
     // Reset osiStoch_ to old solver
     osiStoch_ = tempPtr;

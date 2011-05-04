@@ -2,13 +2,13 @@
 #define ParallelNestedBenders_h__
 
 
+#include <map>
 #include <vector>
 
-
+#include <boost/dynamic_bitset.hpp>
+#include <boost/scoped_array.hpp>
 
 #include <CoinPackedVector.hpp>
-
-#include <boost/dynamic_bitset.hpp>
 
 #include "boost/threadpool.hpp"
 
@@ -153,6 +153,10 @@ private:
 	double temporary_stage_upper_bound_;
     bool compute_stage_bounds_;
     int cuts_added_last_round_; 
+
+    // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
+    bool warm_up_;
+    boost::scoped_array<double> warm_up_solution_;
 
 
 

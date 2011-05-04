@@ -46,6 +46,7 @@ public:
 		benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.01);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		// And do everything with different number of cpus to get a measure of effectivenesss for parallelization
 		//for (int k = 1; k < 5; k++){
