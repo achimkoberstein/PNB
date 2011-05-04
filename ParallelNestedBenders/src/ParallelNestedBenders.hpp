@@ -152,7 +152,8 @@ private:
 	double temporary_stage_lower_bound_;
 	double temporary_stage_upper_bound_;
     bool compute_stage_bounds_;
-    int cuts_added_last_round_; 
+    int cuts_added_last_round_;
+    bool theta_approximations_everywhere_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
