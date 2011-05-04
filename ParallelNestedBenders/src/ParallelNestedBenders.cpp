@@ -127,7 +127,8 @@ namespace parallel_benders {
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),
-        stage_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0)
+        stage_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),
+        warm_up_(false),warm_up_solution_(NULL)
     {
 
     }
@@ -194,6 +195,9 @@ namespace parallel_benders {
             default:
                 compute_stage_bounds_ = false;
         }
+
+        // Warm Up Period
+        //warm_up_ = true;
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -312,6 +316,12 @@ namespace parallel_benders {
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
         
+        // Warm up period
+        if ( warm_up_){
+            std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
+            warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
+        }
+
         int cut_counter = 0;
         timer_.Stop(num_stages_);
         // Do initialization stuff necessary for solve process
@@ -517,6 +527,8 @@ namespace parallel_benders {
                 //id_solver_pair.second->reset(); // This method does not really work for OsiCpx, I do not know why.
                 id_solver_pair.second->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
                 // Workaround: Load empty problem. 
+                // assert num_col == 0
+                assert(id_solver_pair.second->getNumCols() == 0);
             }
             timer_.Stop(current_stage_);
             // Change next stage, depending on where we are heading (forward or backward)
@@ -560,9 +572,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
 
-		//std::stringstream s;
-		//s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
-		//osi_solver->writeLp(s.str().c_str());
+		std::stringstream s;
+		s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
+		osi_solver->writeLp(s.str().c_str());
     
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry
@@ -813,7 +825,11 @@ namespace parallel_benders {
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
         if (  node_pointer->getColLowerLength()) {
             benders_node_pointer->column_lower_ = new double[stage_pointer->num_columns_];
-            memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
+            // Set bounds if we do the warm start
+            if ( warm_up_ )
+                memcpy(benders_node_pointer->column_lower_, warm_up_solution_.get(), stage_pointer->num_columns_*sizeof(double));
+            else
+                memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
             if ( stage_pointer->stochastic_bounds_ )
                 for (int i = 0; i < node_pointer->getColLowerLength(); i++) {
                     benders_node_pointer->column_lower_[node_pointer->getColLowerIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColLowerElements()[i];
@@ -825,7 +841,10 @@ namespace parallel_benders {
         // Column upper bounds
         if ( node_pointer->getColUpperLength()) {
             benders_node_pointer->column_upper_ = new double[stage_pointer->num_columns_];
-            memcpy(benders_node_pointer->column_upper_, core_->getDenseColUpper(current_stage_), stage_pointer->num_columns_*sizeof(double));
+            if ( warm_up_ )
+                memcpy(benders_node_pointer->column_upper_, warm_up_solution_.get(), stage_pointer->num_columns_*sizeof(double));
+            else
+                memcpy(benders_node_pointer->column_upper_, core_->getDenseColUpper(current_stage_), stage_pointer->num_columns_*sizeof(double));
             if ( stage_pointer->stochastic_bounds_ )
                 for (int i = 0; i < node_pointer->getColUpperLength(); i++) {
                     benders_node_pointer->column_upper_[node_pointer->getColUpperIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColUpperElements()[i];
@@ -833,6 +852,10 @@ namespace parallel_benders {
         }
         else
             benders_node_pointer->column_upper_ = const_cast<double*> (core_->getDenseColUpper(current_stage_));
+
+        // Set warm_up_ to false, we did the warm_up_
+        if ( warm_up_ )
+            warm_up_ = false;
 
         // Objective function coefficients
         if ( node_pointer->getObjectiveLength()) {
@@ -1404,9 +1427,11 @@ namespace parallel_benders {
         OsiSolverInterface* osi_solver = osi_solver_map_[boost::this_thread::get_id()];
         if ( osi_solver == NULL ){
             // Create new osi_solver object
-            osi_solver = osi_solver_->clone();
+            osi_solver = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.
             // Silence solver object (Otherwise we get problems with the output (thread-related)
             osi_solver->messageHandler()->setLogLevel(0);
+            // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
+            osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
         }
         return osi_solver;
