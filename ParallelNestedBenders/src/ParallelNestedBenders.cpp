@@ -127,7 +127,7 @@ namespace parallel_benders {
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),
-        stage_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),
+        stage_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),
         warm_up_(false),warm_up_solution_(NULL)
     {
 
@@ -357,14 +357,7 @@ namespace parallel_benders {
 
             // Try the shuffle or FastForward Strategy
             if ( (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD) && !forward_ ){
-                if ( current_stage_ == num_stages_-1){// We can update the upper bound, because we do not do that elsewhere if we use this strategy.
-                    double current_upper_bound = 0;
-                    for (int i = 0; i < num_stages_; i++)
-                        current_upper_bound += stage_lower_upper_bounds_[i].second;
-                    if ( current_upper_bound < upper_bound_)
-                        upper_bound_ = current_upper_bound;
-                }
-                else{
+                if ( current_stage_ < num_stages_-1){// We can update the upper bound, because we do not do that elsewhere if we use this strategy.
                     // Decide wether we want to go forward again 
                     // We want to test if the lower bound for this stage is close enough to the upper bound
                     double current_upper_bound = 0;
@@ -376,7 +369,7 @@ namespace parallel_benders {
             }
 
             // Try the cautious or FastBackward Strategy. Main logic lies behind the solution at the current stage.
-            if ( sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD ){
+            if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD) ){
                 if ( current_stage_ > 0 ){
                     forward_ = false;
                     cuts_added_last_round_ = 0;
@@ -440,7 +433,7 @@ namespace parallel_benders {
                 //LOG_IF(INFO,added_optimality_cuts_[current_stage_]==0) << "We added no new optimality cuts in stage " << current_stage_;
             }
 
-            if ( sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD ){
+            if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
                 cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
                 // Or we should test the discrepancy thesis ( either relative or absolute )
 
@@ -452,13 +445,13 @@ namespace parallel_benders {
                     if ( current_stage_ == num_stages_-1)
                         end_of_story = true;
                 }
-                if ( current_stage_< num_stages_-1 && stage_lower_upper_bounds_[current_stage_+1].second < infinity_
-                    && stage_lower_upper_bounds_[current_stage_].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
+                if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
+                    && stage_lower_upper_bounds_[current_stage_-1].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
                     // What do we want to compute? Discrepancy it is.
-                    double current_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
-                    double next_stage_x = stage_lower_upper_bounds_[current_stage_+1].second;
-                    double next_stage_theta = stage_lower_upper_bounds_[current_stage_+1].first-stage_lower_upper_bounds_[current_stage_+1].second;
-                    if ( current_stage_ == num_stages_-2 )
+                    double current_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
+                    double next_stage_x = stage_lower_upper_bounds_[current_stage_].second;
+                    double next_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
+                    if ( current_stage_ == num_stages_-1 )
                         next_stage_theta = 0;
                     // If we want to compute the gap in the last stage, we do this in stage=num_stages_-2. Then next stage theta is 0.
 
@@ -469,24 +462,28 @@ namespace parallel_benders {
                             // If we are in stage before the last, we can end the algorithm, 
                             // else we want to move forward
                             forward_ = true; // skip this stage, i.e. move forward this stage
-                            if ( current_stage_ == num_stages_-2){ // If we are in the last stage, we have to check for the total end, with the relative epsilon.
-                                if ( !ComputeRelativeGap(next_stage_x, current_stage_theta-next_stage_theta,infinity_,relative_epsilon_) ||
-                                    std::abs(next_stage_x-current_stage_theta+next_stage_theta) <= absolute_epsilon_ ||
-                                    next_stage_x < current_stage_theta-next_stage_theta )
-                                    end_of_story = true;
-                            }
+                            //if ( current_stage_ == num_stages_-1){ // If we are in the last stage, we have to check for the total end, with the relative epsilon.
+                            //    if ( !ComputeRelativeGap(next_stage_x, current_stage_theta-next_stage_theta,infinity_,relative_epsilon_) ||
+                            //        std::abs(next_stage_x-current_stage_theta+next_stage_theta) <= absolute_epsilon_ ||
+                            //        next_stage_x < current_stage_theta-next_stage_theta )
+                            //        end_of_story = true;
+                            //}
                     }//End If Gap checking
                 }// End If Stage and Value Checking
 
-                if ( end_of_story){
-                    // We are done, because we could not add cuts in the last stage
-                    // Set upper bound to the upper bound we have
-                    double sum_stage_solutions = 0;
-                    for (int i = 0; i < num_stages_; i++)
-                        sum_stage_solutions += stage_lower_upper_bounds_[i].second;
-                    upper_bound_ = sum_stage_solutions;
-                    break; // Break while loop
-                }
+                //if ( end_of_story){
+                //    // We are done, because we could not add cuts in the last stage
+                //    // Set upper bound to the upper bound we have and lower bound also.
+                //    double sum_stage_solutions = 0;
+                //    for (int i = 0; i < num_stages_; i++)
+                //        sum_stage_solutions += stage_lower_upper_bounds_[i].second;
+                //    upper_bound_ = sum_stage_solutions;
+                //    lower_bound_ = stage_lower_upper_bounds_[0].first;
+                //    sequencing_protocol_ = 0; // We reset to normal sequencing protocol ( has numerical issues ) 
+                //    // We might have to stop this strategy here as otherwise we wont come to an end.
+                //    // Test against lower_bound
+                //    //break; // Break while loop
+                //}
             }//End If FastBackward/FastEpsilonBackward Procedure
 
 			// Cleanup Added cuts counter
@@ -498,8 +495,15 @@ namespace parallel_benders {
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
             // This does only work for methods, that do not reiterate and use the stage_bounds..
-            if ( current_stage_ == num_stages_ -1 && infeasible_problems_.none() && !compute_stage_bounds_){
-                if ( upper_bound_ > temporary_upper_bound_ )
+            if ( current_stage_ == num_stages_ -1 && infeasible_problems_.none() ){
+                if ( compute_stage_bounds_ ){
+                    double sum_stage_solutions = 0;
+                    for (int i = 0; i < num_stages_; i++)
+                        sum_stage_solutions += stage_lower_upper_bounds_[i].second;
+                    if ( upper_bound_ > sum_stage_solutions)
+                        upper_bound_ = sum_stage_solutions;
+                }
+                else if ( upper_bound_ > temporary_upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
             }
 
@@ -573,9 +577,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
 
-		//std::stringstream s;
-		//s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
-		//osi_solver->writeLp(s.str().c_str());
+		std::stringstream s;
+		s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
+		osi_solver->writeLp(s.str().c_str());
     
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry
@@ -741,7 +745,9 @@ namespace parallel_benders {
             upper_bound_mutex_.lock();
             temporary_upper_bound_ += solution_value*benders_node_pointer->probability_;
             if ( compute_stage_bounds_ ){
-                //if ( current_lower_bound > -infinity_)
+                // We have to see that we can use FAST_BACKWARD strategy. This can at first happen, when we have theta variables at stage 1.
+                if (current_stage_ == 0 && current_lower_bound > -infinity_)
+                    theta_approximations_everywhere_ = true;
                 temporary_stage_lower_bound_ += current_lower_bound;
                 temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_;
             }
@@ -1236,28 +1242,13 @@ namespace parallel_benders {
                 cut_lower_bound += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_rhs_;
                  
             }
-            int new_index = 0;
-            for (int index = 0; index < num_columns+1; index++){
-                if ( CompareWithZero(cut_elements[index]) ){
-                    // Set cut element to zero.
-                    cut_elements[index] = 0;
-                }
-                else if ( index > new_index ){
-                    cut_elements[new_index] = cut_elements[index];
-                    cut_indices[new_index] = cut_indices[index];
-                    new_index++;
-                }
-                else{
-                    new_index++;
-                }
-            }
             // Check if cut is not redundant: Conditional Expected Value of Subproblems (theta) is greater than before. For implementation reasons, we only do this if we do not change aggregation level..
 
             // Theta = cut lower bound - cut_vector * column_solution
             // Compute cut_vector * column_solution
             const double * column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
             double sum = 0.0;
-            for ( int index = 0;  index < new_index-1;  index++ ) { // We iterate over column_solution, but not over the theta index, which is always the last one.
+            for ( int index = 0;  index < num_columns;  index++ ) { // We iterate over column_solution, but not over the theta index, which is always the last one.
                 int column_index = cut_indices[index];
                 sum += column_solution[column_index] * cut_elements[index];
             }
@@ -1265,6 +1256,22 @@ namespace parallel_benders {
             sum = cut_lower_bound-sum;
             // Check with previous stuff only, if we did not changed the aggregation level.
             if ( change_aggregation_level || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i] : 0) ){
+                int new_index = 0;
+                for (int index = 0; index < num_columns+1; index++){
+                    if ( CompareWithZero(cut_elements[index]) ){
+                        // Set cut element to zero.
+                        cut_elements[index] = 0;
+                    }
+                    else if ( index > new_index ){
+                        cut_elements[new_index] = cut_elements[index];
+                        cut_indices[new_index] = cut_indices[index];
+                        new_index++;
+                    }
+                    else{
+                        new_index++;
+                    }
+                }
+
                 // Add cut
                 OsiRowCut* cut_pointer = new OsiRowCut();
                 cut_pointer->setLb(cut_lower_bound);
