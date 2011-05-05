@@ -359,44 +359,44 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, 
 }
 
 TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long to solve
-    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_50"), -364.640, 0.1);
-    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_100"), -354.190, 0.1);
-    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_500"), -349.136, 0.1);
-    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_1000"), -351.171, 0.1);
-    EXPECT_NEAR(solveSMPS("sslp/sslp_10_50_2000"), -347.262, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
 
-    EXPECT_NEAR(solveSMPS("sslp/sslp_15_45_5"), -262.400, 0.1);
-    EXPECT_NEAR(solveSMPS("sslp/sslp_15_45_10"), -260.500, 0.1);
-    EXPECT_NEAR(solveSMPS("sslp/sslp_15_45_15"), -253.602, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_5"), -262.400, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_10"), -260.500, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
 }
 
 
 
 TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer
-    EXPECT_NEAR(solveSMPS("dcap/dcap233_200"), 1834.868, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap233_300"), 1644.342, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap233_500"), 1737.719, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap243_200"), 2322.721, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap243_300"), 2559.297, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap243_500"), 2167.512, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap332_200"), 1060.676, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap332_300"), 1253.040, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap332_500"), 1588.717, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap342_200"), 1619.531, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap342_300"), 2067.777, 0.1);
-    EXPECT_NEAR(solveSMPS("dcap/dcap342_500"), 1904.722, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 2559.297, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_200"), 1060.676, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_300"), 1253.040, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
 }
 
 TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage
-    EXPECT_NEAR(solveSMPS("semi/semi2"), 224434.32, 0.1);
-    EXPECT_NEAR(solveSMPS("semi/semi3"), 224486.00, 0.1);
-    EXPECT_NEAR(solveSMPS("semi/semi4"), 224564.3, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 224434.32, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi3"), 224486.00, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi4"), 224564.3, 0.1);
 }
 
 TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages
-    EXPECT_NEAR(solveSMPS("sizes/sizes3"), 224434.32, 0.1);
-    EXPECT_NEAR(solveSMPS("sizes/sizes5"), 224486.00, 0.1);
-    EXPECT_NEAR(solveSMPS("sizes/sizes10"), 224564.3, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 224486.00, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes10"), 224564.3, 0.1);
 }
 
 TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, not solvable correctly due to SMI stuff: Independent scenario do not get created correctly.
@@ -462,8 +462,8 @@ TEST_F(NestedBendersTest, airlift_FELT){// Two-Stage
 }
 
 TEST_F(NestedBendersTest,assets_FELT){// Two-Stage
-    EXPECT_NEAR(solveSMPS("assets_large"), -689.432, 0.1);
-    EXPECT_NEAR(solveSMPS("assets_small"), -723.839, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/assets/assets_large"), -689.432, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/assets/assets_small"), -723.839, 0.1);
 }
 
 TEST_F(NestedBendersTest,bonds_FELT){ //SCENARIOS, Values that are tested against: results from MSLIB-OSL, values commented out: presented in felts testset
