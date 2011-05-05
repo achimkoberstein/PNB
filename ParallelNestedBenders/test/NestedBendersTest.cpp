@@ -536,8 +536,50 @@ TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ra
     EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -39024.4, 0.1); // seven-stage, stochasticity from stocfor2
 }
 
-TEST_F(NestedBendersTest,20term){
-    EXPECT_NEAR(solveSMPS("20term/data-20/20"), -41131.98, 0.1); //two-stage
+TEST_F(NestedBendersTest,20term_WRIGHT){
+    EXPECT_NEAR(solveSMPS("wright/data-20/20"), -41131.98, 0.1); //two-stage
+}
+TEST_F(NestedBendersTest,gbd_WRIGHT){
+    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), -41131.98, 0.1); //two-stage
+}
+TEST_F(NestedBendersTest,ssn_WRIGHT){
+    EXPECT_NEAR(solveSMPS("wright/data-ssn/ssn"), -41131.98, 0.1); //two-stage
+}
+TEST_F(NestedBendersTest,LandS_WRIGHT){
+    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), -41131.98, 0.1); //two-stage
+}
+
+TEST_F(NestedBendersTest,watson_independent){
+    EXPECT_NEAR(solveSMPS("watson"), -41131.98, 0.1); //two-stage
+}
+TEST_F(NestedBendersTest,watson_conditional){
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.16.sto"), 2401.87,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.32.sto"), 2167.62,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.64.sto"), 2027.43,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.128.sto"), 1879.43,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.256.sto"), 1841.29,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.512.sto"), 1787.19,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.768.sto"), 1780.13,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.1024.sto"), 1791.18,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.1152.sto"), 1725.53,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.1536.sto"), 1693.47,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.1920.sto"), 1769.45,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.2304.sto"), 1664.66,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10.cor","watson/stochWAT_C_10.2688.sto"), 1679.92,0.1);
+}
+
+TEST_F(NestedBendersTest,watson_independent){
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.16.sto"), 2158.75,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.32.sto"), 1866.42,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.64.sto"), 2310.53,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.128.sto"), 1637.81,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.256.sto"), 2000.84,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.512.sto"), 1959.64,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.768.sto"), 1813.11,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.1024.sto"), 1926.79,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.1152.sto"), 1687.92,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.1536.sto"), 1790.27,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10.cor","watson/stochWAT_I_10.1920.sto"), 1778.95,0.1);
 }
 
 TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
@@ -584,7 +626,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.bonds*";
+    ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
