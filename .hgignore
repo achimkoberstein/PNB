@@ -34,6 +34,9 @@ lib/
 share/
 doxydoc/
 doc/
+boost/stage/
+google-perftools-*
+MSVisualStudio/
 
 
 *.aux
