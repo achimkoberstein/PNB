@@ -1,0 +1,40 @@
+STOCH         Test
+SCENARIOS     DISCRETE
+ SC SCEN0001  ROOT      0.125          STAGE001
+    RHS       R3             3.2
+    RHS       R4             4.0
+    RHS       R6             3.2
+    RHS       R7             7.0
+    RHS       R9             4.0
+    RHS       R10            8.0
+ SC SCEN0002  SCEN0001  0.125          STAGE004
+    RHS       R9             3.0
+    RHS       R10            6.0
+ SC SCEN0003  SCEN0001  0.125          STAGE003
+    RHS       R6             4.8
+    RHS       R7             9.0
+    RHS       R9             25.0
+    RHS       R10            30.0
+ SC SCEN0004  SCEN0003  0.125          STAGE004
+    RHS       R9             6.4
+    RHS       R10            18.0
+ SC SCEN0005  SCEN0001  0.125          STAGE002
+    RHS       R3             1.2
+    RHS       R4             4.0
+    RHS       R6             2.2
+    RHS       R7             7.5
+    RHS       R9             3.0
+    RHS       R10            6.0
+ SC SCEN0006  SCEN0005  0.125          STAGE004
+    RHS       R9             4.0
+    RHS       R10            9.0
+ SC SCEN0007  SCEN0005  0.125          STAGE003
+    RHS       R6             2.8
+    RHS       R7             6.0
+    RHS       R9             5.2
+    RHS       R10            12.0
+ SC SCEN0008  SCEN0007  0.125          STAGE004
+    RHS       R9             4.4
+    RHS       R10            8.0
+ENDATA
+
