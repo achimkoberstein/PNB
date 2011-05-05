@@ -38,12 +38,16 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
 			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            CPXdualopt(envPtr,lpPtr);
+            //CPXdualopt(envPtr,lpPtr);
+            CPXbaropt(envPtr,lpPtr);
             //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
             if ( result )
                 LOG(INFO) << "Cplex returned with status code " << result;
+            double obj;
+            CPXgetobjval(envPtr,lpPtr,&obj);
+            LOG(INFO) << "Solution: " << obj;
 
         }
         else{
