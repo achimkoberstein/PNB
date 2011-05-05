@@ -37,6 +37,7 @@ doc/
 boost/stage/
 google-perftools-*
 MSVisualStudio/
+test/instances/OriginalFiles/
 
 
 *.aux
