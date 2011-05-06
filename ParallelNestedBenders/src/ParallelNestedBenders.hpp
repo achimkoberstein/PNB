@@ -65,10 +65,6 @@ private:
     OsiSolverInterface* GetSolverByThread();
     bool CompareWithZero( double value );
 
-    // Constant values
-    const int kT;
-    const int kW;
-
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
@@ -147,6 +143,11 @@ private:
     int sequencing_protocol_; 
 	int second_iteration_stage_;
     double strategy_epsilon_;
+    int repeat_second_iteration_; // How many times do we want to repeat second iteration?
+    int second_iteration_counter_;
+    bool cascading_second_iteration_; // Cascading: first up to stage 1, then up to stage 2, then up to stage 3, then up to .. second_iteration_stage_
+    int current_cascading_stage_;
+    bool in_second_iteration_;
 	// Stage wise upper and lower bound, necessary for certain sequencing protocols
 	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
 	std::vector<std::pair<double,double> > old_lower_upper_bounds_;
