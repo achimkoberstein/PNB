@@ -32,6 +32,9 @@ namespace parallel_benders{
 	const std::string PNB_TREE_WALK_STRATEGY_STAGE = "PNB_TREE_WALK_STRATEGY_STAGE"; // up to which stage do we want to follow the given strategy? else we resort to Fastpass
     const std::string PNB_TREE_WALK_STRATEGY_EPSILON = "PNB_TREE_WALK_STRATEGY_EPSILON";
 
+    const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE";
+    const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT";
+
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //
     const std::string PNB_TOLERANCE_INTEGER = "PNB_TOLERANCE_INTEGER";       //

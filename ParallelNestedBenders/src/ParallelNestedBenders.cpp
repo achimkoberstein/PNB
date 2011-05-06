@@ -118,7 +118,7 @@ namespace parallel_benders {
 
     }
 
-    ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) : kT(1),kW(2),
+    ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
@@ -126,7 +126,7 @@ namespace parallel_benders {
         current_stage_(0),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),timer_(num_stages_+1),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
-		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),
+		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
         warm_up_(false),warm_up_solution_(NULL)
     {
@@ -181,6 +181,11 @@ namespace parallel_benders {
 		// Tree walking procedure
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
 		second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY_STAGE,1);
+        assert( second_iteration_stage_ >= 0);
+        if ( second_iteration_stage_ == num_stages_ -1){
+            second_iteration_stage_ = num_stages_-2;
+            param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
+        }
         strategy_epsilon_ = param.get(PNB_TREE_WALK_STRATEGY_EPSILON,0.0);
         if ( strategy_epsilon_ < relative_epsilon_ )
             strategy_epsilon_ = relative_epsilon_;
@@ -195,6 +200,9 @@ namespace parallel_benders {
             default:
                 compute_stage_bounds_ = false;
         }
+        // Assign parameters for sequencing_protocol_ == PNB_INT_SECOND_ITERATION
+        cascading_second_iteration_ = param.get(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,true);
+        repeat_second_iteration_ = param.get(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,2);
 
         // Warm Up Period
         //warm_up_ = true;
@@ -389,11 +397,40 @@ namespace parallel_benders {
                }
             }
 
-            // Change direction depending on whatever we like. TODO: Magic number. We need more const int for that
-            if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION && (current_iteration_ % 2 == 0) && lower_bound_ > -infinity_ && upper_bound_ < infinity_ && !infeasible_problem_){
-                // Try some fancy stuff: Solve up to "second_iteration_stage_" in every second iteration
-                if ( current_stage_ == second_iteration_stage_)
-                    forward_ = false;
+            // TODO: Move FAST_BACKWARD to here, instead of after cut aggregation?!
+
+            // Change direction depending on whatever we like. 
+            if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION && upper_bound_ < infinity_ && !infeasible_problem_){
+                // Boolean to indicate we are in a second iteration. This can be manifested at the first stage.
+                if ( in_second_iteration_ && forward_){
+                    // Simple case: We reached second_iteration_stage
+                    if ( current_stage_ == second_iteration_stage_ ){
+                        forward_ = false;
+                        in_second_iteration_ = false;
+                        second_iteration_counter_++;
+                        current_cascading_stage_ = 1; // Other values makes no sense, as we can at first cascade back when we reached stage 1
+                        if ( second_iteration_counter_ < repeat_second_iteration_){
+                            in_second_iteration_ = true;
+                        }
+                        else
+                            second_iteration_counter_ = 0;
+                    }
+                    else if ( cascading_second_iteration_ ){
+                        // We want cascading second iteration
+                        if ( current_stage_ == current_cascading_stage_ ){
+                            forward_ = false;
+                            current_cascading_stage_++;
+                        }
+                    }
+                    
+
+                }
+
+                if ( current_stage_ == num_stages_-1 ){
+                    assert( in_second_iteration_ == false); // Otherwise something is wrong. We do not need second_iteration in the last stage, makes no sense
+                    in_second_iteration_ = true;
+                }
+             
             }
 
             std::string direction(forward_ ? "F " : "B ");
