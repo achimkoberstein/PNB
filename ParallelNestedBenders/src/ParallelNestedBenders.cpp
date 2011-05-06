@@ -182,7 +182,7 @@ namespace parallel_benders {
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
 		second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY_STAGE,1);
         assert( second_iteration_stage_ >= 0);
-        if ( second_iteration_stage_ == num_stages_ -1){
+        if ( second_iteration_stage_ >= num_stages_ -1){
             second_iteration_stage_ = num_stages_-2;
             param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
         }
