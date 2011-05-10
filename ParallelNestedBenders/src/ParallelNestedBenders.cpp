@@ -332,7 +332,6 @@ namespace parallel_benders {
             warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
         }
 
-        int cut_counter = 0;
         timer_.Stop(num_stages_);
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
@@ -490,7 +489,7 @@ namespace parallel_benders {
 			}
 
             if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
-                cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
+                //cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
                 // Or we should test the discrepancy thesis ( either relative or absolute )
 				// We always check the gap between this and the stage before.
 				if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
@@ -520,16 +519,16 @@ namespace parallel_benders {
 							old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
                     }//End If Gap checking
 					// We can still check for cuts if the gap is not there
-					if ( cuts_added_last_round_ == 0 ){
-						forward_ = true;
-						if ( current_stage_ == num_stages_-1 ){
-							// We added no cuts at the last stage. This means we should end at the next while loop check.
-							sequencing_protocol_ = PNB_INT_FASTPASS;
-							LOG(INFO) << "Switching to fastpass.";
-							// If not, we use fastpass from then on
-							forward_ = false;
-						}
-					}
+					//if ( cuts_added_last_round_ == 0 ){
+					//	forward_ = true;
+					//	if ( current_stage_ == num_stages_-1 ){
+					//		// We added no cuts at the last stage. This means we should end at the next while loop check.
+					//		sequencing_protocol_ = PNB_INT_FASTPASS;
+					//		LOG(INFO) << "Switching to fastpass.";
+					//		// If not, we use fastpass from then on
+					//		forward_ = false;
+					//	}
+					//}
 
 					//	old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
 					//	old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
@@ -538,10 +537,10 @@ namespace parallel_benders {
 			}//End If FastBackward/FastEpsilonBackward Procedure
 
 			// Cleanup Added cuts counter
-			for (int i = 0; i < num_stages_; i++){
-				cut_counter += added_optimality_cuts_[i];
-				added_optimality_cuts_[i] = 0;
-			}
+			//for (int i = 0; i < num_stages_; i++){
+			//	cut_counter += added_optimality_cuts_[i];
+			//	added_optimality_cuts_[i] = 0;
+			//}
 
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
@@ -592,7 +591,18 @@ namespace parallel_benders {
 
         }
         timer_.Stop(current_stage_);
+        int cut_counter = 0;
+        for (int i = 0; i < num_stages_; i++){
+        	cut_counter += added_optimality_cuts_[i];
+        	//added_optimality_cuts_[i] = 0;
+        }
         LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
+        cut_counter = 0;
+        for (int i = 0; i < num_stages_; i++){
+            cut_counter += added_feasibility_cuts_[i];
+            //added_optimality_cuts_[i] = 0;
+        }
+        LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
         // We finished solving
         if (!infeasible_problem_)
             LOG(INFO) << "Solution: " << upper_bound_;
@@ -1455,12 +1465,14 @@ namespace parallel_benders {
         cut_pointer->setLb(cut_rhs);
         cut_pointer->setUb(infinity_);
         cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0]);
-		// Mutex is necessary for that to work.
+        // Increase feasCutCounter, together with locking/unlocking a mutex, and adding the cut the the parent problem
 		infeasible_problem_mutex_.lock();
         benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_pointer);
+        added_feasibility_cuts_[current_stage_] += 1;
 		infeasible_problem_mutex_.unlock();
 
-        // Increase feasCutCounter, together with locking/unlocking a mutex..
+
+
 
 
         // Deal with it. What about two-sided rows? TODO: Applies to optimality cuts as well
@@ -1471,6 +1483,7 @@ namespace parallel_benders {
         else {
             // Reset the solver interface
             dual_ray_problem->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+            delete dual_ray_problem;
         }
 
         // Delete the computed lower and upper bounds
