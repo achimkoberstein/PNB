@@ -53,6 +53,7 @@ private:
     void HandleSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SolveSubproblem( OsiSolverInterface* osi_solver ,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -117,6 +118,9 @@ private:
     // How many cuts did we added?
     std::vector<int> added_optimality_cuts_;
     std::vector<int> added_feasibility_cuts_;
+	int num_added_feasibility_cuts_;
+
+
 
     Timer timer_;
 
@@ -132,7 +136,7 @@ private:
     boost::mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
 	boost::mutex stage_lower_upper_bounds_mutex_; 
     // Further thread management stuff
-    boost::threadpool::pool thread_pool_;
+	boost::threadpool::pool thread_pool_;
 
     // Fine tuning parameters
     // Warm Start
@@ -160,6 +164,12 @@ private:
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
     boost::scoped_array<double> warm_up_solution_;
+
+	// Memory/Time consumption parameters
+	// Normal case: Solver Instances per thread
+	// We can change this, if we want to.
+	bool seperate_first_stage_solver_;
+	bool seperate_stage_solver_;
 
 
 
