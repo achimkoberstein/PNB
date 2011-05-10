@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\gurobi401\win32\include;..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
+				AdditionalIncludeDirectories="C:\gurobi450\win32\include;..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

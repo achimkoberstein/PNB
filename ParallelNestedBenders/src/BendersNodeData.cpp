@@ -176,8 +176,9 @@ void Parameter::init()
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,1); // Only applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0.
-    parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,1); // 
     parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-6)); 
+    parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,false);
+    parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,1);
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);
