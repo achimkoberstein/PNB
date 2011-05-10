@@ -44,9 +44,10 @@ public:
         // Start with single cut and Benders
         std::vector<double> solutions;
 		// Try different multicut aggregation level
-		benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
-		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,0);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -409,17 +410,17 @@ TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, n
 }
 //
 TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
 }
 //
@@ -623,7 +624,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.sgpf";
-    ::testing::GTEST_FLAG(filter) = "*.scfxm*";
+    ::testing::GTEST_FLAG(filter) = "*.pltexp*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

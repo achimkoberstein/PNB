@@ -212,6 +212,9 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 		}
 	}
 	else{
+		// Rearrange it. 
+
+		//TransformOptimalityCutAggregation( benders_node_data, node_in_cut_vector );
 		assert(false);
 	}
 }
