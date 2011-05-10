@@ -7,13 +7,16 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread.hpp>
 
 
 class CoinPackedMatrix;
 class CoinPackedVector;
 class CoinWarmStart;
 class OsiRowCut;
+class OsiSolverInterface;
 class SmiNodeData;
+
 
 namespace parallel_benders{
 
@@ -94,6 +97,11 @@ public:
 
     std::vector< std::vector<int> > nodes_in_cut_; // Stores which subnodes of current node are aggregated to a cut.
 
+	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
+	bool changed_aggregation_level_;
+	int opt_cut_start_index_;
+	int feas_cut_start_index_;
+
     // Values for cut aggregation
     std::vector<double> current_cut_coefficients_;
     double current_cut_rhs_;
@@ -132,6 +140,8 @@ struct BendersStageData {
     std::vector<int> row_indices_;
     // Coin Warm Start object
     CoinWarmStart* warm_start_;
+
+	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 
 
 };
 

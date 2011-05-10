@@ -103,6 +103,9 @@ namespace boost { namespace threadpool
       size_policy_type::init(*m_core, initial_threads);
     }
 
+	~thread_pool(){ 
+	}
+
 
     /*! Gets the size controller which manages the number of threads in the pool. 
     * \return The size controller.
