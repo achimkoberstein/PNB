@@ -628,7 +628,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.pltexp*";
     ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
-    ::testing::GTEST_FLAG(filter) = "*.*watson_conditional"
+    ::testing::GTEST_FLAG(filter) = "*.*watson_conditional";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
