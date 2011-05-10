@@ -265,7 +265,7 @@ void OsiGrbSolverInterface::initialSolve()
   if (strength!=OsiHintIgnore)
   	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
 
-	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_LPMETHOD, algorithm) );
+	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, algorithm) );
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_AUTO;
@@ -311,7 +311,7 @@ void OsiGrbSolverInterface::resolve()
   if (strength != OsiHintIgnore)
   	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
 
-  GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_LPMETHOD, algorithm) );
+  GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, algorithm) );
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_OFF;
