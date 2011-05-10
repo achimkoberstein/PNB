@@ -1,0 +1,8 @@
+TIME          ENERGY
+PERIODS
+    X1        R1                       STAGE001
+    Y1        R2                       STAGE002
+    Y2        R5                       STAGE003
+    Y3        R8                       STAGE004
+ENDATA
+

@@ -27,7 +27,7 @@ const static char *section[] = {
 };
 
 const static char *smpsType[] = {
-	"SC","BL","  ","DISCRETE","ADD","REPLACE",""
+	"SC","BL","  ","DISCRETE","ADD","REPLACE","","","","LO","UP","FX","FR"
 };
 #endif
 
@@ -363,6 +363,12 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 
                                 }
                                 break;
+                            case SMI_LO_BOUND_CARD:
+                            case SMI_UP_BOUND_CARD:
+                            case SMI_FX_BOUND_CARD:
+                            case SMI_FR_BOUND_CARD:
+                                assert(false); // This is not implemented.
+                                break;
                             case SMI_UNKNOWN_MPS_TYPE:
                             default:
                                 return -2;
@@ -505,6 +511,12 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                 }
 
 
+                            case SMI_LO_BOUND_CARD:
+                            case SMI_UP_BOUND_CARD:
+                            case SMI_FX_BOUND_CARD:
+                            case SMI_FR_BOUND_CARD:
+                                assert(false); // This is not implemented.
+                                break;
                             case SMI_UNKNOWN_MPS_TYPE:
                             default:{
                                 // Clean up used memory before we exit
@@ -628,10 +640,31 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             matrix->modifyCoefficient(i,j,value,true);
                         }
                     }
-
-                    else // unknown type
-                        return -1;
-
+                    else if ( smpsCardReader_->whichSmpsType() == SMI_LO_BOUND_CARD || smpsCardReader_->whichSmpsType() == SMI_UP_BOUND_CARD ||
+                        smpsCardReader_->whichSmpsType() == SMI_FX_BOUND_CARD || smpsCardReader_->whichSmpsType() == SMI_FR_BOUND_CARD ){
+                            int column = this->columnIndex(smpsCardReader_->columnName());
+                            assert( column >= 0);
+                            double value = smpsCardReader_->value();
+                            switch ( smpsCardReader_->whichSmpsType() ){
+                                case SMI_LO_BOUND_CARD:
+                                    dclo.insert(column,value);
+                                    break;
+                                case SMI_UP_BOUND_CARD:
+                                    dcup.insert(column,value);
+                                    break;
+                                case SMI_FX_BOUND_CARD:
+                                    dclo.insert(column,value);
+                                    dcup.insert(column,value);
+                                    break;
+                                case SMI_FR_BOUND_CARD:
+                                    // insert infinity
+                                    dclo.insert(column,-infinity_);
+                                    dcup.insert(column,infinity_);
+                                    break;
+                            } // switch
+                    }
+                    else 
+                        return -1; // unknown type
                 } // while
 
                 if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
@@ -895,7 +928,6 @@ SmiSmpsCardReader::nextSmpsField (  )
 			  case SMI_UNKNOWN_MPS_TYPE:
 				  //this in case the column name has two characters!
 			  case SMI_COLUMN_CARD:
-
 				  //already got the name
 				  strcpy(columnName_,next);
 				  
@@ -923,6 +955,60 @@ SmiSmpsCardReader::nextSmpsField (  )
 					  // strcpy(next,periodName_); // store it here until next time
 					  strcpy(periodName_,next); // store it here until next time
 				  break;
+              case SMI_LO_BOUND_CARD:
+              case SMI_UP_BOUND_CARD:
+              case SMI_FX_BOUND_CARD:
+                  // We got the kind of bound already.
+                  // We store the bound name in rowName
+                  // We store the column name in columnName;
+                  // We store the value in value_
+
+                  if (!(next = strtok(NULL,blanks)))
+                  {
+                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                      break;
+                  }
+                  strcpy(rowName_,next); // Bound name
+
+                  if (!(next = strtok(NULL,blanks)))
+                  {
+                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                      break;
+                  }
+                  strcpy(columnName_,next); // Column name
+
+                  if (!(next = strtok(NULL,blanks)))
+                  {
+                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                      break;
+                  }
+                  strcpy(valstr,next);
+                  value_ = osi_strtod(valstr,&after,0); // Value
+                  // see if error
+                  assert(after>valstr);
+
+                  if (!(next = strtok(NULL,blanks))) // Now there should be end of line only
+                      position_ = eol_;
+                  break;
+              case SMI_FR_BOUND_CARD:
+                  if (!(next = strtok(NULL,blanks)))
+                  {
+                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                      break;
+                  }
+                  strcpy(rowName_,next); // Bound name
+
+                  if (!(next = strtok(NULL,blanks)))
+                  {
+                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                      break;
+                  }
+                  strcpy(columnName_,next); // Column name
+
+                  if (!(next = strtok(NULL,blanks))) // Now there should be end of line only
+                      position_ = eol_;
+
+                  break;
 			  default:
 				  assert(smiSmpsType_ == SMI_UNKNOWN_MPS_TYPE);
 				  break;

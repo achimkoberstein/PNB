@@ -1,0 +1,5 @@
+TIME          feasibil
+PERIODS
+    V0_1 R0_0                     STAGE_0
+    V1 R1                       STAGE_1
+ENDATA
