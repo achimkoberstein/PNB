@@ -286,11 +286,11 @@ namespace parallel_benders {
 			// Set number of thetas per stage, if we want to do it statically
 			stage_data_.back()->num_thetas_ = num_theta;
 		}
-		// TEST
-		stage_data_[4]->num_thetas_ = 1;
-		stage_data_[3]->num_thetas_ = 1;
-		stage_data_[2]->num_thetas_ = 2;
-		stage_data_[1]->num_thetas_ = 2;
+		//// TEST
+		//stage_data_[4]->num_thetas_ = 1;
+		//stage_data_[3]->num_thetas_ = 1;
+		//stage_data_[2]->num_thetas_ = 2;
+		//stage_data_[1]->num_thetas_ = 2;
 
 
 		// Create tree nodes by stage vectors
@@ -406,11 +406,8 @@ namespace parallel_benders {
             if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD) ){
                 if ( current_stage_ > 0 ){
                     forward_ = false;
-                    cuts_added_last_round_ = 0;
                }
             }
-
-            // TODO: Move FAST_BACKWARD to here, instead of after cut aggregation?!
 
             // Change direction depending on whatever we like. 
             if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION && upper_bound_ < infinity_ && !infeasible_problem_){
@@ -435,8 +432,6 @@ namespace parallel_benders {
                             current_cascading_stage_++;
                         }
                     }
-                    
-
                 }
 
                 if ( current_stage_ == num_stages_-1 ){
@@ -639,13 +634,13 @@ namespace parallel_benders {
         }
         else
             osi_solver->initialSolve();
-        //if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
-        //}
+        if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        }
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -1138,6 +1133,17 @@ namespace parallel_benders {
             else if ( dual_solution[row] > 0)
                 cut_rhs += dual_solution[row]*row_lower[row];
         }
+        // Just print out the values of the cut-number 
+        if ( current_stage_ < 2){
+            console_mutex_.lock();
+            for ( int i = row; i < row+benders_node_pointer->optimality_cuts_.size();i++ ){
+                // Print it out
+                if ( std::abs(dual_solution[i]) > zero_tolerance_)
+                    std::cout << "Cut " << i-row << " is active with " << dual_solution[i] << std::endl;
+            }
+            console_mutex_.unlock();
+        }
+        
         for_bound += benders_node_pointer->optimality_cuts_.size();
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         for ( ; row < for_bound; row++ ){
@@ -1163,6 +1169,7 @@ namespace parallel_benders {
         if (node_pointer->getRowUpperLength())
             delete [] row_upper;
         
+
 
 		// We also remove the dual values, because we do not need them anymore.
 		delete [] benders_node_pointer->dual_solution_;
@@ -1230,13 +1237,16 @@ namespace parallel_benders {
         for ( int i = 0; i < num_cuts; i++){
             // Start a new OsiRowCut
             double cut_lower_bound = 0;
-            std::vector<double> cut_elements(num_columns+1,0);
-            cut_elements[num_columns] = 1;
+            int num_theta_indices = 1;//benders_tree_node_pointer->numChildren(); // or 1. What needs to be changed accordingly is the number in AppendCut method
+            std::vector<double> cut_elements(num_columns+num_theta_indices,0);
+            for ( int j = num_columns; j < num_columns+num_theta_indices; j++)
+                cut_elements[j] = 1;
             std::vector<int> cut_indices;
-            cut_indices.reserve(num_columns+1);
-            for (int j = 0; j < num_columns; j++)
+            cut_indices.reserve(num_columns+num_theta_indices); // Try something new/and shiny
+            for (int j = 0; j < num_columns+num_theta_indices; j++)
                 cut_indices.push_back(j);
-            cut_indices.push_back(num_columns+i);
+          
+            //cut_indices.push_back(num_columns+i);
             // For all the indices, that belong to this cut.
             std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
             for ( int j = 0; j < nodes_in_cut.size(); j++){
@@ -1260,7 +1270,7 @@ namespace parallel_benders {
             // Check with previous stuff only, if we did not changed the aggregation level.
             if ( change_aggregation_level || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i] : 0) ){
                 int new_index = 0;
-                for (int index = 0; index < num_columns+1; index++){
+                for (int index = 0; index < num_columns+num_theta_indices; index++){
                     if ( CompareWithZero(cut_elements[index]) ){
                         // Set cut element to zero.
                         cut_elements[index] = 0;
@@ -1549,7 +1559,7 @@ namespace parallel_benders {
 			}
 			if ( cols_to_remove == 0 ){ // We have no thetas yet, but optimality cuts. So we need thetas.
 				// We set a theta value for every stage
-				int num_cols = benders_node_pointer->num_thetas_;
+				int num_cols = benders_node_pointer->num_thetas_;//benders_tree_node_pointer->numChildren();//benders_node_pointer->num_thetas_;
 				std::vector<double> lower(num_cols,-infinity_);
 				std::vector<double> upper(num_cols,infinity_);
 				std::vector<double> objective(num_cols,1);
@@ -1616,9 +1626,6 @@ namespace parallel_benders {
 		// We have to transform the old row cuts with the new row cuts
 
 		// Find out which thetas we want to aggregate and disaggregate
-
-
-
 	}
 
 
