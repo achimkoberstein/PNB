@@ -1497,13 +1497,30 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
 			// Remove theta columns from solver, if we reuse it
 			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_; // This indicates if we reuse a solver, apart from initial run.
-			if ( cols_to_remove && benders_node_pointer->changed_aggregation_level_ ) { // TODO: We only remove the old columns, if we changed the aggregation level ( this is also the time when we have to delete old cuts..
+			if ( cols_to_remove && benders_node_pointer->changed_aggregation_level_ ) { 
 				std::vector<int> remove_indices;
 				remove_indices.reserve(cols_to_remove);
 				for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
 					remove_indices.push_back(i);
 				osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
 				cols_to_remove = 0;
+
+				// Remove all old cuts also.
+				// Remove all cuts from previous solutions ( includes "Theta" Constraints )
+				int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
+				if ( cuts_to_remove ){
+					std::vector<int> remove_indices;
+					remove_indices.reserve(cuts_to_remove);
+					for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+cuts_to_remove;i++)
+						remove_indices.push_back(i);
+					osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
+				}
+				// Reset start indices for cuts
+				benders_node_pointer->opt_cut_start_index_ = 0;
+				benders_node_pointer->feas_cut_start_index_ = 0;
+
+				
+
 			}
 			if ( cols_to_remove == 0 ){ // We have no thetas yet, but optimality cuts. So we need thetas.
 				// We set a theta value for every stage
