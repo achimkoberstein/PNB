@@ -465,92 +465,14 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            // Update stage wise upper/lower bounds
+            // Update stage wise upper/lower bounds, only if we did not had infeasible problems.
             if ( infeasible_problems_.none() && compute_stage_bounds_){
-                // If we solved all problems without infeasibility
-                //if ( stage_lower_upper_bounds_[current_stage_].first < temporary_stage_lower_bound_ )
-                    stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound_;
-                //if ( stage_lower_upper_bounds_[current_stage_].second > temporary_stage_upper_bound_ )
-                    stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound_;
+                old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
+                old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
+                // If we solved all problems without infeasibility, we update these values.
+                stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound_;
+                stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound_;
             }
-
-            if ( sequencing_protocol_ == PNB_INT_FAST_BACKWARD && infeasible_problems_.any() ){
-                cuts_added_last_round_++; // We increase cut counter, because we added feasibility cuts..
-            }
-            
-            // Calculate number of feasibility cuts that were added
-
-            // If we had unbounded problems, we have to stop here
-            if ( unbounded_problem_ ){
-                LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1;
-                break;
-            }
-
-            if ( !forward_ && !infeasible_problem_ && infeasible_problems_.none() ){ 
-                // We need to aggregate optimality cuts for the parent node
-                for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
-                    // Schedule the tasks for this stage
-                    thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
-                thread_pool_.wait(0); // We wait until all threads are done
-                // If we added no cuts, we might want to notice that
-            }
-
-			// If we go forward and have feasibility problems, we go backward again ( ensured below ) 
-			if ( forward_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD )){
-				// Set the old values.
-				old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
-				old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
-			}
-
-            if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
-                //cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
-                // Or we should test the discrepancy thesis ( either relative or absolute )
-				// We always check the gap between this and the stage before.
-				if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
-                    && stage_lower_upper_bounds_[current_stage_-1].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
-                    // What do we want to compute? Discrepancy it is.
-                    double before_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
-                    double current_stage_x = stage_lower_upper_bounds_[current_stage_].second;
-                    double current_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
-                    if ( current_stage_ == num_stages_-1 )
-                        current_stage_theta = 0;
-					// Compute the gap of this stage with the stage before to decide where to go
-                    if ( !ComputeRelativeGap(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
-                        std::abs(current_stage_x-before_stage_theta+current_stage_theta) <= absolute_epsilon_ ||
-                        current_stage_x < before_stage_theta-current_stage_theta ){
-							// We fulfilled our epsilon distance, so we can move to the next stage
-							// Question: What happens, if we get so close, we do not add any cuts to the lower stage problem and go here forever?
-							// Same must in principle hold for the EPSILON_FORWARD algorithm. Not foreseen in Morton 1996.
-							// Solve this by storing current lower / upper bounds and compare if we come here again
-							// TODO: We need an compare_near
-							forward_ = true; // skip this stage, i.e. move forward this stage
-							if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
-								&& std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
-								// We have the same old_lower_upper_bound.first and second. we do not go forward, but apply the cuts we already have.
-								forward_ = false;
-							}
-							old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
-							old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
-                    }//End If Gap checking
-					// We can still check for cuts if the gap is not there
-					//if ( cuts_added_last_round_ == 0 ){
-					//	forward_ = true;
-					//	if ( current_stage_ == num_stages_-1 ){
-					//		// We added no cuts at the last stage. This means we should end at the next while loop check.
-					//		sequencing_protocol_ = PNB_INT_FASTPASS;
-					//		LOG(INFO) << "Switching to fastpass.";
-					//		// If not, we use fastpass from then on
-					//		forward_ = false;
-					//	}
-					//}
-                }// End If Stage and Value Checking
-			}//End If FastBackward/FastEpsilonBackward Procedure
-
-			// Cleanup Added cuts counter
-			//for (int i = 0; i < num_stages_; i++){
-			//	cut_counter += added_optimality_cuts_[i];
-			//	added_optimality_cuts_[i] = 0;
-			//}
 
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
@@ -566,6 +488,54 @@ namespace parallel_benders {
                 else if ( upper_bound_ > temporary_upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
             }
+
+            // If we had unbounded problems, we have to stop the algorihtm.
+            if ( unbounded_problem_ ){
+                LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+                break;
+            }
+
+            if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
+                //cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
+                // Or we should test the discrepancy thesis ( either relative or absolute )
+                // We always check the gap between this and the stage before.
+                if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
+                    && stage_lower_upper_bounds_[current_stage_-1].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
+                        // What do we want to compute? Discrepancy it is.
+                        double before_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
+                        double current_stage_x = stage_lower_upper_bounds_[current_stage_].second;
+                        double current_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
+                        if ( current_stage_ == num_stages_-1 )
+                            current_stage_theta = 0;
+                        // Compute the gap of this stage with the stage before to decide where to go
+                        if ( !ComputeRelativeGap(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
+                            std::abs(current_stage_x-before_stage_theta+current_stage_theta) <= absolute_epsilon_ ||
+                            current_stage_x < before_stage_theta-current_stage_theta ){
+                                // We fulfilled our epsilon distance, so we can move to the next stage
+                                // Question: What happens, if we get so close, we do not add any cuts to the lower stage problem and go here forever?
+                                // Same must in principle hold for the EPSILON_FORWARD algorithm. Not foreseen in Morton 1996.
+                                // Solve this by storing current lower / upper bounds and compare if we come here again
+                                forward_ = true; // skip this stage, i.e. move forward this stage
+                                if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
+                                    && std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
+                                        // We have the same old_lower_upper_bound.first and second. we do not go forward, but apply the cuts we already have.
+                                        forward_ = false;
+                                        LOG(INFO) << "Your Epsilon chosen for your tree-walking strategy might be too big. We switch to fastpass, because we can not update your solution at stage " << current_stage_-1 << " anymore.";
+                                        sequencing_protocol_ = PNB_INT_FASTPASS;
+                                }
+                        }//End If Gap checking
+                }// End If Stage and Value Checking
+            }//End If FastBackward/FastEpsilonBackward Procedure
+
+            if ( !forward_ && !infeasible_problem_ && infeasible_problems_.none() ){ 
+                // We need to aggregate optimality cuts for the parent node
+                for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
+                    // Schedule the tasks for this stage
+                    thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
+                thread_pool_.wait(0); // We wait until all threads are done
+                // If we added no cuts, we might want to notice that
+            }
+
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){
@@ -588,20 +558,17 @@ namespace parallel_benders {
 
 
 
-            // We change the stage, so we should clear all of the osiSolverInterfaces
+            // We change the stage, so we should clear all of the osiSolverInterfaces we used
             std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
             BOOST_FOREACH( id_solver_pair, osi_solver_map_ ){
-                //id_solver_pair.second->reset(); // This method does not really work for OsiCpx, I do not know why.
+                //id_solver_pair.second->reset(); // This method throws exception with Cplex
                 id_solver_pair.second->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
                 // Workaround: Load empty problem. 
-                // assert num_col == 0
                 assert(id_solver_pair.second->getNumCols() == 0);
             }
             timer_.Stop(current_stage_);
             // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
-
-
         }
         timer_.Stop(current_stage_);
         int cut_counter = 0;
