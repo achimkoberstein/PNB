@@ -131,7 +131,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL)
+        warm_up_(false),warm_up_solution_(NULL),seperate_first_stage_solver_(false),seperate_stage_solver_(false)
     {
 
     }
@@ -215,6 +215,9 @@ namespace parallel_benders {
 		param.put(PNB_CPU_USED,num_cpu_);
 		thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
 		//thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
+
+		// Set first stage solver to own instance
+		seperate_first_stage_solver_ = true;
 
         // Do a quick check with probabilities of the model.
         double total_prob = 0;
@@ -305,9 +308,7 @@ namespace parallel_benders {
 			}
             stage_lower_upper_bounds_[num_stages_-1].first = 0; // We do not have another stage in the last one.
         }
-            
-    
-
+        
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
     }
@@ -451,13 +452,14 @@ namespace parallel_benders {
                 // If we added no cuts, we might want to notice that
             }
 
-			if ( forward_ && (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD )){
+			// If we go forward and have feasibility problems, we go backward again ( ensured below ) 
+			if ( forward_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD )){
 				// Set the old values.
 				old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
 				old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
 			}
 
-            if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
+            if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
                 cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
                 // Or we should test the discrepancy thesis ( either relative or absolute )
 				// We always check the gap between this and the stage before.
@@ -488,19 +490,15 @@ namespace parallel_benders {
 							old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
                     }//End If Gap checking
 					// We can still check for cuts if the gap is not there
-					if ( cuts_added_last_round_ == 0 ){
-						forward_ = true;
-						if ( current_stage_ == num_stages_-1 ){
-							// We added no cuts at the last stage. This means we should end at the next while loop check.
-							sequencing_protocol_ = PNB_INT_FASTPASS;
-							LOG(INFO) << "Switching to fastpass.";
-							// If not, we use fastpass from then on
-							forward_ = false;
-						}
-					}
-
-					//	old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
-					//	old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
+					//if ( cuts_added_last_round_ == 0 ){
+					//	forward_ = true;
+					//	if ( current_stage_ == num_stages_-1 ){
+					//		// We added no cuts at the last stage. This means we should end at the next while loop check.
+					//		sequencing_protocol_ = PNB_INT_FASTPASS;
+					//		LOG(INFO) << "Switching to fastpass.";
+					//		// If not, we use fastpass from then on
+					//		forward_ = false;
+					//	}
 					//}
                 }// End If Stage and Value Checking
 			}//End If FastBackward/FastEpsilonBackward Procedure
@@ -531,7 +529,6 @@ namespace parallel_benders {
                 // Set boolean variable to indicate that during this backward run, we do not generate optimality cuts!.
                 infeasible_problem_ = true;
                 if ( current_stage_ == 0){
-                    infeasible_problem_ = true;
                     LOG(INFO) << "First stage problem is infeasible.";
                     // We have to stop the algorithm, our master problem is infeasible..
                     break;
@@ -588,7 +585,7 @@ namespace parallel_benders {
                 return; 
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
-		if ( current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1))
+		if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1))
 			BuildSubproblem(osi_solver, benders_tree_node_pointer);
 		AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
@@ -842,7 +839,6 @@ namespace parallel_benders {
 			// See if we really have a w_matrix here!! TODO
 			// We get the deterministic matrix first ( T and W together ).
 			// We only need the W part, as h-Tx is the RHS.
-			//if ( (current_stage_ == 0 && seperate_first_stage_solver_ && current_iteration_ == 1) || current_stage_ > 0){ // Only do this the first time in the first stage.
 			benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
 			if ( node_pointer->hasMatrix()){
 				RowOrderedSparseMatrixPointer stochastic_matrix(CreateRowOrderedSparseMatrixPointer( node_pointer ));
@@ -1200,10 +1196,10 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->num_thetas_ = num_cuts;
             benders_tree_node_pointer->getDataPtr()->active_cuts_ = boost::dynamic_bitset<>(num_cuts);
         }
-		// We have to set the start index again.
+		// We have to set the start index again, but only if we used it ( marked by infinity )
 		if ( current_stage_-1 == 0 ){
-			//assert( benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == 0);
-			benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.size();
+			if ( benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == 0 || benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == infinity_)
+				benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.size();
 		}
 
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
@@ -1545,8 +1541,10 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->optimality_cuts_.empty()){
 			// Add the cuts
 			int start_index = 0;
-			if ( !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0)
+			if ( seperate_first_stage_solver_ && !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
 				start_index = benders_node_pointer->opt_cut_start_index_;
+				benders_node_pointer->opt_cut_start_index_ == infinity_; // We used the start_index
+			}
 			// TODO: This can be changed to addRows
 			for (int i = start_index; i<benders_node_pointer->optimality_cuts_.size();i++) {
 				osi_solver->applyRowCuts(1,benders_node_pointer->optimality_cuts_[i]);
@@ -1556,8 +1554,10 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->feasibility_cuts_.empty()){
 			// Add the cuts
 			int start_index = 0;
-			if ( !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0)
+			if ( seperate_first_stage_solver_ && !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
 				start_index = benders_node_pointer->feas_cut_start_index_;
+				// If we apply feasibility cuts, we always go back and apply them right away. No need for setting the value to infinity, as in the optimality case.
+			}
 			// TODO: This can be changed to addRows
 			for (int i = 0; i<benders_node_pointer->feasibility_cuts_.size();i++) {
 				osi_solver->applyRowCuts(1,benders_node_pointer->feasibility_cuts_[i]);
