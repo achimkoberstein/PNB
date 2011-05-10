@@ -1445,7 +1445,7 @@ void SmiScnModel::processDiscreteDistributionIntoBlocks(SmiDiscreteDistribution 
             while (cur_variable < rv_vector.size()){
                 // We need to get the current event
                 int current_event = current_events[cur_variable];
-                SmiDiscreteRV* rv = smiDD->getDiscreteRV(cur_variable);
+                SmiDiscreteRV* rv = rv_vector[cur_variable];
                 // Append the vector stuff to the existing ones.
                 obj.append(rv->getEventObjective(current_event));
                 clo.append(rv->getEventColLower(current_event));
