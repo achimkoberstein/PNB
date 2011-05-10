@@ -278,6 +278,13 @@ namespace parallel_benders {
 			// Set number of thetas per stage, if we want to do it statically
 			stage_data_.back()->num_thetas_ = num_theta;
 		}
+		// TEST
+		stage_data_[4]->num_thetas_ = 1;
+		stage_data_[3]->num_thetas_ = 1;
+		stage_data_[2]->num_thetas_ = 2;
+		stage_data_[1]->num_thetas_ = 2;
+
+
 		// Create tree nodes by stage vectors
         for (int i = 1; i < num_stages_; i++) {
             int number_of_nodes_in_this_stage = 0;
@@ -598,11 +605,6 @@ namespace parallel_benders {
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
-
-		//std::stringstream s;
-		//s << "problem-" << current_stage_ << "-" << benders_tree_node_pointer->scenario();
-		//osi_solver->writeLp(s.str().c_str());
-    
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
@@ -749,7 +751,7 @@ namespace parallel_benders {
             memcpy(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta*sizeof(double) );
         }
         
-        if ( forward_ || current_stage_ == num_stages_-1 || compute_stage_bounds_  || sequencing_protocol_ == PNB_INT_FAST_BACKWARD){ // We need the upper bound
+        if ( forward_ || current_stage_ == num_stages_-1 || compute_stage_bounds_ ){ // We need the upper bound, therefore we need to store the column solutions
             // We want to differentiate between column solution and theta variables 
             benders_node_pointer->col_solution_ = new double[stage_data_[current_stage_]->num_columns_];
             memcpy(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_*sizeof(double));
@@ -780,6 +782,11 @@ namespace parallel_benders {
                 temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_;
             }
             upper_bound_mutex_.unlock();
+			// Delete column solution, if we are in the last stage, otherwise we still need it.
+			if ( current_stage_ == num_stages_-1 ){
+				delete [] benders_node_pointer->col_solution_;
+				benders_node_pointer->col_solution_ = NULL;
+			}
         }
 
 
@@ -1103,7 +1110,6 @@ namespace parallel_benders {
         const double* dual_solution = benders_node_pointer->dual_solution_;
         ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
   
-
         BOOST_FOREACH(double& value, cut_coefficients){
             value *= prob;
         }
@@ -1148,17 +1154,24 @@ namespace parallel_benders {
             delete [] row_upper;
         
 
+		// We also remove the dual values, because we do not need them anymore.
+		delete [] benders_node_pointer->dual_solution_;
+		benders_node_pointer->dual_solution_ = NULL;
 
     }
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
-        if ( infeasible_problems_.any() ){
+        if ( infeasible_problems_.any() && !generate_feasibility_and_optimality_cuts_){
 			console_mutex_.lock();
             LOG(WARNING) << "Attempting to generate optimality cuts in the presence of infeasible problems in this stage.";
 			console_mutex_.unlock();
             return;
         }
+		if ( generate_feasibility_and_optimality_cuts_ && infeasible_problems_.any() ){
+			// This is not yet implemented
+			assert(false);
+		}
         // We specified the number of thetas in the stage_pointer (for now)
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         // We need all the children of this node..
@@ -1178,8 +1191,7 @@ namespace parallel_benders {
 
         // We have to adopt the number of cuts per subproblem.
 		assert(num_subproblems_per_cut >= 1);
-        //assert(num_cuts <= num_childs);
-        // Num cuts is num_thetas_ 
+		// See if we want to somehow change our cut level aggregation.
 
         bool change_aggregation_level = false;
         if ( num_cuts != benders_tree_node_pointer->getDataPtr()->num_thetas_ ){
@@ -1582,6 +1594,20 @@ namespace parallel_benders {
 		}
 
 	}
+
+	void ParallelNestedBenders::TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme )
+	{
+		if ( benders_node_pointer->optimality_cuts_.empty() )
+			return; // We are done
+
+		// We have to transform the old row cuts with the new row cuts
+
+		// Find out which thetas we want to aggregate and disaggregate
+
+
+
+	}
+
 
 
     bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
