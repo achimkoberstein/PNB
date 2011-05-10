@@ -98,8 +98,11 @@ namespace parallel_benders {
                             break; // We can skip the rest of the computation, if both booleans are true
                     }
                 }
-                if ( node_ptr->getCoreCombineRule() != SmiCoreCombineReplace::Instance() )
+				if ( node_ptr->getCoreCombineRule() != SmiCoreCombineReplace::Instance() ){
+					console_mutex_.lock();
                     LOG(FATAL) << "The supplied SMPS format is not understood. You used something that is not REPLACE in your stoch file.";
+					console_mutex_.unlock();
+				}
 
 
                 // Are there random bounds?
@@ -141,6 +144,9 @@ namespace parallel_benders {
             osi_solver_ = new OsiCpxSolverInterface();
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
+		// Load empty problem (i.e. reset the solver interface
+		osi_solver_->messageHandler()->setLogLevel(0);
+		osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
 
           // Set infinity to solver infinity
         infinity_ = osi_solver_->getInfinity();
@@ -335,7 +341,7 @@ namespace parallel_benders {
         {
             timer_.Start(current_stage_);
             if ( upper_bound_ <= lower_bound_ ){
-                LOG(INFO) << "Upper Bound is lower than lower Bound. This can not happen, unfortunately it has. Iteration: " << current_iteration_;
+                LOG(INFO) << "Upper Bound is lower than lower Bound. This should not happen, unfortunately it has. Iteration: " << current_iteration_;
                 //break;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){// TODO: If we have feasCuts we might have to look at this again..
@@ -443,7 +449,6 @@ namespace parallel_benders {
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
                 thread_pool_.wait(0); // We wait until all threads are done
                 // If we added no cuts, we might want to notice that
-                //LOG_IF(INFO,added_optimality_cuts_[current_stage_]==0) << "We added no new optimality cuts in stage " << current_stage_;
             }
 
 			if ( forward_ && (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD )){
@@ -581,10 +586,7 @@ namespace parallel_benders {
         if ( !generate_feasibility_and_optimality_cuts_ && only_one_feasibility_cut_ )
             if ( infeasible_problems_.any() )
                 return; 
-        // Get thread ID
-        //console_mutex_.lock();
-        //LOG(INFO) << "Current thread has ID: " << boost::this_thread::get_id();
-        //console_mutex_.unlock();
+
         OsiSolverInterface* osi_solver = GetSolverByThread();
 		if ( current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1))
 			BuildSubproblem(osi_solver, benders_tree_node_pointer);
@@ -641,7 +643,9 @@ namespace parallel_benders {
             // We need to check for errors in this case
             if ( osi_solver->isAbandoned() ){
                 //Problem
+				console_mutex_.lock();
                 LOG(FATAL) << "Solution process abandoned.";
+				console_mutex_.unlock();
             }
             if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
@@ -665,7 +669,9 @@ namespace parallel_benders {
                 }
                 else if ( !osi_solver->isProvenOptimal()){
                     if ( osi_solver->isProvenDualInfeasible() ){
+						console_mutex_.lock();
                         LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+						console_mutex_.unlock();
                         upper_bound_ = infinity_;
                         unbounded_problem_ = true;
                     }
@@ -677,7 +683,9 @@ namespace parallel_benders {
                         CPXLPptr lp = cpx_solver->getLpPtr();
                         // Check status code
                         int error = CPXgetstat(env,lp);
+						console_mutex_.lock();
                         LOG(WARNING) << "Solver returned with status code." << error;
+						console_mutex_.unlock();
                     }
                 }
             }
@@ -692,7 +700,7 @@ namespace parallel_benders {
                 infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
                 infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){
-                    DLOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
+                    //DLOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
                 }
                 else
@@ -978,8 +986,8 @@ namespace parallel_benders {
                     else if ( benders_node_pointer->row_upper_[row] >= infinity_ )
                         benders_node_pointer->row_lower_[row] -= value; // lb <= row
                     else {
-                        if (benders_node_pointer->row_lower_[row] == benders_node_pointer->row_upper_[row])
-                                //LOG(INFO) << "You have used a ranged constraint.";
+                        //if (benders_node_pointer->row_lower_[row] == benders_node_pointer->row_upper_[row])
+
                         benders_node_pointer->row_lower_[row] -= value; // lb == row == ub, we can not handle lb <= row <= ub with one real inequality ( have to split up to two rows somewhere..
                         benders_node_pointer->row_upper_[row] -= value;
                     }
@@ -1150,12 +1158,11 @@ namespace parallel_benders {
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
         if ( infeasible_problems_.any() ){
+			console_mutex_.lock();
             LOG(WARNING) << "Attempting to generate optimality cuts in the presence of infeasible problems in this stage.";
+			console_mutex_.unlock();
             return;
         }
-        //console_mutex_.lock();
-        //LOG(INFO) << "Aggregating cuts";
-        //console_mutex_.unlock();
         // We specified the number of thetas in the stage_pointer (for now)
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         // We need all the children of this node..
@@ -1261,13 +1268,6 @@ namespace parallel_benders {
                 benders_tree_node_pointer->getDataPtr()->active_cuts_[i] = true;
                 added_cuts++;
             }
-            else { // Cut is redundant
-                //Clean up
-                //LOG(INFO) << "Just for debugging reasons";
-
-            }
-            
-
         }// End for num_cuts
         // Add number of added cuts.
         add_cut_counter_mutex_.lock();
@@ -1409,16 +1409,13 @@ namespace parallel_benders {
             delete row_lower;
         if ( node_pointer->getRowUpperLength())
             delete row_upper;
-
-
-
-
     }
 
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
 		// We assign the used solver here.
-		if ( seperate_first_stage_solver_ && current_stage_ == 0 )
+		if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
 			return osi_solver_; // We do not clear this solver. We ALWAYS reuse it.
+		}
         boost::unique_lock<boost::mutex> lock(solver_map_mutex_); // TODO: Remove the mutex and initialize the solver in the init method.
         OsiSolverInterface* osi_solver = osi_solver_map_[boost::this_thread::get_id()];
         if ( osi_solver == NULL ){
