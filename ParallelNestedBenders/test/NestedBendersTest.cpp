@@ -46,7 +46,7 @@ public:
 		// Try different multicut aggregation level
 		//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD); 
@@ -592,6 +592,7 @@ TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
 
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),-149, 0.1); 
+    EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
 }
 
 
