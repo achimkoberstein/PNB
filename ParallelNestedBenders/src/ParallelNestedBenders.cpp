@@ -212,6 +212,9 @@ namespace parallel_benders {
 
         // Warm Up Period
         //warm_up_ = true;
+        // 
+        // Feasibility problems
+        only_one_feasibility_cut_ = false;
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -486,8 +489,13 @@ namespace parallel_benders {
 
             // If we had unbounded problems, we have to stop the algorihtm.
             if ( unbounded_problem_ ){
-                LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
-                break;
+                if ( infeasible_problems_.any() ){
+                    unbounded_problem_ = false;
+                }
+                else {
+                    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+                    break;
+                }
             }
 
             if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
@@ -549,6 +557,7 @@ namespace parallel_benders {
 				added_feasibility_cuts_[current_stage_-1] += num_added_feasibility_cuts_;
 				// Reset num_added_feasibility_cuts_
 				num_added_feasibility_cuts_ = 0;
+
             }
 
 
@@ -624,6 +633,7 @@ namespace parallel_benders {
                 stage_warm_start_mutex_.unlock();
             }
         }
+ 
         //osi_solver->setHintParam(OsiDoDualInInitial,false);
         //osi_solver->setHintParam(OsiDoDualInResolve,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         // MIP Solving only at first stage..
@@ -636,7 +646,7 @@ namespace parallel_benders {
         }
         else
             osi_solver->initialSolve();
-        if ( current_stage_ == 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ >= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
             console_mutex_.lock();
@@ -665,11 +675,12 @@ namespace parallel_benders {
                         extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
                         extra_elements[i] = 1;
                     }
-                    // Throws error, do not know why
-                    osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_ + 1000000, infinity_);
+                    // we bound all thetas with one extra row?
+                    osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+1000000, infinity_);
                     // Solve the model again
                     osi_solver->resolve();
                 }
+
                 if ( osi_solver->isProvenPrimalInfeasible() ){
                     // Go below for feasibility cut
                 }
@@ -678,23 +689,26 @@ namespace parallel_benders {
 						console_mutex_.lock();
                         LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
 						console_mutex_.unlock();
+                        // We can not work with that in a reasonable manner..
                         upper_bound_ = infinity_;
                         unbounded_problem_ = true;
+                        // We only care, if we have no infeasible problems at the same time.
                     }
                     
-                    // In case of CPLEX, we can return the error code..
-                    OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-                    if ( cpx_solver ){
-                        CPXENVptr env = cpx_solver->getEnvironmentPtr();
-                        CPXLPptr lp = cpx_solver->getLpPtr();
-                        // Check status code
-                        int error = CPXgetstat(env,lp);
-						console_mutex_.lock();
-                        LOG(WARNING) << "Solver returned with status code." << error;
-						console_mutex_.unlock();
-                    }
+      //              // In case of CPLEX, we can return the error code..
+      //              OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+      //              if ( cpx_solver ){
+      //                  CPXENVptr env = cpx_solver->getEnvironmentPtr();
+      //                  CPXLPptr lp = cpx_solver->getLpPtr();
+      //                  // Check status code
+      //                  int error = CPXgetstat(env,lp);
+						//console_mutex_.lock();
+      //                  LOG(WARNING) << "Solver returned with status code." << error;
+						//console_mutex_.unlock();
+      //              }
                 }
             }
+
             if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
                 infeasible_problem_mutex_.lock();
@@ -706,7 +720,7 @@ namespace parallel_benders {
                 infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
                 infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){
-                    //DLOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
+                    LOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
                 }
                 else
@@ -998,7 +1012,6 @@ namespace parallel_benders {
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Clean the solver before using it. Or we delete the wrong arrays somewhere?
             osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->row_lower_,benders_node_pointer->row_upper_);
         }
         else{
@@ -1410,8 +1423,7 @@ namespace parallel_benders {
 		if ( num_added_feasibility_cuts_ == 1 )
 			benders_tree_node_pointer->getParent()->getDataPtr()->feas_cut_start_index_ = benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.size();
         benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_pointer);
-        added_feasibility_cuts_[current_stage_] += 1;
-		infeasible_problem_mutex_.unlock();
+        infeasible_problem_mutex_.unlock();
 
 
 
@@ -1425,7 +1437,6 @@ namespace parallel_benders {
         else {
             // Reset the solver interface
             dual_ray_problem->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-            delete dual_ray_problem;
         }
 
         // Delete the computed lower and upper bounds
@@ -1438,6 +1449,14 @@ namespace parallel_benders {
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
 		// We assign the used solver here.
 		if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
+            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+            if ( cpx_ptr ){
+                // Get ENV and LP ptr
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+            }
 			return osi_solver_; // We do not clear this solver. We ALWAYS reuse it.
 		}
         boost::unique_lock<boost::mutex> lock(solver_map_mutex_); // TODO: Remove the mutex and initialize the solver in the init method.
@@ -1449,8 +1468,26 @@ namespace parallel_benders {
             osi_solver->messageHandler()->setLogLevel(0);
             // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
             osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+            // We want to emphasize numerical stability / for CPLEX
+            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+            if ( cpx_ptr ){
+                // Get ENV and LP ptr
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+
+            }
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
+        }
+        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+        if ( cpx_ptr ){
+            // Get ENV and LP ptr
+            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
         }
         return osi_solver;
     }
@@ -1546,7 +1583,7 @@ namespace parallel_benders {
 				}
 				// Reset start indices for cuts
 				benders_node_pointer->opt_cut_start_index_ = 0;
-				benders_node_pointer->feas_cut_start_index_ = 0;
+				benders_node_pointer->feas_cut_start_index_ = 0; // Also feas cuts, we deleted all old cuts..
 
 				
 
@@ -1589,7 +1626,7 @@ namespace parallel_benders {
 			int start_index = 0;
 			if ( seperate_first_stage_solver_ && !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
 				start_index = benders_node_pointer->opt_cut_start_index_;
-				benders_node_pointer->opt_cut_start_index_ == infinity_; // We used the start_index
+				benders_node_pointer->opt_cut_start_index_ == infinity_; // We used the start_index and signal this to the cut aggregation routine.
 			}
 			// TODO: This can be changed to addRows
 			for (int i = start_index; i<benders_node_pointer->optimality_cuts_.size();i++) {
@@ -1600,12 +1637,12 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->feasibility_cuts_.empty()){
 			// Add the cuts
 			int start_index = 0;
-			if ( seperate_first_stage_solver_ && !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
+			if ( seperate_first_stage_solver_ && current_stage_ == 0){
 				start_index = benders_node_pointer->feas_cut_start_index_;
 				// If we apply feasibility cuts, we always go back and apply them right away. No need for setting the value to infinity, as in the optimality case.
 			}
 			// TODO: This can be changed to addRows
-			for (int i = 0; i<benders_node_pointer->feasibility_cuts_.size();i++) {
+			for (int i = start_index; i<benders_node_pointer->feasibility_cuts_.size();i++) {
 				osi_solver->applyRowCuts(1,benders_node_pointer->feasibility_cuts_[i]);
 			}
 		}
