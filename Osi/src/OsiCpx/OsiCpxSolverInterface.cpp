@@ -256,8 +256,6 @@ void OsiCpxSolverInterface::initialSolve()
   
   switchToLP();
   int err = 0;
-  err = CPXsetintparam( env_, CPX_PARAM_NUMERICALEMPHASIS, 1);
-  checkCPXerror( err, "CPXsetintparam", "numerical emphasis" );
 
   int algorithm = 1;
   bool takeHint, gotHint;
