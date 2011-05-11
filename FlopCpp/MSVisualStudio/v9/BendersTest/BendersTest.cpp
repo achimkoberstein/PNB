@@ -35,14 +35,15 @@
         }
 
         void solveSelectedProblems(){
+            //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/saphir/saphir_50"))
             // Scenario and feasibility cuts
-            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/feasibilityProblem"), 25, 0.1);
-            // Scenario and binary
-            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -265.569, 0.1);
-            // Scenario
-            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
-            // Blocks
-            EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
+            //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/feasibilityProblem"), 25, 0.1);
+            //// Scenario and binary
+            //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -265.569, 0.1);
+            //// Scenario
+            //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/Farmer"), -108390, 0.3);
+            //// Blocks
+            //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/assets_small"), -723.839, 0.1);
         }
 
         double solveSMPS(const char* name) {
@@ -64,7 +65,7 @@
         BendersParameter benParam;
         double repetitions;
         BendersTest() : benParam(), repetitions(1) {
-                benParam.setIntParam(BendersParameter::BENDERS,0);
+                benParam.setIntParam(BendersParameter::BENDERS,1);
                 benParam.setIntParam(BendersParameter::MULTI,0);
                 benParam.setIntParam(BendersParameter::TRUSTREGION,0);
                 benParam.setIntParam(BendersParameter::KNAPSACK,0);
@@ -535,7 +536,7 @@ TEST_F(BendersTest,FeasibilityCutTest){
 
 TEST_F(BendersTest, current_problems) {
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/stocfor/stocfor2"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/cargo/4node-2"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/saphir/saphir_50"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/cargo/4node"), 224486.00, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sizes/sizes10"), 224564.3, 0.1);
 }

@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "OsiClpSolverInterface.hpp"
+//#include "OsiClpSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
 
 #include "CoinFloatEqual.hpp"
@@ -19,7 +19,7 @@
 using namespace flopc;
 
 int main(int argc, char* argv[]) {
-    MP_model model(new OsiClpSolverInterface());
+    MP_model model(new OsiCpxSolverInterface());
 
 #pragma region sets
 
@@ -296,13 +296,19 @@ int main(int argc, char* argv[]) {
     
     MP_random_data exr_factor(&rVarExr[0], T);
     
-    MP_random_data exr(C,T);
+    MP_random_data exr(C,T); // exchange rate
     exr.setName("exr");
     // TODO: Forall dreimal angewendet? Funktioniert glaube ich nicht wirklich..
-    forall(C*T.such_that(T > 0 && exr_basis(C) == 0.0), exr(C,T) = exr_offset(C)*1); // basis == 0 --> exr = offset
+    // 
+    //forall(C*T.such_that(T > 0 && exr_basis(C) == 0.0), exr(C,T) = exr_offset(C)*1); // basis == 0 --> exr = offset
 
-    forall(C.such_that(T == 1 && exr_basis(C) == 1.0), exr(C,T) = exr_offset(C) + exr_basis(C) * exr_factor(T)); // basis == 1 --> exr = offset + basis * exr_factor [T = 1]
-    forall(C*T.such_that(T > 1 && exr_basis(C) == 1.0), exr(C,T) = exr(C,T-1) * exr_factor(T)); // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
+    //forall(C.such_that(T == 1 && exr_basis(C) == 1.0), exr(C,T) = exr_offset(C) + exr_basis(C) * exr_factor(T)); // basis == 1 --> exr = offset + basis * exr_factor [T = 1]
+
+    // Set Initial Values
+    exr(C,T+1) = exr_offset(C)+exr_basis(C)*exr_factor(T+1);
+
+    // Set the basic value and then the other stuff..
+    //forall(C*T.such_that(T> 1), exr(C,T) = exr(C,T-1) * exr_factor(T)) ; // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
 
     // ir{c in C}; #interest rate for calculating the npv
     const double ir[numC] = { 0, 0};
@@ -406,6 +412,7 @@ int main(int argc, char* argv[]) {
     };
     MP_data buildY(&valBuildY[0][0], L, P);
     MP_constraint fix_build_y(L,P);
+    fix_build_y.setName("fix_build_y");
     fix_build_y(L,P) = y_build(L,P) == buildY(L,P);
     
 
@@ -474,8 +481,9 @@ int main(int argc, char* argv[]) {
     MP_variable testvar(T);
     MP_constraint constr(T);
     constr.setName("c");
+    testvar.setName("testvar");
     //constr(T) = testvar(T) == d(0,0,T);
-    constr(T) = testvar(T) == exr(0,T);
+    constr(C,T) = testvar(T) == exr(C,T);
     model.setObjective(testvar(0));
     
     //model.setObjective(sum(M*T, revenue(M,T)));
