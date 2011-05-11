@@ -628,7 +628,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.pltexp*";
+    ::testing::GTEST_FLAG(filter) = "*.saphir*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

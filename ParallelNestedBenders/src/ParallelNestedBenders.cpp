@@ -624,6 +624,8 @@ namespace parallel_benders {
                 stage_warm_start_mutex_.unlock();
             }
         }
+        //osi_solver->setHintParam(OsiDoDualInInitial,false);
+        //osi_solver->setHintParam(OsiDoDualInResolve,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         // MIP Solving only at first stage..
         if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
              // We need to set the integer indices.
@@ -872,11 +874,7 @@ namespace parallel_benders {
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
         if (  node_pointer->getColLowerLength()) {
             benders_node_pointer->column_lower_ = new double[stage_pointer->num_columns_];
-            // Set bounds if we do the warm start
-            if ( warm_up_ )
-                memcpy(benders_node_pointer->column_lower_, warm_up_solution_.get(), stage_pointer->num_columns_*sizeof(double));
-            else
-                memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
+            memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
             if ( stage_pointer->stochastic_bounds_ )
                 for (int i = 0; i < node_pointer->getColLowerLength(); i++) {
                     benders_node_pointer->column_lower_[node_pointer->getColLowerIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColLowerElements()[i];
@@ -888,10 +886,7 @@ namespace parallel_benders {
         // Column upper bounds
         if ( node_pointer->getColUpperLength()) {
             benders_node_pointer->column_upper_ = new double[stage_pointer->num_columns_];
-            if ( warm_up_ )
-                memcpy(benders_node_pointer->column_upper_, warm_up_solution_.get(), stage_pointer->num_columns_*sizeof(double));
-            else
-                memcpy(benders_node_pointer->column_upper_, core_->getDenseColUpper(current_stage_), stage_pointer->num_columns_*sizeof(double));
+            memcpy(benders_node_pointer->column_upper_, core_->getDenseColUpper(current_stage_), stage_pointer->num_columns_*sizeof(double));
             if ( stage_pointer->stochastic_bounds_ )
                 for (int i = 0; i < node_pointer->getColUpperLength(); i++) {
                     benders_node_pointer->column_upper_[node_pointer->getColUpperIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColUpperElements()[i];
@@ -899,10 +894,6 @@ namespace parallel_benders {
         }
         else
             benders_node_pointer->column_upper_ = const_cast<double*> (core_->getDenseColUpper(current_stage_));
-
-        // Set warm_up_ to false, we did the warm_up_
-        if ( warm_up_ )
-            warm_up_ = false;
 
         // Objective function coefficients
         if ( node_pointer->getObjectiveLength()) {
@@ -1006,8 +997,10 @@ namespace parallel_benders {
 
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
-        if ( !reuse_solver )
+        if ( !reuse_solver ){
+            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Clean the solver before using it. Or we delete the wrong arrays somewhere?
             osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->row_lower_,benders_node_pointer->row_upper_);
+        }
         else{
             if ( stage_pointer->stochastic_bounds_ ){
                 // Update bounds
@@ -1456,6 +1449,7 @@ namespace parallel_benders {
             osi_solver->messageHandler()->setLogLevel(0);
             // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
             osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+            // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
         }
         return osi_solver;
