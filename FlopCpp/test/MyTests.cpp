@@ -4461,24 +4461,32 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 	        int is11 = s1.addPathtoLeaf(label4,ppath4);
 	        s1.setChildLabels(s1.getRoot(),label4);
-
-	        node = s1.find(label5);
+			// To get to the node via the label, we have to forget the first index
+			std::vector<int> find_label4;
+			find_label4.push_back(label4[1]);
+	        node = s1.find(find_label4);
+			// They are not correctly added..
 	        int is12 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath5,
 		        node->depth()+1);
 	        s1.setChildLabels(node,label5);
-
-	        node = s1.find(label6);
+			std::vector<int> find_label5;
+			find_label5.push_back(label5[0]);
+			node = s1.find(find_label5);
 	        int is13 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath6,
 		        node->depth()+1);
 	        s1.setChildLabels(node,label6);
+			std::vector<int> find_label6;
+			find_label6.push_back(label6[1]);
+			node = s1.find(find_label6);
 
-	        node = s1.find(label7);
-	        int is14 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath7,
+			int is14 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath7,
 		        node->depth()+1);
 	        s1.setChildLabels(node,label7);
+			std::vector<int> find_label7;
+			find_label7.push_back(label7[1]);
+			node = s1.find(find_label7);
 
-	        node = s1.find(label8);
-	        int is15 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath8,
+			int is15 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath8,
 		        node->depth()+1);
 	        s1.setChildLabels(node,label8);
 
@@ -4583,26 +4591,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii2 );
 	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii4 );
 	        myAssert(__FILE__,__LINE__, vbeg1 == vend1 );
-
-
-
-	        //delete i1;
-	        //delete i2;
-	        //delete i3;
-	        //delete i4;
-	        //delete i5;
-	        //delete i6;
-	        //delete i7;
-	        //delete i8;
-
-	        //delete ii1;
-	        //delete ii2;
-	        //delete ii3;
-	        //delete ii4;
-	        //delete ii5;
-	        //delete ii6;
-	        //delete ii7;
-	        //delete ii8;
         }
 
 
@@ -4673,16 +4661,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        assert ((*vec1)[1] == n3 );
 	        delete vec1;
 
-	        delete i1;
-	        delete i2;
-	        delete i3;
-	        delete i4;
-	        delete i5;
-	        delete i6;
-	        delete i7;
-	        delete i8;
+			delete n1;
 
-	        delete n1;
         }
 
 
@@ -6337,7 +6317,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "SmiUnitTest.SmiScenarioTreeUnitTest";
+    ::testing::GTEST_FLAG(filter) = "SmiUnitTest.*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
