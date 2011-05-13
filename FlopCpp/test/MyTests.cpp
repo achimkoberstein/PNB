@@ -4424,10 +4424,15 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 	        vector<int *> ppath6(3);
 	        ppath6[0] = ppath5[0];
-	        vector<int> label6(3);
+            ppath6[1]= ii3;
+            ppath6[2]= ii6;
+	        
+            vector<int> label6(3);
 	        label6[0] = label5[0];
-	        ppath6[1]= ii3; label6[1] = *ii3;
-	        ppath6[2]= ii6; label6[2] = *ii6;
+            label6[1] = *ii3;
+            label6[2] = *ii6;
+            
+
 
 	        vector<int *> ppath7(3);
 	        ppath7[0] = ppath6[0];
@@ -4449,7 +4454,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 	        label8[2] = *ii8;
 
 	        // tree s1 is identical to s just uses labels to id nodes
-	        SmiScenarioTree<int*> s1;
+	        SmiScenarioTree<int* > s1;
 
 
 	        SmiTreeNode<int *> *node;
@@ -4581,23 +4586,23 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 
 
-	        delete i1;
-	        delete i2;
-	        delete i3;
-	        delete i4;
-	        delete i5;
-	        delete i6;
-	        delete i7;
-	        delete i8;
+	        //delete i1;
+	        //delete i2;
+	        //delete i3;
+	        //delete i4;
+	        //delete i5;
+	        //delete i6;
+	        //delete i7;
+	        //delete i8;
 
-	        delete ii1;
-	        delete ii2;
-	        delete ii3;
-	        delete ii4;
-	        delete ii5;
-	        delete ii6;
-	        delete ii7;
-	        delete ii8;
+	        //delete ii1;
+	        //delete ii2;
+	        //delete ii3;
+	        //delete ii4;
+	        //delete ii5;
+	        //delete ii6;
+	        //delete ii7;
+	        //delete ii8;
         }
 
 
@@ -6332,7 +6337,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "SmiUnitTest.*";
+    ::testing::GTEST_FLAG(filter) = "SmiUnitTest.SmiScenarioTreeUnitTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

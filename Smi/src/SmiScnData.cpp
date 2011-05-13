@@ -227,6 +227,7 @@ void SmiCoreData::gutsOfConstructor( int nrow,int ncol,int nstag, int *cstag,int
 		SmiNodeData *node = new SmiNodeData(i,this,
 			matrix,dclo,dcup,dobj,drlo,drup);
 		node->setCoreNode();
+        node->addPtr();
 		nodes_.push_back(node);
 		int nrow=this->getNumRows(i);
 		int ncol=this->getNumCols(i);
@@ -326,8 +327,9 @@ SmiCoreData::~SmiCoreData()
 	delete [] cdobj_;
     delete [] integerIndices_;
     delete [] binaryIndices_;
-    for (int ijk=1; ijk<nodes_.size(); ijk++){ // Delete all the nodes, except the first, which is root of the Scenario Tree
-	  delete nodes_[ijk];
+    for (int ijk=0; ijk<nodes_.size(); ijk++){ // Delete all the nodes, except the first, which is root of the Scenario Tree
+        if ( nodes_[ijk]->deletePtr()  == 0 )
+            delete nodes_[ijk];
     }
 }
 
@@ -625,7 +627,6 @@ void SmiNodeData::copyObjective(double * d){
 
 SmiNodeData::~SmiNodeData()
 {
-    //if ( ptr_count == 0 ) { // Delete memory if we have noone pointing to us anymore
     SmiRowMap::iterator iRowMap;
 
     SmiDenseRowMap::iterator idRowMap;
@@ -633,7 +634,6 @@ SmiNodeData::~SmiNodeData()
         delete[] idRowMap->second;
 
     deleteMemory();
-    //}
 }
 
 double *
