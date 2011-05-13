@@ -165,7 +165,7 @@ namespace flopc {
             MP::GenerateFunctor& f,
             double m) const {
                 // If we generate coefficients we need correct indices, i.e. the ones stored in the RandomDataRef. Therefore empty indices should be propagated, as the function can then decide to either propagate the given indices or use the already stored indices.
-                C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
+                //C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
                 f.setMultiplicator(multiplicators,m);
                 f.setTerminalExpression(this);
                 domain.forall(&f);
@@ -596,6 +596,10 @@ void MP::GenerateFunctor::operator()() const {
     std::vector<double> scenarioValues;
     RandomVariable* ptrRV = 0;
     bool stochasticValuesAdded = false;
+    int rowNumber = -1; // If rowNumber is -1 after call to row_number we have an objective function coefficient
+    if (R != 0) { //If we are at a normal constraint get correct rowNumber
+        rowNumber = R->row_number();
+    }
     // First Step: Look if we have multiplicators added and apply them to sideOfConstraint. (Generate scenarioValues for elements containing RV)
     for (unsigned int i=0; i<multiplicators.size(); i++) {
         // We apply several multiplicators via sideOfConstraint variable in the deterministic case OR the scenarioValues vector in the stochastic case
@@ -606,10 +610,11 @@ void MP::GenerateFunctor::operator()() const {
             if (ePtr == 0)
                 throw invalid_argument_exception();
             // Propagate correct indices, i.e. use the ones defined during assignment phase for MP_random_data. Therefore we have to call the function with empty indices to signal this.
-            ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
+            //ePtr->C->propagateIndexExpressions(MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty(),MP_index_exp::getEmpty());
             stage = max(stage,multiplicators[i]->getStage());
             // Copy values for every scenario to coefficient
-
+            // TODO: Think about how we can use the correct indices in the ePtr, where we just call getValue
+            // TODO: Check what it is with stochasticValuesAdded ? And what about more than one stochastic stuff?
             for (int j = 0; j < MP_model::getCurrentModel()->getScenSet().size();j++){
                 if (stochasticValuesAdded)
                     scenarioValues[i] *= sideOfConstraint;
@@ -632,11 +637,6 @@ void MP::GenerateFunctor::operator()() const {
         }
     }
     // If we have stochastic values, we have to add the mean value
-    // If rowNumber is -1 after call to row_number we have an objective function coefficient
-    int rowNumber = -1;
-    if (R != 0) { //If we are at a normal constraint get correct rowNumber
-        rowNumber = R->row_number();
-    }
     if (rowNumber != outOfBound) { //C 
         assert(C != 0);
         int colNumber = C->getColumn(); //Get Column number. -1 for RHS
@@ -672,6 +672,8 @@ void MP::GenerateFunctor::operator()() const {
                     meanValue += scenarioValues[j]*probs[j];
                 val = meanValue;
             }
+            if ( stage > 0 && stage >= MP_model::getCurrentModel()->getStage().size() )
+                LOG(FATAL) << "You indexed a parameter/variable with a stage of " << stage << " where you only specified " << MP_model::getCurrentModel()->getStage().size() << " stages.";
 
             boost::shared_ptr<MP::Coef> temp(new MP::Coef(colNumber, rowNumber, val, varStage,stage, scenarioValues));
             Coefs.push_back(temp);           

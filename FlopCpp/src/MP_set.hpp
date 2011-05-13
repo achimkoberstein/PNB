@@ -34,9 +34,6 @@ namespace flopc {
         virtual operator MP_domain() const = 0;
         virtual MP_domain operator()(const MP_index_exp& i) const = 0;
 
-
-
-
         //Check if given integer is valid. If not return outOfBound. In Case of cyclic return i mod size.
         int check(int i) const {
             if ((i>=0) && (i<size())) {
@@ -78,7 +75,7 @@ namespace flopc {
     use expressions to subset or slice the data.
     @note term: cardinality is the number of elements in the set.
     @note term: dimension is the number of indices used to reference into it.
-    @note there is a distince 'empty' MP_set
+    @note there is a distinct 'empty' MP_set
     */
     class MP_set : public MP_set_base {
     public:
@@ -88,9 +85,9 @@ namespace flopc {
         into the set.
         @todo is the internal use?
         */
-       
+       // TODO: We have to reconstruct this and put the index_exp also in here! Then we can construct correct domains and iterate over them in a correct way!
         virtual MP_domain operator()(const MP_index_exp& i) const {
-            return i->getDomain(const_cast<MP_set*>(this));
+            return i->getDomain(const_cast<MP_set*>(this),i);
         }
         /// @brief constructs an MP_domain from the MP_set. Cast-Operator, casts a set into a MP_domain.
         virtual operator MP_domain() const {
@@ -291,7 +288,7 @@ namespace flopc {
     class SUBSETREF : public MP_index_base {
     public:
         virtual MP_index* getIndex() const = 0;
-        virtual MP_domain getDomain(MP_set* s) const = 0;
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const = 0;
         virtual int evaluate() const = 0;
         virtual MP_index_base* deepCopy() const = 0;
         virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr) = 0;
@@ -329,11 +326,11 @@ namespace flopc {
                 I5->getIndex()) );
         }
 
-        virtual MP_domain getDomain(MP_set* s) const {
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const {
             return new MP_domain_subset<nbr>(S,
                 makeVector<nbr>(I1->getIndex(), I2->getIndex(), 
                 I3->getIndex(), I4->getIndex(), 
-                I5->getIndex()) );
+                I5->getIndex()) ); //TODO: Not sure if this will work correctly..
         }
 
         //     const MP_domain& such_that(const MP_boolean& b) {

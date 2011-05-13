@@ -255,6 +255,7 @@ namespace flopc {
 
     */
   class MP_constraint : public RowMajor, private Named {
+      friend MP_model;
     public: 
         /// construct the MP_constraint with appropriate sets for indexing.
         MP_constraint(
@@ -309,6 +310,7 @@ namespace flopc {
 
         MP_model* M;
         int offset;
+        int real_size;
         MP_expression left,right;
         Sense_enum sense;
     private:

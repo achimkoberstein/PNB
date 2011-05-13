@@ -25,13 +25,13 @@
 
 //using namespace flopc;
 namespace flopc {
-    void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename, const bool strictFormat=true){
+    void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename="test", const bool strictFormat=true){
         // write SMPS files
         model.smiModel->writeSmps(filename.c_str(), true, strictFormat);
 
         // read SMPS files        
         SmiScnModel smi;
-        EXPECT_EQ(0, smi.readSmps(filename.c_str()));
+        ASSERT_EQ(0, smi.readSmps(filename.c_str()));
         OsiSolverInterface *clp = new OsiClpSolverInterface();
         smi.setOsiSolverHandle(*clp);
         OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
@@ -292,7 +292,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_variable recourse(T);
 
         MP_constraint secondStageConstraint1(T),secondStageConstraint2(T);
-        secondStageConstraint1(T+1) = x() >= a(T+1) - recourse(T+1);
+        secondStageConstraint1(T+1) = x() >= a(T) - recourse(T);
         //secondStageConstraint2(T+1) = y(T+1) == a()
         MP_expression obj = x() + 2*recourse(T.last());
         testModel.setObjective(obj);
@@ -363,7 +363,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //testCon(cars) = z(cars) <= sum(cars,z1(cars));
         carOnStreet(T) = x(T) <= abs(a(T));
         MP_index aliasT;
-        countCars(T+1) = y(T+1) <= sum(T(aliasT).such_that(aliasT<= T) ,x(aliasT+1));
+        countCars(T+1) = y(T) <= sum(T(aliasT).such_that(aliasT<= T-1) ,x(aliasT));
 
 
         MP_expression objective;
@@ -433,13 +433,17 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         combined(T) = A(T) + rVar(T);
         MP_variable y(T);
         MP_constraint randomConstraint1(T),randomConstraint2(T),randomConstraint3(T);
+        randomConstraint1.setName("rc1");
+        randomConstraint2.setName("rc2");
+        randomConstraint3.setName("rc3");
         randomConstraint1(T) = y(T) <= combined(T);
-        randomConstraint3(T+2) = y(T+2) <= combined(T+2)+rVar(T+1);
-        randomConstraint2(T+1) = y(T+1) <= combined(T+1);
+        randomConstraint3(T+2) = y(T) <= combined(T)+rVar(T-1);
+        randomConstraint2(T+1) = y(T) <= combined(T);
         testModel.setObjective(y(T.last()));
         testModel.attach();
         //EXPECT_THROW(testModel.attach(),std::exception);
         testModel.solve(MP_model::MAXIMIZE);
+        testModel.Solver->writeLp("testModel");
         EXPECT_EQ(MP_model::OPTIMAL,testModel.getStatus());
         EXPECT_DOUBLE_EQ(5,testModel.Solver->getObjValue());
         y.display("y");
@@ -470,7 +474,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_constraint randomConstraint1(T),randomConstraint2(T),randomConstraint3(T);
         //randomConstraint1(T) = y(T) <= combined(T);
         //randomConstraint3(T+2) = y(T+2) <= combined(T+2)+rVar(T+1);
-        randomConstraint2(T+1) = y(T+1) <= combined(T+1);
+        randomConstraint2(T+1) = y(T) <= combined(T);
         testModel.setObjective(y(T.last()));
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
@@ -500,7 +504,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_constraint firstConstraint,secondConstraint,thirdConstraint(T);
         //firstConstraint() = a()*x() <= 20;
         //secondConstraint() = y()*x() <= 10;
-        thirdConstraint(T+1) = b(T+1)*x(T+1) <= y(T+1);
+        thirdConstraint(T+1) = b(T)*x(T) <= y(T);
         testModel.setObjective(x(T.last()));
         testModel.solve(MP_model::MAXIMIZE);
 
@@ -630,8 +634,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_constraint thirdConstraint;
         //firstConstraint(T+1) = x(T+1) <= blubb(T) + randomWalkVar(T+1);
 
-        secondConstraint(T+1) = y(T+1) == sumR(T+1) + y(T);
-        firstConstraint(T+1) = x(T+1) <= y(T+1);
+        secondConstraint(T+1) = y(T) == sumR(T) + y(T-1);
+        firstConstraint(T+1) = x(T) <= y(T);
         thirdConstraint() = y(0) <= Constant(0);
 
         //MP_constraint secondConstraint(T);
@@ -687,7 +691,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_random_data rvar2(&scenarioValues1[0],T);
         MP_variable x(T);
         MP_constraint con1(T);
-        con1(T+1) = x(T+1)*(rvar(T+1)+rvar2(T+1)) <= 10;//*rvar2(T);
+        con1(T+1) = x(T)*(rvar(T)+rvar2(T)) <= 10;//*rvar2(T);
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
@@ -750,7 +754,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
         allocationConstr(T-1) = sum(assets,x(T-1,assets)) == wealth(T-1);
-        returnConstr(T+1) = sum(assets,returns(T+1,assets)*x(T,assets) ) == wealth(T+1);
+        returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
 
         goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
         MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
@@ -902,7 +906,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_constraint firstStage,secondStage(T);
 
         firstStage() = x() <= 5;
-        secondStage(T+1) = y(T+1) >= -x()+randomData(T+1);
+        secondStage(T+1) = y(T) >= -x()+randomData(T);
         // Death test only under linux..
         //EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective" );
         testModel.setObjective( x()+2*y(T+1) );
@@ -929,7 +933,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         
         MP_constraint firstStage,secondStage(T);
         firstStage() = x() >= 10;
-        secondStage(T+1) = y(T+1) >= x()+randomData(T+1);
+        secondStage(T) = y(T) >= x()+randomData(T);
 
         testModel.setObjective(x()+y(T+1));
         testModel.solve(MP_model::MINIMIZE);
@@ -1049,8 +1053,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_variable x(T);
         MP_constraint constraint1, constraint2(T),constraint3(T),constraint4(T);
         constraint1 = x(0) == 1;
-        constraint3(T+1) = x(T+1) <= x(T)+ (rvar2(T+1)+3); //TODO: It is necessary to put additive terms in parentheses. This should not be necessary.
-        constraint4(T+1) = x(T+1) >= x(T)*(rvar3(T+1)+3); 
+        constraint3(T+1) = x(T-1) <= x(T)+ (rvar2(T)+3); //TODO: It is necessary to put additive terms in parentheses. This should not be necessary.
+        constraint4(T+1) = x(T-1) >= x(T)*(rvar3(T)+3); 
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
@@ -1084,7 +1088,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         firstStageVar.upperLimit() = 10;
         MP_constraint constraint1(T),constraint2(T);
         //What is with StairCase Structure?!
-        constraint1(T+1) = sum(demands,x(T+1,demands)*rvar(T+1,demands)) + firstStageVar() >= sum(demands,x(T,demands));
+        constraint1(T+1) = sum(demands,x(T,demands)*rvar(T,demands)) + firstStageVar() >= sum(demands,x(T-1,demands));
         //constraint2(T) = x(T,demands) >= 10;
         testModel2.setObjective(x(T.last(),demands));
         testModel2.attach(testModel2.Solver);
@@ -1151,7 +1155,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_variable x(T);
 
         MP_constraint con1(T);
-        con1(T+1) = x(T+1) >=demand(T+1);
+        con1(T+1) = x(T) >=demand(T);
 
         MP_expression objective = x(T.last())*price(T.last());
         testModel.setObjective(objective);
@@ -1251,7 +1255,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //x.lowerLimit = var(T);
         //x.upperLimit = var(T)+5;
         MP_constraint con1(T);
-        con1(T+1) = x(T+1) <= var(T+1)+2.5;
+        con1(T+1) = x(T) <= var(T)+2.5;
         testModel2.setObjective(x(T+1));
         testModel2.attach(testModel.Solver);
         testModel2.solve(MP_model::MAXIMIZE);
@@ -1273,7 +1277,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_variable y2(T);
         MP_constraint exp1(T);
         //Test some combinations of left and right hand side
-        exp1(T+1) = 3*x(T) + 4*y2(T+1) <= 9;
+        exp1(T+1) = 3*x(T-1) + 4*y2(T) <= 9;
         exp1(T) = y2(T)*4 <= rVar1(T);
         //exp1(T+1) = y2(T+1)*rVar1(T+1) <= 8;
         //Only latest assignment remains.. clearly this is correct behaviour
@@ -1296,8 +1300,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //I would expect that such things would work, i.e. assign to different indices of one constraint.
         //constraint1(0) = 3*x() <= 10;
         constraint() = 5*x() >= 60; //Funny thing: Problem gets presolved so that nothing is left.. this is definitly not the correct behaviour, as we want to maximize..
-        constraint1(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) <= rVar3(T+1)*20 + rVar2(T+1);
-        constraint2(T+1) = 4*x()+(rVar(T+1)+2)*y(T+1) >= rVar3(T+1)*20 + rVar2(T+1);
+        constraint1(T+1) = 4*x()+(rVar(T)+2)*y(T) <= rVar3(T)*20 + rVar2(T);
+        constraint2(T+1) = 4*x()+(rVar(T)+2)*y(T) >= rVar3(T)*20 + rVar2(T);
         //TODO: Test coefficients right hand sides and stuff.. it is REALLY necessary to do so
         //TODO: Test if the coefficients get generated in the right manner.
         testModel.setObjective( 3*x() );
@@ -1365,7 +1369,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_EQ(varsArr[0][1],vars2(1,1));
         EXPECT_EQ(varsArr[0][2],vars2(1,2));
         MP_constraint constraint1(trains,T);
-        constraint1(trains,T+1) = sum(cars,test(cars,trains)) <= sum(cars,vars2(T+1,cars));
+        constraint1(trains,T+1) = sum(cars,test(cars,trains)) <= sum(cars,vars2(T,cars));
         testModel.setObjective( sum(cars*trains,test(cars,trains)) );
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
@@ -1496,7 +1500,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_variable y(T);
         y.lowerLimit(T) = 0;
         MP_constraint constraint1(T),con2;
-        constraint1(T+1) = x()+y(T+1)*(rvar(T+1)+testValue) >= 7;
+        constraint1(T+1) = x()+y(T)*(rvar(T)+testValue) >= 7;
         testModel2.setObjective(x());
         testModel2.attach(testModel2.Solver);
         testModel2.solve(MP_model::MINIMIZE);
@@ -1534,7 +1538,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_random_data rvar(&randomVars[0],T);
         MP_variable x(T);
         MP_constraint con1(T),con2(T);
-        con1(T+1) = x(T+1) <= rvar(T+1);
+        con1(T+1) = x(T) <= rvar(T);
         //con2(T+1) = x(T+1) >= x(T);
         testModel.setObjective(x(T.last()));
         testModel.attach();
@@ -1564,7 +1568,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_data testData(&testValues[0],T);
         MP_random_data combinedData(T);
         combinedData(T) = testData(T)*rvar(T); // Necessitates an update for index expressions? Indices on the right hand side should store the same index as item on the left hand side, so if left hand side item changes, all other indices change too. This necessitates an index update mechanism, so that they are linked. => Indices need to be stored as pointers. 
-        constraint1(T+1) = x()-y(T+1)*combinedData(T+1) >= 7;
+        constraint1(T+1) = x()-y(T)*combinedData(T) >= 7;
         // This Constraint does not hold for all recourse variables (aka global constraint), but for each scenario individually.
         constraint2(T) = y(T) >= 20;
         testModel2.setObjective(x());
@@ -1635,7 +1639,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         MP_constraint constraint1(T);
 
-        constraint1(T+1) = sum(arcs, arcsInStage(T+1,arcs)) <= x(T+1);
+        constraint1(T+1) = sum(arcs, arcsInStage(T,arcs)) <= x(T);
         MP_expression objective( x(T.last())+x(1) );
 
         testModel.setObjective(objective);
@@ -2431,8 +2435,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
             MP_constraint constr;
 
-            constr = sum(I, A(I)*x(I)) <= b;
-            KnapSack.add(constr);
+            constr() = sum(I, A(I)*x(I)) <= b;
+            //KnapSack.add(constr);
             KnapSack.maximize( sum(I, C(I)*x(I)) );
 
             x.display("x");
@@ -2442,7 +2446,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             return KnapSack->getObjValue();
         }
 
-        TEST_F(FlopCppExamples, cuttingStock){
+        TEST_F(FlopCppExamples, DISABLED_cuttingStock){
             const int numWidths = 5;
             double tabDemand[] = {150, 96, 48, 108, 227};
             double tabWidth[] = {17, 21, 22.5, 24, 29.5};
@@ -6292,7 +6296,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         //discountConstraint(supplier,discount)=q_fix(supplier,discount)>=Q(supplier,discount)*x(supplier,discount);
 
-        demandConstraint(T+1)=sum(supplier,S(T+1,supplier)*(sum(discount,q_fix(supplier,discount))+q_flex(supplier,T+1)))==maximum(supplier,S(T+1,supplier))*D(T+1);
+        demandConstraint(T+1)=sum(supplier,S(T,supplier)*(sum(discount,q_fix(supplier,discount))+q_flex(supplier,T)))==maximum(supplier,S(T,supplier))*D(T);
 
 
 
@@ -6328,7 +6332,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest";
+    ::testing::GTEST_FLAG(filter) = "SmiUnitTest.*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

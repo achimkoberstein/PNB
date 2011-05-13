@@ -618,7 +618,7 @@ SmiScnModel::loadOsiSolverData()
     //if (NULL != osiSolver)
     //{ // If we really have an OsiCpxSolverInterface, we do the workaround
     //	//
-       osiStoch_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+    osiStoch_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
     //}
     //else
     //    osiStoch_->reset();

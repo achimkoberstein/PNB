@@ -54,7 +54,7 @@ namespace flopc {
 
     MP_scenario_set::~MP_scenario_set() { }
 
-  flopc::MP_domain SUBSETREF::getDomain( MP_set* s ) const
+  flopc::MP_domain SUBSETREF::getDomain( MP_set* s,const MP_index_exp& index_exp ) const
   {
       return MP_domain::getEmpty();
   }

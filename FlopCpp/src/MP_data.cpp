@@ -160,11 +160,18 @@ void DataRef::propagateIndexExpressions(const MP_index_exp& i1,const MP_index_ex
             origI4 = I4.deepCopyIndexExpression();
             origI5 = I5.deepCopyIndexExpression();
         }
+        // Now check if the index we want to insert is the same index as the one we want to replace. Find the correct one.
+        // TODO: Check if we use the correct index to replace the one we want it to replace
         I1 = I1->insertIndexExpr(i1);
-        I2 = I2->insertIndexExpr(i2);
-        I3 = I3->insertIndexExpr(i3);
-        I4 = I4->insertIndexExpr(i4);
-        I5 = I5->insertIndexExpr(i5);
+        // Do we want a warning if we do not insert an index?!
+        if ( empty.operator!=(I2) )
+            I2 = I2->insertIndexExpr(i2);
+        if ( empty.operator!=(I3))
+            I3 = I3->insertIndexExpr(i3);
+        if ( empty.operator!=(I4))
+            I4 = I4->insertIndexExpr(i4);
+        if ( empty.operator!=(I5) )
+            I5 = I5->insertIndexExpr(i5);
 
     }
 }

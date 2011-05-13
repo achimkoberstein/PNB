@@ -54,8 +54,8 @@ namespace flopc {
         MP_index* getIndex() const {
             return S->getIndex();
         }
-        virtual MP_domain getDomain(MP_set* s) const{
-            return MP_domain(S->getDomain(s));
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const{
+            return MP_domain(S->getDomain(s,index_exp));
         }
         virtual MP_index_base* deepCopy() const { return S->deepCopy(); }
         virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr) { 
@@ -143,7 +143,7 @@ namespace flopc {
 
     }
 
-    MP_domain MP_index_constant::getDomain( MP_set* s ) const
+    MP_domain MP_index_constant::getDomain( MP_set* s,const MP_index_exp& index_exp ) const
     {
         return MP_domain::getEmpty();
     }
@@ -156,31 +156,31 @@ namespace flopc {
         LOG_IF(ERROR,S3 == &MP_set::getEmpty() && &d3 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with three indices, but only two sets. This is an error.";
         LOG_IF(ERROR,S4 == &MP_set::getEmpty() && &d4 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with four indices, but only three sets. This is an error.";
         LOG_IF(ERROR,S5 == &MP_set::getEmpty() && &d5 != &MP_index_exp::getEmpty() ) << "You indexed a " << type << " with five indices, but only four sets. This is an error.";
-        LOG_IF(WARNING,S1 != &MP_set::getEmpty() && d1->getIndex() != S1 && d1->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()  ) << "First index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S2 != &MP_set::getEmpty() && d2->getIndex() != S2 && d2->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Second index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S3 != &MP_set::getEmpty() && d3->getIndex() != S3 && d3->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Third index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S4 != &MP_set::getEmpty() && d4->getIndex() != S4 && d4->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fourth index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
-        LOG_IF(WARNING,S5 != &MP_set::getEmpty() && d5->getIndex() != S5 && d5->getDomain(&MP_set::getEmpty()) != MP_domain::getEmpty()) << "Fifth index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S1 != &MP_set::getEmpty() && d1->getIndex() != S1 && d1->getDomain(&MP_set::getEmpty(),MP_index_exp::getEmpty()) != MP_domain::getEmpty()  ) << "First index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S2 != &MP_set::getEmpty() && d2->getIndex() != S2 && d2->getDomain(&MP_set::getEmpty(),MP_index_exp::getEmpty()) != MP_domain::getEmpty()) << "Second index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S3 != &MP_set::getEmpty() && d3->getIndex() != S3 && d3->getDomain(&MP_set::getEmpty(),MP_index_exp::getEmpty()) != MP_domain::getEmpty()) << "Third index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S4 != &MP_set::getEmpty() && d4->getIndex() != S4 && d4->getDomain(&MP_set::getEmpty(),MP_index_exp::getEmpty()) != MP_domain::getEmpty()) << "Fourth index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
+        LOG_IF(WARNING,S5 != &MP_set::getEmpty() && d5->getIndex() != S5 && d5->getDomain(&MP_set::getEmpty(),MP_index_exp::getEmpty()) != MP_domain::getEmpty()) << "Fifth index given to " << type << " with name " << name << " does not correspond to the defined index. This may lead to subtle errors. Continue only if you know what you are doing.";
     }
 } // End of namespace flopc
 
 using namespace flopc;
 
 
-MP_domain MP_index::getDomain(MP_set* s) const{
-    return new MP_domain_set(s,const_cast<MP_index*>(this)) ; 
+MP_domain MP_index::getDomain(MP_set* s,const MP_index_exp& index_exp) const{
+    return new MP_domain_set(s,const_cast<MP_index*>(this),index_exp) ; 
 }
 
-MP_domain MP_index_mult::getDomain(MP_set* s) const{
-    return left->getDomain(s); 
+MP_domain MP_index_mult::getDomain(MP_set* s,const MP_index_exp& index_exp) const{
+    return left->getDomain(s,index_exp); 
 }
 
-MP_domain MP_index_sum::getDomain(MP_set* s) const{
-    return left->getDomain(s); 
+MP_domain MP_index_sum::getDomain(MP_set* s,const MP_index_exp& index_exp) const{
+    return left->getDomain(s,index_exp); 
 }
 
-MP_domain MP_index_dif::getDomain(MP_set* s) const{
-    return left->getDomain(s);
+MP_domain MP_index_dif::getDomain(MP_set* s,const MP_index_exp& index_exp) const{
+    return left->getDomain(s,index_exp);
 }
 
 MP_index_exp::MP_index_exp(int i) : 
