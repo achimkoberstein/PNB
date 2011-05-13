@@ -284,10 +284,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiNeosStochasticSolverInterface.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\OsiPnbStochasticSolverInterface.cpp"
 				>
 			</File>
@@ -311,10 +307,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\OsiBenStochasticSolverInterface.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\OsiNeosStochasticSolverInterface.hpp"
 				>
 			</File>
 			<File
