@@ -126,6 +126,7 @@ public:
 				 CoinPackedVector *drup);
 
 	int addPtr() { return ++ptr_count; }
+    int deletePtr() { return --ptr_count; }
 
 	~SmiNodeData();
 

@@ -117,7 +117,7 @@ namespace flopc {
     class MP_domain_set : public MP_domain_base {
     public:
         /// Constructor taking a set pointer and an index pointer.
-        MP_domain_set(const MP_set* s, MP_index* i);
+        MP_domain_set(const MP_set* s, MP_index* i, const MP_index_exp& = MP_index_exp::getEmpty());
         /// @todo should this be public?  Should it be called?  If so, needs doc.
         void operator()() const;
         /** Evaluates the index within the domain.  
@@ -134,7 +134,7 @@ namespace flopc {
         /** @note Internal use. 
         @todo Is internal? can be private? or needs more doc.
         */
-        MP_domain getDomain(MP_set* s) const ;
+        MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const ;
         ~MP_domain_set();
     private:
         //Disabling copy constructor and assignment operator
@@ -143,6 +143,7 @@ namespace flopc {
 
         const MP_set* S;
         MP_index* I;
+        const MP_index_exp& index_expression;
     };
 
     template<int nbr> class MP_domain_subset; //forward declaration
@@ -211,7 +212,7 @@ namespace flopc {
         /** @note Internal use. 
         @todo Is internal? can be private? or needs more doc.
         */
-        MP_domain getDomain(MP_set* s) const {
+        MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const {
             return MP_domain(const_cast<MP_domain_subset<nbr>*>(this));
         }
         /// @todo should this be public?  Should it be called?  If so, needs doc.

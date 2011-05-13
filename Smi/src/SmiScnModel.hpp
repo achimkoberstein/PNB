@@ -490,7 +490,8 @@ public:
             //    delete node_;
             //    node_= NULL;
             //}
-            delete node_;
+            if ( node_->deletePtr() == 0 )
+                delete node_;
        	}
 	}
 

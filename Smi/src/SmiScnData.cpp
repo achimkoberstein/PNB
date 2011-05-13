@@ -625,13 +625,15 @@ void SmiNodeData::copyObjective(double * d){
 
 SmiNodeData::~SmiNodeData()
 {
-	SmiRowMap::iterator iRowMap;
+    //if ( ptr_count == 0 ) { // Delete memory if we have noone pointing to us anymore
+    SmiRowMap::iterator iRowMap;
 
-	SmiDenseRowMap::iterator idRowMap;
-	for (idRowMap=dRowMap.begin(); idRowMap!=dRowMap.end(); ++idRowMap)
-	  delete[] idRowMap->second;
+    SmiDenseRowMap::iterator idRowMap;
+    for (idRowMap=dRowMap.begin(); idRowMap!=dRowMap.end(); ++idRowMap)
+        delete[] idRowMap->second;
 
-	deleteMemory();
+    deleteMemory();
+    //}
 }
 
 double *

@@ -19,6 +19,7 @@ using std::endl;
 
 #include <glog/logging.h>
 
+#include <boost/dynamic_bitset.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 
@@ -36,51 +37,13 @@ using std::endl;
 #include "MP_constraint.hpp"
 #include "MP_shared_implementation_details.hpp"
 
+
 using namespace flopc;
-
-#ifdef PFUNC_ENABLED_FLOPCPP
-/* Library instance description */
-typedef ::pfunc::generator< ::pfunc::use_default, /* scheduling policy */
-		::pfunc::use_default, /* compare */
-		 pfunc_coef> my_pfunc; /*function object*/
-
-pfunc_coef::pfunc_coef(MP_model* model, MP_constraint* con, std::vector<boost::shared_ptr<MP::Coef> >& vec) : model(model),c(con),coefVec(vec) {}
-
-void pfunc_coef::operator() (){
-	std::vector<boost::shared_ptr<MP::Coef> > vec;
-	c->coefficients(vec);
-	MP_model::assemble(vec,coefVec);
-}
-//Initialize static variables
-pfunc::mutex MP_model::writeMutex;
-#endif
 
 const std::string MP_model::stageString("StageSet");
 MP_model* MP_model::current_model = &MP_model::getDefaultModel();
 MP_model& MP_model::getDefaultModel() { static MP_model default_model(0); return default_model; }
 MP_model* MP_model::getCurrentModel() { return current_model;}
-
-#ifdef PFUNC_ENABLED_FLOPCPP
-void MP_model::initializePfunc() {
-	if (numOfInstances == 0){
-		++numOfInstances; // We create a new instance here
-		unsigned int num_queues = 4;
-		const unsigned int num_threads_per_queue[] = {1,1,1,1};
-		const unsigned int affinities[4][1] = {{0},{1},{2},{3}};
-		unsigned int num_attempts;
-	//	// Create a variable of the type taskmgr
-		my_pfunc::taskmgr* taskMgrPtr = new my_pfunc::taskmgr(num_queues, num_threads_per_queue);
-	//	// Set up my taskmgr as the global runtime
-		::pfunc::init (*taskMgrPtr);
-	//	// Change the number of attempts if necessary
-		::pfunc::taskmgr_max_attempts_get(num_attempts);
-		if (10000 > num_attempts)
-			::pfunc::taskmgr_max_attempts_set (10000);
-    }
-	else
-		++numOfInstances;
-}
-#endif
 
 int MP_model::numOfInstances = 0;
 
@@ -176,7 +139,10 @@ void MP_model::add(MP_constraint* constraint) { //Counts total number of rows in
     if (constraint->left.isDefined() && constraint->right.isDefined()) {
         constraint->offset = m;
         m += constraint->size();
+        constraint->real_size = constraint->size();
     }
+    else
+        constraint->real_size = 0;
 }
 
 void MP_model::setProbabilities(const MP_data& prob){
@@ -312,13 +278,7 @@ void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::s
         } 
         // We need a new MP::Coef in case of entering the while loop, otherwise it is not necessary. TODO: Fix this
         boost::shared_ptr<MP::Coef> temp(new MP::Coef(c,r,val,s,rs,scenVector));
-#ifdef PFUNC_ENABLED_FLOPCPP
-        writeMutex.lock();
-#endif
         av.push_back(temp);
-#ifdef PFUNC_ENABLED_FLOPCPP
-        writeMutex.unlock();
-#endif
     }
 }
 
@@ -394,9 +354,42 @@ void MP_model::attachStochastic(){
     // Generate new coefficients
     // Try PFunc to parallelize the for loop..
     // What do we do? We add a function object, that gets a Constraint, the MP_model and the coefs vector..
-    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
-        (*i)->coefficients(cfs);
-        //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
+    for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
+        (*it)->coefficients(cfs);
+        // Check for empty rows
+        int offset = (*it)->offset;
+        if ( offset == -1){
+            // This constraint is already ignored, go to the next one
+            continue;
+        }
+        int size = (*it)->size();
+        boost::dynamic_bitset<> indicator(size);
+        // Iterate over all cfs to see if we got empty indices. This is only necessary if the Index_exp we stored in the coefficient is not the same as the set.
+        // We can check for this.
+        for (int i = 0; i < cfs.size(); i++){
+            indicator.set(cfs[i]->row-offset,true); // This should be greater than zero.
+        }
+        indicator.flip(); // We flip the bits. Active bits are now the ones, where we have no coefficient
+        if ( indicator.any() ){// If we have any active bits, that means we have to reassign some values.
+            std::map<int,int> index_map;
+            size_t index = indicator.find_first();
+            int subtract_number = 0;
+            while ( index < size ){
+                // We have to subtract 1 from all the row indices starting after this index.
+                index_map[index+offset] = subtract_number++;
+                index = indicator.find_next(index);
+            }
+            // We have to insert the last one too, so that the upper_bound stuff below works
+            index_map[size+offset] = subtract_number;
+            // Now we have the index_map. How many indices do we have? subtract_number many.
+            // Iterate over the vector of coefficients again and subtract the value indicated in the index_map
+            for (int i = 0; i < cfs.size(); i++){
+                std::map<int,int>::iterator iterator = index_map.lower_bound(cfs[i]->row);
+                if ( index_map.end()!=iterator)
+                    cfs[i]->row -= index_map.upper_bound(cfs[i]->row)->second;
+            }
+        }
+  
         assemble(cfs,coefs);
         cfs.clear();
     }
@@ -539,33 +532,63 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     vector<boost::shared_ptr<MP::Coef> > cfs;
     conIt it;
 
-    
-
-
     double timeBegin = CoinCpuTime();
-#ifdef PFUNC_ENABLED_FLOPCPP
-    vector<my_pfunc::task *> tasks;
-    for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
-    	pfunc_coef funObj(this,*i,coefs); //create new function object
-    	my_pfunc::task* taskPtr = new my_pfunc::task;
-    	my_pfunc::attribute myAttribute;
-    	my_pfunc::group myGroup;
-    	::pfunc::spawn(*taskPtr,myAttribute,myGroup,funObj);
-    	tasks.push_back(taskPtr);
-    	
-    }
-    for (int count = 0; count < Constraints.size(); count++){
-        ::pfunc::wait( *tasks[count] );
-    }
-#else
+    int current_minus = 0;
+    int offset_minus = 0;
+    bool changed_rows = false;
     for (conIt it=Constraints.begin(); it!=Constraints.end(); ++it) {
         (*it)->coefficients(cfs);
+        // Check for empty rows
+        int offset = (*it)->offset;
+        if ( offset == -1){
+            // This constraint is already ignored, go to the next one
+            continue;
+        }
+        int size = (*it)->size();
+        boost::dynamic_bitset<> indicator(size);
+        // Iterate over all cfs to see if we got empty indices. This is only necessary if the Index_exp we stored in the coefficient is not the same as the set.
+        // We can check for this.
+        for (int i = 0; i < cfs.size(); i++){
+            indicator.set(cfs[i]->row-offset,true); // This should be greater than zero.
+        }
+        indicator.flip(); // We flip the bits. Active bits are now the ones, where we have no coefficient
+        if ( indicator.any() ){// If we have any active bits, that means we have to reassign some values.
+            changed_rows = true;
+            std::map<int,int> index_map;
+            size_t index = indicator.find_first();
+            int subtract_number = 0;
+            while ( index < size ){
+                // We have to subtract 1 from all the row indices starting after this index.
+                index_map[index+offset] = subtract_number++;
+                index = indicator.find_next(index);
+            }
+            // We have to insert the last one too, so that the upper_bound stuff below works
+            index_map[size+offset] = subtract_number;
+            // Now we have the index_map. How many indices do we have? subtract_number many.
+            current_minus += subtract_number;
+            (*it)->real_size -= subtract_number;
+            // Iterate over the vector of coefficients again and subtract the value indicated in the index_map
+            for (int i = 0; i < cfs.size(); i++){
+                std::map<int,int>::iterator iterator = index_map.lower_bound(cfs[i]->row);
+                if ( index_map.end()!=iterator)
+                    cfs[i]->row -= index_map.upper_bound(cfs[i]->row)->second+offset_minus;
+            }
+        }
+        else if ( changed_rows ){
+            // We have to change the row indices also, if we already have some changed rows..
+            for ( int i = 0; i < cfs.size(); i++){
+                cfs[i]->row -= offset_minus;
+            }
+        }
+        // Remove stuff. We add 
         messenger->constraintDebug((*it)->getName(),cfs);
         //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
         assemble(cfs,coefs);
         cfs.clear();
+        (*it)->offset -= offset_minus;
+        offset_minus = current_minus;
     }
-#endif
+    m -= offset_minus;
     // We have to wait here until all the processes returned..
 
     DLOG(INFO) << "Time for coefficient generation: " << CoinCpuTime()-timeBegin << "s";
@@ -859,11 +882,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
     }
 
     //Depending on the sense of the constraint, create less/greater/equal constraint via setting of the boundLower and boundUpper Arrays
-    //TODO: Empty row handling done here..
     for (conIt i=Constraints.begin(); i!=Constraints.end(); i++) {
         if ((*i)->left.isDefined() && (*i)->right.isDefined() ) {
             int begin = (*i)->offset;
-            int end = (*i)->offset+(*i)->size();
+            int end = (*i)->offset+(*i)->real_size;
             switch ((*i)->sense) {
                   case LE:
                       for (int k=begin; k<end; k++) {
@@ -955,8 +977,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
 
     
     // generate variable/column names
-    std::vector<std::string> colNamesStrict(n);
-    std::vector<std::string> colNamesFree(n);
+    std::vector<std::string> colNamesStrict(realn);
+    std::vector<std::string> colNamesFree(realn);
 
     std::set<string> nameSetStrict;
     nameSetStrict.insert("V");
@@ -1026,7 +1048,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         // Check if we eliminated RV in some stages 
         if (smiModel == 0){
             //We were not sucessful in creating a scenario tree. Try normal operation. TODO: Think about reversed matrix..
-            Solver->loadProblem(n,m,Cst,Rnr,Elm,l,u,c,bl,bu);
+            // But we have to clear the column and row names first?
+            Solver->loadProblem(realn,m,Cst,Rnr,Elm,l,u,c,bl,bu);
             // We have to delete the osiCore:
             delete osiCore;
         }

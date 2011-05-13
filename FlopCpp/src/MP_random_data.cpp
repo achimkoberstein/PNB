@@ -673,6 +673,7 @@ stop:
 
     int RandomDataRef::getStage() const
     {	//We do not know which of these sets is the stage set, so we have to check all (but could abort after we found one)
+        // If stage is greater than allowed, someone choose a wrong index.
         switch (RV->stage){ // We know which index keeps the stage.
     case 0 : return I1->evaluate();
     case 1 : return I2->evaluate();
@@ -728,16 +729,40 @@ stop:
                     // First: User made an error while typing the model. If this is the case we throw an invalid argument exception.
                     // Second: User used a random parameter in the first stage, we can check for that.
                     switch ( RV->stage){
-    case 0: if ( i1 == 0) return 0; break;
-    case 1: if ( i2 == 0) return 0; break;
-    case 2: if ( i3 == 0) return 0; break;
-    case 3: if ( i4 == 0) return 0; break;
-    case 4: if ( i5 == 0) return 0; break;
-        // We have either no stage defined (which throws an exception earlier) or we are not in the first stage.
-    default : throw invalid_argument_exception();
+                        case 0: if ( i1 == 0) return 0; break;
+                        case 1: if ( i2 == 0) return 0; break;
+                        case 2: if ( i3 == 0) return 0; break;
+                        case 3: if ( i4 == 0) return 0; break;
+                        case 4: if ( i5 == 0) return 0; break;
+                            // We have either no stage defined (which throws an exception earlier) or we are not in the first stage.
+                        default : throw invalid_argument_exception();
                     }
                 }
-                return RV->c->evaluate(scenario);
+                // Store original values of the underyling index
+                double index1 = RV->S1.evaluate();
+                double index2 = RV->S2.evaluate();
+                double index3 = RV->S3.evaluate();
+                double index4 = RV->S4.evaluate();
+                double index5 = RV->S5.evaluate();
+                // Assign values of our index expression TODO: Program it in a better way, without the const casts
+                MP_set_base* s1 = const_cast<MP_set_base*>(&RV->S1);
+                MP_set_base* s2 = const_cast<MP_set_base*>(&RV->S2);
+                MP_set_base* s3 = const_cast<MP_set_base*>(&RV->S3);
+                MP_set_base* s4 = const_cast<MP_set_base*>(&RV->S4);
+                MP_set_base* s5 = const_cast<MP_set_base*>(&RV->S5);
+                s1->assign(I1->evaluate());
+                s2->assign(I2->evaluate());
+                s3->assign(I3->evaluate());
+                s4->assign(I4->evaluate());
+                s5->assign(I5->evaluate());
+                double value = RV->c->evaluate(scenario);
+                // Assign original values of the underlying index back
+                s1->assign(index1);
+                s2->assign(index2);
+                s3->assign(index3);
+                s4->assign(index4);
+                s5->assign(index5);
+                return value;
         }
     }
 
@@ -1438,7 +1463,10 @@ stop:
 
     void EmpiricalRandomVariable::sample( int howMany /*= 0*/ )
     {
-        //
+        //Initialize data structures
+        //RandomVariable::sample(howMany);
+        //if (MP_model::getCurrentModel()->getSample()){
+        //}
         if ( howMany )// Draw some values..
             throw not_implemented_error();
         else

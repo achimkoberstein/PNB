@@ -24,18 +24,18 @@ void MP_constraint::operator=(const Constraint &v) {
 }
 
 int MP_constraint::row_number() const {
-    int i1 = S1.check(I1->evaluate());
-    int i2 = S2.check(I2->evaluate());
-    int i3 = S3.check(I3->evaluate());
-    int i4 = S4.check(I4->evaluate());
-    int i5 = S5.check(I5->evaluate());
-
+    // We can produce empty rows here, if we index our constraints, so that we leave the first stages out of the calculation. 
+    int i1 = I1->getIndex()->evaluate();
+    int i2 = I2->getIndex()->evaluate();
+    int i3 = I3->getIndex()->evaluate();
+    int i4 = I4->getIndex()->evaluate();
+    int i5 = I5->getIndex()->evaluate();
+    // Check against S?
     if (i1==outOfBound || i2==outOfBound || i3==outOfBound ||
         i4==outOfBound || i5==outOfBound) {
             return outOfBound;
     } else {
-        return offset + f(I1->evaluate(),I2->evaluate(),I3->evaluate(),
-            I4->evaluate(),I5->evaluate()); 
+        return offset + f(i1,i2,i3,i4,i5);
     }
 }
 
@@ -51,7 +51,7 @@ MP_constraint::MP_constraint(
                              const MP_set_base &s5) :
 RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 M(MP_model::current_model),
-offset(-1),
+offset(-1),real_size(-1),
 S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),
 I1(0),I2(0),I3(0),I4(0),I5(0)
 {
@@ -103,9 +103,12 @@ void MP_constraint::display(string s) const {
 }
 
 void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, std::vector<std::string> &rowNamesStrict, std::vector<std::string> &rowNamesFree) {
+    if ( offset == -1 )
+        return; // We do not process constraints that are not in the model!
+    
     // we start with the names for the the free-type
     string nameFree;
-    
+
     // build the prefix
     if (this->getName().length() > 0) {
         nameFree = this->getName();
@@ -127,7 +130,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
     nameSetFree.insert(nameFree);
 
     // generate the names with the suffixes for every instance of this row and copy them into the array
-    for (int k = 0; k < size(); k++) {
+    for (int k = 0; k < real_size; k++) {
         // Look at empty rows
         if ( getOffsetedIndex(k) == outOfBound )
             continue;
@@ -143,7 +146,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
     if (isUniqueName(nameFree, nameSetStrict) && (nameFree.length() + this->generateNamesSuffixFree(size()-1).length()) <= 8) {
         nameStrict = nameFree;
         nameSetStrict.insert(nameStrict);
-        for (int k = 0; k < size(); k++) {
+        for (int k = 0; k < real_size; k++) {
             // Look at empty rows
             if ( getOffsetedIndex(k) == outOfBound )
                 continue;
@@ -178,7 +181,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             // register the name
             nameSetStrict.insert(nameStrict);
             //fill the array
-            for (int k = 0; k < size(); k++) {
+            for (int k = 0; k < real_size; k++) {
                 // Look at empty rows
                 if ( getOffsetedIndex(k) == outOfBound )
                     continue;
@@ -188,7 +191,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         } else {
             // push empty strings, let the SmiSmpsWriter or whatever try it...
             string s = "";
-            for (int k = 0; k < size(); k++) {
+            for (int k = 0; k < real_size; k++) {
                 // Look at empty rows
                 if ( getOffsetedIndex(k) == outOfBound )
                     continue;

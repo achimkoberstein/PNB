@@ -296,7 +296,7 @@ int main(int argc, char* argv[]) {
     
     MP_random_data exr_factor(&rVarExr[0], T);
     
-    MP_random_data exr(C,T); // exchange rate
+    MP_random_data exr(T,C); // exchange rate
     exr.setName("exr");
     // TODO: Forall dreimal angewendet? Funktioniert glaube ich nicht wirklich..
     // 
@@ -305,7 +305,7 @@ int main(int argc, char* argv[]) {
     //forall(C.such_that(T == 1 && exr_basis(C) == 1.0), exr(C,T) = exr_offset(C) + exr_basis(C) * exr_factor(T)); // basis == 1 --> exr = offset + basis * exr_factor [T = 1]
 
     // Set Initial Values
-    exr(C,T+1) = exr_offset(C)+exr_basis(C)*exr_factor(T+1);
+    exr(T,C) = exr_offset(C)+exr_basis(C)*exr_factor(T);
 
     // Set the basic value and then the other stuff..
     //forall(C*T.such_that(T> 1), exr(C,T) = exr(C,T-1) * exr_factor(T)) ; // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
@@ -413,7 +413,7 @@ int main(int argc, char* argv[]) {
     MP_data buildY(&valBuildY[0][0], L, P);
     MP_constraint fix_build_y(L,P);
     fix_build_y.setName("fix_build_y");
-    fix_build_y(L,P) = y_build(L,P) == buildY(L,P);
+    //fix_build_y(L,P) = y_build(L,P) == buildY(L,P);
     
 
 #pragma endregion
@@ -479,11 +479,11 @@ int main(int argc, char* argv[]) {
 #pragma region optimization
 
     MP_variable testvar(T);
-    MP_constraint constr(T);
+    MP_constraint constr(C,T);
     constr.setName("c");
     testvar.setName("testvar");
     //constr(T) = testvar(T) == d(0,0,T);
-    constr(C,T) = testvar(T) == exr(C,T);
+    constr(C,T) = testvar(T) <= exr(T,C);
     model.setObjective(testvar(0));
     
     //model.setObjective(sum(M*T, revenue(M,T)));

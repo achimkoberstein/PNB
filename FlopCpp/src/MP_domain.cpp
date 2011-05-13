@@ -13,10 +13,10 @@ namespace flopc {
 
 
 
-    MP_domain_set::MP_domain_set(const MP_set* s, MP_index* i) 
-        : S(s), I(i)  {} 
+    MP_domain_set::MP_domain_set(const MP_set* s, MP_index* i,const MP_index_exp& index_exp) 
+        : S(s), I(i),index_expression(index_exp)  {} 
     MP_domain_set::~MP_domain_set() {}
-    MP_domain MP_domain_set::getDomain(MP_set* s) const {
+    MP_domain MP_domain_set::getDomain(MP_set* s,const MP_index_exp& index_exp) const {
         return MP_domain(const_cast<MP_domain_set*>(this));
     }
 
@@ -137,6 +137,14 @@ void MP_domain_set::operator()() const {
         I->instantiate();
         for (int k=0; k<S->size(); k++) {
             I->assign(k);
+            // Evaluate Index_Expression if we do not have an empty index..
+            if ( index_expression.operator!=(MP_index_exp::getEmpty())){
+                int real_index = index_expression->evaluate();
+                if ( real_index >= S->size() )
+                    continue;
+                else
+                    I->assign(real_index);
+            }
             (*donext)();
         }
         I->assign(0);

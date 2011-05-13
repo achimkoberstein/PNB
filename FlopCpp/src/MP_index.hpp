@@ -16,6 +16,7 @@ namespace flopc {
     class MP_domain;
     class MP_set;
     class MP_index_exp;
+    class RandomDataRef;
 
     /** @brief Internal representation of a index
     @ingroup INTERNAL_USE
@@ -28,7 +29,7 @@ namespace flopc {
     public:
         virtual int evaluate() const = 0;
         virtual MP_index* getIndex() const = 0;
-        virtual MP_domain getDomain(MP_set* s) const = 0;
+        virtual MP_domain getDomain(MP_set* s, const MP_index_exp& index_exp) const = 0;
         virtual MP_index_base* deepCopy() const = 0;
         virtual MP_index_base* insertIndexExpr(const MP_index_exp&) = 0;
 
@@ -60,6 +61,7 @@ namespace flopc {
         // We need friend classes that can do semantic checking..
         friend class MP_data;
         friend class MP_random_data_impl;
+        friend class RandomDataRef;
         friend class MP_variable;
         //friend class MP_subset<nbr>;
         // End Semantic check
@@ -111,7 +113,7 @@ namespace flopc {
         }
         /// Getter for domain over which this index is applied.
         // return new MP_domain_set over s and this
-        virtual MP_domain getDomain(MP_set* s) const;
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const;
 
         int index; //current index
         bool instantiated;
@@ -201,7 +203,7 @@ namespace flopc {
         MP_index* getIndex() const {
             return left->getIndex();
         }
-        virtual MP_domain getDomain(MP_set* s) const;
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const;
 
         virtual MP_index_base* deepCopy() const;
         virtual MP_index_base* insertIndexExpr(const MP_index_exp&);
@@ -228,7 +230,7 @@ namespace flopc {
         MP_index* getIndex() const {
             return left->getIndex();
         }
-        virtual MP_domain getDomain(MP_set* s) const;
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const;
 
         virtual MP_index_base* deepCopy() const;
         virtual MP_index_base* insertIndexExpr(const MP_index_exp&);
@@ -254,7 +256,7 @@ namespace flopc {
         MP_index* getIndex() const {
             return left->getIndex();
         }
-        virtual MP_domain getDomain(MP_set* s) const;
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const;
         virtual MP_index_base* deepCopy() const;
         virtual MP_index_base* insertIndexExpr(const MP_index_exp&);
         MP_index_exp left;
@@ -275,7 +277,7 @@ namespace flopc {
             // We can not return a null pointer. We have to return a pointer to this?
             return indexPtr;
         }
-        virtual MP_domain getDomain(MP_set* s) const;
+        virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const;
         virtual MP_index_base* deepCopy() const { return new MP_index_constant(C); }
         virtual MP_index_base* insertIndexExpr(const MP_index_exp& expr) { 
             return expr.operator->();
