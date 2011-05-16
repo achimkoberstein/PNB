@@ -6,6 +6,7 @@
 #include "MP_set.hpp"
 #include "MP_boolean.hpp"
 #include "MP_model.hpp"
+#include "MP_index.hpp"
 
 namespace flopc {
 

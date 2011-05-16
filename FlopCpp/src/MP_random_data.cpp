@@ -1438,7 +1438,7 @@ stop:
             LOG(FATAL) << "You tried to define an EmpiricalRandomVariable with values and probabilities, but they contain a different number of elements.";
         double sumProb = 0;
         // Fill valuesMap with the given values.
-        for (int i = 0; i < values.size(); i++){
+        for (size_t i = 0; i < values.size(); i++){
             valuesMap.insert(std::make_pair(values[i],probabilities[i]));
             sumProb += probabilities[i];
         }
@@ -1449,7 +1449,7 @@ stop:
     {
         // Fill valuesMap with the given values.
         double sumProb;
-        for (int i = 0; i < numEntries; i++){
+        for (size_t i = 0; i < numEntries; i++){
             valuesMap.insert(std::make_pair(values[i],probabilities[i]));
             sumProb += probabilities[i];
         }

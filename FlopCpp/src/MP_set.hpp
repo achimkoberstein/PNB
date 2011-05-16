@@ -240,6 +240,21 @@ namespace flopc {
             }
         }
 
+        int evaluate(const vector<MP_index_exp>& I) const {
+            vector<int> vi;
+            for (int k=0; k<nbr; k++) {
+                int temp = I[k]->evaluate();
+                vi.push_back(temp);
+            }
+            std::map<vector<int>, int>::const_iterator pos;
+            pos = elements.find(vi);
+            if (pos==elements.end()) {
+                return outOfBound;
+            } else {
+                return pos->second;
+            }
+        }
+
         void insert(const vector<int> &args) {
             bool isOk = true;
             for (int i=0; i<nbr; i++) {
@@ -323,14 +338,14 @@ namespace flopc {
             return new MP_domain_subset<nbr>(S,
                 makeVector<nbr>(I1->getIndex(), I2->getIndex(), 
                 I3->getIndex(), I4->getIndex(), 
-                I5->getIndex()) );
+                I5->getIndex()),makeVector<nbr>(I1,I2,I3,I4,I5 ));
         }
 
         virtual MP_domain getDomain(MP_set* s,const MP_index_exp& index_exp) const {
             return new MP_domain_subset<nbr>(S,
                 makeVector<nbr>(I1->getIndex(), I2->getIndex(), 
                 I3->getIndex(), I4->getIndex(), 
-                I5->getIndex()) ); //TODO: Not sure if this will work correctly..
+                I5->getIndex()),makeVector<nbr>(I1,I2,I3,I4,I5 ));
         }
 
         //     const MP_domain& such_that(const MP_boolean& b) {

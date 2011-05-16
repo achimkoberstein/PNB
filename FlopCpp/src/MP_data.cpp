@@ -92,11 +92,12 @@ int DataRef::getStage() const {
 
 void DataRef::evaluate_lhs(double v) const {
     //Check sanity of indices
-    int i1 = D->S1.check(I1->evaluate());
-    int i2 = D->S2.check(I2->evaluate());
-    int i3 = D->S3.check(I3->evaluate());
-    int i4 = D->S4.check(I4->evaluate());
-    int i5 = D->S5.check(I5->evaluate());
+    // If we do an evaluate_lhs, we already set the correct indices.
+    int i1 = D->S1.check(I1->getIndex()->evaluate());
+    int i2 = D->S2.check(I2->getIndex()->evaluate());
+    int i3 = D->S3.check(I3->getIndex()->evaluate());
+    int i4 = D->S4.check(I4->getIndex()->evaluate());
+    int i5 = D->S5.check(I5->getIndex()->evaluate());
     //Compute index in flattened multidimensional array
     int i = D->f(i1,i2,i3,i4,i5);
     // Set Value at computed index to v
@@ -104,8 +105,8 @@ void DataRef::evaluate_lhs(double v) const {
         D->v[i] = v;
     }
     else {
-        LOG(ERROR) << "FlopCpp Error: an index not suitable for the given set appears. Please recheck your model formulation.";
-        throw invalid_argument_exception(); //This should not happen!
+        //LOG(ERROR) << "FlopCpp Error: an index not suitable for the given set appears. Please recheck your model formulation.";
+        //throw invalid_argument_exception(); //This should not happen!
     }
 }
 
