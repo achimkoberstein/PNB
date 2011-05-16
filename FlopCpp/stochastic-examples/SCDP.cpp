@@ -304,9 +304,13 @@ int main(int argc, char* argv[]) {
 
     //forall(C.such_that(T == 1 && exr_basis(C) == 1.0), exr(C,T) = exr_offset(C) + exr_basis(C) * exr_factor(T)); // basis == 1 --> exr = offset + basis * exr_factor [T = 1]
 
-    // Set Initial Values
-    exr(T,C) = exr_offset(C)+exr_basis(C)*exr_factor(T);
 
+    // Set Initial Values for first stage deviation
+    MP_data exr_initial(T,C); // initial data for recursion, get's initialized with zeroes
+    exr_initial.setName("exr_initial"); // 
+    exr_initial(0,C) = exr_offset(C)+exr_basis(C); // This is correct, as offset is only 1 at reference currency, and 0 everywhere else.
+    // Do Recursion
+    exr(T+1,C) = exr(T-1,C)*exr_factor(T)+exr_initial(T-1,C)*exr_factor(T); // This construction is necessary at the moment for this recursive formulation TODO
     // Set the basic value and then the other stuff..
     //forall(C*T.such_that(T> 1), exr(C,T) = exr(C,T-1) * exr_factor(T)) ; // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
 
@@ -328,46 +332,47 @@ int main(int argc, char* argv[]) {
 
 #pragma region option price
 
-    //MP_data sigma(C, T, T);
-    //MP_data o_d1(C, T, T);
-    //MP_data o_d2(C, T, T);
-    //MP_set o_inf(101); // 0..100
-    //MP_data phi_o_d1(C, T, T);
-    //MP_data phi_o_minus_d1(C, T, T);
-    //MP_data phi_o_d2(C, T, T);
-    //MP_data phi_o_minus_d2(C, T, T);
-    //MP_random_data p_put(C, T, T);
-    //MP_random_data p_call(C, T, T);
+    MP_data sigma(C, T, T);
+    MP_data o_d1(C, T, T);
+    MP_data o_d2(C, T, T);
+    MP_set o_inf(101); // 0..100
+    MP_data phi_o_d1(C, T, T);
+    MP_data phi_o_minus_d1(C, T, T);
+    MP_data phi_o_d2(C, T, T);
+    MP_data phi_o_minus_d2(C, T, T);
+    MP_random_data p_put(C, T, T);
+    MP_random_data p_call(C, T, T);
     //
-    //for (int tbuy = 1; tbuy < numT; tbuy++) {
-    //    for (int texpire = tbuy + 1; texpire < min(numT, tbuy + max_hedge_time); texpire++) {
-    //        forall(C, sigma(C, tbuy, texpire) = log(ef) / sqrt((double) (texpire - tbuy)));
-    //        forall(C, o_d1(C, tbuy, texpire) = ((ir_ref - /*ir(C)*/ 0.0 + (sigma(C, tbuy, texpire)*sigma(C, tbuy, texpire)) / 2) * (texpire - tbuy)) / (sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy)));
-    //        forall(C, o_d2(C, tbuy, texpire) = o_d1(C, tbuy, texpire) - sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy));
-    //        
-    //        MP_index o2;
-    //        // TODO: Pow/Exponentialfunktion
-    //        forall(C, phi_o_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-    //        forall(C, phi_o_minus_d1(C, tbuy, texpire) = 0.5 - 1 / sqrt(2 * 3.141592654));
-    //        forall(C, phi_o_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654));
-    //        forall(C, phi_o_minus_d2(C, tbuy, texpire) = 0.5 - 1 / sqrt(2 * 3.141592654));
-    //        
-    //        // p_put; price of a put option
-    //        forall(C, p_put(C, tbuy, texpire) = exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_minus_d2(C,tbuy,texpire) - exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 * (texpire-tbuy)) * phi_o_minus_d1(C,tbuy,texpire));
-    //        
-    //        // p_call; price of a call option
-    //        //forall(C, p_call(C, tbuy, texpire) = exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 *(texpire-tbuy)) * phi_o_d1(C,tbuy,texpire) - exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_d2(C,tbuy,texpire));
-    //    }
-    //}
+    for (int tbuy = 1; tbuy < numT; tbuy++) {
+        for (int texpire = tbuy + 1; texpire < min(numT, tbuy + max_hedge_time); texpire++) {// FORALL C.
+            forall(C, sigma(C, tbuy, texpire) = log(ef) / sqrt((double) (texpire - tbuy)));
+            forall(C, o_d1(C, tbuy, texpire) = ((ir_ref - /*ir(C)*/ 0.0 + (sigma(C, tbuy, texpire)*sigma(C, tbuy, texpire)) / 2) * (texpire - tbuy)) / (sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy)));
+            forall(C, o_d2(C, tbuy, texpire) = o_d1(C, tbuy, texpire) - sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy));
+            
+            MP_index o2;
+            // TODO: Pow/Exponentialfunktion
+            forall(C, phi_o_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            forall(C, phi_o_minus_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            
+            forall(C, phi_o_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            forall(C, phi_o_minus_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            
+            // p_put; price of a put option
+            forall(C, p_put(C, tbuy, texpire) = exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_minus_d2(C,tbuy,texpire) - exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 * (texpire-tbuy)) * phi_o_minus_d1(C,tbuy,texpire));
+            
+            // p_call; price of a call option
+            forall(C, p_call(C, tbuy, texpire) = exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 *(texpire-tbuy)) * phi_o_d1(C,tbuy,texpire) - exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_d2(C,tbuy,texpire));
+        }
+    }
 
 #pragma endregion
 
 #pragma region accounting variables for output
 
-    //MP_variable weighted_npv(); weighted_npv.setName("weighted_npv");
-    //MP_variable npv_min(); npv_min.setName("npv_min"); // see risk management strategy 2
-    //MP_variable cvar95(); cvar95.setName("cvar95"); 
-    //MP_variable npv(); npv.setName("npv"); //{s in Scen}; #npv for each scenario
+    MP_variable weighted_npv(); weighted_npv.setName("weighted_npv");
+    MP_variable npv_min(); npv_min.setName("npv_min"); // see risk management strategy 2
+    MP_variable cvar95(); cvar95.setName("cvar95"); 
+    MP_variable npv(); npv.setName("npv"); //{s in Scen}; #npv for each scenario
     MP_variable y_build(L,P); y_build.setName("y_build"); // {l in L, p1 in P} binary; #1 if line l is built to produce product p, 0 otherwise
 
 #pragma endregion
@@ -483,14 +488,15 @@ int main(int argc, char* argv[]) {
     constr.setName("c");
     testvar.setName("testvar");
     //constr(T) = testvar(T) == d(0,0,T);
-    constr(C,T) = testvar(T) <= exr(T,C);
-    model.setObjective(testvar(0));
+    constr(C,T+1) = testvar(T) <= exr(T,C);
+    model.setObjective(testvar(T.last()));
     
     //model.setObjective(sum(M*T, revenue(M,T)));
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
     //model.setObjective(x(0,0,0,1));
 
     model.solve(MP_model::MAXIMIZE);
+    model->writeLp("test");
 
     revenue.display();
 
