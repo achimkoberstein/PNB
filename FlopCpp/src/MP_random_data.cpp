@@ -343,6 +343,10 @@ namespace flopc{
         values = v;
     }
 
+    void RandomVariable::setScenarioValue(double value, int scenario){
+        values[scenario] = value;
+    }
+
     std::vector<double> RandomVariable::getSampledValues() const
     {
         if ( !values.empty() ) { // if we store values without probabilities, everything is fine. Order is important.
@@ -695,11 +699,12 @@ stop:
             }
         }
         if (!containsRandomVariable) { //We do not have a random variable in this RandomDataRef, so call insert on Constant. This is exclusive-or.
-            RV->c->insertRandomVariables(v);
             // TODO: Break recursion..
             if (visited == true) //We already visited this variable.. this means we have a recursion.
                 return;
             visited = true;
+            RV->c->insertRandomVariables(v);
+            visited = false;
             //TODO: Look at this method again..
         }
 
@@ -721,7 +726,7 @@ stop:
         if ( i ==  outOfBound ) {
             return 0;
         } else {
-            if (RV->values[i] != 0) // MP_random_data is a random variable
+            if (RV->values[i] != NULL) // MP_random_data is a random variable
                 // this does not work correctly when solving EV, EEV or WS problems, because mean value is calculated without considering probabilities
                 return scenario == outOfBound? RV->values[i]->getMeanValue() : RV->values[i]->getSampledValue(scenario);
             else // MP_random_data is the result of algebraic manipulation of expressions involving random data..
@@ -739,11 +744,11 @@ stop:
                     }
                 }
                 // Store original values of the underyling index
-                double index1 = RV->S1.evaluate();
-                double index2 = RV->S2.evaluate();
-                double index3 = RV->S3.evaluate();
-                double index4 = RV->S4.evaluate();
-                double index5 = RV->S5.evaluate();
+                int index1 = RV->S1.evaluate();
+                int index2 = RV->S2.evaluate();
+                int index3 = RV->S3.evaluate();
+                int index4 = RV->S4.evaluate();
+                int index5 = RV->S5.evaluate();
                 // Assign values of our index expression TODO: Program it in a better way, without the const casts
                 MP_set_base* s1 = const_cast<MP_set_base*>(&RV->S1);
                 MP_set_base* s2 = const_cast<MP_set_base*>(&RV->S2);
@@ -756,6 +761,11 @@ stop:
                 s4->assign(I4->evaluate());
                 s5->assign(I5->evaluate());
                 double value = RV->c->evaluate(scenario);
+                // assign the value to the array. Create new Random Variable for that
+                //if ( RV->values[i] == NULL){
+                //    RV->values[i] = new ScenarioRandomVariable();
+                //}
+                //RV->values[i]->setScenarioValue(value,scenario);
                 // Assign original values of the underlying index back
                 s1->assign(index1);
                 s2->assign(index2);

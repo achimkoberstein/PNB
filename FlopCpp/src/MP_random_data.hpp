@@ -104,6 +104,7 @@ namespace flopc{
         std::map<double,double> getSampledValuesWithProb();
         std::vector<double> getSampledValues() const;
         void setScenarioValues(const std::vector<double>&);
+        void setScenarioValue(double value, int scenario);
         void setScenarioValuesWithProb(const std::map<double,double>&);
         double getSampledValue(int index) const;
 
