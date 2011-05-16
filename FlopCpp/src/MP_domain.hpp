@@ -181,8 +181,8 @@ namespace flopc {
     template<int nbr> class MP_domain_subset : public MP_domain_base {
         friend class insertFunctor<nbr>;
     public:
-        MP_domain_subset<nbr> (MP_subset<nbr>* s, 
-            const std::vector<MP_index*> &i) : S(s), I(i){}
+        MP_domain_subset<nbr> (MP_subset<nbr>* s,std::vector<MP_index*> index, 
+            const std::vector<MP_index_exp>& i) : S(s), I(index),IndexExp(i){}
 
         // Does it makes sense to call this function for a MP_domain_subset? I hope not *G*
         MP_index_base* insertIndexExpr( const MP_index_exp& expr)
@@ -247,10 +247,32 @@ namespace flopc {
                                 break;
                             }
                         } else {
+                            // We want to check, if our index, given by the Subset, is different from the one we used during creation of the subset.
+                            // We want to set the index, evaluate the expression and see if it is different, then use that value!
                             I[j]->assign(i->first[j]);
+                            if ( IndexExp[j].operator!=(MP_index_exp::getEmpty())){
+                                int real_index = IndexExp[j]->evaluate();
+                                if ( real_index >= S->S[j]->size() ){
+                                    goOn = false;
+                                    break;
+                                }
+                                else{
+                                    I[j]->assign(real_index);
+                                }
+                            }
+                            
                         }
                     }
+                   
                     if (goOn == true) {
+                        std::vector<int> index_vector; // Set the correct index for this MP_subset, based on the indices of the used sets
+                        for (int i = 0; i < nbr; i++){
+                            index_vector.push_back(I[i]->getIndex()->evaluate());
+                        }
+                        for (int i = nbr; i < 5; i++)
+                            index_vector.push_back(0);
+                        counter = S->operator()(index_vector[0],index_vector[1],index_vector[2],index_vector[3],index_vector[4]); // Assign the correct index based on the subelement number
+                        S->assign(counter); counter++; // Assing the value and prepare for the next one. 
                         (*donext)();
                     }
                 }
@@ -271,6 +293,7 @@ namespace flopc {
     private:
         MP_subset<nbr>* S;
         std::vector<MP_index*> I;
+        std::vector<MP_index_exp> IndexExp;
     };
 
     /** operator which creates a new domain as the pairwise combinations

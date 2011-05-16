@@ -681,6 +681,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 
     //Test if Conditional Sampling works (for seed 0 for every RV. This means values are highly correlated)
+    // TODO: Only run this test in release mode!
     TEST_F(RandomVariableTest,DISABLED_ConditionalSamplingTest){
         MP_model testModel2(new OsiClpSolverInterface());
         MP_stage T(3);
@@ -2064,7 +2065,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         cout<<"Test ampl passed."<<endl;
     }
 
-    TEST_F(FlopCppExamples, DISABLED_bid){ // formularion for setup doesnt work (see below)
+    TEST_F(FlopCppExamples, bid){ // formularion for setup doesnt work (see below)
         // Adapted from bid.gms from the GAMS model library:
         //    http://www.gams.com/
 
@@ -2134,12 +2135,11 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         qmax(VS(e,1)) =  77000;
 
         //original formulation doesnt work - index error
-        setup(VS(V,S+1)) = setup(VS(V,S)) + qmax(VS(V,S)) * (price(VS(V,S)) - price(VS(V,S+1)));
+        //setup(VS(V,S+1)) = setup(VS(V,S)) + qmax(VS(V,S)) * (price(VS(V,S)) - price(VS(V,S+1)));
         //tried this one, no error, but objective is far away from expected
         //forall(VS(V,S).such_that(S > 0), setup(VS(V,S)) = setup(VS(V,S-1)) + qmax(VS(V,S-1)) * (price(VS(V,S-1)) - price(VS(V,S))));
-
-        //    setup(VS(V,S+1)) = setup(VS(V,S)) +
-        //	qmax(VS(V,S))*(price(VS(V,S))-price(VS(V,S+1)));
+        setup(VS(V,S+1)) = setup(VS(V,S-1)) +
+            qmax(VS(V,S-1))*(price(VS(V,S-1))-price(VS(V,S)));
 
         setup.display("setup");
 
@@ -3031,7 +3031,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         }
     } // end namespace exampleSmi
 
-    TEST_F(FlopCppExamples, DISABLED_gapmin){ // heap error at the end...
+    TEST_F(FlopCppExamples, gapmin){
         /* This is a FlopCpp version of the model gapmin.gms from 
         the GAMS model library.
 
@@ -3092,17 +3092,18 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
                 for (int jc=0; jc<j.size(); jc++) {
                     myf(jc) = ftable[k][jc] - w(jc);
                 }
-
+// Compare with gapmin original file..
                 MP_model testModel(new OsiCbcSolverInterface);
 
-                MP_set j(numItems);
+                //MP_set j(numItems);
                 MP_data a(atable[k],j);
-                MP_binary_variable x;
+                MP_binary_variable x(j);
 
                 MP_constraint knapsack;
-                knapsack() = sum(j, a(j)*x(j)) <= b(k); 
+                knapsack() = sum(j, a(j)*x(j)) >= b(k); 
 
-                testModel.minimize( sum(j, f(j)*x(j)) );
+                testModel.minimize( sum(j, myf(j)*x(j)) );
+                testModel->writeLp("test");
 
                 zlr += testModel->getObjValue();
                 for (int jc=0; jc<j.size(); jc++) {
@@ -3110,11 +3111,12 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
                 }
 
             }
+            // Do we have to switch back the current model pointer?
 
             MP_data zl;
             zl() = zlr + sum(j, w(j));
 
-            bool improve = (zl>zlbest);
+            bool improve = (zl(0)>zlbest);
             zlbest = std::max<double>(zlbest,zl(0));
 
             double norm = 0.0;
@@ -3125,8 +3127,8 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             cout<<"Iter Nbr."<<iter+1<<"   "<<zlr<<"   "<<zl<<"   "<<zlbest<<"   "<<norm<<endl;	
             if (norm<tolerance) break;
 
-            double target = (zlbest+zfeas)/2.0;
-            double step = (alpha*(target-zl)/norm);
+            double target = (zlbest+zfeas(0))/2.0;
+            double step = (alpha*(target-zl(0))/norm);
 
             w(j) = w(j)+step*s(j);
 
@@ -3770,7 +3772,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             }    
         };
 
-        TEST_F(FlopCppExamples, DISABLED_tap){ // heap error in branch&bound for the second instance
+        TEST_F(FlopCppExamples, tap){ // heap error in branch&bound for the second instance
             double stab_1[6]  = {5,5,6,6,6,6};
             double dtab_1[4]  = {4, 7, 10, 11};
             double stab_2[7] =  {9,9,10,12,12,12,16};
@@ -6323,7 +6325,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    //::testing::GTEST_FLAG(filter) = "*.ComplicatedExpressionsTest";
+    ::testing::GTEST_FLAG(filter) = "*.gapmin";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
