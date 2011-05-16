@@ -753,7 +753,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             goalConstr(T);
 
         initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-        allocationConstr(T-1) = sum(assets,x(T-1,assets)) == wealth(T-1);
+        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
 
         goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
@@ -1032,7 +1032,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
     // Test complex combinations of random variables in constraints
     TEST_F(UseCaseTest,RandomVariableConstraintCombinationTest){
-        MP_model testModel2(new OsiClpSolverInterface());
+        MP_model testModel2(new OsiClpSolverInterface(),new VerboseMessenger());
         MP_stage T(2);
         MP_scenario_set scen(2);
         double scenarios[1][2] =
@@ -6317,7 +6317,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "SmiUnitTest.*";
+    ::testing::GTEST_FLAG(filter) = "*.RandomVariableConstraintCombinationTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
