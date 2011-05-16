@@ -363,7 +363,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         //testCon(cars) = z(cars) <= sum(cars,z1(cars));
         carOnStreet(T) = x(T) <= abs(a(T));
         MP_index aliasT;
-        countCars(T+1) = y(T) <= sum(T(aliasT).such_that(aliasT<= T-1) ,x(aliasT));
+        countCars(T+1) = y(T) <= sum(T(aliasT).such_that(aliasT<= T) ,x(aliasT));
 
 
         MP_expression objective;
@@ -372,6 +372,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel.setObjective(objective);
         testModel.attach();
         testModel.solve(MP_model::MAXIMIZE);
+        testModel->writeLp("test");
         EXPECT_DOUBLE_EQ(1.3819475579528415,testModel->getObjValue());
         ASSERT_EQ(10,testModel.getScenSet().size());
         writeReadSMPSTest(testModel,MP_model::MAXIMIZE,"test");
@@ -1051,17 +1052,22 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_random_data rvar2(&scenarios2[0][0],T);
         MP_random_data rvar3(&scenarios3[0][0],T);
         MP_variable x(T);
+        x.free();
         MP_constraint constraint1, constraint2(T),constraint3(T),constraint4(T);
-        constraint1 = x(0) == 1;
-        constraint3(T+1) = x(T-1) <= x(T)+ (rvar2(T)+3); //TODO: It is necessary to put additive terms in parentheses. This should not be necessary.
-        constraint4(T+1) = x(T-1) >= x(T)*(rvar3(T)+3); 
+        constraint1() = x(0) == 1;
+        constraint1.setName("con1");
+        constraint2.setName("con2");
+        constraint3.setName("con3");
+        constraint4.setName("con4");
+        constraint3(T+1) = x(T-1)-x(T) <= rvar2(T)+3; // This is the optimality constraint.
+        constraint4(T+1) = x(T-1)-x(T)*(rvar3(T)+3) >= Constant(0); // This is a feasibility constraint.
         testModel2.setObjective(x(T.last()));
         testModel2.attach(testModel2.Solver);
         this->testCorrectStageAssignment(testModel2);
         testModel2.solve(MP_model::MINIMIZE); 
-        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
-        EXPECT_NEAR(4.5,testModel2->getObjValue(),0.001);
+        EXPECT_NEAR(-3.5,testModel2->getObjValue(),0.001);
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
+        writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         compareEVPTest(testModel2,MP_model::MINIMIZE);
     }
 
@@ -1506,9 +1512,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel2.solve(MP_model::MINIMIZE);
         //Test for Correctnes 
         EXPECT_EQ(MP_model::OPTIMAL,testModel2.getStatus());
-        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(1,1));
-        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(2,2));
-        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(6,6));
+        EXPECT_EQ(testValue,testModel2.Solver->getMatrixByRow()->getCoefficient(0,1));
+        EXPECT_EQ(testValue+1,testModel2.Solver->getMatrixByRow()->getCoefficient(1,2));
+        EXPECT_EQ(testValue+5,testModel2.Solver->getMatrixByRow()->getCoefficient(5,6));
         writeReadSMPSTest(testModel2,MP_model::MINIMIZE,"test");
         compareEVPTest(testModel2,MP_model::MINIMIZE);
         //testModel2.detach();
@@ -2035,7 +2041,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         limit(T) =   sum(prd(p), x(p,T)) <= m;
 
         balance(r,TL+1) = 
-            s(r,TL+1) == s(r,TL) - sum(prd(p), units(r,p)*x(p,TL));
+            s(r,TL) == s(r,TL-1) - sum(prd(p), units(r,p)*x(p,TL-1));
 
         s.upperLimit(r,0) = istock(r);
 
@@ -2048,7 +2054,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             sum(raw(r), rvalue(r)*s(r,numT)) 
             );
 
-        EXPECT_EQ(14, testModel->getNumRows());
+        EXPECT_EQ(12, testModel->getNumRows());
         EXPECT_EQ(25, testModel->getNumCols());
         EXPECT_EQ(52, testModel->getNumElements());
         EXPECT_NEAR(79.3413, testModel->getObjValue(), 0.0001);
@@ -6317,7 +6323,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "*.RandomVariableConstraintCombinationTest";
+    //::testing::GTEST_FLAG(filter) = "*.ComplicatedExpressionsTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

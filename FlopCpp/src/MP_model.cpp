@@ -580,13 +580,15 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
                 cfs[i]->row -= offset_minus;
             }
         }
+        // Update offset
+        (*it)->offset -= offset_minus;
+        offset_minus = current_minus;
         // Remove stuff. We add 
         messenger->constraintDebug((*it)->getName(),cfs);
         //Sort and Store Coefficients of current constraint and add them to constraint set coefs.
         assemble(cfs,coefs);
         cfs.clear();
-        (*it)->offset -= offset_minus;
-        offset_minus = current_minus;
+
     }
     m -= offset_minus;
     // We have to wait here until all the processes returned..
