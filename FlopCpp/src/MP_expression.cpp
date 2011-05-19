@@ -213,9 +213,25 @@ namespace flopc {
                  left->insertRandomVariables(v);
 
              }
-
              MP_expression left;
     };
+
+    //class Expression_pow : public Expression_operator{
+    //    friend MP_expression power(const MP_expression& e1, const MP_expression& e2);
+    //protected:
+    //    Expression_pow(const MP_expression& e1, const MP_expression& e2):
+    //         Expression_operator(e1,2) {}
+    //         double level() const { 
+    //             return left->level()+right->level(); 
+    //         }
+    //         void generate(const MP_domain& domain,
+    //             vector<TerminalExpression *> multiplicators,
+    //             MP::GenerateFunctor& f,
+    //             double m) const { 
+    //                 left->generate(domain, multiplicators, f, m);
+    //                 right->generate(domain, multiplicators, f, m);
+    //         }
+    //};
 
     class Expression_plus : public Expression_operator {
         friend MP_expression operator+(const MP_expression& e1, const MP_expression& e2);
@@ -227,7 +243,7 @@ namespace flopc {
         Expression_plus(const MP_expression& e1, const MP_expression& e2) : 
            Expression_operator(e1,e2) {}
            double level() const { 
-               return left->level()+right->level(); 
+               return std::pow(left->level(),right->level()); 
            }
            void generate(const MP_domain& domain,
                vector<TerminalExpression *> multiplicators,

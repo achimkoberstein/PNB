@@ -175,7 +175,7 @@ namespace flopc {
     @param e constant
     */
     Constant maximum(const MP_domain& i, const Constant& e);
-    /** @brief Returns the sum of two constants.
+    /** @brief Returns the minimum of two constants.
     @ingroup PublicInterface
     @todo description?  Haven't used this.
     @param i MP_domain used in evaluation
@@ -189,12 +189,19 @@ namespace flopc {
     @param e constant
     */
     Constant sum(const MP_domain& i, const Constant& e);
-    /** @brief Returns the sum of two constants.
+    /** @brief Returns the product of two constants.
     @ingroup PublicInterface
     @todo description?  Haven't used this.
     @param i MP_domain used in evaluation
     @param e constant
     */
     Constant product(const MP_domain& i, const Constant& e);
+    /** @brief Returns a^b
+    @ingroup PublicInterface
+    @todo description?  Haven't used this.
+    @param a base
+    @param b exponent
+    */
+    Constant power(const Constant& a, const Constant& b);
 }  // End of namespace flopc
 #endif

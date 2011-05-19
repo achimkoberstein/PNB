@@ -21,7 +21,7 @@ namespace flopc {
     private:
 
         virtual double evaluate(int scenario) const {
-            return C->evaluate();
+            return C->evaluate(scenario);
         }
         virtual int getStage() const {
             return 0; //Constants alway have stage 0
@@ -337,6 +337,8 @@ namespace flopc {
 
     class RandomConstant_if : public RandomConstant_exp {
         friend RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const RandomConstant& b); 
+        friend RandomConstant mpif(const MP_boolean& c, const Constant& a, const RandomConstant& b); 
+        friend RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const Constant& b); 
     private:
         RandomConstant_if(const MP_boolean b, const RandomConstant& i, const RandomConstant& j) : RandomConstant_exp(i,j), B(b) {}
         virtual double evaluate(int scenario) const {
@@ -360,6 +362,13 @@ namespace flopc {
     RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const RandomConstant& b) {
         return new RandomConstant_if(c,a,b);
     }
+    RandomConstant mpif(const MP_boolean& c, const Constant& a, const RandomConstant& b) {
+        return new RandomConstant_if(c,a,b);
+    }
+    RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const Constant& b) {
+        return new RandomConstant_if(c,a,b);
+    }
+
 
 
     class RandomConstant_max : public RandomConstant_base {

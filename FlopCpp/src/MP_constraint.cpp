@@ -130,29 +130,36 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
     nameSetFree.insert(nameFree);
 
     // generate the names with the suffixes for every instance of this row and copy them into the array
-    for (int k = 0; k < real_size; k++) {
-        // Look at empty rows
-        if ( getOffsetedIndex(k) == outOfBound )
-            continue;
+    int current_row = 0;
+    int string_length;
+    for (int k = 0; k < size(); k++) {
         string free = nameFree + this->generateNamesSuffixFree(k);
-        rowNamesFree[getOffsetedIndex(k)] = free.c_str();
+        if ( free == nameFree )
+            continue;
+        rowNamesFree[getOffsetedIndex(current_row)] = free.c_str();
+        ++current_row;
+        if ( current_row == real_size )
+            string_length = nameFree.length();
     }
-
+    assert(current_row==real_size);
+    
 
     // now for the strict-type
     string nameStrict;
 
     // maybe we are lucky and can use the same names for the strict-type as for the free-type...
-    if (isUniqueName(nameFree, nameSetStrict) && (nameFree.length() + this->generateNamesSuffixFree(size()-1).length()) <= 8) {
-        nameStrict = nameFree;
+    if (isUniqueName(nameFree, nameSetStrict) && (string_length  <= 8)) {
+        nameStrict = nameFree; // We assume that the name we have is already enough
         nameSetStrict.insert(nameStrict);
-        for (int k = 0; k < real_size; k++) {
-            // Look at empty rows
-            if ( getOffsetedIndex(k) == outOfBound )
-                continue;
+        current_row = 0;
+        for (int k = 0; k < size(); k++) {
             string strict = nameStrict + this->generateNamesSuffixFree(k);
-            rowNamesStrict[getOffsetedIndex(k)] = strict.c_str();
+            if ( strict == nameStrict )
+                continue;
+            rowNamesStrict[getOffsetedIndex(current_row)] = strict.c_str();
+            ++current_row;
         }
+        assert(current_row==real_size);
     }
     else {
         // use the offset as suffix
@@ -182,9 +189,6 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             nameSetStrict.insert(nameStrict);
             //fill the array
             for (int k = 0; k < real_size; k++) {
-                // Look at empty rows
-                if ( getOffsetedIndex(k) == outOfBound )
-                    continue;
                 string strict = nameStrict + "_" + to_string(k);
                 rowNamesStrict[getOffsetedIndex(k)] = strict.c_str();
             }
@@ -192,9 +196,6 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             // push empty strings, let the SmiSmpsWriter or whatever try it...
             string s = "";
             for (int k = 0; k < real_size; k++) {
-                // Look at empty rows
-                if ( getOffsetedIndex(k) == outOfBound )
-                    continue;
                 rowNamesStrict[getOffsetedIndex(k)] = s.c_str();
             }
         }
@@ -211,20 +212,51 @@ int MP_constraint::getOffsetedIndex(const int k){
 string MP_constraint::generateNamesSuffixFree(const int k) {
     IndexKeeper ik = getIndices(k);
     std::stringstream ss;
-    if (&S1 != &MP_set::getEmpty()) {
-        ss << "_" << ik.i1;
+    if (&S1 != &MP_set::getEmpty()) { // What can do the trick: Get the index, assign it to the Index for this constraint and evaluate the index!
+        I1->getIndex()->assign(ik.i1);
+        double value = I1->evaluate();
+        if ( S1.check(value) != outOfBound )
+            ss << "_" << value;
+        else
+            return "";
         if (&S2 != &MP_set::getEmpty()) {
-            ss << "_" << ik.i2;
+            I2->getIndex()->assign(ik.i2);
+            value = I2->evaluate();
+            if ( S2.check(value) != outOfBound )
+                ss << "_" << value;
+            else
+                return "";
             if (&S3 != &MP_set::getEmpty()) {
-                ss << "_" << ik.i3;
+                I3->getIndex()->assign(ik.i3);
+                value = I3->evaluate();
+                if ( S3.check(value) != outOfBound )
+                    ss << "_" << value;
+                else
+                    return "";
                 if (&S4 != &MP_set::getEmpty()) {
-                    ss << "_" << ik.i4;
+                    I4->getIndex()->assign(ik.i4);
+                    value = I4->evaluate();
+                    if ( S4.check(value) != outOfBound )
+                        ss << "_" << value;
+                    else
+                        return "";
                     if (&S5 != &MP_set::getEmpty()) {
-                        ss << "_" << ik.i5;
+                        I5->getIndex()->assign(ik.i5);
+                        value = I5->evaluate();
+                        if ( S1.check(value) != outOfBound )
+                            ss << "_" << value;
+                        else
+                            return "";
                     }
                 }
             }
         }
     }
-    return ss.str();
+    bool bool_value = true;
+    if ( B.operator->() != NULL )
+        bool_value = B->evaluate();
+    if ( bool_value )
+        return ss.str();
+    else 
+        return "";
 }

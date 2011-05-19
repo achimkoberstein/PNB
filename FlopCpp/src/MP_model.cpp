@@ -852,6 +852,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             rowIndirection[oldRow] = coefs[i]->row;
         }
     }
+    // If last row belongs not to the last stage, we actually have less stages than we wanted. Log this
+    LOG_IF(WARNING,rowStage[m-1] != stage.size()-1)<< "Your specified model does not have rows in (especially) the last stage.";
     // Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
     // Yes it is possible. One example: Constraint over stage set T but indexed over T+1 so first stage constraint is empty. 
     // Handled like this: every time rowIndirection is used we check for outOfBound.
@@ -1028,15 +1030,22 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         //matrix.removeGaps(); //What is this for?
         Solver->loadProblem(matrix, l, u, c, bl, bu); //Generate Core Data, in Solver
         SmiCoreData *osiCore = NULL; //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+        // Check for stage and colStage and rowStage..
+        int current_stage = stage.size();
+        if ( colStage[realn-1] != stage.size()-1 || rowStage[m-1] != stage.size() -1 ){
+            LOG_IF(FATAL,colStage[realn-1] != rowStage[m-1]) << "You do not have columns and rows in (especially) the last stage.";
+            current_stage = rowStage[m-1]+1; // +1 because we measure the size not the concrete stage
+        }
+        
         if (!integerIndices.empty()){ //suffices, because every binary is also an integer
             Solver->setInteger(&integerIndices[0],integerIndices.size());
             if (!binaryIndices.empty())
-                osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0],integerIndices.size(), &binaryIndices[0],binaryIndices.size()); 
+                osiCore = new SmiCoreData(Solver,current_stage,colStage,rowStage,&integerIndices[0],integerIndices.size(), &binaryIndices[0],binaryIndices.size()); 
             else
-                osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage,&integerIndices[0],integerIndices.size()); 
+                osiCore = new SmiCoreData(Solver,current_stage,colStage,rowStage,&integerIndices[0],integerIndices.size()); 
         }
         else {
-            osiCore = new SmiCoreData(Solver,stage.size(),colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
+            osiCore = new SmiCoreData(Solver,current_stage,colStage,rowStage); //Create CoreData Node. Needs to be deleted in case of stochastic solver.
         }
 
         osiCore->setColumnNames(colNamesStrict, colNamesFree);

@@ -218,6 +218,8 @@ private:
 
     class MP_boolean;
     RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const RandomConstant& b);
+    RandomConstant mpif(const MP_boolean& c, const RandomConstant& a, const Constant& b);
+    RandomConstant mpif(const MP_boolean& c, const Constant& a, const RandomConstant& b);
 
     /** @brief Returns the maximum over the domain of the RandomConstant.
     @ingroup PublicInterface
