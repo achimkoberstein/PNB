@@ -63,6 +63,7 @@ namespace flopc {
         friend class MP_random_data_impl;
         friend class RandomDataRef;
         friend class MP_variable;
+        friend class MP_constraint;
         //friend class MP_subset<nbr>;
         // End Semantic check
 

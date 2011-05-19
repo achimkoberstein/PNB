@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <boost/math/constants/constants.hpp>
+
 //#include "OsiClpSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
 
@@ -29,6 +31,7 @@ int main(int argc, char* argv[]) {
     T.setName("T");
 
     MP_set T2(numT);
+    T2.setName("T2");
 
     // Lines
     enum {L3, L8, numL};
@@ -310,21 +313,23 @@ int main(int argc, char* argv[]) {
     exr_initial.setName("exr_initial"); // 
     exr_initial(0,C) = exr_offset(C)+exr_basis(C); // This is correct, as offset is only 1 at reference currency, and 0 everywhere else.
     // Do Recursion
-    exr(T+1,C) = exr(T-1,C)*exr_factor(T)+exr_initial(T-1,C)*exr_factor(T); // This construction is necessary at the moment for this recursive formulation TODO
+    exr(T+1,C) = exr(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T))+exr_initial(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T)); // This construction is necessary at the moment for this recursive formulation TODO
     // Set the basic value and then the other stuff..
     //forall(C*T.such_that(T> 1), exr(C,T) = exr(C,T-1) * exr_factor(T)) ; // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
 
     // ir{c in C}; #interest rate for calculating the npv
-    const double ir[numC] = { 0, 0};
+    double ir_data[numC] = { 0, 0};
+    MP_data ir(&ir_data[0],C);
 
     // ir_ref; #interest rate of the reference currency
     const double ir_ref = 0;
 
     // fexr; #exchange rate for a forward contract buying currency c and selling referency currency. contracted in period tbuy, operating in period teffect
-    MP_random_data fexr(C,T,T); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
+    MP_random_data fexr(C,T,T2); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
     MP_index tbuy, teffect;
-    forall(C*T(tbuy)*T(teffect).such_that(teffect > tbuy && teffect-tbuy <= max_hedge_time), fexr(C,tbuy,teffect) = exr(C,tbuy) /* * exp(..) */ );
-    
+    fexr(C,T,T2).such_that(T2 > T && T2-T <= max_hedge_time) = exr(T,C)*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(T2-T)); 
+    //forall(C*T(tbuy)*T(teffect).such_that(teffect > tbuy && teffect-tbuy <= max_hedge_time), 
+        //fexr(C,tbuy,teffect) = exr(C,tbuy)*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(teffect-tbuy)) ); 
     // rc; #recourse coefficient. how high are the recourse costs for not serving the demand (1.0 means that there are no. 1.1 means 10% additional loss of the price for a not delivered unit
     const double rc = 1;
 
@@ -345,23 +350,23 @@ int main(int argc, char* argv[]) {
     //
     for (int tbuy = 1; tbuy < numT; tbuy++) {
         for (int texpire = tbuy + 1; texpire < min(numT, tbuy + max_hedge_time); texpire++) {// FORALL C.
-            forall(C, sigma(C, tbuy, texpire) = log(ef) / sqrt((double) (texpire - tbuy)));
+            forall(C, sigma(C, tbuy, texpire) = std::log(ef) / std::sqrt((double)(texpire-tbuy))); // power(texpire - tbuy,0.5);
             forall(C, o_d1(C, tbuy, texpire) = ((ir_ref - /*ir(C)*/ 0.0 + (sigma(C, tbuy, texpire)*sigma(C, tbuy, texpire)) / 2) * (texpire - tbuy)) / (sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy)));
             forall(C, o_d2(C, tbuy, texpire) = o_d1(C, tbuy, texpire) - sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy));
             
             MP_index o2;
-            // TODO: Pow/Exponentialfunktion
-            forall(C, phi_o_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            forall(C, phi_o_minus_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            
-            forall(C, phi_o_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            forall(C, phi_o_minus_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            
-            // p_put; price of a put option
-            forall(C, p_put(C, tbuy, texpire) = exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_minus_d2(C,tbuy,texpire) - exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 * (texpire-tbuy)) * phi_o_minus_d1(C,tbuy,texpire));
-            
-            // p_call; price of a call option
-            forall(C, p_call(C, tbuy, texpire) = exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 *(texpire-tbuy)) * phi_o_d1(C,tbuy,texpire) - exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_d2(C,tbuy,texpire));
+            //// TODO: Pow/Exponentialfunktion
+            //forall(C, phi_o_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            //forall(C, phi_o_minus_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            //
+            //forall(C, phi_o_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            //forall(C, phi_o_minus_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
+            //
+            //// p_put; price of a put option
+            //forall(C, p_put(C, tbuy, texpire) = exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_minus_d2(C,tbuy,texpire) - exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 * (texpire-tbuy)) * phi_o_minus_d1(C,tbuy,texpire));
+            //
+            //// p_call; price of a call option
+            //forall(C, p_call(C, tbuy, texpire) = exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 *(texpire-tbuy)) * phi_o_d1(C,tbuy,texpire) - exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_d2(C,tbuy,texpire));
         }
     }
 
@@ -369,11 +374,16 @@ int main(int argc, char* argv[]) {
 
 #pragma region accounting variables for output
 
-    MP_variable weighted_npv(); weighted_npv.setName("weighted_npv");
-    MP_variable npv_min(); npv_min.setName("npv_min"); // see risk management strategy 2
-    MP_variable cvar95(); cvar95.setName("cvar95"); 
-    MP_variable npv(); npv.setName("npv"); //{s in Scen}; #npv for each scenario
-    MP_variable y_build(L,P); y_build.setName("y_build"); // {l in L, p1 in P} binary; #1 if line l is built to produce product p, 0 otherwise
+    MP_variable weighted_npv; 
+    weighted_npv.setName("weighted_npv");
+    MP_variable npv_min; 
+    npv_min.setName("npv_min"); // see risk management strategy 2
+    MP_variable cvar95; 
+    cvar95.setName("cvar95"); 
+    MP_variable npv; 
+    npv.setName("npv"); //{s in Scen}; #npv for each scenario
+    MP_variable y_build(L,P); 
+    y_build.setName("y_build"); // {l in L, p1 in P} binary; #1 if line l is built to produce product p, 0 otherwise
 
 #pragma endregion
 
@@ -484,16 +494,17 @@ int main(int argc, char* argv[]) {
 #pragma region optimization
 
     MP_variable testvar(T);
-    MP_constraint constr(C,T);
+    MP_constraint constr(C,T),constr2(C,T,T);
     constr.setName("c");
     testvar.setName("testvar");
     //constr(T) = testvar(T) == d(0,0,T);
-    constr(C,T+1) = testvar(T) <= exr(T,C);
-    model.setObjective(testvar(T.last()));
+    //constr(C,T+1) = testvar(T) <= exr(T,C);
+    MP_index aliasT;
+    constr2(C,T,aliasT).such_that(aliasT>T) = testvar(T) <= fexr(C,T,aliasT);
+    model.setObjective(testvar(T.last()-1));
     
     //model.setObjective(sum(M*T, revenue(M,T)));
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
-    //model.setObjective(x(0,0,0,1));
 
     model.solve(MP_model::MAXIMIZE);
     model->writeLp("test");

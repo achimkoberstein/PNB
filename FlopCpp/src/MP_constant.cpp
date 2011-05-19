@@ -423,6 +423,20 @@ namespace flopc {
         mutable int scenario;
     };
 
+    class Constant_power : public Constant_exp {
+        friend Constant power(const Constant& a, const Constant& b);
+    private:
+        Constant_power(const Constant& a, const Constant& b) : Constant_exp(a,b) {}
+        virtual double evaluate(int scenario) const {
+            return std::pow(left->evaluate(scenario),right->evaluate(scenario));
+        }
+
+        int getStage() const {
+            return std::max(left->getStage(),right->getStage());
+        }
+
+    };
+
     Constant maximum(const MP_domain& i, const Constant& e) {
         return new Constant_max(i,e);
     }
@@ -434,6 +448,9 @@ namespace flopc {
     }
     Constant product(const MP_domain& i, const Constant& e) {
         return new Constant_product(i,e);
+    }
+    Constant power( const Constant& a, const Constant& b ) {
+        return new Constant_power(a,b);
     }
 
     Constant::Constant(const DataRef& d) : 
@@ -447,6 +464,7 @@ namespace flopc {
 
     Constant::Constant(int d) :
     Handle<Constant_base*>(new Constant_double(d)) {}
+
 
 } // End of namespace flopc
 
