@@ -326,7 +326,7 @@ namespace flopc {
 
     class Expression_div : public MP_expression_base, MP  {
         friend MP_expression operator/(const MP_expression& e1, const Constant& e2);
-                friend MP_expression operator/(const MP_expression& e1, const RandomConstant& e2);
+        friend MP_expression operator/(const MP_expression& e1, const RandomConstant& e2);
         //friend MP_expression operator/(const RandomDataRef& e1, const MP_expression& e2);
         //friend MP_expression operator/(const MP_expression& e1, const RandomDataRef& e2);
     private:
@@ -509,10 +509,10 @@ namespace flopc {
         return new Expression_div(e1, e2);
     }
 
-    //flopc::MP_expression operator/( const MP_expression& e1, const RandomDataRef& e2 )
-    //{
-    //    return new Expression_div(e1,e2);
-    //}
+    flopc::MP_expression operator/( const MP_expression& e1, const RandomConstant& e2 )
+    {
+        return new Expression_div(e1,e2);
+    }
 
     //flopc::MP_expression operator/( const RandomDataRef& e1, const MP_expression& e2 )
     //{

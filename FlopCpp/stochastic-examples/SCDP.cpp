@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include <boost/math/distributions.hpp>
 #include <boost/math/constants/constants.hpp>
 
 //#include "OsiClpSolverInterface.hpp"
@@ -298,6 +299,7 @@ int main(int argc, char* argv[]) {
     RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE) };
     
     MP_random_data exr_factor(&rVarExr[0], T);
+    exr_factor.setName("exr_factor");
     
     MP_random_data exr(T,C); // exchange rate
     exr.setName("exr");
@@ -326,6 +328,7 @@ int main(int argc, char* argv[]) {
 
     // fexr; #exchange rate for a forward contract buying currency c and selling referency currency. contracted in period tbuy, operating in period teffect
     MP_random_data fexr(C,T,T2); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
+    fexr.setName("fexr");
     MP_index tbuy, teffect;
     fexr(C,T,T2).such_that(T2 > T && T2-T <= max_hedge_time) = exr(T,C)*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(T2-T)); 
     //forall(C*T(tbuy)*T(teffect).such_that(teffect > tbuy && teffect-tbuy <= max_hedge_time), 
@@ -337,38 +340,45 @@ int main(int argc, char* argv[]) {
 
 #pragma region option price
 
-    MP_data sigma(C, T, T);
-    MP_data o_d1(C, T, T);
-    MP_data o_d2(C, T, T);
+    MP_data sigma(C, T, T2);
+    MP_data o_d1(C, T, T2);
+    MP_data o_d2(C, T, T2);
     MP_set o_inf(101); // 0..100
-    MP_data phi_o_d1(C, T, T);
-    MP_data phi_o_minus_d1(C, T, T);
-    MP_data phi_o_d2(C, T, T);
-    MP_data phi_o_minus_d2(C, T, T);
-    MP_random_data p_put(C, T, T);
-    MP_random_data p_call(C, T, T);
+    MP_data phi_o_d1(C, T, T2);
+    MP_data phi_o_minus_d1(C, T, T2);
+    MP_data phi_o_d2(C, T, T2);
+    MP_data phi_o_minus_d2(C, T, T2);
+    MP_random_data p_put(C, T, T2);
+    p_put.setName("p_put");
+    MP_random_data p_call(C, T, T2);
+    p_call.setName("p_call");
     //
     for (int tbuy = 1; tbuy < numT; tbuy++) {
         for (int texpire = tbuy + 1; texpire < min(numT, tbuy + max_hedge_time); texpire++) {// FORALL C.
-            forall(C, sigma(C, tbuy, texpire) = std::log(ef) / std::sqrt((double)(texpire-tbuy))); // power(texpire - tbuy,0.5);
-            forall(C, o_d1(C, tbuy, texpire) = ((ir_ref - /*ir(C)*/ 0.0 + (sigma(C, tbuy, texpire)*sigma(C, tbuy, texpire)) / 2) * (texpire - tbuy)) / (sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy)));
-            forall(C, o_d2(C, tbuy, texpire) = o_d1(C, tbuy, texpire) - sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy));
+            //forall(C, sigma(C, tbuy, texpire) = std::log(ef) / std::sqrt((double)(texpire-tbuy))); // power(texpire - tbuy,0.5);
+            //forall(C, o_d1(C, tbuy, texpire) = ((ir_ref - ir(C) + (sigma(C, tbuy, texpire)*sigma(C, tbuy, texpire) ) / 2) * (texpire - tbuy)) / 
+            //    (sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy)));
+            //forall(C, o_d2(C, tbuy, texpire) = o_d1(C, tbuy, texpire) - sigma(C, tbuy, texpire) * sqrt((double) texpire - tbuy));
             
             MP_index o2;
-            //// TODO: Pow/Exponentialfunktion
-            //forall(C, phi_o_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            //forall(C, phi_o_minus_d1(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d1(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            //
-            //forall(C, phi_o_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            //forall(C, phi_o_minus_d2(C, tbuy, texpire) = 0.5 + 1 / sqrt(2 * 3.141592654) * sum(o_inf, ( pow(-1.0,o_inf) * pow(o_d2(C,tbuy,texpire),(2*o_inf+1)) / ((2*o_inf+1) * pow(2.0,o_inf) * product(o_inf(o2).such_that(o2 <= o_inf), o2+1)))));
-            //
-            //// p_put; price of a put option
-            //forall(C, p_put(C, tbuy, texpire) = exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_minus_d2(C,tbuy,texpire) - exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 * (texpire-tbuy)) * phi_o_minus_d1(C,tbuy,texpire));
-            //
-            //// p_call; price of a call option
-            //forall(C, p_call(C, tbuy, texpire) = exr(C,tbuy) * exp(/*-ir(C)*/ 0.0 *(texpire-tbuy)) * phi_o_d1(C,tbuy,texpire) - exr(C,tbuy) * exp(-ir_ref * (texpire-tbuy)) * phi_o_d2(C,tbuy,texpire));
+            //// TODO: Normalverteilung is what we want!
+            for (int current_c = 0; current_c < C.size(); current_c++){
+                sigma(current_c, tbuy, texpire) = std::log(ef) / std::sqrt((double)(texpire-tbuy));
+                o_d1(current_c, tbuy, texpire) = ((ir_ref - ir(current_c) + (sigma(current_c, tbuy, texpire)*sigma(current_c, tbuy, texpire) ) / 2) * (texpire - tbuy))                     / (sigma(current_c, tbuy, texpire) * sqrt((double) texpire - tbuy));
+                o_d2(current_c, tbuy, texpire) = o_d1(current_c, tbuy, texpire) - sigma(current_c, tbuy, texpire) * sqrt((double) texpire - tbuy);
+                phi_o_d1(current_c, tbuy, texpire) = boost::math::cdf(boost::math::normal(0,1),o_d1(current_c,tbuy,texpire) );
+                phi_o_d2(current_c, tbuy, texpire) = boost::math::cdf(boost::math::normal(0,1),o_d2(current_c,tbuy,texpire) );
+                phi_o_minus_d1(current_c, tbuy, texpire) = boost::math::cdf(boost::math::normal(0,1),-o_d1(current_c,tbuy,texpire) );
+                phi_o_minus_d2(current_c, tbuy, texpire) = boost::math::cdf(boost::math::normal(0,1),-o_d2(current_c,tbuy,texpire) );
+
+            }
         }
     }
+    p_put(C,T,T2).such_that(T2>T) = exr(T,C)* power(boost::math::constants::e<double>(),-ir_ref*(T2-T)) * phi_o_minus_d2(C,T,T2)
+        - exr(T,C)*power(boost::math::constants::e<double>(),-ir(C) *(T2-T))*phi_o_minus_d1(C,T,T2);
+    
+    p_call(C,T,T2).such_that(T2>T) = exr(T,C)* power(boost::math::constants::e<double>(),-ir(C)*(T2-T)) * phi_o_d1(C,T,T2)
+        - exr(T,C)*power(boost::math::constants::e<double>(),-ir_ref *(T2-T))*phi_o_d2(C,T,T2);
 
 #pragma endregion
 
@@ -390,13 +400,13 @@ int main(int argc, char* argv[]) {
 #pragma region decision variables
 
     MP_variable x(L,M,P,T); x.setName("x"); // Amount of product p produced on line l, delivered to market m in time period t
-    MP_variable f_rev(C,T,T); f_rev.setName("f_rev"); // {c in C, tbuy in T, teffect in T, s in Scen:teffect>tbuy and teffect-tbuy<=max_hedge_time}  =0; # forward amount (between currency c (buy) and reference currency (sell), bought in period tbuy, operates in period teffect), is limited to the production activities (i. e. 1 is the maxmium hedge rate - see restriction)
-    MP_variable f_cost(C,T,T); f_cost.setName("f_cost"); // {c in C, tbuy in T, teffect in T, s in Scen:teffect>tbuy and teffect-tbuy<=max_hedge_time} =0; # forward amount (between currency c (buy) and reference currency (sell), bought in period tbuy, operates in period teffect), is limited to the production activities (i. e. 1 is the maxmium hedge rate - see restriction)
+    MP_variable f_rev(C,T,T2); f_rev.setName("f_rev"); // {c in C, tbuy in T, teffect in T, s in Scen:teffect>tbuy and teffect-tbuy<=max_hedge_time}  =0; # forward amount (between currency c (buy) and reference currency (sell), bought in period tbuy, operates in period teffect), is limited to the production activities (i. e. 1 is the maxmium hedge rate - see restriction)
+    MP_variable f_cost(C,T,T2); f_cost.setName("f_cost"); // {c in C, tbuy in T, teffect in T, s in Scen:teffect>tbuy and teffect-tbuy<=max_hedge_time} =0; # forward amount (between currency c (buy) and reference currency (sell), bought in period tbuy, operates in period teffect), is limited to the production activities (i. e. 1 is the maxmium hedge rate - see restriction)
     MP_variable x2(L,M,P,T); x2.setName("x2"); // {l in L,m1 in M,p in P,t in T,s in Scen} >=0; #not delivered amount of product p on market m from line l in period p in scenario s - needed for calculating the recourse costs
-    MP_variable call_b(C,T,T); call_b.setName("call_b"); // {c in C, tbuy in T, texpire in T, s in Scen:texpire>tbuy and texpire-tbuy<=max_hedge_time} = 0; # amount of bought call options for currency c in period tbuy, expire in period texpire, strike price is the exr in period tbuy (european options)
-    MP_variable put_b(C,T,T); put_b.setName("put_b"); // {c in C, tbuy in T, texpire in T, s in Scen:texpire>tbuy and texpire-tbuy<=max_hedge_time} = 0; # amount of bought put options for currency c in period tbuy, expire in period texpire, strike price is the exr in period tbuy (european options)
-    MP_variable call_e(C,T,T); call_e.setName("call_e"); // {c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised call options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
-    MP_variable put_e(C,T,T); put_e.setName("put_e"); //{c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised put options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
+    MP_variable call_b(C,T,T2); call_b.setName("call_b"); // {c in C, tbuy in T, texpire in T, s in Scen:texpire>tbuy and texpire-tbuy<=max_hedge_time} = 0; # amount of bought call options for currency c in period tbuy, expire in period texpire, strike price is the exr in period tbuy (european options)
+    MP_variable put_b(C,T,T2); put_b.setName("put_b"); // {c in C, tbuy in T, texpire in T, s in Scen:texpire>tbuy and texpire-tbuy<=max_hedge_time} = 0; # amount of bought put options for currency c in period tbuy, expire in period texpire, strike price is the exr in period tbuy (european options)
+    MP_variable call_e(C,T,T2); call_e.setName("call_e"); // {c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised call options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
+    MP_variable put_e(C,T,T2); put_e.setName("put_e"); //{c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised put options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
 
 #pragma endregion
 
@@ -435,33 +445,33 @@ int main(int argc, char* argv[]) {
 
 #pragma region production
 
-    //MP_constraint demand_fulfilment(M,T,P); // {m1 in M, t in T, p in P, s in Scen}: 	sum {l in L}(x[l,m1,p,t,s]) + sum{l in L}(x2[l,m1,p,t,s]) >= d[m1,p,t,s];
-    //MP_constraint max_capacity(L,P,T); //{l in L, p1 in P, t in T, s in Scen}: sum {m1 in M}(x[l,m1,p1,t,s]*r[p1]) <= m[l,p1]*y_build[l,p1];
-    //MP_constraint prod_costs_for_line_l_in_period_t(L,T); // {l in L, t in T,s in Scen}: 	cost_prod[l,t,s] = sum{m1 in M, p1 in P}(x[l,m1,p1,t,s]*q_prod[l,p1,t]);
-    //MP_constraint transportation_costs_from_line_l(L,T); // {l in L, t in T, s in Scen}: 	cost_trans[l,t,s] = sum{m1 in M, p1 in P}(x[l,m1,p1,t,s]*q_trans[l,p1,m1,t]);   #calculated in the currency of the line
-    //MP_constraint revenue_in_market_m_in_periode_t(M,T); // {m1 in M, t in T, s in Scen}: 	revenue[m1,t,s] = sum{p1 in P}( (d[m1,p1,t,s]-rc*sum{l in L}x2[l,m1,p1,t,s])*price[m1,p1,t]);
-    //MP_constraint line_building_costs_in_currency_c(C); // {c in C}: 	cost_linebuild[c] = sum{(l,c)in LineLinks,p1 in P}(c_build[l,p1]*y_build[l,p1]);
-    //MP_constraint line_operating_costs_in_currency_c(C); // {c in C}: cost_lineoperate[c] = sum{(l,c)in LineLinks,p1 in P}(c_operate[l,p1]*y_build[l,p1]);
+    MP_constraint demand_fulfilment(M,T,P); // {m1 in M, t in T, p in P, s in Scen}: 	sum {l in L}(x[l,m1,p,t,s]) + sum{l in L}(x2[l,m1,p,t,s]) >= d[m1,p,t,s];
+    MP_constraint max_capacity(L,P,T); //{l in L, p1 in P, t in T, s in Scen}: sum {m1 in M}(x[l,m1,p1,t,s]*r[p1]) <= m[l,p1]*y_build[l,p1];
+    MP_constraint prod_costs_for_line_l_in_period_t(L,T); // {l in L, t in T,s in Scen}: 	cost_prod[l,t,s] = sum{m1 in M, p1 in P}(x[l,m1,p1,t,s]*q_prod[l,p1,t]);
+    MP_constraint transportation_costs_from_line_l(L,T); // {l in L, t in T, s in Scen}: 	cost_trans[l,t,s] = sum{m1 in M, p1 in P}(x[l,m1,p1,t,s]*q_trans[l,p1,m1,t]);   #calculated in the currency of the line
+    MP_constraint revenue_in_market_m_in_periode_t(M,T); // {m1 in M, t in T, s in Scen}: 	revenue[m1,t,s] = sum{p1 in P}( (d[m1,p1,t,s]-rc*sum{l in L}x2[l,m1,p1,t,s])*price[m1,p1,t]);
+    MP_constraint line_building_costs_in_currency_c(C); // {c in C}: 	cost_linebuild[c] = sum{(l,c)in LineLinks,p1 in P}(c_build[l,p1]*y_build[l,p1]);
+    MP_constraint line_operating_costs_in_currency_c(C); // {c in C}: cost_lineoperate[c] = sum{(l,c)in LineLinks,p1 in P}(c_operate[l,p1]*y_build[l,p1]);
 
-    //demand_fulfilment(M,T,P) = sum(L, x(L,M,P,T) + x2(L,M,P,T)) >= d(M,P,T);
-    //max_capacity(L,P,T) = sum(M, x(L,M,P,T)) * r(P) <= m(L,P) * y_build(L,P);
-    //prod_costs_for_line_l_in_period_t(L,T) = cost_prod(L,T) == sum(M*P, x(L,M,P,T) * q_prod(L,P,T));
-    //transportation_costs_from_line_l(L,T) = cost_trans(L,T) == sum(M*P, x(L,M,P,T) * q_trans(L,P,M,T));
-    //revenue_in_market_m_in_periode_t(M,T) = revenue(M,T) == sum(P, (d(M,P,T) - rc * sum(L, x2(L,M,P,T))) * price(M,P,T));
-    //line_building_costs_in_currency_c(C) = cost_linebuild(C) == sum(LineLinks(L,C)*P, c_build(L,P) * y_build(L,P));
-    //line_operating_costs_in_currency_c(C) = cost_lineoperate(C) == sum(LineLinks(L,C)*P, c_operate(L,P) * y_build(L,P));
+    demand_fulfilment(M,T,P) = sum(L, x(L,M,P,T) + x2(L,M,P,T)) >= d(M,P,T);
+    max_capacity(L,P,T) = sum(M, x(L,M,P,T)) * r(P) <= m(L,P) * y_build(L,P);
+    prod_costs_for_line_l_in_period_t(L,T) = cost_prod(L,T) == sum(M*P, x(L,M,P,T) * q_prod(L,P,T));
+    transportation_costs_from_line_l(L,T) = cost_trans(L,T) == sum(M*P, x(L,M,P,T) * q_trans(L,P,M,T));
+    revenue_in_market_m_in_periode_t(M,T) = revenue(M,T) == sum(P, (d(M,P,T) - rc * sum(L, x2(L,M,P,T))) * price(M,P,T));
+    line_building_costs_in_currency_c(C) = cost_linebuild(C) == sum(LineLinks(L,C)*P, c_build(L,P) * y_build(L,P));
+    line_operating_costs_in_currency_c(C) = cost_lineoperate(C) == sum(LineLinks(L,C)*P, c_operate(L,P) * y_build(L,P));
 
 #pragma endregion
 
 #pragma region hedging
 
-    //MP_constraint production_cash_flow_in_period_p_in_currency_c(C,T); // {c in C, t in T, s in Scen}: 	cfp[c,t,s] = (sum{(m1,c)in MarketLinks}(revenue[m1,t,s])) - (sum{(l,c)in LineLinks}(cost_prod[l,t,s]+cost_trans[l,t,s])) - cost_lineoperate[c];
-    //MP_constraint hedge_rate_lt_1_for_revenues(C,T); // {s in Scen,c in C, teffect in T}: sum{tbuy2 in T:tbuy2<teffect and teffect-tbuy2<=max_hedge_time}(f_rev[c,tbuy2,teffect,s]/fexr[c,s,tbuy2,teffect]-put_e[c,tbuy2,teffect,s]/exr[c,tbuy2,s] ) >= -(sum{(m1,c)in MarketLinks}(revenue[m1,teffect,s])); 
-    //MP_constraint hedge_rate_lt_1_for_costs(C,T); //{c in C, teffect in T,s in Scen}: sum{tbuy2 in T:tbuy2<teffect and teffect-tbuy2<=max_hedge_time}(f_cost[c,tbuy2,teffect,s]/fexr[c,s,tbuy2,teffect]+call_e[c,tbuy2,teffect,s]/exr[c,tbuy2,s]) <= (sum{(l,c)in LineLinks}(cost_prod[l,teffect,s]+cost_trans[l,teffect,s])) + cost_lineoperate[c];
+    MP_constraint production_cash_flow_in_period_p_in_currency_c(C,T); // {c in C, t in T, s in Scen}: 	cfp[c,t,s] = (sum{(m1,c)in MarketLinks}(revenue[m1,t,s])) - (sum{(l,c)in LineLinks}(cost_prod[l,t,s]+cost_trans[l,t,s])) - cost_lineoperate[c];
+    MP_constraint hedge_rate_lt_1_for_revenues(C,T); // {s in Scen,c in C, teffect in T}: sum{tbuy2 in T:tbuy2<teffect and teffect-tbuy2<=max_hedge_time}(f_rev[c,tbuy2,teffect,s]/fexr[c,s,tbuy2,teffect]-put_e[c,tbuy2,teffect,s]/exr[c,tbuy2,s] ) >= -(sum{(m1,c)in MarketLinks}(revenue[m1,teffect,s])); 
+    MP_constraint hedge_rate_lt_1_for_costs(C,T); //{c in C, teffect in T,s in Scen}: sum{tbuy2 in T:tbuy2<teffect and teffect-tbuy2<=max_hedge_time}(f_cost[c,tbuy2,teffect,s]/fexr[c,s,tbuy2,teffect]+call_e[c,tbuy2,teffect,s]/exr[c,tbuy2,s]) <= (sum{(l,c)in LineLinks}(cost_prod[l,teffect,s]+cost_trans[l,teffect,s])) + cost_lineoperate[c];
 
-    //production_cash_flow_in_period_p_in_currency_c(C,T) = cfp(C,T) == sum(MarketLinks(M,C), revenue(M,T)) - sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) - cost_lineoperate(C);
-    //hedge_rate_lt_1_for_revenues(C,T) = sum(T(tbuy).such_that(tbuy < T && T-tbuy <= max_hedge_time), f_rev(C,tbuy,T) / fexr(C,tbuy,T) - put_e(C,tbuy,T) / exr(C,tbuy)) >= -sum(MarketLinks(M,C), revenue(M,T));
-    //hedge_rate_lt_1_for_costs(C,T) = sum(T(tbuy).such_that(tbuy < T && T-tbuy <= max_hedge_time), f_cost(C,tbuy,T) / fexr(C,tbuy,T) - put_e(C,tbuy,T) / exr(C,tbuy)) <= sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) + cost_lineoperate(C);
+    production_cash_flow_in_period_p_in_currency_c(C,T) = cfp(C,T) == sum(MarketLinks(M,C), revenue(M,T)) - sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) - cost_lineoperate(C);
+    hedge_rate_lt_1_for_revenues(C,T) = sum(T(tbuy).such_that(tbuy < T2 && T2-tbuy <= max_hedge_time), f_rev(C,tbuy,T2) / fexr(C,tbuy,T2) - put_e(C,tbuy,T2) / exr(tbuy,C)) >= -sum(MarketLinks(M,C), revenue(M,T));
+    hedge_rate_lt_1_for_costs(C,T) = sum(T(tbuy).such_that(tbuy < T2 && T2-tbuy <= max_hedge_time), f_cost(C,tbuy,T2) / fexr(C,tbuy,T2) - put_e(C,tbuy,T2) / exr(tbuy,C)) <= sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) + cost_lineoperate(C);
 
 #pragma endregion
 
@@ -493,15 +503,24 @@ int main(int argc, char* argv[]) {
 
 #pragma region optimization
 
-    MP_variable testvar(T);
+    MP_variable testvar(C,T),testvar2(C,T),testvar3(C,T);
+    testvar3.setName("p_call");
+    testvar2.setName("p_put");
     MP_constraint constr(C,T),constr2(C,T,T);
     constr.setName("c");
     testvar.setName("testvar");
     //constr(T) = testvar(T) == d(0,0,T);
     //constr(C,T+1) = testvar(T) <= exr(T,C);
     MP_index aliasT;
-    constr2(C,T,aliasT).such_that(aliasT>T) = testvar(T) <= fexr(C,T,aliasT);
+    constr2(C,T,aliasT).such_that(aliasT>T) = p_call(C,T,aliasT)*testvar3(C,T)+p_put(C,T,aliasT)*testvar2(C,T)+exr(T,C)*testvar(C,T) <= fexr(C,T,aliasT);
     model.setObjective(testvar(T.last()-1));
+
+    sigma.display("simga");
+    phi_o_d1.display("phi_o_d1");
+    phi_o_d2.display("phi_o_d2");
+    o_d1.display("o_d1");
+    o_d2.display("o_d2");
+    p_call.display("p_call");
     
     //model.setObjective(sum(M*T, revenue(M,T)));
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));

@@ -269,9 +269,13 @@ void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::s
                 s = (*i)->varStage;
                 //We do not add random variables, so we better do not have a valid pointer yet
                 //Add values of other scenarios
-                assert(scenVector.size() == (*i)->scenVector.size());
-                for (int j = 0; j < scenVector.size(); j++){
-                    scenVector[j] = scenVector[j] + ((*i)->scenVector)[j];
+                if ( scenVector.empty() )
+                    scenVector = (*i)->scenVector;
+                else {
+                    assert(scenVector.size() == (*i)->scenVector.size());
+                    for (int j = 0; j < scenVector.size(); j++){
+                        scenVector[j] = scenVector[j] + ((*i)->scenVector)[j];
+                    }
                 }
             }
             ++i;
