@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../../Benders/src"
+				AdditionalIncludeDirectories="../../../../../Benders/src;../../../../../ParallelNestedBenders/src"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -62,6 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="../../../../../ThirdParty/boost/stage/lib"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 				Profile="true"
@@ -187,7 +188,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../../Benders/src"
+				AdditionalIncludeDirectories="../../../../../Benders/src;../../../../../ParallelNestedBenders/src"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -204,6 +205,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="../../../../../ThirdParty/boost/stage/lib;&quot;C:\Users\wolf\Documents\VirtualBox-Ordner\FlopBenders\ThirdParty\google-perftools\Release&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"

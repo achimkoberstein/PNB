@@ -316,7 +316,15 @@ namespace flopc {
         RandomConstant_div(const Constant& i, const RandomConstant& j) : RandomConstant_exp(i,j) {}
         RandomConstant_div(const RandomConstant& i, const Constant& j) : RandomConstant_exp(i,j) {}
         virtual double evaluate(int scenario) const {
-            return left->evaluate(scenario)/right->evaluate(scenario); 
+            double nominator = left->evaluate(scenario);
+            double denominator = right->evaluate(scenario);
+            // Check for 0: TODO: Or values near zero? Otherwise we get really high values
+            if ( denominator == 0.0 || std::abs(denominator) <= 0.0000000001 ){
+                return 0; // If it is correct, we should throw an exception..
+            }
+            else
+                return nominator/denominator;
+
         }
 
         int getStage() const {

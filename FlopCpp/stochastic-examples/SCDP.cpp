@@ -19,6 +19,9 @@
 #include "SmiScnModel.hpp"
 #include "Benders.hpp"
 
+#include "OsiPnbStochasticSolverInterface.hpp"
+#include "BendersNodeData.hpp"
+
 using namespace flopc;
 
 int main(int argc, char* argv[]) {
@@ -157,6 +160,12 @@ int main(int argc, char* argv[]) {
     
     // df; factor for calculating the demand
     const double df = 1.1;
+
+    // ef; #factor for calculating the exchange rate
+    const double ef = 1.25;
+
+    // probability for the exchange rate going up
+    const double p_up = (1-(1/ef))/(ef-(1/ef)); // Let's see were we get
     
     // demand: up or down (50/50) with factor of df
     std::vector<double> probsD;
@@ -166,11 +175,13 @@ int main(int argc, char* argv[]) {
     valuesD.push_back(df);
     valuesD.push_back(1/df);
 
+
     RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD) };
     MP_random_data d_factor(&rVarDemand[0], T);
 
-    MP_random_data d(M,P,T);
-    forall(M*P*T.such_that(T > 0), d(M,P,T) = d_basis(M,P,T) * d_factor(T));
+    
+    MP_random_data d(M,P,T); // We need a recursive formulation for that! (again..)
+    d(M,P,T) = d_basis(M,P,T)* product(T2.such_that(T2<=T && T2 > 0),d_factor(T2));
     d.setName("d");
 
     // q_trans{l in L, p in P, m in M, t in T}; transportation costs for one unit of product p from line l to market m in period t
@@ -282,13 +293,7 @@ int main(int argc, char* argv[]) {
     double val_exr_offset[numC] = { 1, 0};
     MP_data exr_offset(&val_exr_offset[0], C);
 
-    // ef; #factor for calculating the exchange rate
-    const double ef = 1.25;
-
-    // probability for the exchange rate going up
-    const double p_up = (1-(1/ef))/(ef-(1/ef));
-
-    // exchange rate
+   // exchange rate
     std::vector<double> probsE;
     std::vector<double> valuesE;
     probsE.push_back(p_up);
@@ -303,22 +308,14 @@ int main(int argc, char* argv[]) {
     
     MP_random_data exr(T,C); // exchange rate
     exr.setName("exr");
-    // TODO: Forall dreimal angewendet? Funktioniert glaube ich nicht wirklich..
-    // 
-    //forall(C*T.such_that(T > 0 && exr_basis(C) == 0.0), exr(C,T) = exr_offset(C)*1); // basis == 0 --> exr = offset
-
-    //forall(C.such_that(T == 1 && exr_basis(C) == 1.0), exr(C,T) = exr_offset(C) + exr_basis(C) * exr_factor(T)); // basis == 1 --> exr = offset + basis * exr_factor [T = 1]
-
 
     // Set Initial Values for first stage deviation
     MP_data exr_initial(T,C); // initial data for recursion, get's initialized with zeroes
     exr_initial.setName("exr_initial"); // 
     exr_initial(0,C) = exr_offset(C)+exr_basis(C); // This is correct, as offset is only 1 at reference currency, and 0 everywhere else.
     // Do Recursion
-    exr(T+1,C) = exr(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T))+exr_initial(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T)); // This construction is necessary at the moment for this recursive formulation TODO
-    // Set the basic value and then the other stuff..
-    //forall(C*T.such_that(T> 1), exr(C,T) = exr(C,T-1) * exr_factor(T)) ; // basis == 1 --> exr = exr(T-1) * exr_factor [T > 1]
-
+    exr(T,C) = mpif(T>0,exr(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T)) ,exr_initial(0,C));//+exr_initial(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T)); // This construction is necessary at the moment for this recursive formulation TODO
+   
     // ir{c in C}; #interest rate for calculating the npv
     double ir_data[numC] = { 0, 0};
     MP_data ir(&ir_data[0],C);
@@ -330,7 +327,7 @@ int main(int argc, char* argv[]) {
     MP_random_data fexr(C,T,T2); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
     fexr.setName("fexr");
     MP_index tbuy, teffect;
-    fexr(C,T,T2).such_that(T2 > T && T2-T <= max_hedge_time) = exr(T,C)*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(T2-T)); 
+    fexr(C,T,T2).such_that(T2 > T && T2-T <= max_hedge_time) = mpif(T == 0,1,exr(T,C))*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(T2-T)); 
     //forall(C*T(tbuy)*T(teffect).such_that(teffect > tbuy && teffect-tbuy <= max_hedge_time), 
         //fexr(C,tbuy,teffect) = exr(C,tbuy)*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(teffect-tbuy)) ); 
     // rc; #recourse coefficient. how high are the recourse costs for not serving the demand (1.0 means that there are no. 1.1 means 10% additional loss of the price for a not delivered unit
@@ -392,8 +389,11 @@ int main(int argc, char* argv[]) {
     cvar95.setName("cvar95"); 
     MP_variable npv; 
     npv.setName("npv"); //{s in Scen}; #npv for each scenario
+    MP_variable npv_stage(T); npv_stage.setName("npv_stage");
+    npv_stage.free();
     MP_variable y_build(L,P); 
     y_build.setName("y_build"); // {l in L, p1 in P} binary; #1 if line l is built to produce product p, 0 otherwise
+    y_build.binary();
 
 #pragma endregion
 
@@ -408,6 +408,14 @@ int main(int argc, char* argv[]) {
     MP_variable call_e(C,T,T2); call_e.setName("call_e"); // {c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised call options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
     MP_variable put_e(C,T,T2); put_e.setName("put_e"); //{c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised put options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
 
+    // Enable/Disable options
+    call_e.fix(0);
+    call_b.fix(0);
+    put_e.fix(0);
+    put_b.fix(0);
+    f_cost.fix(0);
+    f_rev.fix(0);
+
 #pragma endregion
 
 #pragma region accounting variables 2
@@ -419,25 +427,28 @@ int main(int argc, char* argv[]) {
     MP_variable cost_linebuild(C); cost_linebuild.setName("cost_linebuild"); // {c in C} >=0; #Line Building Costs in currency c (lines can only be built in the first time period)
     MP_variable cost_lineoperate(C); cost_lineoperate.setName("cost_lineoperate"); // {c in C} >=0; #line operating costs in currency c
     MP_variable cfp(C,T); cfp.setName("cfp"); // {c in C, t in T, s in Scen}; #cash flow of the production activities in currency c in periode t
+    cfp.free();
     MP_variable cf(C,T); cf.setName("cf"); // {c in C, t in T, s in Scen}; #total cash flow in currency c in periode t (production + financial)
+    cf.free();
     MP_variable cf_ref(T); cf_ref.setName("cf_ref"); // {t in T, s in Scen}; #over-all cash flow in the reference currency in period t
+    cf_ref.free();
 
 #pragma endregion
 
 #pragma region fix binary variable
 
-    double valBuildY[numL][numP] =
-    {
-        { // L3
-            1, 1, 0
-        },
-        { // L8
-            0, 0, 1
-        }
-    };
-    MP_data buildY(&valBuildY[0][0], L, P);
-    MP_constraint fix_build_y(L,P);
-    fix_build_y.setName("fix_build_y");
+    //double valBuildY[numL][numP] =
+    //{
+    //    { // L3
+    //        1, 1, 0
+    //    },
+    //    { // L8
+    //        0, 0, 1
+    //    }
+    //};
+    //MP_data buildY(&valBuildY[0][0], L, P);
+    //MP_constraint fix_build_y(L,P);
+    //fix_build_y.setName("fix_build_y");
     //fix_build_y(L,P) = y_build(L,P) == buildY(L,P);
     
 
@@ -446,12 +457,19 @@ int main(int argc, char* argv[]) {
 #pragma region production
 
     MP_constraint demand_fulfilment(M,T,P); // {m1 in M, t in T, p in P, s in Scen}: 	sum {l in L}(x[l,m1,p,t,s]) + sum{l in L}(x2[l,m1,p,t,s]) >= d[m1,p,t,s];
+    demand_fulfilment.setName("demand_fulfilment");
     MP_constraint max_capacity(L,P,T); //{l in L, p1 in P, t in T, s in Scen}: sum {m1 in M}(x[l,m1,p1,t,s]*r[p1]) <= m[l,p1]*y_build[l,p1];
+    max_capacity.setName("mac_capacity");
     MP_constraint prod_costs_for_line_l_in_period_t(L,T); // {l in L, t in T,s in Scen}: 	cost_prod[l,t,s] = sum{m1 in M, p1 in P}(x[l,m1,p1,t,s]*q_prod[l,p1,t]);
+    prod_costs_for_line_l_in_period_t.setName("prod_cost");
     MP_constraint transportation_costs_from_line_l(L,T); // {l in L, t in T, s in Scen}: 	cost_trans[l,t,s] = sum{m1 in M, p1 in P}(x[l,m1,p1,t,s]*q_trans[l,p1,m1,t]);   #calculated in the currency of the line
+    transportation_costs_from_line_l.setName("transportation_cost");
     MP_constraint revenue_in_market_m_in_periode_t(M,T); // {m1 in M, t in T, s in Scen}: 	revenue[m1,t,s] = sum{p1 in P}( (d[m1,p1,t,s]-rc*sum{l in L}x2[l,m1,p1,t,s])*price[m1,p1,t]);
+    revenue_in_market_m_in_periode_t.setName("revenue_in_market");
     MP_constraint line_building_costs_in_currency_c(C); // {c in C}: 	cost_linebuild[c] = sum{(l,c)in LineLinks,p1 in P}(c_build[l,p1]*y_build[l,p1]);
+    line_building_costs_in_currency_c.setName("line_building_cost");
     MP_constraint line_operating_costs_in_currency_c(C); // {c in C}: cost_lineoperate[c] = sum{(l,c)in LineLinks,p1 in P}(c_operate[l,p1]*y_build[l,p1]);
+    line_operating_costs_in_currency_c.setName("line_operating_cost");
 
     demand_fulfilment(M,T,P) = sum(L, x(L,M,P,T) + x2(L,M,P,T)) >= d(M,P,T);
     max_capacity(L,P,T) = sum(M, x(L,M,P,T)) * r(P) <= m(L,P) * y_build(L,P);
@@ -466,72 +484,106 @@ int main(int argc, char* argv[]) {
 #pragma region hedging
 
     MP_constraint production_cash_flow_in_period_p_in_currency_c(C,T); // {c in C, t in T, s in Scen}: 	cfp[c,t,s] = (sum{(m1,c)in MarketLinks}(revenue[m1,t,s])) - (sum{(l,c)in LineLinks}(cost_prod[l,t,s]+cost_trans[l,t,s])) - cost_lineoperate[c];
+    production_cash_flow_in_period_p_in_currency_c.setName("production_cashflow");
     MP_constraint hedge_rate_lt_1_for_revenues(C,T); // {s in Scen,c in C, teffect in T}: sum{tbuy2 in T:tbuy2<teffect and teffect-tbuy2<=max_hedge_time}(f_rev[c,tbuy2,teffect,s]/fexr[c,s,tbuy2,teffect]-put_e[c,tbuy2,teffect,s]/exr[c,tbuy2,s] ) >= -(sum{(m1,c)in MarketLinks}(revenue[m1,teffect,s])); 
+    hedge_rate_lt_1_for_revenues.setName("hege_rate_r");
     MP_constraint hedge_rate_lt_1_for_costs(C,T); //{c in C, teffect in T,s in Scen}: sum{tbuy2 in T:tbuy2<teffect and teffect-tbuy2<=max_hedge_time}(f_cost[c,tbuy2,teffect,s]/fexr[c,s,tbuy2,teffect]+call_e[c,tbuy2,teffect,s]/exr[c,tbuy2,s]) <= (sum{(l,c)in LineLinks}(cost_prod[l,teffect,s]+cost_trans[l,teffect,s])) + cost_lineoperate[c];
+    hedge_rate_lt_1_for_costs.setName("hedge_rate_c");
 
     production_cash_flow_in_period_p_in_currency_c(C,T) = cfp(C,T) == sum(MarketLinks(M,C), revenue(M,T)) - sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) - cost_lineoperate(C);
-    hedge_rate_lt_1_for_revenues(C,T) = sum(T(tbuy).such_that(tbuy < T2 && T2-tbuy <= max_hedge_time), f_rev(C,tbuy,T2) / fexr(C,tbuy,T2) - put_e(C,tbuy,T2) / exr(tbuy,C)) >= -sum(MarketLinks(M,C), revenue(M,T));
-    hedge_rate_lt_1_for_costs(C,T) = sum(T(tbuy).such_that(tbuy < T2 && T2-tbuy <= max_hedge_time), f_cost(C,tbuy,T2) / fexr(C,tbuy,T2) - put_e(C,tbuy,T2) / exr(tbuy,C)) <= sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) + cost_lineoperate(C);
+    hedge_rate_lt_1_for_revenues(C,T) = sum(T2.such_that(T < T2 && T2-T <= max_hedge_time), (f_rev(C,T,T2) / fexr(C,T,T2)) - (put_e(C,T,T2) / exr(T,C))) >= -sum(MarketLinks(M,C), revenue(M,T));
+    hedge_rate_lt_1_for_costs(C,T) = sum(T2.such_that(T < T2 && T2-T <= max_hedge_time), (f_cost(C,T,T2) / fexr(C,T,T2)) - (put_e(C,T,T2) / exr(T,C))) <= sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) + cost_lineoperate(C);
 
 #pragma endregion
 
 #pragma region options
 
-    //MP_constraint costs_for_buying_options(T); // {tbuy in T, s in Scen}: cost_optionbuy[tbuy,s] = sum{c in C,texp in T:tbuy<texp and texp-tbuy<=max_hedge_time}(call_b[c,tbuy,texp,s]*p_call[c,tbuy,texp,s]+put_b[c,tbuy,texp,s]*p_put[c,tbuy,texp,s]);
-    //MP_constraint use_not_more_than_the_bought_calls(C,T,T); // {c in C,t1 in T,t2 in T,s in Scen:t1<t2 and t2-t1<=max_hedge_time}: call_e[c,t1,t2,s] <= call_b[c,t1,t2,s];
-    //MP_constraint use_not_more_than_the_bought_puts(C,T,T); // {c in C,t1 in T,t2 in T,s in Scen:t1<t2 and t2-t1<=max_hedge_time}: put_e[c,t1,t2,s] <= put_b[c,t1,t2,s];
+    MP_constraint costs_for_buying_options(T); // {tbuy in T, s in Scen}: cost_optionbuy[tbuy,s] = sum{c in C,texp in T:tbuy<texp and texp-tbuy<=max_hedge_time}(call_b[c,tbuy,texp,s]*p_call[c,tbuy,texp,s]+put_b[c,tbuy,texp,s]*p_put[c,tbuy,texp,s]);
+    costs_for_buying_options.setName("option_cost");
+    MP_constraint use_not_more_than_the_bought_calls(C,T,T); // {c in C,t1 in T,t2 in T,s in Scen:t1<t2 and t2-t1<=max_hedge_time}: call_e[c,t1,t2,s] <= call_b[c,t1,t2,s];
+    use_not_more_than_the_bought_calls.setName("call_limit");
+    MP_constraint use_not_more_than_the_bought_puts(C,T,T); // {c in C,t1 in T,t2 in T,s in Scen:t1<t2 and t2-t1<=max_hedge_time}: put_e[c,t1,t2,s] <= put_b[c,t1,t2,s];
+    use_not_more_than_the_bought_puts.setName("put_limit");
 
-    //MP_index texp;
-    //costs_for_buying_options(T) = cost_optionbuy(T) == sum(C*T(texp).such_that(T < texp && texp-T <= max_hedge_time), call_b(C,T,texp) * p_call(C,T,texp) + put_b(C,T,texp) * p_put(C,T,texp));
-    //use_not_more_than_the_bought_calls(C,T,T2).such_that(T < T2 && T2-T <= max_hedge_time) = call_e(C,T,T2) <= call_b(C,T,T2);
-    //use_not_more_than_the_bought_puts(C,T,T2).such_that(T < T2 && T2-T <= max_hedge_time) = put_e(C,T,T2) <= put_b(C,T,T2);
+    MP_index texp;
+    costs_for_buying_options(T) = cost_optionbuy(T) == sum(C*T(texp).such_that(T < texp && texp-T <= max_hedge_time), call_b(C,T,texp) * p_call(C,T,texp) + put_b(C,T,texp) * p_put(C,T,texp));
+    use_not_more_than_the_bought_calls(C,T,T2).such_that(T < T2 && T2-T <= max_hedge_time) = call_e(C,T,T2) <= call_b(C,T,T2);
+    use_not_more_than_the_bought_puts(C,T,T2).such_that(T < T2 && T2-T <= max_hedge_time) = put_e(C,T,T2) <= put_b(C,T,T2);
 
 #pragma endregion
 
 #pragma region All-over-Cash-Flows
 
-    //MP_constraint cash_flow_in_period_p_in_currency_c_production_and_financial(C,T); // {s in Scen, c in C, t in T}: cf[c,t,s] = cfp[c,t,s] + ( sum{tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}((f_cost[c,tbuy,t,s]+f_rev[c,tbuy,t,s])/fexr[c,s,tbuy,t]) ) + (sum{tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}((call_e[c,tbuy,t,s]-put_e[c,tbuy,t,s])/exr[c,tbuy,s]));
-    //MP_constraint cash_flow_in_reference_currency_in_periode_t(T); // {t in T, s in Scen}: 	cf_ref[t,s] = ( sum{c in C}(cf[c,t,s]*exr[c,t,s]) ) - ( sum{c in C,tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}(f_cost[c,tbuy,t,s]+f_rev[c,tbuy,t,s]) ) - (sum{c in C,tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}(call_e[c,tbuy,t,s]-put_e[c,tbuy,t,s])) - cost_optionbuy[t,s];
-    //MP_constraint calculate_npvs_for_each_scenario(); // {s in Scen}: npv[s] =  (sum{t in T}(cf_ref[t,s]/((1 + ir_ref)^(t-2009)))) - sum{c in C}(cost_linebuild[c]*(exr_offset[c]+exr_basis[c]));
+    MP_constraint cash_flow_in_period_p_in_currency_c_production_and_financial(C,T); // {s in Scen, c in C, t in T}: cf[c,t,s] = cfp[c,t,s] + ( sum{tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}((f_cost[c,tbuy,t,s]+f_rev[c,tbuy,t,s])/fexr[c,s,tbuy,t]) ) + (sum{tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}((call_e[c,tbuy,t,s]-put_e[c,tbuy,t,s])/exr[c,tbuy,s]));
+    cash_flow_in_period_p_in_currency_c_production_and_financial.setName("cf_p_c");
+    MP_constraint cash_flow_in_reference_currency_in_periode_t(T); // {t in T, s in Scen}: 	cf_ref[t,s] = ( sum{c in C}(cf[c,t,s]*exr[c,t,s]) ) - ( sum{c in C,tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}(f_cost[c,tbuy,t,s]+f_rev[c,tbuy,t,s]) ) - (sum{c in C,tbuy in T:tbuy<t and t-tbuy<=max_hedge_time}(call_e[c,tbuy,t,s]-put_e[c,tbuy,t,s])) - cost_optionbuy[t,s];
+    cash_flow_in_reference_currency_in_periode_t.setName("cf_ref_c");
+    MP_constraint calculate_npvs_for_each_stage(T); // {s in Scen}: npv[s] =  (sum{t in T}(cf_ref[t,s]/((1 + ir_ref)^(t-2009)))) - sum{c in C}(cost_linebuild[c]*(exr_offset[c]+exr_basis[c]));
+    calculate_npvs_for_each_stage.setName("calculate_npv");
     //MP_constraint calculate_weighted_npv(); // : weighted_npv = sum {s in Scen}(prob[s] * npv[s]);
+    MP_index talias;
+     // TODO: insert hedging/option stuff again
+    cash_flow_in_period_p_in_currency_c_production_and_financial(C,T) = cf(C,T) == cfp(C,T)
+        + sum(T2.such_that(T2<T && T-T2 <= max_hedge_time), (f_cost(C,T2,T) + f_rev(C,T2,T)) / fexr(C,T2,T)) 
+        + sum(T2.such_that(T2<T && T-T2 <= max_hedge_time), (call_e(C,T2,T) - put_e(C,T2,T)) / exr(T2,C));
 
-    //cash_flow_in_period_p_in_currency_c_production_and_financial(C,T) = cf(C,T) == cfp(C,T) + sum(T(tbuy).such_that(tbuy<T && T-tbuy <= max_hedge_time), (f_cost(C,tbuy,T) + f_rev(C,tbuy,T)) / fexr(C,tbuy,T)) + sum(T(tbuy).such_that(tbuy<T && T-tbuy <= max_hedge_time),(call_e(C,tbuy,T) - put_e(C,tbuy,T)) / exr(C,tbuy));
-    //cash_flow_in_reference_currency_in_periode_t(T) = cf_ref(T) == sum(C, cf(C,T) * exr(C,T)) - sum(C*T(tbuy).such_that(tbuy<T && T-tbuy <= max_hedge_time), f_cost(C,tbuy,T) + f_rev(C,tbuy,T)) - sum(C*T(tbuy).such_that(tbuy<T && T-tbuy <= max_hedge_time), call_e(C,tbuy,T) - put_e(C,tbuy,T)) - cost_optionbuy(T);
-    ////calculate_npvs_for_each_scenario() = npv ==  sum(T, cf_ref(T) / ((1 + ir_ref)^(T))) - sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)));
+    cash_flow_in_reference_currency_in_periode_t(T) = cf_ref(T) == sum(C, cf(C,T)* exr(T,C)) 
+        - sum(C*T2.such_that(T2<T && T-T2 <= max_hedge_time), f_cost(C,T2,T) + f_rev(C,T2,T)) 
+        - sum(C*T2.such_that(T2<T && T-T2 <= max_hedge_time), call_e(C,T2,T) - put_e(C,T2,T)) 
+        - cost_optionbuy(T);
+
+    calculate_npvs_for_each_stage(T) = npv_stage(T) ==  cf_ref(T) / 1;//power(1 + ir_ref,MP_index_exp(T)); //TODO: Repair power expression
 
 #pragma endregion
 
 #pragma region optimization
 
-    MP_variable testvar(C,T),testvar2(C,T),testvar3(C,T);
-    testvar3.setName("p_call");
-    testvar2.setName("p_put");
-    MP_constraint constr(C,T),constr2(C,T,T);
-    constr.setName("c");
-    testvar.setName("testvar");
-    //constr(T) = testvar(T) == d(0,0,T);
-    //constr(C,T+1) = testvar(T) <= exr(T,C);
-    MP_index aliasT;
-    constr2(C,T,aliasT).such_that(aliasT>T) = p_call(C,T,aliasT)*testvar3(C,T)+p_put(C,T,aliasT)*testvar2(C,T)+exr(T,C)*testvar(C,T) <= fexr(C,T,aliasT);
-    model.setObjective(testvar(T.last()-1));
+    //MP_variable testvar(C,T),testvar2(C,T),testvar3(C,T),testvarmpt(M,P,T);
+    //testvar3.setName("p_call");
+    //testvar2.setName("p_put");
+    //MP_constraint constr(C,T,T2),constr2(C,T,T2),constr3(C,T),constrmpt(M,P,T);
+    //constr3.setName("constr3");
+    //constr.setName("c");
+    //MP_index aliasT;
+    //testvar.setName("testvar");
+    //testvarmpt.setName("m_p_t");
+    //constrmpt.setName("c_mpt");
+    //constrmpt(M,P,T) = testvarmpt(M,P,T) <= d(M,P,T);
+    //constr3(C,T) = testvar(C,T) <= exr(T,C);
+    //
+    //constr2(C,T,aliasT).such_that(aliasT>T) = p_call(C,T,aliasT)*testvar3(C,T)+p_put(C,T,aliasT)*testvar2(C,T)+exr(T,C)*testvar(C,T) <= fexr(C,T,aliasT);
+    //model.setObjective(testvar(T.last()-1));
 
-    sigma.display("simga");
-    phi_o_d1.display("phi_o_d1");
-    phi_o_d2.display("phi_o_d2");
-    o_d1.display("o_d1");
-    o_d2.display("o_d2");
-    p_call.display("p_call");
+    //sigma.display("simga");
+    //phi_o_d1.display("phi_o_d1");
+    //phi_o_d2.display("phi_o_d2");
+    //o_d1.display("o_d1");
+    //o_d2.display("o_d2");
+    //p_call.display("p_call");
     
-    //model.setObjective(sum(M*T, revenue(M,T)));
+    model.setObjective( -sum(T,npv_stage(T)) );// + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) ) );
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
 
-    model.solve(MP_model::MAXIMIZE);
-    model->writeLp("test");
+    model.solve(MP_model::MINIMIZE);
+    std::cout << model->getObjValue();
+    model->writeMps("scdp-problem");
+    cost_linebuild.display("cost_linebuild");
 
-    revenue.display();
+    //revenue.display();
 
     //model.attach();
     model.getSmi()->writeSmps("SCDP", false, false);
+
+    //OsiStochasticParallelNestedBendersTwoStageSolverInterface nested_benders_solver(new OsiCpxSolverInterface(),model.getSmi());
+    //nested_benders_solver.initialSolve(); // We only do minimization!!
+    //std::cout << nested_benders_solver.getObjValue();
+
+    //MP_model testModel2(OsiCpxSolverInterface);
+    //MP_constraint testConstraint(C,T);
+    //testConstraint(C,T) = 0 <= exr(T,C);
+    //testModel2.setObjective(1);
+    //testModel2.solve(MP_model::MAXIMIZE);
+    //testModel2.writeLp("test2");
     
 #pragma endregion
 
