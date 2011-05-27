@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include <boost/foreach.hpp>
+#include "boost/multi_array.hpp"
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 
@@ -44,11 +45,55 @@ namespace parallel_benders {
                     integer_problems_[i] = true;
             }
         }
+        typedef std::map<int,std::vector< std::pair<int,double> > > non_staircase_row_map;
+        non_staircase_row_map non_staircase_rows;
+        // Check for non-staircase structure
+        for (int stage = 2; stage < num_stages_; stage++){
+            // Go through the core node
+            SmiNodeData* current_node = core_->getNode(stage);
+            // Go through all the rows. 
+            if ( current_node->getNumMatrixElements() ){
+                // We split the matrix entries into W and T 
+                for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+core_->getNumRows(stage); j++){
+                    const double* row_elements = current_node->getRowElements(j);
+                    const int* row_indices = current_node->getRowIndices(j);
+                    int row_length = current_node->getRowLength(j);
+                    bool non_staircase_row = false;
+                    for ( int k = 0; k < row_length; k++ ){
+                        if ( row_indices[k] < core_->getColStart(stage-1) ){ // This means, we have a non-staircase structure. Store all the indices in a std::map[]
+                            non_staircase_row = true;
+                        }
+                    }
+                    if ( non_staircase_row ){
+                        non_staircase_problem_ = true;
+                        for ( int kk = 0; kk < row_length; kk++)
+                            non_staircase_rows[j].push_back(make_pair(row_indices[kk],row_elements[kk]));
+                    }
+                }
+            }
+        }
         // What do we want to do?
+        if ( non_staircase_problem_ ){ // We have non_staircase_rows! How do we handle these?
+            // Iterate over all rows
+            BOOST_FOREACH( non_staircase_row_map::value_type vec_ref,non_staircase_rows){
+                for (int i = 0; i < vec_ref.second.size(); i++){
+                    // Do something here!
+                }
+            }
+            // We have to go through it from bottom to top.
+            // If we have a non-staircase row in the last stage, we have to find the coefficient of the lowest stage.
+            // Then we have to insert new rows with free variables ( and most likely stochastic coefficients.. ) in all stages lower than the last stage.
+            // Because it would be necessary to change the whole SmiTree to handle Non-Staircase structure, we can add non-staircase handling behaviour inside our algorithm.
+            // We have to manipulate the last stage in the following way: insert the new column, and insert the new row.
+            // 
+
+        }
         // 1. Check for stochasticity of the model 
         for (int i = 0; i < num_stages_; i++)
             thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AdjustProblemInStage,this,i) );
         thread_pool_.wait(0);
+
+        // If we have a non-staircase problem, handle it!
 
     }
 
@@ -74,6 +119,8 @@ namespace parallel_benders {
             benders_stage_ptr->row_indices_.push_back(i);            
         }
         // End of CPLEX necessary adjustments
+        std::vector< std::vector<int> > non_staircase;
+        bool no_staircase = false;
 
         // Look at core data to get values for the matrices..
         for ( int i = 0; i < tree_nodes_by_stage_[stage].size(); i++){
@@ -91,11 +138,23 @@ namespace parallel_benders {
                         for ( int k = 0; k < row_length; k++ ){
                             if ( row_indices[k] >= core_->getColStart(stage))
                                 benders_stage_ptr->stochastic_matrix_w_ = true;
-                            else
+                            else if ( row_indices[k] >= core_->getColStart(stage-1))
                                 benders_stage_ptr->stochastic_matrix_t_ = true;
+                            else{
+                                no_staircase = true;
+                            }
                         }
-                        if ( benders_stage_ptr->stochastic_matrix_t_ && benders_stage_ptr->stochastic_matrix_w_ )
-                            break; // We can skip the rest of the computation, if both booleans are true
+                        if ( no_staircase ){
+                            // We store the row_indices of the current row and all the indices
+                            non_staircase_problem_ = true; no_staircase = false;
+                            non_staircase.push_back(std::vector<int> () ); 
+                            non_staircase.back().push_back(j); // We store at first the index of the row.
+                            for (int kk = 0; kk < row_length; kk++){
+                                non_staircase.back().push_back(row_indices[kk]);
+                            } // What we also need: Coefficients of the core matrix.
+                        }
+                        //if ( benders_stage_ptr->stochastic_matrix_t_ && benders_stage_ptr->stochastic_matrix_w_ && non_staircase_problem_)
+                        //    break; // We can skip the rest of the computation, if both booleans are true
                     }
                 }
 				if ( node_ptr->getCoreCombineRule() != SmiCoreCombineReplace::Instance() ){
@@ -103,6 +162,8 @@ namespace parallel_benders {
                     LOG(FATAL) << "The supplied SMPS format is not understood. You used something that is not REPLACE in your stoch file.";
 					console_mutex_.unlock();
 				}
+
+                benders_node_ptr->no_staircase_constraints_ = non_staircase;
 
 
                 // Are there random bounds?
@@ -118,6 +179,7 @@ namespace parallel_benders {
                     benders_stage_ptr->stochastic_rhs_ = true;
             }
         }
+        
 
     }
 
@@ -126,7 +188,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -235,7 +297,7 @@ namespace parallel_benders {
         for (int i = 0; i < num_scenarios_; i++){
             total_prob += smi_->getScenarioProb(i);
         }
-        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one.";
+        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one, but " << total_prob;
 
         // create our benders node objects and build the tree
         tree_ = SmiScenarioTree<BendersNodeData*>();
@@ -605,6 +667,10 @@ namespace parallel_benders {
             if ( infeasible_problems_.any() )
                 return; 
 
+        // Check if we got unbounded subproblems
+        if ( unbounded_problem_ )
+            return; // There is no need to actually solve other problems, as we have unbounded problems..
+
         OsiSolverInterface* osi_solver = GetSolverByThread();
 		if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1))
 			BuildSubproblem(osi_solver, benders_tree_node_pointer);
@@ -669,16 +735,18 @@ namespace parallel_benders {
                 if ( current_stage_ < num_stages_-1){
                     // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
-                    boost::scoped_array<int> extra_indices(new int[num_thetas]);
-                    boost::scoped_array<double> extra_elements(new double[num_thetas]);
-                    for (int i = 0; i < num_thetas; i++){
-                        extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
-                        extra_elements[i] = 1;
+                    if ( num_thetas ){
+                        boost::scoped_array<int> extra_indices(new int[num_thetas]);
+                        boost::scoped_array<double> extra_elements(new double[num_thetas]);
+                        for (int i = 0; i < num_thetas; i++){
+                            extra_indices[i] = stage_data_[current_stage_]->num_columns_+i;
+                            extra_elements[i] = 1;
+                        }
+                        // we bound all thetas with one extra row?
+                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+1000000, infinity_);
+                        // Solve the model again
+                        osi_solver->resolve();
                     }
-                    // we bound all thetas with one extra row?
-                    osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+1000000, infinity_);
-                    // Solve the model again
-                    osi_solver->resolve();
                 }
 
                 if ( osi_solver->isProvenPrimalInfeasible() ){
@@ -688,11 +756,11 @@ namespace parallel_benders {
                     if ( osi_solver->isProvenDualInfeasible() ){
 						console_mutex_.lock();
                         LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                        osi_solver->writeLp("unboundedProblem.lp");
 						console_mutex_.unlock();
                         // We can not work with that in a reasonable manner..
                         upper_bound_ = infinity_;
-                        unbounded_problem_ = true;
-                        // We only care, if we have no infeasible problems at the same time.
+                        unbounded_problem_ = true; // If a problem is really unbounded, the whole problem is unbounded ( see paper VanSlyke & Wets )
                     }
                     
       //              // In case of CPLEX, we can return the error code..

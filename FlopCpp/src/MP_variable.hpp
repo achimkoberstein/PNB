@@ -75,6 +75,9 @@ namespace flopc {
         // Call this method to turn the variable in a free variable
         void free();
 
+        // Call this method to fix the variable at a given value
+        void fix(double value); 
+
         void bounds(std::vector< std::vector<boost::shared_ptr<MP::Coef> > >& v);
 
         void generateNames(std::set<string> &nameSetFix, std::set<string> &nameSetFree, std::vector<std::string> &colNamesFix, std::vector<std::string> &colNamesFree);

@@ -115,6 +115,9 @@ public:
     double* objective_;
     double* row_lower_;
     double* row_upper_;
+
+    // In the non-staircase case
+    std::vector< std::vector<int> > no_staircase_constraints_;
 };
 
 // Methods that work on a BendersNodeData

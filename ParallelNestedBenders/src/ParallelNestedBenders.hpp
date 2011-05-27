@@ -106,6 +106,8 @@ private:
     double old_lower_bound_;
 
     int current_stage_;
+    // Characteristic of problem
+    bool non_staircase_problem_;
     // Direction of algorithm
     bool forward_;
     // Do we have infeasible/unbounded problems? And which?

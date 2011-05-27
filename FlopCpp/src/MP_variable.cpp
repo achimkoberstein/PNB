@@ -206,6 +206,13 @@ const VariableRef& flopc::MP_variable::operator()( const MP_index_exp& d1 /*= MP
     return *vPtr;
 }
 
+void flopc::MP_variable::fix( double value )
+{
+    lowerLimit.initialize(value);
+    upperLimit.initialize(value);
+    // We do not change the type
+}
+
 void MP_variable::generateNames(std::set<string> &nameSetStrict, std::set<string> &nameSetFree, std::vector<std::string> &colNamesStrict, std::vector<std::string> &colNamesFree) {
     // we start with the names for the the free-type
     string nameFree;

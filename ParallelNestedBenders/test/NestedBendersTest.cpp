@@ -46,7 +46,7 @@ public:
 		// Try different multicut aggregation level
 		//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD); 
@@ -595,6 +595,10 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
 }
 
+TEST_F(NestedBendersTest,scdp){// scdp problem from marc
+    EXPECT_NEAR(solveSMPS("scdp/SCDP"),-5399313760.7, 0.1); 
+}
+
 
 
 
@@ -629,7 +633,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.saphir*";
+    ::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
