@@ -117,7 +117,7 @@ public:
     double* row_upper_;
 
     // In the non-staircase case
-    std::vector< std::vector<int> > no_staircase_constraints_;
+    std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
 };
 
 // Methods that work on a BendersNodeData
@@ -148,6 +148,9 @@ struct BendersStageData {
     CoinWarmStart* warm_start_;
 
 	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 
+
+    // In the non-staircase case
+    std::vector< std::vector<int> > no_staircase_constraints_;
 
 };
 

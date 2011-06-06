@@ -119,52 +119,75 @@ namespace parallel_benders {
             benders_stage_ptr->row_indices_.push_back(i);            
         }
         // End of CPLEX necessary adjustments
-        std::vector< std::vector<int> > non_staircase;
+        std::vector< std::vector<int> > non_staircase_core;
         bool no_staircase = false;
-
+        bool staircase_in_stage = false;
+        // We split the matrix entries into W and T 
+        for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
+            //const double* row_elements = node_ptr->getRowElements(j);
+            const int* row_indices = core_->getNode(stage)->getRowIndices(j);
+            int row_length = core_->getNode(stage)->getRowLength(j);
+            for ( int k = 0; k < row_length; k++ ){
+                if ( row_indices[k] >= core_->getColStart(stage))
+                    benders_stage_ptr->stochastic_matrix_w_ = true;
+                else if ( stage > 0 && row_indices[k] >= core_->getColStart(stage-1))
+                    benders_stage_ptr->stochastic_matrix_t_ = true;
+                else{
+                    no_staircase = true;
+                }
+            }
+            if ( no_staircase ){
+                staircase_in_stage = true; no_staircase = false;
+                non_staircase_core.push_back(std::vector<int> () ); 
+                non_staircase_core.back().push_back(j); // We store at first the index of the row.
+                for (int kk = 0; kk < row_length; kk++){
+                    non_staircase_core.back().push_back(row_indices[kk]);
+                } 
+            }
+        }
+        // We should store the stage_wise non_staircase structure in benders_stage_data
+        benders_stage_ptr->no_staircase_constraints_ = non_staircase_core;
+       
+        std::vector< std::vector<std::pair<int,double> > > non_staircase;
         // Look at core data to get values for the matrices..
         for ( int i = 0; i < tree_nodes_by_stage_[stage].size(); i++){
             // Look at current node
+            // Empty the non_staircase container
+            non_staircase.clear();
             BendersNodeData* benders_node_ptr = tree_nodes_by_stage_[stage][i]->getDataPtr();
             SmiNodeData* node_ptr = benders_node_ptr->smi_node_data_;
             if ( !node_ptr->isCoreNode()){ // Makes only sense for non-core nodes
-                // Find stochastic T and W matrix
-                if ( node_ptr->getNumMatrixElements() && !( benders_stage_ptr->stochastic_matrix_w_ && benders_stage_ptr->stochastic_matrix_t_) ){
+                // Find stochastic T and W matrix, but only until we found out out if we have a stochastic_matrix_t 
+                if ( node_ptr->getNumMatrixElements() && !( benders_stage_ptr->stochastic_matrix_w_ && benders_stage_ptr->stochastic_matrix_t_ && !staircase_in_stage) ){
                     // We split the matrix entries into W and T 
                     for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
-                        //const double* row_elements = node_ptr->getRowElements(j);
+                        const double* row_elements = node_ptr->getRowElements(j);
                         const int* row_indices = node_ptr->getRowIndices(j);
                         int row_length = node_ptr->getRowLength(j);
                         for ( int k = 0; k < row_length; k++ ){
-                            if ( row_indices[k] >= core_->getColStart(stage))
-                                benders_stage_ptr->stochastic_matrix_w_ = true;
-                            else if ( row_indices[k] >= core_->getColStart(stage-1))
-                                benders_stage_ptr->stochastic_matrix_t_ = true;
-                            else{
+                            if ( stage > 1 && row_indices[k] < core_->getColStart(stage-1))
                                 no_staircase = true;
-                            }
                         }
                         if ( no_staircase ){
                             // We store the row_indices of the current row and all the indices
                             non_staircase_problem_ = true; no_staircase = false;
-                            non_staircase.push_back(std::vector<int> () ); 
-                            non_staircase.back().push_back(j); // We store at first the index of the row.
+                            non_staircase.push_back(std::vector<std::pair<int,double> > () ); 
+                            non_staircase.back().push_back(make_pair<int,double>(j,0)); // We store at first the index of the row.
                             for (int kk = 0; kk < row_length; kk++){
-                                non_staircase.back().push_back(row_indices[kk]);
+                                non_staircase.back().push_back(make_pair<int,double>(row_indices[kk],row_elements[kk]));
                             } // What we also need: Coefficients of the core matrix.
-                        }
-                        //if ( benders_stage_ptr->stochastic_matrix_t_ && benders_stage_ptr->stochastic_matrix_w_ && non_staircase_problem_)
-                        //    break; // We can skip the rest of the computation, if both booleans are true
-                    }
-                }
-				if ( node_ptr->getCoreCombineRule() != SmiCoreCombineReplace::Instance() ){
-					console_mutex_.lock();
+                        }// end if
+                    }//end inner for
+                }//end if
+
+
+                if (!( node_ptr->getCoreCombineRule() == SmiCoreCombineReplace::Instance() || node_ptr->getCoreCombineRule() == SmiCoreCombineAdd::Instance())){
+                    console_mutex_.lock();
                     LOG(FATAL) << "The supplied SMPS format is not understood. You used something that is not REPLACE in your stoch file.";
-					console_mutex_.unlock();
-				}
+                    console_mutex_.unlock();
+                }
 
                 benders_node_ptr->no_staircase_constraints_ = non_staircase;
-
 
                 // Are there random bounds?
                 if ( node_ptr->getLength(node_ptr->getCloStart()) || node_ptr->getLength(node_ptr->getCupStart()) )
@@ -177,11 +200,11 @@ namespace parallel_benders {
                 // Are there random right hand sides?
                 if ( node_ptr->getLength(node_ptr->getRloStart()) || node_ptr->getLength(node_ptr->getRupStart()) )
                     benders_stage_ptr->stochastic_rhs_ = true;
-            }
-        }
-        
+            }//end non-core node check
+        }//end for
+        // In the non-staircase case we now have all the stuff we need.
 
-    }
+   }
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
