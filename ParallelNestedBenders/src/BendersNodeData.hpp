@@ -150,7 +150,7 @@ struct BendersStageData {
 	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 
 
     // In the non-staircase case
-    std::vector< std::vector<int> > no_staircase_constraints_;
+    std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
 
 };
 
