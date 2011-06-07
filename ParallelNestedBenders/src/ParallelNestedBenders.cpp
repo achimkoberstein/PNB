@@ -119,12 +119,13 @@ namespace parallel_benders {
             benders_stage_ptr->row_indices_.push_back(i);            
         }
         // End of CPLEX necessary adjustments
-        std::vector< std::vector<int> > non_staircase_core;
+        typedef std::list< std::vector< std::pair<int,double> > > staircase_container;
+        staircase_container non_staircase_core;
         bool no_staircase = false;
         bool staircase_in_stage = false;
         // We split the matrix entries into W and T 
         for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
-            //const double* row_elements = node_ptr->getRowElements(j);
+            const double* row_elements = core_->getNode(stage)->getRowElements(j);
             const int* row_indices = core_->getNode(stage)->getRowIndices(j);
             int row_length = core_->getNode(stage)->getRowLength(j);
             for ( int k = 0; k < row_length; k++ ){
@@ -138,17 +139,26 @@ namespace parallel_benders {
             }
             if ( no_staircase ){
                 staircase_in_stage = true; no_staircase = false;
-                non_staircase_core.push_back(std::vector<int> () ); 
-                non_staircase_core.back().push_back(j); // We store at first the index of the row.
+                non_staircase_core.push_back(std::vector<std::pair<int,double> > () ); 
+                non_staircase_core.back().push_back(make_pair<int,double>(j,0)); // We store at first the index of the row.
                 for (int kk = 0; kk < row_length; kk++){
-                    non_staircase_core.back().push_back(row_indices[kk]);
+                    non_staircase_core.back().push_back(make_pair<int,double>(row_indices[kk],row_elements[kk]));
                 } 
             }
         }
         // We should store the stage_wise non_staircase structure in benders_stage_data
-        benders_stage_ptr->no_staircase_constraints_ = non_staircase_core;
+        //benders_stage_ptr->no_staircase_constraints_ = non_staircase_core;
+        // Create a map, that maps row numbers to booleans. If a row has stochastic elements, we need to add other constraints..
+        std::map<int,bool> no_staircase_indicator;
+        
+        for (staircase_container::iterator iter = non_staircase_core.begin(); iter != non_staircase_core.end(); ++iter){
+            no_staircase_indicator[iter->front().first] = false;
+        }
+           
+        int map_size = non_staircase_core.size();
+        assert( no_staircase_indicator.size() == map_size);
        
-        std::vector< std::vector<std::pair<int,double> > > non_staircase;
+        std::list< std::vector<std::pair<int,double> > > non_staircase;
         // Look at core data to get values for the matrices..
         for ( int i = 0; i < tree_nodes_by_stage_[stage].size(); i++){
             // Look at current node
@@ -171,6 +181,7 @@ namespace parallel_benders {
                         if ( no_staircase ){
                             // We store the row_indices of the current row and all the indices
                             non_staircase_problem_ = true; no_staircase = false;
+                            no_staircase_indicator[j] = true;
                             non_staircase.push_back(std::vector<std::pair<int,double> > () ); 
                             non_staircase.back().push_back(make_pair<int,double>(j,0)); // We store at first the index of the row.
                             for (int kk = 0; kk < row_length; kk++){
@@ -187,7 +198,7 @@ namespace parallel_benders {
                     console_mutex_.unlock();
                 }
 
-                benders_node_ptr->no_staircase_constraints_ = non_staircase;
+                //benders_node_ptr->no_staircase_constraints_ = non_staircase;
 
                 // Are there random bounds?
                 if ( node_ptr->getLength(node_ptr->getCloStart()) || node_ptr->getLength(node_ptr->getCupStart()) )
@@ -203,6 +214,19 @@ namespace parallel_benders {
             }//end non-core node check
         }//end for
         // In the non-staircase case we now have all the stuff we need.
+
+        // Check what restrictions are non-stochastic
+        assert(no_staircase_indicator.size() == map_size); // See that we did not added new constraints (sanity check)
+        // We need to generate non-staircase constraints for all the purely deterministic ones
+        // Generate constraints for all the deterministic only non-staircase constraints.
+        for ( staircase_container::iterator iter = non_staircase_core.begin(); iter != non_staircase_core.end(); ++iter){
+            if ( !no_staircase_indicator[iter->front().first] ){ // No stochastic element for this non-staircase constraint
+                
+            }
+            else{ // Stochastic elements are contained in this non-staircase constraint. We need to handle it.
+
+            }
+        }
 
    }
 
