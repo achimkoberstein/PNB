@@ -333,6 +333,38 @@ SmiCoreData::~SmiCoreData()
     }
 }
 
+void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients)
+{
+    // We want to transform the problem to staircase structure
+    std::vector<int> new_columns(nstag_,0);
+    int num_new_cols = 0;
+    for ( std::map<int,int>::iterator it = non_staircase_coefficients.begin(); it != non_staircase_coefficients.end(); ++it){
+	// Count the number of columns we want to add to Smi
+        int column_stage = getColStage(it->first);
+        int how_many_constraints = it->second-column_stage-1; // We only need to add new columns in the stage after the column stage and the stages before the last stage it is used.
+        assert(how_many_constraints >= -1);
+        for ( int i = column_stage+1; i < how_many_constraints+column_stage+1; i++){
+		++new_columns[i];
+        }
+	}
+    for (int i = 0; i < new_columns.size(); i++)
+        num_new_cols += new_columns[i];
+    // Now we know how many columns we have to add in which stage, and how many constraints we need to add in which stage ( one for every new column in every stage ) and modify it.
+    // Now we can store for every coefficient
+    
+    // Create new column start arrays
+    int * new_cstart = new int[ncol_+num_new_cols];
+    // We can memcpy a lot if we want
+
+    int * new_stageColPtr =  new int[nstag_];
+    new_stageColPtr[0] = 0;
+    for (int i = 1; i < nstag_; i++){
+        new_stageColPtr[i] = stageColPtr_[i]+new_stageColPtr[i-1]-stageColPtr_[i-1]+new_columns[i-1];
+    }
+    // We need to add and change the core nodes
+
+}
+
 void
 SmiNodeData::setCoreNode()
 {

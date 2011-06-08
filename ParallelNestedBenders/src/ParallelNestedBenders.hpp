@@ -38,6 +38,8 @@ namespace parallel_benders {
 class ParallelNestedBenders {
     friend class OsiStochasticParallelNestedBendersTwoStageSolverInterface;
 
+    typedef std::map<int,int> staircase_container; // Stores the maximal stage where the coefficient appears, and the coefficient as key
+
 public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
     ~ParallelNestedBenders();
@@ -108,6 +110,7 @@ private:
     int current_stage_;
     // Characteristic of problem
     bool non_staircase_problem_;
+    bool non_staircase_stochastic_problem_;
     // Direction of algorithm
     bool forward_;
     // Do we have infeasible/unbounded problems? And which?
@@ -175,6 +178,10 @@ private:
 	// We can change this, if we want to.
 	bool seperate_first_stage_solver_;
 	bool seperate_stage_solver_;
+
+    // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
+    staircase_container non_staircase_coefficients_;
+    
 
 
 

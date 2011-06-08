@@ -29,7 +29,9 @@ class SmiCoreData;
 
 class SmiNodeData
 	//: public SmiLinearData
+    
 {
+    friend SmiCoreData; // Find a better way..
 public:
 	typedef map<int,CoinPackedVector *> SmiRowMap;
 	typedef map<int,double *> SmiDenseRowMap;
@@ -173,10 +175,6 @@ protected:
 
     void transformElements(int start, SmiNodeData* deterministic_node, int deterministic_start);
 
-
-
-
-
 private:
 
 	SmiStageIndex stg_; //Stage to which the node belongs
@@ -258,6 +256,8 @@ public:
 	
 	inline void setRowNames(std::vector<std::string> namesStrict, std::vector<std::string> namesFree) { this->rowNamesStrict = namesStrict; this->rowNamesFree = namesFree; }
 	inline const std::vector<std::string> * getRowNames(bool strictFormat = true) { if (strictFormat) return &rowNamesStrict; else return &rowNamesFree; }
+
+    void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients);
 
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
