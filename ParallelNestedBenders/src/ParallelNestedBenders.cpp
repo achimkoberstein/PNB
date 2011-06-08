@@ -119,51 +119,38 @@ namespace parallel_benders {
             benders_stage_ptr->row_indices_.push_back(i);            
         }
         // End of CPLEX necessary adjustments
-        typedef std::list< std::vector< std::pair<int,double> > > staircase_container;
-        staircase_container non_staircase_core;
         bool no_staircase = false;
         bool staircase_in_stage = false;
         // We split the matrix entries into W and T 
-        for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
-            const double* row_elements = core_->getNode(stage)->getRowElements(j);
-            const int* row_indices = core_->getNode(stage)->getRowIndices(j);
-            int row_length = core_->getNode(stage)->getRowLength(j);
-            for ( int k = 0; k < row_length; k++ ){
-                if ( row_indices[k] >= core_->getColStart(stage))
-                    benders_stage_ptr->stochastic_matrix_w_ = true;
-                else if ( stage > 0 && row_indices[k] >= core_->getColStart(stage-1))
-                    benders_stage_ptr->stochastic_matrix_t_ = true;
-                else{
-                    no_staircase = true;
+        if ( stage > 1){
+            for ( int j = core_->getRowStart(stage); j < core_->getRowStart(stage)+benders_stage_ptr->num_rows_; j++){
+                const double* row_elements = core_->getNode(stage)->getRowElements(j);
+                const int* row_indices = core_->getNode(stage)->getRowIndices(j);
+                int row_length = core_->getNode(stage)->getRowLength(j);
+                for ( int k = 0; k < row_length; k++ ){
+                    if ( row_indices[k] < core_->getColStart(stage-1))
+                        no_staircase = true;
+                    if ( no_staircase )
+                        break;
+                }
+                if ( no_staircase ){
+                    staircase_in_stage = true; no_staircase = false; non_staircase_problem_ = true;
+                    // Choose a mutex to use here TODO
+                    console_mutex_.lock();
+                    for (int kk = 0; kk < row_length; kk++){
+                        if ( core_->getColStage(row_indices[kk]) < stage-1 ) // Only for these coefficients we need constraints..
+                            non_staircase_coefficients_[row_indices[kk]] = max(non_staircase_coefficients_[row_indices[kk]],stage);
+                    } 
+                    console_mutex_.unlock();
                 }
             }
-            if ( no_staircase ){
-                staircase_in_stage = true; no_staircase = false;
-                non_staircase_core.push_back(std::vector<std::pair<int,double> > () ); 
-                non_staircase_core.back().push_back(make_pair<int,double>(j,0)); // We store at first the index of the row.
-                for (int kk = 0; kk < row_length; kk++){
-                    non_staircase_core.back().push_back(make_pair<int,double>(row_indices[kk],row_elements[kk]));
-                } 
-            }
         }
-        // We should store the stage_wise non_staircase structure in benders_stage_data
-        //benders_stage_ptr->no_staircase_constraints_ = non_staircase_core;
-        // Create a map, that maps row numbers to booleans. If a row has stochastic elements, we need to add other constraints..
-        std::map<int,bool> no_staircase_indicator;
-        
-        for (staircase_container::iterator iter = non_staircase_core.begin(); iter != non_staircase_core.end(); ++iter){
-            no_staircase_indicator[iter->front().first] = false;
-        }
-           
-        int map_size = non_staircase_core.size();
-        assert( no_staircase_indicator.size() == map_size);
        
-        std::list< std::vector<std::pair<int,double> > > non_staircase;
+      
+
         // Look at core data to get values for the matrices..
         for ( int i = 0; i < tree_nodes_by_stage_[stage].size(); i++){
             // Look at current node
-            // Empty the non_staircase container
-            non_staircase.clear();
             BendersNodeData* benders_node_ptr = tree_nodes_by_stage_[stage][i]->getDataPtr();
             SmiNodeData* node_ptr = benders_node_ptr->smi_node_data_;
             if ( !node_ptr->isCoreNode()){ // Makes only sense for non-core nodes
@@ -174,19 +161,26 @@ namespace parallel_benders {
                         const double* row_elements = node_ptr->getRowElements(j);
                         const int* row_indices = node_ptr->getRowIndices(j);
                         int row_length = node_ptr->getRowLength(j);
-                        for ( int k = 0; k < row_length; k++ ){
-                            if ( stage > 1 && row_indices[k] < core_->getColStart(stage-1))
+                        for ( int kk = 0; kk < row_length; kk++){
+                            if ( row_indices[kk] >= core_->getColStart(stage))
+                                benders_stage_ptr->stochastic_matrix_w_ = true;
+                            else if ( stage > 0 && row_indices[kk] >= core_->getColStart(stage-1))
+                                benders_stage_ptr->stochastic_matrix_t_ = true;
+                            else{
                                 no_staircase = true;
+                            }
+
                         }
+    
                         if ( no_staircase ){
                             // We store the row_indices of the current row and all the indices
-                            non_staircase_problem_ = true; no_staircase = false;
-                            no_staircase_indicator[j] = true;
-                            non_staircase.push_back(std::vector<std::pair<int,double> > () ); 
-                            non_staircase.back().push_back(make_pair<int,double>(j,0)); // We store at first the index of the row.
-                            for (int kk = 0; kk < row_length; kk++){
-                                non_staircase.back().push_back(make_pair<int,double>(row_indices[kk],row_elements[kk]));
-                            } // What we also need: Coefficients of the core matrix.
+                            non_staircase_stochastic_problem_ = true; no_staircase = false; non_staircase_problem_ = true;
+                            //no_staircase_indicator[j] = true;
+                            //non_staircase.push_back(std::vector<std::pair<int,double> > () ); 
+                            //non_staircase.back().push_back(make_pair<int,double>(j,0)); // We store at first the index of the row.
+                            //for (int kk = 0; kk < row_length; kk++){
+                            //    non_staircase.back().push_back(make_pair<int,double>(row_indices[kk],row_elements[kk]));
+                            //} // What we also need: Coefficients of the core matrix.
                         }// end if
                     }//end inner for
                 }//end if
@@ -214,19 +208,6 @@ namespace parallel_benders {
             }//end non-core node check
         }//end for
         // In the non-staircase case we now have all the stuff we need.
-
-        // Check what restrictions are non-stochastic
-        assert(no_staircase_indicator.size() == map_size); // See that we did not added new constraints (sanity check)
-        // We need to generate non-staircase constraints for all the purely deterministic ones
-        // Generate constraints for all the deterministic only non-staircase constraints.
-        for ( staircase_container::iterator iter = non_staircase_core.begin(); iter != non_staircase_core.end(); ++iter){
-            if ( !no_staircase_indicator[iter->front().first] ){ // No stochastic element for this non-staircase constraint
-                
-            }
-            else{ // Stochastic elements are contained in this non-staircase constraint. We need to handle it.
-
-            }
-        }
 
    }
 
@@ -448,6 +429,12 @@ namespace parallel_benders {
         if ( integer_problems_[0] ){ // In the first stage.
             LOG(INFO) << "Your problem contains first-stage integer variables.";
             //return;
+        }
+        std::vector<int> new_columns(num_stages_,0);
+        if ( non_staircase_problem_ ){
+            
+            // We need to generate the non-staircase constraints
+            core_->transformToStaircaseStructure(non_staircase_coefficients_);
         }
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
