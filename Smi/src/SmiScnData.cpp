@@ -352,15 +352,34 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     // Now we know how many columns we have to add in which stage, and how many constraints we need to add in which stage ( one for every new column in every stage ) and modify it.
     // Now we can store for every coefficient
     
-    // Create new column start arrays
-    int * new_cstart = new int[ncol_+num_new_cols];
-    // We can memcpy a lot if we want
-
+    // Create new stageColPtr array
     int * new_stageColPtr =  new int[nstag_];
     new_stageColPtr[0] = 0;
     for (int i = 1; i < nstag_; i++){
         new_stageColPtr[i] = stageColPtr_[i]+new_stageColPtr[i-1]-stageColPtr_[i-1]+new_columns[i-1];
     }
+    int overall_cols = num_new_cols + ncol_;
+
+    // Create new colStage array
+    int * new_colStage = new int[ncol_+num_new_cols];
+    memcpy(new_colStage,colStage_,stageColPtr_[1]*sizeof(int) );
+    // Memcpy everything in the correct places
+    for (int i = 1; i < nstag_; i++){
+        // At first fill the stage array correctly
+        int j = 0;
+        for (j = 0; j < new_columns[i]; j++){
+            new_colStage[new_stageColPtr[i]+j] = i; 
+        }
+        // Fill the ones afterwards correctly
+        memcpy(new_colStage+new_stageColPtr[i]+j,colStage_+stageColPtr_[i],(stageColPtr_[i]-stageColPtr_[i-1])*sizeof(int) );
+    }
+
+    // Create new nColInStage array
+    int * new_nColInStage = new int[nstag_];
+    for (int i = 0; i < nstag_;i++)
+        new_nColInStage[i] = nColInStage_[i]+new_columns[i];
+
+
     // We need to add and change the core nodes
 
 }
