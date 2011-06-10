@@ -396,10 +396,28 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
         memcpy(new_colStage+new_stageColPtr[i]+j,colStage_+stageColPtr_[i],(stageColPtr_[i]-stageColPtr_[i-1])*sizeof(int) );
     }
 
+
+    // Create new rowStage array
+    int * new_rowStage = new int[nrow_+num_new_cols];
+    memcpy(new_rowStage,rowStage_,stageRowPtr_[1]*sizeof(int) );
+    // Memcpy everything in the correct places
+    for (int i = 1; i < nstag_; i++){
+        memcpy(new_rowStage+new_stageRowPtr[i],rowStage_+stageRowPtr_[i],(stageRowPtr_[i]-stageRowPtr_[i-1])*sizeof(int) );
+        // At first fill the stage array correctly
+        int j = 0;
+        for (j = 0; j < new_columns[i]; j++){ // Works, because at the last stage, we have no new rows..
+            new_rowStage[new_stageRowPtr[i+1]-new_columns[i]+j] = i; 
+        }
+    }
+
     // Create new nColInStage array
     int * new_nColInStage = new int[nstag_];
     for (int i = 0; i < nstag_;i++)
         new_nColInStage[i] = nColInStage_[i]+new_columns[i];
+
+    int * new_nRowInStage = new int[nstag_];
+    for (int i = 0; i < nstag_;i++)
+        new_nRowInStage[i] = nRowInStage_[i]+new_columns[i];
 
     // Look at integer variables? Yes. Find and replace, if necessary, because we moved I do not think that this is necessary!
     // Write method that takes an integer array, a length and does the following
@@ -424,7 +442,6 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     std::deque<SmiTreeNode<SmiScnNode*>* > sibling_queue;
     bool down = true;
     while ( true ){
-
         if ( current_node->hasChild() && down ){
             current_node = current_node->getChild();
             continue; 
@@ -434,15 +451,15 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
             down = false;
         }
         // We only want to call this method once! Ensure this!
-        current_node->getDataPtr()->getNode()->transformToStaircaseStructure(non_staircase_coefficients,coefficient_transformation,new_columns,new_stageColPtr,new_stageRowPtr);
+        if ( !down ){
+            current_node->getDataPtr()->getNode()->transformToStaircaseStructure(non_staircase_coefficients,coefficient_transformation,new_columns,new_stageColPtr,new_stageRowPtr);
+        }
 
         if ( current_node->hasSibling() ){
             current_node = current_node->getSibling();
             down = true;
             continue;
         }
-        
-
         if ( current_node->hasParent() ){
             current_node = current_node->getParent();
             down = false;
@@ -450,7 +467,22 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
         else
             break;
 
-    }
+    } // end while
+
+    // Change SmiCoreData 
+    delete [] nColInStage_; nColInStage_ = new_nColInStage;
+    delete [] nRowInStage_; nRowInStage_ = new_nRowInStage;
+    delete [] stageColPtr_; stageColPtr_ = new_stageColPtr;
+    delete [] stageRowPtr_; stageRowPtr_ = new_stageRowPtr;
+    delete [] colStage_; colStage_ = new_colStage;
+    delete [] rowStage_; rowStage_ = new_rowStage;
+    // TODO: colEx2In etc.
+
+    ncol_ = ncol_+num_new_cols;
+    nrow_ = ncol_+num_new_cols;
+
+    // TODO: What about col/row names? we might have to fix these too.. 
+
     
 
 }
@@ -1053,12 +1085,13 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
             new_dels[start_index+2*count+1] = -1.0;
             new_inds[start_index+2*count] = first_index;
             new_inds[start_index+2*count+1] = second_index;
-            count++;
             new_strt_[strt_index+count] = start_index+2*count; 
+            count++;
             
         }// end for
         start_index = start_index+2*count; // advance our start_index
-        strt_index += count;
+        strt_index += count; //I need to know how long the last bit was
+        new_strt_[strt_index] = start_index;
 
         // Fill new columns
         count = 0;
