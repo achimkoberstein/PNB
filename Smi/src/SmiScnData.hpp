@@ -13,7 +13,7 @@
 #include "CoinPackedVector.hpp"
 #include "CoinMpsIO.hpp"
 #include "SmiCoreCombineRule.hpp"
-//#include "SmiLinearData.hpp"
+#include "SmiScenarioTree.hpp"
 
 #include <map>
 #include <vector>
@@ -26,6 +26,9 @@ typedef int SmiScenarioIndex;
 typedef int SmiStageIndex;
 
 class SmiCoreData;
+class SmiScnNode;
+
+
 
 class SmiNodeData
 	//: public SmiLinearData
@@ -166,6 +169,8 @@ public:
          return this->strt_+istart;
      }
 
+     void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients,std::vector<std::map<int,int> >& coefficient_transformation,std::vector<int>& new_columns, const int * new_stageColPtr, const int * new_stageRowPtr);
+
 protected:
 	void combineWithCoreDoubleArray(double *d_out, const CoinPackedVector &cpv, int o);
 	void combineWithCoreDoubleArray(double *d_out, const int len, const int * inds, const double *dels, int o);
@@ -257,7 +262,7 @@ public:
 	inline void setRowNames(std::vector<std::string> namesStrict, std::vector<std::string> namesFree) { this->rowNamesStrict = namesStrict; this->rowNamesFree = namesFree; }
 	inline const std::vector<std::string> * getRowNames(bool strictFormat = true) { if (strictFormat) return &rowNamesStrict; else return &rowNamesFree; }
 
-    void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients);
+    void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients, SmiTreeNode<SmiScnNode*>* root_node);
 
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);

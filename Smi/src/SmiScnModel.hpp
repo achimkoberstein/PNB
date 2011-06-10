@@ -284,6 +284,8 @@ public:
     inline void releaseSolver() {osiStoch_=NULL;} /// Releases the solver. Use it if you want to delete the SmiScnModel but keep the OsiSolverInterface
     inline void releaseCore() { core_=NULL; } /// Releases the core node. Use it if you want to delete the SmiScnModel but keep the SmiCoreData
 
+    void transformToStaircaseStructure( std::map<int,int>& coefficients );
+
 
     // constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
     SmiScnModel():
@@ -494,6 +496,8 @@ public:
                 delete node_;
        	}
 	}
+
+    
 
 private:
     /** Sets the starting index for the rows with respect to the OSI model. 
