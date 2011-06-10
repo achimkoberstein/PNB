@@ -339,14 +339,14 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     std::vector<int> new_columns(nstag_,0);
     int num_new_cols = 0;
     for ( std::map<int,int>::iterator it = non_staircase_coefficients.begin(); it != non_staircase_coefficients.end(); ++it){
-	// Count the number of columns we want to add to Smi
+        // Count the number of columns we want to add to Smi
         int column_stage = getColStage(it->first);
         int how_many_constraints = it->second-column_stage-1; // We only need to add new columns in the stage after the column stage and the stages before the last stage it is used.
         assert(how_many_constraints >= -1);
         for ( int i = column_stage+1; i < how_many_constraints+column_stage+1; i++){
-		++new_columns[i];
+            ++new_columns[i];
         }
-	}
+    }
     for (int i = 0; i < new_columns.size(); i++)
         num_new_cols += new_columns[i];
     // Now we know how many columns we have to add in which stage, and how many constraints we need to add in which stage ( one for every new column in every stage ) and modify it.
@@ -379,7 +379,22 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     for (int i = 0; i < nstag_;i++)
         new_nColInStage[i] = nColInStage_[i]+new_columns[i];
 
+    // Look at integer variables? Yes. Find and replace, if necessary, because we moved I do not think that this is necessary!
+    // Write method that takes an integer array, a length and does the following
+    for (int i = 0; i < integerLength_; i++){
+        std::map<int,int>::iterator it(non_staircase_coefficients.find(integerIndices_[i]));
+        if ( it != non_staircase_coefficients.end()){ // Get the stage of the old index
+            integerIndices_[i] = 
+            // The new index is: start_index of the stage of the old index + the number of new columns + the relative number of the old index in this stage
+        }
+        else {
+            integerIndices_[i] = new_columns[i]+new_stageColPtr[colStage_[integerIndices_[i]]]+integerIndices_[i]-stageColPtr_[colStage_[integerIndices_[i]];
+        }
 
+    }
+    for (int i = 0; i < binaryLength_; i++){
+
+    }
     // We need to add and change the core nodes
 
 }
