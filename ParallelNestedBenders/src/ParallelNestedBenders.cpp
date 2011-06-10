@@ -434,7 +434,7 @@ namespace parallel_benders {
         if ( non_staircase_problem_ ){
             
             // We need to generate the non-staircase constraints
-            core_->transformToStaircaseStructure(non_staircase_coefficients_);
+            smi_->transformToStaircaseStructure(non_staircase_coefficients_);
         }
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";

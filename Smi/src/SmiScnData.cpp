@@ -1,10 +1,11 @@
 #include "SmiScnData.hpp"
-//#include "SmiScnModel.hpp"
+#include "SmiScnModel.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
 #include <iostream>
 #include <vector>
+#include <deque>
 
 using namespace std;
 
@@ -417,14 +418,37 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     }
     // Now we traverse the tree and call the method on each node
     SmiTreeNode<SmiScnNode*> * current_node = root_node; // <- start with root node
+    SmiTreeNode<SmiScnNode*> * child_node =NULL;
+    SmiTreeNode<SmiScnNode*> * sibling_node = NULL;
+    std::deque<SmiTreeNode<SmiScnNode*>* > child_queue;
+    std::deque<SmiTreeNode<SmiScnNode*>* > sibling_queue;
+    bool down = true;
     while ( true ){
-        if ( current_node->hasChild() ){
-            // put current node in a queue to work on it again, once a node has no childs or siblings anymore?
+
+        if ( current_node->hasChild() && down ){
+            current_node = current_node->getChild();
+            continue; 
         }
+        else
+        {
+            down = false;
+        }
+        // We only want to call this method once! Ensure this!
+        current_node->getDataPtr()->getNode()->transformToStaircaseStructure(non_staircase_coefficients,coefficient_transformation,new_columns,new_stageColPtr,new_stageRowPtr);
 
         if ( current_node->hasSibling() ){
-
+            current_node = current_node->getSibling();
+            down = true;
+            continue;
         }
+        
+
+        if ( current_node->hasParent() ){
+            current_node = current_node->getParent();
+            down = false;
+        }
+        else
+            break;
 
     }
     
