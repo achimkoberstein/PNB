@@ -2044,3 +2044,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
  {
      return smiTree_.getLeaf(ns)->getDataPtr()->getProb();
  }
+
+ void SmiScnModel::transformToStaircaseStructure( std::map<int,int>& coefficients )
+ {
+    core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
+ }

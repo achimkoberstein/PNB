@@ -1,4 +1,5 @@
 #include "SmiScnData.hpp"
+//#include "SmiScnModel.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
@@ -333,7 +334,7 @@ SmiCoreData::~SmiCoreData()
     }
 }
 
-void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients)
+void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients, SmiTreeNode<SmiScnNode*>* root_node)
 {
     // We want to transform the problem to staircase structure
     std::vector<int> new_columns(nstag_,0);
@@ -357,8 +358,28 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     new_stageColPtr[0] = 0;
     for (int i = 1; i < nstag_; i++){
         new_stageColPtr[i] = stageColPtr_[i]+new_stageColPtr[i-1]-stageColPtr_[i-1]+new_columns[i-1];
+        // The new column start is the old column start + the number of columns we added in the stages before that and the number fo columns we added in the stage before
     }
     int overall_cols = num_new_cols + ncol_;
+    // Create new stageRowPtr array
+    int * new_stageRowPtr =  new int[nstag_];
+    new_stageRowPtr[0] = 0;
+    for (int i = 1; i < nstag_; i++){
+        new_stageRowPtr[i] = stageRowPtr_[i]+new_stageRowPtr[i-1]-stageRowPtr_[i-1]+new_columns[i-1];
+    }
+    int overall_rows = num_new_cols + nrow_;
+
+    // Create the vector of map's
+    std::vector<std::map<int,int> > coefficient_transformation(nstag_);
+    std::vector<int> count_columns(nstag_,0);
+    for (std::map<int,int>::iterator it = non_staircase_coefficients.begin(); it != non_staircase_coefficients.end(); ++it){
+        int column_stage = colStage_[it->first];
+        int how_many_constraints = it->second-column_stage-1; //
+        for (int i = column_stage+1; i < how_many_constraints+column_stage+1;i++){
+            coefficient_transformation[i][it->first] = new_stageColPtr[i]+count_columns[i]++; // This also helps in creating the number of new constraints..
+        }
+    }
+    // At the end the count_columns array should have the same size as new_columns array
 
     // Create new colStage array
     int * new_colStage = new int[ncol_+num_new_cols];
@@ -382,20 +403,31 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     // Look at integer variables? Yes. Find and replace, if necessary, because we moved I do not think that this is necessary!
     // Write method that takes an integer array, a length and does the following
     for (int i = 0; i < integerLength_; i++){
-        std::map<int,int>::iterator it(non_staircase_coefficients.find(integerIndices_[i]));
-        if ( it != non_staircase_coefficients.end()){ // Get the stage of the old index
-            integerIndices_[i] = 
-            // The new index is: start_index of the stage of the old index + the number of new columns + the relative number of the old index in this stage
-        }
-        else {
-            integerIndices_[i] = new_columns[i]+new_stageColPtr[colStage_[integerIndices_[i]]]+integerIndices_[i]-stageColPtr_[colStage_[integerIndices_[i]];
-        }
-
+        integerIndices_[i] = new_columns[i]+new_stageColPtr[colStage_[integerIndices_[i]]]+integerIndices_[i]-stageColPtr_[colStage_[integerIndices_[i]]];
     }
     for (int i = 0; i < binaryLength_; i++){
-
+        binaryIndices_[i] = new_columns[i]+new_stageColPtr[colStage_[binaryIndices_[i]]]+binaryIndices_[i]-stageColPtr_[colStage_[binaryIndices_[i]]];
     }
     // We need to add and change the core nodes
+
+    // Now we change the stuff in all of the core nodes at first!
+    // Get all the nodes
+    for (int i = 0; i< nstag_;i++){
+        nodes_[i]->transformToStaircaseStructure(non_staircase_coefficients,coefficient_transformation,new_columns,new_stageColPtr,new_stageRowPtr); // TODO: input new_stageRowPtr here
+    }
+    // Now we traverse the tree and call the method on each node
+    SmiTreeNode<SmiScnNode*> * current_node = root_node; // <- start with root node
+    while ( true ){
+        if ( current_node->hasChild() ){
+            // put current node in a queue to work on it again, once a node has no childs or siblings anymore?
+        }
+
+        if ( current_node->hasSibling() ){
+
+        }
+
+    }
+    
 
 }
 
@@ -914,4 +946,178 @@ void SmiNodeData::transformElements( int start, SmiNodeData* deterministic_node,
         }
     }
     assert(stoch_index == stoch_length); // Otherwise we forgot an element.
+}
+
+void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircase_coefficients,std::vector<std::map<int,int> >& coefficient_transformation,std::vector<int>& new_columns, const int* new_stageColPtr, const int * new_stageRowPtr )
+{
+    // We know which coefficients are non_staircase coefficients via the first map
+    // We know which of the old coefficients is turned into which new coefficient via the vector of maps
+    // We also know how many new columns we have in each stage via the vector
+    // We should also know the Beginnings of the new Column Stages and Row Stages for that matter ( these are the ones we have to extend..
+    
+    // Iterate through the whole array and change coefficients 
+
+    // We need our stage : stg_
+    if ( stg_ == 0)
+        return; // We do nothing in the first stage
+    int last_index = strt_[rlo_strt_];
+    // At first we add the new colbeg to all the columns
+    // We change nsc-indices to the ones we specified before
+    for (int i = 0; i < last_index; i++){
+        if ( inds_[i] < core_->getColStart(stg_-1) && non_staircase_coefficients.find(inds_[i]) != non_staircase_coefficients.end() ){ // A non-staircase coefficient
+            // Find the coefficient in the stage_wise map for this stage
+            std::map<int,int>::iterator it(coefficient_transformation[stg_].find(inds_[i]));
+            //assert(it != coefficient_transformation[stg_].end()); // This is not necessarily so: For Example: nsc in last stage contains first stage element, but not in stages before that, so it is in the non_staircase_coefficients map but not in the coefficient_transformation_map
+            if ( it != coefficient_transformation[stg_].end() )
+                inds_[i] = it->second;
+        }
+        else {
+            // Just count the index up: new columns + new_stage_index_start+ relative index 
+            inds_[i] = new_columns[core_->getColStage(inds_[i])]+new_stageColPtr[core_->getColStage(inds_[i])]+ inds_[i] - core_->getColStart(core_->getColStage(inds_[i]));
+        }
+        assert(inds_[i]<new_stageColPtr[stg_]+new_columns[stg_]+core_->getNumCols(stg_));
+    }
+    // now we have to change the row indices
+    for (int i = last_index; i < strt_[nstrt_-1]; i++){
+        inds_[i] = new_stageRowPtr[core_->getRowStage(inds_[i])]- core_->getRowStart(core_->getRowStage(inds_[i])) + inds_[i];
+    }
+        
+
+    // Now we have to add the new rows and cols ( only in core nodes )
+    // We need new space for the rows and the rowlb and rowub and obj,clo and cup.
+    // How many cols and rows do we add? coefficient_transformation[stg] many
+    // 
+    if ( isCoreNode_ && stg_ > 0 && stg_ < core_->getNumStages()-1 ){// Not in the first or last stage
+        int new_size = strt_[nstrt_-1];
+        if ( has_matrix_ ){
+          new_size += 7*new_columns[stg_];
+        }
+        else{
+            assert(false); // This makes nearly no sense if we have no matrix..
+            new_size += 3*new_columns[stg_];
+        }
+        double * new_dels = new double[new_size];
+        int * new_inds = new int[new_size];
+        int * new_strt_ = new int[nstrt_+new_columns[stg_]];
+        // memcpy the matrix
+        memcpy(new_dels,dels_,strt_[clo_strt_]*sizeof(double) );
+        memcpy(new_inds,inds_,strt_[clo_strt_]*sizeof(int) );
+        memcpy(new_strt_,strt_,clo_strt_*sizeof(int) );
+        // Create the new matrix entries
+        int start_index = strt_[clo_strt_];
+        int strt_index = clo_strt_;
+        int count = 0;
+        // We iterate over the coefficient_transformation_map
+        for (std::map<int,int>::iterator it = coefficient_transformation[stg_].begin(); it != coefficient_transformation[stg_].end(); ++it){
+            int first_index = -1;
+            int second_index = -1;
+            if ( core_->getColStage(it->first) == stg_-1 ){
+                first_index = it->first;
+                second_index = it->second;
+            } // We need to create a new row that maps it->first to it->second
+            else { // We are in a stage where we have not direct access to it->first, but we already need to use a new column we introduced. Therefore we need the it->second of it->first of the stage before.
+                assert( core_->getColStage(it->first) < stg_-1);
+                std::map<int,int>::iterator it2(coefficient_transformation[stg_-1].find(it->first));
+                if ( it2 != coefficient_transformation[stg_-1].end() ){
+                    first_index = it2->second;
+                    second_index = it->second;
+                }
+                else
+                    assert(false);
+            }
+            new_dels[start_index+2*count] = 1.0;
+            new_dels[start_index+2*count+1] = -1.0;
+            new_inds[start_index+2*count] = first_index;
+            new_inds[start_index+2*count+1] = second_index;
+            count++;
+            new_strt_[strt_index+count] = start_index+2*count; 
+            
+        }// end for
+        start_index = start_index+2*count; // advance our start_index
+        strt_index += count;
+
+        // Fill new columns
+        count = 0;
+        for (int i = 0; i < new_columns[stg_]; i++){
+            new_dels[start_index+i] = -core_->getInfinity();// -infinity
+            new_inds[start_index+i] = new_stageColPtr[stg_]+i;
+            new_dels[start_index+i+ncol_+new_columns[stg_]] = core_->getInfinity();// -infinity
+            new_inds[start_index+i+ncol_+new_columns[stg_]] = new_stageColPtr[stg_]+i;
+            new_dels[start_index+i+2*ncol_+2*new_columns[stg_]] = 0;// -infinity
+            new_inds[start_index+i+2*ncol_+2*new_columns[stg_]] = new_stageColPtr[stg_]+i;
+        }
+        start_index += new_columns[stg_];
+        // memcpy clo
+        memcpy(new_dels+start_index,dels_+strt_[clo_strt_],ncol_*sizeof(double));
+        memcpy(new_inds+start_index,inds_+strt_[clo_strt_],ncol_*sizeof(int));
+        start_index += ncol_;
+        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+ncol_; 
+        // memcpy cup
+        start_index += new_columns[stg_];
+        memcpy(new_dels+start_index,dels_+strt_[cup_strt_],ncol_*sizeof(double));
+        memcpy(new_inds+start_index,inds_+strt_[cup_strt_],ncol_*sizeof(int));
+        start_index += ncol_;
+        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+ncol_; 
+        // memcpy obj
+        start_index += new_columns[stg_];
+        memcpy(new_dels+start_index,dels_+strt_[obj_strt_],ncol_*sizeof(double));
+        memcpy(new_inds+start_index,inds_+strt_[obj_strt_],ncol_*sizeof(int));
+        start_index += ncol_;
+        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+ncol_; 
+       
+        // Insert Rlo and Rup
+        start_index += nrow_;
+        for (int i = 0; i < new_columns[stg_]; i++){
+            new_dels[start_index+i] = 0;
+            new_inds[start_index+i] = new_stageRowPtr[stg_+1]-new_columns[stg_]+i;
+            new_dels[start_index+i+nrow_+new_columns[stg_]] = 0;
+            new_inds[start_index+i+nrow_+new_columns[stg_]] = new_stageRowPtr[stg_+1]-new_columns[stg_]+i;
+        }
+        // memcpy rlo
+        start_index -= nrow_; // go back to fill the gap of nrow_
+        memcpy(new_dels+start_index,dels_+strt_[rlo_strt_],nrow_*sizeof(double));
+        memcpy(new_inds+start_index,inds_+strt_[rlo_strt_],nrow_*sizeof(int));
+        start_index += new_columns[stg_]+nrow_;       
+        
+
+        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+nrow_; 
+        memcpy(new_dels+start_index,dels_+strt_[rup_strt_],nrow_*sizeof(double));
+        memcpy(new_inds+start_index,inds_+strt_[rup_strt_],nrow_*sizeof(int));
+        start_index += new_columns[stg_];
+        start_index += nrow_;
+        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+nrow_; 
+        assert(strt_index+1 == nstrt_+new_columns[stg_]);
+        assert(start_index == new_size);
+
+        int new_ncol = ncol_+new_columns[stg_];
+        int new_nrow = nrow_+new_columns[stg_];
+        // colbeg_ and rowbeg_ can be set by new_stageColPtr and new_stageRowPtr
+        // clo_strt_ and the like has to set + new_columns[stg_], and nstrt_ also
+        // Set the values!
+        colbeg_ = new_stageColPtr[stg_];
+        rowbeg_ = new_stageRowPtr[stg_];
+        ncol_ = new_ncol;
+        nrow_ = new_nrow;
+        clo_strt_ += new_columns[stg_];
+        cup_strt_ += new_columns[stg_];
+        obj_strt_ += new_columns[stg_];
+        rlo_strt_ += new_columns[stg_];
+        rup_strt_ += new_columns[stg_];
+        nstrt_ += new_columns[stg_];
+        // We also should set nels_ but this was wrong anyway..
+
+        delete [] dels_;
+        delete [] inds_;
+        delete [] strt_;
+
+        dels_ = new_dels;
+        inds_ = new_inds;
+        strt_ = new_strt_;
+        
+        
+
+
+    }// end if: is core node?
+       
+
 }
