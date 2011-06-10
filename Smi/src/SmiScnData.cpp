@@ -479,7 +479,7 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     // TODO: colEx2In etc.
 
     ncol_ = ncol_+num_new_cols;
-    nrow_ = ncol_+num_new_cols;
+    nrow_ = nrow_+num_new_cols;
 
     // TODO: What about col/row names? we might have to fix these too.. 
 
@@ -1010,7 +1010,7 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     // We know which of the old coefficients is turned into which new coefficient via the vector of maps
     // We also know how many new columns we have in each stage via the vector
     // We should also know the Beginnings of the new Column Stages and Row Stages for that matter ( these are the ones we have to extend..
-    
+
     // Iterate through the whole array and change coefficients 
 
     // We need our stage : stg_
@@ -1037,7 +1037,17 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     for (int i = last_index; i < strt_[nstrt_-1]; i++){
         inds_[i] = new_stageRowPtr[core_->getRowStage(inds_[i])]- core_->getRowStart(core_->getRowStage(inds_[i])) + inds_[i];
     }
-        
+    if ( !isCoreNode_ && stg_ > 0 && stg_ < core_->getNumStages()-1){
+        // In case of non-core node we still need to add empty placeholders for the new rows! (only the strt_ array)
+        strt_ = (int *) realloc(strt_,(nstrt_+new_columns[stg_])*sizeof(int));
+        //
+        memcpy(strt_+clo_strt_+new_columns[stg_],strt_+clo_strt_, (nstrt_-1-clo_strt_)*sizeof(int));
+        for (int i = 0; i < new_columns[stg_]; i++){
+            // Fill the strt_array..
+            strt_[nrow_+i] = strt_[nrow_];
+        }
+    }
+
 
     // Now we have to add the new rows and cols ( only in core nodes )
     // We need new space for the rows and the rowlb and rowub and obj,clo and cup.
@@ -1046,19 +1056,23 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     if ( isCoreNode_ && stg_ > 0 && stg_ < core_->getNumStages()-1 ){// Not in the first or last stage
         int new_size = strt_[nstrt_-1];
         if ( has_matrix_ ){
-          new_size += 7*new_columns[stg_];
+            new_size += 7*new_columns[stg_];
         }
         else{
             assert(false); // This makes nearly no sense if we have no matrix..
             new_size += 3*new_columns[stg_];
         }
-        double * new_dels = new double[new_size];
-        int * new_inds = new int[new_size];
-        int * new_strt_ = new int[nstrt_+new_columns[stg_]];
+
+        double *new_dels     = (double *)calloc(new_size  ,sizeof(double));
+        int *new_inds     = (int *)   calloc(new_size  ,sizeof(int)   );
+        int * new_strt     = (int *)   calloc(nstrt_+new_columns[stg_] ,sizeof(int)   );
+        //double * new_dels = new double[new_size];
+        //int * new_inds = new int[new_size];
+        //int * new_strt_ = new int[nstrt_+new_columns[stg_]];
         // memcpy the matrix
         memcpy(new_dels,dels_,strt_[clo_strt_]*sizeof(double) );
         memcpy(new_inds,inds_,strt_[clo_strt_]*sizeof(int) );
-        memcpy(new_strt_,strt_,clo_strt_*sizeof(int) );
+        memcpy(new_strt,strt_,clo_strt_*sizeof(int) );
         // Create the new matrix entries
         int start_index = strt_[clo_strt_];
         int strt_index = clo_strt_;
@@ -1085,13 +1099,13 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
             new_dels[start_index+2*count+1] = -1.0;
             new_inds[start_index+2*count] = first_index;
             new_inds[start_index+2*count+1] = second_index;
-            new_strt_[strt_index+count] = start_index+2*count; 
+            new_strt[strt_index+count] = start_index+2*count; 
             count++;
-            
+
         }// end for
         start_index = start_index+2*count; // advance our start_index
         strt_index += count; //I need to know how long the last bit was
-        new_strt_[strt_index] = start_index;
+        new_strt[strt_index] = start_index;
 
         // Fill new columns
         count = 0;
@@ -1108,20 +1122,20 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
         memcpy(new_dels+start_index,dels_+strt_[clo_strt_],ncol_*sizeof(double));
         memcpy(new_inds+start_index,inds_+strt_[clo_strt_],ncol_*sizeof(int));
         start_index += ncol_;
-        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+ncol_; 
+        new_strt[++strt_index] = new_strt[strt_index-1]+new_columns[stg_]+ncol_; 
         // memcpy cup
         start_index += new_columns[stg_];
         memcpy(new_dels+start_index,dels_+strt_[cup_strt_],ncol_*sizeof(double));
         memcpy(new_inds+start_index,inds_+strt_[cup_strt_],ncol_*sizeof(int));
         start_index += ncol_;
-        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+ncol_; 
+        new_strt[++strt_index] = new_strt[strt_index-1]+new_columns[stg_]+ncol_; 
         // memcpy obj
         start_index += new_columns[stg_];
         memcpy(new_dels+start_index,dels_+strt_[obj_strt_],ncol_*sizeof(double));
         memcpy(new_inds+start_index,inds_+strt_[obj_strt_],ncol_*sizeof(int));
         start_index += ncol_;
-        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+ncol_; 
-       
+        new_strt[++strt_index] = new_strt[strt_index-1]+new_columns[stg_]+ncol_; 
+
         // Insert Rlo and Rup
         start_index += nrow_;
         for (int i = 0; i < new_columns[stg_]; i++){
@@ -1135,46 +1149,40 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
         memcpy(new_dels+start_index,dels_+strt_[rlo_strt_],nrow_*sizeof(double));
         memcpy(new_inds+start_index,inds_+strt_[rlo_strt_],nrow_*sizeof(int));
         start_index += new_columns[stg_]+nrow_;       
-        
 
-        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+nrow_; 
+
+        new_strt[++strt_index] = new_strt[strt_index-1]+new_columns[stg_]+nrow_; 
         memcpy(new_dels+start_index,dels_+strt_[rup_strt_],nrow_*sizeof(double));
         memcpy(new_inds+start_index,inds_+strt_[rup_strt_],nrow_*sizeof(int));
         start_index += new_columns[stg_];
         start_index += nrow_;
-        new_strt_[++strt_index] = new_strt_[strt_index-1]+new_columns[stg_]+nrow_; 
+        new_strt[++strt_index] = new_strt[strt_index-1]+new_columns[stg_]+nrow_; 
         assert(strt_index+1 == nstrt_+new_columns[stg_]);
         assert(start_index == new_size);
 
-        int new_ncol = ncol_+new_columns[stg_];
-        int new_nrow = nrow_+new_columns[stg_];
-        // colbeg_ and rowbeg_ can be set by new_stageColPtr and new_stageRowPtr
-        // clo_strt_ and the like has to set + new_columns[stg_], and nstrt_ also
-        // Set the values!
-        colbeg_ = new_stageColPtr[stg_];
-        rowbeg_ = new_stageRowPtr[stg_];
-        ncol_ = new_ncol;
-        nrow_ = new_nrow;
-        clo_strt_ += new_columns[stg_];
-        cup_strt_ += new_columns[stg_];
-        obj_strt_ += new_columns[stg_];
-        rlo_strt_ += new_columns[stg_];
-        rup_strt_ += new_columns[stg_];
-        nstrt_ += new_columns[stg_];
         // We also should set nels_ but this was wrong anyway..
 
-        delete [] dels_;
-        delete [] inds_;
-        delete [] strt_;
+        deleteMemory();
 
         dels_ = new_dels;
         inds_ = new_inds;
-        strt_ = new_strt_;
-        
-        
-
-
+        strt_ = new_strt;
     }// end if: is core node?
-       
 
+    // These values have to be set in any case
+    int new_ncol = ncol_+new_columns[stg_];
+    int new_nrow = nrow_+new_columns[stg_];
+    // colbeg_ and rowbeg_ can be set by new_stageColPtr and new_stageRowPtr
+    // clo_strt_ and the like has to set + new_columns[stg_], and nstrt_ also
+    // Set the values!
+    colbeg_ = new_stageColPtr[stg_];
+    rowbeg_ = new_stageRowPtr[stg_];
+    ncol_ = new_ncol;
+    nrow_ = new_nrow;
+    clo_strt_ += new_columns[stg_];
+    cup_strt_ += new_columns[stg_];
+    obj_strt_ += new_columns[stg_];
+    rlo_strt_ += new_columns[stg_];
+    rup_strt_ += new_columns[stg_];
+    nstrt_ += new_columns[stg_];
 }
