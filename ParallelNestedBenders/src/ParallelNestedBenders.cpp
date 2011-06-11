@@ -110,6 +110,11 @@ namespace parallel_benders {
 
         // Reserve place. FIXME: This is necessary for CPLEX. Cplex needs pointers to the first and the last index ( which is one over the end, just like iterators )
         // We fill these arrays, so that cplex can use it to change the RHS, Columns bound and objective function coefficients
+        if ( ! benders_stage_ptr->column_indices_.empty () )
+            benders_stage_ptr->column_indices_.clear();
+        if ( ! benders_stage_ptr->row_indices_.empty () )
+            benders_stage_ptr->row_indices_.clear();
+
         benders_stage_ptr->column_indices_.reserve(benders_stage_ptr->num_columns_);
         benders_stage_ptr->row_indices_.reserve(benders_stage_ptr->num_rows_);
         for ( int i = 0; i < benders_stage_ptr->num_columns_+1; i++ ){
@@ -432,9 +437,16 @@ namespace parallel_benders {
         }
         std::vector<int> new_columns(num_stages_,0);
         if ( non_staircase_problem_ ){
-            
             // We need to generate the non-staircase constraints
             smi_->transformToStaircaseStructure(non_staircase_coefficients_);
+            // We have to update ncols / nrows 
+            //for (int i = 0; i < num_stages_; i++){
+            //    stage_data_[i]->num_columns_ = core_->getNumCols(i);
+            //    stage_data_[i]->num_rows_ = core_->getNumRows(i);
+            //}
+            non_staircase_problem_ = false;
+            non_staircase_coefficients_.clear();
+            AdjustProblem();
         }
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
@@ -746,6 +758,7 @@ namespace parallel_benders {
         }
         else
             osi_solver->initialSolve();
+
         if ( current_stage_ >= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();

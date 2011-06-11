@@ -187,6 +187,7 @@
 				PrecompiledHeaderFile=""
 				AssemblerListingLocation=""
 				WarningLevel="3"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

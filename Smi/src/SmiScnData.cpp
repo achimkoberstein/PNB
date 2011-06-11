@@ -355,17 +355,17 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     // Now we can store for every coefficient
     
     // Create new stageColPtr array
-    int * new_stageColPtr =  new int[nstag_];
+    int * new_stageColPtr =  new int[nstag_+1];
     new_stageColPtr[0] = 0;
-    for (int i = 1; i < nstag_; i++){
+    for (int i = 1; i < nstag_+1; i++){
         new_stageColPtr[i] = stageColPtr_[i]+new_stageColPtr[i-1]-stageColPtr_[i-1]+new_columns[i-1];
         // The new column start is the old column start + the number of columns we added in the stages before that and the number fo columns we added in the stage before
     }
     int overall_cols = num_new_cols + ncol_;
     // Create new stageRowPtr array
-    int * new_stageRowPtr =  new int[nstag_];
+    int * new_stageRowPtr =  new int[nstag_+1];
     new_stageRowPtr[0] = 0;
-    for (int i = 1; i < nstag_; i++){
+    for (int i = 1; i < nstag_+1; i++){
         new_stageRowPtr[i] = stageRowPtr_[i]+new_stageRowPtr[i-1]-stageRowPtr_[i-1]+new_columns[i-1];
     }
     int overall_rows = num_new_cols + nrow_;
@@ -393,8 +393,9 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
             new_colStage[new_stageColPtr[i]+j] = i; 
         }
         // Fill the ones afterwards correctly
-        memcpy(new_colStage+new_stageColPtr[i]+j,colStage_+stageColPtr_[i],(stageColPtr_[i]-stageColPtr_[i-1])*sizeof(int) );
+        memcpy(new_colStage+new_stageColPtr[i]+j,colStage_+stageColPtr_[i],nColInStage_[i]*sizeof(int) );
     }
+    // TODO: Think about it, and below. THis is not yet correct
 
 
     // Create new rowStage array
@@ -402,7 +403,7 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     memcpy(new_rowStage,rowStage_,stageRowPtr_[1]*sizeof(int) );
     // Memcpy everything in the correct places
     for (int i = 1; i < nstag_; i++){
-        memcpy(new_rowStage+new_stageRowPtr[i],rowStage_+stageRowPtr_[i],(stageRowPtr_[i]-stageRowPtr_[i-1])*sizeof(int) );
+        memcpy(new_rowStage+new_stageRowPtr[i],rowStage_+stageRowPtr_[i],nRowInStage_[i]*sizeof(int) );
         // At first fill the stage array correctly
         int j = 0;
         for (j = 0; j < new_columns[i]; j++){ // Works, because at the last stage, we have no new rows..
@@ -441,6 +442,7 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     std::deque<SmiTreeNode<SmiScnNode*>* > child_queue;
     std::deque<SmiTreeNode<SmiScnNode*>* > sibling_queue;
     bool down = true;
+    int debug_count = 0;
     while ( true ){
         if ( current_node->hasChild() && down ){
             current_node = current_node->getChild();
@@ -453,6 +455,7 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
         // We only want to call this method once! Ensure this!
         if ( !down ){
             current_node->getDataPtr()->getNode()->transformToStaircaseStructure(non_staircase_coefficients,coefficient_transformation,new_columns,new_stageColPtr,new_stageRowPtr);
+            debug_count++;
         }
 
         if ( current_node->hasSibling() ){
@@ -1021,11 +1024,15 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     // We change nsc-indices to the ones we specified before
     for (int i = 0; i < last_index; i++){
         if ( inds_[i] < core_->getColStart(stg_-1) && non_staircase_coefficients.find(inds_[i]) != non_staircase_coefficients.end() ){ // A non-staircase coefficient
-            // Find the coefficient in the stage_wise map for this stage
-            std::map<int,int>::iterator it(coefficient_transformation[stg_].find(inds_[i]));
-            //assert(it != coefficient_transformation[stg_].end()); // This is not necessarily so: For Example: nsc in last stage contains first stage element, but not in stages before that, so it is in the non_staircase_coefficients map but not in the coefficient_transformation_map
-            if ( it != coefficient_transformation[stg_].end() )
+            // Find the coefficient in the stage_wise map for the stage after the coefficient, because this is the stage where the new constraint is added which takes the column in the next stage.
+            std::map<int,int>::iterator it(coefficient_transformation[stg_-1].find(inds_[i]));
+            // What happens here is maybe wrong!.
+            if ( it != coefficient_transformation[stg_-1].end() )
                 inds_[i] = it->second;
+            else{
+                // What now? We have a nsc-coefficient which should not be replaced?
+                assert(false);
+            }
         }
         else {
             // Just count the index up: new columns + new_stage_index_start+ relative index 
@@ -1035,13 +1042,13 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     }
     // now we have to change the row indices
     for (int i = last_index; i < strt_[nstrt_-1]; i++){
-        inds_[i] = new_stageRowPtr[core_->getRowStage(inds_[i])]- core_->getRowStart(core_->getRowStage(inds_[i])) + inds_[i];
+        inds_[i] = new_stageRowPtr[core_->getRowStage(inds_[i])] - core_->getRowStart(core_->getRowStage(inds_[i])) + inds_[i];
     }
     if ( !isCoreNode_ && stg_ > 0 && stg_ < core_->getNumStages()-1){
         // In case of non-core node we still need to add empty placeholders for the new rows! (only the strt_ array)
         strt_ = (int *) realloc(strt_,(nstrt_+new_columns[stg_])*sizeof(int));
         //
-        memcpy(strt_+clo_strt_+new_columns[stg_],strt_+clo_strt_, (nstrt_-1-clo_strt_)*sizeof(int));
+        memcpy(strt_+clo_strt_+new_columns[stg_],strt_+clo_strt_, (nstrt_-clo_strt_)*sizeof(int));
         for (int i = 0; i < new_columns[stg_]; i++){
             // Fill the strt_array..
             strt_[nrow_+i] = strt_[nrow_];
@@ -1077,7 +1084,7 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
         int start_index = strt_[clo_strt_];
         int strt_index = clo_strt_;
         int count = 0;
-        // We iterate over the coefficient_transformation_map
+        // We iterate over the coefficient_transformation_map to create the required constraints!
         for (std::map<int,int>::iterator it = coefficient_transformation[stg_].begin(); it != coefficient_transformation[stg_].end(); ++it){
             int first_index = -1;
             int second_index = -1;
@@ -1095,6 +1102,12 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
                 else
                     assert(false);
             }
+            // The first index is the index of the OLD columns, but not the new ones. So we *must* add the number of new columns we added
+            int offset = 0;
+            for (int i = 0; i< core_->getColStage(it->first);i++){
+                offset += new_columns[i];
+            }
+            first_index += offset;
             new_dels[start_index+2*count] = 1.0;
             new_dels[start_index+2*count+1] = -1.0;
             new_inds[start_index+2*count] = first_index;
