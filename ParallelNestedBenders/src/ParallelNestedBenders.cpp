@@ -749,14 +749,14 @@ namespace parallel_benders {
         //osi_solver->setHintParam(OsiDoDualInInitial,false);
         //osi_solver->setHintParam(OsiDoDualInResolve,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         // MIP Solving only at first stage..
-        if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
-             // We need to set the integer indices.
-             std::vector<int> integer_indices = core_->getIntCols(current_stage_);
-             osi_solver->setInteger(&integer_indices[0],integer_indices.size());
-             osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+        //if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
+        //     // We need to set the integer indices.
+        //     std::vector<int> integer_indices = core_->getIntCols(current_stage_);
+        //     osi_solver->setInteger(&integer_indices[0],integer_indices.size());
+        //     osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
 
-        }
-        else
+        //}
+        //else
             osi_solver->initialSolve();
 
         if ( current_stage_ >= 0){ // Only write solution file if we are in the first stage..
@@ -1578,7 +1578,7 @@ namespace parallel_benders {
         OsiSolverInterface* osi_solver = osi_solver_map_[boost::this_thread::get_id()];
         if ( osi_solver == NULL ){
             // Create new osi_solver object
-            osi_solver = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.
+            osi_solver = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.: We can only clone it if it is a LP problem
             // Silence solver object (Otherwise we get problems with the output (thread-related)
             osi_solver->messageHandler()->setLogLevel(0);
             // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
