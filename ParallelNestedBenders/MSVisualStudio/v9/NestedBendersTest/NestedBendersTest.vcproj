@@ -208,10 +208,8 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/fixed:no"
-				AdditionalDependencies="libtcmalloc_minimal.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib;&quot;C:\Users\wolf\Documents\VirtualBox-Ordner\FlopBenders\ThirdParty\google-perftools\Release&quot;"
-				ForceSymbolReferences="__tcmalloc"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
