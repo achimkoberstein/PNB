@@ -38,8 +38,15 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
 			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
+			// Wee need to differentiate between integer and not
+			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
+				osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
+				osi->branchAndBound();
+			}
+			else {
             //CPXdualopt(envPtr,lpPtr);
-            CPXbaropt(envPtr,lpPtr);
+				CPXbaropt(envPtr,lpPtr);
+			}
             //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
@@ -52,7 +59,14 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
         }
         else{
 #endif
-            osi->initialSolve();
+			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
+				osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
+				osi->branchAndBound();
+			}
+			else {
+				osi->initialSolve();
+			}
+
 #ifdef CPLEX_PRESENT
         }
 #endif
