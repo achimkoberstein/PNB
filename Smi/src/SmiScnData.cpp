@@ -484,6 +484,44 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     ncol_ = ncol_+num_new_cols;
     nrow_ = nrow_+num_new_cols;
 
+	// Set collower/upper/objective/rhs..
+	for (int i = 0; i < nstag_; i++){
+		SmiNodeData * node = nodes_[i];
+		int nrow=this->getNumRows(i);
+		int ncol=this->getNumCols(i);
+		int irow=this->getRowStart(i);
+		int icol=this->getColStart(i);
+		//Christian: TODO Why is irow added to these vectors? And Why are these vectors created, if no one uses the getMethods?
+		CoinPackedVector cpv_rlo(node->getRowLowerLength(),node->getRowLowerIndices(),node->getRowLowerElements());
+		cdrlo_[i]=cpv_rlo.denseVector(nrow+irow)+irow;
+
+		CoinPackedVector cpv_rup(node->getRowUpperLength(),node->getRowUpperIndices(),node->getRowUpperElements());
+		cdrup_[i]=cpv_rup.denseVector(nrow+irow)+irow;
+
+		CoinPackedVector cpv_clo(node->getColLowerLength(),node->getColLowerIndices(),node->getColLowerElements());
+		cdclo_[i]=cpv_clo.denseVector(ncol+icol)+icol;
+
+		CoinPackedVector cpv_cup(node->getColUpperLength(),node->getColUpperIndices(),node->getColUpperElements());
+		cdcup_[i]=cpv_cup.denseVector(ncol+icol)+icol;
+
+		CoinPackedVector cpv_obj(node->getObjectiveLength(),node->getObjectiveIndices(),node->getObjectiveElements());
+		cdobj_[i]=cpv_obj.denseVector(ncol+icol)+icol;
+
+		// sort indices in each row
+		//Christian: TODO Why do we have to sort indices?
+		for (int ii=irow; ii<irow+nrow; ++ii)
+		{
+			if (node->getRowLength(ii)>0)
+			{
+				CoinPackedVector cpv(node->getRowLength(ii),node->getRowIndices(ii),node->getRowElements(ii));
+				cpv.sortIncrIndex();
+				memcpy(node->getMutableRowElements(ii),cpv.getElements(),sizeof(double)*cpv.getNumElements());
+				memcpy(node->getMutableRowIndices(ii),cpv.getIndices(),sizeof(int)*cpv.getNumElements());
+			}
+
+		}
+	}
+
     // TODO: What about col/row names? we might have to fix these too.. 
 
     
