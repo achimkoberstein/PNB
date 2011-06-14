@@ -449,8 +449,12 @@ namespace parallel_benders {
             //    stage_data_[i]->num_rows_ = core_->getNumRows(i);
             //}
             non_staircase_problem_ = false;
+            non_staircase_stochastic_problem_ = false;
             non_staircase_coefficients_.clear();
+            // Accomodate the changes we did in the transformation step!
             AdjustProblem();
+            assert( !non_staircase_problem_ );
+            assert( !non_staircase_stochastic_problem_);
         }
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
@@ -763,13 +767,13 @@ namespace parallel_benders {
         else
             osi_solver->initialSolve();
 
-        //if ( current_stage_ >= 0){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
-        //}
+        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        }
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -794,9 +798,13 @@ namespace parallel_benders {
                             extra_elements[i] = 1;
                         }
                         // we bound all thetas with one extra row?
-                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+1000000, infinity_);
+                        // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
+                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_/2, infinity_); // We assume that will work. I mean: Half infinity? 
                         // Solve the model again
-                        osi_solver->resolve();
+                        if ( current_stage_ == 0 && integer_problems_[current_stage_] )
+                            osi_solver->branchAndBound();
+                        else
+                            osi_solver->resolve();
                     }
                 }
 

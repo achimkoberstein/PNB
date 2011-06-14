@@ -40,7 +40,7 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
 			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
-				osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
+				/*osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());*/
 				osi->branchAndBound();
 			}
 			else {

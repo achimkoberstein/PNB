@@ -134,24 +134,24 @@ int main(int argc, char* argv[]) {
     {
         { // M1
             { // P1
-                0, 200000, 200000, 100000, 0, 0
+                0, 200000, 200000, 100000, 0, 0,  0
             },
             { // P2
-                0, 0, 0, 70000, 140000, 140000
+                0, 0, 0, 0, 70000, 140000, 140000, 
             },
             { // P3
-                0, 20000, 70000, 90000, 90000, 70000
+                0, 20000, 70000, 80000, 80000, 60000, 30000
             }
         },
         { // M6
             { // P1
-                0, 130000, 130000, 50000, 0, 0
+                0, 130000, 130000, 50000, 0, 0, 0
             },
             { // P2
-                0, 0, 0, 50000, 100000, 100000
+                0, 0, 0, 0,50000, 100000, 100000,
             },
             { // P3
-                0, 20000, 70000, 90000, 90000, 70000
+                0, 20000, 70000, 80000, 80000, 60000, 30000
             }
         }
     };
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
     valuesD.push_back(1/df);
 
 
-    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD) };
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
     MP_random_data d_factor(&rVarDemand[0], T);
 
     
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
     valuesE.push_back(ef);
     valuesE.push_back(1/ef);
 
-    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE) };
+    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE) };
     
     MP_random_data exr_factor(&rVarExr[0], T);
     exr_factor.setName("exr_factor");
@@ -409,12 +409,12 @@ int main(int argc, char* argv[]) {
     MP_variable put_e(C,T,T2); put_e.setName("put_e"); //{c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised put options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
 
     // Enable/Disable options
-    call_e.fix(0);
-    call_b.fix(0);
-    put_e.fix(0);
-    put_b.fix(0);
-    f_cost.fix(0);
-    f_rev.fix(0);
+    //call_e.fix(0);
+    //call_b.fix(0);
+    //put_e.fix(0);
+    //put_b.fix(0);
+    //f_cost.fix(0);
+    //f_rev.fix(0);
 
 #pragma endregion
 
@@ -561,18 +561,21 @@ int main(int argc, char* argv[]) {
     //o_d2.display("o_d2");
     //p_call.display("p_call");
     
-    model.setObjective( -sum(T,npv_stage(T)) );// + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) ) );
+    model.setObjective( -sum(T,npv_stage(T)) + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) ) );
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
 
+    model.attach();
+    model.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
+    model->writeMps("scdp-problem"); // We should take objective sense into account
     model.solve(MP_model::MINIMIZE);
     std::cout << model->getObjValue();
-    model->writeMps("scdp-problem");
+
     cost_linebuild.display("cost_linebuild");
 
     //revenue.display();
 
     //model.attach();
-    model.getSmi()->writeSmps("SCDP", false, false);
+    
 
     //OsiStochasticParallelNestedBendersTwoStageSolverInterface nested_benders_solver(new OsiCpxSolverInterface(),model.getSmi());
     //nested_benders_solver.initialSolve(); // We only do minimization!!
