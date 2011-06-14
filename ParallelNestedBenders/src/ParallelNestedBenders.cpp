@@ -434,7 +434,11 @@ namespace parallel_benders {
         if ( integer_problems_[0] ){ // In the first stage.
             LOG(INFO) << "Your problem contains first-stage integer variables.";
             //return;
+			
         }
+		for (int i = 1; i < num_stages_; i++ ){
+		// Check for integer in other stages? At the moment we ignore these
+		}
         std::vector<int> new_columns(num_stages_,0);
         if ( non_staircase_problem_ ){
             // We need to generate the non-staircase constraints
@@ -445,8 +449,12 @@ namespace parallel_benders {
             //    stage_data_[i]->num_rows_ = core_->getNumRows(i);
             //}
             non_staircase_problem_ = false;
+            non_staircase_stochastic_problem_ = false;
             non_staircase_coefficients_.clear();
+            // Accomodate the changes we did in the transformation step!
             AdjustProblem();
+            assert( !non_staircase_problem_ );
+            assert( !non_staircase_stochastic_problem_);
         }
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
@@ -749,17 +757,17 @@ namespace parallel_benders {
         //osi_solver->setHintParam(OsiDoDualInInitial,false);
         //osi_solver->setHintParam(OsiDoDualInResolve,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         // MIP Solving only at first stage..
-        //if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
-        //     // We need to set the integer indices.
-        //     std::vector<int> integer_indices = core_->getIntCols(current_stage_);
-        //     osi_solver->setInteger(&integer_indices[0],integer_indices.size());
-        //     osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+        if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
+             // We need to set the integer indices.
+             std::vector<int> integer_indices = core_->getIntCols(current_stage_);
+             osi_solver->setInteger(&integer_indices[0],integer_indices.size());
+             osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
 
-        //}
-        //else
+        }
+        else
             osi_solver->initialSolve();
 
-        if ( current_stage_ >= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
             console_mutex_.lock();
@@ -790,9 +798,13 @@ namespace parallel_benders {
                             extra_elements[i] = 1;
                         }
                         // we bound all thetas with one extra row?
-                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+1000000, infinity_);
+                        // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
+                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_/2, infinity_); // We assume that will work. I mean: Half infinity? 
                         // Solve the model again
-                        osi_solver->resolve();
+                        if ( current_stage_ == 0 && integer_problems_[current_stage_] )
+                            osi_solver->branchAndBound();
+                        else
+                            osi_solver->resolve();
                     }
                 }
 
@@ -1564,20 +1576,24 @@ namespace parallel_benders {
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
 		// We assign the used solver here.
 		if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-            if ( cpx_ptr ){
-                // Get ENV and LP ptr
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-            }
+            //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+            //if ( cpx_ptr ){
+            //    // Get ENV and LP ptr
+            //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+            //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            //    CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            //    CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+            //}
 			return osi_solver_; // We do not clear this solver. We ALWAYS reuse it.
 		}
         boost::unique_lock<boost::mutex> lock(solver_map_mutex_); // TODO: Remove the mutex and initialize the solver in the init method.
         OsiSolverInterface* osi_solver = osi_solver_map_[boost::this_thread::get_id()];
         if ( osi_solver == NULL ){
-            // Create new osi_solver object
+            // Create new osi_solver object from sepearete first stage solver? if we have a mip
+			if ( seperate_first_stage_solver_ && integer_problems_[0] ){ // If we have a seperate first stage solver AND a MIP, we need to get rid of the mip first before we clone!
+				// If we call this method we are not in the first stage.
+				osi_solver_->initialSolve(); // Get rid of the integers!
+			}
             osi_solver = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.: We can only clone it if it is a LP problem
             // Silence solver object (Otherwise we get problems with the output (thread-related)
             osi_solver->messageHandler()->setLogLevel(0);
