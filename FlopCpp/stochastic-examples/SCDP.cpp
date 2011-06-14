@@ -409,12 +409,12 @@ int main(int argc, char* argv[]) {
     MP_variable put_e(C,T,T2); put_e.setName("put_e"); //{c in C, tbuy in T, texc in T, s in Scen:texc>tbuy and texc-tbuy<=max_hedge_time} = 0 ; # amount of excercised put options in period texc for currency c bought in period tbuy, strike price is the exr in period tbuy (european options)
 
     // Enable/Disable options
-    //call_e.fix(0);
-    //call_b.fix(0);
-    //put_e.fix(0);
-    //put_b.fix(0);
-    //f_cost.fix(0);
-    //f_rev.fix(0);
+    call_e.fix(0);
+    call_b.fix(0);
+    put_e.fix(0);
+    put_b.fix(0);
+    f_cost.fix(0);
+    f_rev.fix(0);
 
 #pragma endregion
 
@@ -564,10 +564,12 @@ int main(int argc, char* argv[]) {
     model.setObjective( -sum(T,npv_stage(T)) + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) ) );
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
 
-    model.attach();
+    model.attach(); // Load OsiSolverData??
+    std::cout << "Writing SMPS" << std::endl;
     model.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
-    model->writeMps("scdp-problem"); // We should take objective sense into account
+    std::cout << "Solving model" << std::endl;
     model.solve(MP_model::MINIMIZE);
+    model->writeMps("scdp-problem"); // We should take objective sense into account
     std::cout << model->getObjValue();
 
     cost_linebuild.display("cost_linebuild");
