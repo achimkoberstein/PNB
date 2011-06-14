@@ -1,0 +1,10 @@
+TIME          SCDP    
+PERIODS
+    put_e_0_0_1 demand_fulfilment_0_0_0  STAGE_0
+    put_e_0_1_2 demand_fulfilment_0_1_0  STAGE_1
+    put_e_0_2_3 demand_fulfilment_0_2_0  STAGE_2
+    put_e_0_3_4 demand_fulfilment_0_3_0  STAGE_3
+    put_e_0_4_5 demand_fulfilment_0_4_0  STAGE_4
+    put_e_0_5_6 demand_fulfilment_0_5_0  STAGE_5
+    x_0_0_0_6 demand_fulfilment_0_6_0  STAGE_6
+ENDATA
