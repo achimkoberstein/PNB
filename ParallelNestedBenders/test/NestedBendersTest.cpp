@@ -48,18 +48,18 @@ public:
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Let system decide!
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //for (int i = 1; i <= 4; i++){
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,2);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,i);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,3);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,4);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //}
+        for (int i = 1; i <= 4; i++){
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,i);   
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,2);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,3);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,4);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        }
         //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // 1 Core
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));

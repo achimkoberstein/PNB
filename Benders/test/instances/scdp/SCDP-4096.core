@@ -347,10 +347,6 @@ COLUMNS
     x_1_1_0_0 demand_fulfilment_1_0_0 1 mac_capacity_1_0_0 1
     x_1_1_1_0 demand_fulfilment_1_0_1 1 mac_capacity_1_1_0 1
     x_1_1_2_0 demand_fulfilment_1_0_2 1 mac_capacity_1_2_0 1
-    cfp_0_0 cf_p_c_0_0 -1 production_cashflow_0_0 1
-    cfp_1_0 cf_p_c_1_0 -1 production_cashflow_1_0 1
-    npv_stage_0 OBJROW -1 calculate_npv_0 1
-    cf_ref_0 cf_ref_c_0 1 calculate_npv_0 -1
     call_e_0_0_1 call_limit_0_0_1 1 cf_ref_c_1 1
     call_e_0_0_1 cf_p_c_0_1 -1
     call_e_0_0_2 call_limit_0_0_2 1 cf_ref_c_2 1
@@ -367,8 +363,6 @@ COLUMNS
     call_e_1_0_3 cf_p_c_1_3 -1
     call_e_1_0_4 call_limit_1_0_4 1 cf_ref_c_4 1
     call_e_1_0_4 cf_p_c_1_4 -1
-    cf_0_0 cf_ref_c_0 -1 cf_p_c_0_0 1
-    cf_1_0 cf_ref_c_0 -1 cf_p_c_1_0 1
     f_cost_0_0_1 hedge_rate_c_0_0 1 cf_ref_c_1 1
     f_cost_0_0_1 cf_p_c_0_1 -1
     f_cost_0_0_2 hedge_rate_c_0_0 1 cf_ref_c_2 1
@@ -385,10 +379,6 @@ COLUMNS
     f_cost_1_0_3 cf_p_c_1_3 -1
     f_cost_1_0_4 hedge_rate_c_1_0 1 cf_ref_c_4 1
     f_cost_1_0_4 cf_p_c_1_4 -1
-    cost_trans_0_0 transportation_cost_0_0 1 production_cashflow_0_0 1
-    cost_trans_0_0 hedge_rate_c_0_0 -1
-    cost_trans_1_0 transportation_cost_1_0 1 production_cashflow_1_0 1
-    cost_trans_1_0 hedge_rate_c_1_0 -1
     f_rev_0_0_1 hege_rate_r_0_0 1 cf_ref_c_1 1
     f_rev_0_0_1 cf_p_c_0_1 -1
     f_rev_0_0_2 hege_rate_r_0_0 1 cf_ref_c_2 1
@@ -405,10 +395,19 @@ COLUMNS
     f_rev_1_0_3 cf_p_c_1_3 -1
     f_rev_1_0_4 hege_rate_r_1_0 1 cf_ref_c_4 1
     f_rev_1_0_4 cf_p_c_1_4 -1
-    revenue_0_0 revenue_in_market_0_0 1 hege_rate_r_0_0 1
-    revenue_0_0 production_cashflow_0_0 -1
-    revenue_1_0 revenue_in_market_1_0 1 hege_rate_r_1_0 1
-    revenue_1_0 production_cashflow_1_0 -1
+    cost_prod_0_0 prod_cost_0_0 1 production_cashflow_0_0 1
+    cost_prod_0_0 hedge_rate_c_0_0 -1
+    cost_prod_1_0 prod_cost_1_0 1 production_cashflow_1_0 1
+    cost_prod_1_0 hedge_rate_c_1_0 -1
+    call_b_0_0_1 call_limit_0_0_1 -1
+    call_b_0_0_2 call_limit_0_0_2 -1
+    call_b_0_0_3 call_limit_0_0_3 -1
+    call_b_0_0_4 call_limit_0_0_4 -1
+    call_b_1_0_1 call_limit_1_0_1 -1
+    call_b_1_0_2 call_limit_1_0_2 -1
+    call_b_1_0_3 call_limit_1_0_3 -1
+    call_b_1_0_4 call_limit_1_0_4 -1
+    npv_stage_0 OBJROW -1 calculate_npv_0 1
     cost_lineoperate_0 line_operating_cost_0 1 production_cashflow_0_0 1
     cost_lineoperate_0 hedge_rate_c_0_0 -1 production_cashflow_0_1 1
     cost_lineoperate_0 hedge_rate_c_0_1 -1 production_cashflow_0_2 1
@@ -425,12 +424,29 @@ COLUMNS
     cost_lineoperate_1 hedge_rate_c_1_4 -1 production_cashflow_1_5 1
     cost_lineoperate_1 hedge_rate_c_1_5 -1 production_cashflow_1_6 1
     cost_lineoperate_1 hedge_rate_c_1_6 -1
-    cost_prod_0_0 prod_cost_0_0 1 production_cashflow_0_0 1
-    cost_prod_0_0 hedge_rate_c_0_0 -1
-    cost_prod_1_0 prod_cost_1_0 1 production_cashflow_1_0 1
-    cost_prod_1_0 hedge_rate_c_1_0 -1
+    put_b_0_0_1 put_limit_0_0_1 -1
+    put_b_0_0_2 put_limit_0_0_2 -1
+    put_b_0_0_3 put_limit_0_0_3 -1
+    put_b_0_0_4 put_limit_0_0_4 -1
+    put_b_1_0_1 put_limit_1_0_1 -1
+    put_b_1_0_2 put_limit_1_0_2 -1
+    put_b_1_0_3 put_limit_1_0_3 -1
+    put_b_1_0_4 put_limit_1_0_4 -1
+    cf_0_0 cf_ref_c_0 -1 cf_p_c_0_0 1
+    cf_1_0 cf_ref_c_0 -1 cf_p_c_1_0 1
+    cfp_0_0 cf_p_c_0_0 -1 production_cashflow_0_0 1
+    cfp_1_0 cf_p_c_1_0 -1 production_cashflow_1_0 1
+    cf_ref_0 cf_ref_c_0 1 calculate_npv_0 -1
     cost_linebuild_0 OBJROW 1 line_building_cost_0 1
     cost_linebuild_1 OBJROW 1 line_building_cost_1 1
+    cost_trans_0_0 transportation_cost_0_0 1 production_cashflow_0_0 1
+    cost_trans_0_0 hedge_rate_c_0_0 -1
+    cost_trans_1_0 transportation_cost_1_0 1 production_cashflow_1_0 1
+    cost_trans_1_0 hedge_rate_c_1_0 -1
+    revenue_0_0 revenue_in_market_0_0 1 hege_rate_r_0_0 1
+    revenue_0_0 production_cashflow_0_0 -1
+    revenue_1_0 revenue_in_market_1_0 1 hege_rate_r_1_0 1
+    revenue_1_0 production_cashflow_1_0 -1
     cost_optionbuy_0 cf_ref_c_0 1 option_cost_0 1
     x2_0_0_0_0 demand_fulfilment_0_0_0 1
     x2_0_0_1_0 demand_fulfilment_0_0_1 1
@@ -444,22 +460,6 @@ COLUMNS
     x2_1_1_0_0 demand_fulfilment_1_0_0 1
     x2_1_1_1_0 demand_fulfilment_1_0_1 1
     x2_1_1_2_0 demand_fulfilment_1_0_2 1
-    put_b_0_0_1 put_limit_0_0_1 -1
-    put_b_0_0_2 put_limit_0_0_2 -1
-    put_b_0_0_3 put_limit_0_0_3 -1
-    put_b_0_0_4 put_limit_0_0_4 -1
-    put_b_1_0_1 put_limit_1_0_1 -1
-    put_b_1_0_2 put_limit_1_0_2 -1
-    put_b_1_0_3 put_limit_1_0_3 -1
-    put_b_1_0_4 put_limit_1_0_4 -1
-    call_b_0_0_1 call_limit_0_0_1 -1
-    call_b_0_0_2 call_limit_0_0_2 -1
-    call_b_0_0_3 call_limit_0_0_3 -1
-    call_b_0_0_4 call_limit_0_0_4 -1
-    call_b_1_0_1 call_limit_1_0_1 -1
-    call_b_1_0_2 call_limit_1_0_2 -1
-    call_b_1_0_3 call_limit_1_0_3 -1
-    call_b_1_0_4 call_limit_1_0_4 -1
     put_e_0_1_2 put_limit_0_1_2 1 hege_rate_r_0_1 -0.9999999999999928
     put_e_0_1_2 hedge_rate_c_0_1 -0.9999999999999928 cf_ref_c_2 -1
     put_e_0_1_2 cf_p_c_0_2 0.9999999999999928
@@ -508,10 +508,6 @@ COLUMNS
     x_1_1_1_1 mac_capacity_1_1_1 1 prod_cost_1_1 -1000
     x_1_1_2_1 demand_fulfilment_1_1_2 1 transportation_cost_1_1 -40
     x_1_1_2_1 mac_capacity_1_2_1 1 prod_cost_1_1 -1700
-    cfp_0_1 cf_p_c_0_1 -1 production_cashflow_0_1 1
-    cfp_1_1 cf_p_c_1_1 -1 production_cashflow_1_1 1
-    npv_stage_1 OBJROW -1 calculate_npv_1 1
-    cf_ref_1 cf_ref_c_1 1 calculate_npv_1 -1
     call_e_0_1_2 call_limit_0_1_2 1 cf_ref_c_2 1
     call_e_0_1_2 cf_p_c_0_2 -0.9999999999999928
     call_e_0_1_3 call_limit_0_1_3 1 cf_ref_c_3 1
@@ -528,8 +524,6 @@ COLUMNS
     call_e_1_1_4 cf_p_c_1_4 -1.04999999999999
     call_e_1_1_5 call_limit_1_1_5 1 cf_ref_c_5 1
     call_e_1_1_5 cf_p_c_1_5 -1.04999999999999
-    cf_0_1 cf_ref_c_1 -0.9999999999999928 cf_p_c_0_1 1
-    cf_1_1 cf_ref_c_1 -0.9999999999999896 cf_p_c_1_1 1
     f_cost_0_1_2 hedge_rate_c_0_1 0.9999999999999928 cf_ref_c_2 1
     f_cost_0_1_2 cf_p_c_0_2 -0.9999999999999928
     f_cost_0_1_3 hedge_rate_c_0_1 0.9999999999999928 cf_ref_c_3 1
@@ -546,10 +540,6 @@ COLUMNS
     f_cost_1_1_4 cf_p_c_1_4 -1.04999999999999
     f_cost_1_1_5 hedge_rate_c_1_1 1.04999999999999 cf_ref_c_5 1
     f_cost_1_1_5 cf_p_c_1_5 -1.04999999999999
-    cost_trans_0_1 transportation_cost_0_1 1 production_cashflow_0_1 1
-    cost_trans_0_1 hedge_rate_c_0_1 -1
-    cost_trans_1_1 transportation_cost_1_1 1 production_cashflow_1_1 1
-    cost_trans_1_1 hedge_rate_c_1_1 -1
     f_rev_0_1_2 hege_rate_r_0_1 0.9999999999999928 cf_ref_c_2 1
     f_rev_0_1_2 cf_p_c_0_2 -0.9999999999999928
     f_rev_0_1_3 hege_rate_r_0_1 0.9999999999999928 cf_ref_c_3 1
@@ -566,14 +556,40 @@ COLUMNS
     f_rev_1_1_4 cf_p_c_1_4 -1.04999999999999
     f_rev_1_1_5 hege_rate_r_1_1 1.04999999999999 cf_ref_c_5 1
     f_rev_1_1_5 cf_p_c_1_5 -1.04999999999999
-    revenue_0_1 revenue_in_market_0_1 1 hege_rate_r_0_1 1
-    revenue_0_1 production_cashflow_0_1 -1
-    revenue_1_1 revenue_in_market_1_1 1 hege_rate_r_1_1 1
-    revenue_1_1 production_cashflow_1_1 -1
     cost_prod_0_1 prod_cost_0_1 1 production_cashflow_0_1 1
     cost_prod_0_1 hedge_rate_c_0_1 -1
     cost_prod_1_1 prod_cost_1_1 1 production_cashflow_1_1 1
     cost_prod_1_1 hedge_rate_c_1_1 -1
+    call_b_0_1_2 call_limit_0_1_2 -1 option_cost_1 -0.08883704797514808
+    call_b_0_1_3 call_limit_0_1_3 -1 option_cost_1 -0.08883704797514808
+    call_b_0_1_4 call_limit_0_1_4 -1 option_cost_1 -0.08883704797514808
+    call_b_0_1_5 call_limit_0_1_5 -1
+    call_b_1_1_2 call_limit_1_1_2 -1 option_cost_1 -0.08883704797514865
+    call_b_1_1_3 call_limit_1_1_3 -1 option_cost_1 -0.08883704797514865
+    call_b_1_1_4 call_limit_1_1_4 -1 option_cost_1 -0.08883704797514865
+    call_b_1_1_5 call_limit_1_1_5 -1
+    npv_stage_1 OBJROW -1 calculate_npv_1 1
+    put_b_0_1_2 put_limit_0_1_2 -1 option_cost_1 -0.08883704797514808
+    put_b_0_1_3 put_limit_0_1_3 -1 option_cost_1 -0.08883704797514808
+    put_b_0_1_4 put_limit_0_1_4 -1 option_cost_1 -0.08883704797514808
+    put_b_0_1_5 put_limit_0_1_5 -1
+    put_b_1_1_2 put_limit_1_1_2 -1 option_cost_1 -0.08883704797514865
+    put_b_1_1_3 put_limit_1_1_3 -1 option_cost_1 -0.08883704797514865
+    put_b_1_1_4 put_limit_1_1_4 -1 option_cost_1 -0.08883704797514865
+    put_b_1_1_5 put_limit_1_1_5 -1
+    cf_0_1 cf_ref_c_1 -0.9999999999999928 cf_p_c_0_1 1
+    cf_1_1 cf_ref_c_1 -0.9999999999999896 cf_p_c_1_1 1
+    cfp_0_1 cf_p_c_0_1 -1 production_cashflow_0_1 1
+    cfp_1_1 cf_p_c_1_1 -1 production_cashflow_1_1 1
+    cf_ref_1 cf_ref_c_1 1 calculate_npv_1 -1
+    cost_trans_0_1 transportation_cost_0_1 1 production_cashflow_0_1 1
+    cost_trans_0_1 hedge_rate_c_0_1 -1
+    cost_trans_1_1 transportation_cost_1_1 1 production_cashflow_1_1 1
+    cost_trans_1_1 hedge_rate_c_1_1 -1
+    revenue_0_1 revenue_in_market_0_1 1 hege_rate_r_0_1 1
+    revenue_0_1 production_cashflow_0_1 -1
+    revenue_1_1 revenue_in_market_1_1 1 hege_rate_r_1_1 1
+    revenue_1_1 production_cashflow_1_1 -1
     cost_optionbuy_1 cf_ref_c_1 1 option_cost_1 1
     x2_0_0_0_1 demand_fulfilment_0_1_0 1 revenue_in_market_0_1 3000
     x2_0_0_1_1 demand_fulfilment_0_1_1 1 revenue_in_market_0_1 5000
@@ -587,22 +603,6 @@ COLUMNS
     x2_1_1_0_1 demand_fulfilment_1_1_0 1 revenue_in_market_1_1 2500
     x2_1_1_1_1 demand_fulfilment_1_1_1 1 revenue_in_market_1_1 3500
     x2_1_1_2_1 demand_fulfilment_1_1_2 1 revenue_in_market_1_1 6000
-    put_b_0_1_2 put_limit_0_1_2 -1 option_cost_1 -0.08883704797514808
-    put_b_0_1_3 put_limit_0_1_3 -1 option_cost_1 -0.08883704797514808
-    put_b_0_1_4 put_limit_0_1_4 -1 option_cost_1 -0.08883704797514808
-    put_b_0_1_5 put_limit_0_1_5 -1
-    put_b_1_1_2 put_limit_1_1_2 -1 option_cost_1 -0.08883704797514865
-    put_b_1_1_3 put_limit_1_1_3 -1 option_cost_1 -0.08883704797514865
-    put_b_1_1_4 put_limit_1_1_4 -1 option_cost_1 -0.08883704797514865
-    put_b_1_1_5 put_limit_1_1_5 -1
-    call_b_0_1_2 call_limit_0_1_2 -1 option_cost_1 -0.08883704797514808
-    call_b_0_1_3 call_limit_0_1_3 -1 option_cost_1 -0.08883704797514808
-    call_b_0_1_4 call_limit_0_1_4 -1 option_cost_1 -0.08883704797514808
-    call_b_0_1_5 call_limit_0_1_5 -1
-    call_b_1_1_2 call_limit_1_1_2 -1 option_cost_1 -0.08883704797514865
-    call_b_1_1_3 call_limit_1_1_3 -1 option_cost_1 -0.08883704797514865
-    call_b_1_1_4 call_limit_1_1_4 -1 option_cost_1 -0.08883704797514865
-    call_b_1_1_5 call_limit_1_1_5 -1
     put_e_0_2_3 put_limit_0_2_3 1 hege_rate_r_0_2 -0.9999999999999928
     put_e_0_2_3 hedge_rate_c_0_2 -0.9999999999999928 cf_ref_c_3 -1
     put_e_0_2_3 cf_p_c_0_3 0.9999999999999928
@@ -651,10 +651,6 @@ COLUMNS
     x_1_1_1_2 mac_capacity_1_1_2 1 prod_cost_1_2 -1000
     x_1_1_2_2 demand_fulfilment_1_2_2 1 transportation_cost_1_2 -40
     x_1_1_2_2 mac_capacity_1_2_2 1 prod_cost_1_2 -1700
-    cfp_0_2 cf_p_c_0_2 -1 production_cashflow_0_2 1
-    cfp_1_2 cf_p_c_1_2 -1 production_cashflow_1_2 1
-    npv_stage_2 OBJROW -1 calculate_npv_2 1
-    cf_ref_2 cf_ref_c_2 1 calculate_npv_2 -1
     call_e_0_2_3 call_limit_0_2_3 1 cf_ref_c_3 1
     call_e_0_2_3 cf_p_c_0_3 -0.9999999999999928
     call_e_0_2_4 call_limit_0_2_4 1 cf_ref_c_4 1
@@ -671,8 +667,6 @@ COLUMNS
     call_e_1_2_5 cf_p_c_1_5 -1.102499999999982
     call_e_1_2_6 call_limit_1_2_6 1 cf_ref_c_6 1
     call_e_1_2_6 cf_p_c_1_6 -1.102499999999982
-    cf_0_2 cf_ref_c_2 -0.9999999999999928 cf_p_c_0_2 1
-    cf_1_2 cf_ref_c_2 -0.9999999999999906 cf_p_c_1_2 1
     f_cost_0_2_3 hedge_rate_c_0_2 0.9999999999999928 cf_ref_c_3 1
     f_cost_0_2_3 cf_p_c_0_3 -0.9999999999999928
     f_cost_0_2_4 hedge_rate_c_0_2 0.9999999999999928 cf_ref_c_4 1
@@ -689,10 +683,6 @@ COLUMNS
     f_cost_1_2_5 cf_p_c_1_5 -1.102499999999982
     f_cost_1_2_6 hedge_rate_c_1_2 1.102499999999982 cf_ref_c_6 1
     f_cost_1_2_6 cf_p_c_1_6 -1.102499999999982
-    cost_trans_0_2 transportation_cost_0_2 1 production_cashflow_0_2 1
-    cost_trans_0_2 hedge_rate_c_0_2 -1
-    cost_trans_1_2 transportation_cost_1_2 1 production_cashflow_1_2 1
-    cost_trans_1_2 hedge_rate_c_1_2 -1
     f_rev_0_2_3 hege_rate_r_0_2 0.9999999999999928 cf_ref_c_3 1
     f_rev_0_2_3 cf_p_c_0_3 -0.9999999999999928
     f_rev_0_2_4 hege_rate_r_0_2 0.9999999999999928 cf_ref_c_4 1
@@ -709,14 +699,40 @@ COLUMNS
     f_rev_1_2_5 cf_p_c_1_5 -1.102499999999982
     f_rev_1_2_6 hege_rate_r_1_2 1.102499999999982 cf_ref_c_6 1
     f_rev_1_2_6 cf_p_c_1_6 -1.102499999999982
-    revenue_0_2 revenue_in_market_0_2 1 hege_rate_r_0_2 1
-    revenue_0_2 production_cashflow_0_2 -1
-    revenue_1_2 revenue_in_market_1_2 1 hege_rate_r_1_2 1
-    revenue_1_2 production_cashflow_1_2 -1
     cost_prod_0_2 prod_cost_0_2 1 production_cashflow_0_2 1
     cost_prod_0_2 hedge_rate_c_0_2 -1
     cost_prod_1_2 prod_cost_1_2 1 production_cashflow_1_2 1
     cost_prod_1_2 hedge_rate_c_1_2 -1
+    call_b_0_2_3 call_limit_0_2_3 -1 option_cost_2 -0.08883704797514808
+    call_b_0_2_4 call_limit_0_2_4 -1 option_cost_2 -0.08883704797514808
+    call_b_0_2_5 call_limit_0_2_5 -1 option_cost_2 -0.08883704797514808
+    call_b_0_2_6 call_limit_0_2_6 -1
+    call_b_1_2_3 call_limit_1_2_3 -1 option_cost_2 -0.08883704797514892
+    call_b_1_2_4 call_limit_1_2_4 -1 option_cost_2 -0.08883704797514892
+    call_b_1_2_5 call_limit_1_2_5 -1 option_cost_2 -0.08883704797514892
+    call_b_1_2_6 call_limit_1_2_6 -1
+    npv_stage_2 OBJROW -1 calculate_npv_2 1
+    put_b_0_2_3 put_limit_0_2_3 -1 option_cost_2 -0.08883704797514808
+    put_b_0_2_4 put_limit_0_2_4 -1 option_cost_2 -0.08883704797514808
+    put_b_0_2_5 put_limit_0_2_5 -1 option_cost_2 -0.08883704797514808
+    put_b_0_2_6 put_limit_0_2_6 -1
+    put_b_1_2_3 put_limit_1_2_3 -1 option_cost_2 -0.08883704797514892
+    put_b_1_2_4 put_limit_1_2_4 -1 option_cost_2 -0.08883704797514895
+    put_b_1_2_5 put_limit_1_2_5 -1 option_cost_2 -0.08883704797514892
+    put_b_1_2_6 put_limit_1_2_6 -1
+    cf_0_2 cf_ref_c_2 -0.9999999999999928 cf_p_c_0_2 1
+    cf_1_2 cf_ref_c_2 -0.9999999999999906 cf_p_c_1_2 1
+    cfp_0_2 cf_p_c_0_2 -1 production_cashflow_0_2 1
+    cfp_1_2 cf_p_c_1_2 -1 production_cashflow_1_2 1
+    cf_ref_2 cf_ref_c_2 1 calculate_npv_2 -1
+    cost_trans_0_2 transportation_cost_0_2 1 production_cashflow_0_2 1
+    cost_trans_0_2 hedge_rate_c_0_2 -1
+    cost_trans_1_2 transportation_cost_1_2 1 production_cashflow_1_2 1
+    cost_trans_1_2 hedge_rate_c_1_2 -1
+    revenue_0_2 revenue_in_market_0_2 1 hege_rate_r_0_2 1
+    revenue_0_2 production_cashflow_0_2 -1
+    revenue_1_2 revenue_in_market_1_2 1 hege_rate_r_1_2 1
+    revenue_1_2 production_cashflow_1_2 -1
     cost_optionbuy_2 cf_ref_c_2 1 option_cost_2 1
     x2_0_0_0_2 demand_fulfilment_0_2_0 1 revenue_in_market_0_2 3000
     x2_0_0_1_2 demand_fulfilment_0_2_1 1 revenue_in_market_0_2 5000
@@ -730,22 +746,6 @@ COLUMNS
     x2_1_1_0_2 demand_fulfilment_1_2_0 1 revenue_in_market_1_2 2500
     x2_1_1_1_2 demand_fulfilment_1_2_1 1 revenue_in_market_1_2 3500
     x2_1_1_2_2 demand_fulfilment_1_2_2 1 revenue_in_market_1_2 6000
-    put_b_0_2_3 put_limit_0_2_3 -1 option_cost_2 -0.08883704797514808
-    put_b_0_2_4 put_limit_0_2_4 -1 option_cost_2 -0.08883704797514808
-    put_b_0_2_5 put_limit_0_2_5 -1 option_cost_2 -0.08883704797514808
-    put_b_0_2_6 put_limit_0_2_6 -1
-    put_b_1_2_3 put_limit_1_2_3 -1 option_cost_2 -0.08883704797514892
-    put_b_1_2_4 put_limit_1_2_4 -1 option_cost_2 -0.08883704797514895
-    put_b_1_2_5 put_limit_1_2_5 -1 option_cost_2 -0.08883704797514892
-    put_b_1_2_6 put_limit_1_2_6 -1
-    call_b_0_2_3 call_limit_0_2_3 -1 option_cost_2 -0.08883704797514808
-    call_b_0_2_4 call_limit_0_2_4 -1 option_cost_2 -0.08883704797514808
-    call_b_0_2_5 call_limit_0_2_5 -1 option_cost_2 -0.08883704797514808
-    call_b_0_2_6 call_limit_0_2_6 -1
-    call_b_1_2_3 call_limit_1_2_3 -1 option_cost_2 -0.08883704797514892
-    call_b_1_2_4 call_limit_1_2_4 -1 option_cost_2 -0.08883704797514892
-    call_b_1_2_5 call_limit_1_2_5 -1 option_cost_2 -0.08883704797514892
-    call_b_1_2_6 call_limit_1_2_6 -1
     put_e_0_3_4 put_limit_0_3_4 1 hege_rate_r_0_3 -0.9999999999999928
     put_e_0_3_4 hedge_rate_c_0_3 -0.9999999999999928 cf_ref_c_4 -1
     put_e_0_3_4 cf_p_c_0_4 0.9999999999999928
@@ -788,10 +788,6 @@ COLUMNS
     x_1_1_1_3 mac_capacity_1_1_3 1 prod_cost_1_3 -1000
     x_1_1_2_3 demand_fulfilment_1_3_2 1 transportation_cost_1_3 -40
     x_1_1_2_3 mac_capacity_1_2_3 1 prod_cost_1_3 -1700
-    cfp_0_3 cf_p_c_0_3 -1 production_cashflow_0_3 1
-    cfp_1_3 cf_p_c_1_3 -1 production_cashflow_1_3 1
-    npv_stage_3 OBJROW -1 calculate_npv_3 1
-    cf_ref_3 cf_ref_c_3 1 calculate_npv_3 -1
     call_e_0_3_4 call_limit_0_3_4 1 cf_ref_c_4 1
     call_e_0_3_4 cf_p_c_0_4 -0.9999999999999928
     call_e_0_3_5 call_limit_0_3_5 1 cf_ref_c_5 1
@@ -804,8 +800,6 @@ COLUMNS
     call_e_1_3_5 cf_p_c_1_5 -1.157624999999967
     call_e_1_3_6 call_limit_1_3_6 1 cf_ref_c_6 1
     call_e_1_3_6 cf_p_c_1_6 -1.157624999999967
-    cf_0_3 cf_ref_c_3 -0.9999999999999928 cf_p_c_0_3 1
-    cf_1_3 cf_ref_c_3 -0.99999999999999 cf_p_c_1_3 1
     f_cost_0_3_4 hedge_rate_c_0_3 0.9999999999999928 cf_ref_c_4 1
     f_cost_0_3_4 cf_p_c_0_4 -0.9999999999999928
     f_cost_0_3_5 hedge_rate_c_0_3 0.9999999999999928 cf_ref_c_5 1
@@ -818,10 +812,6 @@ COLUMNS
     f_cost_1_3_5 cf_p_c_1_5 -1.157624999999967
     f_cost_1_3_6 hedge_rate_c_1_3 1.157624999999967 cf_ref_c_6 1
     f_cost_1_3_6 cf_p_c_1_6 -1.157624999999967
-    cost_trans_0_3 transportation_cost_0_3 1 production_cashflow_0_3 1
-    cost_trans_0_3 hedge_rate_c_0_3 -1
-    cost_trans_1_3 transportation_cost_1_3 1 production_cashflow_1_3 1
-    cost_trans_1_3 hedge_rate_c_1_3 -1
     f_rev_0_3_4 hege_rate_r_0_3 0.9999999999999928 cf_ref_c_4 1
     f_rev_0_3_4 cf_p_c_0_4 -0.9999999999999928
     f_rev_0_3_5 hege_rate_r_0_3 0.9999999999999928 cf_ref_c_5 1
@@ -834,14 +824,36 @@ COLUMNS
     f_rev_1_3_5 cf_p_c_1_5 -1.157624999999967
     f_rev_1_3_6 hege_rate_r_1_3 1.157624999999967 cf_ref_c_6 1
     f_rev_1_3_6 cf_p_c_1_6 -1.157624999999967
-    revenue_0_3 revenue_in_market_0_3 1 hege_rate_r_0_3 1
-    revenue_0_3 production_cashflow_0_3 -1
-    revenue_1_3 revenue_in_market_1_3 1 hege_rate_r_1_3 1
-    revenue_1_3 production_cashflow_1_3 -1
     cost_prod_0_3 prod_cost_0_3 1 production_cashflow_0_3 1
     cost_prod_0_3 hedge_rate_c_0_3 -1
     cost_prod_1_3 prod_cost_1_3 1 production_cashflow_1_3 1
     cost_prod_1_3 hedge_rate_c_1_3 -1
+    call_b_0_3_4 call_limit_0_3_4 -1 option_cost_3 -0.08883704797514808
+    call_b_0_3_5 call_limit_0_3_5 -1 option_cost_3 -0.08883704797514808
+    call_b_0_3_6 call_limit_0_3_6 -1 option_cost_3 -0.08883704797514808
+    call_b_1_3_4 call_limit_1_3_4 -1 option_cost_3 -0.08883704797514906
+    call_b_1_3_5 call_limit_1_3_5 -1 option_cost_3 -0.08883704797514906
+    call_b_1_3_6 call_limit_1_3_6 -1 option_cost_3 -0.08883704797514906
+    npv_stage_3 OBJROW -1 calculate_npv_3 1
+    put_b_0_3_4 put_limit_0_3_4 -1 option_cost_3 -0.08883704797514808
+    put_b_0_3_5 put_limit_0_3_5 -1 option_cost_3 -0.08883704797514808
+    put_b_0_3_6 put_limit_0_3_6 -1 option_cost_3 -0.08883704797514808
+    put_b_1_3_4 put_limit_1_3_4 -1 option_cost_3 -0.08883704797514906
+    put_b_1_3_5 put_limit_1_3_5 -1 option_cost_3 -0.08883704797514908
+    put_b_1_3_6 put_limit_1_3_6 -1 option_cost_3 -0.08883704797514906
+    cf_0_3 cf_ref_c_3 -0.9999999999999928 cf_p_c_0_3 1
+    cf_1_3 cf_ref_c_3 -0.99999999999999 cf_p_c_1_3 1
+    cfp_0_3 cf_p_c_0_3 -1 production_cashflow_0_3 1
+    cfp_1_3 cf_p_c_1_3 -1 production_cashflow_1_3 1
+    cf_ref_3 cf_ref_c_3 1 calculate_npv_3 -1
+    cost_trans_0_3 transportation_cost_0_3 1 production_cashflow_0_3 1
+    cost_trans_0_3 hedge_rate_c_0_3 -1
+    cost_trans_1_3 transportation_cost_1_3 1 production_cashflow_1_3 1
+    cost_trans_1_3 hedge_rate_c_1_3 -1
+    revenue_0_3 revenue_in_market_0_3 1 hege_rate_r_0_3 1
+    revenue_0_3 production_cashflow_0_3 -1
+    revenue_1_3 revenue_in_market_1_3 1 hege_rate_r_1_3 1
+    revenue_1_3 production_cashflow_1_3 -1
     cost_optionbuy_3 cf_ref_c_3 1 option_cost_3 1
     x2_0_0_0_3 demand_fulfilment_0_3_0 1 revenue_in_market_0_3 3000
     x2_0_0_1_3 demand_fulfilment_0_3_1 1 revenue_in_market_0_3 5000
@@ -855,18 +867,6 @@ COLUMNS
     x2_1_1_0_3 demand_fulfilment_1_3_0 1 revenue_in_market_1_3 2500
     x2_1_1_1_3 demand_fulfilment_1_3_1 1 revenue_in_market_1_3 3500
     x2_1_1_2_3 demand_fulfilment_1_3_2 1 revenue_in_market_1_3 6000
-    put_b_0_3_4 put_limit_0_3_4 -1 option_cost_3 -0.08883704797514808
-    put_b_0_3_5 put_limit_0_3_5 -1 option_cost_3 -0.08883704797514808
-    put_b_0_3_6 put_limit_0_3_6 -1 option_cost_3 -0.08883704797514808
-    put_b_1_3_4 put_limit_1_3_4 -1 option_cost_3 -0.08883704797514906
-    put_b_1_3_5 put_limit_1_3_5 -1 option_cost_3 -0.08883704797514908
-    put_b_1_3_6 put_limit_1_3_6 -1 option_cost_3 -0.08883704797514906
-    call_b_0_3_4 call_limit_0_3_4 -1 option_cost_3 -0.08883704797514808
-    call_b_0_3_5 call_limit_0_3_5 -1 option_cost_3 -0.08883704797514808
-    call_b_0_3_6 call_limit_0_3_6 -1 option_cost_3 -0.08883704797514808
-    call_b_1_3_4 call_limit_1_3_4 -1 option_cost_3 -0.08883704797514906
-    call_b_1_3_5 call_limit_1_3_5 -1 option_cost_3 -0.08883704797514906
-    call_b_1_3_6 call_limit_1_3_6 -1 option_cost_3 -0.08883704797514906
     put_e_0_4_5 put_limit_0_4_5 1 hege_rate_r_0_4 -0.9999999999999928
     put_e_0_4_5 hedge_rate_c_0_4 -0.9999999999999928 cf_ref_c_5 -1
     put_e_0_4_5 cf_p_c_0_5 0.9999999999999928
@@ -903,10 +903,6 @@ COLUMNS
     x_1_1_1_4 mac_capacity_1_1_4 1 prod_cost_1_4 -1000
     x_1_1_2_4 demand_fulfilment_1_4_2 1 transportation_cost_1_4 -40
     x_1_1_2_4 mac_capacity_1_2_4 1 prod_cost_1_4 -1700
-    cfp_0_4 cf_p_c_0_4 -1 production_cashflow_0_4 1
-    cfp_1_4 cf_p_c_1_4 -1 production_cashflow_1_4 1
-    npv_stage_4 OBJROW -1 calculate_npv_4 1
-    cf_ref_4 cf_ref_c_4 1 calculate_npv_4 -1
     call_e_0_4_5 call_limit_0_4_5 1 cf_ref_c_5 1
     call_e_0_4_5 cf_p_c_0_5 -0.9999999999999928
     call_e_0_4_6 call_limit_0_4_6 1 cf_ref_c_6 1
@@ -915,8 +911,6 @@ COLUMNS
     call_e_1_4_5 cf_p_c_1_5 -1.215506249999975
     call_e_1_4_6 call_limit_1_4_6 1 cf_ref_c_6 1
     call_e_1_4_6 cf_p_c_1_6 -1.215506249999975
-    cf_0_4 cf_ref_c_4 -0.9999999999999928 cf_p_c_0_4 1
-    cf_1_4 cf_ref_c_4 -0.9999999999999901 cf_p_c_1_4 1
     f_cost_0_4_5 hedge_rate_c_0_4 0.9999999999999928 cf_ref_c_5 1
     f_cost_0_4_5 cf_p_c_0_5 -0.9999999999999928
     f_cost_0_4_6 hedge_rate_c_0_4 0.9999999999999928 cf_ref_c_6 1
@@ -925,10 +919,6 @@ COLUMNS
     f_cost_1_4_5 cf_p_c_1_5 -1.215506249999975
     f_cost_1_4_6 hedge_rate_c_1_4 1.215506249999975 cf_ref_c_6 1
     f_cost_1_4_6 cf_p_c_1_6 -1.215506249999975
-    cost_trans_0_4 transportation_cost_0_4 1 production_cashflow_0_4 1
-    cost_trans_0_4 hedge_rate_c_0_4 -1
-    cost_trans_1_4 transportation_cost_1_4 1 production_cashflow_1_4 1
-    cost_trans_1_4 hedge_rate_c_1_4 -1
     f_rev_0_4_5 hege_rate_r_0_4 0.9999999999999928 cf_ref_c_5 1
     f_rev_0_4_5 cf_p_c_0_5 -0.9999999999999928
     f_rev_0_4_6 hege_rate_r_0_4 0.9999999999999928 cf_ref_c_6 1
@@ -937,14 +927,32 @@ COLUMNS
     f_rev_1_4_5 cf_p_c_1_5 -1.215506249999975
     f_rev_1_4_6 hege_rate_r_1_4 1.215506249999975 cf_ref_c_6 1
     f_rev_1_4_6 cf_p_c_1_6 -1.215506249999975
-    revenue_0_4 revenue_in_market_0_4 1 hege_rate_r_0_4 1
-    revenue_0_4 production_cashflow_0_4 -1
-    revenue_1_4 revenue_in_market_1_4 1 hege_rate_r_1_4 1
-    revenue_1_4 production_cashflow_1_4 -1
     cost_prod_0_4 prod_cost_0_4 1 production_cashflow_0_4 1
     cost_prod_0_4 hedge_rate_c_0_4 -1
     cost_prod_1_4 prod_cost_1_4 1 production_cashflow_1_4 1
     cost_prod_1_4 hedge_rate_c_1_4 -1
+    call_b_0_4_5 call_limit_0_4_5 -1 option_cost_4 -0.08883704797514808
+    call_b_0_4_6 call_limit_0_4_6 -1 option_cost_4 -0.08883704797514808
+    call_b_1_4_5 call_limit_1_4_5 -1 option_cost_4 -0.08883704797514908
+    call_b_1_4_6 call_limit_1_4_6 -1 option_cost_4 -0.08883704797514908
+    npv_stage_4 OBJROW -1 calculate_npv_4 1
+    put_b_0_4_5 put_limit_0_4_5 -1 option_cost_4 -0.08883704797514808
+    put_b_0_4_6 put_limit_0_4_6 -1 option_cost_4 -0.08883704797514808
+    put_b_1_4_5 put_limit_1_4_5 -1 option_cost_4 -0.08883704797514908
+    put_b_1_4_6 put_limit_1_4_6 -1 option_cost_4 -0.0888370479751491
+    cf_0_4 cf_ref_c_4 -0.9999999999999928 cf_p_c_0_4 1
+    cf_1_4 cf_ref_c_4 -0.9999999999999901 cf_p_c_1_4 1
+    cfp_0_4 cf_p_c_0_4 -1 production_cashflow_0_4 1
+    cfp_1_4 cf_p_c_1_4 -1 production_cashflow_1_4 1
+    cf_ref_4 cf_ref_c_4 1 calculate_npv_4 -1
+    cost_trans_0_4 transportation_cost_0_4 1 production_cashflow_0_4 1
+    cost_trans_0_4 hedge_rate_c_0_4 -1
+    cost_trans_1_4 transportation_cost_1_4 1 production_cashflow_1_4 1
+    cost_trans_1_4 hedge_rate_c_1_4 -1
+    revenue_0_4 revenue_in_market_0_4 1 hege_rate_r_0_4 1
+    revenue_0_4 production_cashflow_0_4 -1
+    revenue_1_4 revenue_in_market_1_4 1 hege_rate_r_1_4 1
+    revenue_1_4 production_cashflow_1_4 -1
     cost_optionbuy_4 cf_ref_c_4 1 option_cost_4 1
     x2_0_0_0_4 demand_fulfilment_0_4_0 1 revenue_in_market_0_4 3000
     x2_0_0_1_4 demand_fulfilment_0_4_1 1 revenue_in_market_0_4 5000
@@ -958,14 +966,6 @@ COLUMNS
     x2_1_1_0_4 demand_fulfilment_1_4_0 1 revenue_in_market_1_4 2500
     x2_1_1_1_4 demand_fulfilment_1_4_1 1 revenue_in_market_1_4 3500
     x2_1_1_2_4 demand_fulfilment_1_4_2 1 revenue_in_market_1_4 6000
-    put_b_0_4_5 put_limit_0_4_5 -1 option_cost_4 -0.08883704797514808
-    put_b_0_4_6 put_limit_0_4_6 -1 option_cost_4 -0.08883704797514808
-    put_b_1_4_5 put_limit_1_4_5 -1 option_cost_4 -0.08883704797514908
-    put_b_1_4_6 put_limit_1_4_6 -1 option_cost_4 -0.0888370479751491
-    call_b_0_4_5 call_limit_0_4_5 -1 option_cost_4 -0.08883704797514808
-    call_b_0_4_6 call_limit_0_4_6 -1 option_cost_4 -0.08883704797514808
-    call_b_1_4_5 call_limit_1_4_5 -1 option_cost_4 -0.08883704797514908
-    call_b_1_4_6 call_limit_1_4_6 -1 option_cost_4 -0.08883704797514908
     put_e_0_5_6 put_limit_0_5_6 1 hege_rate_r_0_5 -0.9999999999999928
     put_e_0_5_6 hedge_rate_c_0_5 -0.9999999999999928 cf_ref_c_6 -1
     put_e_0_5_6 cf_p_c_0_6 0.9999999999999928
@@ -996,36 +996,40 @@ COLUMNS
     x_1_1_1_5 mac_capacity_1_1_5 1 prod_cost_1_5 -1000
     x_1_1_2_5 demand_fulfilment_1_5_2 1 transportation_cost_1_5 -40
     x_1_1_2_5 mac_capacity_1_2_5 1 prod_cost_1_5 -1700
-    cfp_0_5 cf_p_c_0_5 -1 production_cashflow_0_5 1
-    cfp_1_5 cf_p_c_1_5 -1 production_cashflow_1_5 1
-    npv_stage_5 OBJROW -1 calculate_npv_5 1
-    cf_ref_5 cf_ref_c_5 1 calculate_npv_5 -1
     call_e_0_5_6 call_limit_0_5_6 1 cf_ref_c_6 1
     call_e_0_5_6 cf_p_c_0_6 -0.9999999999999928
     call_e_1_5_6 call_limit_1_5_6 1 cf_ref_c_6 1
     call_e_1_5_6 cf_p_c_1_6 -1.276281562499967
-    cf_0_5 cf_ref_c_5 -0.9999999999999928 cf_p_c_0_5 1
-    cf_1_5 cf_ref_c_5 -0.9999999999999901 cf_p_c_1_5 1
     f_cost_0_5_6 hedge_rate_c_0_5 0.9999999999999928 cf_ref_c_6 1
     f_cost_0_5_6 cf_p_c_0_6 -0.9999999999999928
     f_cost_1_5_6 hedge_rate_c_1_5 1.276281562499967 cf_ref_c_6 1
     f_cost_1_5_6 cf_p_c_1_6 -1.276281562499967
-    cost_trans_0_5 transportation_cost_0_5 1 production_cashflow_0_5 1
-    cost_trans_0_5 hedge_rate_c_0_5 -1
-    cost_trans_1_5 transportation_cost_1_5 1 production_cashflow_1_5 1
-    cost_trans_1_5 hedge_rate_c_1_5 -1
     f_rev_0_5_6 hege_rate_r_0_5 0.9999999999999928 cf_ref_c_6 1
     f_rev_0_5_6 cf_p_c_0_6 -0.9999999999999928
     f_rev_1_5_6 hege_rate_r_1_5 1.276281562499967 cf_ref_c_6 1
     f_rev_1_5_6 cf_p_c_1_6 -1.276281562499967
-    revenue_0_5 revenue_in_market_0_5 1 hege_rate_r_0_5 1
-    revenue_0_5 production_cashflow_0_5 -1
-    revenue_1_5 revenue_in_market_1_5 1 hege_rate_r_1_5 1
-    revenue_1_5 production_cashflow_1_5 -1
     cost_prod_0_5 prod_cost_0_5 1 production_cashflow_0_5 1
     cost_prod_0_5 hedge_rate_c_0_5 -1
     cost_prod_1_5 prod_cost_1_5 1 production_cashflow_1_5 1
     cost_prod_1_5 hedge_rate_c_1_5 -1
+    call_b_0_5_6 call_limit_0_5_6 -1 option_cost_5 -0.08883704797514808
+    call_b_1_5_6 call_limit_1_5_6 -1 option_cost_5 -0.08883704797514909
+    npv_stage_5 OBJROW -1 calculate_npv_5 1
+    put_b_0_5_6 put_limit_0_5_6 -1 option_cost_5 -0.08883704797514808
+    put_b_1_5_6 put_limit_1_5_6 -1 option_cost_5 -0.08883704797514909
+    cf_0_5 cf_ref_c_5 -0.9999999999999928 cf_p_c_0_5 1
+    cf_1_5 cf_ref_c_5 -0.9999999999999901 cf_p_c_1_5 1
+    cfp_0_5 cf_p_c_0_5 -1 production_cashflow_0_5 1
+    cfp_1_5 cf_p_c_1_5 -1 production_cashflow_1_5 1
+    cf_ref_5 cf_ref_c_5 1 calculate_npv_5 -1
+    cost_trans_0_5 transportation_cost_0_5 1 production_cashflow_0_5 1
+    cost_trans_0_5 hedge_rate_c_0_5 -1
+    cost_trans_1_5 transportation_cost_1_5 1 production_cashflow_1_5 1
+    cost_trans_1_5 hedge_rate_c_1_5 -1
+    revenue_0_5 revenue_in_market_0_5 1 hege_rate_r_0_5 1
+    revenue_0_5 production_cashflow_0_5 -1
+    revenue_1_5 revenue_in_market_1_5 1 hege_rate_r_1_5 1
+    revenue_1_5 production_cashflow_1_5 -1
     cost_optionbuy_5 cf_ref_c_5 1 option_cost_5 1
     x2_0_0_0_5 demand_fulfilment_0_5_0 1 revenue_in_market_0_5 3000
     x2_0_0_1_5 demand_fulfilment_0_5_1 1 revenue_in_market_0_5 5000
@@ -1039,10 +1043,6 @@ COLUMNS
     x2_1_1_0_5 demand_fulfilment_1_5_0 1 revenue_in_market_1_5 2500
     x2_1_1_1_5 demand_fulfilment_1_5_1 1 revenue_in_market_1_5 3500
     x2_1_1_2_5 demand_fulfilment_1_5_2 1 revenue_in_market_1_5 6000
-    put_b_0_5_6 put_limit_0_5_6 -1 option_cost_5 -0.08883704797514808
-    put_b_1_5_6 put_limit_1_5_6 -1 option_cost_5 -0.08883704797514909
-    call_b_0_5_6 call_limit_0_5_6 -1 option_cost_5 -0.08883704797514808
-    call_b_1_5_6 call_limit_1_5_6 -1 option_cost_5 -0.08883704797514909
     x_0_0_0_6 demand_fulfilment_0_6_0 1 transportation_cost_0_6 -20
     x_0_0_0_6 mac_capacity_0_0_6 1 prod_cost_0_6 -700
     x_0_0_1_6 demand_fulfilment_0_6_1 1 transportation_cost_0_6 -25
@@ -1067,12 +1067,16 @@ COLUMNS
     x_1_1_1_6 mac_capacity_1_1_6 1 prod_cost_1_6 -1000
     x_1_1_2_6 demand_fulfilment_1_6_2 1 transportation_cost_1_6 -40
     x_1_1_2_6 mac_capacity_1_2_6 1 prod_cost_1_6 -1700
-    cfp_0_6 cf_p_c_0_6 -1 production_cashflow_0_6 1
-    cfp_1_6 cf_p_c_1_6 -1 production_cashflow_1_6 1
+    cost_prod_0_6 prod_cost_0_6 1 production_cashflow_0_6 1
+    cost_prod_0_6 hedge_rate_c_0_6 -1
+    cost_prod_1_6 prod_cost_1_6 1 production_cashflow_1_6 1
+    cost_prod_1_6 hedge_rate_c_1_6 -1
     npv_stage_6 OBJROW -1 calculate_npv_6 1
-    cf_ref_6 cf_ref_c_6 1 calculate_npv_6 -1
     cf_0_6 cf_ref_c_6 -0.9999999999999928 cf_p_c_0_6 1
     cf_1_6 cf_ref_c_6 -0.9999999999999901 cf_p_c_1_6 1
+    cfp_0_6 cf_p_c_0_6 -1 production_cashflow_0_6 1
+    cfp_1_6 cf_p_c_1_6 -1 production_cashflow_1_6 1
+    cf_ref_6 cf_ref_c_6 1 calculate_npv_6 -1
     cost_trans_0_6 transportation_cost_0_6 1 production_cashflow_0_6 1
     cost_trans_0_6 hedge_rate_c_0_6 -1
     cost_trans_1_6 transportation_cost_1_6 1 production_cashflow_1_6 1
@@ -1081,10 +1085,6 @@ COLUMNS
     revenue_0_6 production_cashflow_0_6 -1
     revenue_1_6 revenue_in_market_1_6 1 hege_rate_r_1_6 1
     revenue_1_6 production_cashflow_1_6 -1
-    cost_prod_0_6 prod_cost_0_6 1 production_cashflow_0_6 1
-    cost_prod_0_6 hedge_rate_c_0_6 -1
-    cost_prod_1_6 prod_cost_1_6 1 production_cashflow_1_6 1
-    cost_prod_1_6 hedge_rate_c_1_6 -1
     cost_optionbuy_6 cf_ref_c_6 1 option_cost_6 1
     x2_0_0_0_6 demand_fulfilment_0_6_0 1 revenue_in_market_0_6 3000
     x2_0_0_1_6 demand_fulfilment_0_6_1 1 revenue_in_market_0_6 5000
@@ -1118,52 +1118,268 @@ RHS
     RHS demand_fulfilment_1_6_1 102758.4529329971 demand_fulfilment_1_6_2 30827.53587989986
     RHS revenue_in_market_0_6 747053952.8228988 revenue_in_market_1_6 544619800.5448912
 BOUNDS
+ FX BOUND put_e_0_0_1 0
+ FX BOUND put_e_0_0_2 0
+ FX BOUND put_e_0_0_3 0
+ FX BOUND put_e_0_0_4 0
+ FX BOUND put_e_1_0_1 0
+ FX BOUND put_e_1_0_2 0
+ FX BOUND put_e_1_0_3 0
+ FX BOUND put_e_1_0_4 0
  BV BOUND y_build_0_0 1
  BV BOUND y_build_0_1 1
  BV BOUND y_build_0_2 1
  BV BOUND y_build_1_0 1
  BV BOUND y_build_1_1 1
  BV BOUND y_build_1_2 1
- FR BOUND cfp_0_0 1e+030
- FR BOUND cfp_1_0 1e+030
+ FX BOUND call_e_0_0_1 0
+ FX BOUND call_e_0_0_2 0
+ FX BOUND call_e_0_0_3 0
+ FX BOUND call_e_0_0_4 0
+ FX BOUND call_e_1_0_1 0
+ FX BOUND call_e_1_0_2 0
+ FX BOUND call_e_1_0_3 0
+ FX BOUND call_e_1_0_4 0
+ FX BOUND f_cost_0_0_1 0
+ FX BOUND f_cost_0_0_2 0
+ FX BOUND f_cost_0_0_3 0
+ FX BOUND f_cost_0_0_4 0
+ FX BOUND f_cost_1_0_1 0
+ FX BOUND f_cost_1_0_2 0
+ FX BOUND f_cost_1_0_3 0
+ FX BOUND f_cost_1_0_4 0
+ FX BOUND f_rev_0_0_1 0
+ FX BOUND f_rev_0_0_2 0
+ FX BOUND f_rev_0_0_3 0
+ FX BOUND f_rev_0_0_4 0
+ FX BOUND f_rev_1_0_1 0
+ FX BOUND f_rev_1_0_2 0
+ FX BOUND f_rev_1_0_3 0
+ FX BOUND f_rev_1_0_4 0
+ FX BOUND call_b_0_0_1 0
+ FX BOUND call_b_0_0_2 0
+ FX BOUND call_b_0_0_3 0
+ FX BOUND call_b_0_0_4 0
+ FX BOUND call_b_1_0_1 0
+ FX BOUND call_b_1_0_2 0
+ FX BOUND call_b_1_0_3 0
+ FX BOUND call_b_1_0_4 0
  FR BOUND npv_stage_0 1e+030
- FR BOUND cf_ref_0 1e+030
+ FX BOUND put_b_0_0_1 0
+ FX BOUND put_b_0_0_2 0
+ FX BOUND put_b_0_0_3 0
+ FX BOUND put_b_0_0_4 0
+ FX BOUND put_b_1_0_1 0
+ FX BOUND put_b_1_0_2 0
+ FX BOUND put_b_1_0_3 0
+ FX BOUND put_b_1_0_4 0
  FR BOUND cf_0_0 1e+030
  FR BOUND cf_1_0 1e+030
- FR BOUND cfp_0_1 1e+030
- FR BOUND cfp_1_1 1e+030
+ FR BOUND cfp_0_0 1e+030
+ FR BOUND cfp_1_0 1e+030
+ FR BOUND cf_ref_0 1e+030
+ FX BOUND put_e_0_1_2 0
+ FX BOUND put_e_0_1_3 0
+ FX BOUND put_e_0_1_4 0
+ FX BOUND put_e_0_1_5 0
+ FX BOUND put_e_1_1_2 0
+ FX BOUND put_e_1_1_3 0
+ FX BOUND put_e_1_1_4 0
+ FX BOUND put_e_1_1_5 0
+ FX BOUND call_e_0_1_2 0
+ FX BOUND call_e_0_1_3 0
+ FX BOUND call_e_0_1_4 0
+ FX BOUND call_e_0_1_5 0
+ FX BOUND call_e_1_1_2 0
+ FX BOUND call_e_1_1_3 0
+ FX BOUND call_e_1_1_4 0
+ FX BOUND call_e_1_1_5 0
+ FX BOUND f_cost_0_1_2 0
+ FX BOUND f_cost_0_1_3 0
+ FX BOUND f_cost_0_1_4 0
+ FX BOUND f_cost_0_1_5 0
+ FX BOUND f_cost_1_1_2 0
+ FX BOUND f_cost_1_1_3 0
+ FX BOUND f_cost_1_1_4 0
+ FX BOUND f_cost_1_1_5 0
+ FX BOUND f_rev_0_1_2 0
+ FX BOUND f_rev_0_1_3 0
+ FX BOUND f_rev_0_1_4 0
+ FX BOUND f_rev_0_1_5 0
+ FX BOUND f_rev_1_1_2 0
+ FX BOUND f_rev_1_1_3 0
+ FX BOUND f_rev_1_1_4 0
+ FX BOUND f_rev_1_1_5 0
+ FX BOUND call_b_0_1_2 0
+ FX BOUND call_b_0_1_3 0
+ FX BOUND call_b_0_1_4 0
+ FX BOUND call_b_0_1_5 0
+ FX BOUND call_b_1_1_2 0
+ FX BOUND call_b_1_1_3 0
+ FX BOUND call_b_1_1_4 0
+ FX BOUND call_b_1_1_5 0
  FR BOUND npv_stage_1 1e+030
- FR BOUND cf_ref_1 1e+030
+ FX BOUND put_b_0_1_2 0
+ FX BOUND put_b_0_1_3 0
+ FX BOUND put_b_0_1_4 0
+ FX BOUND put_b_0_1_5 0
+ FX BOUND put_b_1_1_2 0
+ FX BOUND put_b_1_1_3 0
+ FX BOUND put_b_1_1_4 0
+ FX BOUND put_b_1_1_5 0
  FR BOUND cf_0_1 1e+030
  FR BOUND cf_1_1 1e+030
- FR BOUND cfp_0_2 1e+030
- FR BOUND cfp_1_2 1e+030
+ FR BOUND cfp_0_1 1e+030
+ FR BOUND cfp_1_1 1e+030
+ FR BOUND cf_ref_1 1e+030
+ FX BOUND put_e_0_2_3 0
+ FX BOUND put_e_0_2_4 0
+ FX BOUND put_e_0_2_5 0
+ FX BOUND put_e_0_2_6 0
+ FX BOUND put_e_1_2_3 0
+ FX BOUND put_e_1_2_4 0
+ FX BOUND put_e_1_2_5 0
+ FX BOUND put_e_1_2_6 0
+ FX BOUND call_e_0_2_3 0
+ FX BOUND call_e_0_2_4 0
+ FX BOUND call_e_0_2_5 0
+ FX BOUND call_e_0_2_6 0
+ FX BOUND call_e_1_2_3 0
+ FX BOUND call_e_1_2_4 0
+ FX BOUND call_e_1_2_5 0
+ FX BOUND call_e_1_2_6 0
+ FX BOUND f_cost_0_2_3 0
+ FX BOUND f_cost_0_2_4 0
+ FX BOUND f_cost_0_2_5 0
+ FX BOUND f_cost_0_2_6 0
+ FX BOUND f_cost_1_2_3 0
+ FX BOUND f_cost_1_2_4 0
+ FX BOUND f_cost_1_2_5 0
+ FX BOUND f_cost_1_2_6 0
+ FX BOUND f_rev_0_2_3 0
+ FX BOUND f_rev_0_2_4 0
+ FX BOUND f_rev_0_2_5 0
+ FX BOUND f_rev_0_2_6 0
+ FX BOUND f_rev_1_2_3 0
+ FX BOUND f_rev_1_2_4 0
+ FX BOUND f_rev_1_2_5 0
+ FX BOUND f_rev_1_2_6 0
+ FX BOUND call_b_0_2_3 0
+ FX BOUND call_b_0_2_4 0
+ FX BOUND call_b_0_2_5 0
+ FX BOUND call_b_0_2_6 0
+ FX BOUND call_b_1_2_3 0
+ FX BOUND call_b_1_2_4 0
+ FX BOUND call_b_1_2_5 0
+ FX BOUND call_b_1_2_6 0
  FR BOUND npv_stage_2 1e+030
- FR BOUND cf_ref_2 1e+030
+ FX BOUND put_b_0_2_3 0
+ FX BOUND put_b_0_2_4 0
+ FX BOUND put_b_0_2_5 0
+ FX BOUND put_b_0_2_6 0
+ FX BOUND put_b_1_2_3 0
+ FX BOUND put_b_1_2_4 0
+ FX BOUND put_b_1_2_5 0
+ FX BOUND put_b_1_2_6 0
  FR BOUND cf_0_2 1e+030
  FR BOUND cf_1_2 1e+030
- FR BOUND cfp_0_3 1e+030
- FR BOUND cfp_1_3 1e+030
+ FR BOUND cfp_0_2 1e+030
+ FR BOUND cfp_1_2 1e+030
+ FR BOUND cf_ref_2 1e+030
+ FX BOUND put_e_0_3_4 0
+ FX BOUND put_e_0_3_5 0
+ FX BOUND put_e_0_3_6 0
+ FX BOUND put_e_1_3_4 0
+ FX BOUND put_e_1_3_5 0
+ FX BOUND put_e_1_3_6 0
+ FX BOUND call_e_0_3_4 0
+ FX BOUND call_e_0_3_5 0
+ FX BOUND call_e_0_3_6 0
+ FX BOUND call_e_1_3_4 0
+ FX BOUND call_e_1_3_5 0
+ FX BOUND call_e_1_3_6 0
+ FX BOUND f_cost_0_3_4 0
+ FX BOUND f_cost_0_3_5 0
+ FX BOUND f_cost_0_3_6 0
+ FX BOUND f_cost_1_3_4 0
+ FX BOUND f_cost_1_3_5 0
+ FX BOUND f_cost_1_3_6 0
+ FX BOUND f_rev_0_3_4 0
+ FX BOUND f_rev_0_3_5 0
+ FX BOUND f_rev_0_3_6 0
+ FX BOUND f_rev_1_3_4 0
+ FX BOUND f_rev_1_3_5 0
+ FX BOUND f_rev_1_3_6 0
+ FX BOUND call_b_0_3_4 0
+ FX BOUND call_b_0_3_5 0
+ FX BOUND call_b_0_3_6 0
+ FX BOUND call_b_1_3_4 0
+ FX BOUND call_b_1_3_5 0
+ FX BOUND call_b_1_3_6 0
  FR BOUND npv_stage_3 1e+030
- FR BOUND cf_ref_3 1e+030
+ FX BOUND put_b_0_3_4 0
+ FX BOUND put_b_0_3_5 0
+ FX BOUND put_b_0_3_6 0
+ FX BOUND put_b_1_3_4 0
+ FX BOUND put_b_1_3_5 0
+ FX BOUND put_b_1_3_6 0
  FR BOUND cf_0_3 1e+030
  FR BOUND cf_1_3 1e+030
- FR BOUND cfp_0_4 1e+030
- FR BOUND cfp_1_4 1e+030
+ FR BOUND cfp_0_3 1e+030
+ FR BOUND cfp_1_3 1e+030
+ FR BOUND cf_ref_3 1e+030
+ FX BOUND put_e_0_4_5 0
+ FX BOUND put_e_0_4_6 0
+ FX BOUND put_e_1_4_5 0
+ FX BOUND put_e_1_4_6 0
+ FX BOUND call_e_0_4_5 0
+ FX BOUND call_e_0_4_6 0
+ FX BOUND call_e_1_4_5 0
+ FX BOUND call_e_1_4_6 0
+ FX BOUND f_cost_0_4_5 0
+ FX BOUND f_cost_0_4_6 0
+ FX BOUND f_cost_1_4_5 0
+ FX BOUND f_cost_1_4_6 0
+ FX BOUND f_rev_0_4_5 0
+ FX BOUND f_rev_0_4_6 0
+ FX BOUND f_rev_1_4_5 0
+ FX BOUND f_rev_1_4_6 0
+ FX BOUND call_b_0_4_5 0
+ FX BOUND call_b_0_4_6 0
+ FX BOUND call_b_1_4_5 0
+ FX BOUND call_b_1_4_6 0
  FR BOUND npv_stage_4 1e+030
- FR BOUND cf_ref_4 1e+030
+ FX BOUND put_b_0_4_5 0
+ FX BOUND put_b_0_4_6 0
+ FX BOUND put_b_1_4_5 0
+ FX BOUND put_b_1_4_6 0
  FR BOUND cf_0_4 1e+030
  FR BOUND cf_1_4 1e+030
- FR BOUND cfp_0_5 1e+030
- FR BOUND cfp_1_5 1e+030
+ FR BOUND cfp_0_4 1e+030
+ FR BOUND cfp_1_4 1e+030
+ FR BOUND cf_ref_4 1e+030
+ FX BOUND put_e_0_5_6 0
+ FX BOUND put_e_1_5_6 0
+ FX BOUND call_e_0_5_6 0
+ FX BOUND call_e_1_5_6 0
+ FX BOUND f_cost_0_5_6 0
+ FX BOUND f_cost_1_5_6 0
+ FX BOUND f_rev_0_5_6 0
+ FX BOUND f_rev_1_5_6 0
+ FX BOUND call_b_0_5_6 0
+ FX BOUND call_b_1_5_6 0
  FR BOUND npv_stage_5 1e+030
- FR BOUND cf_ref_5 1e+030
+ FX BOUND put_b_0_5_6 0
+ FX BOUND put_b_1_5_6 0
  FR BOUND cf_0_5 1e+030
  FR BOUND cf_1_5 1e+030
- FR BOUND cfp_0_6 1e+030
- FR BOUND cfp_1_6 1e+030
+ FR BOUND cfp_0_5 1e+030
+ FR BOUND cfp_1_5 1e+030
+ FR BOUND cf_ref_5 1e+030
  FR BOUND npv_stage_6 1e+030
- FR BOUND cf_ref_6 1e+030
  FR BOUND cf_0_6 1e+030
  FR BOUND cf_1_6 1e+030
+ FR BOUND cfp_0_6 1e+030
+ FR BOUND cfp_1_6 1e+030
+ FR BOUND cf_ref_6 1e+030
 ENDATA
