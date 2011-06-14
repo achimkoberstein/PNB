@@ -1322,24 +1322,22 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     delete [] rstrt;
     
     const std::vector<std::string> vec; //dummy
-    this->setMpsData(matrix, this->infinity_, clo, cup, obj, NULL, rlo, rup, *(this->core->getColumnNames(strictFormat)), *(this->core->getRowNames(strictFormat)));
+    char* integrality = new char[ncol];
+    std::fill_n(integrality, ncol, 0);
+    for (int i = 0; i < core->getIntegerLength(); i++) {
+        integrality[core->getIntegerIndices()[i]] = 1;
+    }
+    this->setMpsData(matrix, this->infinity_, clo, cup, obj, integrality, rlo, rup, *(this->core->getColumnNames(strictFormat)), *(this->core->getRowNames(strictFormat)));
 
     delete [] clo;
     delete [] cup;
     delete [] obj;
     delete [] rlo;
     delete [] rup;
+    delete [] integrality;
 
     this->setProblemName(filename);
 
-    char* integrality = new char[ncol];
-    std::fill_n(integrality, ncol, 0);
-    for (int i = 0; i < core->getIntegerLength(); i++) {
-        integrality[core->getIntegerIndices()[i]] = 1;
-    }
-    this->copyInIntegerInformation(integrality);
-    delete [] integrality;
-    
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
     
