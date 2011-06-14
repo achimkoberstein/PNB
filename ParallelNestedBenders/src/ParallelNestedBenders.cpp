@@ -799,7 +799,7 @@ namespace parallel_benders {
                         }
                         // we bound all thetas with one extra row?
                         // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
-                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_/2, infinity_); // We assume that will work. I mean: Half infinity? 
+                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+10000000, infinity_); // We assume that will work. I mean: Half infinity? 
                         // Solve the model again
                         if ( current_stage_ == 0 && integer_problems_[current_stage_] )
                             osi_solver->branchAndBound();
@@ -1376,10 +1376,17 @@ namespace parallel_benders {
                 cut_elements[j] = 1;
             std::vector<int> cut_indices;
             cut_indices.reserve(num_columns+num_theta_indices); // Try something new/and shiny
-            for (int j = 0; j < num_columns+num_theta_indices; j++)
+            for (int j = 0; j < num_columns; j++)
                 cut_indices.push_back(j);
           
-            //cut_indices.push_back(num_columns+i);
+            if ( num_theta_indices == 1)
+                cut_indices.push_back(num_columns+i);
+            else {
+                for (int j = 0; j < num_theta_indices; j++)
+                    cut_indices.push_back(num_columns+j);
+            }
+            
+
             // For all the indices, that belong to this cut.
             std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
             for ( int j = 0; j < nodes_in_cut.size(); j++){
