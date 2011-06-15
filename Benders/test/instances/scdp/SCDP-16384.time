@@ -1,0 +1,11 @@
+TIME          SCDP    
+PERIODS
+    put_e_0_0_1 put_limit_0_0_1          STAGE_0
+    put_e_0_1_2 put_limit_0_1_2          STAGE_1
+    put_e_0_2_3 put_limit_0_2_3          STAGE_2
+    put_e_0_3_4 put_limit_0_3_4          STAGE_3
+    put_e_0_4_5 put_limit_0_4_5          STAGE_4
+    put_e_0_5_6 put_limit_0_5_6          STAGE_5
+    put_e_0_6_7 put_limit_0_6_7          STAGE_6
+    x_0_0_0_7 production_cashflow_0_7  STAGE_7
+ENDATA
