@@ -94,7 +94,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples.vsprops"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples-64.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -239,7 +239,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples.vsprops"
+			InheritedPropertySheets="..\IncludeFilesExamples.vsprops;..\CplexConfigurationExamples-64.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -263,7 +263,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../../Benders/src"
+				AdditionalIncludeDirectories="../../../../../Benders/src;../../../../../ParallelNestedBenders/src"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -280,6 +280,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalLibraryDirectories="../../../../../ThirdParty/boost/stage/lib64;&quot;C:\Users\wolf\Documents\VirtualBox-Ordner\FlopBenders\ThirdParty\google-perftools\Release&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
