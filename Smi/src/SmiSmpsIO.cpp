@@ -1394,7 +1394,8 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     //    line << "REPLACE\n";
     //else
     //    line << "ADD\n";
-        
+    //    
+    int num_scen = tree->getNumScenarios();
     for (int scen = 0; scen < tree->getNumScenarios(); scen++) {
         writeScenarioToStochFile(line, tree->getLeaf(scen), scen, strictFormat);
     }
@@ -1412,11 +1413,11 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
         writeScenarioToStochFile(stream, node->getParent(), scenario, strictFormat);
     } else {
         // write scenario card
-        stream << " SC Scen_" << std::setw(5) << std::left << node->scenario();
-
+        stream << " SC Scen_" << std::setw(7) << std::left << node->scenario();
+        // TODO: choose setw number depending on overall number of scenarios
         if (node->getParent() != tree->getRoot()) {
             // branches from parent scenario
-            stream << "Scen_" << std::setw(5) << std::left << node->getParent()->scenario();
+            stream << "Scen_" << std::setw(7) << std::left << node->getParent()->scenario();
         } else {
             // branches from root, i.e. Scen_0.
             if (scenario == 0) // First Scenario (Scen_0) branches from ROOT, other scenarios branches from Scen_0
