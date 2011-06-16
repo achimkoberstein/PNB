@@ -30,6 +30,8 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
 {
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1) == 0){
         OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
+        // Model statistics
+        std::cout << "Variables: " << osi->getNumCols() << " Rows: " << osi->getNumRows() << " Elements: " << osi->getNumElements() << " Integer: " << osi->getNumIntegers() << std::endl;
         //osi->writeMps("deterministicEquivalent","mps",1);
         // Use Barrier method if we use cplex.. ugly code results
 #ifdef CPLEX_PRESENT
@@ -40,7 +42,6 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
 			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
-				/*osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());*/
 				osi->branchAndBound();
 			}
 			else {
@@ -55,12 +56,19 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
             double obj;
             CPXgetobjval(envPtr,lpPtr,&obj);
             LOG(INFO) << "Solution: " << obj;
+            // Get first stage solution
+            // TODO: Move this to another place later..
+            int num_first_stage_cols = nested_benders_->smi_->getCore()->getNumCols(0);
+            const double* col_solution = osi->getColSolution();
+            for ( int i = 0; i < num_first_stage_cols; i++ ){
+                std::cout << "x" << i << " : " << col_solution[i] << std::endl;
+            }
 
         }
         else{
 #endif
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
-				osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
+				//osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
 				osi->branchAndBound();
 			}
 			else {
