@@ -604,7 +604,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             int current_index = 0;
            
             for (int i = 0; i < number_rows; i++){ // Iterate over the rows of the deterministic node
-                int number_elements_in_row = current_node_data->strt_[i+1] - current_node_data->strt_[i]
+                int number_elements_in_row = current_node_data->strt_[i+1] - current_node_data->strt_[i];
                 if ( number_elements_in_row ){
                     int temp_current_index = new_start[i];
                     // Put these rows together
