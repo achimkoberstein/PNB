@@ -772,13 +772,13 @@ namespace parallel_benders {
         else
             osi_solver->initialSolve();
 
-        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            console_mutex_.lock();
-            osi_solver->writeLp(stream.str().c_str());
-            console_mutex_.unlock();
-        }
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    console_mutex_.lock();
+        //    osi_solver->writeLp(stream.str().c_str());
+        //    console_mutex_.unlock();
+        //} // TODO: Debugging stuff
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
