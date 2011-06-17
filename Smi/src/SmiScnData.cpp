@@ -484,6 +484,15 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     ncol_ = ncol_+num_new_cols;
     nrow_ = nrow_+num_new_cols;
 
+    // Before we create the new arrays for rlo,rup,clo,cup,obj, we need to delete the old ones
+    for (int i = 0; i < nstag_; i++){
+        delete [] cdrlo_[i];
+        delete [] cdrup_[i];
+        delete [] cdobj_[i];
+        delete [] cdclo_[i];
+        delete [] cdcup_[i];
+    }
+
 	// Set collower/upper/objective/rhs..
 	for (int i = 0; i < nstag_; i++){
 		SmiNodeData * node = nodes_[i];
@@ -508,7 +517,6 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
 		cdobj_[i]=cpv_obj.denseVector(ncol+icol)+icol;
 
 		// sort indices in each row
-		//Christian: TODO Why do we have to sort indices?
 		for (int ii=irow; ii<irow+nrow; ++ii)
 		{
 			if (node->getRowLength(ii)>0)
@@ -523,8 +531,108 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
 	}
 
     // TODO: What about col/row names? we might have to fix these too.. 
+}
 
+void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree){
+    // Here we make our adjustments!
+    assert(secondStage-firstStage == 1); // We can only merge consecutive stages by now! ( iteratively applying the method should also work..
+    // We only merge at the end or beginning from now
+    assert( firstStage == 0 || secondStage == nstag_-1 );
+    SmiTreeNode<SmiScnNode*>* current_node = NULL;
+    int num_children = 0;
     
+    // At first we handle the case, were we aggregate stages from the beginning :
+    if ( firstStage == 0){
+        assert( nstag_ >= 3); // Otherwise we can simply return without doing anything
+
+
+        int number_cols = nColInStage_[secondStage];
+        int number_rows = nRowInStage_[secondStage];
+
+        current_node = smiTree.getRoot()->getChild();
+        num_children = current_node->numChildren();
+
+        // We handle the childs of this node step by step!
+        // Get the first node we handle
+        
+        // We need a new array that holds all the new matrix, the clo, cup, obj, rlo, rup
+        int nels = 0;
+        int nstrt = 0;
+        // How many elements do we need? 
+        // The number of cols of firstStage + num_childen*cols of secondStage
+        // Same for number of rows
+        // Matrix entries is different, there we need to look at the actual sizes
+        SmiScnNode* current_scn_node = current_node->getDataPtr();
+        SmiNodeData* current_node_data = current_scn_node->getNode();
+        nels += nodes_[firstStage]->nels_;
+        // Count the numer of nels in child nodes
+        SmiTreeNode<SmiScnNode*>* temp_node = current_node->getChild();
+        int num_det_matrix_entries = nodes_[secondStage]->strt_[nodes_[secondStage]->clo_strt_];
+        while ( temp_node->hasSibling() ){
+            nels += num_det_matrix_entries;
+            nels += number_cols*3; // Clo,Cup, Obj
+            nels += number_rows*2; // Rlo,Rup
+            temp_node = temp_node->getSibling();
+        }
+        nstrt = num_children*number_rows+5+1;
+
+        double* elements = (double *)calloc(nels  ,sizeof(double));
+        int* indices = (int *)   calloc(nels ,sizeof(int)   );
+        int* start = (int *)   calloc(nstrt ,sizeof(int)   );
+        // Create the deterministic equivalent problem!
+
+
+         // We need to add the contents of all these nodes to the root node ( which is also a core node ), because the det.eq. is totally deterministic!
+        memcpy(elements,nodes_[firstStage]->dels_,nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_]*sizeof(double) );
+        memcpy(indices,nodes_[firstStage]->inds_,nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_]*sizeof(double) );
+        memcpy(start,nodes_[firstStage]->strt_,nodes_[firstStage]->clo_strt_ *sizeof(double) );
+
+        int overall_current_col_offset = 0;
+        int overall_current_row_offset = 0;
+
+        // For the current node, we build the deterministic equivalent
+        while ( current_node->hasSibling() ){
+            // We need to combine the core row with the stochastic row and get a new row from that! Do this by hand! The other stuff works relatively simple
+            int num_stochastic_matrix_entries = current_node_data->strt_[current_node_data->clo_strt_];
+            double* new_elements = new double[num_det_matrix_entries];
+            int* new_indices = new int[num_det_matrix_entries];
+            int* new_start = new int[number_rows];
+            // Copy old elements, indices and start arrays, we replace the values step by step.
+            memcpy(new_elements,nodes_[secondStage]->dels_,num_det_matrix_entries*sizeof(double));
+            memcpy(new_indices,nodes_[secondStage]->inds_,num_det_matrix_entries*sizeof(int));
+            memcpy(new_start,nodes_[secondStage]->strt_,number_rows*sizeof(int));
+            int current_index = 0;
+           
+            for (int i = 0; i < number_rows; i++){ // Iterate over the rows of the deterministic node
+                int number_elements_in_row = current_node_data->strt_[i+1] - current_node_data->strt_[i]
+                if ( number_elements_in_row ){
+                    int temp_current_index = new_start[i];
+                    // Put these rows together
+                    for (int temp_stochastic_index = current_node_data->strt_[i]; temp_stochastic_index < current_node_data->strt_[i+1]; temp_stochastic_index++ ){
+                        temp_current_index = current_index;
+                        // We need to work here to put these two rows together
+                        while ( current_node_data->inds_[temp_stochastic_index] != new_indices[temp_current_index] || temp_current_index < new_start[i+1] ){
+                            temp_current_index++;
+                        }    
+                        assert( temp_current_index < new_start[i+1]); // Otherwise wrong SMPS file
+                        new_elements[temp_current_index] = current_node_data->dels_[temp_stochastic_index];
+                    }
+                }
+                for (int j = new_start[i]; j < new_start[i+1]; j++)  // Rewrite the coefficient indices!
+                    new_indices[j] += overall_current_col_offset;
+               
+            }
+            // Create the transformation step for the child nodes where we have wrong coefficients in the stochastic nodes AND in the deterministic nodes too!
+
+        }
+    }
+    // If we aggregate stages from the end
+    if ( secondStage == nstag_-1){
+
+    }
+    // Merge all the nodes of the two stages together. We need a new number of columns and rows, because we have to build the det-eq. for these two stages
+
+    // 
 
 }
 
@@ -761,6 +869,7 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
         this->inds_ = (int*)temp_ptr;
     else
         this->inds_ = NULL;
+    this->nels_ = offset_dst; // Set nels_ to the correct number of overall elements in this node
 }
 
 int SmiNodeData::combineWithDenseCoreRow(double *dr,const int nels,const int *inds, const double *dels, double *dest_dels,int *dest_indx)

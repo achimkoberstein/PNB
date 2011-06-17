@@ -2049,3 +2049,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
  {
     core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
  }
+
+ void SmiScnModel::aggregateStages( int firstStage, int secondStage )
+ {
+     core_->aggregateStages( firstStage, secondStage, smiTree_);
+ }
