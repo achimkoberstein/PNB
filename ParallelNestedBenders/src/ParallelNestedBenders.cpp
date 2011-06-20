@@ -434,11 +434,7 @@ namespace parallel_benders {
         if ( integer_problems_[0] ){ // In the first stage.
             LOG(INFO) << "Your problem contains first-stage integer variables.";
             //return;
-			
         }
-		for (int i = 1; i < num_stages_; i++ ){
-		// Check for integer in other stages? At the moment we ignore these
-		}
         std::vector<int> new_columns(num_stages_,0);
         if ( non_staircase_problem_ ){
             // We need to generate the non-staircase constraints
@@ -459,6 +455,10 @@ namespace parallel_benders {
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
         
+
+        // Stage Aggregation!
+        smi_->aggregateStages(0,1); // Aggregate stage 0 and 1
+
         // Warm up period
         if ( warm_up_){
             std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);

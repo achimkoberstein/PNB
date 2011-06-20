@@ -539,100 +539,521 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // We only merge at the end or beginning from now
     assert( firstStage == 0 || secondStage == nstag_-1 );
     SmiTreeNode<SmiScnNode*>* current_node = NULL;
-    int num_children = 0;
+    int number_children = 0;
+
+    int number_cols = nColInStage_[secondStage];
+    int number_rows = nRowInStage_[secondStage];
     
     // At first we handle the case, were we aggregate stages from the beginning :
     if ( firstStage == 0){
         assert( nstag_ >= 3); // Otherwise we can simply return without doing anything
+        // Here is what we do:
+        /*
+         * 1: Initialize variables with information about the second stage, find the current node.
+         * 2: Build the Det.Eq in the first stage node(s)
+         * * a) Copy the element data 
+         * * b) Adjust the probability for the objective function coefficients
+         * 3: (If needed) Transform nodes in stage after second stage to work with the new Det. Eq. (i.e. change indices in core node, change indices in stochastic nodes)
+         */
 
 
-        int number_cols = nColInStage_[secondStage];
-        int number_rows = nRowInStage_[secondStage];
+        current_node = smiTree.getRoot();
+        number_children = current_node->numChildren();
 
-        current_node = smiTree.getRoot()->getChild();
-        num_children = current_node->numChildren();
+    }
+    else if ( secondStage == nstag_-1){
+        // Find the current node
+        current_node = smiTree.getLeaf(0)->getParent();
+        number_children = current_node->numChildren();
+    }
+    // Find the maximal number of children at this stage!
+    SmiTreeNode<SmiScnNode*> * temp_node = current_node;
+    bool different_tree_size = false;
+    while ( temp_node != NULL ){
+        if ( number_children < temp_node->numChildren() ){
+            number_children = temp_node->numChildren();
+            different_tree_size = true; // This is not good..
+        }
+        temp_node = temp_node->getSibling(); // Assume that uninitialized sibling has null-pointer
+    }
+    assert(number_children>= current_node->numChildren());
+    double conditionalProb = 1;
+    std::vector<double> conditionalProbs;
+    double sum = 0;
+    temp_node = current_node->getChild();
+    while ( current_node != NULL ){
+        conditionalProbs.push_back(current_node->getDataPtr()->getProb());
+        sum += conditionalProbs.back();
+        temp_node = current_node->getSibling();
+    }
+    int num_probs = conditionalProbs.size(); 
 
-        // We handle the childs of this node step by step!
-        // Get the first node we handle
-        
-        // We need a new array that holds all the new matrix, the clo, cup, obj, rlo, rup
-        int nels = 0;
-        int nstrt = 0;
-        // How many elements do we need? 
-        // The number of cols of firstStage + num_childen*cols of secondStage
-        // Same for number of rows
-        // Matrix entries is different, there we need to look at the actual sizes
+   // BuildDetEqInNode(SmiTreeNode<SmiScnNode*> * tree_node, int firstStage, int secondStage);
+
+    // We need a new array that holds all the new matrix, the clo, cup, obj, rlo, rup
+    int nels = 0;
+    int nstrt = 0;
+    // How many elements do we need? 
+    // The number of cols of firstStage + num_childen*cols of secondStage
+    // Same for number of rows
+    // Matrix entries is different, there we need to look at the actual sizes
+
+
+    // Determine how many elements we need to store
+    //SmiTreeNode<SmiScnNode*>* temp_node = current_node->getChild();
+    int num_det_matrix_entries = nodes_[secondStage]->strt_[nodes_[secondStage]->clo_strt_];
+    nels += num_det_matrix_entries;
+    nels += number_cols*3; // Clo,Cup, Obj
+    nels += number_rows*2; // Rlo,Rup
+    nels *= number_children; // This times the number of children we have 
+    // + first stage entries
+    nels += nodes_[firstStage]->strt_[nodes_[firstStage]->nstrt_-1];
+
+    nstrt = nodes_[firstStage]->clo_strt_+number_children*number_rows+5+1;
+
+    // Allocate the memory for the elements, indices and start arrays
+    double* elements = (double *)calloc(nels  ,sizeof(double));
+    int* indices = (int *)   calloc(nels ,sizeof(int)   );
+    int* start = (int *)   calloc(nstrt ,sizeof(int)   );
+    // Create the deterministic equivalent problem!
+
+    // We need to add the contents of all these nodes to the root node ( which is also a core node ), because the det.eq. is totally deterministic!
+    // Copy the core node information from the first stage
+    memcpy(elements,nodes_[firstStage]->dels_,nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_]*sizeof(double) );
+    memcpy(indices,nodes_[firstStage]->inds_,nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_]*sizeof(int) );
+    memcpy(start,nodes_[firstStage]->strt_,(nodes_[firstStage]->clo_strt_+1) *sizeof(int) ); // We need to account for the leading 0: one element more than number of rows..
+
+    int overall_current_col_offset = nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_];
+    int overall_current_strt_offset = nodes_[firstStage]->clo_strt_+1;
+
+    assert(number_rows==nodes_[secondStage]->clo_strt_);
+
+    int col_offset = 0;
+    int col_offset_second_stage = number_children*number_cols; // This is for the stages afterwards
+    
+    for (int i = 0; i < number_children; i++){
+        // memcpy the deterministic data of secondStage
+        memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_,nodes_[secondStage]->strt_[number_rows]*sizeof(double));
+        // We need to copy the indices one_by_one
+        for (int j = 0; j < nodes_[secondStage]->strt_[number_rows]; j++){ // Depending on which index we have: FirstStage or SecondStage
+            if ( nodes_[secondStage]->inds_[j] < stageColPtr_[secondStage] ) // TODO: Bedingter Operator
+                indices[overall_current_col_offset+j] = nodes_[secondStage]->inds_[j];
+            else
+                indices[overall_current_col_offset+j] = nodes_[secondStage]->inds_[j]+ col_offset;
+        }
+        for (int j = 0; j < number_rows; j++)
+            start[overall_current_strt_offset+j] = nodes_[secondStage]->strt_[j+1]+overall_current_col_offset; // Take the start value + the values in the elements/indices arrays so far
+
+        // Update the offsets for the array indexation
+        overall_current_col_offset += nodes_[secondStage]->strt_[number_rows]; // which should be equal to nels_
+        overall_current_strt_offset += number_rows;
+        // Update the col offset for the deterministic equivalent
+        col_offset += number_cols;
+    }
+    // Column Lower
+    int new_clo_offset = overall_current_strt_offset;
+    col_offset = 0;
+    memcpy(elements+overall_current_col_offset,nodes_[firstStage]->dels_+nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_],nColInStage_[firstStage]*sizeof(double));
+    memcpy(indices+overall_current_col_offset,nodes_[firstStage]->inds_+nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_],nColInStage_[firstStage]*sizeof(int));
+    overall_current_col_offset += nColInStage_[firstStage]; // Copy first stage clo
+    for (int i = 0; i < number_children; i++ ){
+        // We need to fill clo, cup, obj, rlo, rup
+        memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_+nodes_[secondStage]->strt_[nodes_[secondStage]->clo_strt_],number_cols*sizeof(double));
+        for (int j = 0; j < number_cols; j++){
+            indices[overall_current_col_offset+j] = stageColPtr_[secondStage]+col_offset;
+        }
+        overall_current_col_offset += number_cols;
+        col_offset += number_cols;
+    }
+    start[overall_current_strt_offset] = start[overall_current_strt_offset-1]+number_cols*number_children+nColInStage_[firstStage]; 
+    overall_current_strt_offset++;
+    // Column Upper
+    col_offset = 0;
+    memcpy(elements+overall_current_col_offset,nodes_[firstStage]->dels_+nodes_[firstStage]->strt_[nodes_[firstStage]->cup_strt_],nColInStage_[firstStage]*sizeof(double));
+    memcpy(indices+overall_current_col_offset,nodes_[firstStage]->inds_+nodes_[firstStage]->strt_[nodes_[firstStage]->cup_strt_],nColInStage_[firstStage]*sizeof(int));
+    overall_current_col_offset += nColInStage_[firstStage]; // Copy first stage cup
+    for (int i = 0; i < number_children; i++ ){
+        // We need to fill clo, cup, obj, rlo, rup
+        memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_+nodes_[secondStage]->strt_[nodes_[secondStage]->cup_strt_],number_cols*sizeof(double));
+        for (int j = 0; j < number_cols; j++){
+            indices[overall_current_col_offset+j] = stageColPtr_[secondStage]+col_offset;
+        }
+        overall_current_col_offset += number_cols;
+        col_offset += number_cols;
+    }
+    start[overall_current_strt_offset] = start[overall_current_strt_offset-1]+number_cols*number_children+nColInStage_[firstStage];
+    overall_current_strt_offset++;
+    // Objective Function
+    col_offset = 0;
+    memcpy(elements+overall_current_col_offset,nodes_[firstStage]->dels_+nodes_[firstStage]->strt_[nodes_[firstStage]->obj_strt_],nColInStage_[firstStage]*sizeof(double));
+    memcpy(indices+overall_current_col_offset,nodes_[firstStage]->inds_+nodes_[firstStage]->strt_[nodes_[firstStage]->obj_strt_],nColInStage_[firstStage]*sizeof(int));
+    overall_current_col_offset += nColInStage_[firstStage]; // Copy first stage obj
+    SmiTreeNode<SmiScnNode*>* obj_node = current_node->getChild();
+
+    for (int i = 0; i < number_children; i++ ){
+        // We need to fill clo, cup, obj, rlo, rup
+        memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_+nodes_[secondStage]->strt_[nodes_[secondStage]->obj_strt_],number_cols*sizeof(double));
+        int obj_offset = nodes_[secondStage]->strt_[nodes_[secondStage]->obj_strt_];
+        for (int j = 0; j < number_cols; j++){ // We need to set the correct value from the scenario subproblems! But this does not help, if we aggregate from the last stage, because we have different Det.Eq. in different nodes!. So we need to adapt the values in the stochastic setting!. This follows naturally for all the other stuff!
+            elements[overall_current_col_offset+j] = nodes_[secondStage]->dels_[obj_offset+j];
+        }
+        for (int j = 0; j < number_cols; j++){
+            indices[overall_current_col_offset+j] = stageColPtr_[secondStage]+col_offset;
+        }
+        overall_current_col_offset += number_cols;
+        col_offset += number_cols;
+    }
+    start[overall_current_strt_offset] = start[overall_current_strt_offset-1]+number_cols*number_children+nColInStage_[firstStage]; 
+    overall_current_strt_offset++;
+    // Row Lower
+    col_offset = 0;
+    int row_offset = 0;
+    memcpy(elements+overall_current_col_offset,nodes_[firstStage]->dels_+nodes_[firstStage]->strt_[nodes_[firstStage]->rlo_strt_],nRowInStage_[firstStage]*sizeof(double));
+    memcpy(indices+overall_current_col_offset,nodes_[firstStage]->inds_+nodes_[firstStage]->strt_[nodes_[firstStage]->rlo_strt_],nRowInStage_[firstStage]*sizeof(int));
+    overall_current_col_offset += nRowInStage_[firstStage]; // Copy first stage rlo
+    for (int i = 0; i < number_children; i++ ){
+        // We need to fill clo, cup, obj, rlo, rup
+        memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_+nodes_[secondStage]->strt_[nodes_[secondStage]->rlo_strt_],number_rows*sizeof(double));
+        for (int j = 0; j < number_rows; j++){
+            indices[overall_current_col_offset+j] = stageRowPtr_[secondStage]+row_offset;
+        }
+        overall_current_col_offset += number_rows;
+        row_offset += number_rows;
+    }
+    start[overall_current_strt_offset] = start[overall_current_strt_offset-1]+number_rows*number_children+nRowInStage_[firstStage]; 
+    overall_current_strt_offset++;
+    // Row Upper
+    row_offset = 0;
+    memcpy(elements+overall_current_col_offset,nodes_[firstStage]->dels_+nodes_[firstStage]->strt_[nodes_[firstStage]->rup_strt_],nRowInStage_[firstStage]*sizeof(double));
+    memcpy(indices+overall_current_col_offset,nodes_[firstStage]->inds_+nodes_[firstStage]->strt_[nodes_[firstStage]->rup_strt_],nRowInStage_[firstStage]*sizeof(int));
+    overall_current_col_offset += nRowInStage_[firstStage]; // Copy first stage rup
+    for (int i = 0; i < number_children; i++ ){
+        // We need to fill clo, cup, obj, rlo, rup
+        memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_+nodes_[secondStage]->strt_[nodes_[secondStage]->rup_strt_],number_rows*sizeof(double));
+        for (int j = 0; j < number_rows; j++){
+            indices[overall_current_col_offset+j] = stageRowPtr_[secondStage]+row_offset;
+        }
+        overall_current_col_offset += number_rows;
+        row_offset += number_rows;
+    }
+    start[overall_current_strt_offset] = start[overall_current_strt_offset-1]+number_rows*number_children+nRowInStage_[firstStage]; 
+    overall_current_strt_offset++;
+    assert( overall_current_col_offset == nels);
+    assert( overall_current_strt_offset == nstrt);
+
+    bool final_stage = true; // If not true, we have to deal with nodes after the child nodes..
+    if ( secondStage < nstag_-1)
+        final_stage = false;
+    // Now the elements, indices and start array are filled.
+
+     // Now comes the scenario tree: We iterate over all the firstStage nodes (siblings) and need to include the information of the direct child nodes in 
+    // - second stage nodes 
+    // - sibling first-stage nodes
+
+    // Build the stochastic entries for the current node
+    while ( current_node != NULL){
+
+        // TODO: Put it in own method!
+
         SmiScnNode* current_scn_node = current_node->getDataPtr();
         SmiNodeData* current_node_data = current_scn_node->getNode();
-        nels += nodes_[firstStage]->nels_;
-        // Count the numer of nels in child nodes
-        SmiTreeNode<SmiScnNode*>* temp_node = current_node->getChild();
-        int num_det_matrix_entries = nodes_[secondStage]->strt_[nodes_[secondStage]->clo_strt_];
-        while ( temp_node->hasSibling() ){
-            nels += num_det_matrix_entries;
-            nels += number_cols*3; // Clo,Cup, Obj
-            nels += number_rows*2; // Rlo,Rup
+
+        // Find out how many elements we need to store!
+        temp_node = current_node->getChild();
+        int number_elements = current_node->getDataPtr()->getNode()->nels_;
+        while ( temp_node != NULL){
+            // Count number of elements and store place for this..
+            number_elements += temp_node->getDataPtr()->getNode()->nels_;
             temp_node = temp_node->getSibling();
         }
-        nstrt = num_children*number_rows+5+1;
+        double* new_elements = (double *)calloc(number_elements, sizeof(double));
+        int* new_indices = (int *) calloc(number_elements, sizeof(int));
+        int* new_start = (int *) calloc(nstrt, sizeof(int));
 
-        double* elements = (double *)calloc(nels  ,sizeof(double));
-        int* indices = (int *)   calloc(nels ,sizeof(int)   );
-        int* start = (int *)   calloc(nstrt ,sizeof(int)   );
-        // Create the deterministic equivalent problem!
-
-
-         // We need to add the contents of all these nodes to the root node ( which is also a core node ), because the det.eq. is totally deterministic!
-        memcpy(elements,nodes_[firstStage]->dels_,nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_]*sizeof(double) );
-        memcpy(indices,nodes_[firstStage]->inds_,nodes_[firstStage]->strt_[nodes_[firstStage]->clo_strt_]*sizeof(double) );
-        memcpy(start,nodes_[firstStage]->strt_,nodes_[firstStage]->clo_strt_ *sizeof(double) );
-
-        int overall_current_col_offset = 0;
-        int overall_current_row_offset = 0;
-
-        // For the current node, we build the deterministic equivalent
-        while ( current_node->hasSibling() ){
-            // We need to combine the core row with the stochastic row and get a new row from that! Do this by hand! The other stuff works relatively simple
-            int num_stochastic_matrix_entries = current_node_data->strt_[current_node_data->clo_strt_];
-            double* new_elements = new double[num_det_matrix_entries];
-            int* new_indices = new int[num_det_matrix_entries];
-            int* new_start = new int[number_rows];
-            // Copy old elements, indices and start arrays, we replace the values step by step.
-            memcpy(new_elements,nodes_[secondStage]->dels_,num_det_matrix_entries*sizeof(double));
-            memcpy(new_indices,nodes_[secondStage]->inds_,num_det_matrix_entries*sizeof(int));
-            memcpy(new_start,nodes_[secondStage]->strt_,number_rows*sizeof(int));
-            int current_index = 0;
-           
-            for (int i = 0; i < number_rows; i++){ // Iterate over the rows of the deterministic node
-                int number_elements_in_row = current_node_data->strt_[i+1] - current_node_data->strt_[i];
-                if ( number_elements_in_row ){
-                    int temp_current_index = new_start[i];
-                    // Put these rows together
-                    for (int temp_stochastic_index = current_node_data->strt_[i]; temp_stochastic_index < current_node_data->strt_[i+1]; temp_stochastic_index++ ){
-                        temp_current_index = current_index;
-                        // We need to work here to put these two rows together
-                        while ( current_node_data->inds_[temp_stochastic_index] != new_indices[temp_current_index] || temp_current_index < new_start[i+1] ){
-                            temp_current_index++;
-                        }    
-                        assert( temp_current_index < new_start[i+1]); // Otherwise wrong SMPS file
-                        new_elements[temp_current_index] = current_node_data->dels_[temp_stochastic_index];
-                    }
-                }
-                for (int j = new_start[i]; j < new_start[i+1]; j++)  // Rewrite the coefficient indices!
-                    new_indices[j] += overall_current_col_offset;
-               
+        memcpy(new_elements,current_node_data->dels_,current_node_data->strt_[current_node_data->clo_strt_]*sizeof(double));
+        memcpy(new_indices,current_node_data->inds_,current_node_data->strt_[current_node_data->clo_strt_]*sizeof(int));
+        memcpy(new_start,current_node_data->strt_,(current_node_data->clo_strt_+1)*sizeof(int));
+        int new_index_offset = current_node_data->strt_[current_node_data->clo_strt_];
+        int new_start_offset = current_node_data->clo_strt_+1;
+        // Now we iterate through all the child nodes of this current_node and copy the matrix elements
+        int det_eq_column_offset = 0;
+        int det_eq_row_offset = 0;
+        // Copy stochastic matrix elements into the new arrays
+        temp_node = current_node->getChild();
+        while ( temp_node != NULL){
+            SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
+            memcpy(new_elements+new_index_offset,temp_data->dels_,temp_data->strt_[temp_data->clo_strt_]*sizeof(double));
+            // Indices can not be copied straight away, we have to change them
+            for (int i = 0; i < temp_data->strt_[temp_data->getMatEnd()]; i++)
+                new_indices[new_index_offset+i] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
+            for (int i = 0; i < number_rows;i++)
+                new_start[new_start_offset+i] = temp_data->strt_[i]+new_index_offset;
+            
+            if ( !final_stage ){
+                // Deal with childs of this node and all the remaining subtree! We have to expand a little bit?
             }
-            // Create the transformation step for the child nodes where we have wrong coefficients in the stochastic nodes AND in the deterministic nodes too!
+            if ( firstStage != 0){
+                // Deal with the nodes before, if we aggregated other stages, than the first one?
+            }
+            temp_node = temp_node->getSibling();
+            det_eq_column_offset += number_cols;
+            det_eq_row_offset += number_rows;
+            new_index_offset += temp_data->strt_[temp_data->getMatEnd()];
+            new_start_offset += number_rows;
+        }
+        int new_clo_strt = new_start_offset-1;
+
+
+        // Copy stochastic clo arrays
+        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->clo_strt_],current_node_data->getColLowerLength()*sizeof(double));
+        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->clo_strt_],current_node_data->getColLowerLength()*sizeof(int));
+        new_index_offset += current_node_data->getColLowerLength();
+ 
+        det_eq_column_offset = 0;
+        det_eq_row_offset = 0;
+        temp_node = current_node->getChild();
+        while ( temp_node != NULL){
+            SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
+            int index_start = temp_data->strt_[temp_data->clo_strt_];
+            int index_length = temp_data->getColLowerLength();
+            memcpy(new_elements+new_index_offset,temp_data->dels_+index_start,index_length*sizeof(double));
+            // Indices can not be copied straight away, we have to change them
+            for (int i = index_start; i < index_start+index_length; i++)
+                new_indices[new_index_offset+i-index_start] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
+
+            temp_node = temp_node->getSibling();
+            det_eq_column_offset += number_cols;
+            det_eq_row_offset += number_rows;
+            new_index_offset += index_length;
+        }
+        new_start[new_start_offset++] = new_index_offset;
+        int new_cup_strt = new_start_offset-1;
+
+        // Copy stochastic cup arrays
+        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->cup_strt_],current_node_data->getColUpperLength()*sizeof(double));
+        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->cup_strt_],current_node_data->getColUpperLength()*sizeof(int));
+        new_index_offset += current_node_data->getColUpperLength();
+
+        det_eq_column_offset = 0;
+        det_eq_row_offset = 0;
+        temp_node = current_node->getChild();
+        while ( temp_node != NULL){
+            SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
+            int index_start = temp_data->strt_[temp_data->cup_strt_];
+            int index_length = temp_data->getColUpperLength();
+            memcpy(new_elements+new_index_offset,temp_data->dels_+index_start,index_length*sizeof(double));
+            // Indices can not be copied straight away, we have to change them
+            for (int i = index_start; i < index_start+index_length; i++)
+                new_indices[new_index_offset+i-index_start] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
+
+            temp_node = temp_node->getSibling();
+            det_eq_column_offset += number_cols;
+            det_eq_row_offset += number_rows;
+            new_index_offset += index_length;
+        }
+        new_start[new_start_offset++] = new_index_offset;
+        int new_obj_strt = new_start_offset-1;
+
+        // Copy stochastic obj arrays
+        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->obj_strt_],current_node_data->getColUpperLength()*sizeof(double));
+        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->obj_strt_],current_node_data->getColUpperLength()*sizeof(int));
+        new_index_offset += current_node_data->getObjectiveLength();
+
+        det_eq_column_offset = 0;
+        det_eq_row_offset = 0;
+        temp_node = current_node->getChild();
+        // FInd the probabilities
+        std::vector<double> scenario_probs;
+        double sum = 0;
+        while ( temp_node != NULL){
+            scenario_probs.push_back(current_node->getDataPtr()->getProb());
+            sum = scenario_probs.back();
+            temp_node = temp_node->getSibling();
+        }
+        temp_node = current_node->getChild();
+        // TODO: We NEED to insert stochastic objective function values for EVERY coefficient we have in the core node!
+        while ( temp_node != NULL){
+            SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
+            int index_start = temp_data->strt_[temp_data->obj_strt_];
+            int index_length = temp_data->getObjectiveLength();
+            memcpy(new_elements+new_index_offset,temp_data->dels_+index_start,index_length*sizeof(double));
+            for (int i = index_start; i < index_start+index_length; i++)
+                new_elements[new_index_offset+i-index_start] = ( temp_data->dels_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
+            // Indices can not be copied straight away, we have to change them
+            for (int i = index_start; i < index_start+index_length; i++)
+                new_indices[new_index_offset+i-index_start] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
+
+            temp_node = temp_node->getSibling();
+            det_eq_column_offset += number_cols;
+            det_eq_row_offset += number_rows;
+            new_index_offset += index_length;
+        }
+        new_start[new_start_offset++] = new_index_offset;
+        int new_rlo_strt = new_start_offset-1;
+
+        // Copy stochastic rlo arrays
+        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->rlo_strt_],current_node_data->getRowLowerLength()*sizeof(double));
+        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->rlo_strt_],current_node_data->getRowLowerLength()*sizeof(int));
+        new_index_offset += current_node_data->getRowLowerLength();
+
+        det_eq_column_offset = 0;
+        det_eq_row_offset = 0;
+        temp_node = current_node->getChild();
+        while ( temp_node != NULL){
+            SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
+            int index_start = temp_data->strt_[temp_data->rlo_strt_];
+            int index_length = temp_data->getRowLowerLength();
+            memcpy(new_elements+new_index_offset,temp_data->dels_+index_start,index_length*sizeof(double));
+            // Indices can not be copied straight away, we have to change them
+            for (int i = index_start; i < index_start+index_length; i++)
+                new_indices[new_index_offset+i-index_start] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_row_offset;
+
+            temp_node = temp_node->getSibling();
+            det_eq_column_offset += number_cols;
+            det_eq_row_offset += number_rows;
+            new_index_offset += index_length;
+        }
+        new_start[new_start_offset++] = new_index_offset;
+        int new_rup_strt = new_start_offset-1;
+
+        // Copy stochastic rup arrays
+        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->rup_strt_],current_node_data->getRowUpperLength()*sizeof(double));
+        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->rup_strt_],current_node_data->getRowUpperLength()*sizeof(int));
+        new_index_offset += current_node_data->getRowUpperLength();
+
+        det_eq_column_offset = 0;
+        det_eq_row_offset = 0;
+        temp_node = current_node->getChild();
+        while ( temp_node != NULL){
+            SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
+            int index_start = temp_data->strt_[temp_data->rup_strt_];
+            int index_length = temp_data->getRowUpperLength();
+            memcpy(new_elements+new_index_offset,temp_data->dels_+index_start,index_length*sizeof(double));
+            // Indices can not be copied straight away, we have to change them
+            for (int i = index_start; i < index_start+index_length; i++)
+                new_indices[new_index_offset+i-index_start] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_row_offset;
+
+            temp_node = temp_node->getSibling();
+            det_eq_column_offset += number_cols;
+            det_eq_row_offset += number_rows;
+            new_index_offset += index_length;
+        }
+        new_start[new_start_offset++] = new_index_offset;
+
+        // Now we finished the preparation of the stochastic node. We now need to update the node with the new arrays and variables!
+        current_node->getDataPtr()->getNode()->clo_strt_ = new_clo_strt;
+        current_node->getDataPtr()->getNode()->cup_strt_ = new_cup_strt;
+        current_node->getDataPtr()->getNode()->obj_strt_ = new_obj_strt;
+        current_node->getDataPtr()->getNode()->rlo_strt_ = new_rlo_strt;
+        current_node->getDataPtr()->getNode()->rup_strt_ = new_rup_strt;
+        current_node->getDataPtr()->getNode()->ncol_ += number_cols*number_children;
+        current_node->getDataPtr()->getNode()->nrow_ += number_rows*number_children;
+        current_node->getDataPtr()->getNode()->nels_ = number_elements;
+        current_node->getDataPtr()->getNode()->nstrt_ = nstrt;
+        current_node->getDataPtr()->getNode()->deleteMemory();
+        current_node->getDataPtr()->getNode()->dels_ = new_elements;
+        current_node->getDataPtr()->getNode()->inds_ = new_indices;
+        current_node->getDataPtr()->getNode()->strt_ = new_start;
+        
+        // Go to the next node 
+        current_node = current_node->getSibling();
+
+    } // End while
+
+    // Change the node_data private variables
+    nodes_[firstStage]->ncol_ += number_cols*number_children;
+    nodes_[firstStage]->nrow_ += number_rows*number_children;
+    nodes_[firstStage]->nels_ += nels;
+    nodes_[firstStage]->clo_strt_ = new_clo_offset-1;
+    nodes_[firstStage]->cup_strt_ = new_clo_offset;
+    nodes_[firstStage]->obj_strt_ = new_clo_offset+1;
+    nodes_[firstStage]->rlo_strt_ = new_clo_offset+2;
+    nodes_[firstStage]->rup_strt_ = new_clo_offset+3;
+    nodes_[firstStage]->nstrt_ = new_clo_offset+5;
+    nodes_[firstStage]->deleteMemory();
+    nodes_[firstStage]->dels_ = elements;
+    nodes_[firstStage]->inds_ = indices;
+    nodes_[firstStage]->strt_ = start;
+
+
+
+    if ( ! final_stage){
+        // Prepare the core node of the stage after secondStage.
+
+        // Handle all the core nodes thereafter!
+    }
+
+    // Change the core_ (nStageColPtr,stageColPtr,nColInStage, etc..
+    // We reduced the number of stages by one
+    nColInStage_[firstStage] = nodes_[firstStage]->ncol_;
+    if ( !final_stage){
+        // We have to set all the values upwards from secondStage, if we are not in the final stage!
+    }
+
+    nstag_--;
+    nColInStage_[nstag_] = 0;
+    nRowInStage_[nstag_] = 0;
+    stageColPtr_[nstag_] = 0;
+    stageRowPtr_[nstag_] = 0;
+    // Update colStage/rowStage array, introduce new ones..
+    int new_ncol = ncol_+number_children*(number_cols-1);
+    int new_nrow = nrow_+number_children*(number_rows-1);
+    int * new_col_stage = new int [new_ncol];
+    int * new_row_stage = new int [new_nrow];
+    memcpy(new_col_stage,colStage_,ncol_*sizeof(int));
+    memcpy(new_row_stage,rowStage_,nrow_*sizeof(int));
+    // Update the remaining ones
+    for (int j = firstStage; j < nstag_; j++){
+        for (int i = stageColPtr_[j]; i < stageColPtr_[j]+nColInStage_[j]; i++){
+            colStage_[i] = j;
+        }
+        for (int i = stageRowPtr_[j]; i < stageRowPtr_[j]+nRowInStage_[j]; i++){
+            rowStage_[i] = j;
+        }
+    }
+    ncol_ = new_ncol;
+    nrow_ = new_nrow;
+
+    // Update clo/cup/obj/rhs/rlo/rup arrays..
+    for (int i = firstStage; i < secondStage; i++){
+        delete [] cdrlo_[i];
+        delete [] cdcup_[i];
+        delete [] cdobj_[i];
+        delete [] cdrlo_[i];
+        delete [] cdrup_[i];
+        SmiNodeData * node = nodes_[i];
+        int nrow=this->getNumRows(i);
+        int ncol=this->getNumCols(i);
+        int irow=this->getRowStart(i);
+        int icol=this->getColStart(i);
+        CoinPackedVector cpv_rlo(node->getRowLowerLength(),node->getRowLowerIndices(),node->getRowLowerElements());
+        cdrlo_[i]=cpv_rlo.denseVector(nrow+irow)+irow;
+
+        CoinPackedVector cpv_rup(node->getRowUpperLength(),node->getRowUpperIndices(),node->getRowUpperElements());
+        cdrup_[i]=cpv_rup.denseVector(nrow+irow)+irow;
+
+        CoinPackedVector cpv_clo(node->getColLowerLength(),node->getColLowerIndices(),node->getColLowerElements());
+        cdclo_[i]=cpv_clo.denseVector(ncol+icol)+icol;
+
+        CoinPackedVector cpv_cup(node->getColUpperLength(),node->getColUpperIndices(),node->getColUpperElements());
+        cdcup_[i]=cpv_cup.denseVector(ncol+icol)+icol;
+
+        CoinPackedVector cpv_obj(node->getObjectiveLength(),node->getObjectiveIndices(),node->getObjectiveElements());
+        cdobj_[i]=cpv_obj.denseVector(ncol+icol)+icol;
+
+        // sort indices in each row
+        for (int ii=irow; ii<irow+nrow; ++ii)
+        {
+            if (node->getRowLength(ii)>0)
+            {
+                CoinPackedVector cpv(node->getRowLength(ii),node->getRowIndices(ii),node->getRowElements(ii));
+                cpv.sortIncrIndex();
+                memcpy(node->getMutableRowElements(ii),cpv.getElements(),sizeof(double)*cpv.getNumElements());
+                memcpy(node->getMutableRowIndices(ii),cpv.getIndices(),sizeof(int)*cpv.getNumElements());
+            }
 
         }
     }
-    // If we aggregate stages from the end
-    if ( secondStage == nstag_-1){
-
-    }
-    // Merge all the nodes of the two stages together. We need a new number of columns and rows, because we have to build the det-eq. for these two stages
-
-    // 
 
 }
 
