@@ -171,14 +171,15 @@ public:
 
 	//@}
 
-protected:
-
 	void setChild(SmiTreeNode<T> *c) {
 		child_ = c;
 	}
 	void setSibling(SmiTreeNode<T> *s) {
 		sibling_ = s;
 	}
+    void setParent(SmiTreeNode<T> *p) {
+        parent_ = p;
+    }
 	SmiTreeNode<T> *getParentP() {
 		return parent_;
 	}
@@ -392,6 +393,12 @@ public:
 		return leaf_.size() - 1;
 
 	}
+
+    void repopulateLeafNodeSet(){
+        // For every leaf_ node we get the parent, and put it in the leaf_node set instead!
+        SmiTreeNode<T> current_node = root_;
+
+    }
 
 	SmiTreeNode<T> * addNodesToTree(SmiTreeNode<T> *parent, int scenario,
 			vector<T> &pathdata, int start) {
