@@ -38,6 +38,10 @@ namespace parallel_benders{
     const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE";
     const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT";
 
+    const std::string PNB_STAGE_AGGREGATION = "PNB_STAGE_AGGREGATION";
+    const std::string PNB_STAGE_AGGREGATION_START = "PNB_STAGE_AGGREGATION_START";
+    const std::string PNB_STAGE_AGGREGATION_END = "PNB_STAGE_AGGREGATION_END";
+
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //
     const std::string PNB_TOLERANCE_INTEGER = "PNB_TOLERANCE_INTEGER";       //
@@ -45,7 +49,7 @@ namespace parallel_benders{
     const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
 
 
-	// Some fixed integer to avoid magic number
+	// Some fixed integer to avoid magic numbers
 	const int PNB_INT_FASTPASS = 0;
 	const int PNB_INT_FAST_FORWARD = 1;
 	const int PNB_INT_FAST_BACKWARD = 2;

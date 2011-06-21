@@ -173,6 +173,11 @@ private:
     bool warm_up_;
     boost::scoped_array<double> warm_up_solution_;
 
+    // Stage Aggreagtion
+    bool stage_aggregation_;
+    int begin_aggregation_stage_;
+    int end_aggregation_stage_;
+
 	// Memory/Time consumption parameters
 	// Normal case: Solver Instances per thread
 	// We can change this, if we want to.
