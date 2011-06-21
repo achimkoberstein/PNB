@@ -34,6 +34,8 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AdjustProblem()
     {
+        num_stages_ = core_->getNumStages();
+        num_scenarios_ = smi_->getNumScenarios(); // The leaf nodes do not work correctly!
         // Check for integrality right away
         if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
             contains_integer_ = true;
@@ -457,7 +459,8 @@ namespace parallel_benders {
         
 
         // Stage Aggregation!
-        smi_->aggregateStages(0,1); // Aggregate stage 0 and 1
+        smi_->aggregateStages(num_stages_-2,num_stages_-1); // Aggregate stage 0 and 1
+        AdjustProblem(); // We need to set the important properties again!
 
         // Warm up period
         if ( warm_up_){

@@ -2053,4 +2053,5 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
  void SmiScnModel::aggregateStages( int firstStage, int secondStage )
  {
      core_->aggregateStages( firstStage, secondStage, smiTree_);
+     // Can we adapt the scenario tree?
  }
