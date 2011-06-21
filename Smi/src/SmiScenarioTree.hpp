@@ -84,6 +84,9 @@ public:
 	int numChildren() {
 		return nchild_;
 	}
+    void setNumChildren(int s){
+        nchild_ = s;
+    }
 	int scenario() {
 		return scen_;
 	}
