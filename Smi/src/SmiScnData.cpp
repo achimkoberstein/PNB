@@ -485,13 +485,13 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     nrow_ = nrow_+num_new_cols;
 
     // Before we create the new arrays for rlo,rup,clo,cup,obj, we need to delete the old ones
-    for (int i = 0; i < nstag_; i++){
-        delete [] cdrlo_[i];
-        delete [] cdrup_[i];
-        delete [] cdobj_[i];
-        delete [] cdclo_[i];
-        delete [] cdcup_[i];
-    }
+    //for (int i = 0; i < nstag_; i++){
+    //    delete [] cdrlo_[i];
+    //    delete [] cdrup_[i];
+    //    delete [] cdobj_[i];
+    //    delete [] cdclo_[i];
+    //    delete [] cdcup_[i];
+    //} // Test why this does no longer work!
 
 	// Set collower/upper/objective/rhs..
 	for (int i = 0; i < nstag_; i++){
@@ -540,9 +540,12 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     assert( firstStage == 0 || secondStage == nstag_-1 );
     SmiTreeNode<SmiScnNode*>* current_node = NULL;
     int number_children = 0;
+    int number_scenarios = 0;
 
     int number_cols = nColInStage_[secondStage];
     int number_rows = nRowInStage_[secondStage];
+
+    std::vector<SmiTreeNode<SmiScnNode*>*> first_stage_nodes;
     
     // At first we handle the case, were we aggregate stages from the beginning :
     if ( firstStage == 0){
@@ -558,24 +561,59 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
 
         current_node = smiTree.getRoot();
+        first_stage_nodes.push_back(current_node);
         number_children = current_node->numChildren();
+        number_scenarios = smiTree.getNumScenarios();
 
     }
     else if ( secondStage == nstag_-1){
-        // Find the current node
-        current_node = smiTree.getLeaf(smiTree.getNumScenarios()-1)->getParent();
+        // Find all the nodes at the current stage
+        // We need to go through all the child/siblings until we reach our current stage
+        SmiTreeNode<SmiScnNode*>* temporary_node = smiTree.getRoot()->getChild();
+        bool goDown = true;
+        bool goSibling = false;
+        while ( temporary_node != smiTree.getRoot() ){
+            if ( goDown && temporary_node->depth() < firstStage){
+                temporary_node = temporary_node->getChild();
+            }
+            else if ( goDown && temporary_node->depth() == firstStage  ){
+                first_stage_nodes.push_back(temporary_node);
+                goDown = false;
+                if ( temporary_node->hasSibling() ){
+                    temporary_node = temporary_node->getSibling();
+                }
+                else {
+                    temporary_node = temporary_node->getParent();
+                }
+
+            }
+            else if ( !goDown ){
+                if ( temporary_node->depth() == firstStage )
+                    first_stage_nodes.push_back(temporary_node);
+                if ( temporary_node->hasSibling() ){
+                    temporary_node = temporary_node->getSibling();
+                    goDown = true;
+                }
+                else {
+                    goDown = false;
+                    temporary_node = temporary_node->getParent();
+                }
+            }
+        }
+        current_node = first_stage_nodes.back();
         number_children = current_node->numChildren();
+        number_scenarios = first_stage_nodes.size();
     }
     // Find the maximal number of children at this stage!
     SmiTreeNode<SmiScnNode*> * temp_node = current_node;
     bool different_tree_size = false;
-    while ( temp_node != NULL ){
-        if ( number_children < temp_node->numChildren() ){
-            number_children = temp_node->numChildren();
+    for (int i = 0; i < first_stage_nodes.size(); i++){
+        if ( number_children < first_stage_nodes[i]->numChildren() ){
+            number_children = first_stage_nodes[i]->numChildren();
             different_tree_size = true; // This is not good..
         }
-        temp_node = temp_node->getSibling(); // Assume that uninitialized sibling has null-pointer
     }
+    
     assert(number_children>= current_node->numChildren());
    // BuildDetEqInNode(SmiTreeNode<SmiScnNode*> * tree_node, int firstStage, int secondStage);
 
@@ -741,8 +779,9 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
     // Build the stochastic entries for the current node
     int scenario_index = number_children-1; // We start backwards with the scenario counting, courtesy to the tree creation routine!
-    while ( current_node != NULL){
+    for (int cur_scen = number_scenarios-1; cur_scen >= 0;  cur_scen--){
 
+        current_node = first_stage_nodes[cur_scen]; // This means, the node with scen 0 gets the first det-eq values
         // TODO: Put it in own method!
 
         SmiScnNode* current_scn_node = current_node->getDataPtr();
@@ -995,12 +1034,11 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         }
         delete current_node->getChild(); // This deletes the childs and siblings of this node.
         current_node->setChild(NULL); // we set the child pointer to zero
-        current_node->setScenario(scenario_index--);
-        // Go to the next node 
-        current_node = current_node->getSibling();
+        current_node->setScenario(number_scenarios-cur_scen-1);
+        current_node->setNumChildren(0);
 
     } // End while
-    assert(scenario_index == -1);
+
 
     // Change the node_data private variables
     nodes_[firstStage]->ncol_ += number_cols*number_children;
