@@ -1,11 +1,17 @@
 #include "SmiScnData.hpp"
+
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <vector>
+#include <deque>
+#include <sstream>
+
 #include "SmiScnModel.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
-#include <iostream>
-#include <vector>
-#include <deque>
+
 
 using namespace std;
 
@@ -1043,7 +1049,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // Change the node_data private variables
     nodes_[firstStage]->ncol_ += number_cols*number_children;
     nodes_[firstStage]->nrow_ += number_rows*number_children;
-    nodes_[firstStage]->nels_ += nels;
+    nodes_[firstStage]->nels_ = nels;
     nodes_[firstStage]->clo_strt_ = new_clo_offset-1;
     nodes_[firstStage]->cup_strt_ = new_clo_offset;
     nodes_[firstStage]->obj_strt_ = new_clo_offset+1;
@@ -1073,15 +1079,54 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     }
 
     nstag_--;
+    // We also need to set the column and row names, if we want to print it out.
+    int new_ncol = ncol_+(number_children-1)*number_cols;
+    int new_nrow = nrow_+(number_children-1)*number_rows;
+
+
+
+    
+
     nColInStage_[firstStage] = nodes_[firstStage]->ncol_;
     nRowInStage_[firstStage] = nodes_[firstStage]->nrow_;
     nColInStage_[nstag_] = 0;
     nRowInStage_[nstag_] = 0;
-    stageColPtr_[nstag_] = 0;
-    stageRowPtr_[nstag_] = 0;
+    stageColPtr_[nstag_] += (number_children)*number_cols; // We need to set the correct number here!
+    stageRowPtr_[nstag_] += (number_children)*number_rows;
     // Update colStage/rowStage array, introduce new ones..
-    int new_ncol = ncol_+number_children*(number_cols-1);
-    int new_nrow = nrow_+number_children*(number_rows-1);
+
+    std::vector< std::string > col_names;
+    std::vector< std::string > row_names;
+    col_names.reserve(new_ncol); row_names.reserve(new_nrow);
+    //memcpy before ( and after TODO )
+    std::vector<std::string>::iterator it = rowNamesFree.begin();
+    std::advance(it,stageRowPtr_[secondStage]-(number_children*number_rows));
+    std::copy(rowNamesFree.begin(),it,std::back_inserter(row_names));
+
+    it = colNamesFree.begin();
+    std::advance(it,stageColPtr_[secondStage]-(number_children*number_cols));
+    std::copy(colNamesFree.begin(),it,std::back_inserter(col_names));
+
+    int first_index_of_original_problem = stageRowPtr_[secondStage]-number_children*number_rows;
+    for (int i = 0; i < number_children; i++){
+        for (int j = 0; j < number_cols; j++){
+            std::stringstream ss;
+            ss << "det_" << i << "_"  << colNamesFree[first_index_of_original_problem+j];
+            col_names.push_back(ss.str());
+        }
+        for (int j = 0; j < number_rows; j++){
+            std::stringstream ss;
+            ss << "det_" << i << "_"  << rowNamesFree[first_index_of_original_problem+j];
+            row_names.push_back(ss.str());
+        }
+    }
+    // We clear the strict strings
+    colNamesStrict.clear();
+    rowNamesStrict.clear();
+    // Insert all the other strings at later stages (TODO)
+    
+
+
     int * new_col_stage = new int [new_ncol];
     int * new_row_stage = new int [new_nrow];
     memcpy(new_col_stage,colStage_,ncol_*sizeof(int));

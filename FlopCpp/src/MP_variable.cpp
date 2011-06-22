@@ -339,5 +339,7 @@ string MP_variable::generateNamesSuffixFree(const int k) {
             }
         }
     }
+    else 
+        return "_0";
     return ss.str();
 }

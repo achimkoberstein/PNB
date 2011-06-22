@@ -444,7 +444,7 @@ namespace parallel_benders {
         std::vector<int> new_columns(num_stages_,0);
         if ( non_staircase_problem_ ){
             // We need to generate the non-staircase constraints
-            LOG(INFO) << "Transforming to a non-staircase problem.."
+            LOG(INFO) << "Transforming to a non-staircase problem..";
             smi_->transformToStaircaseStructure(non_staircase_coefficients_);
             // We have to update ncols / nrows 
             //for (int i = 0; i < num_stages_; i++){
@@ -459,15 +459,21 @@ namespace parallel_benders {
             assert( !non_staircase_problem_ );
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
+        }
         for (int i = 1; i < num_stages_;i++)
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
         
 
         // Stage Aggregation!
-        //smi_->aggregateStages(num_stages_-2,num_stages_-1); // Aggregate stage 0 and 1
-        //AdjustProblem(); // We need to set the important properties again!
-        //num_scenarios_ = tree_nodes_by_stage_[num_stages_-2].size();
+        if ( stage_aggregation_){
+            smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_); // Aggregate stage 0 and 1
+            smi_->writeSmps("stageAggreg");
+            AdjustProblem(); // We need to set the important properties again!
+            // Best way would be to just recreate the benders_node_data tree from scratch!
+            num_scenarios_ = tree_nodes_by_stage_[num_stages_-2].size();
         // Recreate the num_stage-2 tree_nodes_in_stage nodes!
+        }
+        
 
         // Warm up period
         if ( warm_up_){

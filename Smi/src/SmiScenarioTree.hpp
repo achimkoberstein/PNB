@@ -398,8 +398,48 @@ public:
 	}
 
     void repopulateLeafNodeSet(){
-        // For every leaf_ node we get the parent, and put it in the leaf_node set instead!
-        SmiTreeNode<T> current_node = root_;
+        // Look at the Tree, and populate the leaf node again.
+        SmiTreeNode<T>* temporary_node = root_->getChild();
+        leaf_.clear(); // Empty the vector
+
+        std::vector<SmiTreeNode<T>* > temporary_leaf_set;
+        int depth = 0;
+        bool goDown = true;
+        // Take the goDown method again
+
+        while ( temporary_node != root_ ){
+            if ( goDown ){
+                if ( temporary_node->hasChild() )
+                    temporary_node = temporary_node->getChild();
+                else {
+                    depth = std::max(depth, temporary_node->depth());
+                    if ( temporary_node->depth() == depth )
+                        temporary_leaf_set.push_back(temporary_node);
+                    goDown = false;
+                    if ( temporary_node->hasSibling() )
+                        temporary_node = temporary_node->getSibling();
+                    else
+                        temporary_node = temporary_node->getParent();
+                }
+            }
+            else {
+                if ( temporary_node->depth() == depth )
+                    temporary_leaf_set.push_back(temporary_node);
+                if ( temporary_node->hasSibling() ){
+                    temporary_node = temporary_node->getSibling();
+                    goDown = true;
+                }
+                else {
+                    goDown = false;
+                    temporary_node = temporary_node->getParent();
+                }
+            }
+        }
+        leaf_.resize(temporary_leaf_set.size()); 
+        for (int i = 0; i < temporary_leaf_set.size() ; i++){
+            leaf_[temporary_leaf_set[i]->scenario()] = temporary_leaf_set[i];
+        }
+        ;
 
     }
 
