@@ -134,8 +134,9 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
     int string_length;
     for (int k = 0; k < size(); k++) {
         string free = nameFree + this->generateNamesSuffixFree(k);
-        if ( free == nameFree )
+        if ( free == nameFree ){
             continue;
+        }
         rowNamesFree[getOffsetedIndex(current_row)] = free.c_str();
         ++current_row;
         if ( current_row == real_size )
@@ -154,8 +155,9 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         current_row = 0;
         for (int k = 0; k < size(); k++) {
             string strict = nameStrict + this->generateNamesSuffixFree(k);
-            if ( strict == nameStrict )
+            if ( strict == nameStrict ){
                 continue;
+            }
             rowNamesStrict[getOffsetedIndex(current_row)] = strict.c_str();
             ++current_row;
         }
@@ -251,6 +253,10 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
                 }
             }
         }
+    }
+    else {
+        // Constraint without any set's, also possible
+        return "_0";
     }
     bool bool_value = true;
     if ( B.operator->() != NULL )

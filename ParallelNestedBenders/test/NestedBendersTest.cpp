@@ -81,6 +81,10 @@ public:
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD); 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-4)); 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
@@ -651,15 +655,49 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
     MP_constraint firstStage,secondStage(T);
 
     firstStage() = x() <= 5;
-    secondStage(T+1) = y(T+1) >= -x()+randomData(T+1);
+    secondStage(T+1) = y(T) >= -x()+randomData(T+1);
     // Death test only under linux..
     //EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective" );
     testModel.setObjective( x()+2*y(T+1) );
     testModel.attach();
     parallel_benders::ParallelNestedBenders pnb(testModel.getSmi());
-    pnb.Solve();
+    pnb.Solve(); // We need the osi_solver interface!
 
     // Output file
+    //SmiScnModel* smiModel = testModel.getSmi();
+    //smiModel->writeSmps("feasibilityProblem",true,false);
+}
+
+TEST_F(NestedBendersTest,StageAggregationTest){
+    using namespace flopc;
+    MP_model testModel(new OsiCpxSolverInterface());
+    MP_stage T(3);
+    MP_variable x,y(T);
+    //x.lowerLimit() = -10;
+    //y.upperLimit(T) = 15;
+
+    MP_random_data randomData(T);
+    randomData(1) = new DiscreteUniformRandomVariable(10,20,3,new BracketMedianDiscretization(3));
+    randomData(1)->setStage(1);
+    randomData(2) = new DiscreteUniformRandomVariable(1,8,3,new BracketMedianDiscretization(3));
+    randomData(2)->setStage(2);
+
+    MP_constraint firstStage,secondStage(T);
+
+    firstStage() = x() <= 5;
+    secondStage(T+1) = y(T-1)+ y(T) >= randomData(T);
+    testModel.setObjective( x()+2*sum(T,y(T)) );
+    testModel.attach();
+    testModel.solve(MP_model::MINIMIZE);
+    //testModel.getSmi()->writeSmps("stageAggregTest");
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(testModel.operator->(),testModel.getSmi());
+    parallel_benders::Parameter benders_parameter_;
+    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
+    pnb.setParameters(benders_parameter_);
+    pnb.initialSolve();
+     // Output file
     //SmiScnModel* smiModel = testModel.getSmi();
     //smiModel->writeSmps("feasibilityProblem",true,false);
 }
@@ -667,9 +705,9 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.scdp*";
+    ::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp*";
-    ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+    //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

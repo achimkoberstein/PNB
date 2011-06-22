@@ -1285,7 +1285,7 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
         ncol += core->getNumCols(stg);
 	    nrow += core->getNumRows(stg);
     }
-    // 
+    assert(rowCount == nrow);
     if (solverInf_ != this->infinity_){
     // We have to transform the values from solverInfinity to infinity
         for (int i = 0; i < core->getNumCols(); i++){
