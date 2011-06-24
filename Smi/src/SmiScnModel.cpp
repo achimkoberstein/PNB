@@ -2050,9 +2050,25 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
  }
 
- void SmiScnModel::aggregateStages( int firstStage, int secondStage )
+ void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromEnd )
  {
-     core_->aggregateStages( firstStage, secondStage, smiTree_);
-     // Can we adapt the scenario tree?
-     smiTree_.repopulateLeafNodeSet();
+     // Call the method 
+     int lesser_stage = std::min(firstStage,secondStage);
+     int upper_stage = std::max(firstStage,secondStage);
+     if ( lesser_stage-upper_stage == 0 )
+         return; // We do nothing
+     if ( upper_stage-lesser_stage > 1) { // We need to apply the method several times, so we need to know from which direction we want to start!
+         if ( aggregateFromEnd )
+             for (int i = upper_stage; i > lesser_stage; i++){
+                 core_->aggregateStages( i-1, i, smiTree_);
+             }
+         else
+             for (int i = lesser_stage; i < upper_stage; i++){
+                 core_->aggregateStages(i,i+1, smiTree_);
+             }
+     }
+     else
+         core_->aggregateStages(lesser_stage,upper_stage,smiTree_);
+     
+
  }

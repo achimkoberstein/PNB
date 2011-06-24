@@ -335,47 +335,10 @@ namespace parallel_benders {
         LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one, but " << total_prob;
 
         // create our benders node objects and build the tree
-        tree_ = SmiScenarioTree<BendersNodeData*>();
-        std::vector<std::vector<BendersNodeData*> > nodeVec;
-        nodeVec.reserve(num_scenarios_);
+        // Initialize benders node data objects and tree!
+        // 
+        InitializeBendersNodeDataTree(num_scen_pro_cut);
 
-        // Create one BendersNodeData vector for every scenario
-        for (int i = 0; i < num_scenarios_; i++) {
-            std::vector<BendersNodeData*> vec;
-            nodeVec.push_back(vec);
-        } 
-		// Fill the node vectors with real nodes
-        std::vector<SmiScnNode *>::iterator it = smi_->getSmiTree()->treeBegin();
-        while (it != smi_->getSmiTree()->treeEnd()) {
-            BendersNodeData *node = new BendersNodeData((*it)->getNode());
-            node->scenario_index_ = (*it)->getScenarioIndex();
-            node->probability_ = (*it)->getProb();
-            if ((*it)->getParent() != NULL && (*it)->getParent()->getScenarioIndex() != (*it)->getScenarioIndex()) {
-                node->branch_scenario_ = (*it)->getParent()->getScenarioIndex();
-            }
-            nodeVec[(*it)->getScenarioIndex()].push_back(node);
-            it++;
-        }
-		// Fill the tree
-        for (int i = 0; i < smi_->getNumScenarios(); i++) {
-            BendersNodeData *node = nodeVec[i][0];
-            tree_.addPathtoLeaf(node->branch_scenario_, node->smi_node_data_->getStage()-1, nodeVec[i]);
-        }
-
-        // Make a list of list of nodes, seperated by stage
-        // the first list contains stage 0 nodes, the second stage 1 nodes, the third stage 2 nodes, ...
-        tree_nodes_by_stage_.reserve(num_stages_);
-        for (int i = 0; i < num_stages_; i++) {
-            std::vector<SmiTreeNode<BendersNodeData*>*> vec;
-            tree_nodes_by_stage_.push_back(vec);
-        }
-        tree_nodes_by_stage_[0].push_back(tree_.getRoot());
-        // Set probability 1 to root node, to prevent numerical issues
-        tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
-        // Set multicut aggregation for the first stage also
-        if ( num_theta == 0 ){
-			tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
-        }
 		// Create Benders Stage data
 		stage_data_.reserve(num_stages_);
 		for (int i = 0; i < num_stages_; i++){
@@ -396,28 +359,7 @@ namespace parallel_benders {
 
 
 
-
-		// Create tree nodes by stage vectors
-        for (int i = 1; i < num_stages_; i++) {
-            int number_of_nodes_in_this_stage = 0;
-            int number_of_child_nodes_for_next_stage = 0;
-            for (unsigned int j = 0; j < tree_nodes_by_stage_[i-1].size(); j++) {
-                std::vector<SmiTreeNode<BendersNodeData*> *> *children = tree_nodes_by_stage_[i-1][j]->getChildren();
-                for (int k = 0; k < children->size(); k++) {
-                    tree_nodes_by_stage_[i].push_back((*children)[k]);
-                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
-                    tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
-                    number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
-				    // Set num_scen_pro_cut, if we want to use it..
-                    if ( num_scen_pro_cut ){
-	                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
-                    }
-                }
-                delete children;
-            }
-        }
-
-        if ( compute_stage_bounds_ ){
+       if ( compute_stage_bounds_ ){
             // Initialize all upper and lower bounds
             stage_lower_upper_bounds_.reserve(num_stages_);
 
@@ -466,9 +408,14 @@ namespace parallel_benders {
 
         // Stage Aggregation!
         if ( stage_aggregation_){
+            smi_->writeSmps("beforeStageAgg",true,false);
             smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_); // Aggregate stage 0 and 1
-            smi_->writeSmps("stageAggreg");
+            smi_->writeSmps("stageAggreg",true,false);
+            num_stages_ = core_->getNumStages();
+            num_scenarios_ = smi_->getNumScenarios();
+            InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
             AdjustProblem(); // We need to set the important properties again!
+            
             // Best way would be to just recreate the benders_node_data tree from scratch!
             num_scenarios_ = tree_nodes_by_stage_[num_stages_-2].size();
         // Recreate the num_stage-2 tree_nodes_in_stage nodes!
@@ -1818,6 +1765,71 @@ namespace parallel_benders {
 		// Find out which thetas we want to aggregate and disaggregate
 	}
 
+    void ParallelNestedBenders::InitializeBendersNodeDataTree(int num_scen_pro_cut)
+    {
+        tree_ = SmiScenarioTree<BendersNodeData*>();
+        std::vector<std::vector<BendersNodeData*> > nodeVec;
+        nodeVec.reserve(num_scenarios_);
+
+        // Create one BendersNodeData vector for every scenario
+        for (int i = 0; i < num_scenarios_; i++) {
+            std::vector<BendersNodeData*> vec;
+            nodeVec.push_back(vec);
+        } 
+        // Fill the node vectors with real nodes
+        std::vector<SmiScnNode *>::iterator it = smi_->getSmiTree()->treeBegin();
+        while (it != smi_->getSmiTree()->treeEnd()) {
+            BendersNodeData *node = new BendersNodeData((*it)->getNode());
+            node->scenario_index_ = (*it)->getScenarioIndex();
+            node->probability_ = (*it)->getProb();
+            if ((*it)->getParent() != NULL && (*it)->getParent()->getScenarioIndex() != (*it)->getScenarioIndex()) {
+                node->branch_scenario_ = (*it)->getParent()->getScenarioIndex();
+            }
+            nodeVec[(*it)->getScenarioIndex()].push_back(node);
+            it++;
+        }
+        // Fill the tree
+        for (int i = 0; i < smi_->getNumScenarios(); i++) {
+            BendersNodeData *node = nodeVec[i][0];
+            tree_.addPathtoLeaf(node->branch_scenario_, node->smi_node_data_->getStage()-1, nodeVec[i]);
+        }
+
+        tree_nodes_by_stage_.clear();
+        // Make a list of list of nodes, seperated by stage
+        // the first list contains stage 0 nodes, the second stage 1 nodes, the third stage 2 nodes, ...
+        tree_nodes_by_stage_.reserve(num_stages_);
+        for (int i = 0; i < num_stages_; i++) {
+            std::vector<SmiTreeNode<BendersNodeData*>*> vec;
+            tree_nodes_by_stage_.push_back(vec);
+        }
+        tree_nodes_by_stage_[0].push_back(tree_.getRoot());
+        // Set probability 1 to root node, to prevent numerical issues
+        tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
+        // Set multicut aggregation for the first stage also
+        if ( num_scen_pro_cut)
+            tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+        
+
+        // Create tree nodes by stage vectors
+        for (int i = 1; i < num_stages_; i++) {
+            int number_of_nodes_in_this_stage = 0;
+            int number_of_child_nodes_for_next_stage = 0;
+            for (unsigned int j = 0; j < tree_nodes_by_stage_[i-1].size(); j++) {
+                std::vector<SmiTreeNode<BendersNodeData*> *> *children = tree_nodes_by_stage_[i-1][j]->getChildren();
+                for (int k = 0; k < children->size(); k++) {
+                    tree_nodes_by_stage_[i].push_back((*children)[k]);
+                    tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
+                    tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
+                    number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
+                    // Set num_scen_pro_cut, if we want to use it..
+                    if ( num_scen_pro_cut ){
+                        tree_nodes_by_stage_[i].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+                    }
+                }
+                delete children;
+            }
+        }
+    }
 
 
     bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){

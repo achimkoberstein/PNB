@@ -1341,8 +1341,8 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
     
-    if (strictFormat)
-        this->writeMps(fnWithExt.c_str());
+    if (strictFormat) // Use IEEE hex mode for numbers
+        this->writeMps(fnWithExt.c_str(), 0 ,1);
     else
         this->writeMps(fnWithExt.c_str(), 0, 1);
 }
