@@ -398,26 +398,34 @@ public:
 	}
 
     void repopulateLeafNodeSet(){
-        // Look at the Tree, and populate the leaf node again.
+        // Look at the Tree, and populate the leaf node set again.
         SmiTreeNode<T>* temporary_node = root_->getChild();
+        int num_scen = leaf_.size();
+        int num_nodes = node_data.size();
         leaf_.clear(); // Empty the vector
+        node_data.clear();
 
         std::vector<SmiTreeNode<T>* > temporary_leaf_set;
         int depth = 0;
         bool goDown = true;
         // Take the goDown method again
+        node_data.push_back(root_->getDataPtr());
 
         while ( temporary_node != root_ ){
             if ( goDown ){
-                if ( temporary_node->hasChild() )
+                node_data.push_back(temporary_node->getDataPtr());
+                if ( temporary_node->hasChild() ){
                     temporary_node = temporary_node->getChild();
+                }
                 else {
                     depth = std::max(depth, temporary_node->depth());
                     if ( temporary_node->depth() == depth )
                         temporary_leaf_set.push_back(temporary_node);
                     goDown = false;
-                    if ( temporary_node->hasSibling() )
+                    if ( temporary_node->hasSibling() ){
                         temporary_node = temporary_node->getSibling();
+                        node_data.push_back(temporary_node->getDataPtr());
+                    }
                     else
                         temporary_node = temporary_node->getParent();
                 }
@@ -425,6 +433,7 @@ public:
             else {
                 if ( temporary_node->depth() == depth )
                     temporary_leaf_set.push_back(temporary_node);
+                
                 if ( temporary_node->hasSibling() ){
                     temporary_node = temporary_node->getSibling();
                     goDown = true;
@@ -435,11 +444,13 @@ public:
                 }
             }
         }
+        assert(node_data.size() == num_nodes - num_scen);
         leaf_.resize(temporary_leaf_set.size()); 
         for (int i = 0; i < temporary_leaf_set.size() ; i++){
             leaf_[temporary_leaf_set[i]->scenario()] = temporary_leaf_set[i];
         }
         ;
+        // Now we need to repopulate the node_data set?!
 
     }
 

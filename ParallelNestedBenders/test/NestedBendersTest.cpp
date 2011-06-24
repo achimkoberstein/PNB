@@ -77,13 +77,15 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // 1 Core
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,4);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD); 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-4)); 
@@ -633,8 +635,8 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
     EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"),-6301005010, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"),-6301005010, 1);
 }
 
 
@@ -684,12 +686,18 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 
     MP_constraint firstStage,secondStage(T);
 
+    double* objCoefs = new double[3];
+    objCoefs[0] = 2;
+    objCoefs[1] = 3;
+    objCoefs[2] = 4;
+    MP_data param1(objCoefs,T);
+
     firstStage() = x() <= 5;
     secondStage(T+1) = y(T-1)+ y(T) >= randomData(T);
-    testModel.setObjective( x()+2*sum(T,y(T)) );
+    testModel.setObjective( x()+sum(T,param1(T)*y(T)) );
     testModel.attach();
     testModel.solve(MP_model::MINIMIZE);
-    //testModel.getSmi()->writeSmps("stageAggregTest");
+    testModel.getSmi()->writeSmps("stageAggregTest");
     OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(testModel.operator->(),testModel.getSmi());
     parallel_benders::Parameter benders_parameter_;
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
@@ -705,8 +713,8 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    //::testing::GTEST_FLAG(filter) = "*.pltexp*";
+    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    ::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

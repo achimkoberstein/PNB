@@ -67,6 +67,8 @@ private:
 
 	void TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme );
 
+    void InitializeBendersNodeDataTree(int num_scen_pro_cut);
+
     OsiSolverInterface* GetSolverByThread();
     bool CompareWithZero( double value );
 
