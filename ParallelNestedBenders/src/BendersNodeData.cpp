@@ -159,6 +159,10 @@ std::string Timer::GetFullTimeString() const
     return s.str();
 }
 
+int Timer::GetTimeStages() const
+{
+    return stages_;
+}
 void Parameter::init()
 {
     // DetEq or Benders
@@ -179,13 +183,15 @@ void Parameter::init()
     parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-6)); 
     parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,false);
     parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,1);
+    // Stage Aggregation
+    parameter_.put(PNB_STAGE_AGGREGATION,false);
+    parameter_.put(PNB_STAGE_AGGREGATION_START,0);
+    parameter_.put(PNB_STAGE_AGGREGATION_END,0);
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, 0); // Do we want to use TrustRegion TODO: Implement this
-
-
     //// Tolerances
     parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-8));
 	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-6));

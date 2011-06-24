@@ -85,7 +85,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,4);
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,0);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD); 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-4)); 
@@ -288,7 +288,7 @@ protected:
 		}
         // Write Detailed Time Statistics
         const parallel_benders::Timer& timer(nested_benders.getTimer());
-        s << timer.GetTime(smi.getCore()->getNumStages()) << "; "; // num_stages is time for setup and stuff
+        s << timer.GetTime(timer.GetTimeStages()-1) << "; "; // num_stages is time for setup and stuff
         for (int i = 0; i < smi.getCore()->getNumStages(); i++){
             s << timer.GetTime(i) << "; ";
         }
