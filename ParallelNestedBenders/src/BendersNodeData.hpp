@@ -192,6 +192,8 @@ public:
 
     std::string GetFullTimeString() const;
 
+    int GetTimeStages() const;
+
 private:
     int stages_;
     std::vector<double> start_time_;

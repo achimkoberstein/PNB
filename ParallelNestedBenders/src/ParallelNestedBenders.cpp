@@ -376,7 +376,8 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Solve()
     {
-        timer_.Start(num_stages_);
+        int setup_timer = num_stages_;
+        timer_.Start(setup_timer);
         AdjustProblem();
         // We can stop here, if we have integer variables on more than the second stage..
         if ( integer_problems_[0] ){ // In the first stage.
@@ -428,7 +429,7 @@ namespace parallel_benders {
             warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
         }
 
-        timer_.Stop(num_stages_);
+        timer_.Stop(setup_timer);
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
             std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
