@@ -573,7 +573,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         number_scenarios = smiTree.getNumScenarios();
 
     }
-    else if ( secondStage == nstag_-1){
+    else {
         // Find all the nodes at the current stage
         // We need to go through all the child/siblings until we reach our current stage
         SmiTreeNode<SmiScnNode*>* temporary_node = smiTree.getRoot()->getChild();
@@ -611,6 +611,14 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         number_children = current_node->numChildren();
         number_scenarios = first_stage_nodes.size();
     }
+    // We build the detEq in the following order:
+    // - Iterate over firstStageNode from 0 to size()-1
+    // - Iterate over the childs of firstStageNodes in a while loop with the getChild/getSibling Semantic, starting first with the child and then the siblings.
+    // 
+    // Example: firststage = 7 cols, secondstage = 5 cols, 3 children: columns 7-11 to the first child, 12-16 to the second and 17-21 to the third child.
+    // Subsequent childs therefore need to adress the correct columns!
+
+
     // Find the maximal number of children at this stage!
     SmiTreeNode<SmiScnNode*> * temp_node = current_node;
     bool different_tree_size = false;
