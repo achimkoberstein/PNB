@@ -263,7 +263,9 @@ public:
 	inline const std::vector<std::string> * getRowNames(bool strictFormat = true) { if (strictFormat) return &rowNamesStrict; else return &rowNamesFree; }
 
     void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients, SmiTreeNode<SmiScnNode*>* root_node);
-        void aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree);
+    void aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree);
+
+    void increaseColumnIndices(SmiScnNode* scn_node, int amount);
 
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);

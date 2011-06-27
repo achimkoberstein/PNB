@@ -539,6 +539,10 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     // TODO: What about col/row names? we might have to fix these too.. 
 }
 
+void SmiCoreData::increaseColumnIndices( SmiScnNode* scn_node, int amount )
+{
+
+}
 void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree){
     // Here we make our adjustments!
     assert(secondStage-firstStage == 1); // We can only merge consecutive stages by now! ( iteratively applying the method should also work..
@@ -617,6 +621,9 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // 
     // Example: firststage = 7 cols, secondstage = 5 cols, 3 children: columns 7-11 to the first child, 12-16 to the second and 17-21 to the third child.
     // Subsequent childs therefore need to adress the correct columns!
+    // Because childs of the firstStageNodes childs become childs of the firstStageNodes in the process, we need to address the problem of correct reference to the correct column.
+    // Two solutions: Also create new columns in subsequent stages
+    // Lift only the T-matrix of the soon to be secondstage to a W-matrix and create a new row that chooses the correct column depending on where we are in the tree!
 
 
     // Find the maximal number of children at this stage!
@@ -673,6 +680,11 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
     int col_offset = 0;
     int col_offset_second_stage = number_children*number_cols; // This is for the stages afterwards
+
+    int add_columns_to_later_stage = number_children*number_cols;
+    int add_rows_to_third_stage = number_children*number_rows;
+    int add_rows_in_addition_to_later_than_third_stage = stageRowPtr_[secondStage+1]-stageRowPtr_[secondStage];
+
     
     for (int i = 0; i < number_children; i++){
         // memcpy the deterministic data of secondStage
@@ -692,6 +704,45 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         overall_current_strt_offset += number_rows;
         // Update the col offset for the deterministic equivalent
         col_offset += number_cols;
+
+        // Get the childs of this firststagenode
+        if ( secondStage < nstag_-1 ){
+            SmiTreeNode<SmiScnNode* > * child_node = first_stage_nodes[i]->getChild();
+            // Get all the children of this node
+            std::vector< SmiTreeNode<SmiScnNode* > * >* child_nodes = first_stage_nodes[i]->getChildren(); // We need to delete it after use
+            bool goDown = true;
+            while ( child_node != first_stage_nodes[i] ){
+                // Go get the child. We increase the indices in every one of these nodes
+                if ( current_node->hasChild() && goDown)
+                    child_node = current_node->getChild();
+                else if ( goDown){
+                    // We have no child
+                    // Do something with the node
+                    //
+                    increaseColumnIndices(current_node->getDataPtr(),add_columns_to_later_stage);
+
+                    goDown = false;
+                    if ( child_node->hasSibling() )
+                        child_node = child_node->getSibling();
+                    else
+                        child_node = child_node->getParent();
+
+                }
+                else // goDown = false
+                {
+                    // Do something with the node
+                    increaseColumnIndices(current_node->getDataPtr(),add_columns_to_later_stage);
+                    if ( child_node->hasSibling() ){
+                        child_node = child_node->getSibling();
+                        goDown = false;
+                    }
+                    else
+                        child_node = child_node->getParent();
+
+                }
+            delete child_nodes;
+
+        }
     }
     // Column Lower
     int new_clo_offset = overall_current_strt_offset;
