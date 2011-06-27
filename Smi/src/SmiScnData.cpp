@@ -555,7 +555,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     
     // At first we handle the case, were we aggregate stages from the beginning :
     if ( firstStage == 0){
-        assert( nstag_ >= 3); // Otherwise we can simply return without doing anything
+        if ( nstag_ > 2)
+            return; // We can simply return without doing anything, because then we would have a deterministic equivalent!.
         // Here is what we do:
         /*
          * 1: Initialize variables with information about the second stage, find the current node.

@@ -1472,15 +1472,15 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                 // lower and upper bound given for current column
                 if (data->getColLowerElements()[icl] == data->getColUpperElements()[icu]) {
                     // variable is fixed
-                    stream << " FX BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
+                    stream << " FX BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl] << "\n";
                 } 
                 else if (data->getColLowerElements()[icl] == 0.0 && data->getColUpperElements()[icu] == 1.0) {
                     // variable is binary
-                    stream << " BV BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
+                    stream << " BV BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << "\n";
                 }
                 else if (data->getColLowerElements()[icl] == -this->solverInf_ && data->getColUpperElements()[icu] == this->solverInf_) {
                     // variable is free
-                    stream << " FR BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
+                    stream << " FR BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << "\n";
                 }
                 icl++; icu++;
                 continue;
@@ -1490,16 +1490,16 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                 // write column lower bound
                 if (this->isInteger(icl)) {
                     // column lower bound for integer variable
-                    stream << " LI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
+                    stream << " LI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl] << "\n";
                 }
                 else {
                     if (data->getColLowerElements()[icl] == -this->solverInf_) {
                         // lower bound is -infinity
-                        stream << " MI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]);
+                        stream << " MI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << "\n";
                     }
                     else {
                         // normal column lower bound
-                        stream << " LO BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl];
+                        stream << " LO BOUND     " << std::setw(10) << std::left << this->columnName(data->getColLowerIndices()[icl]) << data->getColLowerElements()[icl] << "\n";
                     }
                 }
                 icl++;
@@ -1508,16 +1508,16 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                 // write column upper bound
                 if (this->isInteger(icu)) {
                     // column upper bound for integer variable
-                    stream << " UI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu];
+                    stream << " UI BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu] << "\n";
                 }
                 else {
                     if (data->getColUpperElements()[icu] == this->solverInf_) {
                         // upper bound is infinity
-                        stream << " PL BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]);
+                        stream << " PL BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << "\n";
                     }
                     else {
                         // normal column upper bound
-                        stream << " UP BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu];
+                        stream << " UP BOUND     " << std::setw(10) << std::left << this->columnName(data->getColUpperIndices()[icu]) << data->getColUpperElements()[icu] << "\n";
                     }
                 }
                 icu++;
