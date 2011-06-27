@@ -2059,7 +2059,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
          return; // We do nothing
      if ( upper_stage-lesser_stage > 1) { // We need to apply the method several times, so we need to know from which direction we want to start!
          if ( aggregateFromEnd )
-             for (int i = upper_stage; i > lesser_stage; i++){
+             for (int i = upper_stage; i > lesser_stage; i--){
                  core_->aggregateStages( i-1, i, smiTree_);
              }
          else

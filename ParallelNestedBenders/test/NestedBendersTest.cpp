@@ -32,7 +32,7 @@ public:
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::string testbed_log_file_string_;
 	std::string parameter_name_string_;
-    static const int max_stages_ = 7;
+    static const int max_stages_ = 11;
 
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
@@ -48,51 +48,54 @@ public:
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Let system decide!
-        //for (int i = 1; i <= 4; i++){
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Single Core
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,i);   
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Let system decide!
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		for (int i = 1; i < max_stages_;i++){
+			benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+			benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+			benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE);
+			benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE-i); // Aggregate from the end
+			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		}
+		//for (int i = 1; i <= 4; i++){
+		//	// Loop parameters
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,i); // choose number of cpus
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // choose benders decomp
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1); // choose stage aggregation
+		//	// We may need different parameters here!
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,6);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,5);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,4);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,3);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,0);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//}
+		// Choose second iteration strategy
+		//for (int i = 1; i < 7; i++){
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,6);
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,7);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,0);
+		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,2);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,3);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,4);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,5);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,6);
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //}
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // 1 Core
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // 1 Core
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // 1 Core
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,4);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,0);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD); 
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-4)); 
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,9);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,true);
-        // Enable cascading and repeating with parameters TODO
+		//}
+              // Enable cascading and repeating with parameters TODO
         
  		// And do everything with different number of cpus to get a measure of effectivenesss for parallelization
 		//for (int k = 4; k < 5; k++){
@@ -597,16 +600,16 @@ TEST_F(NestedBendersTest,watson_conditional){
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2401.87,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2167.62,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2027.43,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), 1879.43,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), 1841.29,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"), 1787.19,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), 1780.13,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), 1791.18,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), 1725.53,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), 1693.47,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), 1769.45,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), 1664.66,0.1);
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), 1679.92,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), 1879.43,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), 1841.29,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"), 1787.19,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), 1780.13,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), 1791.18,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), 1725.53,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), 1693.47,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), 1769.45,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), 1664.66,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), 1679.92,0.1);
 }
 
 TEST_F(NestedBendersTest,watson_independent){
@@ -634,9 +637,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"),-6301005010, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
 }
 
 
@@ -714,8 +717,8 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    ::testing::GTEST_FLAG(filter) = "*.scdp*";
-    //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+    //::testing::GTEST_FLAG(filter) = "*.scdp*";
+    ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
