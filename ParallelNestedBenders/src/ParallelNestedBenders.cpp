@@ -327,13 +327,6 @@ namespace parallel_benders {
 		// Set first stage solver to own instance
 		seperate_first_stage_solver_ = true;
 
-        // Do a quick check with probabilities of the model.
-        double total_prob = 0;
-        for (int i = 0; i < num_scenarios_; i++){
-            total_prob += smi_->getScenarioProb(i);
-        }
-        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one, but " << total_prob;
-
         // create our benders node objects and build the tree
         // Initialize benders node data objects and tree!
         // 
@@ -429,9 +422,6 @@ namespace parallel_benders {
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
             AdjustProblem(); // We need to set the important properties again!
             // Best way would be to just recreate the benders_node_data tree from scratch!
-            num_scenarios_ = tree_nodes_by_stage_[num_stages_-2].size();
-
-        // Recreate the num_stage-2 tree_nodes_in_stage nodes!
         }
 
         if ( second_iteration_stage_ > num_stages_-2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
@@ -1593,15 +1583,14 @@ namespace parallel_benders {
             // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
             osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
             // We want to emphasize numerical stability / for CPLEX
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr ){
-                // Get ENV and LP ptr
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-
-            }
+            //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+            //if ( cpx_ptr ){
+            //    // Get ENV and LP ptr
+            //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+            //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            //    CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            //    CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+            //}
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
         }
@@ -1786,6 +1775,76 @@ namespace parallel_benders {
     void ParallelNestedBenders::InitializeBendersNodeDataTree(int num_scen_pro_cut)
     {
         tree_ = SmiScenarioTree<BendersNodeData*>();
+
+        // Do a quick check with probabilities of the model.
+        double total_prob = 0;
+        for (int i = 0; i < num_scenarios_; i++){
+            total_prob += smi_->getScenarioProb(i);
+        }
+        LOG_IF(WARNING,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "Your model probabilties do not sum up to one, but " << total_prob;
+        if ( total_prob > 1+zero_tolerance_ || total_prob < 1-zero_tolerance_ ){
+            // Scenario probability is wrong for the leafs. We normalize these and recompute all the probabilities back up the tree 
+            for (int i = 0; i < num_scenarios_; i++){
+                smi_->getSmiTree()->getLeaf(i)->getDataPtr()->setProb( smi_->getScenarioProb(i)/total_prob );
+            }
+            // Now we need to calculate the probabilities for all the nodes in the tree!
+            SmiTreeNode<SmiScnNode*>* current_node = smi_->getSmiTree()->getRoot();
+            std::vector<SmiTreeNode<SmiScnNode*>* > parent_node_vector;
+            bool goSibling = false;
+            while ( current_node != NULL ){
+                if ( current_node->hasChild() && !goSibling){
+                    current_node = current_node->getChild();
+                }
+                else if ( !goSibling)
+                { // We have no childs
+                    current_node = current_node->getParent();
+                    // Get all the child nodes!
+                    std::vector<SmiTreeNode<SmiScnNode*> * >* childs = current_node->getChildren();
+                    // Go one step up and get all the childs of this node. Set the proability of this node. Get the siblings.
+                    // Sum up the probabilities
+                    double sum = 0;
+                    BOOST_FOREACH( SmiTreeNode<SmiScnNode*> * child_node, *childs )
+                        sum += child_node->getDataPtr()->getProb();
+                    current_node->getDataPtr()->setProb(sum);
+                    goSibling = true;
+                    delete childs;
+                    if ( current_node->hasSibling() ){
+                        current_node = current_node->getSibling();
+                        goSibling = false;
+                    }
+                    else
+                        current_node = current_node->getParent(); // We must update the probability and move then to the 
+                }
+                else if ( goSibling ){
+                    // Go to the sibling node, after we updated our stuff
+                    std::vector<SmiTreeNode<SmiScnNode*> * >* childs = current_node->getChildren();
+                    // Go one step up and get all the childs of this node. Set the proability of this node. Get the siblings.
+                    // Sum up the probabilities
+                    double sum = 0;
+                    BOOST_FOREACH( SmiTreeNode<SmiScnNode*> * child_node, *childs )
+                        sum += child_node->getDataPtr()->getProb();
+                    current_node->getDataPtr()->setProb(sum);
+
+                    goSibling = false;
+                    if ( current_node->hasSibling() )
+                        current_node = current_node->getSibling();
+                    else {
+                        current_node = current_node->getParent();
+                        goSibling = true;
+                    }
+
+
+                }
+            }//while
+            // We modified your problem
+            total_prob = 0;
+            for (int i = 0; i < num_scenarios_; i++){
+                total_prob += smi_->getScenarioProb(i);
+            }
+            LOG_IF(ERROR,!CompareForEquality(1,total_prob,ParallelNestedBenders::zero_tolerance_)) << "We tried to fix your problem with the model probabilities, but did not succeed. The probabilities sum up to " << total_prob;
+            LOG(INFO) << "We modified your problem by normalizing the leaf node probabilities and updating the scenario tree accordingly.";
+        }// if
+
         std::vector<std::vector<BendersNodeData*> > nodeVec;
         nodeVec.reserve(num_scenarios_);
 
@@ -1847,6 +1906,17 @@ namespace parallel_benders {
                 delete children;
             }
         }
+
+        // Check for probability at every stage. Sanity check, that we can, but do not need to run.
+        //for (int i = 0; i < num_stages_; i++){
+        //    double sum = 0;
+        //    
+        //    for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
+        //        sum += tree_nodes_by_stage_[i][j]->getDataPtr()->probability_;
+        //    }
+        //    if ( sum > 1 + zero_tolerance_ || sum < 1-zero_tolerance_)
+        //        LOG(ERROR) << "Probabilities in stage " << i << " do not sum to one, but " << sum;
+        //}
     }
 
 

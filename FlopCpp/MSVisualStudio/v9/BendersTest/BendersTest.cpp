@@ -536,7 +536,8 @@ TEST_F(BendersTest,FeasibilityCutTest){
 
 TEST_F(BendersTest, current_problems) {
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/stocfor/stocfor2"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/saphir/saphir_50"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/saphir/saphir_50"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("stageAggreg"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/felt/cargo/4node"), 224486.00, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sizes/sizes10"), 224564.3, 0.1);
 }
