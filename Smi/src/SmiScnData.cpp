@@ -740,9 +740,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                         child_node = child_node->getParent();
 
                 }
-            delete child_nodes;
+                delete child_nodes;
 
-        }
+            }// End While
+        }// End If
     }
     // Column Lower
     int new_clo_offset = overall_current_strt_offset;
