@@ -355,6 +355,14 @@ namespace parallel_benders {
         if ( stage_aggregation_ ){
             begin_aggregation_stage_ = param.get(PNB_STAGE_AGGREGATION_START,0);
             end_aggregation_stage_ = param.get(PNB_STAGE_AGGREGATION_END,0);
+			if ( end_aggregation_stage_ == PNB_INT_STAGE_AGGREGATION_LAST_STAGE )
+				end_aggregation_stage_ = num_stages_-1;
+			if ( begin_aggregation_stage_ < PNB_INT_STAGE_AGGREGATION_LAST_STAGE )
+				begin_aggregation_stage_ = std::max(0, num_stages_ - (PNB_INT_STAGE_AGGREGATION_LAST_STAGE-begin_aggregation_stage_) );
+			if ( begin_aggregation_stage_ == 0 && end_aggregation_stage_ == num_stages_-1 ){
+				stage_aggregation_ = false;
+				LOG(ERROR) << "You specified stage aggregation that would result in the deterministic equivalent. We therefore disable stage aggregation for this run!";
+			}
         }
 
 
@@ -416,9 +424,10 @@ namespace parallel_benders {
             num_scenarios_ = smi_->getNumScenarios();
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
             AdjustProblem(); // We need to set the important properties again!
-            
             // Best way would be to just recreate the benders_node_data tree from scratch!
             num_scenarios_ = tree_nodes_by_stage_[num_stages_-2].size();
+			if ( second_iteration_stage_ > num_stages_-2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
+				sequencing_protocol_ = PNB_INT_FASTPASS;
         // Recreate the num_stage-2 tree_nodes_in_stage nodes!
         }
         

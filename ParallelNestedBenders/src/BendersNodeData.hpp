@@ -56,6 +56,7 @@ namespace parallel_benders{
 	const int PNB_INT_EPSILON_FAST_FORWARD = 3;
 	const int PNB_INT_EPSILON_FAST_BACKWARD = 4;
 	const int PNB_INT_SECOND_ITERATION = 5;
+	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
 	//const int PNB_INT_
 
 
