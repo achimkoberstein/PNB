@@ -192,8 +192,8 @@ void Parameter::init()
 	parameter_.put(PNB_CPU_USED,0);
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, 0); // Do we want to use TrustRegion TODO: Implement this
-    //// Tolerances
-    parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-8));
+    //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
+    parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-6));
 	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-6));
     parameter_.put(PNB_EPSILON_ABSOLUTE, std::pow(10.0,-6));
     parameter_.put(PNB_EPSILON_RELATIVE, std::pow(10.0,-6));

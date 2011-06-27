@@ -357,6 +357,10 @@ namespace parallel_benders {
             end_aggregation_stage_ = param.get(PNB_STAGE_AGGREGATION_END,0);
 			if ( end_aggregation_stage_ == PNB_INT_STAGE_AGGREGATION_LAST_STAGE )
 				end_aggregation_stage_ = num_stages_-1;
+            if ( begin_aggregation_stage_ == PNB_INT_STAGE_AGGREGATION_LAST_STAGE ){
+                begin_aggregation_stage_ = num_stages_-1;
+                stage_aggregation_ = false;
+            }
 			if ( begin_aggregation_stage_ < PNB_INT_STAGE_AGGREGATION_LAST_STAGE )
 				begin_aggregation_stage_ = std::max(0, num_stages_ - (PNB_INT_STAGE_AGGREGATION_LAST_STAGE-begin_aggregation_stage_) );
 			if ( begin_aggregation_stage_ == 0 && end_aggregation_stage_ == num_stages_-1 ){
@@ -417,19 +421,21 @@ namespace parallel_benders {
 
         // Stage Aggregation!
         if ( stage_aggregation_){
-            smi_->writeSmps("beforeStageAgg",true,false);
+            //smi_->writeSmps("beforeStageAgg",true,false);
             smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_); // Aggregate stage 0 and 1
-            smi_->writeSmps("stageAggreg",true,false);
+            //smi_->writeSmps("stageAggreg",true,false);
             num_stages_ = core_->getNumStages();
             num_scenarios_ = smi_->getNumScenarios();
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
             AdjustProblem(); // We need to set the important properties again!
             // Best way would be to just recreate the benders_node_data tree from scratch!
             num_scenarios_ = tree_nodes_by_stage_[num_stages_-2].size();
-			if ( second_iteration_stage_ > num_stages_-2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
-				sequencing_protocol_ = PNB_INT_FASTPASS;
+
         // Recreate the num_stage-2 tree_nodes_in_stage nodes!
         }
+
+        if ( second_iteration_stage_ > num_stages_-2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
+            sequencing_protocol_ = PNB_INT_FASTPASS;
         
 
         // Warm up period
@@ -745,7 +751,7 @@ namespace parallel_benders {
         else
             osi_solver->initialSolve();
 
-        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 3){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
@@ -1243,9 +1249,11 @@ namespace parallel_benders {
                 cut_rhs += dual_solution[row]*row_upper[row];
             else if ( dual_solution[row] > 0)
                 cut_rhs += dual_solution[row]*row_lower[row];
+            if ( cut_rhs < -10000000000 )
+                std::cout << "stopping";
         }
         // Just print out the values of the cut-number 
-        if ( current_stage_ < 2){
+        if ( current_stage_ < 1){
             console_mutex_.lock();
             for ( int i = row; i < row+benders_node_pointer->optimality_cuts_.size();i++ ){
                 // Print it out

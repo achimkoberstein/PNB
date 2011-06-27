@@ -32,7 +32,7 @@ public:
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::string testbed_log_file_string_;
 	std::string parameter_name_string_;
-    static const int max_stages_ = 11;
+    static const int max_stages_ = 10;
 
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
@@ -48,13 +48,19 @@ public:
 		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Let system decide!
-		for (int i = 1; i < max_stages_;i++){
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
+		for (int i = 0; i < max_stages_;i++){
 			benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
 			benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
 			benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE);
 			benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE-i); // Aggregate from the end
 			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		}
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); // Solve DetEq
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); // Aggregate from the end
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//for (int i = 1; i <= 4; i++){
 		//	// Loop parameters
 		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,i); // choose number of cpus
@@ -292,9 +298,15 @@ protected:
         // Write Detailed Time Statistics
         const parallel_benders::Timer& timer(nested_benders.getTimer());
         s << timer.GetTime(timer.GetTimeStages()-1) << "; "; // num_stages is time for setup and stuff
+        int num_stages = smi.getCore()->getNumStages();
+        if ( num_stages > max_stages_)
+            LOG(ERROR) << "Only the first " << num_stages << " stages get reported with wall clock time.";
         for (int i = 0; i < smi.getCore()->getNumStages(); i++){
             s << timer.GetTime(i) << "; ";
         }
+        for (int i = 0; i < max_stages_-num_stages; i++)// Ensure that the date/time stamp is where it is supposed to be!
+            s << 0 << "; ";
+        
 
         // Write date/time stamp of log file writing time
         char sdate[9];
@@ -600,16 +612,16 @@ TEST_F(NestedBendersTest,watson_conditional){
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2401.87,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2167.62,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2027.43,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), 1879.43,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), 1841.29,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"), 1787.19,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), 1780.13,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), 1791.18,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), 1725.53,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), 1693.47,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), 1769.45,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), 1664.66,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), 1679.92,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), -1879.43,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), -1841.29,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"), -1787.19,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), -1780.13,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), -1791.18,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), -1725.53,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), -1693.47,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), -1769.45,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), -1664.66,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), -1679.92,0.1);
 }
 
 TEST_F(NestedBendersTest,watson_independent){
