@@ -1280,8 +1280,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             new_inds[new_start[new_clo_strt]+i] = start_of_third_stage_col_indices+i;
             new_inds[new_start[new_cup_strt]+i] = start_of_third_stage_col_indices+i;
             new_inds[new_start[new_obj_strt]+i] = start_of_third_stage_col_indices+i;
-            new_inds[new_start[new_rlo_strt]+nRowInStage_[secondStage+1]+i] = start_of_third_stage_row_indices+i;
-            new_inds[new_start[new_rup_strt]+nRowInStage_[secondStage+1]+i] = start_of_third_stage_row_indices+i;
+            new_inds[new_start[new_rlo_strt]+nRowInStage_[secondStage+1]+i] = start_of_third_stage_row_indices+nRowInStage_[secondStage+1]+i;
+            new_inds[new_start[new_rup_strt]+nRowInStage_[secondStage+1]+i] = start_of_third_stage_row_indices+nRowInStage_[secondStage+1]+i;
             new_dels[new_start[new_clo_strt]+i] = -infinity_;
             new_dels[new_start[new_cup_strt]+i] = infinity_;
             new_dels[new_start[new_obj_strt]+i] = 0;
@@ -1310,12 +1310,12 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         nodes_[secondStage+1]->nrow_ += number_cols;
         nodes_[secondStage+1]->nels_ = nels; //New Matrix entries, column bounds/obj and rowlower/rowuppper
         int matrix_offset = number_cols*number_children;
-        nodes_[secondStage+1]->clo_strt_ += new_clo_strt; // The matrix entries
-        nodes_[secondStage+1]->cup_strt_ += new_cup_strt;
-        nodes_[secondStage+1]->obj_strt_ += new_obj_strt;
-        nodes_[secondStage+1]->rlo_strt_ += new_rlo_strt;
-        nodes_[secondStage+1]->rup_strt_ += new_rup_strt;
-        nodes_[secondStage+1]->nstrt_ += end_strt+1;
+        nodes_[secondStage+1]->clo_strt_ = new_clo_strt; // The matrix entries
+        nodes_[secondStage+1]->cup_strt_ = new_cup_strt;
+        nodes_[secondStage+1]->obj_strt_ = new_obj_strt;
+        nodes_[secondStage+1]->rlo_strt_ = new_rlo_strt;
+        nodes_[secondStage+1]->rup_strt_ = new_rup_strt;
+        nodes_[secondStage+1]->nstrt_ = end_strt+1;
         nodes_[secondStage+1]->deleteMemory();
         nodes_[secondStage+1]->dels_ = new_dels;
         nodes_[secondStage+1]->inds_ = new_inds;
@@ -1346,8 +1346,9 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     nColInStage_[firstStage] = nodes_[firstStage]->ncol_;
     nRowInStage_[firstStage] = nodes_[firstStage]->nrow_;
     for (int i = firstStage+1; i < nstag_; i++){
-        nColInStage_[i] = nodes_[i+1]->ncol_;
-        nRowInStage_[i] = nodes_[i+1]->nrow_;
+        nodes_[i] = nodes_[i+1]; // We need to shift the nodes one up
+        nColInStage_[i] = nodes_[i]->ncol_;
+        nRowInStage_[i] = nodes_[i]->nrow_;
     }
     nColInStage_[nstag_] = 0;
     nRowInStage_[nstag_] = 0;
