@@ -265,7 +265,7 @@ public:
     void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients, SmiTreeNode<SmiScnNode*>* root_node);
     void aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree);
 
-    void increaseColumnIndices(SmiScnNode* scn_node, int amount);
+    void increaseIndices(SmiNodeData* scn_node, int col_amount, int row_amount);
 
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
