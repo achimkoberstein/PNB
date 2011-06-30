@@ -1861,6 +1861,8 @@ namespace parallel_benders {
             node->probability_ = (*it)->getProb();
             if ((*it)->getParent() != NULL && (*it)->getParent()->getScenarioIndex() != (*it)->getScenarioIndex()) {
                 node->branch_scenario_ = (*it)->getParent()->getScenarioIndex();
+                if ( node->branch_scenario_ == 139 )
+                    std::cout << "bla";
             }
             nodeVec[(*it)->getScenarioIndex()].push_back(node);
             it++;

@@ -1167,14 +1167,21 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         // Delete the child and sibling nodes, recast pointers of their child nodes, if necessary!
         temp_node = current_node->getChild();
         SmiTreeNode<SmiScnNode*>* new_child_node = temp_node->getChild();
+        SmiTreeNode<SmiScnNode*>* sibling_node = NULL;
         int num_childs = 0;
         while ( temp_node != NULL ){
             if ( temp_node->hasChild() ){ // We have thirdstage_nodes
                 SmiTreeNode<SmiScnNode*>* third_stage_node = temp_node->getChild();
+                if ( sibling_node != NULL )
+                    sibling_node->setSibling(third_stage_node);
                 while ( third_stage_node != NULL){
-                    // Reset parent pointer
+                    // Reset parent pointer AND Sibling Pointer!!
                     num_childs++;
                     third_stage_node->setParent(current_node);
+                    third_stage_node->getDataPtr()->setParent(current_node->getDataPtr());
+                    if ( third_stage_node->hasSibling() )
+                        sibling_node = third_stage_node->getSibling();
+
                     third_stage_node = third_stage_node->getSibling();
                 }
                 // Set Child Pointer to Null
@@ -1223,8 +1230,6 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     nodes_[firstStage]->dels_ = elements;
     nodes_[firstStage]->inds_ = indices;
     nodes_[firstStage]->strt_ = start;
-
-
 
     if ( ! final_stage){
         // Prepare the core node of the stage after secondStage.
@@ -1343,6 +1348,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         new_ncol = ncol_+(number_children-1)*number_cols;
         new_nrow = nrow_+(number_children-1)*number_rows;
     }
+
     nColInStage_[firstStage] = nodes_[firstStage]->ncol_;
     nRowInStage_[firstStage] = nodes_[firstStage]->nrow_;
     for (int i = firstStage+1; i < nstag_; i++){
@@ -1352,8 +1358,12 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     }
     nColInStage_[nstag_] = 0;
     nRowInStage_[nstag_] = 0;
-    stageColPtr_[secondStage] += (number_children)*number_cols; // Why do we set the number to number_children*number_cols instead of how many new columns we really added?
-    stageRowPtr_[secondStage] += (number_children)*number_rows; // Because this is the number of columns we added to the stage before! ( we moved columns from stage second to stage first)
+    // Start with the stageColPtr / stageRowPtr
+    for (int i = firstStage+1; i < nstag_+1; i++){
+        stageColPtr_[i] = stageColPtr_[i-1]+nColInStage_[i-1];
+        stageRowPtr_[i] = stageRowPtr_[i-1]+nRowInStage_[i-1];
+    }
+    // Because this is the number of columns we added to the stage before! ( we moved columns from stage second to stage first)
     // Update colStage/rowStage array, introduce new ones..
 
     if ( !rowNamesFree.empty() && !colNamesFree.empty()){
@@ -1381,6 +1391,19 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             for (int j = 0; j < number_rows; j++){
                 std::stringstream ss;
                 ss << "det_" << i << "_"  << rowNamesFree[first_index_of_original_problem_row+j];
+                row_names.push_back(ss.str());
+            }
+        }
+        if ( !final_stage ) {
+            // We need to append the other names..
+            for (int i = stageColPtr_[secondStage+1]; i < stageColPtr_[nstag_] ; i++){
+                std::stringstream ss;
+                ss << "det_later_" << i;
+                col_names.push_back(ss.str());
+            }
+            for (int i = stageRowPtr_[secondStage+1]; i < stageRowPtr_[nstag_] ; i++){
+                std::stringstream ss;
+                ss << "det_later_" << i;
                 row_names.push_back(ss.str());
             }
         }
@@ -1456,8 +1479,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
         }
     }
-    if ( secondStage == nstag_-1)
-        smiTree.repopulateLeafNodeSet();
+    //if ( final_stage )
+    smiTree.repopulateLeafNodeSet();
 
 }
 
