@@ -719,6 +719,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             SmiTreeNode<SmiScnNode* > * child_node = first_stage_nodes[i]->getChild();
             // Get all the children of this node
              bool goDown = true;
+             // This loop does not do what it is supposed to do! TODO: Fix it
             while ( child_node != first_stage_nodes[i] ){ // As long as there are nodes below the thirdstage
                 // Go get the child. We increase the indices in every one of these nodes
                 if ( child_node->hasChild() && goDown)
@@ -729,8 +730,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     if ( child_node->depth() > secondStage+1 )
                         increaseIndices(child_node->getDataPtr()->getNode(),add_columns_to_later_stage,add_rows_to_third_stage+number_cols);
                     goDown = false;
-                    if ( child_node->hasSibling() )
+                    if ( child_node->hasSibling() ){
                         child_node = child_node->getSibling();
+                        goDown = true;
+                    }
                     else
                         child_node = child_node->getParent();
 
@@ -742,7 +745,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                         increaseIndices(child_node->getDataPtr()->getNode(),add_columns_to_later_stage,add_rows_to_third_stage+number_cols);
                     if ( child_node->hasSibling() ){
                         child_node = child_node->getSibling();
-                        goDown = false;
+                        goDown = true;
                     }
                     else
                         child_node = child_node->getParent();
@@ -927,13 +930,13 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // Build the stochastic entries for the current node
     int scenario_index = number_children-1; // We start backwards with the scenario counting, courtesy to the tree creation routine!
     for (int cur_scen = number_scenarios-1; cur_scen >= 0;  cur_scen--){
-
         current_node = first_stage_nodes[cur_scen]; // This means, the node with scen 0 gets the first det-eq values
         // TODO: Put it in own method!
 
         SmiScnNode* current_scn_node = current_node->getDataPtr();
         SmiNodeData* current_node_data = current_scn_node->getNode();
 
+#pragma region copyElements
         // Find out how many elements we need to store!
         temp_node = current_node->getChild();
         int number_elements = current_node->getDataPtr()->getNode()->nels_;
@@ -965,12 +968,6 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             for (int i = 0; i < number_rows;i++)
                 new_start[new_start_offset+i] = temp_data->strt_[i+1]+new_index_offset;
             
-            if ( !final_stage ){
-                // Deal with childs of this node and all the remaining subtree! We have to expand a little bit?
-            }
-            if ( firstStage != 0){
-                // Deal with the nodes before, if we aggregated other stages, than the first one?
-            }
             temp_node = temp_node->getSibling();
             det_eq_column_offset += number_cols;
             det_eq_row_offset += number_rows;
@@ -1179,6 +1176,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     num_childs++;
                     third_stage_node->setParent(current_node);
                     third_stage_node->getDataPtr()->setParent(current_node->getDataPtr());
+                    // We have to adapt the stochastic third_stage_nodes to the new det-eq world
+
                     if ( third_stage_node->hasSibling() )
                         sibling_node = third_stage_node->getSibling();
 
@@ -1231,8 +1230,11 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     nodes_[firstStage]->inds_ = indices;
     nodes_[firstStage]->strt_ = start;
 
+#pragma endregion CopyElements
+
     if ( ! final_stage){
         // Prepare the core node of the stage after secondStage.
+#pragma region thirdstagecore
         // Add the new columns and rows..
         int nels = nodes_[secondStage+1]->nels_ + number_cols*(number_children+1)+number_cols*3+number_cols*2;
         int new_start_overall = nodes_[secondStage+1]->nstrt_+number_cols;
@@ -1331,8 +1333,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         for (int i = secondStage+2; i < nstag_; i++){
             increaseIndices(nodes_[i],(number_children-1)*number_cols+number_cols, (number_children-1)*number_rows+number_cols);
         }
-    }
-;
+#pragma endregion thirdstagecore
+    }// end if !finalStage
+    
+    
     // Change the core_ (nStageColPtr,stageColPtr,nColInStage, etc..
     // We reduced the number of stages by one
     
@@ -1353,6 +1357,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     nRowInStage_[firstStage] = nodes_[firstStage]->nrow_;
     for (int i = firstStage+1; i < nstag_; i++){
         nodes_[i] = nodes_[i+1]; // We need to shift the nodes one up
+        // And we set the correct stage in the process
+        nodes_[i]->stg_ = i;
         nColInStage_[i] = nodes_[i]->ncol_;
         nRowInStage_[i] = nodes_[i]->nrow_;
     }
@@ -1479,9 +1485,43 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
         }
     }
-    //if ( final_stage )
     smiTree.repopulateLeafNodeSet();
+    // Iterate over node set to set the stg_ of the node_data to depth_ of the tree_node
+    SmiTreeNode<SmiScnNode*>* another_node = smiTree.getRoot()->getChild();
+    bool goDown = true;
+    while ( another_node != NULL ){ // Walk through the whole tree and set the scenario to the tree depth_
+        
+        if ( another_node->hasChild() && goDown )
+            another_node = another_node->getChild();
+        else if( goDown ){
+            another_node->getDataPtr()->getNode()->stg_ = another_node->depth();
+            // Assert some things!
+            assert( another_node->getDataPtr()->getNode()->nrow_ == nodes_[another_node->depth()]->nrow_ );
+            assert( another_node->getDataPtr()->getNode()->ncol_ == nodes_[another_node->depth()]->ncol_ );
+            goDown = false;
+            if ( another_node->hasSibling() ){
+                goDown = true;
+                another_node = another_node->getSibling();
+            }
+            else
+                another_node = another_node->getParent();
+            
+        }
+        else {// goDown is false {
+            another_node->getDataPtr()->getNode()->stg_ = another_node->depth();
+            // Assert some things!
+            assert( another_node->getDataPtr()->getNode()->nrow_ == nodes_[another_node->depth()]->nrow_ );
+            assert( another_node->getDataPtr()->getNode()->ncol_ == nodes_[another_node->depth()]->ncol_ );
+            
+            if ( another_node->hasSibling() ){
+                goDown = true;
+                another_node = another_node->getSibling();
+            }
+            else
+                another_node = another_node->getParent();
 
+        }
+    }
 }
 
 void
