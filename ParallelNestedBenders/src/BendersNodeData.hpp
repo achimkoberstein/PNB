@@ -203,6 +203,10 @@ private:
 
 
 struct Parameter {
+
+    Parameter() {
+        init();
+    }
     // Set default values for all strings we have..
     void init();
 
