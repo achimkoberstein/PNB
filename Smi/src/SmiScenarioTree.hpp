@@ -81,6 +81,9 @@ public:
 	int depth() {
 		return depth_;
 	}
+    void setDepth(int depth) {
+        depth_ = depth;
+    }
 	int numChildren() {
 		return nchild_;
 	}
@@ -410,12 +413,15 @@ public:
         bool goDown = true;
         // Take the goDown method again
         node_data.push_back(root_->getDataPtr());
+        int currrent_depth = 1;
 
         while ( temporary_node != root_ ){
             if ( goDown ){
                 node_data.push_back(temporary_node->getDataPtr());
+                temporary_node->setDepth(currrent_depth);
                 if ( temporary_node->hasChild() ){
                     temporary_node = temporary_node->getChild();
+                    currrent_depth++;
                 }
                 else {
                     depth = std::max(depth, temporary_node->depth());
@@ -426,8 +432,10 @@ public:
                         temporary_node = temporary_node->getSibling();
                         node_data.push_back(temporary_node->getDataPtr());
                     }
-                    else
+                    else {
                         temporary_node = temporary_node->getParent();
+                        currrent_depth--;
+                    }
                 }
             }
             else {
@@ -441,15 +449,17 @@ public:
                 else {
                     goDown = false;
                     temporary_node = temporary_node->getParent();
+                    currrent_depth--;
                 }
             }
         }
-        assert(node_data.size() == num_nodes - num_scen);
+        assert(currrent_depth == 0);
+        //assert(node_data.size() == num_nodes - num_scen);
         leaf_.resize(temporary_leaf_set.size()); 
         for (int i = 0; i < temporary_leaf_set.size() ; i++){
             leaf_[temporary_leaf_set[i]->scenario()] = temporary_leaf_set[i];
         }
-        ;
+        
         // Now we need to repopulate the node_data set?!
 
     }
