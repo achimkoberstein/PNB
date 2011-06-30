@@ -707,15 +707,21 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     objCoefs[1] = 3;
     objCoefs[2] = 4;
     MP_data param1(objCoefs,T);
+    double* objCoefs1 = new double[3];
+    objCoefs1[0] = -1;
+    objCoefs1[1] = 0;
+    objCoefs1[2] = 1;
+    MP_data param2(objCoefs,T);
 
     firstStage() = x() <= 5;
-    secondStage(T+1) = y(T-1)+ y(T) >= randomData(T);
+    secondStage(T+1) = y(T-1)+ param2(T)*y(T) >= randomData(T);
     testModel.setObjective( x()+sum(T,param1(T)*y(T)) );
     testModel.attach();
     testModel.solve(MP_model::MINIMIZE);
     testModel.getSmi()->writeSmps("stageAggregTest");
     OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(testModel.operator->(),testModel.getSmi());
     parallel_benders::Parameter benders_parameter_;
+    benders_parameter_.init(); // This should be called by the standard constructor anyway!
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
@@ -729,9 +735,9 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    ::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
     //::testing::GTEST_FLAG(filter) = "*.scdp*";
-    ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+    //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
