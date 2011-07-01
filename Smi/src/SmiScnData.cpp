@@ -555,9 +555,10 @@ void SmiCoreData::increaseIndices( SmiNodeData* node_data, int col_amount, int r
 void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree){
     // Here we make our adjustments!
     assert(secondStage-firstStage == 1); // We can only merge consecutive stages by now! ( iteratively applying the method should also work..
-    // We only merge at the end or beginning from now
-    //assert( firstStage == 0 || secondStage == nstag_-1 );
-    SmiTreeNode<SmiScnNode*>* current_node = NULL;
+    bool final_stage = true; // If not true, we have to deal with nodes after the child nodes..
+    if ( secondStage < nstag_-1)
+        final_stage = false;
+     SmiTreeNode<SmiScnNode*>* current_node = NULL;
     int number_children = 0;
     int number_scenarios = 0;
 
@@ -566,20 +567,18 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
     std::vector<SmiTreeNode<SmiScnNode*>*> first_stage_nodes;
     
+    // Here is what we do:
+    /*
+    * 1: Initialize variables with information about the second stage, find the current node.
+    * 2: Build the Det.Eq in the first stage node(s)
+    * * a) Copy the element data 
+    * * b) Adjust the probability for the objective function coefficients
+    * 3: (If needed) Transform nodes in stage after second stage to work with the new Det. Eq. (i.e. change indices in core node, change indices in stochastic nodes)
+    */
     // At first we handle the case, were we aggregate stages from the beginning :
     if ( firstStage == 0){
         if ( nstag_ < 2)
             return; // We can simply return without doing anything, because then we would have a deterministic equivalent!.
-        // Here is what we do:
-        /*
-         * 1: Initialize variables with information about the second stage, find the current node.
-         * 2: Build the Det.Eq in the first stage node(s)
-         * * a) Copy the element data 
-         * * b) Adjust the probability for the objective function coefficients
-         * 3: (If needed) Transform nodes in stage after second stage to work with the new Det. Eq. (i.e. change indices in core node, change indices in stochastic nodes)
-         */
-
-
         current_node = smiTree.getRoot();
         first_stage_nodes.push_back(current_node);
         number_children = current_node->numChildren();
@@ -601,6 +600,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                 goDown = false;
                 if ( temporary_node->hasSibling() ){
                     temporary_node = temporary_node->getSibling();
+                    goDown = true;
                 }
                 else {
                     temporary_node = temporary_node->getParent();
@@ -631,9 +631,6 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // Example: firststage = 7 cols, secondstage = 5 cols, 3 children: columns 7-11 to the first child, 12-16 to the second and 17-21 to the third child.
     // Subsequent childs therefore need to adress the correct columns!
     // Because childs of the firstStageNodes childs become childs of the firstStageNodes in the process, we need to address the problem of correct reference to the correct column.
-    // Two solutions: Also create new columns in subsequent stages
-    // Lift only the T-matrix of the soon to be secondstage to a W-matrix and create a new row that chooses the correct column depending on where we are in the tree!
-
 
     // Find the maximal number of children at this stage!
     SmiTreeNode<SmiScnNode*> * temp_node = current_node;
@@ -657,6 +654,9 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // Same for number of rows
     // Matrix entries is different, there we need to look at the actual sizes
 
+    /*
+     * Creating the Deterministic Equivalent Core Model
+     */
 
     // Determine how many elements we need to store
     //SmiTreeNode<SmiScnNode*>* temp_node = current_node->getChild();
@@ -690,11 +690,12 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     int col_offset = 0;
     int col_offset_second_stage = number_children*number_cols; // This is for the stages afterwards
 
-    int add_columns_to_later_stage = (number_children-1)*number_cols+number_cols; // We need to add the number of columns we added: number_children-1 * number cols for DetEq, and number_cols for the new cols in thirdstage. We can not add the + number_cols for the thirdstage nodes..
-    int add_rows_to_third_stage = (number_children-1)*number_rows+number_cols;// Numer_children-1 * number_rows for the new rows that were added in the det_eq process + numer_col rows for the new rows in thirdstage
-    int add_rows_in_addition_to_later_than_third_stage = stageRowPtr_[secondStage+1]-stageRowPtr_[secondStage];
+    //int add_columns_to_third_stage = (number_children)*number_cols; // We need to add the number of columns we added: number_children-1 * number cols for DetEq, and number_cols for the new cols in thirdstage. We can not add the + number_cols for the thirdstage nodes..
+    //int add_rows_to_third_stage = (number_children-1)*number_rows;// Numer_children-1 * number_rows for the new rows that were added in the det_eq process + numer_col rows for the new rows in thirdstage
+    //int add_rows_in_addition_to_later_than_third_stage = add_rows_to_third_stage+number_cols; // The number of rows we added to the third stage nodes.
+    //int add_columns_to_later_than_third_stage = add_columns_to_third_stage+number_cols;
 
-    
+
     for (int i = 0; i < number_children; i++){
         // memcpy the deterministic data of secondStage
         memcpy(elements+overall_current_col_offset,nodes_[secondStage]->dels_,nodes_[secondStage]->strt_[number_rows]*sizeof(double));
@@ -728,7 +729,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     // We have no child
                     // Do something with the node
                     if ( child_node->depth() > secondStage+1 )
-                        increaseIndices(child_node->getDataPtr()->getNode(),add_columns_to_later_stage,add_rows_to_third_stage+number_cols);
+                        increaseIndices(child_node->getDataPtr()->getNode(),number_children*number_cols,(number_children-1)*number_rows+number_cols);
                     goDown = false;
                     if ( child_node->hasSibling() ){
                         child_node = child_node->getSibling();
@@ -742,7 +743,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                 {
                     // Do something with the node
                     if ( child_node->depth() > secondStage+1 )
-                        increaseIndices(child_node->getDataPtr()->getNode(),add_columns_to_later_stage,add_rows_to_third_stage+number_cols);
+                        increaseIndices(child_node->getDataPtr()->getNode(),number_children*number_cols,(number_children-1)*number_rows+number_cols);
                     if ( child_node->hasSibling() ){
                         child_node = child_node->getSibling();
                         goDown = true;
@@ -752,8 +753,13 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
                 }
             }// End While for subtree!
+        }// End If 
+ 
+    }// End For : matrix indices
 
-            // Now we need to change the thirdstage nodes
+    if ( !final_stage){
+        // Now we need to change the thirdstage nodes
+        for (int i = 0; i < first_stage_nodes.size(); i++){
             SmiTreeNode<SmiScnNode*>* second_stage_node = first_stage_nodes[i]->getChild(); // we need this node and all the sibling nodes!
             // We need to do the following for all the siblings!
             while ( second_stage_node != NULL ){
@@ -795,13 +801,16 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
                     // Now we copy the indices!
                     for (int j = 0; j < third_stage_node_data->strt_[new_start_index]; j++){
-                        new_inds[j] = third_stage_node_data->inds_[j] +  (( third_stage_node_data->inds_[j] < third_stage_node_data->colbeg_) ? number_cols*count : add_columns_to_later_stage);
+                        new_inds[j] = third_stage_node_data->inds_[j] +  number_cols*number_children;//(( third_stage_node_data->inds_[j] < third_stage_node_data->colbeg_) ? number_cols*count : number_cols*number_children);
                     }
-                    for (int j = 0; j < number_cols; j++){
-                        new_inds[third_stage_node_data->strt_[new_start_index]+j] = third_stage_node_data->colbeg_+(number_children-1)*number_cols+j;
+                    for (int j = 0; j < number_cols; j++){ // We add the new rows. We need to set the indices of the stage before
+                        new_inds[third_stage_node_data->strt_[new_start_index]+j] = stageColPtr_[secondStage]+(number_cols)*count+j;
                     }
-                    for ( int j = third_stage_node_data->strt_[new_start_index]; j < third_stage_node_data->nels_; j++){ // Assign the missing indices
-                        new_inds[j+number_cols] = third_stage_node_data->inds_[j]+add_columns_to_later_stage;
+                    for ( int j = third_stage_node_data->strt_[new_start_index]; j < third_stage_node_data->strt_[third_stage_node_data->rlo_strt_]; j++){ // Assign the missing indices
+                        new_inds[j+number_cols] = third_stage_node_data->inds_[j]+number_children*number_cols;
+                    }
+                    for ( int j = third_stage_node_data->strt_[third_stage_node_data->rlo_strt_]; j < third_stage_node_data->strt_[third_stage_node_data->nstrt_-1]; j++){ // Assign the missing indices
+                        new_inds[j+number_cols] = third_stage_node_data->inds_[j]+(number_children-1)*number_rows;
                     }
                     assert( third_stage_node_data->colbeg_ == stageColPtr_[secondStage+1]);
 
@@ -811,22 +820,28 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     third_stage_node_data->obj_strt_ += number_cols;
                     third_stage_node_data->rlo_strt_ += number_cols;
                     third_stage_node_data->rup_strt_ += number_cols;
+                    third_stage_node_data->nstrt_ += number_cols;
+                    third_stage_node_data->nels_ = new_start[third_stage_node_data->nstrt_-1]; // The number of elements
                     third_stage_node_data->deleteMemory();
                     third_stage_node_data->dels_ = new_dels;
                     third_stage_node_data->inds_ = new_inds;
                     third_stage_node_data->strt_ = new_start;
                     third_stage_node_data->colbeg_ += (number_children-1)*number_cols;
                     third_stage_node_data->rowbeg_ += (number_children-1)*number_rows;
+                    third_stage_node_data->nrow_ += number_cols;
+                    third_stage_node_data->ncol_ += number_cols;
+                    
 
 
                     third_stage_node = third_stage_node->getSibling();
                     count++;
                 }// End While Thirdstagenode
                 second_stage_node = second_stage_node->getSibling();
-            } // End WHile SecondStageNode
+            } // End While SecondStageNode
+        } // End For
+    }//End If !finalStage
 
-        }// End If
-    }
+#pragma region fivearrays
     // Column Lower
     int new_clo_offset = overall_current_strt_offset;
     col_offset = 0;
@@ -917,10 +932,9 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     overall_current_strt_offset++;
     assert( overall_current_col_offset == nels);
     assert( overall_current_strt_offset == nstrt);
+    #pragma endregion fivearrays
 
-    bool final_stage = true; // If not true, we have to deal with nodes after the child nodes..
-    if ( secondStage < nstag_-1)
-        final_stage = false;
+   
     // Now the elements, indices and start array are filled.
 
      // Now comes the scenario tree: We iterate over all the firstStage nodes (siblings) and need to include the information of the direct child nodes in 
@@ -1233,7 +1247,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 #pragma endregion CopyElements
 
     if ( ! final_stage){
-        // Prepare the core node of the stage after secondStage.
+        // Prepare the core node of the stage after secondStage. thirdstagenode
 #pragma region thirdstagecore
         // Add the new columns and rows..
         int nels = nodes_[secondStage+1]->nels_ + number_cols*(number_children+1)+number_cols*3+number_cols*2;
@@ -1248,13 +1262,15 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
         memcpy(new_start,nodes_[secondStage+1]->strt_,(new_start_index+1)*sizeof(int));
 
-        for (int i = 0; i < nodes_[secondStage+1]->strt_[new_start_index];i++){
-            new_inds[i] = nodes_[secondStage+1]->inds_[i] + ( nodes_[secondStage+1]->inds_[i] < stageColPtr_[secondStage+1] ? add_columns_to_later_stage-number_cols : add_columns_to_later_stage );
+        for (int i = 0; i < nodes_[secondStage+1]->strt_[new_start_index];i++){ // We want to reference the previous secondStage indices, to our new indices, made for this row!
+            new_inds[i] = nodes_[secondStage+1]->inds_[i] + number_children*number_cols;//( nodes_[secondStage+1]->inds_[i] < stageColPtr_[secondStage+1] ? add_rows_to_third_stage : add_rows_to_third_stage+number_cols );
         }
         int current_index = nodes_[secondStage+1]->strt_[new_start_index]; // This is an overall index!
+        int start_of_third_stage_col_indices = stageColPtr_[secondStage+1]+(number_children-1)*number_cols;
+        int start_of_third_stage_row_indices = stageRowPtr_[secondStage+1]+(number_children-1)*number_rows;
         for (int i = 0; i < number_cols; i++){
             // Set the new rows 
-            new_inds[current_index] = add_columns_to_later_stage-number_cols+i;
+            new_inds[current_index] = start_of_third_stage_col_indices+i; 
             new_dels[current_index] = 1;
             current_index++;
             for (int j = 0; j < number_children; j++){
@@ -1281,8 +1297,6 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         assert(new_start[end_strt] == nels);
         
         // Set the new variables first!
-        int start_of_third_stage_col_indices = stageColPtr_[secondStage+1]+(number_children-1)*number_cols;
-        int start_of_third_stage_row_indices = stageRowPtr_[secondStage+1]+(number_children-1)*number_rows;
         for (int i = 0; i < number_cols; i++){
             new_inds[new_start[new_clo_strt]+i] = start_of_third_stage_col_indices+i;
             new_inds[new_start[new_cup_strt]+i] = start_of_third_stage_col_indices+i;
