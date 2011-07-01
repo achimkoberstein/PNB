@@ -1063,7 +1063,7 @@ namespace parallel_benders {
                         while ( node_pointer->hasMatrix() && stochastic_element_in_row  ){ // Jump over all consecutive W column entries in this row (As columns are ordered, we should skip the rest of the matrix anyway // TODO: Ensure this
                             if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns && stochastic_column_index < stochastic_matrix.start_[row+1] )
                                 stochastic_column_index++;
-                            else if (stochastic_column_index==stochastic_matrix.start_[row+1]) {
+                            else if (stochastic_column_index==stochastic_matrix.start_[row+1]) { // If the number of stochastic column indices > current_stage_columns (aka W-entries) equals length of stochastic matrix entries in this row, this is not a row for the T-matrix
                                 stochastic_element_in_row = false;
                                 break;
                             }

@@ -58,6 +58,7 @@ public:
 		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//}
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2); // Aggregate from the end
