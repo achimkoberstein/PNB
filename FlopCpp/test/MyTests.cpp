@@ -942,6 +942,91 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         LOG(INFO) << "ObjValue " << testModel->getObjValue();
     }
 
+    TEST_F(UseCaseTest,FarmerModel) {
+        MP_model farmer(new OsiClpSolverInterface()); 
+        MP_stage T(2);
+
+        enum {low, normal, high, numScenarios};
+        MP_scenario_set scen(numScenarios);
+
+        MP_data prob(scen);
+        prob(low)    = 1.0/3;
+        prob(normal) =  1.0/3;
+        prob(high)   = 1.0/3;
+        farmer.setProbabilities(prob);
+
+        enum {weat, corn, sugar,numProducts};
+        MP_set R(numProducts);
+
+        //enum {lumber, finishing, carpentry, numResources};
+        //MP_set R(numResources);
+
+        MP_data sellValue(R);
+        sellValue(weat) = 170;
+        sellValue(corn) = 150;
+        sellValue(sugar) = 36;
+
+
+        MP_data buyPrice(R);
+        buyPrice(weat) = 238;
+        buyPrice(corn) = 210;
+
+        MP_data prodCost(R);
+        prodCost(weat) = 150;
+        prodCost(corn) = 230;
+        prodCost(sugar) = 260;
+
+        MP_data minAmount(R);
+        minAmount(weat) = 200;
+        minAmount(corn) = 240;
+
+        double yields[1][3][3] = {
+            {
+                { 2, 2.5, 3 }, // weat
+                { 2.4, 3, 3.6}, // corn
+                { 16, 20, 24 } // sugar
+
+
+            }
+        };
+        MP_random_data yield(&yields[0][0][0], T,R);
+
+        MP_variable 
+            x(R),   // Ressourcenbedarf
+            y(T,R), // Einkaufsmenge
+            w(T,R), // Verkaufsmenge
+            wSugar(T); // ExtraVerkaufsmenge Zucker
+
+        MP_constraint minAmountConstraint(T,R),productionConstraint,sugarConstraint1(T),sugarConstraint2(T);//fixConstraint1,fixConstraint2,fixConstraint3;
+        minAmountConstraint(T+1,R) = y(T,R)+x(R)*yield(T,R) -w(T,R) >= minAmount(R);
+        productionConstraint() = sum(R,x(R) ) <= 500;
+        sugarConstraint1(T+1) = w(T,sugar) <= 6000;
+        sugarConstraint2(T+1) = w(T,sugar)+wSugar(T) <= yield(T,sugar)*x(sugar);
+        //fixConstraint1() = x(weat) == 120; // normal: 170
+        //fixConstraint2() = x(corn) == 80;// 80
+        MP_data wsugar_price(T);
+        wsugar_price(1) = 10;
+        //x.fix() // I want to fix the variables to a given value, not yet implemneted
+
+        farmer.setObjective(
+            sum(R, prodCost(R)*x(R) - w(T.last(),R)*sellValue(R)+ y(T.last(),R)*buyPrice(R))  -wsugar_price(T.last())*wSugar(T.last())
+            );
+
+        OsiClpSolverInterface cplex;
+        farmer.solve(MP_model::MINIMIZE);
+        // Display results;
+        minAmount.display("minAmount");
+        yield.display("yield");
+        x.display("x");
+        w.display("w");
+        y.display("y");
+        wSugar.display("wSugar");
+        farmer.getSmi()->writeSmps("bla");
+        std::vector< std::pair<double,double> > ws;
+        ws = farmer.getSmi()->solveWS(&cplex);
+        double eev = farmer.getSmi()->solveEEV(&cplex);
+    }
+
     // Dacota  Model to test the EV-, EEV- and WS-Problems
     TEST_F(UseCaseTest,DacotaModel) {
         MP_model dacota(new OsiClpSolverInterface()); 
@@ -6325,7 +6410,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "*.gapmin";
+    ::testing::GTEST_FLAG(filter) = "*.FarmerModel";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

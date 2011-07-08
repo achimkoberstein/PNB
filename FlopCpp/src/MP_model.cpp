@@ -694,7 +694,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             LOG_IF(INFO,colIndirection[coefsObj[i]->col] == outOfBound) << "Some of your variables in your objective function do not appear in your model. Please check your model for validity. Take a closer look at indexed variables.";
             assert(colIndirection[coefsObj[i]->col] != outOfBound); // Asssert that all variables in the objective function already appear in a constraint.
             if (coefsObj[i]->col == -1){ // Handle constant term in the objective
-                constantTerm = coefsObj[i]->val;
+                constantTerm += coefsObj[i]->val;
             }
             else {
                 coefsObj[i]->col = colIndirection[coefsObj[i]->col];     
@@ -1067,6 +1067,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             Solver->loadProblem(realn,m,Cst,Rnr,Elm,l,u,c,bl,bu);
             // We have to delete the osiCore:
             delete osiCore;
+            LOG(WARNING) << "You specified a stage set, but we could not generate a stochastic model.";
         }
     }
     else {
