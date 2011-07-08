@@ -196,6 +196,8 @@ namespace flopc{
 
     private:
         void createRandomVariableFromIndices(double* arr,int indexForArr,int indexForValues, int scen){
+            if ( scen <= 0)
+                LOG(FATAL) << "You must define a stage set, if you use scenario data for your random variables.";
             double *tempArray;
             tempArray = new double[scen]; //new/delete
             for (int i = 0; i < scen; i++){

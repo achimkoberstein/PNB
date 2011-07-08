@@ -2055,6 +2055,11 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      // Call the method 
      int lesser_stage = std::min(firstStage,secondStage);
      int upper_stage = std::max(firstStage,secondStage);
+     // Let's see if we can actually aggregate the stages we specified?!
+     if ( upper_stage > core_->getNumStages()-1 )
+         return; // We do not aggreagtes anything, if asked the wrong way
+     if ( lesser_stage < 0 )
+         return;
      if ( lesser_stage-upper_stage == 0 )
          return; // We do nothing
      if ( upper_stage-lesser_stage > 1) { // We need to apply the method several times, so we need to know from which direction we want to start!

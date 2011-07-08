@@ -273,7 +273,7 @@ public:
     */
     void setOsiSolverHandle(const OsiSolverInterface *osi)
     {
-        osiStoch_ = osi->clone(false);
+        osiStoch_ = osi->clone(false); // THis method does not work so well for cplex solver, instead we should just copy an empty model into the solver interface
     }
     
     /** Returns the OsiSolverInterface of this SMI model.

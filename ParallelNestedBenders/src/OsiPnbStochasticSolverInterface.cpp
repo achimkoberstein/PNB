@@ -91,6 +91,8 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
 OsiStochasticParallelNestedBendersTwoStageSolverInterface::OsiStochasticParallelNestedBendersTwoStageSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
 : OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL)
 {
+    if ( smi_model == NULL )
+        assert(false);
     this->smi_model_->setOsiSolverHandle(this->osi_solver_);
     nested_benders_ = new parallel_benders::ParallelNestedBenders(smi_model_);
 }

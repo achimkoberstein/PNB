@@ -414,11 +414,10 @@ public:
         // Take the goDown method again
         node_data.push_back(root_->getDataPtr());
         int currrent_depth = 1;
-
         while ( temporary_node != root_ ){
+            temporary_node->setDepth(currrent_depth);
             if ( goDown ){
                 node_data.push_back(temporary_node->getDataPtr());
-                temporary_node->setDepth(currrent_depth);
                 if ( temporary_node->hasChild() ){
                     temporary_node = temporary_node->getChild();
                     currrent_depth++;
@@ -439,6 +438,7 @@ public:
                 }
             }
             else {
+                assert( temporary_node->depth() <= depth);
                 if ( temporary_node->depth() == depth )
                     temporary_leaf_set.push_back(temporary_node);
                 
