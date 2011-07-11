@@ -59,32 +59,32 @@ public:
 		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//}
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2); // Aggregate from the end
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2); // Aggregate from the end
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         // Test the stuff with old benders
-        std::string folder("../../../../Benders/test/instances/");
-#if _M_X32 || __x83_32__ // Works only on windows i suppose
-        folder = "../../../../../Benders/test/instances/";
-#endif
-        std::string core_name_string(core_name);
-        std::string time_name_string(time_name);
-        std::string stoch_name_string(stoch_name);
-        std::string total_core_string = folder+core_name_string;
-        std::string total_time_string = folder+time_name_string;
-        std::string total_stoch_string = folder+stoch_name_string;
-        OsiCpxSolverInterface osi_cpx;
-        SmiScnModel smi;
-        smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        // We can only solve aggregated problems..
-        // But we can aggregate the problem if we want to, we have the smi model!
-        smi.aggregateStages(1,smi.getCore()->getNumStages()-1,true); // We construct a two-stage problem, where the second stage contains all the scenarios we want?
-        OsiStochasticBendersTwoStageSolverInterface two_stage_benders(&osi_cpx,&smi);
-        two_stage_benders.initialSolve();
-        solutions.push_back(two_stage_benders.getObjValue());
+//        std::string folder("../../../../Benders/test/instances/");
+//#if _M_X32 || __x83_32__ // Works only on windows i suppose
+//        folder = "../../../../../Benders/test/instances/";
+//#endif
+//        std::string core_name_string(core_name);
+//        std::string time_name_string(time_name);
+//        std::string stoch_name_string(stoch_name);
+//        std::string total_core_string = folder+core_name_string;
+//        std::string total_time_string = folder+time_name_string;
+//        std::string total_stoch_string = folder+stoch_name_string;
+//        OsiCpxSolverInterface osi_cpx;
+//        SmiScnModel smi;
+//        smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+//        // We can only solve aggregated problems..
+//        // But we can aggregate the problem if we want to, we have the smi model!
+//        smi.aggregateStages(1,smi.getCore()->getNumStages()-1,true); // We construct a two-stage problem, where the second stage contains all the scenarios we want?
+//        OsiStochasticBendersTwoStageSolverInterface two_stage_benders(&osi_cpx,&smi);
+//        two_stage_benders.initialSolve();
+//        solutions.push_back(two_stage_benders.getObjValue());
 		//for (int i = 1; i <= 4; i++){
 		//	// Loop parameters
 		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,i); // choose number of cpus
@@ -711,7 +711,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
 
 TEST_F(NestedBendersTest,StageAggregationTest){
     using namespace flopc;
-    OsiClpSolverInterface* osi_cplex = new OsiClpSolverInterface();
+    OsiSolverInterface* osi_cplex = new OsiCpxSolverInterface();
     MP_model testModel(osi_cplex);
     enum { stage1,stage2,stage3,stage4, number_stages};
     enum { scen1,scen2,scen3,scen4,scen5,scen6,scen7,scen8,scen9,scen10,scen11,scen12,scen13,scen14,scen15,scen16, num_scenarios};
@@ -749,7 +749,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     testModel.attach();
     testModel.getSmi()->writeSmps("stageAggregTest");
     //OsiCpxSolverInterface cpx;
-    OsiSolverInterface* new_solver = new OsiClpSolverInterface();
+    OsiSolverInterface* new_solver = new OsiCpxSolverInterface();
     OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(new_solver,testModel.getSmi());
     parallel_benders::Parameter benders_parameter_;
     benders_parameter_.init(); // This should be called by the standard constructor anyway!
@@ -768,8 +768,8 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    //::testing::GTEST_FLAG(filter) = "*.scdp*";
-    ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+    ::testing::GTEST_FLAG(filter) = "*.scdp*";
+    //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
