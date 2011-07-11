@@ -1560,14 +1560,14 @@ namespace parallel_benders {
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
 		// We assign the used solver here.
 		if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
-            //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-            //if ( cpx_ptr ){
-            //    // Get ENV and LP ptr
-            //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            //    CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            //    CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-            //}
+            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+            if ( cpx_ptr ){
+                // Get ENV and LP ptr
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+            }
 			return osi_solver_; // We do not clear this solver. We ALWAYS reuse it.
 		}
         boost::unique_lock<boost::mutex> lock(solver_map_mutex_); // TODO: Remove the mutex and initialize the solver in the init method.
