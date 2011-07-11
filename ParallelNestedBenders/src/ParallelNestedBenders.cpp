@@ -1584,25 +1584,25 @@ namespace parallel_benders {
             // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
             osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
             // We want to emphasize numerical stability / for CPLEX
-            //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            //if ( cpx_ptr ){
-            //    // Get ENV and LP ptr
-            //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            //    CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            //    CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-            //}
+            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+            if ( cpx_ptr ){
+                // Get ENV and LP ptr
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+            }
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
         }
-        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-        if ( cpx_ptr ){
-            // Get ENV and LP ptr
-            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-        }
+        //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+        //if ( cpx_ptr ){
+        //    // Get ENV and LP ptr
+        //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+        //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+        //    CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+        //    CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+        //}
         return osi_solver;
     }
 
