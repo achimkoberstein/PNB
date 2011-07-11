@@ -46,10 +46,10 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				WarningLevel="3"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -62,7 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/fixed:no"
 				AdditionalDependencies="gurobi45.lib"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib;C:\gurobi450\win32\lib"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"

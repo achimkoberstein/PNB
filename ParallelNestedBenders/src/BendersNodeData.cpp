@@ -187,6 +187,7 @@ void Parameter::init()
     parameter_.put(PNB_STAGE_AGGREGATION,false);
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
     parameter_.put(PNB_STAGE_AGGREGATION_END,0);
+    parameter_.put(PNB_STAGE_AGGREGATION_DIRECTION,true); // Direction == true : Aggregate from start
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);

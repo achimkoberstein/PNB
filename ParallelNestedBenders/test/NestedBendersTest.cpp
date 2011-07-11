@@ -25,6 +25,7 @@
 #include "BendersNodeData.hpp"
 #include "ParallelNestedBenders.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
+#include "OsiBenStochasticSolverInterface.hpp"
 
 
 class NestedBendersTest: public ::testing::Test {
@@ -58,12 +59,37 @@ public:
 		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE-i); // Aggregate from the end
 		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//}
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2); // Aggregate from the end
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2); // Aggregate from the end
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); // Solve DetEq
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        // Solve the same problem with OsiBenStochasticSolverInterface..
+        std::string folder("../../../../Benders/test/instances/");
+#if _M_X32 || __x83_32__ // Works only on windows i suppose
+        folder = "../../../../../Benders/test/instances/";
+#endif
+        std::string core_name_string(core_name);
+        std::string time_name_string(time_name);
+        std::string stoch_name_string(stoch_name);
+        std::string total_core_string = folder+core_name_string;
+        std::string total_time_string = folder+time_name_string;
+        std::string total_stoch_string = folder+stoch_name_string;
+        OsiCpxSolverInterface osi_cpx;
+        SmiScnModel smi;
+        smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        // We can only solve aggregated problems..
+        // But we can aggregate the problem if we want to, we have the smi model!
+        smi.aggregateStages(1,smi.getCore()->getNumStages()-1,true); // We construct a two-stage problem, where the second stage contains all the scenarios we want?
+        OsiStochasticBendersTwoStageSolverInterface two_stage_benders(&osi_cpx,&smi);
+        two_stage_benders.initialSolve();
+        solutions.push_back(two_stage_benders.getObjValue());
+
+        // We compare the non-aggregated case, with the aggregated case and compare it with det.eq.
+
 		//for (int i = 1; i <= 2; i++){
 		//	// Loop parameters
 		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,i); // choose number of cpus
@@ -671,7 +697,10 @@ TEST_F(NestedBendersTest,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-2093"),-3301005010, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-13382"), -5183755359, 1);
 }
-
+TEST_F(NestedBendersTest,StageAggregTest){
+    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0563,0.01);
+    // I also want to try to test it with benders..
+}
 
 
 
@@ -743,26 +772,43 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     testModel.attach();
     testModel.getSmi()->writeSmps("stageAggregTest");
     //OsiCpxSolverInterface cpx;
+    std::vector<double> solution_values;
     OsiSolverInterface* new_solver = new OsiClpSolverInterface();
     OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(new_solver,testModel.getSmi());
     parallel_benders::Parameter benders_parameter_;
     benders_parameter_.init(); // This should be called by the standard constructor anyway!
+    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,0);
+    pnb.setParameters(benders_parameter_);
+    pnb.initialSolve();
+    solution_values.push_back(pnb.getObjValue());
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb3(new_solver,testModel.getSmi());
+    benders_parameter_.init(); // This should be called by the standard constructor anyway!
+    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+    pnb3.setParameters(benders_parameter_);
+    pnb3.initialSolve();
+    solution_values.push_back(pnb3.getObjValue());
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
-    pnb.setParameters(benders_parameter_);
-    pnb.initialSolve();
-     // Output file
-    //SmiScnModel* smiModel = testModel.getSmi();
-    //smiModel->writeSmps("feasibilityProblem",true,false);
-    //     testModel.solve(MP_model::MINIMIZE);
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb2(new_solver,testModel.getSmi());
+    pnb2.setParameters(benders_parameter_);
+    pnb2.initialSolve();
+    solution_values.push_back(pnb2.getObjValue());
+
+    // Compute mean value
+    double mean = 0.0;
+    for (int i = 0; i < solution_values.size(); i++)
+        mean += solution_values[i]/solution_values.size();
+
+    EXPECT_NEAR(mean,14.0563,0.1);
     
 }
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    ::testing::GTEST_FLAG(filter) = "*.StageAggregTest*";
     //::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.farmer*";

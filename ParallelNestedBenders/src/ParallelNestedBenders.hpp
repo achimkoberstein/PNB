@@ -179,6 +179,7 @@ private:
     bool stage_aggregation_;
     int begin_aggregation_stage_;
     int end_aggregation_stage_;
+    bool aggregate_from_start_;
 
 	// Memory/Time consumption parameters
 	// Normal case: Solver Instances per thread

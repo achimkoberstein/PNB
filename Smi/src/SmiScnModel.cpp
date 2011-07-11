@@ -2050,7 +2050,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
  }
 
- void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromEnd )
+ void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromStart )
  {
      // Call the method 
      int lesser_stage = std::min(firstStage,secondStage);
@@ -2063,13 +2063,14 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      if ( lesser_stage-upper_stage == 0 )
          return; // We do nothing
      if ( upper_stage-lesser_stage > 1) { // We need to apply the method several times, so we need to know from which direction we want to start!
-         if ( aggregateFromEnd )
-             for (int i = upper_stage; i > lesser_stage; i--){
-                 core_->aggregateStages( i-1, i, smiTree_);
+         int number_of_aggregations = upper_stage-lesser_stage;
+         if ( aggregateFromStart ) // With each aggregation, our final number of stages collapses by one.
+             for (int i = 0; i < number_of_aggregations; i++){ 
+                 core_->aggregateStages(lesser_stage,lesser_stage+1, smiTree_);
              }
          else
-             for (int i = lesser_stage; i < upper_stage; i++){
-                 core_->aggregateStages(i,i+1, smiTree_);
+             for (int i = upper_stage; i > lesser_stage; i--){
+                 core_->aggregateStages( i-1, i, smiTree_);
              }
      }
      else
