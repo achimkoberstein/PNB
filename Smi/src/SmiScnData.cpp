@@ -795,15 +795,16 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
                     // Now we copy the indices!
                     for (int j = 0; j < third_stage_node_data->strt_[new_start_index]; j++){
-                        new_inds[j] = third_stage_node_data->inds_[j] +  number_cols*number_children;//(( third_stage_node_data->inds_[j] < third_stage_node_data->colbeg_) ? number_cols*count : number_cols*number_children);
+                        new_inds[j] = third_stage_node_data->inds_[j] +  number_cols*number_children;
                     }
                     for (int j = 0; j < number_cols; j++){ // We add the new rows. We need to set the indices of the stage before
                         new_inds[third_stage_node_data->strt_[new_start_index]+j] = stageColPtr_[secondStage]+(number_cols)*count+j;
                     }
-                    for ( int j = third_stage_node_data->strt_[new_start_index]; j < third_stage_node_data->strt_[third_stage_node_data->rlo_strt_]; j++){ // Assign the missing indices
+                    for ( int j = third_stage_node_data->strt_[new_start_index]; j < third_stage_node_data->strt_[third_stage_node_data->rlo_strt_]; j++){ // Assign the missing indices for clo, cup, obj function
                         new_inds[j+number_cols] = third_stage_node_data->inds_[j]+number_children*number_cols;
+                        
                     }
-                    for ( int j = third_stage_node_data->strt_[third_stage_node_data->rlo_strt_]; j < third_stage_node_data->strt_[third_stage_node_data->nstrt_-1]; j++){ // Assign the missing indices
+                    for ( int j = third_stage_node_data->strt_[third_stage_node_data->rlo_strt_]; j < third_stage_node_data->strt_[third_stage_node_data->nstrt_-1]; j++){ // Assign the missing indices for rlo,rup
                         new_inds[j+number_cols] = third_stage_node_data->inds_[j]+(number_children-1)*number_rows;
                     }
                     assert( third_stage_node_data->colbeg_ == stageColPtr_[secondStage+1]);
@@ -1054,8 +1055,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         int new_obj_strt = new_start_offset-1;
 
         // Copy stochastic obj arrays
-        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->obj_strt_],current_node_data->getColUpperLength()*sizeof(double));
-        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->obj_strt_],current_node_data->getColUpperLength()*sizeof(int));
+        memcpy(new_elements+new_index_offset,current_node_data->dels_+current_node_data->strt_[current_node_data->obj_strt_],current_node_data->getObjectiveLength()*sizeof(double));
+        memcpy(new_indices+new_index_offset,current_node_data->inds_+current_node_data->strt_[current_node_data->obj_strt_],current_node_data->getObjectiveLength()*sizeof(int));
         new_index_offset += current_node_data->getObjectiveLength();
 
         det_eq_column_offset = 0;
@@ -1384,6 +1385,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
     nColInStage_[firstStage] = nodes_[firstStage]->ncol_;
     nRowInStage_[firstStage] = nodes_[firstStage]->nrow_;
+    // We need to delete the firstStage+1 node in any case!
+    delete nodes_[firstStage+1];
     for (int i = firstStage+1; i < nstag_; i++){
         nodes_[i] = nodes_[i+1]; // We need to shift the nodes one up
         // And we set the correct stage in the process
@@ -1391,6 +1394,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         nColInStage_[i] = nodes_[i]->ncol_;
         nRowInStage_[i] = nodes_[i]->nrow_;
     }
+    // Remove the last node to prevent issues during deletion
+    nodes_.pop_back();
+
+
     nColInStage_[nstag_] = 0;
     nRowInStage_[nstag_] = 0;
     // Start with the stageColPtr / stageRowPtr

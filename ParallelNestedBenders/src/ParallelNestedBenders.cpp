@@ -228,7 +228,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),seperate_first_stage_solver_(false),seperate_stage_solver_(false)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(false),seperate_stage_solver_(false)
     {
 
     }
@@ -360,6 +360,7 @@ namespace parallel_benders {
 				stage_aggregation_ = false;
 				LOG(ERROR) << "You specified stage aggregation that would result in the deterministic equivalent. We therefore disable stage aggregation for this run!";
 			}
+            aggregate_from_start_ = param.get(PNB_STAGE_AGGREGATION_DIRECTION,true);
         }
 
 
@@ -415,7 +416,7 @@ namespace parallel_benders {
         // Stage Aggregation!
         if ( stage_aggregation_){
             //smi_->writeSmps("beforeStageAgg",true,false);
-            smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_); // Aggregate stage 0 and 1
+            smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_, aggregate_from_start_); // Aggregate stage 0 and 1
             //smi_->writeSmps("stageAggreg",true,false);
             num_stages_ = core_->getNumStages();
             num_scenarios_ = smi_->getNumScenarios();

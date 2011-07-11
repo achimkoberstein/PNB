@@ -41,6 +41,7 @@ namespace parallel_benders{
     const std::string PNB_STAGE_AGGREGATION = "PNB_STAGE_AGGREGATION";
     const std::string PNB_STAGE_AGGREGATION_START = "PNB_STAGE_AGGREGATION_START";
     const std::string PNB_STAGE_AGGREGATION_END = "PNB_STAGE_AGGREGATION_END";
+    const std::string PNB_STAGE_AGGREGATION_DIRECTION = "PNG_STAGE_AGGREGATION_DIRECTION"; // In which direction do we want to aggregate if difference is greater than one? True means from start to end, false means from end to start
 
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //

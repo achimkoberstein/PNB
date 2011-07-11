@@ -325,7 +325,7 @@ public:
     @return the SMI tree
     */
     inline SmiScenarioTree<SmiScnNode *> * getSmiTree() { return &smiTree_; }
-    void aggregateStages( int firstStage, int secondStage, bool aggregateFromEnd = true );
+    void aggregateStages( int firstStage, int secondStage, bool aggregateFromStart = true );
 
 private:
     CoinMessageHandler *handler_;
