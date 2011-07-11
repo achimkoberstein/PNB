@@ -1265,12 +1265,12 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     if ( ! final_stage){
         // Prepare the core node of the stage after secondStage. thirdstagenode
 #pragma region thirdstagecore
-        // Add the new columns and rows..
-        int nels = nodes_[secondStage+1]->nels_ + number_cols*(number_children+1)+number_cols*3+number_cols*2;
+        // Add the new columns and rows.. Create new nels variable
+        int new_nels = nodes_[secondStage+1]->nels_ + number_cols*(number_children+1)+number_cols*3+number_cols*2;
         int new_start_overall = nodes_[secondStage+1]->nstrt_+number_cols;
         int new_start_index = nodes_[secondStage+1]->clo_strt_;
-        double * new_dels = (double *) calloc(nels, sizeof(double));
-        int * new_inds = (int*) calloc(nels,sizeof(int));
+        double * new_dels = (double *) calloc(new_nels, sizeof(double));
+        int * new_inds = (int*) calloc(new_nels,sizeof(int));
         int * new_start = (int*) calloc(new_start_overall,sizeof(int));
 
         // Memcpy the matrix elements and start
@@ -1310,7 +1310,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         new_start[new_rlo_strt] = new_start[new_obj_strt]+number_cols+nColInStage_[secondStage+1];
         new_start[new_rup_strt] = new_start[new_rlo_strt]+number_cols+nRowInStage_[secondStage+1];
         new_start[end_strt] = new_start[new_rup_strt]+number_cols+nRowInStage_[secondStage+1];
-        assert(new_start[end_strt] == nels);
+        assert(new_start[end_strt] == new_nels);
         
         // Set the new variables first!
         for (int i = 0; i < number_cols; i++){
@@ -1345,7 +1345,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         // Prepare the thirdstage core node
         nodes_[secondStage+1]->ncol_ += number_cols;
         nodes_[secondStage+1]->nrow_ += number_cols;
-        nodes_[secondStage+1]->nels_ = nels; //New Matrix entries, column bounds/obj and rowlower/rowuppper
+        nodes_[secondStage+1]->nels_ = new_nels; //New Matrix entries, column bounds/obj and rowlower/rowuppper
         int matrix_offset = number_cols*number_children;
         nodes_[secondStage+1]->clo_strt_ = new_clo_strt; // The matrix entries
         nodes_[secondStage+1]->cup_strt_ = new_cup_strt;
