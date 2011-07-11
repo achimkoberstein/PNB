@@ -67,7 +67,9 @@ public:
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); // Solve DetEq
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        // Solve the same problem with OsiBenStochasticSolverInterface..
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+         // Solve the same problem with OsiBenStochasticSolverInterface..
         std::string folder("../../../../Benders/test/instances/");
 #if _M_X32 || __x83_32__ // Works only on windows i suppose
         folder = "../../../../../Benders/test/instances/";
@@ -693,9 +695,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1022"),-3301005010, 1); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-2093"),-3301005010, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-13382"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-3301005010, 1); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-3301005010, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
 }
 TEST_F(NestedBendersTest,StageAggregTest){
     EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0563,0.01);
@@ -808,8 +810,8 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    ::testing::GTEST_FLAG(filter) = "*.StageAggregTest*";
-    //::testing::GTEST_FLAG(filter) = "*.scdp*";
+    //::testing::GTEST_FLAG(filter) = "*.StageAggregTest*";
+    ::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.farmer*";
     google::InitGoogleLogging(argv[0]);
