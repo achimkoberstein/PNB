@@ -62,7 +62,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        for (int i = 2; i < 5; i++){
+        for (int i = 2; i < 4; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1); 
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);// Aggregate from the start ( more scenario subproblems )
@@ -621,7 +621,9 @@ TEST_F(NestedBendersTest,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
 }
 
-
+TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
+    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
+}
 
 
 TEST_F(NestedBendersTest,FeasibilityCutTest){
@@ -710,7 +712,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    //::testing::GTEST_FLAG(filter) = "*.StageAggregTest*";
     ::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
