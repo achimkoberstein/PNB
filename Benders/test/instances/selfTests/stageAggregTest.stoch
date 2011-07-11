@@ -1,0 +1,46 @@
+STOCH         stageAgg
+SCENARIOS     DISCRETE
+ SC Scen_0      'ROOT'    0.0625         STAGE_1
+    RHS       R0_1      2.1
+    RHS       R0_2      3.1
+    RHS       R0_3      1
+ SC Scen_1      Scen_0      0.0625         STAGE_3
+    RHS       R0_3      2
+ SC Scen_2      Scen_0      0.0625         STAGE_2
+    RHS       R0_2      3.2
+    RHS       R0_3      3
+ SC Scen_3      Scen_2      0.0625         STAGE_3
+    RHS       R0_3      4
+ SC Scen_4      Scen_2      0.0625         STAGE_3
+    RHS       R0_3      5
+ SC Scen_5      Scen_0      0.0625         STAGE_2
+    RHS       R0_2      3.3
+    RHS       R0_3      6
+ SC Scen_6      Scen_5      0.0625         STAGE_3
+    RHS       R0_3      7
+ SC Scen_7      Scen_0    0.0625         STAGE_1
+    RHS       R0_1      2.2
+    RHS       R0_2      3.4
+    RHS       R0_3      8
+ SC Scen_8      Scen_7      0.0625         STAGE_2
+    RHS       R0_2      3.5
+    RHS       R0_3      9
+ SC Scen_9      Scen_8      0.0625         STAGE_3
+    RHS       R0_3      10
+ SC Scen_10     Scen_0    0.0625         STAGE_1
+    RHS       R0_1      2.3
+    RHS       R0_2      3.6
+    RHS       R0_3      11
+ SC Scen_11     Scen_10     0.0625         STAGE_3
+    RHS       R0_3      12
+ SC Scen_12     Scen_10     0.0625         STAGE_2
+    RHS       R0_2      3.7
+    RHS       R0_3      13
+ SC Scen_13     Scen_12     0.0625         STAGE_3
+    RHS       R0_3      14
+ SC Scen_14     Scen_12     0.0625         STAGE_3
+    RHS       R0_3      15
+ SC Scen_15     Scen_10     0.0625         STAGE_2
+    RHS       R0_2      3.8
+    RHS       R0_3      0
+ENDATA
