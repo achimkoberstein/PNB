@@ -24,6 +24,7 @@
 #include "BendersNodeData.hpp"
 #include "ParallelNestedBenders.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
+#include "OsiBenStochasticSolverInterface.hpp"
 
 
 class NestedBendersTest: public ::testing::Test {
@@ -63,6 +64,27 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,2); // Aggregate from the end
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+        // Test the stuff with old benders
+        std::string folder("../../../../Benders/test/instances/");
+#if _M_X32 || __x83_32__ // Works only on windows i suppose
+        folder = "../../../../../Benders/test/instances/";
+#endif
+        std::string core_name_string(core_name);
+        std::string time_name_string(time_name);
+        std::string stoch_name_string(stoch_name);
+        std::string total_core_string = folder+core_name_string;
+        std::string total_time_string = folder+time_name_string;
+        std::string total_stoch_string = folder+stoch_name_string;
+        OsiCpxSolverInterface osi_cpx;
+        SmiScnModel smi;
+        smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        // We can only solve aggregated problems..
+        // But we can aggregate the problem if we want to, we have the smi model!
+        smi.aggregateStages(1,smi.getCore()->getNumStages()-1,true); // We construct a two-stage problem, where the second stage contains all the scenarios we want?
+        OsiStochasticBendersTwoStageSolverInterface two_stage_benders(&osi_cpx,&smi);
+        two_stage_benders.initialSolve();
+        solutions.push_back(two_stage_benders.getObjValue());
 		//for (int i = 1; i <= 4; i++){
 		//	// Loop parameters
 		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,i); // choose number of cpus
