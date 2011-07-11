@@ -708,13 +708,15 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         overall_current_strt_offset += number_rows;
         // Update the col offset for the deterministic equivalent
         col_offset += number_cols;
+    }// End For : matrix indices
 
-        // We need to increase indices for all the nodes after the thirdstage nodes
-        if ( secondStage < nstag_-2 ){
+    // We need to increase indices for all the nodes after the thirdstage nodes
+    if ( !final_stage ){
+        for (int i = 0; i < first_stage_nodes.size(); i++){
             SmiTreeNode<SmiScnNode* > * child_node = first_stage_nodes[i]->getChild();
             // Get all the children of this node
-             bool goDown = true;
-             // This loop does not do what it is supposed to do! TODO: Fix it
+            bool goDown = true;
+            // This loop does not do what it is supposed to do! TODO: Fix it
             while ( child_node != first_stage_nodes[i] ){ // As long as there are nodes below the thirdstage
                 // Go get the child. We increase the indices in every one of these nodes
                 if ( child_node->hasChild() && goDown)
@@ -747,9 +749,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 
                 }
             }// End While for subtree!
-        }// End If 
- 
-    }// End For : matrix indices
+        }// End For first_stage_nodes
+    }// End If !final_stage
 
     if ( !final_stage){
         // Now we need to change the thirdstage nodes
@@ -1266,8 +1267,9 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         // Prepare the core node of the stage after secondStage. thirdstagenode
 #pragma region thirdstagecore
         // Add the new columns and rows.. Create new nels variable
+        assert( nodes_[secondStage+1]->nels_ == nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->nstrt_-1]);
         int new_nels = nodes_[secondStage+1]->nels_ + number_cols*(number_children+1)+number_cols*3+number_cols*2;
-        int new_start_overall = nodes_[secondStage+1]->nstrt_+number_cols;
+        int new_start_overall = nodes_[secondStage+1]->nstrt_+number_cols; // The size of new start array: old start array plus new rows
         int new_start_index = nodes_[secondStage+1]->clo_strt_;
         double * new_dels = (double *) calloc(new_nels, sizeof(double));
         int * new_inds = (int*) calloc(new_nels,sizeof(int));
@@ -1305,7 +1307,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         int new_rlo_strt = new_obj_strt+1;
         int new_rup_strt = new_rlo_strt+1;
         int end_strt = new_rup_strt+1;
-        new_start[new_cup_strt] = new_start[new_clo_strt]+number_cols+nColInStage_[secondStage+1];
+        new_start[new_cup_strt] = new_start[new_clo_strt]+number_cols+nColInStage_[secondStage+1]; // How many entries do we need? number_cols new cols plus oldCols nColInStage_
         new_start[new_obj_strt] = new_start[new_cup_strt]+number_cols+nColInStage_[secondStage+1];
         new_start[new_rlo_strt] = new_start[new_obj_strt]+number_cols+nColInStage_[secondStage+1];
         new_start[new_rup_strt] = new_start[new_rlo_strt]+number_cols+nRowInStage_[secondStage+1];
@@ -1326,11 +1328,11 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             new_dels[new_start[new_rup_strt]+nRowInStage_[secondStage+1]+i] = 0;
         }
         // Memcpy the rest
-        memcpy(new_dels+new_start[new_clo_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage]->clo_strt_],nColInStage_[secondStage+1]*sizeof(double));
-        memcpy(new_dels+new_start[new_cup_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage]->cup_strt_],nColInStage_[secondStage+1]*sizeof(double));
-        memcpy(new_dels+new_start[new_obj_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage]->obj_strt_],nColInStage_[secondStage+1]*sizeof(double));
-        memcpy(new_dels+new_start[new_rlo_strt],nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage]->rlo_strt_],nRowInStage_[secondStage+1]*sizeof(double));
-        memcpy(new_dels+new_start[new_rup_strt],nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage]->rup_strt_],nRowInStage_[secondStage+1]*sizeof(double));
+        memcpy(new_dels+new_start[new_clo_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->clo_strt_],nColInStage_[secondStage+1]*sizeof(double));
+        memcpy(new_dels+new_start[new_cup_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->cup_strt_],nColInStage_[secondStage+1]*sizeof(double));
+        memcpy(new_dels+new_start[new_obj_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->obj_strt_],nColInStage_[secondStage+1]*sizeof(double));
+        memcpy(new_dels+new_start[new_rlo_strt],nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->rlo_strt_],nRowInStage_[secondStage+1]*sizeof(double));
+        memcpy(new_dels+new_start[new_rup_strt],nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->rup_strt_],nRowInStage_[secondStage+1]*sizeof(double));
 
         for (int i = 0; i< nColInStage_[secondStage+1]; i++){
             new_inds[new_start[new_clo_strt]+number_cols+i] = start_of_third_stage_col_indices+number_cols+i;
@@ -1812,6 +1814,7 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
         temp_ptr = realloc(this->strt_,nstrt_*sizeof(int));
         this->strt_ = (int*) temp_ptr;
     }
+    assert( this->nels_ == this->strt_[this->nstrt_-1]);
 }
 
 int SmiNodeData::combineWithDenseCoreRow(double *dr,const int nels,const int *inds, const double *dels, double *dest_dels,int *dest_indx)
@@ -2287,4 +2290,5 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     rlo_strt_ += new_columns[stg_];
     rup_strt_ += new_columns[stg_];
     nstrt_ += new_columns[stg_];
+    nels_ = strt_[nstrt_-1]; // We ensure that the number of elements is correctly set!
 }
