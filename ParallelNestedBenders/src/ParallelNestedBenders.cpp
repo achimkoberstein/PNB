@@ -681,10 +681,11 @@ namespace parallel_benders {
             LOG(INFO) << "Problem is infeasible.";
         }
 
-        // Show the first stage solution!
-        for (int i = 0; i < stage_data_[0]->num_columns_; i++){
-            std::cout << "x" << i << " : " << tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] << std::endl;
-        }
+        // Show the first stage solution! Only if feasible
+        if ( !infeasible_problem_ )
+            for (int i = 0; i < stage_data_[0]->num_columns_; i++){
+                std::cout << "x" << i << " : " << tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] << std::endl;
+            }
 
     }
 
@@ -742,13 +743,13 @@ namespace parallel_benders {
         else
             osi_solver->initialSolve();
 
-        //if ( current_stage_ <= 3){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
-        //} // TODO: Debugging stuff
+        if ( current_stage_ <= 3){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        } // TODO: Debugging stuff
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
         if ( !osi_solver->isProvenOptimal() ){
@@ -985,6 +986,14 @@ namespace parallel_benders {
             // We still have to reload the matrix as it might have be changed in the past, and this is not what we want..
             reuse_solver = false;
             benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
+        }
+        // Do a quick matrix check:
+        if ( benders_node_pointer->matrix_->getMinorDim() == 0){
+            benders_node_pointer->matrix_->reverseOrdering(); // We have an empty matrix, it is col ordered
+            benders_node_pointer->matrix_->setDimensions(1,stage_pointer->num_columns_);
+            // Insert at least empty entries for our columns
+            for (int i = 0; i < stage_pointer->num_columns_; i++)
+                benders_node_pointer->matrix_->modifyCoefficient(0,i,0,true);
         }
 
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
