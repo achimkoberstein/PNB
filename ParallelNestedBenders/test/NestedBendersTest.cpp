@@ -62,14 +62,34 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        for (int i = 2; i < 4; i++){
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1); 
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);// Aggregate from the start ( more scenario subproblems )
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);// Aggregate from the end ( less scenario subproblems )
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        }
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,4);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1); 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //for (int i = 2; i < 5; i++){
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,5-i); 
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
+        //    //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);// Aggregate from the start ( more scenario subproblems )
+        //    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);// Aggregate from the end ( less scenario subproblems )
+        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //}
 
         // Test the stuff with old benders
 //        std::string folder("../../../../Benders/test/instances/");
