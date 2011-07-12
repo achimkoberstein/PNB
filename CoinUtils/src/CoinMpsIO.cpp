@@ -4187,102 +4187,103 @@ CoinMpsIO::writeMps(const char *filename, int compression,
 
    // Through columns (only put out if elements or objective value)
    for (i=0;i<numberColumns_;i++) {
-     if (i==nextColumnString) {
-       // set up
-       int k=whichString;
-       int iColumn=nextColumnString;
-       int iRow=nextRowString;
-       const char * dummy;
-       while (iColumn==nextColumnString) {
-	 stringRow[iRow]=1;
-	 k++;
-	 decodeString(k,iRow,iColumn,dummy);
+       if (i==nextColumnString) {
+           // set up
+           int k=whichString;
+           int iColumn=nextColumnString;
+           int iRow=nextRowString;
+           const char * dummy;
+           while (iColumn==nextColumnString) {
+               stringRow[iRow]=1;
+               k++;
+               decodeString(k,iRow,iColumn,dummy);
+           }
        }
-     }
-     if (objective[i]||lengths[i]||i==nextColumnString) {
-       // see if bound will be needed
-       if (columnLower[i]||columnUpper[i]<largeValue||isInteger(i))
-	 ifBounds=true;
-       int numberFields=0;
-       if (objective[i]) {
-	 convertDouble(0,formatType,objective[i],outputValue[0],
-		       objrow,outputRow[0]);
-	 numberFields=1;
-	 if (stringRow[numberRows_]) {
-	   assert (objective[i]==STRING_VALUE);
-	   assert (nextColumnString==i&&nextRowString==numberRows_);
-	   strcpyeq(outputValue[0],nextString);
-	   stringRow[numberRows_]=0;
-	   decodeString(++whichString,nextRowString,nextColumnString,nextString);
-	 }
+       bool allowZeroes = true;
+       if (objective[i]||lengths[i]||i==nextColumnString|| allowZeroes&&objective[i]==0) {
+           // see if bound will be needed
+           if (columnLower[i]||columnUpper[i]<largeValue||isInteger(i))
+               ifBounds=true;
+           int numberFields=0;
+           if (objective[i] || allowZeroes&&objective[i]==0) {
+               convertDouble(0,formatType,objective[i],outputValue[0],
+                   objrow,outputRow[0]);
+               numberFields=1;
+               if (stringRow[numberRows_]) {
+                   assert (objective[i]==STRING_VALUE);
+                   assert (nextColumnString==i&&nextRowString==numberRows_);
+                   strcpyeq(outputValue[0],nextString);
+                   stringRow[numberRows_]=0;
+                   decodeString(++whichString,nextRowString,nextColumnString,nextString);
+               }
+           }
+           if (numberFields==numberAcross) {
+               // put out card
+               outputCard(formatType, numberFields,
+                   output, "    ",
+                   columnNames[i],
+                   outputValue,
+                   outputRow);
+               numberFields=0;
+           }
+           int j;
+           int numberEntries = lengths[i];
+           int start = starts[i];
+           for (j=0;j<numberEntries;j++) {
+               tempRow[j] = rows[start+j];
+               tempValue[j] = elements[start+j];
+           }
+           CoinSort_2(tempRow,tempRow+numberEntries,tempValue);
+           for (j=0;j<numberEntries;j++) {
+               int jRow = tempRow[j];
+               double value = tempValue[j];
+               if (value&&!stringRow[jRow] || !stringRow[jRow]&&allowZeroes) { // Allow zero values printed out!
+                   convertDouble(0,formatType,value,
+                       outputValue[numberFields],
+                       rowNames[jRow],
+                       outputRow[numberFields]);
+                   numberFields++;
+                   if (numberFields==numberAcross) {
+                       // put out card
+                       outputCard(formatType, numberFields,
+                           output, "    ",
+                           columnNames[i],
+                           outputValue,
+                           outputRow);
+                       numberFields=0;
+                   }
+               }
+           }
+           if (numberFields) {
+               // put out card
+               outputCard(formatType, numberFields,
+                   output, "    ",
+                   columnNames[i],
+                   outputValue,
+                   outputRow);
+           }
        }
-       if (numberFields==numberAcross) {
-	 // put out card
-	 outputCard(formatType, numberFields,
-		    output, "    ",
-		    columnNames[i],
-		    outputValue,
-		    outputRow);
-	 numberFields=0;
+       // end see if any strings
+       if (i==nextColumnString) {
+           int iColumn=nextColumnString;
+           int iRow=nextRowString;
+           while (iColumn==nextColumnString) {
+               double value = 1.0;
+               convertDouble(0,formatType,value,
+                   outputValue[0],
+                   rowNames[nextRowString],
+                   outputRow[0]);
+               strcpyeq(outputValue[0],nextString);
+               // put out card
+               outputCard(formatType, 1,
+                   output, "    ",
+                   columnNames[i],
+                   outputValue,
+                   outputRow);
+               stringRow[iRow]=0;
+               decodeString(++whichString,nextRowString,nextColumnString,nextString);
+           }
        }
-       int j;
-       int numberEntries = lengths[i];
-       int start = starts[i];
-       for (j=0;j<numberEntries;j++) {
-	 tempRow[j] = rows[start+j];
-	 tempValue[j] = elements[start+j];
-       }
-       CoinSort_2(tempRow,tempRow+numberEntries,tempValue);
-       for (j=0;j<numberEntries;j++) {
-	 int jRow = tempRow[j];
-	 double value = tempValue[j];
-	 if (value&&!stringRow[jRow]) {
-	   convertDouble(0,formatType,value,
-			 outputValue[numberFields],
-			 rowNames[jRow],
-			 outputRow[numberFields]);
-	   numberFields++;
-	   if (numberFields==numberAcross) {
-	     // put out card
-	     outputCard(formatType, numberFields,
-			output, "    ",
-			columnNames[i],
-			outputValue,
-			outputRow);
-	     numberFields=0;
-	   }
-	 }
-       }
-       if (numberFields) {
-	 // put out card
-	 outputCard(formatType, numberFields,
-		    output, "    ",
-		    columnNames[i],
-		    outputValue,
-		    outputRow);
-       }
-     }
-     // end see if any strings
-     if (i==nextColumnString) {
-       int iColumn=nextColumnString;
-       int iRow=nextRowString;
-       while (iColumn==nextColumnString) {
-	 double value = 1.0;
-	 convertDouble(0,formatType,value,
-		       outputValue[0],
-		       rowNames[nextRowString],
-		       outputRow[0]);
-	 strcpyeq(outputValue[0],nextString);
-	 // put out card
-	 outputCard(formatType, 1,
-		    output, "    ",
-		    columnNames[i],
-		    outputValue,
-		    outputRow);
-	 stringRow[iRow]=0;
-	 decodeString(++whichString,nextRowString,nextColumnString,nextString);
-       }
-     }
    }
    delete [] tempRow;
    delete [] tempValue;
