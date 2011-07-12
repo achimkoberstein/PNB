@@ -686,7 +686,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 
     MP_constraint firstStage,secondStage(T);
 
-    firstStage() = x() >= 5;
+    firstStage() = Constant(0)*x() >= 5;
     secondStage(T+1) = y(T-1)+ y(T) >= randomParam(T);
     testModel.setObjective( x()+sum(T,param1(T)*y(T)) );
     testModel.attach();
@@ -696,9 +696,9 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(new_solver,testModel.getSmi());
     parallel_benders::Parameter benders_parameter_;
     benders_parameter_.init(); // This should be called by the standard constructor anyway!
-    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
-    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
-    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
+    //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
+    //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+    //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
     pnb.setParameters(benders_parameter_);
     pnb.initialSolve();
     // Output file
@@ -710,8 +710,8 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    ::testing::GTEST_FLAG(filter) = "*.scdp*";
+    ::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    //::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
