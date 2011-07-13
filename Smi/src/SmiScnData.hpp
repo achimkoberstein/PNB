@@ -209,6 +209,8 @@ private:
 	int    * strt_; //start array, where new row begins
 
 	int ptr_count; //Propably for memory management?!
+
+
 };
 
 // Return pointer to CoinPackedMatrix
@@ -279,6 +281,9 @@ private:
     void gutsOfConstructor(int nrow,int ncol,int nstag, int *cstag,int *rstag, CoinPackedMatrix *matrix, CoinPackedVector *dclo, CoinPackedVector *dcup, CoinPackedVector *dobj, CoinPackedVector *drlo, CoinPackedVector *drup, int* integerIndices = 0,int integerLength = 0,int* binaryIndices = 0,int binaryLength = 0);
 
     OsiSolverInterface* generateCoreProblem(OsiSolverInterface* osi);
+
+    void createSecondStageDeterministicEquivalentCoreModel( int first_stage, int second_stage, int number_children);
+    void generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* current_node, int number_children);
 
 
 

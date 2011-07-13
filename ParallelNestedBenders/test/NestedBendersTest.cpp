@@ -67,20 +67,10 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,4);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1); 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //for (int i = 2; i < 5; i++){
         //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,5-i); 
@@ -733,8 +723,8 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.StageAggregTest*";
-    ::testing::GTEST_FLAG(filter) = "*.scdp*";
-    //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+    //::testing::GTEST_FLAG(filter) = "*.scdp*";
+    ::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

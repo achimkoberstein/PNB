@@ -682,9 +682,9 @@ namespace parallel_benders {
         }
 
         // Show the first stage solution!
-        for (int i = 0; i < stage_data_[0]->num_columns_; i++){
-            std::cout << "x" << i << " : " << tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] << std::endl;
-        }
+        //for (int i = 0; i < stage_data_[0]->num_columns_; i++){
+        //    std::cout << "x" << i << " : " << tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] << std::endl;
+        //}
 
     }
 
