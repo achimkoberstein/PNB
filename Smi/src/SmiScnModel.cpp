@@ -103,13 +103,12 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
         assert(branch == 0);
         anc = 0;
         branch = 0;
-        //Add core node pointer to SmiScnModel for proper cleanup. Kind of unnice to do it in this way.
-        //if (core_ == 0)
-        //    core_ = core;
-
 
         // generate root node
-        SmiNodeData *node = core->getNode(0);
+        //SmiNodeData *node = core->getNode(0);
+        CoinPackedMatrix matrix;
+        CoinPackedVector vector;
+        SmiNodeData *node = new SmiNodeData(0,core,&matrix,&vector,&vector,&vector,&vector,&vector);
         SmiScnNode *tnode = new SmiScnNode(node);
         tnode->setScenarioIndex(0);
         node_vec.push_back(tnode);
