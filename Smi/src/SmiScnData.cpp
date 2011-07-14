@@ -774,10 +774,32 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // Now comes the scenario tree: We iterate over all the firstStage nodes (siblings) and need to include the information of the direct child nodes in 
     // - second stage nodes 
     // - sibling first-stage nodes
-
-    for (int i = 0; i < first_stage_nodes.size(); i++)
+    std::vector<int> scenario_numbers;
+    int num_new_scenarios = first_stage_nodes.size();
+    assert( first_stage_nodes[num_new_scenarios-1]->getDataPtr()->getScenarioIndex() == 0 );
+    for (int i = 0; i < first_stage_nodes.size(); i++){ // We iterate here from back to front
         this->generateNewStochasticNodeByStage(first_stage_nodes[i],number_children);
-
+        if ( final_stage ){// We now have less scenarios than before, replace scenario indices..
+            // We want to replace the number
+            int current_scen = first_stage_nodes[i]->getDataPtr()->getScenarioIndex();
+            SmiTreeNode<SmiScnNode*>* temp_node = first_stage_nodes[i];
+            temp_node->setScenario(--num_new_scenarios);
+            temp_node->getDataPtr()->setScenarioIndex(num_new_scenarios);
+            temp_node = current_node;
+            // Go up the tree to replace scenario indices!
+            while ( temp_node->hasParent() ){
+                temp_node = temp_node->getParent();
+                if ( temp_node->scenario() == current_scen ){
+                    temp_node->setScenario(num_new_scenarios);
+                    temp_node->getDataPtr()->setScenarioIndex(num_new_scenarios);
+                }
+                else // We do not have to go up the tree, because our direct parent has another scenario number
+                    break;
+            }
+        }//End If
+    }//End for
+    if ( final_stage )
+        assert( num_new_scenarios == 0);
 
 #pragma endregion CopyElements
 
@@ -796,8 +818,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         increaseIndices(nodes_[secondStage+1],number_children*number_cols,(number_children-1)*number_rows+number_cols); // Increase all the indices to the correct level
 
         // Memcpy the matrix elements and indices, but not the clo/cup/obj/rlo/rup
-        memcpy(new_dels+number_cols*2,nodes_[secondStage+1]->dels_,nodes_[secondStage+1]->strt_[new_start_index]*sizeof(double));
-        memcpy(new_inds+number_cols*2,nodes_[secondStage+1]->inds_,nodes_[secondStage+1]->strt_[new_start_index]*sizeof(int));
+        memcpy(new_dels+number_cols*(number_children+1),nodes_[secondStage+1]->dels_,nodes_[secondStage+1]->strt_[new_start_index]*sizeof(double));
+        memcpy(new_inds+number_cols*(number_children+1),nodes_[secondStage+1]->inds_,nodes_[secondStage+1]->strt_[new_start_index]*sizeof(int));
         memcpy(new_start+number_cols+1,nodes_[secondStage+1]->strt_+1,(nodes_[secondStage+1]->nstrt_-1)*sizeof(int));// Do not copy the leading 0
 
         int start_of_third_stage_col_indices = stageColPtr_[secondStage+1]+(number_children-1)*number_cols;
@@ -838,20 +860,26 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             new_inds[new_start[new_clo_strt]+i] = start_of_third_stage_col_indices+i;
             new_inds[new_start[new_cup_strt]+i] = start_of_third_stage_col_indices+i;
             new_inds[new_start[new_obj_strt]+i] = start_of_third_stage_col_indices+i;
-            new_inds[new_start[new_rlo_strt]+i] = start_of_third_stage_row_indices+nRowInStage_[secondStage+1]+i;
-            new_inds[new_start[new_rup_strt]+i] = start_of_third_stage_row_indices+nRowInStage_[secondStage+1]+i;
+            new_inds[new_start[new_rlo_strt]+i] = start_of_third_stage_row_indices+i;
+            new_inds[new_start[new_rup_strt]+i] = start_of_third_stage_row_indices+i;
             new_dels[new_start[new_clo_strt]+i] = -infinity_;
             new_dels[new_start[new_cup_strt]+i] = infinity_;
             new_dels[new_start[new_obj_strt]+i] = 0;
             new_dels[new_start[new_rlo_strt]+i] = 0;
             new_dels[new_start[new_rup_strt]+i] = 0;
         }
-        // Memcpy the rest
+        // Memcpy the rest: elements ..
         memcpy(new_dels+new_start[new_clo_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->clo_strt_],nColInStage_[secondStage+1]*sizeof(double));
         memcpy(new_dels+new_start[new_cup_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->cup_strt_],nColInStage_[secondStage+1]*sizeof(double));
         memcpy(new_dels+new_start[new_obj_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->obj_strt_],nColInStage_[secondStage+1]*sizeof(double));
         memcpy(new_dels+new_start[new_rlo_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->rlo_strt_],nRowInStage_[secondStage+1]*sizeof(double));
         memcpy(new_dels+new_start[new_rup_strt]+number_cols,nodes_[secondStage+1]->dels_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->rup_strt_],nRowInStage_[secondStage+1]*sizeof(double));
+        // and indices ...
+        memcpy(new_inds+new_start[new_clo_strt]+number_cols,nodes_[secondStage+1]->inds_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->clo_strt_],nColInStage_[secondStage+1]*sizeof(int));
+        memcpy(new_inds+new_start[new_cup_strt]+number_cols,nodes_[secondStage+1]->inds_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->cup_strt_],nColInStage_[secondStage+1]*sizeof(int));
+        memcpy(new_inds+new_start[new_obj_strt]+number_cols,nodes_[secondStage+1]->inds_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->obj_strt_],nColInStage_[secondStage+1]*sizeof(int));
+        memcpy(new_inds+new_start[new_rlo_strt]+number_cols,nodes_[secondStage+1]->inds_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->rlo_strt_],nRowInStage_[secondStage+1]*sizeof(int));
+        memcpy(new_inds+new_start[new_rup_strt]+number_cols,nodes_[secondStage+1]->inds_+nodes_[secondStage+1]->strt_[nodes_[secondStage+1]->rup_strt_],nRowInStage_[secondStage+1]*sizeof(int));
         //// And set the correct indices for the old indices (Already done via call to increaseIndices
         //for (int i = 0; i< nColInStage_[secondStage+1]; i++){
         //    new_inds[new_start[new_clo_strt]+number_cols+i] = start_of_third_stage_col_indices+number_cols+i;
@@ -2272,26 +2300,25 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
 
     delete current_node->getChild(); // This deletes the childs and siblings of this node.
     current_node->setChild(new_child_node); // we set the child pointer to the new_child_node, which is zero, if we had no thirdstage nodes
-    int old_scenario = current_node->scenario();
     // I think we only need to restructure the scenario indices, If we have no thirdstage nodes.
-    if ( secondStage == nstag_-1 ){
-        assert(false);
-        // TODO: Set correct scenario!
-        //current_node->setScenario(number_scenarios-cur_scen-1);
-        //current_node->getDataPtr()->setScenarioIndex(number_scenarios-cur_scen-1);
-        //temp_node = current_node;
-        //// Go up the tree to replace scenario indices!
-        //while ( temp_node->hasParent() ){
-        //    temp_node = temp_node->getParent();
-        //    if ( temp_node->scenario() == old_scenario ){
-        //        temp_node->setScenario(number_scenarios-cur_scen-1);
-        //        temp_node->getDataPtr()->setScenarioIndex(temp_node->scenario());
-        //    }
-        //    else
-        //        break;
-        //}
+    //if ( secondStage == nstag_-1 ){
+    //    assert(false);
+    //    // TODO: Set correct scenario!
+    //    current_node->setScenario(number_scenarios-cur_scen-1);
+    //    current_node->getDataPtr()->setScenarioIndex(number_scenarios-cur_scen-1);
+    //    temp_node = current_node;
+    //    // Go up the tree to replace scenario indices!
+    //    while ( temp_node->hasParent() ){
+    //        temp_node = temp_node->getParent();
+    //        if ( temp_node->scenario() == old_scenario ){
+    //            temp_node->setScenario(number_scenarios-cur_scen-1);
+    //            temp_node->getDataPtr()->setScenarioIndex(temp_node->scenario());
+    //        }
+    //        else
+    //            break;
+    //    }
 
-    }
+    //}
     current_node->setNumChildren(num_childs);
 
 }
