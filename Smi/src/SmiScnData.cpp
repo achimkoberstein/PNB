@@ -700,10 +700,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         // Now we need to change the thirdstage nodes too
         for (int i = 0; i < first_stage_nodes.size(); i++){
             SmiTreeNode<SmiScnNode*>* second_stage_node = first_stage_nodes[i]->getChild(); // we need this node and all the sibling nodes!
+            int count = 0;
             // We need to do the following for all the siblings!
             while ( second_stage_node != NULL ){
                 SmiTreeNode<SmiScnNode*>* third_stage_node = second_stage_node->getChild();
-                int count = 0;
                 while ( third_stage_node != NULL){
                     // Where are we? Column begin is the same for all nodes in thirdstage, due to core node!
                     // We do the following: Exchange indices of previous stage nodes with indices of newly added columns, that ensure we react to the correct detEq index!
@@ -749,6 +749,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     third_stage_node_data->obj_strt_ += number_cols;
                     third_stage_node_data->rlo_strt_ += number_cols;
                     third_stage_node_data->rup_strt_ += number_cols;
+                    // At least from now on, we have matrix entries
+                    third_stage_node_data->has_matrix_ = true;
                     third_stage_node_data->nstrt_ += number_cols; // Because is the number of new rows we added..
                     third_stage_node_data->nels_ = new_start[third_stage_node_data->nstrt_-1]; // The number of elements
                     third_stage_node_data->deleteMemory();
@@ -761,9 +763,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     third_stage_node_data->nrow_ += number_cols;
                     third_stage_node_data->ncol_ += number_cols;
                     third_stage_node = third_stage_node->getSibling();
-                    count++;
+                    
                 }// End While Thirdstagenode
                 second_stage_node = second_stage_node->getSibling();
+                count++;
             } // End While SecondStageNode
         } // End For
     }//End If !finalStage
@@ -901,6 +904,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
         nodes_[secondStage+1]->obj_strt_ = new_obj_strt;
         nodes_[secondStage+1]->rlo_strt_ = new_rlo_strt;
         nodes_[secondStage+1]->rup_strt_ = new_rup_strt;
+        // At least now, we have matrix entries
+        nodes_[secondStage+1]->has_matrix_ = true;
         nodes_[secondStage+1]->nstrt_ = end_strt+1;
         nodes_[secondStage+1]->deleteMemory();
         nodes_[secondStage+1]->dels_ = new_dels;
@@ -963,53 +968,58 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
     // Update colStage/rowStage array, introduce new ones..
 
     if ( !rowNamesFree.empty() && !colNamesFree.empty()){
-        std::vector< std::string > col_names;
-        std::vector< std::string > row_names;
-        col_names.reserve(new_ncol); row_names.reserve(new_nrow);
-        //memcpy before ( and after TODO )
-        std::vector<std::string>::iterator it = rowNamesFree.begin();
-        std::advance(it,stageRowPtr_[secondStage]-(number_children*number_rows));
-        std::copy(rowNamesFree.begin(),it,std::back_inserter(row_names));
+        //std::vector< std::string > col_names;
+        //std::vector< std::string > row_names;
+        //col_names.reserve(new_ncol); row_names.reserve(new_nrow);
+        ////memcpy before ( and after TODO )
+        //std::vector<std::string>::iterator it = rowNamesFree.begin();
+        //std::advance(it,stageRowPtr_[secondStage]-(number_children*number_rows));
+        //std::copy(rowNamesFree.begin(),it,std::back_inserter(row_names));
 
-        it = colNamesFree.begin();
-        std::advance(it,stageColPtr_[secondStage]-(number_children*number_cols));
-        std::copy(colNamesFree.begin(),it,std::back_inserter(col_names));
+        //it = colNamesFree.begin();
+        //std::advance(it,stageColPtr_[secondStage]-(number_children*number_cols));
+        //std::copy(colNamesFree.begin(),it,std::back_inserter(col_names));
 
-        // Copy the names of the aggregated secondStage indices and add a "det_" in front of it, to distinguish them
-        int first_index_of_original_problem_row = stageRowPtr_[secondStage]-number_children*number_rows; // Start of indices of det-eq of second stage
-        int first_index_of_original_problem_col = stageColPtr_[secondStage]-number_children*number_cols;
-        for (int i = 0; i < number_children; i++){
-            for (int j = 0; j < number_cols; j++){
-                std::stringstream ss;
-                ss << "det_" << i << "_"  << colNamesFree[first_index_of_original_problem_col+j];
-                col_names.push_back(ss.str());
-            }
-            for (int j = 0; j < number_rows; j++){
-                std::stringstream ss;
-                ss << "det_" << i << "_"  << rowNamesFree[first_index_of_original_problem_row+j];
-                row_names.push_back(ss.str());
-            }
-        }
-        if ( !final_stage ) {
-            // We need to append the other names..
-            for (int i = stageColPtr_[secondStage+1]; i < stageColPtr_[nstag_] ; i++){
-                std::stringstream ss;
-                ss << "det_later_" << i;
-                col_names.push_back(ss.str());
-            }
-            for (int i = stageRowPtr_[secondStage+1]; i < stageRowPtr_[nstag_] ; i++){
-                std::stringstream ss;
-                ss << "det_later_" << i;
-                row_names.push_back(ss.str());
-            }
-        }
-        // Append the new names for the later stages!
-        // TODO::
-        // We set the new names
-        colNamesFree = col_names;
-        rowNamesFree = row_names;
+        //// Copy the names of the aggregated secondStage indices and add a "det_" in front of it, to distinguish them
+        //int first_index_of_original_problem_row = stageRowPtr_[secondStage]-number_children*number_rows; // Start of indices of det-eq of second stage
+        //int first_index_of_original_problem_col = stageColPtr_[secondStage]-number_children*number_cols;
+        //for (int i = 0; i < number_children; i++){
+        //    for (int j = 0; j < number_cols; j++){
+        //        std::stringstream ss;
+        //        ss << "det_" << i << "_"  << colNamesFree[first_index_of_original_problem_col+j];
+        //        col_names.push_back(ss.str());
+        //    }
+        //    for (int j = 0; j < number_rows; j++){
+        //        std::stringstream ss;
+        //        ss << "det_" << i << "_"  << rowNamesFree[first_index_of_original_problem_row+j];
+        //        row_names.push_back(ss.str());
+        //    }
+        //}
+        //if ( !final_stage ) {
+        //    // We need to append the other names..
+        //    for (int i = secondStage+1; i < nstag_ ; i++){
+        //        for (int j = stageColPtr_[i]; j < stageColPtr_[i+1]; j++){
+        //            std::stringstream ss;
+        //            ss << "det_later_" << colNamesFree[;
+        //            col_names.push_back(ss.str());
+        //        }
+        //    }
+        //    for (int i = stageRowPtr_[secondStage+1]; i < stageRowPtr_[nstag_] ; i++){
+        //        std::stringstream ss;
+        //        ss << "det_later_" << i;
+        //        row_names.push_back(ss.str());
+        //    }
+        //}
+        //// Append the new names for the later stages!
+        //// TODO::
+        //// We set the new names
+        //colNamesFree = col_names;
+        //rowNamesFree = row_names;
 
         // Insert all the other strings at later stages (TODO), if we want to aggregate from the beginning
+        // TODO: If done correctly, we have to stop this right here..
+        rowNamesFree.clear();
+        rowNamesStrict.clear();
     }
     // We clear the strict strings
     colNamesStrict.clear();
@@ -2251,6 +2261,9 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
     new_start[new_start_offset++] = new_index_offset;
 
     // Now we finished the preparation of the stochastic node. We now need to update the node with the new arrays and variables!
+    // Check if we added something to the matrix
+    if ( new_clo_strt > current_node->getDataPtr()->getNode()->clo_strt_ )
+        current_node->getDataPtr()->getNode()->has_matrix_ = true;
     current_node->getDataPtr()->getNode()->clo_strt_ = new_clo_strt;
     current_node->getDataPtr()->getNode()->cup_strt_ = new_cup_strt;
     current_node->getDataPtr()->getNode()->obj_strt_ = new_obj_strt;
