@@ -62,8 +62,8 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,8); 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,9);
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
