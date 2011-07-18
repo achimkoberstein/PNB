@@ -788,7 +788,6 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
             SmiTreeNode<SmiScnNode*>* temp_node = first_stage_nodes[i];
             temp_node->setScenario(--num_new_scenarios);
             temp_node->getDataPtr()->setScenarioIndex(num_new_scenarios);
-            temp_node = current_node;
             // Go up the tree to replace scenario indices!
             while ( temp_node->hasParent() ){
                 temp_node = temp_node->getParent();
@@ -2313,25 +2312,6 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
 
     delete current_node->getChild(); // This deletes the childs and siblings of this node.
     current_node->setChild(new_child_node); // we set the child pointer to the new_child_node, which is zero, if we had no thirdstage nodes
-    // I think we only need to restructure the scenario indices, If we have no thirdstage nodes.
-    //if ( secondStage == nstag_-1 ){
-    //    assert(false);
-    //    // TODO: Set correct scenario!
-    //    current_node->setScenario(number_scenarios-cur_scen-1);
-    //    current_node->getDataPtr()->setScenarioIndex(number_scenarios-cur_scen-1);
-    //    temp_node = current_node;
-    //    // Go up the tree to replace scenario indices!
-    //    while ( temp_node->hasParent() ){
-    //        temp_node = temp_node->getParent();
-    //        if ( temp_node->scenario() == old_scenario ){
-    //            temp_node->setScenario(number_scenarios-cur_scen-1);
-    //            temp_node->getDataPtr()->setScenarioIndex(temp_node->scenario());
-    //        }
-    //        else
-    //            break;
-    //    }
-
-    //}
     current_node->setNumChildren(num_childs);
 
 }
