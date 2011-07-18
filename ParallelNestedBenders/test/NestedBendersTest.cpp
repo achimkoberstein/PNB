@@ -60,31 +60,48 @@ public:
 		//}
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,9);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // From backwards
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        int upper_stage = 7;
-        int max_cpu = 1;
-        for (int num_cpu = 1; num_cpu < max_cpu+1; num_cpu++){ // Look for difference in cpu usage
-            for (int i = 1; i < upper_stage; i++){
-                // We need to repeat these runs at least two times.. TODO
-                benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,num_cpu);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-                // Aggregate the last stages, so we have fewer scenarios in the end ( from back and from front )
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,upper_stage-i); 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,upper_stage);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);// Aggregate from the start ( more scenario subproblems )
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);// Aggregate from the end ( less scenario subproblems )
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                // Aggregate the first stages, so we have bigger first stage scenarios..
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        // Read in model created above
+        OsiCpxSolverInterface osi_cpx;
+        SmiScnModel smi;
+        smi.readSmps(core_name,time_name,stoch_name);
+        smi.aggregateStages(1,9,false);
 
-            }
-        }
+        OsiStochasticBendersTwoStageSolverInterface benders(&osi_cpx,&smi);
+        // We need to set some params
+        BendersParameter parameter;
+        parameter.setIntParam(BendersParameter::BENDERS,0); // Use DetEQ
+        benders.setParams(parameter);
+        benders.initialSolve();
+
+        //int upper_stage = 7;
+        //int max_cpu = 1;
+        //for (int num_cpu = 1; num_cpu < max_cpu+1; num_cpu++){ // Look for difference in cpu usage
+        //    for (int i = 1; i < upper_stage; i++){
+        //        // We need to repeat these runs at least two times.. TODO
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,num_cpu);
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+        //        // Aggregate the last stages, so we have fewer scenarios in the end ( from back and from front )
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,upper_stage-i); 
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,upper_stage);
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);// Aggregate from the start ( more scenario subproblems )
+        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);// Aggregate from the end ( less scenario subproblems )
+        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //        // Aggregate the first stages, so we have bigger first stage scenarios..
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i);
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);
+        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
+        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+        //    }
+        //}
 
         // Test the stuff with old benders
 //        std::string folder("../../../../Benders/test/instances/");
@@ -711,13 +728,23 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     //OsiCpxSolverInterface cpx;
     OsiSolverInterface* new_solver = new OsiCpxSolverInterface();
     
+
+    testModel.getSmi()->aggregateStages(1,3,false);
+    testModel.getSmi()->writeSmps("testSMPS");
+
+    //OsiStochasticBendersTwoStageSolverInterface osi_benders(new_solver,testModel.getSmi());
+    //BendersParameter parameter;
+    //parameter.setIntParam(BendersParameter::BENDERS,0);
+    //osi_benders.setParams(parameter);
+    //osi_benders.initialSolve();
+
+
+    //testModel.getSmi()->writeSmps("stageAggreg2Test");
     parallel_benders::Parameter benders_parameter_;
     benders_parameter_.init(); // This should be called by the standard constructor anyway!
-    //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,1);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); //Use deteq
     //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
     //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,2);
-    testModel.getSmi()->aggregateStages(1,2);
-    testModel.getSmi()->writeSmps("stageAggreg2Test");
     OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(new_solver,testModel.getSmi());
     pnb.setParameters(benders_parameter_);
     pnb.initialSolve();
