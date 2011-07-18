@@ -1592,7 +1592,8 @@ void Benders::copySubmodel(SmiScnModel* smi){
     // Declaration of an array which contains the solution of
     // master problem, including the values of the additional
     // variables for the scenarios and the solution of subproblems
-    bestSol_ = new double[mncol_+zSub_+sncol_*nScen_];
+   int number_of_overall_variables = mncol_ + zSub_ + sncol_*nScen_;
+    bestSol_ = new double[number_of_overall_variables];
 
     // Declaration of an start array for the combined matrix
     combSt2rstrt_ = new int[snrow_+1+sncol_];

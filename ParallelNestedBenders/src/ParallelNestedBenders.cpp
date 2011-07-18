@@ -417,7 +417,7 @@ namespace parallel_benders {
         if ( stage_aggregation_){
             //smi_->writeSmps("beforeStageAgg",true,false);
             smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_, aggregate_from_start_); // Aggregate stage 0 and 1
-            //smi_->writeSmps("stageAggreg",true,false);
+            smi_->writeSmps("stageAggreg",true,false);
             num_stages_ = core_->getNumStages();
             num_scenarios_ = smi_->getNumScenarios();
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree

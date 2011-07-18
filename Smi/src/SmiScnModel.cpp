@@ -2065,15 +2065,64 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
          int number_of_aggregations = upper_stage-lesser_stage;
          if ( aggregateFromStart ) // With each aggregation, our final number of stages collapses by one.
              for (int i = 0; i < number_of_aggregations; i++){ 
+                 int old_cols_lesser = core_->getNumCols(lesser_stage);
+                 int old_cols_lesser_plus = core_->getNumCols(lesser_stage+1);
+                 int old_rows_lesser = core_->getNumRows(lesser_stage);
+                 int old_rows_lesser_plus = core_->getNumRows(lesser_stage+1);
+                 int old_els = core_->getNumElements();
                  core_->aggregateStages(lesser_stage,lesser_stage+1, smiTree_);
+                 // Increase ncol,nrow and nels!
+                 int new_cols = core_->getNumCols(lesser_stage);
+                 int new_cols_plus = old_cols_lesser_plus;
+                 int new_rows = core_->getNumRows(lesser_stage);
+                 int new_rows_plus = old_rows_lesser_plus;
+                 int new_els = core_->getNumElements();
+                 if ( lesser_stage+1 < core_->getNumStages() ){ // Example: aggregate 1 and 2, we have now 2 stages: no new_cols
+                     new_cols_plus = core_->getNumCols(lesser_stage+1);
+                     new_rows_plus = core_->getNumRows(lesser_stage+1);
+                 }
+                 this->ncol_ += new_cols-old_cols_lesser +new_cols_plus-old_cols_lesser_plus;
+                 this->nrow_ += new_rows-old_rows_lesser +new_rows_plus-old_rows_lesser_plus;
+                 this->nels_ += new_els-old_els;
              }
          else
              for (int i = upper_stage; i > lesser_stage; i--){
+                 int old_cols_lesser = core_->getNumCols(i-1);
+                 int old_cols_lesser_plus = core_->getNumCols(i-1+1);
+                 int old_rows_lesser = core_->getNumRows(i-1);
+                 int old_rows_lesser_plus = core_->getNumRows(i-1+1);
+                 int old_els = core_->getNumElements();
                  core_->aggregateStages( i-1, i, smiTree_);
+                 // Increase ncol,nrow and nels!
+                 int new_cols = core_->getNumCols(i-1);
+                 int new_cols_plus = old_cols_lesser_plus;
+                 int new_rows = core_->getNumRows(i-1);
+                 int new_rows_plus = old_rows_lesser_plus;
+                 int new_els = core_->getNumElements();
+                 if ( i-1+1 < core_->getNumStages() ){ // Example: aggregate 1 and 2, we have now 2 stages: no new_cols
+                     new_cols_plus = core_->getNumCols(i-1+1);
+                     new_rows_plus = core_->getNumRows(i-1+1);
+                 }
+                 this->ncol_ += new_cols-old_cols_lesser +new_cols_plus-old_cols_lesser_plus;
+                 this->nrow_ += new_rows-old_rows_lesser +new_rows_plus-old_rows_lesser_plus;
+                 this->nels_ += new_els-old_els;
              }
      }
-     else
+     else{
+         int old_cols_lesser = core_->getNumCols(lesser_stage);
+         int old_rows_lesser = core_->getNumRows(lesser_stage);
+         int old_els = core_->getNumElements();
+
          core_->aggregateStages(lesser_stage,upper_stage,smiTree_);
-     
+
+         int new_cols = core_->getNumCols(lesser_stage);
+         int new_rows = core_->getNumRows(lesser_stage);
+         int new_els = core_->getNumElements();
+
+         this->ncol_ += new_cols-old_cols_lesser;
+         this->nrow_ += new_rows-old_rows_lesser;
+         this->nels_ += new_els-old_els;
+
+     }
 
  }
