@@ -1573,11 +1573,11 @@ void Benders::copySubmodel(SmiScnModel* smi){
                 // Copy row length
                 mutlen_[i-mnrow_+scen_*snrow_] = smi->getLeafNode(scen_)->getNode()->getRowLength(i);
                 // Copy coefficients
-                memcpy(mutdels_+mutrstrt_[i-mnrow_]+scenMatStart_[scen_],
+                memcpy(mutdels_+mutrstrt_[i-mnrow_+scen_*snrow_],
                     smi->getLeafNode(scen_)->getNode()->getRowElements(i),
                     sizeof(double)*mutlen_[i-mnrow_+scen_*snrow_]);
                 // Copy indices
-                memcpy(mutiels_+mutrstrt_[i-mnrow_]+scenMatStart_[scen_],
+                memcpy(mutiels_+mutrstrt_[i-mnrow_+scen_*snrow_],
                     smi->getLeafNode(scen_)->getNode()->getRowIndices(i),
                     sizeof(int)*mutlen_[i-mnrow_+scen_*snrow_]);
                 // Copy start array

@@ -60,10 +60,37 @@ namespace parallel_benders{
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
 	//const int PNB_INT_
 
+    struct BendersNodeData;
+
+    struct CutInformation
+    {
+        int cut_creation_iteration_;
+        int got_active_iteration_;
+        int got_inactive_iteration_;
+        int active_iteration_counter_;
+        int inactive_iteration_counter_;
+    };
+
+    class CutManager
+    {
+    public:
+        CutManager(BendersNodeData&);
+        ~CutManager();
+
+        //void CreateCut();
+        //int GetCutSize();
+        //std::vector<OsiRowCut*>& OptimalityCuts();
+
+    private:
+        BendersNodeData& node_data_ref_;
+        std::vector<CutInformation> cut_informations_;
+    };
+
 
 // We can make it a struct anyway?!
-struct BendersNodeData
+struct BendersNodeData 
 {
+    friend class CutManager;
 public:
     BendersNodeData();
     BendersNodeData(SmiNodeData* nodeData);
@@ -84,9 +111,9 @@ public:
     bool feasible_;
     
 
-    int cols_;
+    int cols_; 
     int rows_;
-    int num_thetas_;
+    int num_thetas_; // How many aggregates do we have at this node
     boost::dynamic_bitset<> active_cuts_; // Has to have the size of num_thetas_
     CoinWarmStart* warm_start_;
 
@@ -95,12 +122,15 @@ public:
     int branch_scenario_;
     int num_node_in_stage_;
     int child_node_start_;
-    double probability_;
-    double conditional_probability_;
+    double probability_; // Overal probability
+    double conditional_probability_; // Probability with respect to the parent node
 
     double solution_value_;
+    // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
+    CutManager cut_information_;
     std::vector<OsiRowCut* > optimality_cuts_;
     std::vector<OsiRowCut* > feasibility_cuts_;
+    
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;
 
@@ -108,13 +138,14 @@ public:
 
 	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
 	bool changed_aggregation_level_;
-	int opt_cut_start_index_;
+	int opt_cut_start_index_; // If we keep instances of the solver, we may want to store which cuts we added last
 	int feas_cut_start_index_;
 
     // Values for cut aggregation
     std::vector<double> current_cut_coefficients_;
     double current_cut_rhs_;
 
+    // Subproblem elements
     CoinPackedMatrix* matrix_;
     double* column_lower_;
     double* column_upper_;

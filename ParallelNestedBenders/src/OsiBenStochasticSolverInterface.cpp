@@ -91,6 +91,8 @@ void OsiStochasticBendersTwoStageSolverInterface::initialSolve()
             LOG(INFO) << "You have chosen two conflicting options, we go for regularized manhattan.";
 
         }
+        if ( smi_model_->getCore()->getNumStages() > 2)
+            LOG(FATAL) << "This solver is not capable of handling models with more than 2 stages.";
 
         // We want to store the time necessary to solve the problem
         double time = CoinCpuTime();
