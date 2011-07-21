@@ -177,6 +177,7 @@ struct BendersStageData {
     bool stochastic_rhs_;
     bool stochastic_objective_;
     bool stochastic_bounds_;
+    bool non_zero_bounds_;
 
     // Store pointers to matrices W and / or T if they do not change ?
     std::vector<int> column_indices_;
