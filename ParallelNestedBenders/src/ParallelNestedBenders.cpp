@@ -153,8 +153,6 @@ namespace parallel_benders {
             }
         }
        
-      
-
         // Look at core data to get values for the matrices..
         for ( int i = 0; i < tree_nodes_by_stage_[stage].size(); i++){
             // Look at current node
@@ -214,6 +212,20 @@ namespace parallel_benders {
                     benders_stage_ptr->stochastic_rhs_ = true;
             }//end non-core node check
         }//end for
+
+        if ( !benders_stage_ptr->stochastic_bounds_ ){// If we have no stochastic bounds, we might want to check for non_zero_bounds
+            // Also check if we have bounds other than >= 0 and <= 0 ( important for feasibility cut generation )
+            const double* col_lower = core_->getDenseColLower(stage);
+            const double* col_upper = core_->getDenseColLower(stage);
+            for (int i = 0; i < benders_stage_ptr->num_columns_; i++){
+                if ( (!(col_lower[i] == -infinity_ || col_lower[i] == 0)) || (!(col_upper[i] == 0 || col_upper[i] == infinity_)) ){
+                    benders_stage_ptr->non_zero_bounds_ = true;
+                    break;
+                }
+            }
+        }
+        else
+            benders_stage_ptr->non_zero_bounds_ = true;
         // In the non-staircase case we now have all the stuff we need.
 
    }
@@ -1445,7 +1457,6 @@ namespace parallel_benders {
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
             int cpx_stat = 0;
 
-            double proof;
             dual_solution_farkas = new double[number_rows];
             //// We need to solve the problem for that and need status infeasible
             ////osi_solver->initialSolve(); // This would be easier, but it seems necessary to do it like this!
@@ -1454,8 +1465,11 @@ namespace parallel_benders {
             CPXchgobjsen(env_ptr, lp_ptr, -objsen);
             CPXchgobjsen(env_ptr, lp_ptr, objsen);
             CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
-            //CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
-            CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
+            if ( stage_data_[current_stage_]->non_zero_bounds_ )
+                CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
+            else
+                CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+            
             // This allows me to do the correct stuff below: reducedCost*variable_lower_bound
             //console_mutex_.lock();
             //double offset = 0;
@@ -1471,26 +1485,46 @@ namespace parallel_benders {
             //cpx_stat = CPXsolution (env_ptr, lp_ptr, &lp_stat, &solution_objval, solution_x, solution_dual,solution_slack, solution_reduced);
 
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-            if ( cpx_stat == CPX_STAT_INFEASIBLE )
-                cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);//CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
+            double proof = 0;
+            if ( cpx_stat == CPX_STAT_INFEASIBLE ){
+                if ( stage_data_[current_stage_]->non_zero_bounds_ )
+                    cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);//
+                else
+                    cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
+            }
             else
                 assert(false);// We can resort to the old method of handling things..
             // Get information about col infeasibility to know which variable bounds are ignored by the current solution!
             //double * col_infeasout = new double[number_coss];
             //cpx_stat = CPXgetcolinfeas (env_ptr, lp_ptr, NULL, col_infeasout, 0, CPXgetnumcols(env_ptr,lp_ptr)-1);
             double * reduced_cost = new double[number_coss];
-            cpx_stat = CPXgetdj(env_ptr,lp_ptr,reduced_cost,0,number_coss-1);
+            if ( stage_data_[current_stage_]->non_zero_bounds_ )
+                cpx_stat = CPXgetdj(env_ptr,lp_ptr,reduced_cost,0,number_coss-1);
+            //else {
+            //    // Set the value to -1 ( upper_bound violation ) or 1 ( lower_bound violation )
+            //    cpx_stat = CPXgetcolinfeas (env_ptr, lp_ptr, NULL, reduced_cost, 0, number_coss-1);
+            //    for (int i = 0; i < number_coss; i++){
+            //        if ( CompareWithZero(reduced_cost[i]) )
+            //            reduced_cost[i] = 0;
+
+            //        if ( reduced_cost[i] > 0 ) // Positive value means upper bound violation
+            //            reduced_cost[i] = -1;
+            //        else if ( reduced_cost[i] < 0) // Negative value means lower bound violation
+            //            reduced_cost[i] = 1;
+            //    }
+            //}
          
             variable_lower_bounds = osi_solver->getColLower();
             variable_upper_bounds = osi_solver->getColUpper();
-            for (int i = 0; i < number_coss; i++){
-                if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && reduced_cost[i] < 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
-                    computed_dual_value_for_variable_bounds += reduced_cost[i]*variable_lower_bounds[i];
+            if ( stage_data_[current_stage_]->non_zero_bounds_)
+                for (int i = 0; i < number_coss; i++){
+                    if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && reduced_cost[i] < 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
+                        computed_dual_value_for_variable_bounds += reduced_cost[i]*variable_lower_bounds[i];
+                    }
+                    else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && reduced_cost[i] > 0){ // Variable has non-zero upper bound and the current variable value is above
+                        computed_dual_value_for_variable_bounds += reduced_cost[i]*variable_upper_bounds[i];
+                    }
                 }
-                else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && reduced_cost[i] > 0){ // Variable has non-zero upper bound and the current variable value is above
-                    computed_dual_value_for_variable_bounds += reduced_cost[i]*variable_upper_bounds[i];
-                }
-            }
             delete [] reduced_cost;
 
         }
@@ -1737,7 +1771,7 @@ namespace parallel_benders {
 
     bool ParallelNestedBenders::CompareWithZero( double value ) 
     {
-        return std::abs(value) < zero_tolerance_;
+        return std::abs(value) < zero_tolerance_; // True, if zero
     }
 
 	void ParallelNestedBenders::AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
