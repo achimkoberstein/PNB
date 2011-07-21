@@ -59,24 +59,28 @@ public:
 		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		//}
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,9);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // From backwards
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // From backwards
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         // Read in model created above
-        OsiCpxSolverInterface osi_cpx;
-        SmiScnModel smi;
-        smi.readSmps(core_name,time_name,stoch_name);
-        smi.aggregateStages(1,9,false);
+        // 
+        // 
+        //OsiCpxSolverInterface osi_cpx;
+        //SmiScnModel smi;
+        //smi.readSmps(core_name,time_name,stoch_name);
+        //smi.aggregateStages(1,5,false);
 
-        OsiStochasticBendersTwoStageSolverInterface benders(&osi_cpx,&smi);
-        // We need to set some params
-        BendersParameter parameter;
-        parameter.setIntParam(BendersParameter::BENDERS,0); // Use DetEQ
-        benders.setParams(parameter);
-        benders.initialSolve();
+        //OsiStochasticBendersTwoStageSolverInterface benders(&osi_cpx,&smi);
+        //// We need to set some params
+        //BendersParameter parameter;
+        //parameter.setIntParam(BendersParameter::BENDERS,0); // Use DetEQ
+        //benders.setParams(parameter);
+        //benders.initialSolve();
+        //solutions.push_back(benders.getObjValue());
+        //std::cout << benders.getObjValue();
 
         //int upper_stage = 7;
         //int max_cpu = 1;
@@ -458,8 +462,8 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages
 }
 
 TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, not solvable correctly due to SMI stuff: Independent scenario do not get created correctly.
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK : MSLIP/NEOS: 18416.76
-	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK : MSLIP/NEOS: 18416.76
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK : MSLIP/NEOS: 18416.76
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK : MSLIP/NEOS: 18416.76
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);// Model probability problems
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"), 18438.891, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"), 18616.224, 0.1);
@@ -648,9 +652,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
@@ -673,13 +677,20 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
     MP_constraint firstStage,secondStage(T);
 
     firstStage() = x() <= 5;
-    secondStage(T+1) = y(T) >= -x()+randomData(T+1);
+    secondStage(T+1) = y(T) >= -x()+randomData(T);
     // Death test only under linux..
     //EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective" );
-    testModel.setObjective( x()+2*y(T+1) );
+    testModel.setObjective( x()+2*y(T.last()) );
     testModel.attach();
-    parallel_benders::ParallelNestedBenders pnb(testModel.getSmi());
-    pnb.Solve(); // We need the osi_solver interface!
+    OsiCpxSolverInterface osi_cpx;
+    OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(&osi_cpx,testModel.getSmi());
+    parallel_benders::Parameter param;
+    param.init();
+    param.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
+    pnb.setParameters(param);
+    pnb.initialSolve(); // We need the osi_solver interface!
+
+    // We need to assert something here with google assertions
 
     // Output file
     //SmiScnModel* smiModel = testModel.getSmi();
@@ -720,7 +731,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 
     MP_constraint firstStage,secondStage(T);
 
-    firstStage() = Constant(0)*x() >= 5;
+    firstStage() = x() >= 5;
     secondStage(T+1) = y(T-1)+ randomParam(T)*y(T) >= randomParam(T);
     testModel.setObjective( x()+sum(T,param1(T)*y(T)) );
     testModel.attach();
@@ -731,12 +742,13 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 
     testModel.getSmi()->aggregateStages(1,3,false);
     testModel.getSmi()->writeSmps("testSMPS");
+    //testModel.getSmi()->loadOsiSolverData();
 
-    //OsiStochasticBendersTwoStageSolverInterface osi_benders(new_solver,testModel.getSmi());
-    //BendersParameter parameter;
-    //parameter.setIntParam(BendersParameter::BENDERS,0);
-    //osi_benders.setParams(parameter);
-    //osi_benders.initialSolve();
+    OsiStochasticBendersTwoStageSolverInterface osi_benders(new_solver,testModel.getSmi());
+    BendersParameter parameter;
+    parameter.setIntParam(BendersParameter::BENDERS,0);
+    osi_benders.setParams(parameter);
+    osi_benders.initialSolve();
 
 
     //testModel.getSmi()->writeSmps("stageAggreg2Test");
@@ -757,9 +769,11 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
     //::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+    //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
+    ::testing::GTEST_FLAG(filter) = "*.scfxm*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
