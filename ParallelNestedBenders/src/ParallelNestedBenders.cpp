@@ -216,7 +216,7 @@ namespace parallel_benders {
         if ( !benders_stage_ptr->stochastic_bounds_ ){// If we have no stochastic bounds, we might want to check for non_zero_bounds
             // Also check if we have bounds other than >= 0 and <= 0 ( important for feasibility cut generation )
             const double* col_lower = core_->getDenseColLower(stage);
-            const double* col_upper = core_->getDenseColLower(stage);
+            const double* col_upper = core_->getDenseColUpper(stage);
             for (int i = 0; i < benders_stage_ptr->num_columns_; i++){
                 if ( (!(col_lower[i] == -infinity_ || col_lower[i] == 0)) || (!(col_upper[i] == 0 || col_upper[i] == infinity_)) ){
                     benders_stage_ptr->non_zero_bounds_ = true;
@@ -724,6 +724,7 @@ namespace parallel_benders {
             if ( !forward_)
                 GenerateOptimalityCut(benders_tree_node_pointer);
         }
+        DeleteSubproblem(benders_tree_node_pointer);
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
@@ -1149,7 +1150,7 @@ namespace parallel_benders {
                 row_bounds.push_back(benders_node_pointer->row_upper_[i]);
             }
             osi_solver->setRowSetBounds(&stage_pointer->row_indices_[0],&stage_pointer->row_indices_[stage_pointer->num_rows_],&row_bounds[0]);
-            
+
             // Remove all cuts from previous solutions ( includes "Theta" Constraints )
             int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
             if ( cuts_to_remove ){
@@ -1160,24 +1161,7 @@ namespace parallel_benders {
                 osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
             }
         }
-
-     
-        // Delete all the stuff we created
-        delete benders_node_pointer->matrix_; benders_node_pointer->matrix_ = NULL;
-        if ( node_pointer->getColLowerLength())
-            delete [] benders_node_pointer->column_lower_; benders_node_pointer->column_lower_ = NULL;
-        if ( node_pointer->getColUpperLength())
-            delete [] benders_node_pointer->column_upper_; benders_node_pointer->column_upper_ = NULL;
-
-        if ( node_pointer->getObjectiveLength())
-            delete [] benders_node_pointer->objective_; benders_node_pointer->objective_ = NULL;
-
-        delete [] benders_node_pointer->row_upper_; benders_node_pointer->row_upper_ = NULL;
-        delete [] benders_node_pointer->row_lower_; benders_node_pointer->row_lower_ = NULL;
-
-
-
-    }
+  }
 
     ParallelNestedBenders::~ParallelNestedBenders()
     {
@@ -1434,6 +1418,7 @@ namespace parallel_benders {
         assert(osi_solver->isProvenPrimalInfeasible()); // Otherwise we do not need to call this method
         bool dual_farkas = false;
         double * dual_solution_farkas = NULL; // We need to delete this, if we use dual_farkas, else not
+        double * dual_solution_primal_variable_bounds = NULL;
         const double * dual_solution = NULL;
         int number_rows = osi_solver->getNumRows(); 
         int number_coss = osi_solver->getNumCols(); 
@@ -1465,67 +1450,74 @@ namespace parallel_benders {
             CPXchgobjsen(env_ptr, lp_ptr, -objsen);
             CPXchgobjsen(env_ptr, lp_ptr, objsen);
             CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
-            if ( stage_data_[current_stage_]->non_zero_bounds_ )
+            bool use_dual_farkas = true;
+            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
                 CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
             else
                 CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
             
-            // This allows me to do the correct stuff below: reducedCost*variable_lower_bound
-            //console_mutex_.lock();
-            //double offset = 0;
-            //CPXdualwrite(env_ptr,lp_ptr,"dual_stage.mps",&offset);
-            //console_mutex_.unlock();
-            // Get all the stuff you want from cplex!
-            //int lp_stat = 0;
-            //double solution_objval = 0;
-            //double* solution_x = new double[number_coss];
-            //double* solution_dual = new double[number_rows];
-            //double* solution_slack = new double[number_rows];
-            //double* solution_reduced = new double[number_coss];
-            //cpx_stat = CPXsolution (env_ptr, lp_ptr, &lp_stat, &solution_objval, solution_x, solution_dual,solution_slack, solution_reduced);
-
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
-                if ( stage_data_[current_stage_]->non_zero_bounds_ )
+                if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
                     cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);//
-                else
+                else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
-            }
+                    if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
+                       // q^T = y^T*A
+                        // We can compute this with the column based matrices
+                        variable_lower_bounds = osi_solver->getColLower();
+                        variable_upper_bounds = osi_solver->getColUpper();
+                        const CoinPackedMatrix* matrix = NULL;
+                        if ( benders_tree_node_pointer->getDataPtr()->matrix_ == NULL ){ // Do we reuse a problem or not?
+                            matrix = osi_solver->getMatrixByCol(); // This matrix is column ordered
+                        }
+                        else {
+                            benders_tree_node_pointer->getDataPtr()->matrix_->transpose();
+                            matrix = benders_tree_node_pointer->getDataPtr()->matrix_;
+                        }
+
+                        
+                        dual_solution_primal_variable_bounds = new double[number_coss];
+                        for (int i = 0; i < number_coss; i++){
+                            dual_solution_primal_variable_bounds[i] = 0;
+                            if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ || variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ ){
+                             // Get column of the matrix!
+                                CoinShallowPackedVector vector = matrix->getVector(i);
+                                double result = 0.0;
+                                for ( int j = 0; j < vector.getNumElements(); j++){
+                                    result += -dual_solution_farkas[vector.getIndices()[j]] * vector.getElements()[j];
+                                }
+                                if ( !CompareWithZero(result) )
+                                    dual_solution_primal_variable_bounds[i] = result;
+                          
+                            }
+                        }// End For
+                    }// End If non_zero_bounds
+                }// End Else
+            }//End If infeasible
             else
                 assert(false);// We can resort to the old method of handling things..
-            // Get information about col infeasibility to know which variable bounds are ignored by the current solution!
-            //double * col_infeasout = new double[number_coss];
-            //cpx_stat = CPXgetcolinfeas (env_ptr, lp_ptr, NULL, col_infeasout, 0, CPXgetnumcols(env_ptr,lp_ptr)-1);
-            double * reduced_cost = new double[number_coss];
-            if ( stage_data_[current_stage_]->non_zero_bounds_ )
-                cpx_stat = CPXgetdj(env_ptr,lp_ptr,reduced_cost,0,number_coss-1);
-            //else {
-            //    // Set the value to -1 ( upper_bound violation ) or 1 ( lower_bound violation )
-            //    cpx_stat = CPXgetcolinfeas (env_ptr, lp_ptr, NULL, reduced_cost, 0, number_coss-1);
-            //    for (int i = 0; i < number_coss; i++){
-            //        if ( CompareWithZero(reduced_cost[i]) )
-            //            reduced_cost[i] = 0;
-
-            //        if ( reduced_cost[i] > 0 ) // Positive value means upper bound violation
-            //            reduced_cost[i] = -1;
-            //        else if ( reduced_cost[i] < 0) // Negative value means lower bound violation
-            //            reduced_cost[i] = 1;
-            //    }
-            //}
-         
-            variable_lower_bounds = osi_solver->getColLower();
-            variable_upper_bounds = osi_solver->getColUpper();
-            if ( stage_data_[current_stage_]->non_zero_bounds_)
-                for (int i = 0; i < number_coss; i++){
-                    if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && reduced_cost[i] < 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
-                        computed_dual_value_for_variable_bounds += reduced_cost[i]*variable_lower_bounds[i];
+            
+            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){
+                double * dual_solution_primal_variable_bounds = new double[number_coss];
+                cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
+            }
+            
+            if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
+                variable_lower_bounds = osi_solver->getColLower();
+                variable_upper_bounds = osi_solver->getColUpper();
+                if ( stage_data_[current_stage_]->non_zero_bounds_)
+                    for (int i = 0; i < number_coss; i++){
+                        if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && dual_solution_primal_variable_bounds[i] > 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
+                            computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_lower_bounds[i];
+                        }
+                        else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && dual_solution_primal_variable_bounds[i] < 0){ // Variable has non-zero upper bound and the current variable value is above
+                            computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_upper_bounds[i];
+                        }
                     }
-                    else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && reduced_cost[i] > 0){ // Variable has non-zero upper bound and the current variable value is above
-                        computed_dual_value_for_variable_bounds += reduced_cost[i]*variable_upper_bounds[i];
-                    }
-                }
-            delete [] reduced_cost;
+                    delete [] dual_solution_primal_variable_bounds;
+            }
 
         }
 #endif // CPLEX_PRESENT
@@ -1565,7 +1557,7 @@ namespace parallel_benders {
         // Compute the values: \lambda * lower_bound - \mu * upper_bound
         // Compute the resulting values right away, as we have the osi_solver_interface at hand.
 
-        if ( !dual_farkas ){
+        if ( !dual_farkas ){ 
             dual_values_variable_bounds = const_cast<double*> (dual_ray_problem->getReducedCost());
             variable_lower_bounds = osi_solver->getColLower();
             variable_upper_bounds = osi_solver->getColUpper();
@@ -2020,7 +2012,25 @@ namespace parallel_benders {
         //}
     }
 
+    void ParallelNestedBenders::DeleteSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        // We should delete this in an own method, after solving the problem, because we might need it?
+        // Delete all the stuff we created
+        BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
+        SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_;
 
+        delete benders_node_pointer->matrix_; benders_node_pointer->matrix_ = NULL;
+        if ( node_pointer->getColLowerLength())
+            delete [] benders_node_pointer->column_lower_; benders_node_pointer->column_lower_ = NULL;
+        if ( node_pointer->getColUpperLength())
+            delete [] benders_node_pointer->column_upper_; benders_node_pointer->column_upper_ = NULL;
+
+        if ( node_pointer->getObjectiveLength())
+            delete [] benders_node_pointer->objective_; benders_node_pointer->objective_ = NULL;
+
+        delete [] benders_node_pointer->row_upper_; benders_node_pointer->row_upper_ = NULL;
+        delete [] benders_node_pointer->row_lower_; benders_node_pointer->row_lower_ = NULL;
+    }
     bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;

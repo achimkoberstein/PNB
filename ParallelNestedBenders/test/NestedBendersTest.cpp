@@ -661,6 +661,10 @@ TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
     EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
 }
 
+TEST_F(NestedBendersTest,dakota){// dakota model
+    EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
+}
+
 
 TEST_F(NestedBendersTest,FeasibilityCutTest){
     using namespace flopc;
@@ -774,6 +778,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
     ::testing::GTEST_FLAG(filter) = "*.scfxm*";
+    //::testing::GTEST_FLAG(filter) = "*dakota";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
