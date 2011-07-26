@@ -44,90 +44,54 @@ public:
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut and Benders
         std::vector<double> solutions;
-		// Try different multicut aggregation level
-		//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
-		//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Let system decide!
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Solve DetEq
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//for (int i = 0; i < max_stages_;i++){
-		//	benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE);
-		//	benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE-i); // Aggregate from the end
-		//	solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-		//}
+        std::string folder("../../../../Benders/test/instances/");
+#if _M_X64 || __x86_64__ // Works only on windows i suppose
+        folder = "../../../../../Benders/test/instances/";
+#endif
+        SmiScnModel* smi = new SmiScnModel();
+        std::string core_name_string(core_name);
+        std::string time_name_string(time_name);
+        std::string stoch_name_string(stoch_name);
+        std::string total_core_string = folder+core_name_string;
+        std::string total_time_string = folder+time_name_string;
+        std::string total_stoch_string = folder+stoch_name_string;
+        smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        int num_stages = smi->getCore()->getNumStages();
+        int num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
+        delete smi; // Get rid of the model, before we actually solve stuff
+
+
+        // Single Cut first
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,5);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // From backwards
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
+        // Always use second_iteration_stage, as it is superior to fastpass
+        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1); // We always go at least to the second stage
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        // Read in model created above
-        // 
-        // 
-        //OsiCpxSolverInterface osi_cpx;
-        //SmiScnModel smi;
-        //smi.readSmps(core_name,time_name,stoch_name);
-        //smi.aggregateStages(1,5,false);
+        // Multi Cut behind
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        //OsiStochasticBendersTwoStageSolverInterface benders(&osi_cpx,&smi);
-        //// We need to set some params
-        //BendersParameter parameter;
-        //parameter.setIntParam(BendersParameter::BENDERS,0); // Use DetEQ
-        //benders.setParams(parameter);
-        //benders.initialSolve();
-        //solutions.push_back(benders.getObjValue());
-        //std::cout << benders.getObjValue();
-
-        //int upper_stage = 7;
-        //int max_cpu = 1;
-        //for (int num_cpu = 1; num_cpu < max_cpu+1; num_cpu++){ // Look for difference in cpu usage
-        //    for (int i = 1; i < upper_stage; i++){
-        //        // We need to repeat these runs at least two times.. TODO
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,num_cpu);
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        //        // Aggregate the last stages, so we have fewer scenarios in the end ( from back and from front )
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,upper_stage-i); 
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,upper_stage);
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);// Aggregate from the start ( more scenario subproblems )
-        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);// Aggregate from the end ( less scenario subproblems )
-        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //        // Aggregate the first stages, so we have bigger first stage scenarios..
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0); 
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i);
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true);
-        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false);
-        //        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-        //    }
+        // Now we can test the stuff with different number of aggregates!
+        //// Test stage aggregation with respect to forward/backwards
+        //if ( num_stages > 3 ){
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE);
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // From backwards : Minimize number of scenarios
+        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true); // From forward : Greater first stage nodes
+        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //}
+        // Test stage aggregation by reducing number of consecutive stages
+        if ( num_stages > 2 )
+            for (int i = 0; i < num_stages-1; i++){
+                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,i);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i+1);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            }
 
-        // Test the stuff with old benders
-//        std::string folder("../../../../Benders/test/instances/");
-//#if _M_X32 || __x83_32__ // Works only on windows i suppose
-//        folder = "../../../../../Benders/test/instances/";
-//#endif
-//        std::string core_name_string(core_name);
-//        std::string time_name_string(time_name);
-//        std::string stoch_name_string(stoch_name);
-//        std::string total_core_string = folder+core_name_string;
-//        std::string total_time_string = folder+time_name_string;
-//        std::string total_stoch_string = folder+stoch_name_string;
-//        OsiCpxSolverInterface osi_cpx;
-//        SmiScnModel smi;
-//        smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-//        // We can only solve aggregated problems..
-//        // But we can aggregate the problem if we want to, we have the smi model!
-//        smi.aggregateStages(1,smi.getCore()->getNumStages()-1,true); // We construct a two-stage problem, where the second stage contains all the scenarios we want?
-//        OsiStochasticBendersTwoStageSolverInterface two_stage_benders(&osi_cpx,&smi);
-//        two_stage_benders.initialSolve();
-//        solutions.push_back(two_stage_benders.getObjValue());
-
+ 
         double average = 0;
         for (int i = 0; i < solutions.size(); i++)
             average += solutions[i];
@@ -778,7 +742,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
-    ::testing::GTEST_FLAG(filter) = "*stocfor*";
+    ::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
