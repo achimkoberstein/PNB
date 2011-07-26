@@ -228,12 +228,41 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 }
 
 
-CutManager::CutManager( BendersNodeData& benders_node) : node_data_ref_(benders_node)
+CutManager::CutManager( BendersNodeData& benders_node) : node_data_ref_(benders_node),cut_informations_(),cut_counter_(0)
+{
+   
+}
+
+
+CutManager::~CutManager()
 {
 
 }
 
-CutManager::~CutManager()
+void CutManager::CreateCut( int iteration )
+{
+    cut_informations_.push_back( CutInformation() );
+    cut_informations_.back().cut_creation_iteration_ = iteration;
+    cut_counter_++;
+       
+}
+
+CutInformation& CutManager::GetCut( int index )
+{
+    return cut_informations_.at(index);
+}
+
+void CutManager::DeleteCut( int index )
+{
+    cut_informations_.erase(cut_informations_.begin()+index);
+    cut_counter_--;
+}
+
+int CutManager::NumCuts()
+{
+    return cut_counter_;
+}
+CutInformation::CutInformation() : cut_creation_iteration_(0),active_iteration_counter_(0),inactive_iteration_counter_(0),iteration_forward_active_vector_(),iteration_backward_active_vector_()
 {
 
 }

@@ -64,11 +64,14 @@ namespace parallel_benders{
 
     struct CutInformation
     {
+
+        CutInformation();
+
         int cut_creation_iteration_;
-        int got_active_iteration_;
-        int got_inactive_iteration_;
         int active_iteration_counter_;
         int inactive_iteration_counter_;
+        std::map<int,double> iteration_forward_active_vector_;
+        std::map<int,double> iteration_backward_active_vector_;
     };
 
     class CutManager
@@ -77,13 +80,16 @@ namespace parallel_benders{
         CutManager(BendersNodeData&);
         ~CutManager();
 
-        //void CreateCut();
-        //int GetCutSize();
+        void CreateCut(int iteration); // Initialize a new cut with an index
+        CutInformation& GetCut(int index); // Return a CutInformation struct
+        void DeleteCut(int index);
+        int NumCuts();
         //std::vector<OsiRowCut*>& OptimalityCuts();
 
     private:
         BendersNodeData& node_data_ref_;
-        std::vector<CutInformation> cut_informations_;
+        std::vector<CutInformation> cut_informations_; // 
+        int cut_counter_;
     };
 
 

@@ -693,6 +693,52 @@ namespace parallel_benders {
             LOG(INFO) << "Problem is infeasible.";
         }
 
+        // Do a Cut Analyzation
+        // Iterate over the stages 
+        //             // Create output!
+        ofstream cut_analysis;
+        cut_analysis.open("cut_analysis", std::ios_base::app);
+        std::cout << "New Problem" << std::endl;
+        for (int i = 0; i < num_stages_-1; i++){ // Last stage has nothing of interest!
+            // Stage Wise Portrait: Active Cuts in a given Iteration
+            std::vector<int> active_cuts_in_iteration(current_iteration_,0);
+            boost::multi_array<int,2> active_cuts_from_iteration(boost::extents[current_iteration_][current_iteration_]);
+            //std::vector<int> active_cuts_from_iteration(current_iteration_,0);
+            for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
+                CutManager& cut_manager = tree_nodes_by_stage_[i][j]->getDataPtr()->cut_information_;
+                int num_cuts = cut_manager.NumCuts();
+                for (int current_cut = 0; current_cut < num_cuts; current_cut++){
+                    CutInformation& cut_information(cut_manager.GetCut(current_cut));
+                    for (int temp_iteration = cut_information.cut_creation_iteration_; temp_iteration < current_iteration_; temp_iteration++){
+                        if ( cut_information.iteration_forward_active_vector_.find(temp_iteration) != cut_information.iteration_forward_active_vector_.end() ){
+                            active_cuts_in_iteration[temp_iteration]++;
+                            active_cuts_from_iteration[cut_information.cut_creation_iteration_+1][temp_iteration]++;
+                        }
+                    }
+                }
+            }
+
+
+            std::cout << "   ";
+            cut_analysis << "Iteration Number;";
+            for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
+                std::cout << " It." << array_dim1;
+                cut_analysis << "It." << array_dim1 << ";";
+            }
+            std::cout << std::endl;
+            cut_analysis << std::endl;
+            for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
+                std::cout << "It. " << array_dim1;
+                cut_analysis << "It. " << array_dim1 << ";";
+                for ( int array_dim2 = 2; array_dim2 < current_iteration_; array_dim2++){
+                    std::cout << "   " << active_cuts_from_iteration[array_dim2][array_dim1];
+                    cut_analysis << active_cuts_from_iteration[array_dim2][array_dim1] << ";";
+                }
+                std::cout << std::endl;
+                cut_analysis << std::endl;
+            }
+        }
+
         // Show the first stage solution! Only if feasible
         if ( !infeasible_problem_ )
             for (int i = 0; i < stage_data_[0]->num_columns_; i++){
@@ -947,7 +993,7 @@ namespace parallel_benders {
                 // Look at variable value and their bounds
                 if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
                     
-                    // We have to look at bounds TODO: ZEROTEST For reduced cost
+                    // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
                     if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
                     else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
@@ -956,7 +1002,29 @@ namespace parallel_benders {
             }
             benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
         }
-    }
+
+        bool store_cut_information_ = true;
+        if ( store_cut_information_ ){
+            // Store values about active cuts in own data structure
+            for ( int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size();i++ ){
+                CutInformation& cut_information = benders_node_pointer->cut_information_.GetCut(i-stage_data_[current_stage_]->num_rows_);
+                double cut_active_value = osi_solver->getRowPrice()[i];
+                if ( cut_active_value ){ // Not Zero
+                    if ( forward_ )
+                        cut_information.iteration_forward_active_vector_[current_iteration_] = cut_active_value;
+                    else
+                        cut_information.iteration_backward_active_vector_[current_iteration_] = cut_active_value;
+                    cut_information.active_iteration_counter_++;
+                }
+                else
+                    cut_information.inactive_iteration_counter_++;
+            }// End For
+            // Print it out
+            //  std::cout << "Node " << benders_node_pointer->scenario_index_  << std::endl;
+            //if ( std::abs(osi_solver->getRowPrice()[i]) > zero_tolerance_)
+            //    std::cout << "Cut " << i-stage_data_[current_stage_]->num_rows_ << " is active with " << osi_solver->getRowPrice()[i] << std::endl;
+        }// End if store_cut_information_
+   }
 
     void ParallelNestedBenders::BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
@@ -1236,17 +1304,6 @@ namespace parallel_benders {
                 cut_rhs += dual_solution[row]*row_lower[row];
         }
         // Just print out the values of the cut-number 
-
-        console_mutex_.lock();
-        std::cout << "Node " << benders_node_pointer->scenario_index_  << std::endl;
-        for ( int i = row; i < row+benders_node_pointer->optimality_cuts_.size();i++ ){
-            // Print it out
-            if ( std::abs(dual_solution[i]) > zero_tolerance_)
-                std::cout << "Cut " << i-row << " is active with " << dual_solution[i] << std::endl;
-        }
-        console_mutex_.unlock();
-        
-        
         for_bound += benders_node_pointer->optimality_cuts_.size();
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         for ( ; row < for_bound; row++ ){
@@ -1330,7 +1387,7 @@ namespace parallel_benders {
         }
 		// We have to set the start index again, but only if we used it ( marked by infinity )
 		if ( current_stage_-1 == 0 ){
-			if ( benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == 0 || benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == infinity_)
+			if ( benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == 0 || benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == -1)
 				benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.size();
 		}
 
@@ -1356,7 +1413,6 @@ namespace parallel_benders {
                     cut_indices.push_back(num_columns+j);
             }
             
-
             // For all the indices, that belong to this cut.
             std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
             for ( int j = 0; j < nodes_in_cut.size(); j++){
@@ -1384,6 +1440,7 @@ namespace parallel_benders {
                         // Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise
                         cut_elements[index] = 0;
                     }
+                    //  Do that to filter out unused indices..
                     //else if ( index > new_index ){
                     //    cut_elements[new_index] = cut_elements[index];
                     //    cut_indices[new_index] = cut_indices[index];
@@ -1404,6 +1461,9 @@ namespace parallel_benders {
                 // Set aggregate to active: We have a cut for this aggregate
                 benders_tree_node_pointer->getDataPtr()->active_cuts_[i] = true;
                 added_cuts++;
+
+                // Store information about this new cut, we added a new one to our set!
+                benders_tree_node_pointer->getDataPtr()->cut_information_.CreateCut(current_iteration_);
             }
         }// End for num_cuts
         // Add number of added cuts.
@@ -1443,8 +1503,6 @@ namespace parallel_benders {
             int cpx_stat = 0;
 
             dual_solution_farkas = new double[number_rows];
-            //// We need to solve the problem for that and need status infeasible
-            ////osi_solver->initialSolve(); // This would be easier, but it seems necessary to do it like this!
 
             int objsen = CPXgetobjsen(env_ptr, lp_ptr);
             CPXchgobjsen(env_ptr, lp_ptr, -objsen);
@@ -1456,18 +1514,23 @@ namespace parallel_benders {
             else
                 CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
             
+            // Write the dual problem, to see what cplex solves
+            //console_mutex_.lock();
+            //double obj_shift = 0;
+            //cpx_stat = CPXdualwrite(env_ptr,lp_ptr,"dual_test",&obj_shift);
+            //console_mutex_.unlock();
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
                 if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
-                    cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);//
+                    cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);// If we use the primal method, we get the dual ray via the dual variables
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
                     if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
                        // q^T = y^T*A
                         // We can compute this with the column based matrices
-                        variable_lower_bounds = osi_solver->getColLower();
-                        variable_upper_bounds = osi_solver->getColUpper();
+                        variable_lower_bounds = benders_tree_node_pointer->getDataPtr()->column_lower_;
+                        variable_upper_bounds = benders_tree_node_pointer->getDataPtr()->column_upper_;
                         const CoinPackedMatrix* matrix = NULL;
                         if ( benders_tree_node_pointer->getDataPtr()->matrix_ == NULL ){ // Do we reuse a problem or not?
                             matrix = osi_solver->getMatrixByCol(); // This matrix is column ordered
@@ -1476,18 +1539,21 @@ namespace parallel_benders {
                             benders_tree_node_pointer->getDataPtr()->matrix_->transpose();
                             matrix = benders_tree_node_pointer->getDataPtr()->matrix_;
                         }
-
                         
                         dual_solution_primal_variable_bounds = new double[number_coss];
+                        const double* objective_coefficients = benders_tree_node_pointer->getDataPtr()->objective_;
                         for (int i = 0; i < number_coss; i++){
                             dual_solution_primal_variable_bounds[i] = 0;
                             if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ || variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ ){
-                             // Get column of the matrix!
+                                 // Get column of the matrix to compute q_j = y^T A_j
                                 CoinShallowPackedVector vector = matrix->getVector(i);
                                 double result = 0.0;
                                 for ( int j = 0; j < vector.getNumElements(); j++){
-                                    result += -dual_solution_farkas[vector.getIndices()[j]] * vector.getElements()[j];
+                                    result += dual_solution_farkas[vector.getIndices()[j]] * vector.getElements()[j];
                                 }
+                                // q_j + v_j - w_j = c_j
+                                // Therefore: We need to compute the resulting value, which is c_j-q_j. But: Cplex does not care about the RHS itself?
+                                result = -result;// If value is negative, we need the positive and vice versa.
                                 if ( !CompareWithZero(result) )
                                     dual_solution_primal_variable_bounds[i] = result;
                           
@@ -1499,11 +1565,11 @@ namespace parallel_benders {
             else
                 assert(false);// We can resort to the old method of handling things..
             
-            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){
+            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
                 double * dual_solution_primal_variable_bounds = new double[number_coss];
                 cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
             }
-            
+            // Compute the value of the primal variable bounds * dual multipliers
             if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
                 variable_lower_bounds = osi_solver->getColLower();
                 variable_upper_bounds = osi_solver->getColUpper();
@@ -1832,7 +1898,7 @@ namespace parallel_benders {
 			int start_index = 0;
 			if ( seperate_first_stage_solver_ && !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
 				start_index = benders_node_pointer->opt_cut_start_index_;
-				benders_node_pointer->opt_cut_start_index_ = 0; // We used the start_index and signal this to the cut aggregation routine.
+				benders_node_pointer->opt_cut_start_index_ = -1; // We used the start_index and signal this to the cut aggregation routine.
 			}
 			// TODO: This can be changed to addRows
 			for (int i = start_index; i<benders_node_pointer->optimality_cuts_.size();i++) {

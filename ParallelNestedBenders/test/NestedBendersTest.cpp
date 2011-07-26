@@ -613,7 +613,7 @@ TEST_F(NestedBendersTest,LandS_WRIGHT){
 
 TEST_F(NestedBendersTest,watson_conditional){
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2401.87,0.1);
- /*   EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2167.62,0.1);
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2167.62,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2027.43,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), -1879.43,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), -1841.29,0.1);
@@ -624,7 +624,7 @@ TEST_F(NestedBendersTest,watson_conditional){
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), -1693.47,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), -1769.45,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), -1664.66,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), -1679.92,0.1);*/
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), -1679.92,0.1);
 }
 
 TEST_F(NestedBendersTest,watson_independent){
@@ -777,8 +777,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
-    ::testing::GTEST_FLAG(filter) = "*.scfxm*";
-    //::testing::GTEST_FLAG(filter) = "*dakota";
+    //::testing::GTEST_FLAG(filter) = "*.scfxm*";
+    ::testing::GTEST_FLAG(filter) = "*stocfor*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
