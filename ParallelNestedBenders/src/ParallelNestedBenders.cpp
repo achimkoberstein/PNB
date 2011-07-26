@@ -1527,6 +1527,7 @@ namespace parallel_benders {
                         }
                         else {
                             benders_tree_node_pointer->getDataPtr()->matrix_->transpose();
+                            benders_tree_node_pointer->getDataPtr()->matrix_->reverseOrdering(); // Maybe it is faster to get the matrix from cplex..
                             matrix = benders_tree_node_pointer->getDataPtr()->matrix_;
                         }
                         
