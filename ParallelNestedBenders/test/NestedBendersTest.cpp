@@ -61,16 +61,26 @@ public:
         delete smi; // Get rid of the model, before we actually solve stuff
 
 
-        // Single Cut first
+        benders_parameter_.init();
+
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
         // Always use second_iteration_stage, as it is superior to fastpass
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1); // We always go at least to the second stage
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
+        // Single Cut first
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         // Multi Cut behind
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        // Try some aggregation
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,num_childs_first_stage/2); // try aggregation
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
 
         // Now we can test the stuff with different number of aggregates!
         //// Test stage aggregation with respect to forward/backwards
@@ -84,10 +94,16 @@ public:
         //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //}
         // Test stage aggregation by reducing number of consecutive stages
+        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
         if ( num_stages > 2 )
             for (int i = 0; i < num_stages-1; i++){
                 benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,i);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i+1);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,num_childs_first_stage/2); // try aggregation
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             }
 

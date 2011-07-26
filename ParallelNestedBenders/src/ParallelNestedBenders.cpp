@@ -698,7 +698,6 @@ namespace parallel_benders {
         //             // Create output!
         ofstream cut_analysis;
         cut_analysis.open("cut_analysis", std::ios_base::app);
-        std::cout << "New Problem" << std::endl;
         for (int i = 0; i < num_stages_-1; i++){ // Last stage has nothing of interest!
             // Stage Wise Portrait: Active Cuts in a given Iteration
             std::vector<int> active_cuts_in_iteration(current_iteration_,0);
@@ -717,22 +716,16 @@ namespace parallel_benders {
                     }
                 }
             }
-            std::cout << "   ";
             cut_analysis << "Stage " << i << ";";
             for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
-                std::cout << " It." << array_dim1;
                 cut_analysis << "It." << array_dim1 << ";";
             }
-            std::cout << std::endl;
             cut_analysis << std::endl;
             for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
-                std::cout << "It. " << array_dim1;
                 cut_analysis << "It. " << array_dim1 << ";";
                 for ( int array_dim2 = 2; array_dim2 < current_iteration_; array_dim2++){
-                    std::cout << "   " << active_cuts_from_iteration[array_dim2][array_dim1];
                     cut_analysis << active_cuts_from_iteration[array_dim2][array_dim1] << ";";
                 }
-                std::cout << std::endl;
                 cut_analysis << std::endl;
             }
         }
