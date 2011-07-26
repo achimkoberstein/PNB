@@ -169,7 +169,7 @@ void Parameter::init()
     parameter_.put(PNB_BENDERS,1); // 0: No Benders (detEq), 1 Benders
     
 	// WarmStart
-    parameter_.put(PNB_WARM_START, 1); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario
+    parameter_.put(PNB_WARM_START, 1); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario (in the same iteration)
 
     //// Aggregation of Cuts ( or single-multi cut )
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
