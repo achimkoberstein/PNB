@@ -332,9 +332,9 @@ namespace parallel_benders {
 			num_cpu_ = available_cpus;
 		else
 			num_cpu_ = std::min(num_cpu_,available_cpus);
+        assert( num_cpu_ > 0);
 		param.put(PNB_CPU_USED,num_cpu_);
 		thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
-		//thread_pool_ = boost::threadpool::pool(1); // Debugging reasonsTODO: Remove again
 
 		// Set first stage solver to own instance
 		seperate_first_stage_solver_ = true;
@@ -717,10 +717,8 @@ namespace parallel_benders {
                     }
                 }
             }
-
-
             std::cout << "   ";
-            cut_analysis << "Iteration Number;";
+            cut_analysis << "Stage " << i << ";";
             for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
                 std::cout << " It." << array_dim1;
                 cut_analysis << "It." << array_dim1 << ";";
@@ -738,7 +736,6 @@ namespace parallel_benders {
                 cut_analysis << std::endl;
             }
         }
-
         // Show the first stage solution! Only if feasible
         if ( !infeasible_problem_ )
             for (int i = 0; i < stage_data_[0]->num_columns_; i++){
