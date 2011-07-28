@@ -1476,8 +1476,8 @@ namespace parallel_benders {
         double * dual_solution_farkas = NULL; // We need to delete this, if we use dual_farkas, else not
         double * dual_solution_primal_variable_bounds = NULL;
         const double * dual_solution = NULL;
-        int number_rows = osi_solver->getNumRows(); 
-        int number_coss = osi_solver->getNumCols(); 
+        int number_rows = osi_solver->getNumRows(); // Also account for optimality and feasibility cuts
+        int number_coss = stage_data_[current_stage_]->num_columns_;//osi_solver->getNumCols(); Ignore next stage approximations
 
         const double* variable_lower_bounds = NULL;
         const double* variable_upper_bounds = NULL;
@@ -1528,14 +1528,16 @@ namespace parallel_benders {
                         variable_lower_bounds = benders_tree_node_pointer->getDataPtr()->column_lower_;
                         variable_upper_bounds = benders_tree_node_pointer->getDataPtr()->column_upper_;
                         const CoinPackedMatrix* matrix = NULL;
-                        if ( benders_tree_node_pointer->getDataPtr()->matrix_ == NULL ){ // Do we reuse a problem or not?
-                            matrix = osi_solver->getMatrixByCol(); // This matrix is column ordered
-                        }
-                        else {
-                            benders_tree_node_pointer->getDataPtr()->matrix_->transpose();
-                            benders_tree_node_pointer->getDataPtr()->matrix_->reverseOrdering(); // Maybe it is faster to get the matrix from cplex..
-                            matrix = benders_tree_node_pointer->getDataPtr()->matrix_;
-                        }
+                        //if ( benders_tree_node_pointer->getDataPtr()->matrix_ == NULL ){ // Do we reuse a problem or not?
+                        //    matrix = osi_solver->getMatrixByCol(); // This matrix is column ordered
+                        //}
+                        //else {
+                        //    benders_tree_node_pointer->getDataPtr()->matrix_->transpose();
+                        //    benders_tree_node_pointer->getDataPtr()->matrix_->reverseOrdering(); // Maybe it is faster to get the matrix from cplex..
+                        //    matrix = benders_tree_node_pointer->getDataPtr()->matrix_;
+                        //}
+                        // TODO: test something
+                        matrix = osi_solver->getMatrixByCol(); // This matrix contains also feasibility/optimality cuts..
                         
                         dual_solution_primal_variable_bounds = new double[number_coss];
                         const double* objective_coefficients = benders_tree_node_pointer->getDataPtr()->objective_;
@@ -1563,7 +1565,7 @@ namespace parallel_benders {
                 assert(false);// We can resort to the old method of handling things..
             
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
-                double * dual_solution_primal_variable_bounds = new double[number_coss];
+                dual_solution_primal_variable_bounds = new double[number_coss];
                 cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
             }
             // Compute the value of the primal variable bounds * dual multipliers
