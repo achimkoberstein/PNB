@@ -114,7 +114,7 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
         node_vec.push_back(tnode);
         this->ncol_ = core->getNumCols(0);
         this->nrow_ = core->getNumRows(0);
-        this->nels_ = node->getNumMatrixElements();
+        this->nels_ = core->getNode(0)->getNumMatrixElements();// In the det-eq the first stage nels are needed, so we can not start with 0 here
 
         // prepare array for counting max nels per stage and scenario
         if (this->maxNelsPerScenInStage)

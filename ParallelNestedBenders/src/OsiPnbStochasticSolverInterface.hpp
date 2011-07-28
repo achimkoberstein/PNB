@@ -20,6 +20,8 @@ public:
     void initialSolve();
 
     double getObjValue();
+    int getNumOptimalityCuts();
+    int getNumFeasibilityCuts();
     void setParameters(const parallel_benders::Parameter& parameters);
     int getNumIterations();
 	const parallel_benders::Parameter& getParameters() const;

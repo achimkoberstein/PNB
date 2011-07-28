@@ -55,9 +55,12 @@ public:
         std::string total_core_string = folder+core_name_string;
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
-        smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        int num_stages = smi->getCore()->getNumStages();
-        int num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
+        //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //assert( smi_read_in == 0);
+        int num_stages = 2;
+        //num_stages = smi->getCore()->getNumStages();
+        int num_childs_first_stage = 10;
+        //num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
         delete smi; // Get rid of the model, before we actually solve stuff
 
 
@@ -74,12 +77,16 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
         // Single Cut first
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        // Test against deteq
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
         // Multi Cut behind
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         // Try some aggregation
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,num_childs_first_stage/2); // try aggregation
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // try aggregation
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
 
         // Now we can test the stuff with different number of aggregates!
@@ -95,7 +102,7 @@ public:
         //}
         // Test stage aggregation by reducing number of consecutive stages
         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        if ( num_stages > 2 )
+        if ( num_stages > 10 )
             for (int i = 0; i < num_stages-1; i++){
                 benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,i);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i+1);
@@ -151,6 +158,7 @@ protected:
 		// Header line of File should be this one
 		// We need to write the header line for this file
 		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+        s << "Created Optimality Cuts; Created Feasibility Cuts; ";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
 		{   
@@ -218,6 +226,10 @@ protected:
         time = CoinCpuTime()-time; // Overall WallClockTime;
         LOG(INFO) << "Solution Time: " << time;
 
+
+        int created_opt_cuts = nested_benders.getNumOptimalityCuts();
+        int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
+
 		// We get the parameters from the solver back to evaluate it.
 		benders_parameter_ = nested_benders.getParameters();
 
@@ -270,6 +282,8 @@ protected:
         }
         // Write solution line
         s << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+        // Write num cuts
+        s << created_opt_cuts << ";" << created_feas_cuts << ";";
 		// Write parameter values
 		// Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
@@ -451,18 +465,18 @@ TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP, n
 }
 //
 TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
 }
 //
 TEST_F(NestedBendersTest, sgpf_POSTS) { // We get other results.
@@ -546,22 +560,22 @@ TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed 
     EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), 3300, 0.1); // For mixed-integer case should be: 3300
 }
 
-TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. <- We can not cope with that by now..
+TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. 
 EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
-EXPECT_NEAR(solveSMPS("felt/electric/LandS2"), 719.21, 0.1); // Independent
+EXPECT_NEAR(solveSMPS("felt/electric/LandS","felt/electric/LandS","felt/electric/LandS2"), 719.21, 0.1); // Independent : should be 719.21
 }
 
-TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values not verified
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.608219, 0.1); // Non-challenging CO2 limits //  19777.4
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.929095, 0.1); // Challenging CO2 limits // 20478.7
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 21010.235039, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),21034.731951, 0.1); //20799.3 Based on Import, INDEP and BLOCKS // 22438.9
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 0, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"),  19777.4, 0.1); // INDEP
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-1200"),10399.839640, 0.1); // INDEP and BLOCKS for the rest  22428.9
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-1875"), 10399.839640, 0.1); //  22447.1
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-3780"), 0, 0.1); //  22441
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-5292"), 0, 0.1); // 22438.4
+TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values verified with det-eq, but differ from andy felts test set ( maybe indep/blocks mixture is incorrect??
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-1200"),20808.6, 0.1); // INDEP and BLOCKS for the rest  22428.9
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-1875"), 20809.3, 0.1); //  22447.1
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-3780"), 20794.7, 0.1); //  22441
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-5292"), 20788.6, 0.1); // 22438.4
 }
 TEST_F(NestedBendersTest,phone_FELT){//INDEP, two-stage, mixed-integer, values not verified
     EXPECT_NEAR(solveSMPS("felt/phone/phone"), 36.9, 0.1); // Stochastic problem: 2^15 scenarios
@@ -578,17 +592,21 @@ TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ra
     EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -39024.4, 0.1); // seven-stage, stochasticity from stocfor2
 }
 
-TEST_F(NestedBendersTest,20term_WRIGHT){
+// Huge problems
+TEST_F(NestedBendersTest,20term_WRIGHT){// 1.1 * 10^12 scenarios
     EXPECT_NEAR(solveSMPS("wright/data-20/20"), -41131.98, 0.1); //two-stage
 }
-TEST_F(NestedBendersTest,gbd_WRIGHT){
-    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), -41131.98, 0.1); //two-stage
+TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
+    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
 }
-TEST_F(NestedBendersTest,ssn_WRIGHT){
+TEST_F(NestedBendersTest,ssn_WRIGHT){// 10^70 scenarios
     EXPECT_NEAR(solveSMPS("wright/data-ssn/ssn"), -41131.98, 0.1); //two-stage
 }
-TEST_F(NestedBendersTest,LandS_WRIGHT){
-    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), -41131.98, 0.1); //two-stage
+TEST_F(NestedBendersTest,LandS_WRIGHT){// 10^6 scenarios
+    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
+}
+TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
+    EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 225.629, 0.1); //two-stage
 }
 
 TEST_F(NestedBendersTest,watson_conditional){
@@ -758,7 +776,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
-    ::testing::GTEST_FLAG(filter) = "*watson_conditional*";
+    //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
+    ::testing::GTEST_FLAG(filter) = "*electric*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
