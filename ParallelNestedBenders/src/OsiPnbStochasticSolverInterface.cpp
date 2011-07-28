@@ -39,16 +39,16 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
         if ( cpx_solver){
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
-			//CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
+            CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
 				osi->branchAndBound();
 			}
 			else {
-                //CPXdualopt(envPtr,lpPtr);
-				CPXbaropt(envPtr,lpPtr);
+                CPXdualopt(envPtr,lpPtr);
+				//CPXbaropt(envPtr,lpPtr);
 			}
             //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
