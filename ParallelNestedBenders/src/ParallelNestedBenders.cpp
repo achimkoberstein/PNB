@@ -1000,7 +1000,7 @@ namespace parallel_benders {
         }
 
         bool store_cut_information_ = true;
-        if ( store_cut_information_ ){
+        if ( store_cut_information_ && !integer_problems_[current_stage_]){ // Store Cut information only for non-integer problems!
             // Store values about active cuts in own data structure
             for ( int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size();i++ ){
                 CutInformation& cut_information = benders_node_pointer->cut_information_.GetCut(i-stage_data_[current_stage_]->num_rows_);
