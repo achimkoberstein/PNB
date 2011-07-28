@@ -111,3 +111,21 @@ const parallel_benders::Timer& OsiStochasticParallelNestedBendersTwoStageSolverI
 {
     return nested_benders_->timer_;
 }
+
+int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumOptimalityCuts()
+{
+    int cut_counter = 0;
+    for (int i = 0; i < nested_benders_->num_stages_; i++){
+        cut_counter += nested_benders_->added_optimality_cuts_[i];
+    }
+    return cut_counter;
+}
+
+int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumFeasibilityCuts()
+{
+    int cut_counter = 0;
+    for (int i = 0; i < nested_benders_->num_stages_; i++){
+        cut_counter += nested_benders_->added_feasibility_cuts_[i];
+    }
+    return cut_counter;
+}

@@ -297,9 +297,14 @@ namespace parallel_benders {
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
 		second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY_STAGE,1);
         assert( second_iteration_stage_ >= 0);
-        if ( second_iteration_stage_ >= num_stages_ -1){
+        if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION && second_iteration_stage_ >= num_stages_-1){ // In this case we can either disable the second iteration OR set it to lowest possible level
             second_iteration_stage_ = num_stages_-2;
-            param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
+            if ( second_iteration_stage_ == 0 ){
+                sequencing_protocol_ = PNB_INT_FASTPASS;
+            }
+            else
+                param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
+            // TODO: If we aggregate stages, we do not care about second_iteration_stage!
         }
         strategy_epsilon_ = param.get(PNB_TREE_WALK_STRATEGY_EPSILON,0.0);
         if ( strategy_epsilon_ < relative_epsilon_ )
@@ -323,7 +328,7 @@ namespace parallel_benders {
         //warm_up_ = true;
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = false;
+        only_one_feasibility_cut_ = true;
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -515,7 +520,7 @@ namespace parallel_benders {
                 // Boolean to indicate we are in a second iteration. This can be manifested at the first stage.
                 if ( in_second_iteration_ && forward_){
                     // Simple case: We reached second_iteration_stage
-                    if ( current_stage_ == second_iteration_stage_ ){
+                    if ( current_stage_ == second_iteration_stage_ && current_stage_ > 0){// To prevent wrong specification of second_iteration_stage
                         forward_ = false;
                         in_second_iteration_ = false;
                         second_iteration_counter_++;
@@ -676,13 +681,11 @@ namespace parallel_benders {
         int cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
         	cut_counter += added_optimality_cuts_[i];
-        	//added_optimality_cuts_[i] = 0;
         }
         LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
         cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
             cut_counter += added_feasibility_cuts_[i];
-            //added_optimality_cuts_[i] = 0;
         }
         LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
         // We finished solving
@@ -696,44 +699,47 @@ namespace parallel_benders {
         // Do a Cut Analyzation
         // Iterate over the stages 
         //             // Create output!
-        ofstream cut_analysis;
-        cut_analysis.open("cut_analysis", std::ios_base::app);
-        for (int i = 0; i < num_stages_-1; i++){ // Last stage has nothing of interest!
-            // Stage Wise Portrait: Active Cuts in a given Iteration
-            std::vector<int> active_cuts_in_iteration(current_iteration_,0);
-            boost::multi_array<int,2> active_cuts_from_iteration(boost::extents[current_iteration_][current_iteration_]);
-            //std::vector<int> active_cuts_from_iteration(current_iteration_,0);
-            for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
-                CutManager& cut_manager = tree_nodes_by_stage_[i][j]->getDataPtr()->cut_information_;
-                int num_cuts = cut_manager.NumCuts();
-                for (int current_cut = 0; current_cut < num_cuts; current_cut++){
-                    CutInformation& cut_information(cut_manager.GetCut(current_cut));
-                    for (int temp_iteration = cut_information.cut_creation_iteration_; temp_iteration < current_iteration_; temp_iteration++){
-                        if ( cut_information.iteration_forward_active_vector_.find(temp_iteration) != cut_information.iteration_forward_active_vector_.end() ){
-                            active_cuts_in_iteration[temp_iteration]++;
-                            active_cuts_from_iteration[cut_information.cut_creation_iteration_+1][temp_iteration]++;
+        bool analyse_cuts_ = false;
+        if ( analyse_cuts_ ){
+            ofstream cut_analysis;
+            cut_analysis.open("cut_analysis", std::ios_base::app);
+            for (int i = 0; i < num_stages_-1; i++){ // Last stage has nothing of interest!
+                // Stage Wise Portrait: Active Cuts in a given Iteration
+                std::vector<int> active_cuts_in_iteration(current_iteration_,0);
+                boost::multi_array<int,2> active_cuts_from_iteration(boost::extents[current_iteration_][current_iteration_]);
+                //std::vector<int> active_cuts_from_iteration(current_iteration_,0);
+                for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
+                    CutManager& cut_manager = tree_nodes_by_stage_[i][j]->getDataPtr()->cut_information_;
+                    int num_cuts = cut_manager.NumCuts();
+                    for (int current_cut = 0; current_cut < num_cuts; current_cut++){
+                        CutInformation& cut_information(cut_manager.GetCut(current_cut));
+                        for (int temp_iteration = cut_information.cut_creation_iteration_; temp_iteration < current_iteration_; temp_iteration++){
+                            if ( cut_information.iteration_forward_active_vector_.find(temp_iteration) != cut_information.iteration_forward_active_vector_.end() ){
+                                active_cuts_in_iteration[temp_iteration]++;
+                                active_cuts_from_iteration[cut_information.cut_creation_iteration_+1][temp_iteration]++;
+                            }
                         }
                     }
                 }
-            }
-            cut_analysis << "Stage " << i << ";";
-            for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
-                cut_analysis << "It." << array_dim1 << ";";
-            }
-            cut_analysis << std::endl;
-            for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
-                cut_analysis << "It. " << array_dim1 << ";";
-                for ( int array_dim2 = 2; array_dim2 < current_iteration_; array_dim2++){
-                    cut_analysis << active_cuts_from_iteration[array_dim2][array_dim1] << ";";
+                cut_analysis << "Stage " << i << ";";
+                for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
+                    cut_analysis << "It." << array_dim1 << ";";
                 }
                 cut_analysis << std::endl;
+                for (int array_dim1 = 2; array_dim1 < current_iteration_; array_dim1++){
+                    cut_analysis << "It. " << array_dim1 << ";";
+                    for ( int array_dim2 = 2; array_dim2 < current_iteration_; array_dim2++){
+                        cut_analysis << active_cuts_from_iteration[array_dim2][array_dim1] << ";";
+                    }
+                    cut_analysis << std::endl;
+                }
             }
         }
         // Show the first stage solution! Only if feasible
-        if ( !infeasible_problem_ )
-            for (int i = 0; i < stage_data_[0]->num_columns_; i++){
-                std::cout << "x" << i << " : " << tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] << std::endl;
-            }
+        //if ( !infeasible_problem_ )
+        //    for (int i = 0; i < stage_data_[0]->num_columns_; i++){
+        //        std::cout << "x" << i << " : " << tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] << std::endl;
+        //    }
 
     }
 
@@ -860,7 +866,7 @@ namespace parallel_benders {
                 infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
                 infeasible_problem_mutex_.unlock();
                 if ( current_stage_ > 0 ){
-                    LOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
+                    //LOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
                 }
                 else

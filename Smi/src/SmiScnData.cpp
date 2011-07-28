@@ -1701,12 +1701,33 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
     }
     if ( !isCoreNode_ && stg_ > 0 && stg_ < core_->getNumStages()-1){
         // In case of non-core node we still need to add empty placeholders for the new rows! (only the strt_ array)
-        strt_ = (int *) realloc(strt_,(nstrt_+new_columns[stg_])*sizeof(int));
-        //
-        memcpy(strt_+clo_strt_+new_columns[stg_],strt_+clo_strt_, (nstrt_-clo_strt_)*sizeof(int));
-        for (int i = 0; i < new_columns[stg_]; i++){
-            // Fill the strt_array..
-            strt_[nrow_+i] = strt_[nrow_];
+        // Update to clo_strt, nstrt_ and the like are done at the end of the method
+        // And we need to see for the matrix, if we have no matrix yet
+        int new_size = nstrt_+new_columns[stg_];
+        if ( this->has_matrix_ == false ){ // If we have no matrix yet, we need to create it now, for the new cols..
+            new_size += nrow_;
+            // But if we have a new matrix, we also need to add the old stuff that was missing till now, the empty strt_ array entries and update clo_strt and the like
+            this->has_matrix_ = true;
+            this->clo_strt_ += nrow_;
+            this->cup_strt_ += nrow_;
+            this->obj_strt_ += nrow_;
+            this->rlo_strt_ += nrow_;
+            this->rup_strt_ += nrow_;
+            strt_ = (int*) realloc(strt_,new_size*sizeof(int));
+            // Copy old bytes to make room for new ones, but prevent overlapping copies, so we copy in intermediate array
+            memmove(strt_+clo_strt_+new_columns[stg_],strt_,(nstrt_)*sizeof(int));
+            for (int i = 0; i < nrow_+new_columns[stg_]; i++) // Or use another better function for that..
+                strt_[i] = 0;
+        }
+        else {
+            strt_ = (int *) realloc(strt_,new_size*sizeof(int));
+            // Prevent overlapping copies here!
+            memmove(strt_+clo_strt_+new_columns[stg_],strt_+clo_strt_, (nstrt_-clo_strt_)*sizeof(int));
+            assert( clo_strt_ == nrow_ );
+            for (int i = 0; i < new_columns[stg_]; i++){
+                // Fill the strt_array..
+                strt_[nrow_+i] = strt_[nrow_];
+            }
         }
     }
 
