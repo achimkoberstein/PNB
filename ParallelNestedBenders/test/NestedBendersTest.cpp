@@ -578,7 +578,7 @@ TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-3780"), 20794.7, 0.1); //  22441
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-5292"), 20788.6, 0.1); // 22438.4
 }
-TEST_F(NestedBendersTest,phone_FELT){//INDEP, two-stage, mixed-integer, values not verified
+TEST_F(NestedBendersTest,phone_FELT){//INDEP, two-stage, mixed-integer on both stages, values not verified
     EXPECT_NEAR(solveSMPS("felt/phone/phone"), 36.9, 0.1); // Stochastic problem: 2^15 scenarios
     EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9
 
@@ -627,10 +627,10 @@ TEST_F(NestedBendersTest,watson_conditional){ // Values from own solver, old val
 }
 
 TEST_F(NestedBendersTest,watson_independent){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_16"), 2158.75,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_32"), 1866.42,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_64"), 2310.53,0.1);
-    EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_128"), 1637.81,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_16"), 2158.75,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_32"), 1866.42,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_64"), 2310.53,0.1);
+    //EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_128"), 1637.81,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_256"), 2000.84,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_512"), 1959.64,0.1);
     EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_768"), 1813.11,0.1);
@@ -778,7 +778,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
-    ::testing::GTEST_FLAG(filter) = "*phone*";
+    ::testing::GTEST_FLAG(filter) = "*watson_independent*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
