@@ -601,6 +601,7 @@ namespace parallel_benders {
                 }
             }
 
+            // If we use fast backward strategy, we have to decide where we go now
             if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
                 //cuts_added_last_round_ += added_optimality_cuts_[current_stage_];
                 // Or we should test the discrepancy thesis ( either relative or absolute )
@@ -633,6 +634,7 @@ namespace parallel_benders {
                 }// End If Stage and Value Checking
             }//End If FastBackward/FastEpsilonBackward Procedure
 
+            // Aggregate optimality cuts for nodes at the stage before the current stage
             if ( !forward_ && !infeasible_problem_ && infeasible_problems_.none() ){ 
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
@@ -660,7 +662,6 @@ namespace parallel_benders {
 				added_feasibility_cuts_[current_stage_-1] += num_added_feasibility_cuts_;
 				// Reset num_added_feasibility_cuts_
 				num_added_feasibility_cuts_ = 0;
-
             }
 
 
@@ -1342,7 +1343,7 @@ namespace parallel_benders {
             return;
         }
 		if ( generate_feasibility_and_optimality_cuts_ && infeasible_problems_.any() ){
-			// This is not yet implemented
+			// This is not yet implemented TOOD: we do not call this method, if we have infeasibly problems
 			assert(false);
 		}
         // We specified the number of thetas in the stage_pointer (for now)
