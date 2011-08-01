@@ -1732,7 +1732,7 @@ namespace parallel_benders {
                 // Get ENV and LP ptr
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-                CPXsetintparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
+                CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
                 //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
                 //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
             }
@@ -1757,7 +1757,7 @@ namespace parallel_benders {
                 // Get ENV and LP ptr
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-                CPXsetintparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
+                CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
                 //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
                 //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
             }
