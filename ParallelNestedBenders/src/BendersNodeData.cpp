@@ -191,6 +191,8 @@ void Parameter::init()
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);
+    // Maximal solution time
+    parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Minutes
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, 0); // Do we want to use TrustRegion TODO: Implement this
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver

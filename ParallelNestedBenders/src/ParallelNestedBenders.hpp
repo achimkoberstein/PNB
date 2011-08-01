@@ -129,6 +129,8 @@ private:
 
 
     Timer timer_;
+    Timer wall_clock_solution_time_;
+    int maximal_solution_time_;
 
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?

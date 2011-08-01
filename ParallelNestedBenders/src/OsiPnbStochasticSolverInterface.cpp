@@ -29,9 +29,13 @@ int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumIterations(
 void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
 {
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1) == 0){
+        parallel_benders::Timer solution_time(2);
+        solution_time.Start(1);
         OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
         // Model statistics
         std::cout << "Variables: " << osi->getNumCols() << " Rows: " << osi->getNumRows() << " Elements: " << osi->getNumElements() << " Integer: " << osi->getNumIntegers() << std::endl;
+        solution_time.Stop(1);
+        solution_time.Start(0);
         //osi->writeMps("deterministicEquivalent","mps",1);
         // Use Barrier method if we use cplex.. ugly code results
 #ifdef CPLEX_PRESENT
@@ -39,16 +43,17 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
         if ( cpx_solver){
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
-			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
-            CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
+			//CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
+   //         CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
+   //         CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
+            CPXsetintparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
 				osi->branchAndBound();
 			}
 			else {
-                CPXdualopt(envPtr,lpPtr);
-				//CPXbaropt(envPtr,lpPtr);
+                //CPXdualopt(envPtr,lpPtr);
+				CPXbaropt(envPtr,lpPtr);
 			}
             //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
@@ -57,31 +62,33 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
                 LOG(INFO) << "Cplex returned with status code " << result;
             double obj;
             CPXgetobjval(envPtr,lpPtr,&obj);
-            LOG(INFO) << "Solution: " << obj;
+            //LOG(INFO) << "Solution: " << obj;
             // Get first stage solution
             // TODO: Move this to another place later..
-            int num_first_stage_cols = nested_benders_->smi_->getCore()->getNumCols(0);
-            const double* col_solution = osi->getColSolution();
-            for ( int i = 0; i < num_first_stage_cols; i++ ){
-                std::cout << "x" << i << " : " << col_solution[i] << std::endl;
-            }
+            //int num_first_stage_cols = nested_benders_->smi_->getCore()->getNumCols(0);
+            //const double* col_solution = osi->getColSolution();
+            //for ( int i = 0; i < num_first_stage_cols; i++ ){
+            //    std::cout << "x" << i << " : " << col_solution[i] << std::endl;
+            //}
 
         }
         else{
 #endif
-			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
-				//osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
-				osi->branchAndBound();
-			}
-			else {
-				osi->initialSolve();
-			}
+            if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
+                //osi->setInteger(nested_benders_->smi_->getCore()->getIntegerIndices(),nested_benders_->smi_->getCore()->getIntegerLength());
+                osi->branchAndBound();
+            }
+            else {
+                osi->initialSolve();
+            }
 
 #ifdef CPLEX_PRESENT
         }
 #endif
+        solution_time.Stop(0);
         // Set solution value
         nested_benders_->upper_bound_ = osi->getObjValue();
+        // We have the time, but can not set it accordingly. not good!
 
     }
     else {
