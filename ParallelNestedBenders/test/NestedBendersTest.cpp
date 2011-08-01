@@ -55,66 +55,75 @@ public:
         std::string total_core_string = folder+core_name_string;
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
-        //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        //assert( smi_read_in == 0);
+        int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        assert( smi_read_in == 0);
         int num_stages = 2;
-        //num_stages = smi->getCore()->getNumStages();
+        num_stages = smi->getCore()->getNumStages();
         int num_childs_first_stage = 10;
-        //num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
+        num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
         delete smi; // Get rid of the model, before we actually solve stuff
 
 
         benders_parameter_.init();
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
-        // Always use second_iteration_stage, as it is superior to fastpass
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1); // We always go at least to the second stage
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
-        // Single Cut first
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        // Test against deteq
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-        // Multi Cut behind
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        // Try some aggregation
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // try aggregation
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-
-        // Now we can test the stuff with different number of aggregates!
-        //// Test stage aggregation with respect to forward/backwards
-        //if ( num_stages > 3 ){
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE);
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // From backwards : Minimize number of scenarios
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true); // From forward : Greater first stage nodes
-        //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //}
-        // Test stage aggregation by reducing number of consecutive stages
-        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
-        if ( num_stages > 10 )
-            for (int i = 0; i < num_stages-1; i++){
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,i);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,i+1);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        int num_repetitions = 3; // To rule out system instability
+        for (int i = 0; i < num_repetitions; i++){
+            benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
+            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
+            // Always use second_iteration_stage, as it is superior to fastpass
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,1); // We always go at least to the second stage
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            // Solve multi cut
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            // Do static tests for test set we seem to consider useful
+            if ( num_childs_first_stage > 3){
+                // Resolve with a static try
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,num_childs_first_stage/2); // try aggregation
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             }
+            //// Test against deteq
+            benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
- 
+
+
+            // Try some aggregation ( dynamic )
+
+            // Test stage aggregation by reducing number of consecutive stages
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
+            if ( num_stages > 2 )
+                for (int i = 0; i < num_stages-1; i++){
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,parallel_benders::PNB_INT_STAGE_AGGREGATION_LAST_STAGE);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,false); // Start backwards, minimize number of scenarios
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    if ( num_childs_first_stage > 3 ){
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,num_childs_first_stage/2); // try aggregation
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    }
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_DIRECTION,true); // Start forwards
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    if ( num_childs_first_stage > 3 ){
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,num_childs_first_stage/2); // try aggregation
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    }
+                }
+
+        }
         double average = 0;
         for (int i = 0; i < solutions.size(); i++)
             average += solutions[i];
@@ -476,7 +485,7 @@ TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage,
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
 }
 
 TEST_F(NestedBendersTest, sgpf_POSTS) { // Verified with original values
@@ -779,7 +788,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
-    ::testing::GTEST_FLAG(filter) = "*pltexp*";
+    ::testing::GTEST_FLAG(filter) = "*POSTS*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

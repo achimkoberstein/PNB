@@ -21,6 +21,7 @@ class SmiNodeData;
 namespace parallel_benders{
 
     // Parameter names go in here. We use std::string as parameter
+    // IMPORTANT: If you add a new string here, also set the default value in the init() method of Parameter class
     // We start with integer parameters
     const std::string PNB_BENDERS = "PNB_BENDERS";          //
     const std::string PNB_WARM_START = "PNB_WARM_START";    //
@@ -42,6 +43,8 @@ namespace parallel_benders{
     const std::string PNB_STAGE_AGGREGATION_START = "PNB_STAGE_AGGREGATION_START";
     const std::string PNB_STAGE_AGGREGATION_END = "PNB_STAGE_AGGREGATION_END";
     const std::string PNB_STAGE_AGGREGATION_DIRECTION = "PNG_STAGE_AGGREGATION_DIRECTION"; // In which direction do we want to aggregate if difference is greater than one? True means from start to end, false means from end to start
+
+    const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
 
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //

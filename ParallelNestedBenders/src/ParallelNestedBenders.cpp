@@ -235,7 +235,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -274,6 +274,9 @@ namespace parallel_benders {
         integer_tolerance_ = param.get(PNB_TOLERANCE_INTEGER,0.0);
         absolute_epsilon_ = param.get(PNB_EPSILON_ABSOLUTE,0.0);
         relative_epsilon_ = param.get(PNB_EPSILON_RELATIVE,0.0);
+
+        // Solution time
+        maximal_solution_time_ = param.get(PNB_MAXIMAL_SOLUTION_TIME,3600); // Maximal solution time is 1 hour by default!
         // WarmStart
         int warm_start_version = param.get(PNB_WARM_START,0);
         if ( warm_start_version > 0 )
@@ -412,11 +415,6 @@ namespace parallel_benders {
             // We need to generate the non-staircase constraints
             LOG(INFO) << "Transforming to a non-staircase problem..";
             smi_->transformToStaircaseStructure(non_staircase_coefficients_);
-            // We have to update ncols / nrows 
-            //for (int i = 0; i < num_stages_; i++){
-            //    stage_data_[i]->num_columns_ = core_->getNumCols(i);
-            //    stage_data_[i]->num_rows_ = core_->getNumRows(i);
-            //}
             non_staircase_problem_ = false;
             non_staircase_stochastic_problem_ = false;
             non_staircase_coefficients_.clear();
@@ -453,6 +451,7 @@ namespace parallel_benders {
         }
 
         timer_.Stop(setup_timer);
+        wall_clock_solution_time_.Start(0);
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
             std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
@@ -460,6 +459,13 @@ namespace parallel_benders {
             current_iteration_ < max_iteration_ 
             ) 
         {
+            wall_clock_solution_time_.Stop(0);
+            // Check if we already went over the time limit
+            if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
+                LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
+                return; // We stop solving the problem
+            }
+            wall_clock_solution_time_.Start(0);
             timer_.Start(current_stage_);
             if ( upper_bound_ <= lower_bound_ ){
                 LOG(INFO) << "Upper Bound is lower than lower Bound. This should not happen, unfortunately it has. Iteration: " << current_iteration_;
@@ -502,9 +508,7 @@ namespace parallel_benders {
 					}
 					else {
 					// We have to check if old_lower_bound and so are the same. if yes, we must go forward to reach something new, don't we?
-
 					}
-
                 }
             }
 
@@ -1728,6 +1732,7 @@ namespace parallel_benders {
                 // Get ENV and LP ptr
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+                CPXsetintparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
                 //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
                 //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
             }
@@ -1752,6 +1757,7 @@ namespace parallel_benders {
                 // Get ENV and LP ptr
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+                CPXsetintparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
                 //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
                 //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
             }
