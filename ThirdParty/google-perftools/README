@@ -37,7 +37,7 @@ As a quick-start, do the following after installing this package:
 
 1) Link your executable with -ltcmalloc
 2) Run your executable with the HEAPPROFILE environment var set:
-     $ HEAPROFILE=/tmp/heapprof <path/to/binary> [binary args]
+     $ HEAPPROFILE=/tmp/heapprof <path/to/binary> [binary args]
 3) Run pprof to analyze the heap usage
      $ pprof <path/to/binary> /tmp/heapprof.0045.heap  # run 'ls' to see options
      $ pprof --gv <path/to/binary> /tmp/heapprof.0045.heap
@@ -122,6 +122,14 @@ library, this two-library linking won't work:
 Instead, use the special libtcmalloc_and_profiler library, which we
 make for just this purpose:
    gcc -o myapp ... /usr/lib/libtcmalloc_and_profiler.a
+
+
+CONFIGURATION OPTIONS
+---------------------
+For advanced users, there are several flags you can pass to
+'./configure' that tweak tcmalloc performace.  (These are in addition
+to the environment variables you can set at runtime to affect
+tcmalloc, described below.)  See the INSTALL file for details.
 
 
 ENVIRONMENT VARIABLES
@@ -254,4 +262,4 @@ new threads, or is otherwise likely to cause a call to
 pthread_mutex_lock!
 
 ---
-22 May 2009
+17 May 2011

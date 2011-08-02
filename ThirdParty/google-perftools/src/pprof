@@ -72,7 +72,7 @@ use strict;
 use warnings;
 use Getopt::Long;
 
-my $PPROF_VERSION = "1.5";
+my $PPROF_VERSION = "1.8.1";
 
 # These are the object tools we use which can come from a
 # user-specified location using --tools, from the PPROF_TOOLS
@@ -89,6 +89,7 @@ my %obj_tool_map = (
 );
 my $DOT = "dot";          # leave non-absolute, since it may be in /usr/local
 my $GV = "gv";
+my $EVINCE = "evince";    # could also be xpdf or perhaps acroread
 my $KCACHEGRIND = "kcachegrind";
 my $PS2PDF = "ps2pdf";
 # These are used for dynamic profiles
@@ -103,6 +104,7 @@ my $GROWTH_PAGE = "/pprof/growth";
 my $CONTENTION_PAGE = "/pprof/contention";
 my $WALL_PAGE = "/pprof/wall(?:\\?.*)?";  # accepts options like namefilter
 my $FILTEREDPROFILE_PAGE = "/pprof/filteredprofile(?:\\?.*)?";
+my $CENSUSPROFILE_PAGE = "/pprof/censusprofile";  # must support "?seconds=#"
 my $SYMBOL_PAGE = "/pprof/symbol";     # must support symbol lookup via POST
 my $PROGRAM_NAME_PAGE = "/pprof/cmdline";
 
@@ -110,7 +112,7 @@ my $PROGRAM_NAME_PAGE = "/pprof/cmdline";
 # All the alternatives must begin with /.
 my $PROFILES = "($HEAP_PAGE|$PROFILE_PAGE|$PMUPROFILE_PAGE|" .
                "$GROWTH_PAGE|$CONTENTION_PAGE|$WALL_PAGE|" .
-               "$FILTEREDPROFILE_PAGE)";
+               "$FILTEREDPROFILE_PAGE|$CENSUSPROFILE_PAGE)";
 
 # default binary name
 my $UNKNOWN_BINARY = "(unknown)";
@@ -119,6 +121,11 @@ my $UNKNOWN_BINARY = "(unknown)";
 # i.e., nibbles) of an address, distinguishing between 32-bit and
 # 64-bit profiles.  To err on the safe size, default to 64-bit here:
 my $address_length = 16;
+
+my $dev_null = "/dev/null";
+if (! -e $dev_null && $^O =~ /MSWin/) {    # $^O is the OS perl was built for
+  $dev_null = "nul";
+}
 
 # A list of paths to search for shared object files
 my @prefix_list = ();
@@ -148,8 +155,9 @@ pprof [options] <profile>
 
    The /<service> can be $HEAP_PAGE, $PROFILE_PAGE, /pprof/pmuprofile,
                          $GROWTH_PAGE, $CONTENTION_PAGE, /pprof/wall,
-                         or /pprof/filteredprofile.
-   For instance: "pprof http://myserver.com:80$HEAP_PAGE".
+                         $CENSUSPROFILE_PAGE, or /pprof/filteredprofile.
+   For instance:
+     pprof http://myserver.com:80$HEAP_PAGE
    If /<service> is omitted, the service defaults to $PROFILE_PAGE (cpu profiling).
 pprof --symbols <program>
    Maps addresses to symbol names.  In this mode, stdin should be a
@@ -180,6 +188,7 @@ Output type:
    --text              Generate text report
    --callgrind         Generate callgrind format to stdout
    --gv                Generate Postscript and display
+   --evince            Generate PDF and display
    --web               Generate SVG and display
    --list=<regexp>     Generate source listing of matching routines
    --disasm=<regexp>   Generate disassembly of matching routines
@@ -208,6 +217,7 @@ Call-graph Options:
    --nodecount=<n>     Show at most so many nodes [default=80]
    --nodefraction=<f>  Hide nodes below <f>*total [default=.005]
    --edgefraction=<f>  Hide edges below <f>*total [default=.001]
+   --maxdegree=<n>     Max incoming/outgoing edges per node [default=8]
    --focus=<regexp>    Focus on nodes matching <regexp>
    --ignore=<regexp>   Ignore nodes matching <regexp>
    --scale=<n>         Set GV scaling [default=0]
@@ -304,6 +314,7 @@ sub Init() {
   $main::opt_disasm = "";
   $main::opt_symbols = 0;
   $main::opt_gv = 0;
+  $main::opt_evince = 0;
   $main::opt_web = 0;
   $main::opt_dot = 0;
   $main::opt_ps = 0;
@@ -315,6 +326,7 @@ sub Init() {
   $main::opt_nodecount = 80;
   $main::opt_nodefraction = 0.005;
   $main::opt_edgefraction = 0.001;
+  $main::opt_maxdegree = 8;
   $main::opt_focus = '';
   $main::opt_ignore = '';
   $main::opt_scale = 0;
@@ -372,6 +384,7 @@ sub Init() {
              "disasm=s"       => \$main::opt_disasm,
              "symbols!"       => \$main::opt_symbols,
              "gv!"            => \$main::opt_gv,
+             "evince!"        => \$main::opt_evince,
              "web!"           => \$main::opt_web,
              "dot!"           => \$main::opt_dot,
              "ps!"            => \$main::opt_ps,
@@ -383,6 +396,7 @@ sub Init() {
              "nodecount=i"    => \$main::opt_nodecount,
              "nodefraction=f" => \$main::opt_nodefraction,
              "edgefraction=f" => \$main::opt_edgefraction,
+             "maxdegree=i"    => \$main::opt_maxdegree,
              "focus=s"        => \$main::opt_focus,
              "ignore=s"       => \$main::opt_ignore,
              "scale=i"        => \$main::opt_scale,
@@ -452,6 +466,7 @@ sub Init() {
       ($main::opt_disasm eq '' ? 0 : 1) +
       ($main::opt_symbols == 0 ? 0 : 1) +
       $main::opt_gv +
+      $main::opt_evince +
       $main::opt_web +
       $main::opt_dot +
       $main::opt_ps +
@@ -531,7 +546,7 @@ sub Init() {
     ConfigureObjTools($main::prog)
   }
 
-  # Break the opt_list_prefix into the prefix_list array
+  # Break the opt_lib_prefix into the prefix_list array
   @prefix_list = split (',', $main::opt_lib_prefix);
 
   # Remove trailing / from the prefixes, in the list to prevent
@@ -627,9 +642,9 @@ sub Main() {
   # Print
   if (!$main::opt_interactive) {
     if ($main::opt_disasm) {
-      PrintDisassembly($libs, $flat, $cumulative, $main::opt_disasm, $total);
+      PrintDisassembly($libs, $flat, $cumulative, $main::opt_disasm);
     } elsif ($main::opt_list) {
-      PrintListing($libs, $flat, $cumulative, $main::opt_list);
+      PrintListing($total, $libs, $flat, $cumulative, $main::opt_list, 0);
     } elsif ($main::opt_text) {
       # Make sure the output is empty when have nothing to report
       # (only matters when --heapcheck is given but we must be
@@ -637,7 +652,7 @@ sub Main() {
       if ($total != 0) {
         printf("Total: %s %s\n", Unparse($total), Units());
       }
-      PrintText($symbols, $flat, $cumulative, $total, -1);
+      PrintText($symbols, $flat, $cumulative, -1);
     } elsif ($main::opt_raw) {
       PrintSymbolizedProfile($symbols, $profile, $main::prog);
     } elsif ($main::opt_callgrind) {
@@ -646,6 +661,8 @@ sub Main() {
       if (PrintDot($main::prog, $symbols, $profile, $flat, $cumulative, $total)) {
         if ($main::opt_gv) {
           RunGV(TempName($main::next_tmpfile, "ps"), "");
+        } elsif ($main::opt_evince) {
+	  RunEvince(TempName($main::next_tmpfile, "pdf"), "");
         } elsif ($main::opt_web) {
           my $tmp = TempName($main::next_tmpfile, "svg");
           RunWeb($tmp);
@@ -694,7 +711,7 @@ sub ReadlineMightFail {
 sub RunGV {
   my $fname = shift;
   my $bg = shift;       # "" or " &" if we should run in background
-  if (!system("$GV --version >/dev/null 2>&1")) {
+  if (!system("$GV --version >$dev_null 2>&1")) {
     # Options using double dash are supported by this gv version.
     # Also, turn on noantialias to better handle bug in gv for
     # postscript files with large dimensions.
@@ -706,6 +723,12 @@ sub RunGV {
     print STDERR "$GV -scale $main::opt_scale\n";
     system("$GV -scale $main::opt_scale " . $fname . $bg);
   }
+}
+
+sub RunEvince {
+  my $fname = shift;
+  my $bg = shift;       # "" or " &" if we should run in background
+  system("$EVINCE " . $fname . $bg);
 }
 
 sub RunWeb {
@@ -805,6 +828,7 @@ sub InteractiveCommand {
   $main::opt_disasm = 0;
   $main::opt_list = 0;
   $main::opt_gv = 0;
+  $main::opt_evince = 0;
   $main::opt_cum = 0;
 
   if (m/^\s*(text|top)(\d*)\s*(.*)/) {
@@ -816,14 +840,14 @@ sub InteractiveCommand {
     my $ignore;
     ($routine, $ignore) = ParseInteractiveArgs($3);
 
-    my $profile = ProcessProfile($orig_profile, $symbols, "", $ignore);
+    my $profile = ProcessProfile($total, $orig_profile, $symbols, "", $ignore);
     my $reduced = ReduceProfile($symbols, $profile);
 
     # Get derived profiles
     my $flat = FlatProfile($reduced);
     my $cumulative = CumulativeProfile($reduced);
 
-    PrintText($symbols, $flat, $cumulative, $total, $line_limit);
+    PrintText($symbols, $flat, $cumulative, $line_limit);
     return 1;
   }
   if (m/^\s*callgrind\s*([^ \n]*)/) {
@@ -843,21 +867,22 @@ sub InteractiveCommand {
 
     return 1;
   }
-  if (m/^\s*list\s*(.+)/) {
+  if (m/^\s*(web)?list\s*(.+)/) {
+    my $html = (defined($1) && ($1 eq "web"));
     $main::opt_list = 1;
 
     my $routine;
     my $ignore;
-    ($routine, $ignore) = ParseInteractiveArgs($1);
+    ($routine, $ignore) = ParseInteractiveArgs($2);
 
-    my $profile = ProcessProfile($orig_profile, $symbols, "", $ignore);
+    my $profile = ProcessProfile($total, $orig_profile, $symbols, "", $ignore);
     my $reduced = ReduceProfile($symbols, $profile);
 
     # Get derived profiles
     my $flat = FlatProfile($reduced);
     my $cumulative = CumulativeProfile($reduced);
 
-    PrintListing($libs, $flat, $cumulative, $routine);
+    PrintListing($total, $libs, $flat, $cumulative, $routine, $html);
     return 1;
   }
   if (m/^\s*disasm\s*(.+)/) {
@@ -868,21 +893,24 @@ sub InteractiveCommand {
     ($routine, $ignore) = ParseInteractiveArgs($1);
 
     # Process current profile to account for various settings
-    my $profile = ProcessProfile($orig_profile, $symbols, "", $ignore);
+    my $profile = ProcessProfile($total, $orig_profile, $symbols, "", $ignore);
     my $reduced = ReduceProfile($symbols, $profile);
 
     # Get derived profiles
     my $flat = FlatProfile($reduced);
     my $cumulative = CumulativeProfile($reduced);
 
-    PrintDisassembly($libs, $flat, $cumulative, $routine, $total);
+    PrintDisassembly($libs, $flat, $cumulative, $routine);
     return 1;
   }
-  if (m/^\s*(gv|web)\s*(.*)/) {
+  if (m/^\s*(gv|web|evince)\s*(.*)/) {
     $main::opt_gv = 0;
+    $main::opt_evince = 0;
     $main::opt_web = 0;
     if ($1 eq "gv") {
       $main::opt_gv = 1;
+    } elsif ($1 eq "evince") {
+      $main::opt_evince = 1;
     } elsif ($1 eq "web") {
       $main::opt_web = 1;
     }
@@ -892,7 +920,8 @@ sub InteractiveCommand {
     ($focus, $ignore) = ParseInteractiveArgs($2);
 
     # Process current profile to account for various settings
-    my $profile = ProcessProfile($orig_profile, $symbols, $focus, $ignore);
+    my $profile = ProcessProfile($total, $orig_profile, $symbols,
+                                 $focus, $ignore);
     my $reduced = ReduceProfile($symbols, $profile);
 
     # Get derived profiles
@@ -902,6 +931,8 @@ sub InteractiveCommand {
     if (PrintDot($main::prog, $symbols, $profile, $flat, $cumulative, $total)) {
       if ($main::opt_gv) {
         RunGV(TempName($main::next_tmpfile, "ps"), " &");
+      } elsif ($main::opt_evince) {
+        RunEvince(TempName($main::next_tmpfile, "pdf"), " &");
       } elsif ($main::opt_web) {
         RunWeb(TempName($main::next_tmpfile, "svg"));
       }
@@ -918,6 +949,7 @@ sub InteractiveCommand {
 
 
 sub ProcessProfile {
+  my $total_count = shift;
   my $orig_profile = shift;
   my $symbols = shift;
   my $focus = shift;
@@ -925,7 +957,6 @@ sub ProcessProfile {
 
   # Process current profile to account for various settings
   my $profile = $orig_profile;
-  my $total_count = TotalProfile($profile);
   printf("Total: %s %s\n", Unparse($total_count), Units());
   if ($focus ne '') {
     $profile = FocusProfile($symbols, $profile, $focus);
@@ -971,6 +1002,11 @@ Commands:
 
   list [routine_regexp] [-ignore1] [-ignore2]
       Show source listing of routines whose names match "routine_regexp"
+
+  weblist [routine_regexp] [-ignore1] [-ignore2]
+     Displays a source listing of routines whose names match "routine_regexp"
+     in a web browser.  You can click on source lines to view the
+     corresponding disassembly.
 
   top [--cum] [-ignore1] [-ignore2]
   top20 [--cum] [-ignore1] [-ignore2]
@@ -1114,8 +1150,9 @@ sub PrintText {
   my $symbols = shift;
   my $flat = shift;
   my $cumulative = shift;
-  my $total = shift;
   my $line_limit = shift;
+
+  my $total = TotalProfile($flat);
 
   # Which profile to sort by?
   my $s = $main::opt_cum ? $cumulative : $flat;
@@ -1146,7 +1183,7 @@ sub PrintText {
              $sym);
     }
     $lines++;
-    last if ($line_limit >= 0 && $lines > $line_limit);
+    last if ($line_limit >= 0 && $lines >= $line_limit);
   }
 }
 
@@ -1191,7 +1228,8 @@ sub PrintDisassembly {
   my $flat = shift;
   my $cumulative = shift;
   my $disasm_opts = shift;
-  my $total = shift;
+
+  my $total = TotalProfile($flat);
 
   foreach my $lib (@{$libs}) {
     my $symbol_table = GetProcedureBoundaries($lib->[0], $disasm_opts);
@@ -1292,13 +1330,33 @@ sub ByName {
   return ShortFunctionName($a) cmp ShortFunctionName($b);
 }
 
-# Print source-listing for all all routines that match $main::opt_list
+# Print source-listing for all all routines that match $list_opts
 sub PrintListing {
+  my $total = shift;
   my $libs = shift;
   my $flat = shift;
   my $cumulative = shift;
   my $list_opts = shift;
+  my $html = shift;
 
+  my $output = \*STDOUT;
+  my $fname = "";
+
+  if ($html) {
+    # Arrange to write the output to a temporary file
+    $fname = TempName($main::next_tmpfile, "html");
+    $main::next_tmpfile++;
+    if (!open(TEMP, ">$fname")) {
+      print STDERR "$fname: $!\n";
+      return;
+    }
+    $output = \*TEMP;
+    print $output HtmlListingHeader();
+    printf $output ("<div class=\"legend\">%s<br>Total: %s %s</div>\n",
+                    $main::prog, Unparse($total), Units());
+  }
+
+  my $listed = 0;
   foreach my $lib (@{$libs}) {
     my $symbol_table = GetProcedureBoundaries($lib->[0], $list_opts);
     my $offset = AddressSub($lib->[1], $lib->[3]);
@@ -1310,15 +1368,113 @@ sub PrintListing {
       my $addr = AddressAdd($start_addr, $offset);
       for (my $i = 0; $i < $length; $i++) {
         if (defined($cumulative->{$addr})) {
-          PrintSource($lib->[0], $offset,
-                      $routine, $flat, $cumulative,
-                      $start_addr, $end_addr);
+          $listed += PrintSource(
+            $lib->[0], $offset,
+            $routine, $flat, $cumulative,
+            $start_addr, $end_addr,
+            $html,
+            $output);
           last;
         }
         $addr = AddressInc($addr);
       }
     }
   }
+
+  if ($html) {
+    if ($listed > 0) {
+      print $output HtmlListingFooter();
+      close($output);
+      RunWeb($fname);
+    } else {
+      close($output);
+      unlink($fname);
+    }
+  }
+}
+
+sub HtmlListingHeader {
+  return <<'EOF';
+<DOCTYPE html>
+<html>
+<head>
+<title>Pprof listing</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+}
+h1 {
+  font-size: 1.5em;
+  margin-bottom: 4px;
+}
+.legend {
+  font-size: 1.25em;
+}
+.line {
+  color: #aaaaaa;
+}
+.nop {
+  color: #aaaaaa;
+}
+.unimportant {
+  color: #cccccc;
+}
+.disasmloc {
+  color: #000000;
+}
+.deadsrc {
+  cursor: pointer;
+}
+.deadsrc:hover {
+  background-color: #eeeeee;
+}
+.livesrc {
+  color: #0000ff;
+  cursor: pointer;
+}
+.livesrc:hover {
+  background-color: #eeeeee;
+}
+.asm {
+  color: #008800;
+  display: none;
+}
+</style>
+<script type="text/javascript">
+function pprof_toggle_asm(e) {
+  var target;
+  if (!e) e = window.event;
+  if (e.target) target = e.target;
+  else if (e.srcElement) target = e.srcElement;
+
+  if (target) {
+    var asm = target.nextSibling;
+    if (asm && asm.className == "asm") {
+      asm.style.display = (asm.style.display == "block" ? "" : "block");
+      e.preventDefault();
+      return false;
+    }
+  }
+}
+</script>
+</head>
+<body>
+EOF
+}
+
+sub HtmlListingFooter {
+  return <<'EOF';
+</body>
+</html>
+EOF
+}
+
+sub HtmlEscape {
+  my $text = shift;
+  $text =~ s/&/&amp;/g;
+  $text =~ s/</&lt;/g;
+  $text =~ s/>/&gt;/g;
+  return $text;
 }
 
 # Returns the indentation of the line, if it has any non-whitespace
@@ -1332,6 +1488,45 @@ sub Indentation {
   }
 }
 
+# If the symbol table contains inlining info, Disassemble() may tag an
+# instruction with a location inside an inlined function.  But for
+# source listings, we prefer to use the location in the function we
+# are listing.  So use MapToSymbols() to fetch full location
+# information for each instruction and then pick out the first
+# location from a location list (location list contains callers before
+# callees in case of inlining).
+#
+# After this routine has run, each entry in $instructions contains:
+#   [0] start address
+#   [1] filename for function we are listing
+#   [2] line number for function we are listing
+#   [3] disassembly
+#   [4] limit address
+#   [5] most specific filename (may be different from [1] due to inlining)
+#   [6] most specific line number (may be different from [2] due to inlining)
+sub GetTopLevelLineNumbers {
+  my ($lib, $offset, $instructions) = @_;
+  my $pcs = [];
+  for (my $i = 0; $i <= $#{$instructions}; $i++) {
+    push(@{$pcs}, $instructions->[$i]->[0]);
+  }
+  my $symbols = {};
+  MapToSymbols($lib, $offset, $pcs, $symbols);
+  for (my $i = 0; $i <= $#{$instructions}; $i++) {
+    my $e = $instructions->[$i];
+    push(@{$e}, $e->[1]);
+    push(@{$e}, $e->[2]);
+    my $addr = $e->[0];
+    my $sym = $symbols->{$addr};
+    if (defined($sym)) {
+      if ($#{$sym} >= 2 && $sym->[1] =~ m/^(.*):(\d+)$/) {
+        $e->[1] = $1;  # File name
+        $e->[2] = $2;  # Line number
+      }
+    }
+  }
+}
+
 # Print source-listing for one routine
 sub PrintSource {
   my $prog = shift;
@@ -1341,9 +1536,12 @@ sub PrintSource {
   my $cumulative = shift;
   my $start_addr = shift;
   my $end_addr = shift;
+  my $html = shift;
+  my $output = shift;
 
   # Disassemble all instructions (just to get line numbers)
   my @instructions = Disassemble($prog, $offset, $start_addr, $end_addr);
+  GetTopLevelLineNumbers($prog, $offset, \@instructions);
 
   # Hack 1: assume that the first source file encountered in the
   # disassembly contains the routine
@@ -1356,7 +1554,7 @@ sub PrintSource {
   }
   if (!defined($filename)) {
     print STDERR "no filename found in $routine\n";
-    return;
+    return 0;
   }
 
   # Hack 2: assume that the largest line number from $filename is the
@@ -1389,7 +1587,7 @@ sub PrintSource {
   {
     if (!open(FILE, "<$filename")) {
       print STDERR "$filename: $!\n";
-      return;
+      return 0;
     }
     my $l = 0;
     my $first_indentation = -1;
@@ -1417,12 +1615,24 @@ sub PrintSource {
   # Assign all samples to the range $firstline,$lastline,
   # Hack 4: If an instruction does not occur in the range, its samples
   # are moved to the next instruction that occurs in the range.
-  my $samples1 = {};
-  my $samples2 = {};
-  my $running1 = 0;     # Unassigned flat counts
-  my $running2 = 0;     # Unassigned cumulative counts
-  my $total1 = 0;       # Total flat counts
-  my $total2 = 0;       # Total cumulative counts
+  my $samples1 = {};        # Map from line number to flat count
+  my $samples2 = {};        # Map from line number to cumulative count
+  my $running1 = 0;         # Unassigned flat counts
+  my $running2 = 0;         # Unassigned cumulative counts
+  my $total1 = 0;           # Total flat counts
+  my $total2 = 0;           # Total cumulative counts
+  my %disasm = ();          # Map from line number to disassembly
+  my $running_disasm = "";  # Unassigned disassembly
+  my $skip_marker = "---\n";
+  if ($html) {
+    $skip_marker = "";
+    for (my $l = $firstline; $l <= $lastline; $l++) {
+      $disasm{$l} = "";
+    }
+  }
+  my $last_dis_filename = '';
+  my $last_dis_linenum = -1;
+  my $last_touched_line = -1;  # To detect gaps in disassembly for a line
   foreach my $e (@instructions) {
     # Add up counts for all address that fall inside this instruction
     my $c1 = 0;
@@ -1431,6 +1641,38 @@ sub PrintSource {
       $c1 += GetEntry($flat, $a);
       $c2 += GetEntry($cumulative, $a);
     }
+
+    if ($html) {
+      my $dis = sprintf("      %6s %6s \t\t%8s: %s ",
+                        HtmlPrintNumber($c1),
+                        HtmlPrintNumber($c2),
+                        UnparseAddress($offset, $e->[0]),
+                        CleanDisassembly($e->[3]));
+      
+      # Append the most specific source line associated with this instruction
+      if (length($dis) < 80) { $dis .= (' ' x (80 - length($dis))) };
+      $dis = HtmlEscape($dis);
+      my $f = $e->[5];
+      my $l = $e->[6];
+      if ($f ne $last_dis_filename) {
+        $dis .= sprintf("<span class=disasmloc>%s:%d</span>", 
+                        HtmlEscape(CleanFileName($f)), $l);
+      } elsif ($l ne $last_dis_linenum) {
+        # De-emphasize the unchanged file name portion
+        $dis .= sprintf("<span class=unimportant>%s</span>" .
+                        "<span class=disasmloc>:%d</span>", 
+                        HtmlEscape(CleanFileName($f)), $l);
+      } else {
+        # De-emphasize the entire location
+        $dis .= sprintf("<span class=unimportant>%s:%d</span>", 
+                        HtmlEscape(CleanFileName($f)), $l);
+      }
+      $last_dis_filename = $f;
+      $last_dis_linenum = $l;
+      $running_disasm .= $dis;
+      $running_disasm .= "\n";
+    }
+
     $running1 += $c1;
     $running2 += $c2;
     $total1 += $c1;
@@ -1445,23 +1687,49 @@ sub PrintSource {
       AddEntry($samples2, $line, $running2);
       $running1 = 0;
       $running2 = 0;
+      if ($html) {
+        if ($line != $last_touched_line && $disasm{$line} ne '') {
+          $disasm{$line} .= "\n";
+        }
+        $disasm{$line} .= $running_disasm;
+        $running_disasm = '';
+        $last_touched_line = $line;
+      }
     }
   }
 
   # Assign any leftover samples to $lastline
   AddEntry($samples1, $lastline, $running1);
   AddEntry($samples2, $lastline, $running2);
+  if ($html) {
+    if ($lastline != $last_touched_line && $disasm{$lastline} ne '') {
+      $disasm{$lastline} .= "\n";
+    }
+    $disasm{$lastline} .= $running_disasm;
+  }
 
-  printf("ROUTINE ====================== %s in %s\n" .
-         "%6s %6s Total %s (flat / cumulative)\n",
-         ShortFunctionName($routine),
-         $filename,
-         Units(),
-         Unparse($total1),
-         Unparse($total2));
+  if ($html) {
+    printf $output (
+      "<h1>%s</h1>%s\n<pre onClick=\"pprof_toggle_asm()\">\n" .
+      "Total:%6s %6s (flat / cumulative %s)\n",
+      HtmlEscape(ShortFunctionName($routine)),
+      HtmlEscape(CleanFileName($filename)),
+      Unparse($total1),
+      Unparse($total2),
+      Units());
+  } else {
+    printf $output (
+      "ROUTINE ====================== %s in %s\n" .
+      "%6s %6s Total %s (flat / cumulative)\n",
+      ShortFunctionName($routine),
+      CleanFileName($filename),
+      Unparse($total1),
+      Unparse($total2),
+      Units());
+  }
   if (!open(FILE, "<$filename")) {
     print STDERR "$filename: $!\n";
-    return;
+    return 0;
   }
   my $l = 0;
   while (<FILE>) {
@@ -1471,16 +1739,47 @@ sub PrintSource {
         (($l <= $oldlastline + 5) || ($l <= $lastline))) {
       chop;
       my $text = $_;
-      if ($l == $firstline) { printf("---\n"); }
-      printf("%6s %6s %4d: %s\n",
-             UnparseAlt(GetEntry($samples1, $l)),
-             UnparseAlt(GetEntry($samples2, $l)),
-             $l,
-             $text);
-      if ($l == $lastline)  { printf("---\n"); }
+      if ($l == $firstline) { print $output $skip_marker; }
+      my $n1 = GetEntry($samples1, $l);
+      my $n2 = GetEntry($samples2, $l);
+      if ($html) {
+        # Emit a span that has one of the following classes:
+        #    livesrc -- has samples
+        #    deadsrc -- has disassembly, but with no samples
+        #    nop     -- has no matching disasembly
+        # Also emit an optional span containing disassembly.
+        my $dis = $disasm{$l};
+        my $asm = "";
+        if (defined($dis) && $dis ne '') {
+          $asm = "<span class=\"asm\">" . $dis . "</span>";
+        }
+        my $source_class = (($n1 + $n2 > 0) 
+                            ? "livesrc" 
+                            : (($asm ne "") ? "deadsrc" : "nop"));
+        printf $output (
+          "<span class=\"line\">%5d</span> " .
+          "<span class=\"%s\">%6s %6s %s</span>%s\n",
+          $l, $source_class,
+          HtmlPrintNumber($n1),
+          HtmlPrintNumber($n2),
+          HtmlEscape($text),
+          $asm);
+      } else {
+        printf $output(
+          "%6s %6s %4d: %s\n",
+          UnparseAlt($n1),
+          UnparseAlt($n2),
+          $l,
+          $text);
+      }
+      if ($l == $lastline)  { print $output $skip_marker; }
     };
   }
   close(FILE);
+  if ($html) {
+    print $output "</pre>\n";
+  }
+  return 1;
 }
 
 # Return the source line for the specified file/linenumber.
@@ -1623,21 +1922,11 @@ sub PrintDisassembledFunction {
     # Print disassembly
     for (my $x = $first_inst; $x <= $last_inst; $x++) {
       my $e = $instructions[$x];
-      my $address = $e->[0];
-      $address = AddressSub($address, $offset);  # Make relative to section
-      $address =~ s/^0x//;
-      $address =~ s/^0*//;
-
-      # Trim symbols
-      my $d = $e->[3];
-      while ($d =~ s/\([^()%]*\)(\s*const)?//g) { } # Argument types, not (%rax)
-      while ($d =~ s/(\w+)<[^<>]*>/$1/g)  { }       # Remove template arguments
-
       printf("%6s %6s    %8s: %6s\n",
              UnparseAlt($flat_count[$x]),
              UnparseAlt($cum_count[$x]),
-             $address,
-             $d);
+             UnparseAddress($offset, $e->[0]),
+             CleanDisassembly($e->[3]));
     }
   }
 }
@@ -1685,6 +1974,8 @@ sub PrintDot {
   my $output;
   if ($main::opt_gv) {
     $output = "| $DOT -Tps2 >" . TempName($main::next_tmpfile, "ps");
+  } elsif ($main::opt_evince) {
+    $output = "| $DOT -Tps2 | $PS2PDF - " . TempName($main::next_tmpfile, "pdf");
   } elsif ($main::opt_ps) {
     $output = "| $DOT -Tps2";
   } elsif ($main::opt_pdf) {
@@ -1745,7 +2036,7 @@ sub PrintDot {
     if ($f != $c) {
       $extra = sprintf("\\rof %s (%s)",
                        Unparse($c),
-                       Percent($c, $overall_total));
+                       Percent($c, $local_total));
     }
     my $style = "";
     if ($main::opt_heapcheck) {
@@ -1764,7 +2055,7 @@ sub PrintDot {
                 $node{$a},
                 $sym,
                 Unparse($f),
-                Percent($f, $overall_total),
+                Percent($f, $local_total),
                 $extra,
                 $fs,
                 $style,
@@ -1792,12 +2083,38 @@ sub PrintDot {
     }
   }
 
-  # Print edges
-  foreach my $e (keys(%edge)) {
+  # Print edges (process in order of decreasing counts)
+  my %indegree = ();   # Number of incoming edges added per node so far
+  my %outdegree = ();  # Number of outgoing edges added per node so far
+  foreach my $e (sort { $edge{$b} <=> $edge{$a} } keys(%edge)) {
     my @x = split(/\001/, $e);
     $n = $edge{$e};
 
-    if (abs($n) > $edgelimit) {
+    # Initialize degree of kept incoming and outgoing edges if necessary
+    my $src = $x[0];
+    my $dst = $x[1];
+    if (!exists($outdegree{$src})) { $outdegree{$src} = 0; }
+    if (!exists($indegree{$dst})) { $indegree{$dst} = 0; }
+
+    my $keep;
+    if ($indegree{$dst} == 0) {
+      # Keep edge if needed for reachability
+      $keep = 1;
+    } elsif (abs($n) <= $edgelimit) {
+      # Drop if we are below --edgefraction
+      $keep = 0;
+    } elsif ($outdegree{$src} >= $main::opt_maxdegree ||
+             $indegree{$dst} >= $main::opt_maxdegree) {
+      # Keep limited number of in/out edges per node
+      $keep = 0;
+    } else {
+      $keep = 1;
+    }
+
+    if ($keep) {
+      $outdegree{$src}++;
+      $indegree{$dst}++;
+
       # Compute line width based on edge count
       my $fraction = abs($local_total ? (3 * ($n / $local_total)) : 0);
       if ($fraction > 1) { $fraction = 1; }
@@ -2135,6 +2452,19 @@ function handleMouseUp(evt) {
 EOF
 }
 
+# Return a small number that identifies the argument.
+# Multiple calls with the same argument will return the same number.
+# Calls with different arguments will return different numbers.
+sub ShortIdFor {
+  my $key = shift;
+  my $id = $main::uniqueid{$key};
+  if (!defined($id)) {
+    $id = keys(%main::uniqueid) + 1;
+    $main::uniqueid{$key} = $id;
+  }
+  return $id;
+}
+
 # Translate a stack of addresses into a stack of symbols
 sub TranslateStack {
   my $symbols = shift;
@@ -2172,6 +2502,15 @@ sub TranslateStack {
       if ($j > 2) {
         $func = "$func (inline)";
       }
+
+      # Do not merge nodes corresponding to Callback::Run since that
+      # causes confusing cycles in dot display.  Instead, we synthesize
+      # a unique name for this frame per caller.
+      if ($func =~ m/Callback.*::Run$/) {
+        my $caller = ($i > 0) ? $addrs[$i-1] : 0;
+        $func = "Run#" . ShortIdFor($caller);
+      }
+
       if ($main::opt_addresses) {
         push(@result, "$a $func $fileline");
       } elsif ($main::opt_lines) {
@@ -2241,6 +2580,16 @@ sub UnparseAlt {
   my $num = shift;
   if ($num == 0) {
     return ".";
+  } else {
+    return Unparse($num);
+  }
+}
+
+# Alternate pretty-printed form: 0 maps to ""
+sub HtmlPrintNumber {
+  my $num = shift;
+  if ($num == 0) {
+    return "";
   } else {
     return Unparse($num);
   }
@@ -2402,6 +2751,13 @@ sub RemoveUninterestingFrames {
                       '__builtin_vec_new',
                       'operator new',
                       'operator new[]',
+		      # The entry to our memory-allocation routines on OS X
+		      'malloc_zone_malloc',
+		      'malloc_zone_calloc',
+		      'malloc_zone_valloc',
+		      'malloc_zone_realloc',
+		      'malloc_zone_memalign',
+		      'malloc_zone_free',
                       # These mark the beginning/end of our custom sections
                       '__start_google_malloc',
                       '__stop_google_malloc',
@@ -2415,7 +2771,16 @@ sub RemoveUninterestingFrames {
     # old code out of the system.
     $skip_regexp = "TCMalloc|^tcmalloc::";
   } elsif ($main::profile_type eq 'contention') {
-    foreach my $vname ('Mutex::Unlock', 'Mutex::UnlockSlow') {
+    foreach my $vname ('base::RecordLockProfileData',
+                       'base::SubmitMutexProfileData',
+                       'base::SubmitSpinLockProfileData',
+                       'Mutex::Unlock',
+                       'Mutex::UnlockSlow',
+                       'Mutex::ReaderUnlock',
+                       'MutexLock::~MutexLock',
+                       'SpinLock::Unlock',
+                       'SpinLock::SlowUnlock',
+                       'SpinLockHolder::~SpinLockHolder') {
       $skip{$vname} = 1;
     }
   } elsif ($main::profile_type eq 'cpu') {
@@ -2955,7 +3320,7 @@ sub FetchDynamicProfile {
 
     my $fetcher = AddFetchTimeout($URL_FETCHER, $fetch_timeout);
     my $cmd = "$fetcher '$url' > '$tmp_profile'";
-    if ($path =~ m/$PROFILE_PAGE|$PMUPROFILE_PAGE/){
+    if ($path =~ m/$PROFILE_PAGE|$PMUPROFILE_PAGE|$CENSUSPROFILE_PAGE/){
       print STDERR "Gathering CPU profile from $url for $main::opt_seconds seconds to\n  ${real_profile}\n";
       if ($encourage_patience) {
         print STDERR "Be patient...\n";
@@ -3154,24 +3519,47 @@ BEGIN {
   }
 }
 
-# Return the next line from the profile file, assuming it's a text
-# line (which in this case means, doesn't start with a NUL byte).  If
-# it's not a text line, return "".  At EOF, return undef, like perl does.
-# Input file should be in binmode.
-sub ReadProfileLine {
+# Reads the top, 'header' section of a profile, and returns the last
+# line of the header, commonly called a 'header line'.  The header
+# section of a profile consists of zero or more 'command' lines that
+# are instructions to pprof, which pprof executes when reading the
+# header.  All 'command' lines start with a %.  After the command
+# lines is the 'header line', which is a profile-specific line that
+# indicates what type of profile it is, and perhaps other global
+# information about the profile.  For instance, here's a header line
+# for a heap profile:
+#   heap profile:     53:    38236 [  5525:  1284029] @ heapprofile
+# For historical reasons, the CPU profile does not contain a text-
+# readable header line.  If the profile looks like a CPU profile,
+# this function returns "".  If no header line could be found, this
+# function returns undef.
+#
+# The following commands are recognized:
+#   %warn -- emit the rest of this line to stderr, prefixed by 'WARNING:'
+#
+# The input file should be in binmode.
+sub ReadProfileHeader {
   local *PROFILE = shift;
   my $firstchar = "";
   my $line = "";
   read(PROFILE, $firstchar, 1);
-  seek(PROFILE, -1, 1);          # unread the firstchar
-  if ($firstchar eq "\0") {
+  seek(PROFILE, -1, 1);                    # unread the firstchar
+  if ($firstchar !~ /[[:print:]]/) {       # is not a text character
     return "";
   }
-  $line = <PROFILE>;
-  if (defined($line)) {
+  while (defined($line = <PROFILE>)) {
     $line =~ s/\r//g;   # turn windows-looking lines into unix-looking lines
+    if ($line =~ /^%warn\s+(.*)/) {        # 'warn' command
+      # Note this matches both '%warn blah\n' and '%warn\n'.
+      print STDERR "WARNING: $1\n";        # print the rest of the line
+    } elsif ($line =~ /^%/) {
+      print STDERR "Ignoring unknown command from profile header: $line";
+    } else {
+      # End of commands, must be the header line.
+      return $line;
+    }
   }
-  return $line;
+  return undef;     # got to EOF without seeing a header line
 }
 
 sub IsSymbolizedProfileFile {
@@ -3182,7 +3570,7 @@ sub IsSymbolizedProfileFile {
   # Check if the file contains a symbol-section marker.
   open(TFILE, "<$file_name");
   binmode TFILE;
-  my $firstline = ReadProfileLine(*TFILE);
+  my $firstline = ReadProfileHeader(*TFILE);
   close(TFILE);
   if (!$firstline) {
     return 0;
@@ -3202,14 +3590,7 @@ sub IsSymbolizedProfileFile {
 sub ReadProfile {
   my $prog = shift;
   my $fname = shift;
-
-  if (IsSymbolizedProfileFile($fname) && !$main::use_symbolized_profile) {
-    # we have both a binary and symbolized profiles, abort
-    usage("Symbolized profile '$fname' cannot be used with a binary arg.  " .
-          "Try again without passing '$prog'.");
-  }
-
-  $main::profile_type = '';
+  my $result;            # return value
 
   $CONTENTION_PAGE =~ m,[^/]+$,;    # matches everything after the last slash
   my $contention_marker = $&;
@@ -3226,40 +3607,45 @@ sub ReadProfile {
   # whole firstline, since it may be gigabytes(!) of data.
   open(PROFILE, "<$fname") || error("$fname: $!\n");
   binmode PROFILE;      # New perls do UTF-8 processing
-  my $header = ReadProfileLine(*PROFILE);
+  my $header = ReadProfileHeader(*PROFILE);
   if (!defined($header)) {   # means "at EOF"
     error("Profile is empty.\n");
   }
 
   my $symbols;
   if ($header =~ m/^--- *$symbol_marker/o) {
+    # Verify that the user asked for a symbolized profile
+    if (!$main::use_symbolized_profile) {
+      # we have both a binary and symbolized profiles, abort
+      error("FATAL ERROR: Symbolized profile\n   $fname\ncannot be used with " .
+	    "a binary arg. Try again without passing\n   $prog\n");
+    }
     # Read the symbol section of the symbolized profile file.
     $symbols = ReadSymbols(*PROFILE{IO});
     # Read the next line to get the header for the remaining profile.
-    $header = ReadProfileLine(*PROFILE) || "";
+    $header = ReadProfileHeader(*PROFILE) || "";
   }
 
-  my $result;
-
+  $main::profile_type = '';
   if ($header =~ m/^heap profile:.*$growth_marker/o) {
     $main::profile_type = 'growth';
-    $result =  ReadHeapProfile($prog, $fname, $header);
+    $result =  ReadHeapProfile($prog, *PROFILE, $header);
   } elsif ($header =~ m/^heap profile:/) {
     $main::profile_type = 'heap';
-    $result =  ReadHeapProfile($prog, $fname, $header);
+    $result =  ReadHeapProfile($prog, *PROFILE, $header);
   } elsif ($header =~ m/^--- *$contention_marker/o) {
     $main::profile_type = 'contention';
-    $result = ReadSynchProfile($prog, $fname);
+    $result = ReadSynchProfile($prog, *PROFILE);
   } elsif ($header =~ m/^--- *Stacks:/) {
     print STDERR
       "Old format contention profile: mistakenly reports " .
       "condition variable signals as lock contentions.\n";
     $main::profile_type = 'contention';
-    $result = ReadSynchProfile($prog, $fname);
+    $result = ReadSynchProfile($prog, *PROFILE);
   } elsif ($header =~ m/^--- *$profile_marker/) {
     # the binary cpu profile data starts immediately after this line
     $main::profile_type = 'cpu';
-    $result = ReadCPUProfile($prog, $fname);
+    $result = ReadCPUProfile($prog, $fname, *PROFILE);
   } else {
     if (defined($symbols)) {
       # a symbolized profile contains a format we don't recognize, bail out
@@ -3267,8 +3653,10 @@ sub ReadProfile {
     }
     # no ascii header present -- must be a CPU profile
     $main::profile_type = 'cpu';
-    $result = ReadCPUProfile($prog, $fname);
+    $result = ReadCPUProfile($prog, $fname, *PROFILE);
   }
+
+  close(PROFILE);
 
   # if we got symbols along with the profile, return those as well
   if (defined($symbols)) {
@@ -3308,7 +3696,8 @@ sub FixCallerAddresses {
 # CPU profile reader
 sub ReadCPUProfile {
   my $prog = shift;
-  my $fname = shift;
+  my $fname = shift;       # just used for logging
+  local *PROFILE = shift;
   my $version;
   my $period;
   my $i;
@@ -3375,7 +3764,6 @@ sub ReadCPUProfile {
   my $map = '';
   seek(PROFILE, $i * 4, 0);
   read(PROFILE, $map, (stat PROFILE)[7]);
-  close(PROFILE);
 
   my $r = {};
   $r->{version} = $version;
@@ -3389,7 +3777,7 @@ sub ReadCPUProfile {
 
 sub ReadHeapProfile {
   my $prog = shift;
-  my $fname = shift;
+  local *PROFILE = shift;
   my $header = shift;
 
   my $index = 1;
@@ -3531,16 +3919,18 @@ sub ReadHeapProfile {
           # The sampling frequency is the rate of a Poisson process.
           # This means that the probability of sampling an allocation of
           # size X with sampling rate Y is 1 - exp(-X/Y)
-          my $ratio;
-          $ratio = (($s1*1.0)/$n1)/($sample_adjustment);
-          my $scale_factor;
-          $scale_factor = 1/(1 - exp(-$ratio));
-          $n1 *= $scale_factor;
-          $s1 *= $scale_factor;
-          $ratio = (($s2*1.0)/$n2)/($sample_adjustment);
-          $scale_factor = 1/(1 - exp(-$ratio));
-          $n2 *= $scale_factor;
-          $s2 *= $scale_factor;
+	  if ($n1 != 0) {
+	    my $ratio = (($s1*1.0)/$n1)/($sample_adjustment);
+	    my $scale_factor = 1/(1 - exp(-$ratio));
+	    $n1 *= $scale_factor;
+	    $s1 *= $scale_factor;
+	  }
+	  if ($n2 != 0) {
+	    my $ratio = (($s2*1.0)/$n2)/($sample_adjustment);
+	    my $scale_factor = 1/(1 - exp(-$ratio));
+	    $n2 *= $scale_factor;
+	    $s2 *= $scale_factor;
+	  }
         } else {
           # Remote-heap version 1
           my $ratio;
@@ -3572,7 +3962,9 @@ sub ReadHeapProfile {
 }
 
 sub ReadSynchProfile {
-  my ($prog, $fname, $header) = @_;
+  my $prog = shift;
+  local *PROFILE = shift;
+  my $header = shift;
 
   my $map = '';
   my $profile = {};
@@ -3647,7 +4039,6 @@ sub ReadSynchProfile {
       $map .= $line;
     }
   }
-  close PROFILE;
 
   if (!$seen_clockrate) {
     printf STDERR ("No cycles/second entry in profile; Guessing %.1f GHz\n",
@@ -4091,9 +4482,15 @@ sub ExtractSymbols {
 
   my $symbols = {};
 
-  # Map each PC value to the containing library
-  my %seen = ();
-  foreach my $lib (@{$libs}) {
+  # Map each PC value to the containing library.  To make this faster,
+  # we sort libraries by their starting pc value (highest first), and
+  # advance through the libraries as we advance the pc.  Sometimes the
+  # addresses of libraries may overlap with the addresses of the main
+  # binary, so to make sure the libraries 'win', we iterate over the
+  # libraries in reverse order (which assumes the binary doesn't start
+  # in the middle of a library, which seems a fair assumption).
+  my @pcs = (sort { $a cmp $b } keys(%{$pcset}));  # pcset is 0-extended strings
+  foreach my $lib (sort {$b->[1] cmp $a->[1]} @{$libs}) {
     my $libname = $lib->[0];
     my $start = $lib->[1];
     my $finish = $lib->[2];
@@ -4101,12 +4498,21 @@ sub ExtractSymbols {
 
     # Get list of pcs that belong in this library.
     my $contained = [];
-    foreach my $pc (keys(%{$pcset})) {
-      if (!$seen{$pc} && ($pc ge $start) && ($pc le $finish)) {
-        $seen{$pc} = 1;
-        push(@{$contained}, $pc);
-      }
+    my ($start_pc_index, $finish_pc_index);
+    # Find smallest finish_pc_index such that $finish < $pc[$finish_pc_index].
+    for ($finish_pc_index = $#pcs + 1; $finish_pc_index > 0;
+	 $finish_pc_index--) {
+      last if $pcs[$finish_pc_index - 1] le $finish;
     }
+    # Find smallest start_pc_index such that $start <= $pc[$start_pc_index].
+    for ($start_pc_index = $finish_pc_index; $start_pc_index > 0;
+	 $start_pc_index--) {
+      last if $pcs[$start_pc_index - 1] lt $start;
+    }
+    # This keeps PC values higher than $pc[$finish_pc_index] in @pcs,
+    # in case there are overlaps in libraries and the main binary.
+    @{$contained} = splice(@pcs, $start_pc_index,
+			   $finish_pc_index - $start_pc_index);
     # Map to symbols
     MapToSymbols($libname, AddressSub($start, $offset), $contained, $symbols);
   }
@@ -4136,7 +4542,7 @@ sub MapToSymbols {
 
   # If "addr2line" isn't installed on the system at all, just use
   # nm to get what info we can (function names, but not line numbers).
-  if (system("$addr2line --help >/dev/null 2>&1") != 0) {
+  if (system("$addr2line --help >$dev_null 2>&1") != 0) {
     MapSymbolsWithNM($image, $offset, $pclist, $symbols);
     return;
   }
@@ -4154,7 +4560,7 @@ sub MapToSymbols {
   if (defined($sep_address)) {
     # Only add " -i" to addr2line if the binary supports it.
     # addr2line --help returns 0, but not if it sees an unknown flag first.
-    if (system("$cmd -i --help >/dev/null 2>&1") == 0) {
+    if (system("$cmd -i --help >$dev_null 2>&1") == 0) {
       $cmd .= " -i";
     } else {
       $sep_address = undef;   # no need for sep_address if we don't support -i
@@ -4284,6 +4690,31 @@ sub ShortFunctionName {
   return $function;
 }
 
+# Trim overly long symbols found in disassembler output
+sub CleanDisassembly {
+  my $d = shift;
+  while ($d =~ s/\([^()%]*\)(\s*const)?//g) { } # Argument types, not (%rax)
+  while ($d =~ s/(\w+)<[^<>]*>/$1/g)  { }       # Remove template arguments
+  return $d;
+}
+
+# Clean file name for display
+sub CleanFileName {
+  my ($f) = @_;
+  $f =~ s|^/proc/self/cwd/||;
+  $f =~ s|^\./||;
+  return $f;
+}
+
+# Make address relative to section and clean up for display
+sub UnparseAddress {
+  my ($offset, $address) = @_;
+  $address = AddressSub($address, $offset);
+  $address =~ s/^0x//;
+  $address =~ s/^0*//;
+  return $address;
+}
+
 ##### Miscellaneous #####
 
 # Find the right versions of the above object tools to use.  The
@@ -4300,8 +4731,16 @@ sub ConfigureObjTools {
   # predictably return error status in prod.
   (-e $prog_file)  || error("$prog_file does not exist.\n");
 
-  # Follow symlinks (at least for systems where "file" supports that)
-  my $file_type = `/usr/bin/file -L $prog_file 2>/dev/null || /usr/bin/file $prog_file`;
+  my $file_type = undef;
+  if (-e "/usr/bin/file") {
+    # Follow symlinks (at least for systems where "file" supports that).
+    $file_type = `/usr/bin/file -L $prog_file 2>$dev_null || /usr/bin/file $prog_file`;
+  } elsif ($^O == "MSWin32") {
+    $file_type = "MS Windows";
+  } else {
+    print STDERR "WARNING: Can't determine the file type of $prog_file";
+  }
+
   if ($file_type =~ /64-bit/) {
     # Change $address_length to 16 if the program file is ELF 64-bit.
     # We can't detect this from many (most?) heap or lock contention
@@ -4513,16 +4952,16 @@ sub GetProcedureBoundaries {
   # --demangle and -f.
   my $demangle_flag = "";
   my $cppfilt_flag = "";
-  if (system("$nm --demangle $image >/dev/null 2>&1") == 0) {
+  if (system("$nm --demangle $image >$dev_null 2>&1") == 0) {
     # In this mode, we do "nm --demangle <foo>"
     $demangle_flag = "--demangle";
     $cppfilt_flag = "";
-  } elsif (system("$cppfilt $image >/dev/null 2>&1") == 0) {
+  } elsif (system("$cppfilt $image >$dev_null 2>&1") == 0) {
     # In this mode, we do "nm <foo> | c++filt"
     $cppfilt_flag = " | $cppfilt";
   };
   my $flatten_flag = "";
-  if (system("$nm -f $image >/dev/null 2>&1") == 0) {
+  if (system("$nm -f $image >$dev_null 2>&1") == 0) {
     $flatten_flag = "-f";
   }
 
@@ -4530,11 +4969,11 @@ sub GetProcedureBoundaries {
   # -D to at least get *exported* symbols.  If we can't use --demangle,
   # we use c++filt instead, if it exists on this system.
   my @nm_commands = ("$nm -n $flatten_flag $demangle_flag" .
-                     " $image 2>/dev/null $cppfilt_flag",
+                     " $image 2>$dev_null $cppfilt_flag",
                      "$nm -D -n $flatten_flag $demangle_flag" .
-                     " $image 2>/dev/null $cppfilt_flag",
+                     " $image 2>$dev_null $cppfilt_flag",
                      # 6nm is for Go binaries
-		     "6nm $image 2>/dev/null | sort",
+		     "6nm $image 2>$dev_null | sort",
                      );
 
   # If the executable is an MS Windows PDB-format executable, we'll
@@ -4543,7 +4982,7 @@ sub GetProcedureBoundaries {
   # PDB-format executables can apparently include dwarf .o files.
   if (exists $obj_tool_map{"nm_pdb"}) {
     my $nm_pdb = $obj_tool_map{"nm_pdb"};
-    push(@nm_commands, "$nm_pdb --demangle $image 2>/dev/null");
+    push(@nm_commands, "$nm_pdb --demangle $image 2>$dev_null");
   }
 
   foreach my $nm_command (@nm_commands) {
