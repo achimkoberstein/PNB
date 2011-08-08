@@ -188,6 +188,8 @@ void Parameter::init()
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
     parameter_.put(PNB_STAGE_AGGREGATION_END,0);
     parameter_.put(PNB_STAGE_AGGREGATION_DIRECTION,true); // Direction == true : Aggregate from start
+    // Start solution
+    parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution, 1 EV solution, 2 ? not yet implemented
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);

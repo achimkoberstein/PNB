@@ -346,6 +346,8 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     else
         osiStoch_->initialSolve(); //Solve this problem.
 
+    osiStoch_->writeLp("ev_problem.lp");
+
     //Delete new-ed objects
     delete matrix_;
     delete [] this->dels_;
@@ -534,6 +536,7 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
     solutionValues.reserve(this->smiTree_.getNumScenarios());
 
 
+    CoinWarmStart* warm_start = osiStoch_->getEmptyWarmStart();
     // loop over all scenarios and solve each of it individually
     for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
         // We have an empty model (zero cols,rows,els)
@@ -565,12 +568,18 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
         //Set objSense
         osiStoch_->setObjSense(objSense);
             // If we have integer indices, we need the branch-and-bound solver
+        // Silence Cplex!
+        osiStoch_->messageHandler()->setLogLevel(0);
         if (intIndices.size()){
             osiStoch_->setInteger(&intIndices[0],intIndices.size());
             osiStoch_->branchAndBound();
         }
-        else
+        else{
+            osiStoch_->setWarmStart(warm_start);
             osiStoch_->initialSolve(); //Solve this problem.
+            delete warm_start;
+            warm_start = osiStoch_->getWarmStart();
+        }
         solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
 
         //Delete new-ed objects
