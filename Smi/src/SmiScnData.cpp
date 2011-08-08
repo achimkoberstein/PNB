@@ -714,7 +714,12 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     int nels = third_stage_node_data->nels_;
                     assert ( nels >= third_stage_node_data->strt_[third_stage_node_data->nstrt_-1]);
                     nels += number_cols; // The new entries for the stochastic rows, everything else stays the same!
+                    // Let's see if we already have a matrix. If not, we need to add empty entries!
                     int num_start = third_stage_node_data->nstrt_+number_cols; // Account for the new rows!
+                    if ( !third_stage_node_data->has_matrix_)
+                        num_start += this->getNumRows(secondStage+1);
+                   
+
                     double* new_dels = (double *) calloc(nels, sizeof(double));
                     int * new_inds = (int*) calloc(nels,sizeof(int));
                     int* new_start = (int*) calloc(num_start,sizeof(int));
@@ -722,6 +727,10 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     assert( new_dels );
                     assert( new_inds );
                     assert( new_start );
+                    if ( !third_stage_node_data->has_matrix_)
+                        // Insert the (old) rows
+                        for (int index = number_cols+1; index < number_cols+1+this->getNumRows(secondStage+1); index++)
+                            new_start[index] = number_cols;
                     // Copy in the old data elements, leave room in the beginning for the new rows!
                     memcpy(new_dels+number_cols,third_stage_node_data->dels_,third_stage_node_data->strt_[third_stage_node_data->nstrt_-1]*sizeof(double));
                     for (int j = 0; j < number_cols; j++)
@@ -730,10 +739,14 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     // Copy in the old data start array and update the values afterwards
                     for (int j = 0; j < number_cols+1; j++) // We need to write one index more..
                         new_start[j] = j;
-                    memcpy(new_start+number_cols+1,third_stage_node_data->strt_+1,(third_stage_node_data->nstrt_-1)*sizeof(int)); // Do not copy the leading zero!
+                    memcpy(new_start+number_cols+1+(!third_stage_node_data->has_matrix_ ? this->getNumRows(secondStage+1):0) ,third_stage_node_data->strt_+1,(third_stage_node_data->nstrt_-1)*sizeof(int)); // Do not copy the leading zero! If we had no matrix entries before, we have to jump over these now..
                     // Increase all these indices by the amount of values we will add before: the number of new columns
-                    for (int j = 0; j < third_stage_node_data->nstrt_-1; j++)
-                        new_start[number_cols+j+1] += number_cols;
+                    if ( third_stage_node_data->has_matrix_ )
+                        for (int j = 0; j < third_stage_node_data->nstrt_-1; j++)
+                            new_start[number_cols+j+1] += number_cols;
+                    else
+                        for (int j = this->getNumRows(secondStage+1)+1; j < this->getNumRows(secondStage+1)+1+third_stage_node_data->nstrt_-1; j++)
+                            new_start[number_cols+j] += number_cols;
                     
                     // Now we copy the indices!
                     for (int j = 0; j < number_cols; j++){ // We add the new rows. We need to set the indices of the stage before
@@ -1513,6 +1526,8 @@ CoinPackedMatrix* SmiNodeData::generateCoinPackedMatrix() const
 
 CoinPackedMatrix* SmiNodeData::generateCoinPackedWMatrix() const
 {
+    if ( !this->has_matrix_ ) // If we have no matrix, we return an empty matrix
+        return new CoinPackedMatrix();
     std::vector<double> elements;
     std::vector<int> indices;
     std::vector<int> start;
@@ -1894,7 +1909,7 @@ void SmiCoreData::createSecondStageDeterministicEquivalentCoreModel( int first_s
     // + first stage entries
     nels += nodes_[firstStage]->strt_[nodes_[firstStage]->nstrt_-1];
     // Change the nstrt_ value to the amount of added rows 
-    nstrt = nodes_[firstStage]->getMatEnd()+number_children*number_rows+5+1;
+    nstrt = nodes_[firstStage]->getMatEnd()+number_children*number_rows+5+1; // In the core file, we must have a matrix entry. If we have no matrix in the core file, we have no rows.
 
     // Allocate the memory for the elements, indices and start arrays
     double* elements = (double *)calloc(nels  ,sizeof(double));
@@ -2083,10 +2098,12 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
     temp_node = current_node->getChild();
     while ( temp_node != NULL){
         SmiNodeData* temp_data = temp_node->getDataPtr()->getNode();
-        memcpy(new_elements+new_index_offset,temp_data->dels_,temp_data->strt_[temp_data->getMatEnd()]*sizeof(double));
+        if ( temp_data->has_matrix_ )
+            memcpy(new_elements+new_index_offset,temp_data->dels_,temp_data->strt_[temp_data->getMatEnd()]*sizeof(double));
         // Indices can not be copied straight away, we have to change them
-        for (int i = 0; i < temp_data->strt_[temp_data->getMatEnd()]; i++)
-            new_indices[new_index_offset+i] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
+        if ( temp_data->has_matrix_ ) // If we have a matrix, we need to change the corresponding indices
+            for (int i = 0; i < temp_data->strt_[temp_data->getMatEnd()]; i++)
+                new_indices[new_index_offset+i] = ( temp_data->inds_[i] < stageColPtr_[secondStage] ) ? temp_data->inds_[i] : temp_data->inds_[i]+det_eq_column_offset;
         for (int i = 0; i < number_rows;i++){
             if ( temp_data->has_matrix_ ) // If our child node has a matrix, we copy the row data, also we copy nothing
                 new_start[new_start_offset+i] = temp_data->strt_[i+1]+new_index_offset;
@@ -2096,7 +2113,7 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
         temp_node = temp_node->getSibling();
         det_eq_column_offset += number_cols;
         det_eq_row_offset += number_rows;
-        new_index_offset += temp_data->strt_[temp_data->getMatEnd()];
+        new_index_offset += temp_data->has_matrix_ ? temp_data->strt_[temp_data->getMatEnd()]: 0;
         new_start_offset += number_rows;
     }// En While temp_node != NULL
     // We need to adress the effect of unbalanced trees here!
@@ -2169,7 +2186,7 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
     det_eq_column_offset = 0;
     det_eq_row_offset = 0;
     temp_node = current_node->getChild();
-    // FInd the probabilities
+    // Find the probabilities
     std::vector<double> scenario_probs;
     double sum = 0;
     while ( temp_node != NULL){
@@ -2177,6 +2194,7 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
         sum += scenario_probs.back();
         temp_node = temp_node->getSibling();
     }
+    assert( sum-current_node->getDataPtr()->getProb() <= 0.0000001);
     temp_node = current_node->getChild();
     int node_counter = 0;
     // TODO: We NEED to insert stochastic objective function values for EVERY coefficient we have in the core node!
@@ -2203,19 +2221,14 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
         memcpy(new_elements+new_index_offset,elems,obj_length*sizeof(double));
         int index_counter = 0;
         for (int i = 0; i < obj_length; i++){
-            // We need to check if the current index we look at is the same as the stochastic one
-            if ( index_counter < index_length && inds[i] == temp_data->inds_[index_start+index_counter] ){
-                // Use stochastic element
-                new_elements[new_index_offset+i] = temp_data->dels_[index_start+index_counter]*( scenario_probs[node_counter]/sum );
-                index_counter++;
-            }
-            else {
-                // Use deterministic element
-                new_elements[new_index_offset+i] *= scenario_probs[node_counter] / sum; 
-            }
-
+            new_elements[new_index_offset+i] *= scenario_probs[node_counter] / sum; 
         }// End for
-        assert(index_counter == index_length);
+        for ( int i = 0; i < index_length; i++){
+            int stochastic_index = temp_data->inds_[index_start+i] - temp_data->colbeg_; // We get the relative index we need for new_elements array
+            assert( stochastic_index < obj_length && stochastic_index >= 0);
+            // Use stochastic element
+            new_elements[new_index_offset+stochastic_index] = temp_data->dels_[index_start+i]*( scenario_probs[node_counter]/sum );
+        }
         // Indices can not be copied straight away, we have to change them
         for (int i = 0; i < obj_length; i++)
             new_indices[new_index_offset+i] = inds[i]+det_eq_column_offset;
