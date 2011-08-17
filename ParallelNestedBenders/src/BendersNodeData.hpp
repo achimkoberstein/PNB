@@ -116,6 +116,7 @@ public:
     // Information about the solution
     double* col_solution_;
     double* dual_solution_;
+    double* reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
     double* next_stage_approximation_;
     double dual_value_variable_bounds_;
     bool feasible_;

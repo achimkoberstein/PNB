@@ -17,6 +17,7 @@
 
 #include "OsiCpxSolverInterface.hpp"
 #include "OsiGrbSolverInterface.hpp"
+#include "OsiClpSolverInterface.hpp"
 #include "CoinTime.hpp"
 #include "SmiScnModel.hpp"
 #include "flopc.hpp"
@@ -72,7 +73,7 @@ public:
         int num_repetitions = 1; // To rule out system instability
         for (int i = 0; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
+            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Use all Cores
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
@@ -419,13 +420,13 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
 
     EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
 }
 
 TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long to solve
@@ -794,7 +795,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
-    ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+    //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+    ::testing::GTEST_FLAG(filter) = "*rand*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

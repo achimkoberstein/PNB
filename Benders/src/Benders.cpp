@@ -2142,7 +2142,7 @@ int Benders::solveMaster(){
     }
 
     std::stringstream stream;
-    stream << "stage0_" << nIter_+1 << "_0";
+    stream << "Bstage0_" << nIter_+1 << "_0";
     osiMaster_->writeLp(stream.str().c_str());
 
     // If master problem is infeasible, print an error
@@ -3055,7 +3055,7 @@ int Benders::solveSubproblem(int scen_, bool fCut){
         }
     }
     std::stringstream stream;
-    stream << "stage1" << "_" << nIter_+1 << "_" << scen_; 
+    stream << "Bstage1" << "_" << nIter_+1 << "_" << scen_; 
     osiSubproblem_->writeLp(stream.str().c_str());
 
 
