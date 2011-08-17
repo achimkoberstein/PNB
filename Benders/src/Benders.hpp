@@ -539,7 +539,7 @@ public:
     useRegularizedManhattan_(false),gamma_(0.5), recourseFunction_(infty_), firstStageSolution_(infty_),lowerBoundedRecourseFunctionApprox_(-infty_),
     outputPrecision_(4),outputWidth_(12),
     mipSubCnt_(0),mipSubIndices_(NULL),mipSubValues_(NULL),
-    integerBendersReloaded_(true),branchAndBoundUpperBound_(COIN_DBL_MAX)
+    integerBendersReloaded_(false),branchAndBoundUpperBound_(COIN_DBL_MAX)
 	{
 		// Wich solver is used
 		OsiCpxSolverInterface *cpx = new OsiCpxSolverInterface();

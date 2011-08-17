@@ -75,7 +75,7 @@
                 benParam.setIntParam(BendersParameter::BARRIER,0);
                 benParam.setIntParam(BendersParameter::BUNCHING,0);
                 benParam.setIntParam(BendersParameter::BUNCH_SIZE,50);
-                benParam.setIntParam(BendersParameter::INTEGER_BENDERS,1);
+                benParam.setIntParam(BendersParameter::INTEGER_BENDERS,0);
         }
 
         double solveSMPS(const char* name) {
@@ -288,7 +288,7 @@ TEST_F(BendersTest, sslp) { // seems to be ok, but takes very long to solve
     //benParam.setIntParam(BendersParameter::BUNCH_SIZE,100);
     //benParam.setIntParam(BendersParameter::TRUSTREGION,1);
     //benParam.setIntParam(BendersParameter::INTEGER_BENDERS,0);
-    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_5"), -265.569, 0.1);
+    EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/other/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_15_45_15"), -254.71, 0.1);
     //EXPECT_NEAR(solveSMPS("../../../../Benders/test/instances/sslp_10_50_50"), -365.517, 0.1);
@@ -546,7 +546,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "BendersTest.sslpReal";
     //::testing::GTEST_FLAG(filter) = "BendersTest.stormG2";
-    ::testing::GTEST_FLAG(filter) = "BendersTest.current_problems";
+    ::testing::GTEST_FLAG(filter) = "BendersTest.sslp";
     
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
