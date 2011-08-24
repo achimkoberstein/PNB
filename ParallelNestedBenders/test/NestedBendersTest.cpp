@@ -85,7 +85,7 @@ public:
             // Single Cut first
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //// Solve multi cut
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // 0 is multi cut
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //// Do static tests for test set we seem to consider useful
             //if ( num_childs_first_stage > 3){
@@ -796,7 +796,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
-    ::testing::GTEST_FLAG(filter) = "*rand*";
+    ::testing::GTEST_FLAG(filter) = "*finance*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
