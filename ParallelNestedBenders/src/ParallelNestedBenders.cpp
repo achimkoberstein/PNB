@@ -865,6 +865,11 @@ namespace parallel_benders {
             if ( warm_start_scenarios_ ){
                 if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
                     osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+                else{
+                    stage_warm_start_mutex_.lock(); 
+                    osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                    stage_warm_start_mutex_.unlock();
+                }
             }
             else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
                 stage_warm_start_mutex_.lock(); 
@@ -985,6 +990,12 @@ namespace parallel_benders {
         else { // Proven Optimal: 
             if ( warm_start_ && osi_solver->optimalBasisIsAvailable()) // Store WarmStart Information, otherwise we reuse the old one..
                 if ( warm_start_scenarios_ ){
+                    if ( benders_tree_node_pointer->scenario() == 0 && benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL ){
+                        stage_warm_start_mutex_.lock();
+                        delete stage_data_[current_stage_]->warm_start_;
+                        stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                        stage_warm_start_mutex_.unlock();
+                    }
                     delete benders_tree_node_pointer->getDataPtr()->warm_start_;
                     benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
                 }
