@@ -703,8 +703,15 @@ namespace parallel_benders {
                 }// End If Stage and Value Checking
             }//End If FastBackward/FastEpsilonBackward Procedure
 
+            if ( infeasible_problem_ && infeasible_problems_.none() ){
+                // If one problem at later stage was infeasible and in this stage no problem is infeasible. We want to move forward again!
+                forward_ = true;
+                infeasible_problem_ = false;
+
+            }
+
             // Aggregate optimality cuts for nodes at the stage before the current stage
-            if ( !forward_ && !infeasible_problem_ && infeasible_problems_.none() ){ 
+            if ( !forward_ && infeasible_problems_.none() ){ 
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -712,7 +719,6 @@ namespace parallel_benders {
                 thread_pool_.wait(0); // We wait until all threads are done
                 // If we added no cuts, we might want to notice that
             }
-
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){
@@ -732,6 +738,7 @@ namespace parallel_benders {
 				// Reset num_added_feasibility_cuts_
 				num_added_feasibility_cuts_ = 0;
             }
+
 
 
 
@@ -846,7 +853,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 8){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
             console_mutex_.lock();
@@ -1087,7 +1094,7 @@ namespace parallel_benders {
             }
  
 
-            bool check_primal_degeneracy = true;
+            bool check_primal_degeneracy = false;
             double * reduced_cost = NULL;
             if ( check_primal_degeneracy ){
                 OsiCpxSolverInterface * osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
@@ -1502,35 +1509,35 @@ namespace parallel_benders {
         }
 
         // QuicknDirtyhack: REMOVE AGAIN
-        std::vector<OsiRowCut*> row_cuts;
-        if ( current_stage_ == 1)
-        {
-            // Apply osi row_cuts
-            std::vector<int> column_indices;
-            for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
-                if ( benders_node_pointer->column_upper_[i] != 0)
-                    column_indices.push_back(i);
-            }
-            
-            for (int i = 0; i< column_indices.size(); i++){
-                // Create an osi row_cut
-                double * element1 = new double[1];
-                int * index1 = new int[1];
-                element1[0] = 1;
-                index1[0] = column_indices[i];
-                row_cuts.push_back(new OsiRowCut(-infinity_,benders_node_pointer->column_upper_[column_indices[i]],1,1,index1,element1));
-            }
-            for (int i = 0; i < column_indices.size(); i++)
-                benders_node_pointer->column_upper_[i] = infinity_;
-        }
+        //std::vector<OsiRowCut*> row_cuts;
+        //if ( current_stage_ == 1)
+        //{
+        //    // Apply osi row_cuts
+        //    std::vector<int> column_indices;
+        //    for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
+        //        if ( benders_node_pointer->column_upper_[i] != 0)
+        //            column_indices.push_back(i);
+        //    }
+        //    
+        //    for (int i = 0; i< column_indices.size(); i++){
+        //        // Create an osi row_cut
+        //        double * element1 = new double[1];
+        //        int * index1 = new int[1];
+        //        element1[0] = 1;
+        //        index1[0] = column_indices[i];
+        //        row_cuts.push_back(new OsiRowCut(-infinity_,benders_node_pointer->column_upper_[column_indices[i]],1,1,index1,element1));
+        //    }
+        //    for (int i = 0; i < column_indices.size(); i++)
+        //        benders_node_pointer->column_upper_[i] = infinity_;
+        //}
 
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
             osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->row_lower_,benders_node_pointer->row_upper_);
 
-            for (int i = 0; i < row_cuts.size(); i++)
-                osi_solver->applyRowCuts(1,row_cuts[i]); // TODO REMOVE AGAIN
+            //for (int i = 0; i < row_cuts.size(); i++)
+            //    osi_solver->applyRowCuts(1,row_cuts[i]); // TODO REMOVE AGAIN
         }
         else{
             if ( stage_pointer->stochastic_bounds_ ){
@@ -1565,8 +1572,8 @@ namespace parallel_benders {
                     remove_indices.push_back(i);
                 osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
             }
-            for (int i = 0; i < row_cuts.size(); i++)
-                osi_solver->applyRowCuts(1,row_cuts[i]); // TODO REMOVE AGAIN
+            //for (int i = 0; i < row_cuts.size(); i++)
+            //    osi_solver->applyRowCuts(1,row_cuts[i]); // TODO REMOVE AGAIN
         }
 
   }
@@ -1808,7 +1815,7 @@ namespace parallel_benders {
         }// End for num_cuts
         // Add number of added cuts.
         add_cut_counter_mutex_.lock();
-        added_optimality_cuts_[current_stage_] += added_cuts;
+        added_optimality_cuts_[current_stage_-1] += added_cuts;
         add_cut_counter_mutex_.unlock();
     }
 
