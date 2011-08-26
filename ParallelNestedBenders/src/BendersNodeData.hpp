@@ -139,8 +139,11 @@ public:
     double solution_value_;
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
     CutManager cut_information_;
-    std::vector<OsiRowCut* > optimality_cuts_;
-    std::vector<OsiRowCut* > feasibility_cuts_;
+    typedef std::list<OsiRowCut* > cut_container;
+    cut_container optimality_cuts_;
+    cut_container feasibility_cuts_;
+    cut_container::iterator last_iteration_start_optimality_;
+    cut_container::iterator last_iteration_start_feasibility_;
     
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;

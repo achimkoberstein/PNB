@@ -33,12 +33,11 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::~BendersNodeData(void)
 {
-    for (unsigned int i = 0; i < this->optimality_cuts_.size(); i++) {
-        delete optimality_cuts_[i];
+    for (cut_container::iterator it = optimality_cuts_.begin(); it != optimality_cuts_.end(); ++it) {
+        delete *it; 
     }
-
-    for (unsigned int i = 0; i < this->feasibility_cuts_.size(); i++) {
-        delete feasibility_cuts_[i];
+    for (cut_container::iterator it = feasibility_cuts_.begin(); it != feasibility_cuts_.end(); ++it) {
+        delete *it; 
     }
 
     delete [] this->col_solution_;
