@@ -72,6 +72,8 @@ private:
 
     OsiSolverInterface* GetSolverByThread();
     bool CompareWithZero( double value );
+    void findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut );
+    void aggregateOldOptimalityCuts( BendersNodeData* param1,std::vector< std::vector<int> >& mapping );
 
     // Problem data
     SmiScnModel* smi_;
