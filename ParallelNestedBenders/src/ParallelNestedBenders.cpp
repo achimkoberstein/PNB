@@ -703,12 +703,11 @@ namespace parallel_benders {
                 }// End If Stage and Value Checking
             }//End If FastBackward/FastEpsilonBackward Procedure
 
-            if ( infeasible_problem_ && infeasible_problems_.none() ){
-                // If one problem at later stage was infeasible and in this stage no problem is infeasible. We want to move forward again!
-                forward_ = true;
-                infeasible_problem_ = false;
-
-            }
+            //if ( infeasible_problem_ && infeasible_problems_.none() ){
+            //    // If one problem at later stage was infeasible and in this stage no problem is infeasible. We want to move forward again!
+            //    forward_ = true;
+            //    infeasible_problem_ = false;
+            //}
 
             // Aggregate optimality cuts for nodes at the stage before the current stage
             if ( !forward_ && infeasible_problems_.none() ){ 
@@ -2058,15 +2057,16 @@ namespace parallel_benders {
             else if ( checked_dual_solution[row] > 0)
                 cut_rhs += checked_dual_solution[row]*row_lower[row];
         }
+        assert( row == for_bound);
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            cut_rhs += (*it)->lb()*dual_solution[row];
+            cut_rhs += (*it)->lb()*checked_dual_solution[row];
             row++;
         }
-        assert( row == for_bound);
+
         for_bound += benders_node_pointer->feasibility_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
-            cut_rhs += (*it)->lb()*dual_solution[row];
+            cut_rhs += (*it)->lb()*checked_dual_solution[row];
             row++;
         }
         // Append value for dual variable bounds
