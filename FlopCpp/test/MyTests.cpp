@@ -1022,9 +1022,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         y.display("y");
         wSugar.display("wSugar");
         farmer.getSmi()->writeSmps("bla");
-        std::vector< std::pair<double,double> > ws;
-        ws = farmer.getSmi()->solveWS(&cplex);
-        double eev = farmer.getSmi()->solveEEV(&cplex);
+        //std::vector< std::pair<double,double> > ws;
+        //ws = farmer.getSmi()->solveWS(&cplex);
+        //double eev = farmer.getSmi()->solveEEV(&cplex);
     }
 
     // Dacota  Model to test the EV-, EEV- and WS-Problems
@@ -6399,8 +6399,26 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         osiPtr->writeLp("Atilla");
         model.solve(MP_model::MINIMIZE);
 
+    }
+
+    TEST_F(UseCaseTest,PiaTest){
+        const double cm_per_inch = 2.54;
+
+        double length = 1;
+
+        char unit = 0;
+
+        cout << "Geben Sie eine Länge gefolgt von einer Einheit an (c oder i): \n";
+
+        cin >> length >> unit ;
 
 
+
+        if ( unit == 'i')
+            cout << length << "in == " << cm_per_inch*length << "cm\n";
+        else
+
+            cout << length << "cm= " << length/cm_per_inch<< "in\n";
     }
 
 } //end namespace
@@ -6410,7 +6428,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "*.FarmerModel";
+    ::testing::GTEST_FLAG(filter) = "*.scxfm";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

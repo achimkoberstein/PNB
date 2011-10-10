@@ -787,6 +787,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     //     testModel.solve(MP_model::MINIMIZE);
 }
 
+
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -794,11 +795,11 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
-    //::testing::GTEST_FLAG(filter) = "*.scfxm*";
+    ::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
-    ::testing::GTEST_FLAG(filter) = "*watson_independent*";
+    //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
-    ::testing::GTEST_FLAG(filter) = "*rand*";
+    //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*pltexp*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
