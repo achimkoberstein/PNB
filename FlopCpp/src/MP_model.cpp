@@ -855,9 +855,10 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             rowStage[coefs[i]->row] = curRowStage; //Set rowStage of new indexed row to the stage of the row
             rowIndirection[oldRow] = coefs[i]->row;
         }
+            LOG_IF(WARNING,rowStage[m-1] != stage.size()-1)<< "Your specified model does not have rows in (especially) the last stage.";
     }
     // If last row belongs not to the last stage, we actually have less stages than we wanted. Log this
-    LOG_IF(WARNING,rowStage[m-1] != stage.size()-1)<< "Your specified model does not have rows in (especially) the last stage.";
+
     // Are there any empty rows? That means rows with no coefficient assigned to them? Is this possible?
     // Yes it is possible. One example: Constraint over stage set T but indexed over T+1 so first stage constraint is empty. 
     // Handled like this: every time rowIndirection is used we check for outOfBound.

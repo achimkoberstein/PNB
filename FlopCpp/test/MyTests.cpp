@@ -758,7 +758,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
 
-        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+        goalConstr(T+3) = wealth(T) == goal() + overage(T) - shortage(T); 
         MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
 
         investmentModel.setObjective( valueFunction );
@@ -6418,7 +6418,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "*.PiaTest";
+    //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
