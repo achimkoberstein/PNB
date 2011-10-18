@@ -66,9 +66,20 @@ namespace parallel_benders{
 
     struct BendersNodeData;
 
+    struct CutStuff
+    {
+        CutStuff(int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer);
+
+        int cut_creation_iteration_;
+        int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
+        boost::shared_ptr<OsiRowCut> cut_;
+        double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
+    };
+
+    bool is_active (const boost::shared_ptr<CutStuff>& value);
+
     struct CutInformation
     {
-
         CutInformation();
 
         int cut_creation_iteration_;
@@ -139,11 +150,13 @@ public:
     double solution_value_;
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
     CutManager cut_information_;
-    typedef std::list<OsiRowCut* > cut_container;
+    typedef std::list<boost::shared_ptr<CutStuff> > cut_container;
     cut_container optimality_cuts_;
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
     cut_container::iterator last_iteration_start_feasibility_;
+    typedef std::vector< cut_container::iterator > iteration_cut_pointer;
+    iteration_cut_pointer optimality_cut_pointer_;
     
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;
@@ -173,6 +186,9 @@ public:
 
 // Methods that work on a BendersNodeData
 void createRoundRobinAggregation(BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subpropblems_per_cut);
+
+double computeEuclideanNorm(OsiRowCut* cut);
+double computeCutViolation( OsiRowCut* cut, double* solution, double infinity );
 
 struct BendersStageData {
 

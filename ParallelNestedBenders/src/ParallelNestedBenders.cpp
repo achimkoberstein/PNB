@@ -240,7 +240,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(false),seperate_stage_solver_(false)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(false),seperate_stage_solver_(false),optimality_cut_counter_(0)
     {
 
     }
@@ -348,7 +348,7 @@ namespace parallel_benders {
 		thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
 
 		// Set first stage solver to own instance
-		seperate_first_stage_solver_ = true;
+		seperate_first_stage_solver_ = false;
 
         // create our benders node objects and build the tree
         // Initialize benders node data objects and tree!
@@ -491,11 +491,12 @@ namespace parallel_benders {
             int * indices = new int[stage_data_[0]->num_columns_+1];
             memcpy(indices,&stage_data_[0]->column_indices_[0],sizeof(int)*stage_data_[0]->num_columns_);
             indices[stage_data_[0]->num_columns_] = stage_data_[0]->num_columns_;
-            OsiRowCut* cut_pointer = new OsiRowCut();
+            boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
             cut_pointer->setLb(ws_value);
             cut_pointer->setUb(infinity_);
             cut_pointer->setRow(stage_data_[0]->num_columns_+1,indices,new_coefs);
-            node->optimality_cuts_.push_back(cut_pointer);
+            boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
+            node->optimality_cuts_.push_back(cut_stuff);
             //OsiRowCut* cut_pointer = new OsiRowCut();
             //cut_pointer->setLb(sum);
             //cut_pointer->setUb(infinity_);
@@ -705,6 +706,7 @@ namespace parallel_benders {
 
             //if ( infeasible_problem_ && infeasible_problems_.none() ){
             //    // If one problem at later stage was infeasible and in this stage no problem is infeasible. We want to move forward again!
+            //    // Only if we have not added optimality cuts! Otherwise we can deadlock ourselves, can we?
             //    forward_ = true;
             //    infeasible_problem_ = false;
             //}
@@ -718,6 +720,8 @@ namespace parallel_benders {
                 thread_pool_.wait(0); // We wait until all threads are done
                 // If we added no cuts, we might want to notice that
             }
+
+            // If we added no new cuts, we can move forward again? Or backward to test for stopping criterion?
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){
@@ -852,13 +856,13 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 8){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            console_mutex_.lock();
-            osi_solver->writeLp(stream.str().c_str());
-            console_mutex_.unlock();
-        } // TODO: Debugging stuff
+        //if ( current_stage_ <= 8){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    console_mutex_.lock();
+        //    osi_solver->writeLp(stream.str().c_str());
+        //    console_mutex_.unlock();
+        //} // TODO: Debugging stuff
 
         if ( warm_start_ ){
             if ( warm_start_scenarios_ ){
@@ -884,7 +888,7 @@ namespace parallel_benders {
 
         }
  
-        osi_solver->setHintParam(OsiDoPresolveInInitial,false);
+        osi_solver->setHintParam(OsiDoPresolveInInitial,true);
         osi_solver->setHintParam(OsiDoDualInInitial,true);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         // MIP Solving only at first stage..
         if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
@@ -1332,27 +1336,103 @@ namespace parallel_benders {
 
         }
 
-        bool store_cut_information_ = true;
-        if ( store_cut_information_ && !integer_problems_[current_stage_]){ // Store Cut information only for non-integer problems!
-            // Store values about active cuts in own data structure
-            for ( int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size();i++ ){
-                CutInformation& cut_information = benders_node_pointer->cut_information_.GetCut(i-stage_data_[current_stage_]->num_rows_);
-                double cut_active_value = osi_solver->getRowPrice()[i];
-                if ( cut_active_value ){ // Not Zero
-                    if ( forward_ )
-                        cut_information.iteration_forward_active_vector_[current_iteration_] = cut_active_value;
-                    else
-                        cut_information.iteration_backward_active_vector_[current_iteration_] = cut_active_value;
-                    cut_information.active_iteration_counter_++;
+        bool store_cut_information_ = false;
+
+        if ( forward_ && store_cut_information_){
+            // We want to store the information about cuts!
+            std::vector< std::list< std::pair<int,double> > > active_cuts_per_aggregate(benders_node_pointer->num_thetas_); // Stores information about cut from which iterations are active for an aggregate and how active they are
+            std::vector< std::pair<int,double> > cuts_from_iteration(current_iteration_); // Stores information about how many cuts are active from a given iteration and how active they are
+
+            std::list< BendersNodeData::cut_container::iterator > to_remove;
+            // We need the dual values!
+            benders_node_pointer->dual_solution_ = new double[osi_solver->getNumRows()];
+            memcpy(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()*sizeof(double));
+            for (int i = 0; i < osi_solver->getNumRows();i++){
+                if ( CompareWithZero(benders_node_pointer->dual_solution_[i]))
+                    benders_node_pointer->dual_solution_[i] = 0;
+            }
+            int current_row = stage_data_[current_stage_]->num_rows_;
+            // Store the number of rows/columns
+            for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
+                // First cut corresponds to the first row after the rows of the original problem!
+                // Find out if cut is active!
+                int cut_creation = (*it)->cut_creation_iteration_;
+                int aggregate = (*it)->aggregate_number_;
+                // Get active value via dual value
+                double active = benders_node_pointer->dual_solution_[current_row];
+                // Put values in the corresponding vectors!
+                if ( active ){
+                    active_cuts_per_aggregate[aggregate].push_back(make_pair<int,double>(cut_creation,active));
+                    cuts_from_iteration[cut_creation].first++;
+                    cuts_from_iteration[cut_creation].second += active;
+                    (*it)->active_value += active;
                 }
-                else
-                    cut_information.inactive_iteration_counter_++;
-            }// End For
-            // Print it out
-            //  std::cout << "Node " << benders_node_pointer->scenario_index_  << std::endl;
-            //if ( std::abs(osi_solver->getRowPrice()[i]) > zero_tolerance_)
-            //    std::cout << "Cut " << i-stage_data_[current_stage_]->num_rows_ << " is active with " << osi_solver->getRowPrice()[i] << std::endl;
-        }// End if store_cut_information_
+                else 
+                    (*it)->active_value -= 0.5;
+                current_row++;
+            }
+            // Remove all cuts in the to_remove list
+            //benders_node_pointer->optimality_cuts_.remove_if(is_active);
+
+            if ( benders_node_pointer->num_thetas_ > 1 )
+                for (int i = 1; i< current_iteration_; i++){
+                    LOG(INFO) << "Active from iteration " << i << " are " << cuts_from_iteration[i].first << " cuts with a value of " << cuts_from_iteration[i].second;
+                    if ( cuts_from_iteration[i].second < zero_tolerance_ ){
+                        // Let's put all the cuts in one single cut!
+                        OsiRowCut * new_single_cut = (*benders_node_pointer->optimality_cut_pointer_[i])->cut_.get();
+                        CoinPackedVector& row(new_single_cut->mutableRow());
+                        // We need to create a new vector
+                        int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_; // This many variables are needed
+                        double * new_elements = new double[col_size];
+                        int * new_indices = new int[col_size];
+                        for (int j = 0; j < col_size; j++){
+                            new_elements[j] = 0;
+                            new_indices[j] = j;
+                        }
+                        double rhs = 0;
+                        for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cut_pointer_[i]; it != benders_node_pointer->optimality_cut_pointer_[i+1]; ++it){
+                            // We must change the CoinPackedVector!
+                            for (int j = 0; j < (*it)->cut_->row().getNumElements(); j++ ){
+                                new_elements[(*it)->cut_->row().getIndices()[j]] += (*it)->cut_->row().getElements()[j];
+                            }
+                            rhs += (*it)->cut_->lb();
+                        }
+                        CoinPackedVector new_row(col_size,new_indices,new_elements);
+                        new_single_cut->setRow(new_row);
+                        new_single_cut->setLb(rhs);
+                        (*benders_node_pointer->optimality_cut_pointer_[i])->active_value = 1.0;
+                        BendersNodeData::cut_container::iterator start = benders_node_pointer->optimality_cut_pointer_[i];
+                        ++start;
+                        benders_node_pointer->optimality_cuts_.erase(start, benders_node_pointer->optimality_cut_pointer_[i+1]);
+                        LOG(INFO) << "Building new cut for iteration " << i;
+                        
+
+                    }
+                }
+
+        }
+
+
+        //if ( store_cut_information_ && !integer_problems_[current_stage_]){ // Store Cut information only for non-integer problems!
+        //    // Store values about active cuts in own data structure
+        //    for ( int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size();i++ ){
+        //        CutInformation& cut_information = benders_node_pointer->cut_information_.GetCut(i-stage_data_[current_stage_]->num_rows_);
+        //        double cut_active_value = osi_solver->getRowPrice()[i];
+        //        if ( cut_active_value ){ // Not Zero
+        //            if ( forward_ )
+        //                cut_information.iteration_forward_active_vector_[current_iteration_] = cut_active_value;
+        //            else
+        //                cut_information.iteration_backward_active_vector_[current_iteration_] = cut_active_value;
+        //            cut_information.active_iteration_counter_++;
+        //        }
+        //        else
+        //            cut_information.inactive_iteration_counter_++;
+        //    }// End For
+        //    // Print it out
+        //    //  std::cout << "Node " << benders_node_pointer->scenario_index_  << std::endl;
+        //    //if ( std::abs(osi_solver->getRowPrice()[i]) > zero_tolerance_)
+        //    //    std::cout << "Cut " << i-stage_data_[current_stage_]->num_rows_ << " is active with " << osi_solver->getRowPrice()[i] << std::endl;
+        //}// End if store_cut_information_
    }
 
     void ParallelNestedBenders::BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -1669,13 +1749,13 @@ namespace parallel_benders {
         for_bound += benders_node_pointer->optimality_cuts_.size();
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            cut_rhs += (*it)->lb()*dual_solution[row];
+            cut_rhs += (*it)->cut_->lb()*dual_solution[row];
             row++;
         }
         assert( row == for_bound);
         for_bound += benders_node_pointer->feasibility_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
-            cut_rhs += (*it)->lb()*dual_solution[row];
+            cut_rhs += (*it)->cut_->lb()*dual_solution[row];
             row++;
         }
         assert( row == for_bound);
@@ -1753,9 +1833,11 @@ namespace parallel_benders {
         if ( num_cuts > 1 ) {
             // We can potentially aggregate some cuts
             // Use a potential policy here for the aggregation
-            std::vector< std::vector<int> > new_old_mapping;
-            findAggregationPossibilities(benders_tree_node_pointer->getDataPtr(),new_old_mapping,num_childs,num_cuts,num_subproblems_per_cut);
-            aggregateOldOptimalityCuts(benders_tree_node_pointer->getDataPtr(),new_old_mapping);
+            //std::vector< std::vector<int> > new_old_mapping;
+            //findAggregationPossibilities(benders_tree_node_pointer->getDataPtr(),new_old_mapping,num_childs,num_cuts,num_subproblems_per_cut);
+            //aggregateOldOptimalityCuts(benders_tree_node_pointer->getDataPtr(),new_old_mapping);
+
+            // Look into all the cuts of 
         }
 
 		// We have to set the start index again, but only if we used it ( marked by infinity )
@@ -1821,13 +1903,21 @@ namespace parallel_benders {
                 new_index = num_columns+num_theta_indices;
 
                 // Add cut
-                OsiRowCut* cut_pointer = new OsiRowCut();
+                boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
                 cut_pointer->setLb(cut_lower_bound);
                 cut_pointer->setUb(infinity_);
                 cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
-                benders_tree_node_pointer->getDataPtr()->optimality_cuts_.push_back(cut_pointer);
+                boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
+                cut_stuff->aggregate_number_ = i;
+                benders_tree_node_pointer->getDataPtr()->optimality_cuts_.push_back(cut_stuff);
+                if ( i == 0){
+                    if ( benders_tree_node_pointer->getDataPtr()->optimality_cut_pointer_.empty())
+                        benders_tree_node_pointer->getDataPtr()->optimality_cut_pointer_.resize(max_iteration_);
+                    benders_tree_node_pointer->getDataPtr()->optimality_cut_pointer_[current_iteration_] = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() ;
+                }
                 // Set aggregate to active: We have a cut for this aggregate
                 benders_tree_node_pointer->getDataPtr()->active_cuts_[i] = true;
+                // Add information about this cut to cut database!
                 added_cuts++;
 
                 // Store information about this new cut, we added a new one to our set!
@@ -1845,6 +1935,54 @@ namespace parallel_benders {
         add_cut_counter_mutex_.lock();
         added_optimality_cuts_[current_stage_-1] += added_cuts;
         add_cut_counter_mutex_.unlock();
+
+        // Now we added all the cuts. Let's see if we can throw some of them away!
+        // Num cuts is the number of aggregates we have here
+        std::vector< std::list< BendersNodeData::cut_container::iterator > > cut_list(num_cuts);
+        for ( BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.begin(); it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end(); ++it){
+            int index = (*it)->cut_->row().getIndices()[(*it)->cut_->row().getNumElements() - 1];
+
+            if ( index > stage_data_[current_stage_-1]->num_columns_-1 ){ // Columns get indexed from 0 to num_columns-1, so if it is greater than that it is a theta var
+                // This is the index we want
+                if ( index > stage_data_[current_stage_-1]->num_columns_+num_cuts-1 )
+                    LOG(INFO) << "This should not happen";
+                cut_list[index-stage_data_[current_stage_-1]->num_columns_].push_back(it);
+            }
+            else
+                LOG(INFO) << "This should not happen";
+        }
+        //if ( benders_tree_node_pointer->getDataPtr()->next_stage_approximation_ != NULL){
+        //    // Prepare last column solution to work with!
+        //    double* column_solution = new double[ stage_data_[current_stage_-1]->num_columns_+benders_tree_node_pointer->getDataPtr()->num_thetas_];
+        //    memcpy(column_solution,benders_tree_node_pointer->getDataPtr()->col_solution_,stage_data_[current_stage_-1]->num_columns_*sizeof(double));
+        //    memcpy(column_solution+stage_data_[current_stage_-1]->num_columns_,benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,benders_tree_node_pointer->getDataPtr()->num_thetas_*sizeof(double));
+        //    for (int i = 0; i < num_cuts; i++){
+        //        // Go over all the aggregates and find the cuts that are "good"
+        //        std::list< BendersNodeData::cut_container::iterator > delete_iterator;
+        //        int number_of_cuts = 0;
+        //        for ( std::list< BendersNodeData::cut_container::iterator >::iterator it = cut_list[i].begin(); it != cut_list[i].end(); ++it ){
+        //            // Compute violation ( and distance
+        //            // Column solution does not contain next_stage_approximation!!
+        //            double violation = computeCutViolation( (*(*it))->cut_.get(), column_solution,infinity_);
+        //            double euclidean_norm = computeEuclideanNorm((*(*it))->cut_.get());
+        //            double distance = violation/euclidean_norm;
+        //            number_of_cuts++;
+        //        }
+        //        // This is how many cuts we have now!
+        //        // We want to throw away all cuts we do not like..
+        //        // First cut = 
+        //        BendersNodeData::cut_container::iterator first_cut = (*cut_list[i].begin());
+        //        for ( std::list< BendersNodeData::cut_container::iterator >::iterator it = cut_list[i].begin(); it != cut_list[i].end(); ++it ){
+        //            // Keep three cuts per scenario, the ones with the greatest distance!
+
+        //        }
+
+        //    }
+        //    //if ( num_cuts > 1){ // We have not the single cut case, So we may need to find all the cuts that belong to a certain aggregate
+        //    //    benders_tree_node_pointer->getDataPtr()->col_solution_; // This has to be present to check for violation?
+        //    //    benders_tree_node_pointer->getDataPtr()->optimality_cuts_;
+        //    //}
+        //}
     }
 
     void ParallelNestedBenders::GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -2060,28 +2198,30 @@ namespace parallel_benders {
         assert( row == for_bound);
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            cut_rhs += (*it)->lb()*checked_dual_solution[row];
+            cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
             row++;
         }
 
         for_bound += benders_node_pointer->feasibility_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
-            cut_rhs += (*it)->lb()*checked_dual_solution[row];
+            cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
             row++;
         }
         // Append value for dual variable bounds
         cut_rhs += computed_dual_value_for_variable_bounds;
 
         // Add cut to set of feasibility cuts of parent problem
-        OsiRowCut* cut_pointer = new OsiRowCut();
+        boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
         cut_pointer->setLb(cut_rhs);
         cut_pointer->setUb(infinity_);
         cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0]);
         // Increase feasCutCounter, together with locking/unlocking a mutex, and adding the cut the the parent problem
+        boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
 		infeasible_problem_mutex_.lock();
 		// Check if this is the first cut we added
 		num_added_feasibility_cuts_++;
-        benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_pointer);
+
+        benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_stuff);
         if ( num_added_feasibility_cuts_ == 1 ){
 			benders_tree_node_pointer->getParent()->getDataPtr()->feas_cut_start_index_ = benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.size();
             benders_tree_node_pointer->getParent()->getDataPtr()->last_iteration_start_feasibility_ = --benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.end();
@@ -2270,7 +2410,7 @@ namespace parallel_benders {
 			}
 			// TODO: This can be changed to addRows
 			for ( ; it != benders_node_pointer->optimality_cuts_.end();++it) {
-				osi_solver->applyRowCuts(1,*it);
+				osi_solver->applyRowCuts(1,(*it)->cut_.get());
 			}
 		}
 
@@ -2283,7 +2423,7 @@ namespace parallel_benders {
 			}
 			// TODO: This can be changed to addRows
 			for (; it != benders_node_pointer->feasibility_cuts_.end();++it) {
-				osi_solver->applyRowCuts(1,*it);
+				osi_solver->applyRowCuts(1,(*it)->cut_.get());
 			}
 		}
 

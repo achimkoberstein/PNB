@@ -33,12 +33,12 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::~BendersNodeData(void)
 {
-    for (cut_container::iterator it = optimality_cuts_.begin(); it != optimality_cuts_.end(); ++it) {
-        delete *it; 
-    }
-    for (cut_container::iterator it = feasibility_cuts_.begin(); it != feasibility_cuts_.end(); ++it) {
-        delete *it; 
-    }
+    //for (cut_container::iterator it = optimality_cuts_.begin(); it != optimality_cuts_.end(); ++it) {
+    //    delete *it; 
+    //}
+    //for (cut_container::iterator it = feasibility_cuts_.begin(); it != feasibility_cuts_.end(); ++it) {
+    //    delete *it; 
+    //}
 
     delete [] this->col_solution_;
 
@@ -268,5 +268,48 @@ int CutManager::NumCuts()
 CutInformation::CutInformation() : cut_creation_iteration_(0),active_iteration_counter_(0),inactive_iteration_counter_(0),iteration_forward_active_vector_(),iteration_backward_active_vector_()
 {
 
+}
+
+double computeEuclideanNorm( OsiRowCut* cut )
+{
+    double sum = 0;
+    int length = cut->row().getNumElements();
+    const double* elements = cut->row().getElements();
+    for ( int i = 0; i < length; i++){
+        sum += elements[i]*elements[i];
+    }
+    return sqrt(sum);
+}
+
+double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
+    int i;
+    double sum = 0.0;
+    const int* column = cut->row().getIndices();
+    int number = cut->row().getNumElements();
+    const double* element = cut->row().getElements();
+    for ( i = 0;  i < number;  i++ ) {
+        int colIndx = column[i];
+        sum += solution[colIndx] * element[i];
+    }
+    // Test for infinity and stuff
+    if ( sum > cut->ub() )
+        return sum-cut->ub();
+    else if ( sum < cut->lb() )
+        return cut->lb()-sum;
+    else if ( cut->ub() >= infinity ) // Cut is not violated!
+        return cut->lb()-sum;
+    else if ( cut->lb() <= -infinity) // Cut is not violated
+        return sum-cut->ub();
+    else // Both values are set, we do not know what to do with this!
+        return 0.0;
+}
+
+CutStuff::CutStuff( int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),aggregate_number_(-1),cut_(cut_pointer),active_value(1.0)
+{
+}
+
+bool is_active( const boost::shared_ptr<CutStuff>& value )
+{
+    return value->active_value < 0;
 }
 } // end namespace parallel benders

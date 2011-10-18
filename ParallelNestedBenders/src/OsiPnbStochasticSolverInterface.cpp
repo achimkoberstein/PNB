@@ -89,6 +89,8 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
         // Set solution value
         nested_benders_->upper_bound_ = osi->getObjValue();
         // We have the time, but can not set it accordingly. not good!
+        LOG(INFO) << "Solution: " << nested_benders_->upper_bound_;
+        LOG(INFO) << "Solution Time: " << solution_time.GetTime(0) << "s";
 
     }
     else {
