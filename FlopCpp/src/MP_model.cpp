@@ -1446,9 +1446,9 @@ namespace flopc {
         bool count = false;
         if (nScen==0) // We have no specified scenario set, so we rely on the default sample size and count the scenario size afterwards.
             count = true;
-        for (int curStage = 1; curStage < nStages; curStage++){ //Count number of random coefficients for each stage..
-            for (randVarIterator it = randomCoefficientVector[curStage].begin(); it != randomCoefficientVector[curStage].end();++it){
-                randVarsPerStage[curStage]++;
+        for (int i = 1; i < nStages; i++){ //Count number of random coefficients for each stage..
+            for (randVarIterator it = randomCoefficientVector[i].begin(); it != randomCoefficientVector[i].end();++it){
+                randVarsPerStage[i]++;
             }
         }
         if (nScen == 0 || randVarsPerStage[1] == 0)//If we have nothing to do, we have nothing to. 
@@ -1496,20 +1496,20 @@ namespace flopc {
         if (probabilities.empty())
             probabilities = std::vector<double>(nScen,1.0/nScen); //If probability set is present, use that, otherwise use equiprobable values.
 
-        typedef std::list<int>::iterator scenIt;
-        std::list<int> scenarioHeap;
-
-        for (int i = 0; i < nScen; i++)
-            scenarioHeap.push_back(i);
 
         std::vector<std::deque<int> > subScenarioQueueVector(nStages,std::deque<int> ()); //For each stage an own queue
         subScenarioQueueVector[0].push_front(0);
 
         //We do not like recursion, therefore we need to store all the elements in a list of vectors and stuff
-        std::vector< std::vector< std::list<int> > > subScenariosPerStageAndScenario(nStages, std::vector<std::list<int> > (nScen)); //TODO: Redo, this seems to be expensive..
+        std::vector< std::vector< boost::dynamic_bitset<> > > subScenariosPerStageAndScenario(nStages, std::vector< boost::dynamic_bitset<> >(nScen)); //TODO: Redo, this seems to be expensive..
+        for (int k = 0; k < nStages; k++)
         for (int j = 0; j < nScen; j++){ // Assign scenarioHeap to all the first stage sets. TODO: Improve memory consumption and thus running time due to allocation and deletion
-            subScenariosPerStageAndScenario[0][j] = scenarioHeap;
+            subScenariosPerStageAndScenario[k][j] = boost::dynamic_bitset<>(nScen);
+            if ( k == 0)
+                subScenariosPerStageAndScenario[k][j].set();
+
         }
+        // This only keeps which scenario is active where. This can be done better by a simple bitset, I assume!
 
 
         int curStage = 0; //We start at stage 0
@@ -1521,8 +1521,8 @@ namespace flopc {
             curScen = subScenarioQueueVector[curStage].front();
             subScenarioQueueVector[curStage].pop_front();
             // Loop over all subset scenarios of the current scenario to form new nodes
-            while (!subScenariosPerStageAndScenario[curStage][curScen].empty()){
-                int parentScen = *subScenariosPerStageAndScenario[curStage][curScen].begin(); //the parentScen will be the "parent" or head of the new node.
+            while (subScenariosPerStageAndScenario[curStage][curScen].any()){
+                int parentScen = subScenariosPerStageAndScenario[curStage][curScen].find_first(); //the parentScen will be the "parent" or head of the new node.
                 //If the node is already a parent of a node in a lower stage, we keep the old values
                 if (branchStageVec[parentScen] == outOfBound)
                     branchStageVec[parentScen] = curStage+1;
@@ -1535,7 +1535,7 @@ namespace flopc {
                 else{ //In the last stage: increase scenario counter and set scenarioIndirection and delete the parent scenario from subScenarios so that only the same scenarios as the parentScen scenario are left
                     scenarioIndirection[parentScen] = scenCounter++;
                     realOrderingFromVirtualScenario[scenCounter -1] = parentScen;
-                    subScenariosPerStageAndScenario[curStage][curScen].erase(subScenariosPerStageAndScenario[curStage][curScen].begin()); //Remove from subsetSet to only contain strict subset in the last stage: This ensures correct probability calculation
+                    subScenariosPerStageAndScenario[curStage][curScen].set(subScenariosPerStageAndScenario[curStage][curScen].find_first(),false); //Remove from subsetSet to only contain strict subset in the last stage: This ensures correct probability calculation
                     //probabilities[scenCounter-1] = probabilities[scenCounter-1];
                 }
 
@@ -1589,27 +1589,25 @@ namespace flopc {
 #pragma endregion setCoefficients
 
                 // Remove elements from subsetHeap that are equal to this one and add them to subset for next stage.
-                for (scenIt innerIt = subScenariosPerStageAndScenario[curStage][curScen].begin(); innerIt != subScenariosPerStageAndScenario[curStage][curScen].end();){
+                for (int current_scenario = subScenariosPerStageAndScenario[curStage][curScen].find_first(); current_scenario != boost::dynamic_bitset<>::npos; current_scenario = subScenariosPerStageAndScenario[curStage][curScen].find_next(current_scenario) ){
                     if (curStage == nStages-1){
                         //We are in the last stage. All scenarios that still have the same values end up in the same scenario, but that increases the probability
                         //Remove the scenario from current stage and set realOdering to outOfBound
-                        tempAncScenVec[*innerIt] = tempAncScenVec[parentScen];
-                        scenarioIndirection[*innerIt] = outOfBound;
+                        tempAncScenVec[current_scenario] = tempAncScenVec[parentScen];
+                        scenarioIndirection[current_scenario] = outOfBound;
                         realOrderingFromVirtualScenario[scenCounter] = outOfBound;
-                        probabilities[parentScen] += probabilities[*innerIt]; //add one scenario prob for each added scenario.
-                        probabilities[*innerIt] = 0;
-                        subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
+                        probabilities[parentScen] += probabilities[current_scenario]; //add one scenario prob for each added scenario.
+                        probabilities[current_scenario] = 0;
+                        subScenariosPerStageAndScenario[curStage][curScen].set(current_scenario,false);
                     }
                     // Define the new scenario subset node for the next stage
-                    else if (!differFromPrevious(randomCoefficientVector,curStage+1,parentScen,*innerIt)){// We have a scenario subset node        
+                    else if (!differFromPrevious(randomCoefficientVector,curStage+1,parentScen,current_scenario)){// We have a scenario subset node        
                         //Add to scenario subset heap of next stage node and scenario
-                        subScenariosPerStageAndScenario[curStage+1][parentScen].push_back(*innerIt); 
+                        subScenariosPerStageAndScenario[curStage+1][parentScen].set(current_scenario,true); 
                         //Erase from subsetHeap, so that this subset scenario does not form a new node in a subsequent run of the while loop
-                       subScenariosPerStageAndScenario[curStage][curScen].erase(innerIt++);
+                       subScenariosPerStageAndScenario[curStage][curScen].set(current_scenario,false);
                     }
-                    else{ // Scenario is in another node, skip it for now. Will be looked at during the inner while loop
-                        ++innerIt;
-                    }
+  
                 }//end for
             }//end while: subScenariosPerStageAndScenario
 
