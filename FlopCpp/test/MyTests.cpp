@@ -790,6 +790,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_NEAR(10.76479,result,0.0001);
     }
 
+    
 
     TEST_F(MP_modelTest,RandomParameterInObjectiveTest){
         MP_model testModel(new OsiClpSolverInterface());
@@ -6402,23 +6403,12 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
     }
 
     TEST_F(UseCaseTest,PiaTest){
-        const double cm_per_inch = 2.54;
+        char buchstabe = 'a';
+        while ( buchstabe <= 'z' ){ // Könnte funktionieren, bin nicht sicher
+            std::cout << buchstabe << "  " << (int)(buchstabe) << "\n";
+            buchstabe++;
+        }
 
-        double length = 1;
-
-        char unit = 0;
-
-        cout << "Geben Sie eine Länge gefolgt von einer Einheit an (c oder i): \n";
-
-        cin >> length >> unit ;
-
-
-
-        if ( unit == 'i')
-            cout << length << "in == " << cm_per_inch*length << "cm\n";
-        else
-
-            cout << length << "cm= " << length/cm_per_inch<< "in\n";
     }
 
 } //end namespace
@@ -6428,7 +6418,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    ::testing::GTEST_FLAG(filter) = "*.scxfm";
+    ::testing::GTEST_FLAG(filter) = "*.PiaTest";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

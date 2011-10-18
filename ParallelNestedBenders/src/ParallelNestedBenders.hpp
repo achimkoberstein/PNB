@@ -199,6 +199,8 @@ private:
     // TODO: REMOVE AGAIN
     bool changed_num_rows;
 
+    int optimality_cut_counter_;
+
 
 };
 
