@@ -12,21 +12,21 @@
 #endif
 
 
-void OsiStochasticParallelNestedBendersTwoStageSolverInterface::setParameters(const parallel_benders::Parameter& parameters){
+void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const parallel_benders::Parameter& parameters){
     nested_benders_->parameter_ = parameters;
 }
 
 
-double OsiStochasticParallelNestedBendersTwoStageSolverInterface::getObjValue()
+double OsiStochasticParallelNestedBendersSolverInterface::getObjValue()
 {
     return nested_benders_->upper_bound_;
 }
 
-int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumIterations()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations()
 {
     return nested_benders_->current_iteration_;
 }
-void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
+void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1) == 0){
         parallel_benders::Timer solution_time(2);
@@ -99,7 +99,7 @@ void OsiStochasticParallelNestedBendersTwoStageSolverInterface::initialSolve()
     }
 }
 
-OsiStochasticParallelNestedBendersTwoStageSolverInterface::OsiStochasticParallelNestedBendersTwoStageSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
+OsiStochasticParallelNestedBendersSolverInterface::OsiStochasticParallelNestedBendersSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
 : OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL)
 {
     if ( smi_model == NULL )
@@ -108,22 +108,22 @@ OsiStochasticParallelNestedBendersTwoStageSolverInterface::OsiStochasticParallel
     nested_benders_ = new parallel_benders::ParallelNestedBenders(smi_model_);
 }
 
-OsiStochasticParallelNestedBendersTwoStageSolverInterface::~OsiStochasticParallelNestedBendersTwoStageSolverInterface()
+OsiStochasticParallelNestedBendersSolverInterface::~OsiStochasticParallelNestedBendersSolverInterface()
 {
     delete nested_benders_;
 }
 
-const parallel_benders::Parameter& OsiStochasticParallelNestedBendersTwoStageSolverInterface::getParameters() const
+const parallel_benders::Parameter& OsiStochasticParallelNestedBendersSolverInterface::getParameters() const
 {
 	return nested_benders_->parameter_;
 }
 
-const parallel_benders::Timer& OsiStochasticParallelNestedBendersTwoStageSolverInterface::getTimer() const
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getTimer() const
 {
     return nested_benders_->timer_;
 }
 
-int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumOptimalityCuts()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts()
 {
     int cut_counter = 0;
     for (int i = 0; i < nested_benders_->num_stages_; i++){
@@ -132,7 +132,7 @@ int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumOptimalityC
     return cut_counter;
 }
 
-int OsiStochasticParallelNestedBendersTwoStageSolverInterface::getNumFeasibilityCuts()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
 {
     int cut_counter = 0;
     for (int i = 0; i < nested_benders_->num_stages_; i++){

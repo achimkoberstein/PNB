@@ -10,12 +10,12 @@ namespace parallel_benders {
 }
 
 
-class OsiStochasticParallelNestedBendersTwoStageSolverInterface : public OsiStochasticSolverInterface {
+class OsiStochasticParallelNestedBendersSolverInterface : public OsiStochasticSolverInterface {
 public:
 
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
+    OsiStochasticParallelNestedBendersSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
     //OsiStochasticParallelNestedBendersTwoStageSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model, BendersParameter& params);
-    ~OsiStochasticParallelNestedBendersTwoStageSolverInterface();
+    ~OsiStochasticParallelNestedBendersSolverInterface();
 
     void initialSolve();
 

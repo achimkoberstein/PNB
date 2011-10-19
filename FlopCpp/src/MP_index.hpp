@@ -17,6 +17,9 @@ namespace flopc {
     class MP_set;
     class MP_index_exp;
     class RandomDataRef;
+    template <int nbr> class MP_subset;
+    template <int nbr> class SubsetRef;
+
 
     /** @brief Internal representation of a index
     @ingroup INTERNAL_USE
@@ -64,7 +67,8 @@ namespace flopc {
         friend class RandomDataRef;
         friend class MP_variable;
         friend class MP_constraint;
-        //friend class MP_subset<nbr>;
+        template<int nbr> friend class MP_subset;
+        template<int nbr> friend class SubsetRef;
         // End Semantic check
 
         template<int nbr> friend class MP_domain_subset;

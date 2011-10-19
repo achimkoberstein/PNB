@@ -240,7 +240,7 @@ protected:
         }
         // Load ParallelNestedBendersSolver
         double solver_time = CoinCpuTime();
-        OsiStochasticParallelNestedBendersTwoStageSolverInterface nested_benders(&osi_cpx,&smi);
+        OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
         nested_benders.setParameters(benders_parameter_);
         nested_benders.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
@@ -351,7 +351,7 @@ TEST_F(NestedBendersTest,InvestmentExampleTest){
     MP_model investmentModel(new OsiCpxSolverInterface());
     MP_data initialWealth,goal;
     initialWealth() = 55; //set data
-    goal() = 80;
+    goal() = 90;
 
     enum {numStage=3};
     MP_stage T(numStage); //Time Stages
@@ -387,12 +387,17 @@ TEST_F(NestedBendersTest,InvestmentExampleTest){
     returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
 
     goalConstr(T+2) = wealth(T) == goal() + overage(T) - shortage(T); 
-    MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
+    MP_expression valueFunction( +1.3*shortage(T.last()) - 1.1*overage(T.last()));
 
     investmentModel.setObjective( valueFunction );
     investmentModel.attach(investmentModel.Solver);
     investmentModel.getSmi()->writeSmps("investment",true,false);
-    investmentModel.solve(MP_model::MAXIMIZE);
+    investmentModel.solve(MP_model::MINIMIZE);
+
+    OsiCpxSolverInterface osi_solver;
+    SmiScnModel* smi = investmentModel.getSmi();
+    OsiStochasticParallelNestedBendersSolverInterface nested_solver(&osi_solver,smi);
+    nested_solver.initialSolve();
 
 
     ////Compare solution values.
@@ -762,7 +767,7 @@ TEST_F(NestedBendersTest,FeasibilityCutTest){
     testModel.setObjective( x()+2*y(T.last()) );
     testModel.attach();
     OsiCpxSolverInterface osi_cpx;
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(&osi_cpx,testModel.getSmi());
+    OsiStochasticParallelNestedBendersSolverInterface pnb(&osi_cpx,testModel.getSmi());
     parallel_benders::Parameter param;
     param.init();
     param.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
@@ -836,7 +841,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); //Use deteq
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
-    OsiStochasticParallelNestedBendersTwoStageSolverInterface pnb(new_solver,testModel.getSmi());
+    OsiStochasticParallelNestedBendersSolverInterface pnb(new_solver,testModel.getSmi());
     pnb.setParameters(benders_parameter_);
     pnb.initialSolve();
     EXPECT_NEAR(9.41,pnb.getObjValue(),0.1);

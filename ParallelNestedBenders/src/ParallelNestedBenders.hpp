@@ -36,7 +36,7 @@ namespace parallel_benders {
 
 
 class ParallelNestedBenders {
-    friend class OsiStochasticParallelNestedBendersTwoStageSolverInterface;
+    friend class OsiStochasticParallelNestedBendersSolverInterface;
 
     typedef std::map<int,int> staircase_container; // Stores the maximal stage where the coefficient appears, and the coefficient as key
 

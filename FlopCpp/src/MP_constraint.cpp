@@ -216,35 +216,45 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
     std::stringstream ss;
     if (&S1 != &MP_set::getEmpty()) { // What can do the trick: Get the index, assign it to the Index for this constraint and evaluate the index!
         I1->getIndex()->assign(ik.i1);
+        I1->getIndex()->instantiate();
         double value = I1->evaluate();
+        I1->getIndex()->unInstantiate();
         if ( S1.check(value) != outOfBound )
             ss << "_" << value;
         else
             return "";
         if (&S2 != &MP_set::getEmpty()) {
             I2->getIndex()->assign(ik.i2);
+            I2->getIndex()->instantiate();
             value = I2->evaluate();
+            I2->getIndex()->unInstantiate();
             if ( S2.check(value) != outOfBound )
                 ss << "_" << value;
             else
                 return "";
             if (&S3 != &MP_set::getEmpty()) {
                 I3->getIndex()->assign(ik.i3);
+                I3->getIndex()->instantiate();
                 value = I3->evaluate();
+                I3->getIndex()->unInstantiate();
                 if ( S3.check(value) != outOfBound )
                     ss << "_" << value;
                 else
                     return "";
                 if (&S4 != &MP_set::getEmpty()) {
                     I4->getIndex()->assign(ik.i4);
+                    I4->getIndex()->instantiate();
                     value = I4->evaluate();
+                    I4->getIndex()->unInstantiate();
                     if ( S4.check(value) != outOfBound )
                         ss << "_" << value;
                     else
                         return "";
                     if (&S5 != &MP_set::getEmpty()) {
                         I5->getIndex()->assign(ik.i5);
+                        I5->getIndex()->instantiate();
                         value = I5->evaluate();
+                        I5->getIndex()->unInstantiate();
                         if ( S1.check(value) != outOfBound )
                             ss << "_" << value;
                         else
