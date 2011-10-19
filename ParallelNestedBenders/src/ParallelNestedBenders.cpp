@@ -548,6 +548,7 @@ namespace parallel_benders {
             }
 
             // Change direction depending on last or first stage. This is sequencing protocol 0.
+
             if ( current_stage_ == 0 ){
                 forward_ = true;
                 // If we had infeasible problems in the last backward run, we added all the feas cuts and can start fresh
@@ -944,6 +945,7 @@ namespace parallel_benders {
                     if ( osi_solver->isProvenDualInfeasible() ){
 						console_mutex_.lock();
                         LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                        LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem.";
                         osi_solver->writeLp("unboundedProblem.lp");
 						console_mutex_.unlock();
                         // We can not work with that in a reasonable manner..

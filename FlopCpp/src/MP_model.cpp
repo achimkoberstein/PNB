@@ -720,7 +720,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
             coefsObj[i]->row = m;
         }
     }
-    if (constantTerm == 0.0){
+    if (constantTerm == 0.0){ // reduce realn and n by one, as we have no constant term in the objective and thus no need for another variable!
         // We could reduce column counter by 1, but that mixed up the RHS value, which was set to realn.
         --realn;
         --n;
@@ -1038,7 +1038,8 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         // Check for stage and colStage and rowStage..
         int current_stage = stage.size();
         if ( colStage[realn-1] != stage.size()-1 || rowStage[m-1] != stage.size() -1 ){
-            LOG_IF(FATAL,colStage[realn-1] != rowStage[m-1]) << "You do not have columns and rows in (especially) the last stage.";
+            if ( colStage[realn-1] != 0 && constantTerm == 0.0)
+                LOG_IF(FATAL,colStage[realn-1] != rowStage[m-1]) << "You do not have columns and/or rows in (especially) the last stage.";
             current_stage = rowStage[m-1]+1; // +1 because we measure the size not the concrete stage
         }
         

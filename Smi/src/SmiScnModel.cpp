@@ -576,7 +576,7 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
         }
         else{
             osiStoch_->setWarmStart(warm_start);
-            delete warm_start;
+            //delete warm_start;
             osiStoch_->initialSolve(); //Solve this problem.
             
             warm_start = osiStoch_->getWarmStart();

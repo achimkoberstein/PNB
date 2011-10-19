@@ -269,12 +269,14 @@ namespace flopc {
                 if (pos==elements.end()) {  // insert if not existent
                     const int v = elements.size();
                     elements[args] = v;
+                    reverse_elements[v] = args;
                 }
             }
         }
         void insert(int i1, int i2=0, int i3=0, int i4=0, int i5=0) {
             insert(makeVector<nbr>(i1, i2, i3, i4, i5));
         }
+
         const InsertFunctor<nbr>& insert(MP_index_exp i1, 
             MP_index_exp i2=MP_index_exp::getEmpty(), 
             MP_index_exp i3=MP_index_exp::getEmpty(), 
@@ -286,10 +288,23 @@ namespace flopc {
             return elements.size();
         }
 
+        std::vector<int> evaluate_subset(){
+            std::map<int, std::vector<int> >::iterator it = reverse_elements.find(index);
+            if (reverse_elements.end() != it)
+                return it->second;
+            else
+            {
+                // We need to return an out of bound container
+                std::vector<int> temp_vector(5,outOfBound);
+                return temp_vector;
+           }
+        }
+
     private:
         vector<MP_index_exp> myrefs;
         vector<const MP_set*> S; 
         std::map<std::vector<int>, int> elements;
+        std::map<int, std::vector<int> > reverse_elements;
     };
 
     /** @brief Abstract base class for templatized derived class SubsetRef.
@@ -358,18 +373,34 @@ namespace flopc {
         }
 
         virtual int evaluate() const {
-            vector<MP_index_exp> I = makeVector<nbr>(I1,I2,I3,I4,I5);
-            vector<int> vi;
-            for (int k=0; k<nbr; k++) {
-                int temp = I[k]->evaluate();
-                vi.push_back(temp);
+            // We need to set the values we got via MP_subset!
+            // Do we need to set the indices somehow? How can we decide that? I am not sure at this moment!
+            if ( S->isInstantiated()){
+                std::vector<int> current_index_stuff = S->evaluate_subset();
+                if ( !current_index_stuff.empty() && current_index_stuff[0] != outOfBound ){
+                    std::map<vector<int>,int >::const_iterator pos;
+                    pos = S->elements.find(current_index_stuff);
+                    if (pos==S->elements.end()) {
+                        return outOfBound;
+                    } else {
+                        return pos->second;
+                    }
+                }
             }
-            std::map<vector<int>, int>::const_iterator pos;
-            pos = S->elements.find(vi);
-            if (pos==S->elements.end()) {
-                return outOfBound;
-            } else {
-                return pos->second;
+            else {
+                vector<MP_index_exp> I = makeVector<nbr>(I1,I2,I3,I4,I5);
+                vector<int> vi;
+                for (int k=0; k<nbr; k++) {
+                    int temp = I[k]->evaluate();
+                    vi.push_back(temp);
+                }
+                std::map<vector<int>, int>::const_iterator pos;
+                pos = S->elements.find(vi);
+                if (pos==S->elements.end()) {
+                    return outOfBound;
+                } else {
+                    return pos->second;
+                }
             }
 
         }
