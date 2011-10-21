@@ -78,12 +78,15 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
             benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,0);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,800); // single cut
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             // Always use second_iteration_stage, as it is superior to fastpass
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
-            //// Single Cut first
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             //// Single Cut first
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -732,9 +735,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
@@ -861,8 +864,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
-    ::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+    //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
+    ::testing::GTEST_FLAG(filter) = "*scdp*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*pltexp*";
     google::InitGoogleLogging(argv[0]);
