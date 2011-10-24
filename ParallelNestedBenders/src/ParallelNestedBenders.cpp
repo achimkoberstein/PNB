@@ -2080,27 +2080,32 @@ namespace parallel_benders {
                     }// End If non_zero_bounds
                 }// End Else
             }//End If infeasible
-            else
-                assert(false);// We can resort to the old method of handling things..
+            else {
+                // Print out the stat
+                LOG(INFO) << "Solver returned with status code : " << cpx_stat << " while generating feasibility cut with dual farkas method.";
+                dual_farkas = false;
+            }
+                
             
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
                 dual_solution_primal_variable_bounds = new double[number_coss];
                 cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
-            }
-            // Compute the value of the primal variable bounds * dual multipliers
-            if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
-                variable_lower_bounds = osi_solver->getColLower();
-                variable_upper_bounds = osi_solver->getColUpper();
-                if ( stage_data_[current_stage_]->non_zero_bounds_)
-                    for (int i = 0; i < number_coss; i++){
-                        if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && dual_solution_primal_variable_bounds[i] > 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
-                            computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_lower_bounds[i];
+
+                // Compute the value of the primal variable bounds * dual multipliers
+                if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
+                    variable_lower_bounds = osi_solver->getColLower();
+                    variable_upper_bounds = osi_solver->getColUpper();
+                    if ( stage_data_[current_stage_]->non_zero_bounds_)
+                        for (int i = 0; i < number_coss; i++){
+                            if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && dual_solution_primal_variable_bounds[i] > 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
+                                computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_lower_bounds[i];
+                            }
+                            else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && dual_solution_primal_variable_bounds[i] < 0){ // Variable has non-zero upper bound and the current variable value is above
+                                computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_upper_bounds[i];
+                            }
                         }
-                        else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && dual_solution_primal_variable_bounds[i] < 0){ // Variable has non-zero upper bound and the current variable value is above
-                            computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_upper_bounds[i];
-                        }
-                    }
-                    delete [] dual_solution_primal_variable_bounds;
+                        delete [] dual_solution_primal_variable_bounds;
+                }
             }
 
         }

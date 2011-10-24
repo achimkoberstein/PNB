@@ -96,86 +96,87 @@ CoinMessages::~CoinMessages()
 /* The copy constructor */
 CoinMessages::CoinMessages(const CoinMessages & rhs)
 {
-  numberMessages_=rhs.numberMessages_;
-  language_=rhs.language_;
-  strcpy(source_,rhs.source_);
-  class_=rhs.class_;
-  lengthMessages_=rhs.lengthMessages_;
-  if (lengthMessages_<0) {
-    if (numberMessages_) {
-      message_ = new CoinOneMessage * [numberMessages_];
-      int i;
-      for (i=0;i<numberMessages_;i++) 
-	if (rhs.message_[i])
-	  message_[i]=new CoinOneMessage(*(rhs.message_[i]));
-	else
-	  message_[i] = NULL;
-    } else {
-      message_=NULL;
-    }
-  } else {
-    char * temp = CoinCopyOfArray(reinterpret_cast<char *> (rhs.message_),lengthMessages_);
-    message_ = reinterpret_cast<CoinOneMessage **> (temp);
-    long int offset = temp - reinterpret_cast<char *> (rhs.message_);
-    int i;
-    //printf("new address %x(%x), rhs %x - length %d\n",message_,temp,rhs.message_,lengthMessages_);
-    for (i=0;i<numberMessages_;i++) {
-      if (message_[i]) {
-	char * newAddress = (reinterpret_cast<char *> (message_[i])) + offset;
-	assert (newAddress-temp<lengthMessages_);
-	message_[i] = reinterpret_cast<CoinOneMessage *> (newAddress);
-	//printf("message %d at %x is %s\n",i,message_[i],message_[i]->message());
-	//printf("message %d at %x wass %s\n",i,rhs.message_[i],rhs.message_[i]->message());
-      }
-    }
-  }
+    numberMessages_=rhs.numberMessages_;
+    language_=rhs.language_;
+    strcpy(source_,rhs.source_);
+    class_=rhs.class_;
+    lengthMessages_=rhs.lengthMessages_;
+    //if (lengthMessages_<0) {
+        if (numberMessages_) {
+            message_ = new CoinOneMessage * [numberMessages_];
+            int i;
+            for (i=0;i<numberMessages_;i++) 
+                if (rhs.message_[i])
+                    message_[i]=new CoinOneMessage(*(rhs.message_[i]));
+                else
+                    message_[i] = NULL;
+        } else {
+            message_=NULL;
+        }
+    //} else {
+    //    char * temp = CoinCopyOfArray(reinterpret_cast<char *> (rhs.message_),lengthMessages_);
+    //    message_ = reinterpret_cast<CoinOneMessage **> (temp);
+    //    long int offset = temp - reinterpret_cast<char *> (rhs.message_);
+    //    int i;
+    //    //printf("new address %x(%x), rhs %x - length %d\n",message_,temp,rhs.message_,lengthMessages_);
+    //    for (i=0;i<numberMessages_;i++) {
+    //        if (message_[i]) {
+    //            char * newAddress = (reinterpret_cast<char *> (message_[i])) + offset;
+    //            assert (newAddress-temp<lengthMessages_);
+    //            message_[i] = reinterpret_cast<CoinOneMessage *> (newAddress);
+    //            //printf("message %d at %x is %s\n",i,message_[i],message_[i]->message());
+    //            //printf("message %d at %x wass %s\n",i,rhs.message_[i],rhs.message_[i]->message());
+    //        }
+    //    }
+    //}
 }
 /* assignment operator. */
 CoinMessages& 
 CoinMessages::operator=(const CoinMessages & rhs)
 {
-  if (this != &rhs) {
-    language_=rhs.language_;
-    strcpy(source_,rhs.source_);
-    class_=rhs.class_;
-    if (lengthMessages_<0) {
-      int i;
-      for (i=0;i<numberMessages_;i++)
-	delete message_[i];
+    if (this != &rhs) {
+        language_=rhs.language_;
+        strcpy(source_,rhs.source_);
+        class_=rhs.class_;
+        if (lengthMessages_<0) {
+            int i;
+            for (i=0;i<numberMessages_;i++)
+                delete message_[i];
+        }
+        delete [] message_;
+        numberMessages_=rhs.numberMessages_;
+        lengthMessages_=rhs.lengthMessages_;
+        //if (lengthMessages_<0) {
+            if (numberMessages_) {
+                message_ = new CoinOneMessage * [numberMessages_];
+                int i;
+                for (i=0;i<numberMessages_;i++) 
+                    if (rhs.message_[i])
+                        message_[i]=new CoinOneMessage(*(rhs.message_[i]));
+                    else
+                        message_[i] = NULL;
+            } else {
+                message_=NULL;
+            }
+        //} 
+        //else {
+        //    char * temp = CoinCopyOfArray(reinterpret_cast<char *> (rhs.message_),lengthMessages_);
+        //    message_ = reinterpret_cast<CoinOneMessage **> (temp);
+        //    long int offset = temp - reinterpret_cast<char *> (rhs.message_);
+        //    int i;
+        //    //printf("new address %x(%x), rhs %x - length %d\n",message_,temp,rhs.message_,lengthMessages_);
+        //    for (i=0;i<numberMessages_;i++) {
+        //        if (message_[i]) {
+        //            char * newAddress = (reinterpret_cast<char *> (message_[i])) + offset;
+        //            assert (newAddress-temp<lengthMessages_);
+        //            message_[i] = reinterpret_cast<CoinOneMessage *> (newAddress);
+        //            //printf("message %d at %x is %s\n",i,message_[i],message_[i]->message());
+        //            //printf("message %d at %x wass %s\n",i,rhs.message_[i],rhs.message_[i]->message());
+        //        }
+        //    }
+        //}
     }
-    delete [] message_;
-    numberMessages_=rhs.numberMessages_;
-    lengthMessages_=rhs.lengthMessages_;
-    if (lengthMessages_<0) {
-      if (numberMessages_) {
-	message_ = new CoinOneMessage * [numberMessages_];
-	int i;
-	for (i=0;i<numberMessages_;i++) 
-	  if (rhs.message_[i])
-	    message_[i]=new CoinOneMessage(*(rhs.message_[i]));
-	  else
-	    message_[i] = NULL;
-      } else {
-	message_=NULL;
-      }
-    } else {
-      char * temp = CoinCopyOfArray(reinterpret_cast<char *> (rhs.message_),lengthMessages_);
-      message_ = reinterpret_cast<CoinOneMessage **> (temp);
-      long int offset = temp - reinterpret_cast<char *> (rhs.message_);
-      int i;
-      //printf("new address %x(%x), rhs %x - length %d\n",message_,temp,rhs.message_,lengthMessages_);
-      for (i=0;i<numberMessages_;i++) {
-	if (message_[i]) {
-	  char * newAddress = (reinterpret_cast<char *> (message_[i])) + offset;
-	  assert (newAddress-temp<lengthMessages_);
-	  message_[i] = reinterpret_cast<CoinOneMessage *> (newAddress);
-	  //printf("message %d at %x is %s\n",i,message_[i],message_[i]->message());
-	  //printf("message %d at %x wass %s\n",i,rhs.message_[i],rhs.message_[i]->message());
-	}
-      }
-    }
-  }
-  return *this;
+    return *this;
 }
 // Puts message in correct place
 void 
