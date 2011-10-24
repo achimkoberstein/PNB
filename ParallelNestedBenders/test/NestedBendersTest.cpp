@@ -46,9 +46,9 @@ public:
         // Start with single cut and Benders
         std::vector<double> solutions;
         std::string folder("../../../../Benders/test/instances/");
-#if _M_X64 || __x86_64__ // Works only on windows i suppose
-        folder = "../../../../../Benders/test/instances/";
-#endif
+//#if _M_X64 || __x86_64__ // Works only on windows i suppose
+//        folder = "../../../../../Benders/test/instances/";
+//#endif
         SmiScnModel* smi = new SmiScnModel();
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
@@ -56,13 +56,13 @@ public:
         std::string total_core_string = folder+core_name_string;
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
-        int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        assert( smi_read_in == 0);
-        int num_stages = 2;
-        num_stages = smi->getCore()->getNumStages();
-        int num_childs_first_stage = 10;
-        num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
-        delete smi; // Get rid of the model, before we actually solve stuff
+        //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //assert( smi_read_in == 0);
+        //int num_stages = 2;
+        //num_stages = smi->getCore()->getNumStages();
+        //int num_childs_first_stage = 10;
+        //num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
+        //delete smi; // Get rid of the model, before we actually solve stuff
 
 
         benders_parameter_.init();
@@ -85,6 +85,15 @@ public:
             // Single Cut first
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,3); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5); // single cut
             // Single Cut first
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
@@ -237,7 +246,7 @@ protected:
         OsiCpxSolverInterface osi_cpx;
         smi.setOsiSolverHandle(osi_cpx);
         int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        if ( read_in!= 0 ){
+        if ( read_in != 0 ){
             LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
             return -osi_cpx.getInfinity();
         }
@@ -737,7 +746,8 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
@@ -867,7 +877,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     ::testing::GTEST_FLAG(filter) = "*scdp*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
-    //::testing::GTEST_FLAG(filter) = "*pltexp*";
+    //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)

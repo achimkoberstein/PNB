@@ -265,6 +265,7 @@ public:
     */
     void setOsiSolverHandle(const OsiSolverInterface &osi)
     {
+        delete osiStoch_;
         osiStoch_ = osi.clone(false);
     }
     
@@ -273,6 +274,7 @@ public:
     */
     void setOsiSolverHandle(const OsiSolverInterface *osi)
     {
+        delete osiStoch_;
         osiStoch_ = osi->clone(false); // THis method does not work so well for cplex solver, instead we should just copy an empty model into the solver interface
     }
     
