@@ -70,7 +70,7 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        int num_repetitions = 1; // To rule out system instability
+        int num_repetitions = 2; // To rule out system instability
         for (int i = 0; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
             benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
@@ -78,6 +78,8 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
             benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,0);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i+1);
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             // Always use second_iteration_stage, as it is superior to fastpass
@@ -258,7 +260,7 @@ protected:
         // This can be done in a loop.
         double time = CoinCpuTime();  
         SmiScnModel smi;
-        OsiSolverInterface* osi_cpx = new OsiGrbSolverInterface();
+        OsiSolverInterface* osi_cpx = new OsiCpxSolverInterface();
         smi.setOsiSolverHandleWithoutCloning(osi_cpx);
         int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
         if ( read_in != 0 ){
@@ -267,7 +269,7 @@ protected:
         }
         // Load ParallelNestedBendersSolver
         double solver_time = CoinCpuTime();
-        OsiSolverInterface* osi_cpx2 = new OsiGrbSolverInterface();
+        OsiSolverInterface* osi_cpx2 = new OsiCpxSolverInterface();
         OsiStochasticParallelNestedBendersSolverInterface nested_benders(osi_cpx2,&smi);
         nested_benders.setParameters(benders_parameter_);
         nested_benders.initialSolve();
