@@ -96,6 +96,21 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5); // single cut
             // Single Cut first
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,6); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,7); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,8); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,9); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
+            // Single Cut first
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             //// Single Cut first
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -243,16 +258,17 @@ protected:
         // This can be done in a loop.
         double time = CoinCpuTime();  
         SmiScnModel smi;
-        OsiCpxSolverInterface osi_cpx;
-        smi.setOsiSolverHandle(osi_cpx);
+        OsiSolverInterface* osi_cpx = new OsiGrbSolverInterface();
+        smi.setOsiSolverHandleWithoutCloning(osi_cpx);
         int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
         if ( read_in != 0 ){
             LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-            return -osi_cpx.getInfinity();
+            return -osi_cpx->getInfinity();
         }
         // Load ParallelNestedBendersSolver
         double solver_time = CoinCpuTime();
-        OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
+        OsiSolverInterface* osi_cpx2 = new OsiGrbSolverInterface();
+        OsiStochasticParallelNestedBendersSolverInterface nested_benders(osi_cpx2,&smi);
         nested_benders.setParameters(benders_parameter_);
         nested_benders.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
