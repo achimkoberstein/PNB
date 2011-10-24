@@ -428,12 +428,13 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
 
     // Look at integer variables? Yes. Find and replace, if necessary, because we moved I do not think that this is necessary!
     // Write method that takes an integer array, a length and does the following
-    for (int i = 0; i < integerLength_; i++){
-        integerIndices_[i] = new_columns[i]+new_stageColPtr[colStage_[integerIndices_[i]]]+integerIndices_[i]-stageColPtr_[colStage_[integerIndices_[i]]];
-    }
-    for (int i = 0; i < binaryLength_; i++){
-        binaryIndices_[i] = new_columns[i]+new_stageColPtr[colStage_[binaryIndices_[i]]]+binaryIndices_[i]-stageColPtr_[colStage_[binaryIndices_[i]]];
-    }
+    // Integer variables at other stages.. we have a problem with that anyway..
+    //for (int i = 0; i < integerLength_; i++){
+    //    integerIndices_[i] = new_stageColPtr[colStage_[integerIndices_[i]]]+integerIndices_[i]-stageColPtr_[colStage_[integerIndices_[i]]];
+    //}
+    //for (int i = 0; i < binaryLength_; i++){
+    //    binaryIndices_[i] = new_stageColPtr[colStage_[binaryIndices_[i]]]+binaryIndices_[i]-stageColPtr_[colStage_[binaryIndices_[i]]];
+    //}
     // We need to add and change the core nodes
 
     // Now we change the stuff in all of the core nodes at first!
@@ -479,6 +480,24 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     } // end while
 
     // Change SmiCoreData 
+
+    // Before we create the new arrays for rlo,rup,clo,cup,obj, we need to delete the old ones
+    for (int t = 0; t < nstag_; t++){
+        int irow=this->getRowStart(t);
+        int icol=this->getColStart(t);
+        cdrlo_[t]-=irow;
+        cdrup_[t]-=irow;
+        cdclo_[t]-=icol;
+        cdcup_[t]-=icol;
+        cdobj_[t]-=icol;
+        delete [] cdrlo_[t];
+        delete [] cdrup_[t];
+        delete [] cdclo_[t];
+        delete [] cdcup_[t];
+        delete [] cdobj_[t];
+    } // Test why this does no longer work!
+
+
     delete [] nColInStage_; nColInStage_ = new_nColInStage;
     delete [] nRowInStage_; nRowInStage_ = new_nRowInStage;
     delete [] stageColPtr_; stageColPtr_ = new_stageColPtr;
@@ -490,14 +509,6 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     ncol_ = ncol_+num_new_cols;
     nrow_ = nrow_+num_new_cols;
 
-    // Before we create the new arrays for rlo,rup,clo,cup,obj, we need to delete the old ones
-    //for (int i = 0; i < nstag_; i++){
-    //    delete [] cdrlo_[i];
-    //    delete [] cdrup_[i];
-    //    delete [] cdobj_[i];
-    //    delete [] cdclo_[i];
-    //    delete [] cdcup_[i];
-    //} // Test why this does no longer work!
 
     // Set collower/upper/objective/rhs..
     for (int i = 0; i < nstag_; i++){

@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 
 
     //RandomVariable* rVarDemand[numberStages-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
-    RandomVariable* rVarDemand[numberStages-1] = { new ContinuousNormalRandomVariable(1,1,new BracketMeanDiscretization(20)), new ContinuousNormalRandomVariable(1,1,new BracketMeanDiscretization(20)), new ContinuousNormalRandomVariable(1,1,new BracketMeanDiscretization(20)), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
+    RandomVariable* rVarDemand[numberStages-1] = { new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(20)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(20)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(20)), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
     MP_random_data d_factor(&rVarDemand[0], T);
 
     
@@ -396,7 +396,7 @@ int main(int argc, char* argv[]) {
     npv_stage.free();
     MP_variable y_build(L,P); 
     y_build.setName("y_build"); // {l in L, p1 in P} binary; #1 if line l is built to produce product p, 0 otherwise
-    y_build.binary();
+    //y_build.binary();
 
 #pragma endregion
 

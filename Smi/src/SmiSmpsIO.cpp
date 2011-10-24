@@ -385,6 +385,8 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             }
                             //process discrete distribution
                             smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                            delete smiDD;
+                            delete matrix;
                             continue;
                         }
                         else if ( smpsCardReader_->whichSmpsSection() == SMI_BLOCKS_SECTION){
@@ -395,11 +397,14 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                 smiDD->addDiscreteRV(smiRV);
                             }
                             smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                            delete smiDD;
+                            delete matrix;
                             continue;
                         }
                         else
                             return -2;
 
+                        // We end here, so we want to delete the discrete variable
 
 
                     }

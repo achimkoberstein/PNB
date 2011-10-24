@@ -46,6 +46,8 @@ BendersNodeData::~BendersNodeData(void)
 
     delete [] this->next_stage_approximation_;
 
+    delete [] this->reduced_cost_;
+
     delete this->warm_start_;
 
 }
@@ -113,6 +115,7 @@ column_indices_(0),row_indices_(0),warm_start_(NULL),osi_solver_map_(),no_stairc
 
 BendersStageData::~BendersStageData()
 {
+    delete warm_start_;
 }
 
 RowOrderedSparseMatrix::RowOrderedSparseMatrix(const std::vector<double>& elements, const std::vector<int>& indices, const std::vector<int>& start):

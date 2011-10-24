@@ -2244,6 +2244,8 @@ namespace parallel_benders {
             delete row_lower;
         if ( node_pointer->getRowUpperLength())
             delete row_upper;
+
+        delete [] checked_dual_solution;
     }
 
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
