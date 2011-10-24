@@ -277,6 +277,12 @@ public:
         delete osiStoch_;
         osiStoch_ = osi->clone(false); // THis method does not work so well for cplex solver, instead we should just copy an empty model into the solver interface
     }
+
+    void setOsiSolverHandleWithoutCloning( OsiSolverInterface *osi)
+    {
+        delete osiStoch_;
+        osiStoch_ = osi;
+    }
     
     /** Returns the OsiSolverInterface of this SMI model.
     @return a pointer to the OsiSolverInterface
