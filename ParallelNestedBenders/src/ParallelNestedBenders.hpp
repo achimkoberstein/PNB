@@ -85,6 +85,7 @@ private:
     std::vector<std::vector<SmiTreeNode<BendersNodeData*>* > > tree_nodes_by_stage_;
     // Vector that contains StageWiseInformation
     std::vector< BendersStageData* > stage_data_;
+
     
     // Problem characteristics
     int num_stages_;
@@ -102,6 +103,11 @@ private:
     double integer_tolerance_;
     double absolute_epsilon_;
     double relative_epsilon_;
+
+    // External solver and problem formulation
+    int lp_method_;
+    int feas_cut_lp_method_;
+    bool bounds_in_matrix_;
 
     // Solution process
     int current_iteration_;

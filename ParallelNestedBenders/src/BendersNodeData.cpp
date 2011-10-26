@@ -174,6 +174,8 @@ void Parameter::init()
 	// WarmStart
     parameter_.put(PNB_WARM_START, 1); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario (in the same iteration)
 
+    parameter_.put(PNB_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
+    parameter_.put(PNB_FEAS_CUT_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
     //// Aggregation of Cuts ( or single-multi cut )
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
     parameter_.put(PNB_SCENARIOS_PRO_CUT, 0); // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
@@ -191,6 +193,8 @@ void Parameter::init()
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
     parameter_.put(PNB_STAGE_AGGREGATION_END,0);
     parameter_.put(PNB_STAGE_AGGREGATION_DIRECTION,true); // Direction == true : Aggregate from start
+    //Bounds in matrix
+    parameter_.put(PNB_BOUNDS_IN_MATRIX,false);
     // Start solution
     parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution, 1 EV solution, 2 ? not yet implemented
 	// Parallel Parameters

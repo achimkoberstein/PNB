@@ -286,6 +286,13 @@ namespace parallel_benders {
             warm_start_scenarios_ = true;
         if ( warm_start_version == 2 )
             warm_start_stage_ = true;
+
+        // Problem formulation
+        bounds_in_matrix_ = param.get(PNB_BOUNDS_IN_MATRIX,false);
+
+        // LP method
+        lp_method_ = param.get(PNB_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
+        feas_cut_lp_method_ = param.get(PNB_FEAS_CUT_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
         
         // Multicut Aggregation
         int value = param.get(PNB_AGGREGATED_OPTIMALITY_CUTS,1);
@@ -895,7 +902,11 @@ namespace parallel_benders {
         }
  
         osi_solver->setHintParam(OsiDoPresolveInInitial,true);
-        osi_solver->setHintParam(OsiDoDualInInitial,true);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
+        if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
+            osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
+        else 
+             osi_solver->setHintParam(OsiDoDualInInitial,true);
+
         // MIP Solving only at first stage..
         if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
              // We need to set the integer indices.
@@ -1342,7 +1353,6 @@ namespace parallel_benders {
             benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
 
         }
-
         bool store_cut_information_ = false;
 
         if ( forward_ && store_cut_information_){
@@ -1606,37 +1616,43 @@ namespace parallel_benders {
         }
 
         // QuicknDirtyhack: REMOVE AGAIN
-        bool add_upper_bounds_to_matrix = false;
         std::vector<OsiRowCut*> row_cuts;
-        if ( add_upper_bounds_to_matrix ){
-            
-            if ( current_stage_ == 1)
-            {
-                // Apply osi row_cuts
-                std::vector<int> column_indices;
-                for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
-                    if ( benders_node_pointer->column_upper_[i] != 0)
-                        column_indices.push_back(i);
-                }
-
-                for (int i = 0; i< column_indices.size(); i++){
-                    // Create an osi row_cut
-                    double * element1 = new double[1];
-                    int * index1 = new int[1];
-                    element1[0] = 1;
-                    index1[0] = column_indices[i];
-                    row_cuts.push_back(new OsiRowCut(-infinity_,benders_node_pointer->column_upper_[column_indices[i]],1,1,index1,element1));
-                }
-                for (int i = 0; i < column_indices.size(); i++)
-                    benders_node_pointer->column_upper_[i] = infinity_;
+        if ( bounds_in_matrix_ ){
+            // Apply osi row_cuts
+            boost::dynamic_bitset<> upper_column_indices(stage_data_[current_stage_]->num_columns_);
+            boost::dynamic_bitset<> lower_column_indices(stage_data_[current_stage_]->num_columns_);
+            for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
+                if ( benders_node_pointer->column_upper_[i] != 0 )
+                    upper_column_indices.set(i);
+                if ( benders_node_pointer->column_lower_[i] != 0 )
+                    lower_column_indices.set(i);
             }
+            for (int i = upper_column_indices.find_first(); i< upper_column_indices.npos; i = upper_column_indices.find_next(i)){
+                // Create an osi row_cut
+                double * element1 = new double[1];
+                int * index1 = new int[1];
+                element1[0] = 1;
+                index1[0] = i;
+                row_cuts.push_back(new OsiRowCut(-infinity_,benders_node_pointer->column_upper_[i],1,1,index1,element1));
+                benders_node_pointer->column_upper_[i] = infinity_;
+            }
+            for (int i = lower_column_indices.find_first(); i< lower_column_indices.npos; i = lower_column_indices.find_next(i)){
+                // Create an osi row_cut
+                double * element1 = new double[1];
+                int * index1 = new int[1];
+                element1[0] = 1;
+                index1[0] = i;
+                row_cuts.push_back(new OsiRowCut(benders_node_pointer->column_lower_[i],infinity_,1,1,index1,element1));
+                benders_node_pointer->column_lower_[i] = -infinity_;
+            }
+           
         }
 
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
             osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->row_lower_,benders_node_pointer->row_upper_);
-            if ( add_upper_bounds_to_matrix )
+            if ( bounds_in_matrix_ )
                 for (int i = 0; i < row_cuts.size(); i++)
                     osi_solver->applyRowCuts(1,row_cuts[i]); // TODO REMOVE AGAIN
         }
@@ -1673,7 +1689,7 @@ namespace parallel_benders {
                     remove_indices.push_back(i);
                 osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
             }
-            if ( add_upper_bounds_to_matrix )
+            if ( bounds_in_matrix_ )
                 for (int i = 0; i < row_cuts.size(); i++)
                     osi_solver->applyRowCuts(1,row_cuts[i]); // TODO REMOVE AGAIN
         }
@@ -1996,7 +2012,7 @@ namespace parallel_benders {
     { // Called directly from solve subproblem.
         // We need the dual rays..
         assert(osi_solver->isProvenPrimalInfeasible()); // Otherwise we do not need to call this method
-        bool dual_farkas = false;
+        bool use_cplex = false;
         double * dual_solution_farkas = NULL; // We need to delete this, if we use dual_farkas, else not
         double * dual_solution_primal_variable_bounds = NULL;
         const double * dual_solution = NULL;
@@ -2012,22 +2028,13 @@ namespace parallel_benders {
        
 
 #ifdef CPLEX_PRESENT
-        dual_farkas = true; //TODO: change this
-        osi_solver->writeLp("bla.lp");
-
-        osi_solver->setHintParam(OsiDoPresolveInResolve,false);
-        if ( dual_farkas )
-            osi_solver->setHintParam(OsiDoDualInResolve,true);
+        use_cplex = true; //TODO: change this
+        bool use_dual_farkas = true;
+        if ( feas_cut_lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
+            use_dual_farkas = false;
         else
-            osi_solver->setHintParam(OsiDoDualInResolve,false);
-        osi_solver->resolve();
-        if ( !osi_solver->isProvenPrimalInfeasible() ){
-            osi_solver->writeLp("miracle.lp");
-            LOG(INFO)<< "A miracle.";
-            
-        }
-        if ( osi_solver->isProvenOptimal() )
-            LOG(INFO) << "more miracle";
+            use_dual_farkas = true;
+        
         // Now we try to solve the same stuff with dual farkas: Primal problem is infeasible, we use the dual simplex, so it should work fine.
         // See for example https://www-304.ibm.com/support/docview.wss?uid=swg21400058
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -2038,33 +2045,14 @@ namespace parallel_benders {
             int cpx_stat = 0;
 
             dual_solution_farkas = new double[number_rows];
-            bool use_dual_farkas = true;
-
-            //// We want in infeasible solution, but we need a correct solution before we can work with that.
-            //int objsen = CPXgetobjsen(env_ptr, lp_ptr);
-            //// This gets rid of the preprocessing data
-            //CPXchgobjsen(env_ptr, lp_ptr, -objsen);
-            //cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-            //LOG(INFO) << "chgobjsen" << cpx_stat;
-            //CPXchgobjsen(env_ptr, lp_ptr, objsen);
-            //cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-            //LOG(INFO) << "chgobjsen2" << cpx_stat;
-            //// We need the dual ray, so we can not use any preprocessing that forbids us to solve the problem at all!
-            //cpx_stat = CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
-            //LOG(INFO) << "setpreprocessingoff" << cpx_stat;
-
-            //if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
-            //    CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
-            //else
-            //    CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
-            osi_solver->setHintParam(OsiDoPresolveInResolve,false);
-            if ( use_dual_farkas )
-                osi_solver->setHintParam(OsiDoDualInResolve,true);
+            
+            CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
+            CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
+            CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
+            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
+                CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
             else
-                osi_solver->setHintParam(OsiDoDualInResolve,false);
-            osi_solver->resolve();
-            if ( !osi_solver->isProvenPrimalInfeasible() )
-                LOG(INFO)<< "A miracle.";
+                CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
             
             //// Write the dual problem, to see what cplex solves
             //console_mutex_.lock();
@@ -2081,7 +2069,7 @@ namespace parallel_benders {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
                     LOG(INFO)<< "CPXdualfarks :" << cpx_stat;
                     if ( !(cpx_stat == CPX_STAT_OPTIMAL || cpx_stat == CPX_STAT_NUM_BEST) ) // If cpx_stat is not correct, we need to try the other stuff
-                        dual_farkas = false;
+                        use_cplex = false;
                     else if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
                        // q^T = y^T*A
                         // We can compute this with the column based matrices
@@ -2124,7 +2112,7 @@ namespace parallel_benders {
             else {
                 // Print out the stat
                 LOG(INFO) << "Solver returned with status code : " << cpx_stat << " while solving the original problem again with primal or dual simplex.";
-                dual_farkas = false;
+                use_cplex = false;
             }
                 
             
@@ -2153,7 +2141,7 @@ namespace parallel_benders {
 #endif // CPLEX_PRESENT
         bool cplex_licence_problem = true;
         OsiSolverInterface* dual_ray_problem = NULL;
-        if ( !dual_farkas){
+        if ( !use_cplex){
             dual_ray_problem = osi_solver;
             GenerateDualRayProblem(dual_ray_problem); // Append columns to the existing problems, to allow feasible solutions.
             if ( abs(dual_ray_problem->getObjValue()) <= zero_tolerance_){
@@ -2173,7 +2161,7 @@ namespace parallel_benders {
 
         // Copy solution to enable zero bound check
         double* checked_dual_solution = new double[number_rows];
-        if ( dual_farkas ){
+        if ( use_cplex ){
             memcpy(checked_dual_solution,dual_solution_farkas,sizeof(double)*number_rows);
             delete dual_solution_farkas;
         }
@@ -2191,7 +2179,7 @@ namespace parallel_benders {
         // Compute the values: \lambda * lower_bound - \mu * upper_bound
         // Compute the resulting values right away, as we have the osi_solver_interface at hand.
 
-        if ( !dual_farkas ){ 
+        if ( !use_cplex ){ 
             dual_values_variable_bounds = const_cast<double*> (dual_ray_problem->getReducedCost());
             variable_lower_bounds = osi_solver->getColLower();
             variable_upper_bounds = osi_solver->getColUpper();
@@ -2282,9 +2270,9 @@ namespace parallel_benders {
         infeasible_problem_mutex_.unlock();
 
         // Delete dual ray problem
-        if ( !cplex_licence_problem && !dual_farkas)
+        if ( !cplex_licence_problem && !use_cplex)
             delete dual_ray_problem;
-        else if ( !dual_farkas ){
+        else if ( !use_cplex ){
             // Reset the solver interface
             dual_ray_problem->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         }
@@ -2347,7 +2335,7 @@ namespace parallel_benders {
         int stochastic_column_index = 0;
         bool stochastic_element_in_row = false;
         // Compute a coefficient for every row
-        for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
+        for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to be added to rlo or rup
             double value = 0;
             if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
                 stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;

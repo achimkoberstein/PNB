@@ -25,6 +25,8 @@ namespace parallel_benders{
     // We start with integer parameters
     const std::string PNB_BENDERS = "PNB_BENDERS";          //
     const std::string PNB_WARM_START = "PNB_WARM_START";    //
+    const std::string PNB_LP_METHOD = "PNB_LP_METHOD";
+    const std::string PNB_FEAS_CUT_LP_METHOD = "PNB_FEAS_CUT_LP_METHOD";
     const std::string PNB_AGGREGATED_OPTIMALITY_CUTS = "PNB_AGGREGATED_OPTIMALITY_CUTS";    //
     const std::string PNB_SCENARIOS_PRO_CUT = "PNB_SCENARIOS_PRO_CUT" ;            //
     const std::string PNB_RELAXATION = "PNB_RELAXATION";                   //
@@ -44,8 +46,10 @@ namespace parallel_benders{
     const std::string PNB_STAGE_AGGREGATION_END = "PNB_STAGE_AGGREGATION_END";
     const std::string PNB_STAGE_AGGREGATION_DIRECTION = "PNG_STAGE_AGGREGATION_DIRECTION"; // In which direction do we want to aggregate if difference is greater than one? True means from start to end, false means from end to start
     const std::string PNB_USE_START_SOLUTION = "PNB_USE_START_SOLUTION"; // If we use a start solution or not. At the moment start solution is EV solution!
+    const std::string PNB_BOUNDS_IN_MATRIX = "PNB_BOUNDS_IN_MATRIX";
 
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
+
 
     // Here come the double parameters
     const std::string PNB_TOLERANCE_ZERO = "PNB_TOLERANCE_ZERO";             //
@@ -63,6 +67,10 @@ namespace parallel_benders{
 	const int PNB_INT_SECOND_ITERATION = 5;
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
 	//const int PNB_INT_
+
+    const int PNB_INT_PRIMAL_SIMPLEX = 10;
+    const int PNB_INT_DUAL_SIMPLEX = 11;
+    const int PNB_INT_BARRIER_MASTER = 12;
 
     struct BendersNodeData;
 

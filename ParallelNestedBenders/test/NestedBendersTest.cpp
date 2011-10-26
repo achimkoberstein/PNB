@@ -46,9 +46,9 @@ public:
         // Start with single cut and Benders
         std::vector<double> solutions;
         std::string folder("../../../../Benders/test/instances/");
-//#if _M_X64 || __x86_64__ // Works only on windows i suppose
-//        folder = "../../../../../Benders/test/instances/";
-//#endif
+#if _M_X64 || __x86_64__ // Works only on windows i suppose
+        folder = "../../../../../Benders/test/instances/";
+#endif
         SmiScnModel* smi = new SmiScnModel();
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
@@ -80,8 +80,15 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,0);
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i+1);
+
+            // Bounds in matrix
+            benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+
+            // Primal or dual
+            benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //// Always use second_iteration_stage, as it is superior to fastpass
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
             //// Single Cut first
