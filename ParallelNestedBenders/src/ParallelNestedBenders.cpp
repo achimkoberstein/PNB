@@ -240,7 +240,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(false),seperate_stage_solver_(false),optimality_cut_counter_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),optimality_cut_counter_(0)
     {
 
     }
@@ -348,7 +348,7 @@ namespace parallel_benders {
 		thread_pool_ = boost::threadpool::pool(num_cpu_); // Can we resize the threadpool?
 
 		// Set first stage solver to own instance
-		seperate_first_stage_solver_ = false;
+		seperate_first_stage_solver_ = true;
 
         // create our benders node objects and build the tree
         // Initialize benders node data objects and tree!
