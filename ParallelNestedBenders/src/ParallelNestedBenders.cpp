@@ -235,7 +235,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -408,6 +408,10 @@ namespace parallel_benders {
            //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
        } 
 
+       build_problem_timer_ = 0;
+       solve_problem_timer_ = 1;
+       cut_generation_timer_ = 2;
+       // Detailed_timer 
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -837,6 +841,7 @@ namespace parallel_benders {
             return; // There is no need to actually solve other problems, as we have unbounded problems..
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
+
 		if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1))
 			BuildSubproblem(osi_solver, benders_tree_node_pointer);
 		AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
@@ -2008,6 +2013,21 @@ namespace parallel_benders {
 
 #ifdef CPLEX_PRESENT
         dual_farkas = true; //TODO: change this
+        osi_solver->writeLp("bla.lp");
+
+        osi_solver->setHintParam(OsiDoPresolveInResolve,false);
+        if ( dual_farkas )
+            osi_solver->setHintParam(OsiDoDualInResolve,true);
+        else
+            osi_solver->setHintParam(OsiDoDualInResolve,false);
+        osi_solver->resolve();
+        if ( !osi_solver->isProvenPrimalInfeasible() ){
+            osi_solver->writeLp("miracle.lp");
+            LOG(INFO)<< "A miracle.";
+            
+        }
+        if ( osi_solver->isProvenOptimal() )
+            LOG(INFO) << "more miracle";
         // Now we try to solve the same stuff with dual farkas: Primal problem is infeasible, we use the dual simplex, so it should work fine.
         // See for example https://www-304.ibm.com/support/docview.wss?uid=swg21400058
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -2018,18 +2038,35 @@ namespace parallel_benders {
             int cpx_stat = 0;
 
             dual_solution_farkas = new double[number_rows];
-
-            int objsen = CPXgetobjsen(env_ptr, lp_ptr);
-            CPXchgobjsen(env_ptr, lp_ptr, -objsen);
-            CPXchgobjsen(env_ptr, lp_ptr, objsen);
-            CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
             bool use_dual_farkas = true;
-            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
-                CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
+
+            //// We want in infeasible solution, but we need a correct solution before we can work with that.
+            //int objsen = CPXgetobjsen(env_ptr, lp_ptr);
+            //// This gets rid of the preprocessing data
+            //CPXchgobjsen(env_ptr, lp_ptr, -objsen);
+            //cpx_stat = CPXgetstat(env_ptr,lp_ptr);
+            //LOG(INFO) << "chgobjsen" << cpx_stat;
+            //CPXchgobjsen(env_ptr, lp_ptr, objsen);
+            //cpx_stat = CPXgetstat(env_ptr,lp_ptr);
+            //LOG(INFO) << "chgobjsen2" << cpx_stat;
+            //// We need the dual ray, so we can not use any preprocessing that forbids us to solve the problem at all!
+            //cpx_stat = CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
+            //LOG(INFO) << "setpreprocessingoff" << cpx_stat;
+
+            //if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
+            //    CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
+            //else
+            //    CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+            osi_solver->setHintParam(OsiDoPresolveInResolve,false);
+            if ( use_dual_farkas )
+                osi_solver->setHintParam(OsiDoDualInResolve,true);
             else
-                CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+                osi_solver->setHintParam(OsiDoDualInResolve,false);
+            osi_solver->resolve();
+            if ( !osi_solver->isProvenPrimalInfeasible() )
+                LOG(INFO)<< "A miracle.";
             
-            // Write the dual problem, to see what cplex solves
+            //// Write the dual problem, to see what cplex solves
             //console_mutex_.lock();
             //double obj_shift = 0;
             //cpx_stat = CPXdualwrite(env_ptr,lp_ptr,"dual_test",&obj_shift);
@@ -2037,11 +2074,15 @@ namespace parallel_benders {
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
-                if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
+                if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){
                     cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);// If we use the primal method, we get the dual ray via the dual variables
+                }
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
-                    if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
+                    LOG(INFO)<< "CPXdualfarks :" << cpx_stat;
+                    if ( !(cpx_stat == CPX_STAT_OPTIMAL || cpx_stat == CPX_STAT_NUM_BEST) ) // If cpx_stat is not correct, we need to try the other stuff
+                        dual_farkas = false;
+                    else if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
                        // q^T = y^T*A
                         // We can compute this with the column based matrices
                         variable_lower_bounds = benders_tree_node_pointer->getDataPtr()->column_lower_;
@@ -2082,7 +2123,7 @@ namespace parallel_benders {
             }//End If infeasible
             else {
                 // Print out the stat
-                LOG(INFO) << "Solver returned with status code : " << cpx_stat << " while generating feasibility cut with dual farkas method.";
+                LOG(INFO) << "Solver returned with status code : " << cpx_stat << " while solving the original problem again with primal or dual simplex.";
                 dual_farkas = false;
             }
                 
@@ -2115,6 +2156,10 @@ namespace parallel_benders {
         if ( !dual_farkas){
             dual_ray_problem = osi_solver;
             GenerateDualRayProblem(dual_ray_problem); // Append columns to the existing problems, to allow feasible solutions.
+            if ( abs(dual_ray_problem->getObjValue()) <= zero_tolerance_){
+                // cleanup and return
+                return;
+            }
             number_rows = dual_ray_problem->getNumRows(); // Should have the same number of rows?!
             dual_solution = dual_ray_problem->getRowPrice();
         }

@@ -132,6 +132,12 @@ private:
 
     Timer timer_;
     Timer wall_clock_solution_time_;
+    Timer detailed_timer_;
+    // Some integer relating to the detailed_timer
+    int build_problem_timer_;
+    int solve_problem_timer_;
+    int cut_generation_timer_;
+
     int maximal_solution_time_;
 
     // Thread related variables
