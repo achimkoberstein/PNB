@@ -187,6 +187,7 @@ public:
     double* objective_;
     double* row_lower_;
     double* row_upper_;
+    std::vector<OsiRowCut*> variable_bounds_;
 
     // In the non-staircase case
     std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
