@@ -308,10 +308,10 @@ namespace parallel_benders {
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
 		second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY_STAGE,1);
         assert( second_iteration_stage_ >= 0);
-        if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION && second_iteration_stage_ >= num_stages_-1){ // In this case we can either disable the second iteration OR set it to lowest possible level
-            second_iteration_stage_ = num_stages_-2;
-            if ( second_iteration_stage_ == 0 ){
+        if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION ){ // In this case we can either disable the second iteration OR set it to lowest possible level
+            if ( second_iteration_stage_ == 0 || second_iteration_stage_ >= num_stages_-1){
                 sequencing_protocol_ = PNB_INT_FASTPASS;
+                param.put(PNB_TREE_WALK_STRATEGY,PNB_INT_FASTPASS); // 0 is not a viable option, num_stages-1 neither, so we switch to fastpass if this is specified.
             }
             else
                 param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
@@ -985,8 +985,10 @@ namespace parallel_benders {
                     //LOG(INFO) << "Generate feasibility cut for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_;
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
                 }
-                else
+                else{
+                    osi_solver->writeLp("master_infeasible");
                     LOG(ERROR) << "Your master problem is infeasible.";
+                }
                 
             }
             else if ( !osi_solver->isProvenOptimal() ){
@@ -1616,36 +1618,37 @@ namespace parallel_benders {
         }
 
         // QuicknDirtyhack: REMOVE AGAIN
-        std::vector<OsiRowCut*> row_cuts;
+        std::vector<OsiRowCut*>& row_cuts(benders_node_pointer->variable_bounds_);
         if ( bounds_in_matrix_ ){
-            // Apply osi row_cuts
-            boost::dynamic_bitset<> upper_column_indices(stage_data_[current_stage_]->num_columns_);
-            boost::dynamic_bitset<> lower_column_indices(stage_data_[current_stage_]->num_columns_);
-            for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
-                if ( benders_node_pointer->column_upper_[i] != 0 )
-                    upper_column_indices.set(i);
-                if ( benders_node_pointer->column_lower_[i] != 0 )
-                    lower_column_indices.set(i);
+            if ( benders_node_pointer->variable_bounds_.empty() ){
+                // Apply osi row_cuts
+                boost::dynamic_bitset<> upper_column_indices(stage_data_[current_stage_]->num_columns_);
+                boost::dynamic_bitset<> lower_column_indices(stage_data_[current_stage_]->num_columns_);
+                for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
+                    if ( benders_node_pointer->column_upper_[i] != 0 )
+                        upper_column_indices.set(i);
+                    if ( benders_node_pointer->column_lower_[i] != 0 )
+                        lower_column_indices.set(i);
+                }
+                for (int i = upper_column_indices.find_first(); i< upper_column_indices.npos; i = upper_column_indices.find_next(i)){
+                    // Create an osi row_cut
+                    double * element1 = new double[1];
+                    int * index1 = new int[1];
+                    element1[0] = 1;
+                    index1[0] = i;
+                    row_cuts.push_back(new OsiRowCut(-infinity_,benders_node_pointer->column_upper_[i],1,1,index1,element1));
+                    benders_node_pointer->column_upper_[i] = infinity_;
+                }
+                for (int i = lower_column_indices.find_first(); i< lower_column_indices.npos; i = lower_column_indices.find_next(i)){
+                    // Create an osi row_cut
+                    double * element1 = new double[1];
+                    int * index1 = new int[1];
+                    element1[0] = 1;
+                    index1[0] = i;
+                    row_cuts.push_back(new OsiRowCut(benders_node_pointer->column_lower_[i],infinity_,1,1,index1,element1));
+                    benders_node_pointer->column_lower_[i] = -infinity_;
+                }
             }
-            for (int i = upper_column_indices.find_first(); i< upper_column_indices.npos; i = upper_column_indices.find_next(i)){
-                // Create an osi row_cut
-                double * element1 = new double[1];
-                int * index1 = new int[1];
-                element1[0] = 1;
-                index1[0] = i;
-                row_cuts.push_back(new OsiRowCut(-infinity_,benders_node_pointer->column_upper_[i],1,1,index1,element1));
-                benders_node_pointer->column_upper_[i] = infinity_;
-            }
-            for (int i = lower_column_indices.find_first(); i< lower_column_indices.npos; i = lower_column_indices.find_next(i)){
-                // Create an osi row_cut
-                double * element1 = new double[1];
-                int * index1 = new int[1];
-                element1[0] = 1;
-                index1[0] = i;
-                row_cuts.push_back(new OsiRowCut(benders_node_pointer->column_lower_[i],infinity_,1,1,index1,element1));
-                benders_node_pointer->column_lower_[i] = -infinity_;
-            }
-           
         }
 
         // Load the basic problem
@@ -2311,8 +2314,8 @@ namespace parallel_benders {
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
                 CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
-                //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-                //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
             }
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;

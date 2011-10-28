@@ -18,7 +18,7 @@ namespace parallel_benders{
 BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_cuts_(0),warm_start_(NULL),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),opt_cut_start_index_(0),feas_cut_start_index_(0),
-matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),no_staircase_constraints_()
+matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
 
 {
 }
@@ -26,7 +26,7 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_cuts_(0),warm_start_(NULL),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),opt_cut_start_index_(0),feas_cut_start_index_(0),
-matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),no_staircase_constraints_()
+matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
 {
 
 }
@@ -49,6 +49,9 @@ BendersNodeData::~BendersNodeData(void)
     delete [] this->reduced_cost_;
 
     delete this->warm_start_;
+
+    for (int i = 0; i < variable_bounds_.size(); i++)
+        delete variable_bounds_[i];
 
 }
 
