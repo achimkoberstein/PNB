@@ -1771,6 +1771,18 @@ namespace parallel_benders {
             else if ( dual_solution[row] > 0)
                 cut_rhs += dual_solution[row]*row_lower[row];
         }
+        // Skip the values of the bounds_in_matrix, if we have them!
+        if ( bounds_in_matrix_ ){ // TODO: Redo, if needed
+            for (std::vector<OsiRowCut*>::iterator it = benders_node_pointer->variable_bounds_.begin(); it != benders_node_pointer->variable_bounds_.end(); ++it){
+                if ( dual_solution[row] < 0)
+                    cut_rhs += dual_solution[row]*(*it)->ub();
+                else if ( dual_solution[row] > 0)
+                    cut_rhs += dual_solution[row]*(*it)->ub();
+                row++;
+                for_bound++;
+            }
+        }
+        
         // Just print out the values of the cut-number 
         for_bound += benders_node_pointer->optimality_cuts_.size();
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
@@ -2239,11 +2251,12 @@ namespace parallel_benders {
                 cut_rhs += checked_dual_solution[row]*row_lower[row];
         }
         assert( row == for_bound);
-        // Append values for optimality and feasibility cuts.. ( if we have any at this node )
-        for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
-            row++;
-        }
+        //// Append values for optimality and feasibility cuts.. ( if we have any at this node )
+        // Optimality cuts should not count into the feasibility question
+        //for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
+        //    cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
+        //    row++;
+        //}
 
         for_bound += benders_node_pointer->feasibility_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
