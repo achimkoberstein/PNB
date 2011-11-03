@@ -70,10 +70,10 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        int num_repetitions = 4; // To rule out system instability
+        int num_repetitions = 1; // To rule out system instability
         for (int i = 0; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,i%4); // Use all Cores
+            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
@@ -100,14 +100,23 @@ public:
 
 
             // Primal or dual
-            
+            benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut            
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut            
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut            
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut            
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //// Always use second_iteration_stage, as it is superior to fastpass
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
+
             //// Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
             //// Single Cut first
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -132,9 +141,9 @@ public:
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,9); // single cut
             //// Single Cut first
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             //// Single Cut first
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -536,10 +545,10 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
 
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
@@ -603,8 +612,8 @@ TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage,
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
@@ -914,7 +923,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*scdp*";
+    ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
