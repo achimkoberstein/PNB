@@ -107,6 +107,21 @@ const CoinWarmStart* BendersNodeData::warm_start(void)
     return this->warm_start_;
 }
 
+void BendersNodeData::CleanUnusedMemory( bool direction )
+{
+    if ( direction ){ // We go forward, we do not need dual values. We recompute then, if needed
+        delete [] dual_solution_;
+        delete [] reduced_cost_;
+        dual_solution_ = NULL;
+        reduced_cost_ = NULL;
+    }
+    else { // We go backward, we do not need the column solution;
+        delete [] col_solution_;
+        delete [] next_stage_approximation_; // Needed in aggregate_cut method, for already solved problems. This means, we can get rid of it, if we go backwards.
+        col_solution_ = NULL;
+        next_stage_approximation_ = NULL;
+    }
+}
 
 BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),

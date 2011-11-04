@@ -65,6 +65,7 @@ namespace parallel_benders{
 	const int PNB_INT_EPSILON_FAST_FORWARD = 3;
 	const int PNB_INT_EPSILON_FAST_BACKWARD = 4;
 	const int PNB_INT_SECOND_ITERATION = 5;
+    const int PNB_INT_FASTPASS_WITH_FASTBACK = 6;
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
 	//const int PNB_INT_
 
@@ -131,6 +132,8 @@ public:
     const double* dual_solution();
     void set_warm_start(CoinWarmStart* coinWarmStart);
     const CoinWarmStart* warm_start();
+
+    void CleanUnusedMemory(bool direction);
 
     // Information about the solution
     double* col_solution_;
