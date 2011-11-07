@@ -330,7 +330,7 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
         return 0.0;
 }
 
-CutStuff::CutStuff( int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),aggregate_number_(-1),cut_(cut_pointer),active_value(1.0)
+CutStuff::CutStuff( int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),active_value(1.0)
 {
 }
 
