@@ -538,6 +538,10 @@ namespace parallel_benders {
 
 
 
+        double old_gap = 0;
+        double gap = 0;
+        int gap_counter = 0;
+        int gap_counter_maximum = 10;
         wall_clock_solution_time_.Start(0);
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
@@ -560,6 +564,23 @@ namespace parallel_benders {
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
                 LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
             }
+            if ( !infeasible_problem_ ){
+                // Count if gap is similar
+                if ( current_stage_ == 0 ){
+                    old_gap = gap;
+                    gap = abs(upper_bound_-lower_bound_)/abs(upper_bound_);
+                    if (CompareForEquality(old_gap,gap,zero_tolerance_) )
+                        gap_counter++;
+                    else
+                        gap_counter = 0;
+                    if ( gap_counter > gap_counter_maximum ){
+                        LOG(INFO) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
+                        break;
+                    }
+                }
+            }
+            else
+                gap_counter = 0;
 
             minor_iteration_++;
             if ( current_stage_ == 0 ){ // Things to do if we are in the first stage
@@ -637,12 +658,7 @@ namespace parallel_benders {
 
             
             if ( current_stage_ == num_stages_-1 ){// We are in last stage
-                if ( at_last_iteration_ )
-                    temporary_upper_bound_ = 0;
-                else{
-                    temporary_upper_bound_ = 0;
-                    at_last_iteration_ = true;
-                }
+                at_last_iteration_ = true;
                 if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
                     made_one_turn = true; // Needed to indicate that we made a whole major iteration!
             }
@@ -657,6 +673,10 @@ namespace parallel_benders {
                 thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
             }
             thread_pool_.wait(0); // We wait until all threads are done
+
+            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none())// Update upper bound only, when we have no infeasible problems!
+                if ( temporary_upper_bound_ < upper_bound_ )
+                    upper_bound_ = temporary_upper_bound_;
 
             std::string direction(forward_ ? "F " : "B ");
             std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
@@ -965,7 +985,7 @@ namespace parallel_benders {
             }
             else if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
-                // If we are in a problem with theta variables, we might have sucess in restricting the theta variables
+                // If we are in a problem with theta variables, we might have success in restricting the theta variables
                 if ( current_stage_ < num_stages_-1){
                     // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
@@ -978,7 +998,7 @@ namespace parallel_benders {
                         }
                         // we bound all thetas with one extra row?
                         // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
-                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-infinity_+10000000, infinity_); // We assume that will work. I mean: Half infinity? 
+                        osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-100000000000, infinity_); // We assume that will work. I mean: Half infinity? 
                         // Solve the model again
                         if ( current_stage_ == 0 && integer_problems_[current_stage_] )
                             osi_solver->branchAndBound();
@@ -1038,7 +1058,6 @@ namespace parallel_benders {
                 }
 
             }
-            
             // TODO Other possible cases
             // Get the cplex stat..
 
@@ -1062,9 +1081,7 @@ namespace parallel_benders {
                     stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
                     stage_warm_start_mutex_.unlock();
                 }
-
         }
-
     }
 
     void ParallelNestedBenders::StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
@@ -1104,10 +1121,11 @@ namespace parallel_benders {
             solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
         }
 
+       
         if ( !forward_ || current_stage_ == 0 || compute_stage_bounds_ ){
             // Compute lower and upper bound estimates on the way back!
             double current_lower_bound = solution_value; 
-            if ( compute_stage_bounds_ ){ 
+            if ( compute_stage_bounds_ || current_stage_ == 0){ 
                 for (int i = 0; i < num_theta; i++){ // Add all thetas to the c*x solution to get lower bound for node at this stage
                     current_lower_bound += benders_node_pointer->next_stage_approximation_[i];
                 }
@@ -1119,23 +1137,14 @@ namespace parallel_benders {
                 // We are again at stage 0, test for new upper bound!
                 old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
                 lower_bound_ = current_lower_bound;
-
                 if (num_theta == 0){// We have no thetas yet
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
                 }
-                if ( at_last_iteration_ ){
-                    at_last_iteration_ = false;
-                    if ( temporary_upper_bound_ < upper_bound_ )
-                        upper_bound_ = temporary_upper_bound_;
-                    temporary_upper_bound_ = 0; // Start with zero!
-                }
+                temporary_upper_bound_ = 0;
             }
             upper_bound_mutex_.lock();
 
-            if ( at_last_iteration_ ) // We are on our way back!
-                temporary_upper_bound_ += solution_value*benders_node_pointer->probability_; // Add current solution to overall temporary upper bound, but only on way back?
-            
             if ( compute_stage_bounds_ ){
                 // We have to see that we can use FAST_BACKWARD strategy. This can at first happen, when we have theta variables at stage 1.
                 if (current_stage_ == 0 && current_lower_bound > -infinity_)
@@ -1144,12 +1153,17 @@ namespace parallel_benders {
                 temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_;
             }
             upper_bound_mutex_.unlock();
-            // Delete column solution, if we do not need to store primal_and_dual solutions
-            if ( !store_primal_and_dual_ ){
+            // Delete column solution, if we do not need to store primal_and_dual solutions. 
+            // We can delete the column solution only if we move backward and we do not need to store both!
+            if ( !forward_ && !store_primal_and_dual_  ){
                 delete [] benders_node_pointer->col_solution_;
                 benders_node_pointer->col_solution_ = NULL;
             }
         }
+
+        if ( forward_ || current_stage_ == num_stages_-1 ) // If we go forward, we add to our upper bound!
+            temporary_upper_bound_ += solution_value*benders_node_pointer->probability_; // Add current solution to overall temporary upper bound, but only on way back?
+
 
         // Store dual solutions
         if ( !forward_ || (store_primal_and_dual_ && current_stage_ > 0)){

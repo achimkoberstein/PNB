@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
     // c_build{l in L, p1 in P}; #costs für building line l
     double costs_building[numL][numP] =
     {
-        {250000000, 250000000, 250000000},
-        {250000000, 250000000, 250000000}
+        {250000, 250000, 250000},
+        {250000, 250000, 250000}
     };
     MP_data c_build(&costs_building[0][0], L, P);
     c_build.setName("c_build");
@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
     // c_operate{l in L, p1 in P}; #costs für operating line l
     double costs_operate[numL][numP] =
     {
-        {50000000, 50000000, 50000000},
-        {50000000, 50000000, 50000000}
+        {5000, 5000, 5000},
+        {5000, 5000, 5000}
     };
     MP_data c_operate(&costs_operate[0][0], L, P);
     c_operate.setName("c_operate");
