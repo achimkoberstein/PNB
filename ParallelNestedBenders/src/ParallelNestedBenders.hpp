@@ -64,6 +64,10 @@ private:
     void GenerateOptimalityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
+    void AnalyseOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+
+    void CombineTwoCuts( const CutStuff&, const CutStuff& );
+
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
 	void TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme );
@@ -134,6 +138,8 @@ private:
     std::vector<int> added_feasibility_cuts_;
 	int num_added_feasibility_cuts_;
 
+    // Strategy decision
+    bool adaptive_;
 
 
     Timer timer_;

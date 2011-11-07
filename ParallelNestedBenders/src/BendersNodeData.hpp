@@ -80,6 +80,7 @@ namespace parallel_benders{
         CutStuff(int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer);
 
         int cut_creation_iteration_;
+        int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
         boost::shared_ptr<OsiRowCut> cut_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
