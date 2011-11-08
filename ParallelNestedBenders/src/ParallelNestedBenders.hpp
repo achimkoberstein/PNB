@@ -64,7 +64,7 @@ private:
     void GenerateOptimalityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
-    void AnalyseOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+    void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
     void CombineTwoCuts( boost::shared_ptr<CutStuff>&, boost::shared_ptr<CutStuff>& );
 
