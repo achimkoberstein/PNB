@@ -103,68 +103,72 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
-            //// Single Cut first
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,3); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,6); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,7); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,8); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,9); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
             benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,3); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,6); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,7); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,8); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,9); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
-            // Single Cut first
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
+            ////// Single Cut first
+            ////solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,3); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,6); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,7); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,8); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,9); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1); // single cut
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,3); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,6); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,7); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,8); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,9); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10); // single cut
+            //// Single Cut first
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // single cut
             //// Single Cut first
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -816,9 +820,9 @@ TEST_F(NestedBendersTest,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
-
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc

@@ -66,7 +66,7 @@ private:
 
     void AnalyseOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
-    void CombineTwoCuts( const CutStuff&, const CutStuff& );
+    void CombineTwoCuts( boost::shared_ptr<CutStuff>&, boost::shared_ptr<CutStuff>& );
 
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
