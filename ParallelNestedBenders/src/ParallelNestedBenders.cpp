@@ -1176,9 +1176,10 @@ namespace parallel_benders {
             }
         }
 
-        if ( forward_ || current_stage_ == num_stages_-1 ) // If we go forward, we add to our upper bound!
-            temporary_upper_bound_ += solution_value*benders_node_pointer->probability_; // Add current solution to overall temporary upper bound, but only on way back?
-
+        // If we go forward, we add to our upper bound!
+        upper_bound_mutex_.lock();
+        temporary_upper_bound_ += solution_value*benders_node_pointer->probability_; // Add current solution to overall temporary upper bound, but only on way back?
+        upper_bound_mutex_.unlock();
 
         // Store dual solutions
         if ( !forward_ || (store_primal_and_dual_ && current_stage_ > 0) || adaptive_ ){
@@ -1197,7 +1198,6 @@ namespace parallel_benders {
                     benders_node_pointer->reduced_cost_[i] = 0;
             }
  
-
             bool check_primal_degeneracy = false;
             double * reduced_cost = NULL;
             if ( check_primal_degeneracy ){
