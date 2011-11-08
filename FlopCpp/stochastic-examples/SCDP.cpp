@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 
 
     //RandomVariable* rVarDemand[numberStages-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
-    RandomVariable* rVarDemand[numberStages-1] = { new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(20)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(20)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(20)), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
+    RandomVariable* rVarDemand[numberStages-1] = { new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(10)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(10)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(10)), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
     MP_random_data d_factor(&rVarDemand[0], T);
 
     
@@ -570,12 +570,12 @@ int main(int argc, char* argv[]) {
     model.attach(); // Load OsiSolverData??
     std::cout << "Writing SMPS" << std::endl;
     model.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
-    std::cout << "Solving model" << std::endl;
-    model.solve(MP_model::MINIMIZE);
-    model->writeMps("scdp-problem"); // We should take objective sense into account
-    std::cout << model->getObjValue();
+    //std::cout << "Solving model" << std::endl;
+    //model.solve(MP_model::MINIMIZE);
+    //model->writeMps("scdp-problem"); // We should take objective sense into account
+    //std::cout << model->getObjValue();
 
-    cost_linebuild.display("cost_linebuild");
+    //cost_linebuild.display("cost_linebuild");
 
     //revenue.display();
 

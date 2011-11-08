@@ -1,0 +1,7 @@
+TIME          SCDP    
+PERIODS
+    put_e_0_0_1 option_cost_0            STAGE_0
+    put_e_0_1_2 option_cost_1            STAGE_1
+    put_e_0_2_3 option_cost_2            STAGE_2
+    x_0_0_0_3 option_cost_3            STAGE_3
+ENDATA
