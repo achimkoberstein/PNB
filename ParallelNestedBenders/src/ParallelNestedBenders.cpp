@@ -686,17 +686,9 @@ namespace parallel_benders {
                 thread_pool_.wait(0); // We wait until all threads are done
             }
 
-            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none())// Update upper bound only, when we have no infeasible problems!
+            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() && !compute_stage_bounds_)// Update upper bound only, when we have no infeasible problems!
                 if ( temporary_upper_bound_ < upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
-
-            std::string direction(forward_ ? "F " : "B ");
-            std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
-            if ( current_stage_ == 0){
-                std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-                std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-                std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
-            }
 
             // Update stage wise upper/lower bounds, only if we did not had infeasible problems.
             if ( infeasible_problems_.none() && compute_stage_bounds_){
@@ -741,6 +733,14 @@ namespace parallel_benders {
                     if ( upper_bound_ > sum_stage_solutions)
                         upper_bound_ = sum_stage_solutions;
                 }
+            }
+
+            std::string direction(forward_ ? "F " : "B ");
+            std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
+            if ( current_stage_ == 0){
+                std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
+                std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+                std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
             }
 
             // If we had unbounded problems, we have to stop the algorihtm.
