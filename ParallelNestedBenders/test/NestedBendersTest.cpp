@@ -73,7 +73,7 @@ public:
         int num_repetitions = 6; // To rule out system instability
         for (int i = 0; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
+            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Use all Cores
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
@@ -95,30 +95,26 @@ public:
             else 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
+            for (int j = 0; j < 21; j++){
+                if ( num_childs_first_stage < j )
+                    break;
+                // Try different second iteration stuff
+                for (int stage = 1; stage < num_stages-1; stage++){
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,stage);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j); // two cuts
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                }
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,0);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j); // two cuts
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,0);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j); // two cuts
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // multi cut
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            // Multi Cut afterwards!
-            if ( num_childs_first_stage < 2000 )
-                continue;
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,2000); // two cuts
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            if ( num_childs_first_stage < 3000 )
-                continue;
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,3000); // two cuts
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            if ( num_childs_first_stage < 4000 )
-                continue;
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,4000); // two cuts
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            if ( num_childs_first_stage < 5000 )
-                continue;
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,5000); // two cuts
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            if ( num_childs_first_stage < 10000 )
-                continue;
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10000); // two cuts
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            }
 
        
         // Test stage aggregation by reducing number of consecutive stages
@@ -559,8 +555,8 @@ TEST_F(NestedBendersTest, scfxm_POSTS) { // Generates feasibility cuts, INDEP
 }
 
 TEST_F(NestedBendersTest, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
@@ -745,9 +741,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
@@ -878,7 +874,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*WRIGHT*";
+    ::testing::GTEST_FLAG(filter) = "*scdp*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);

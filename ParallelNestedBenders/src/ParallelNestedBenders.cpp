@@ -255,17 +255,10 @@ namespace parallel_benders {
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
 		// Load empty problem (i.e. reset the solver interface
-		//osi_solver_->messageHandler()->setLogLevel(0);
+		osi_solver_->messageHandler()->setLogLevel(0);
 		osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-        if ( cpx_ptr ){
-            // Get ENV and LP ptr
-            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            //CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
-            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-        }
+        // Cplex specific settings come later
+
 
 
           // Set infinity to solver infinity
@@ -315,7 +308,7 @@ namespace parallel_benders {
         num_scen_pro_cut = param.get(PNB_SCENARIOS_PRO_CUT,0);
 
         // Adaptive aggregation
-        adaptive_ = true;
+        adaptive_ = false;
 
 		// Tree walking procedure
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
@@ -424,6 +417,16 @@ namespace parallel_benders {
        solve_problem_timer_ = 1;
        cut_generation_timer_ = 2;
        // Detailed_timer 
+
+       OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+       if ( cpx_ptr ){
+           // Get ENV and LP ptr
+           CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+           CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+           //CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
+           CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+           CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+       }
 
 		// Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -700,24 +703,24 @@ namespace parallel_benders {
                 if ( current_stage_ < num_stages_ && current_stage_ > 0){
                     // Discrepancy makes sense on the way forward, but only for values actually solved!
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
-                    LOG(INFO) << "Discrepancy-" << current_stage_-1 << " : " << discrepancy;
-                    // TODO: Find reasonable absolte and relative value, depending on available solutions, probably!
+                    //LOG(INFO) << "Discrepancy-" << current_stage_-1 << " : " << discrepancy;
+                    // TODO: Find reasonable absolute and relative value, depending on available solutions, probably!
                     if (discrepancy > 1000000 && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
                         forward_ = false;
                     }
-                    else if ( forward_ )
+                    else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
                         made_one_turn = false;
                 
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
                 }
-                if ( at_last_iteration_ && current_stage_ < num_stages_-1) { // Absolute error: values of all later stages, minus approxmation of later stages at current stage.
-                    double absolute_error = 0; 
-                    for (int t = current_stage_+1; t < num_stages_; ++t){ // Add all the concrete values
-                        absolute_error += stage_lower_upper_bounds_[t].second;
-                    }
-                    absolute_error += (stage_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].first);
-                    LOG(INFO) << "Absolute Error" << current_stage_ << " : " << absolute_error;
-                }
+                //if ( at_last_iteration_ && current_stage_ < num_stages_-1) { // Absolute error: values of all later stages, minus approxmation of later stages at current stage.
+                //    double absolute_error = 0; 
+                //    for (int t = current_stage_+1; t < num_stages_; ++t){ // Add all the concrete values
+                //        absolute_error += stage_lower_upper_bounds_[t].second;
+                //    }
+                //    absolute_error += (stage_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].first);
+                //    LOG(INFO) << "Absolute Error" << current_stage_ << " : " << absolute_error;
+                //}
                 
             }
 
@@ -2475,7 +2478,7 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
 			// Remove theta columns from solver, if we reuse it
 			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_; // This indicates if we reuse a solver, apart from initial run.
-			if ( cols_to_remove && benders_node_pointer->changed_aggregation_level_ ) { 
+			if ( cols_to_remove && benders_node_pointer->changed_aggregation_level_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ ) ) { 
 				std::vector<int> remove_indices;
 				remove_indices.reserve(cols_to_remove);
 				for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
@@ -2496,6 +2499,7 @@ namespace parallel_benders {
 				// Reset start indices for cuts
 				benders_node_pointer->opt_cut_start_index_ = 0;
 				benders_node_pointer->feas_cut_start_index_ = 0; // Also feas cuts, we deleted all old cuts..
+                LOG(INFO) << osi_solver->getNumCols();
             }
 			if ( cols_to_remove == 0 ){ // We have no thetas yet, but optimality cuts. So we need thetas.
 				// We set a theta value for every stage
@@ -2531,7 +2535,7 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->optimality_cuts_.empty()){
 			// Add the cuts
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
-			if ( seperate_first_stage_solver_ && !benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
+			if ( seperate_first_stage_solver_ &&  current_stage_ == 0){
 				it = benders_node_pointer->last_iteration_start_optimality_;
 				benders_node_pointer->opt_cut_start_index_ = -1; // We used the start_index and signal this to the cut aggregation routine.
 			}
@@ -2829,14 +2833,18 @@ namespace parallel_benders {
 
         std::map<int,int> map_old_to_new;
         int new_thetas = 0; 
+        std::vector<int> delete_cols;
         if ( maximal_active_creation_iteration - minimal_active_creation_iteration > inactive_threshold ){
             // Compute a new aggregation and change the values accordingly!
             int num_cuts = current_cut_index - stage_data_[current_stage_]->num_rows_;
             std::list<int> aggregates_into_one;
             // Let's see if we have aggregates that we can aggregate together!
             for (int i = 0; i < number_of_aggregates; i++){
-                if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration )
+                if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration ){
+                    if ( !aggregates_into_one.empty() )
+                        delete_cols.push_back(i);
                     aggregates_into_one.push_back(i);
+                }
             }
             if ( aggregates_into_one.size() <= 1 ){
                 // We can break here!
@@ -2906,11 +2914,15 @@ namespace parallel_benders {
                 }
                 
             }
+            osi_solver->deleteCols(delete_cols.size(), &delete_cols[0]);
             osi_solver->deleteRows(delete_rows.size(),&delete_rows[0]);
-            // Store warm_start again!
+            //LOG(INFO) << "cols" << osi_solver->getNumCols();
+            //LOG(INFO) << "rows" << osi_solver->getNumRows();
+            //// We also need to delete the now unused columns and change some coefficients!
+            //// Store warm_start again!
             osi_solver->resolve();
-            delete benders_node_pointer->warm_start_;
-            benders_node_pointer->warm_start_ = osi_solver->getWarmStart();
+            //delete benders_node_pointer->warm_start_;
+            //benders_node_pointer->warm_start_ = osi_solver->getWarmStart();
         }
 
 
