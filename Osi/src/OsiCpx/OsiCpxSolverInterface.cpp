@@ -879,13 +879,15 @@ bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   numcols = ws->getNumStructural();
   numrows = ws->getNumArtificial();
   
-  if( numcols != getNumCols() || numrows != getNumRows() )
+  int real_numrows = numrows;//getNumRows(); // numrows disables new feature
+
+  if( numcols != getNumCols() || (numrows != getNumRows() && real_numrows < numrows) )
     return false;
 
   switchToLP();
 
   cstat = new int[numcols];
-  rstat = new int[numrows];
+  rstat = new int[real_numrows];
   for( i = 0; i < numrows; ++i )
     {
       switch( ws->getArtifStatus( i ) )
@@ -904,6 +906,9 @@ bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 	  goto TERMINATE;
 	}
     }
+  for (i = numrows; i < real_numrows; i++){
+      rstat[i] = CPX_AT_LOWER;
+  }
   for( i = 0; i < numcols; ++i )
     {
       switch( ws->getStructStatus( i ) )
