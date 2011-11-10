@@ -73,7 +73,7 @@ public:
         int num_repetitions = 6; // To rule out system instability
         for (int i = 0; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
-            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // Use all Cores
+            benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
@@ -741,12 +741,17 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTest,scdp){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
