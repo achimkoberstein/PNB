@@ -70,8 +70,8 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        int num_repetitions = 6; // To rule out system instability
-        for (int i = 0; i < num_repetitions; i++){
+        int num_repetitions = 2; // To rule out system instability
+        for (int i = 1; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
             benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
             benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
@@ -89,32 +89,39 @@ public:
             //else
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
 
-            // Choose primal or dual simplex method
-            if ( i < num_repetitions / 2.0 )
+            //// Choose primal or dual simplex method
+            //if ( i < num_repetitions / 2.0 )
                 benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-            else 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+            //else 
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
-            for (int j = 0; j < 21; j++){
-                if ( num_childs_first_stage < j )
-                    break;
-                // Try different second iteration stuff
-                for (int stage = 1; stage < num_stages-1; stage++){
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,stage);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j); // two cuts
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                for (int k = 0; k < 2; k++){
+                    if ( k == 0)
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+                    else
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
+                    for (int j = 0; j < 10; j++){
+                        if ( num_childs_first_stage < j/2.0 )
+                            break;
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // two cuts
+                        // Try different second iteration stuff
+                        for (int stage = 1; stage < num_stages-1; stage++){
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,stage);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j*100); // two cuts
+                            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        }
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,0);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j*100); // two cuts
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,0);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j*100); // two cuts
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    }
                 }
-                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,0);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j); // two cuts
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,0);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,j); // two cuts
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-            }
 
        
         // Test stage aggregation by reducing number of consecutive stages
@@ -497,10 +504,10 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, 
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
 }
 
@@ -746,12 +753,12 @@ TEST_F(NestedBendersTest,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -23.214073, 0.1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
@@ -879,7 +886,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*scdp*";
+    ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);

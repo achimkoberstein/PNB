@@ -705,7 +705,7 @@ namespace parallel_benders {
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
                     //LOG(INFO) << "Discrepancy-" << current_stage_-1 << " : " << discrepancy;
                     // TODO: Find reasonable absolute and relative value, depending on available solutions, probably!
-                    if (discrepancy > 1000000 && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
+                    if (discrepancy > 1 && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
                         forward_ = false;
                     }
                     else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
