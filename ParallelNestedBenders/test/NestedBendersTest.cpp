@@ -505,7 +505,7 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, 
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
