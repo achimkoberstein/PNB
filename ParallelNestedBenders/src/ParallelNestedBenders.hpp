@@ -8,11 +8,10 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
 
-#include <CoinPackedVector.hpp>
-
 #include "boost/threadpool.hpp"
 
-#include "Benders.hpp" // Just for OsiStochasticSolverInterface, needs to be outsourced to own file
+#include <CoinPackedVector.hpp>
+#include "SmiScnModel.hpp"
 #include "SmiScenarioTree.hpp" 
 #include "BendersNodeData.hpp"
 

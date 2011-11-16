@@ -67,6 +67,8 @@ public:
 
         benders_parameter_.init();
 
+        
+
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
@@ -74,9 +76,9 @@ public:
         for (int i = 1; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
             benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,0);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,0);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,false);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,3);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,4);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
             benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,0);
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i+1);
@@ -95,7 +97,7 @@ public:
             //else 
             //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
-            for (int k = 0; k < 2; k++){
+            for (int k = 0; k < 1; k++){
                 //if ( k == 0)
                 //    benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
                 //else
@@ -103,9 +105,9 @@ public:
                 benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+                //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     //for (int j = 0; j < 10; j++){
                     //    if ( num_childs_first_stage < j/2.0 )
                     //        break;
@@ -889,7 +891,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*sslp*";
+    ::testing::GTEST_FLAG(filter) = "*pltexp*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
