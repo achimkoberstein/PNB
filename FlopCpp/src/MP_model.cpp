@@ -553,6 +553,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         // Iterate over all cfs to see if we got empty indices. This is only necessary if the Index_exp we stored in the coefficient is not the same as the set.
         // We can check for this.
         for (int i = 0; i < cfs.size(); i++){
+            assert( cfs[i]->row-offset < size); // If not, wrong coefficients got generated.
             indicator.set(cfs[i]->row-offset,true); // This should be greater than zero.
         }
         indicator.flip(); // We flip the bits. Active bits are now the ones, where we have no coefficient
