@@ -37,6 +37,10 @@ namespace parallel_benders {
     {
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios(); // The leaf nodes do not work correctly!
+
+        if ( bounds_in_matrix_ ){
+            smi_->moveBoundsIntoMatrix();
+        }
         // Check for integrality right away
         if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
             contains_integer_ = true;
@@ -1985,6 +1989,7 @@ namespace parallel_benders {
             }
             
             // For all the indices, that belong to this cut.
+            // TODO We can store the cut as a sparse cut!
             std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
             for ( int j = 0; j < nodes_in_cut.size(); j++){
                 for (int k = 0; k < num_columns; k++)

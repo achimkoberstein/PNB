@@ -341,6 +341,98 @@ SmiCoreData::~SmiCoreData()
     }
 }
 
+void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
+{
+    for ( int i = 0; i < this->getNumStages(); i++){
+        this->getNode(i)->moveBoundsInMatrix();
+    }
+    // Adjust arrays with number of cols and rows
+    // num rows in stage
+    int new_num_rows = nrow_;
+    std::vector<int> new_rows;
+    for (int i = 0; i < nstag_; i++){
+        new_rows.push_back( this->getNode(i)->nrow_-nRowInStage_[i] );
+        new_num_rows += new_rows.back();
+    }
+    // Allocate new arrays
+    int * old_rowStage = new int[nrow_];
+    //int * old_rowex2in = new int[nrow_];
+    //int * old_rowin2ex = new int[nrow_];
+    // Copy old arrays
+    memcpy(old_rowStage,rowStage_,nrow_*sizeof(int));
+    //memcpy(old_rowex2in,rowEx2In_,nrow_*sizeof(int));
+    //memcpy(old_rowin2ex,rowIn2Ex_,nrow_*sizeof(int));
+    // Delete and reallocate old arrays
+    delete [] rowStage_;
+    delete [] rowEx2In_;
+    delete [] rowIn2Ex_;
+    rowStage_ = new int[new_num_rows];
+    rowEx2In_ = new int[new_num_rows];
+    rowIn2Ex_ = new int[new_num_rows];
+
+    int rows_so_far = 0;
+    for (int i = 0; i < nstag_; i++){
+        memcpy(rowStage_+stageRowPtr_[i]+rows_so_far,old_rowStage+stageRowPtr_[i],nRowInStage_[i]*sizeof(int));
+        // Insert new values
+        for (int j = 0; j < new_rows[i]; j++){
+            rowStage_[j+stageRowPtr_[i+1]+rows_so_far] = i;
+
+        }
+        rows_so_far += new_rows[i];
+    }
+    assert(rows_so_far== new_num_rows-nrow_);
+    delete [] old_rowStage;
+
+    for (int i = 0; i < new_num_rows;i++){
+        rowEx2In_[i] = i;
+        rowIn2Ex_[i] = i;
+        // We should assert some things!
+        if ( i < nrow_){
+            assert(rowEx2In_[i] == i);
+            assert(rowIn2Ex_[i] == i);
+        }
+    }
+    // Update nRowInStage and stageRowPtr
+    for (int i=0;i<nstag_;i++){
+        nRowInStage_[i] += new_rows[i];
+        stageRowPtr_[i+1] = stageRowPtr_[i] + nRowInStage_[i];
+        this->getNode(i)->rowbeg_ = stageRowPtr_[i];
+    }
+    // Set nrow_
+    nrow_ = new_num_rows;
+
+    // Update all nodes of the scenario tree
+    for (int i = 0; i < nodes.size(); i++){
+        nodes[i]->getNode()->moveBoundsInMatrix();
+    }
+
+    // Core Dense Row Lower / Dense Row Upper
+    for (int i = 0; i < nstag_; i++){
+        delete [] cdrlo_[i];
+        delete [] cdrup_[i];
+        delete [] cdclo_[i];
+        delete [] cdcup_[i];
+
+        SmiNodeData* node = this->getNode(i);
+        int nrow=this->getNumRows(i);
+        int ncol=this->getNumCols(i);
+        int irow=this->getRowStart(i);
+        int icol=this->getColStart(i);
+        CoinPackedVector cpv_rlo(node->getRowLowerLength(),node->getRowLowerIndices(),node->getRowLowerElements());
+        cdrlo_[i]=cpv_rlo.denseVector(nrow+irow)+irow;
+
+        CoinPackedVector cpv_rup(node->getRowUpperLength(),node->getRowUpperIndices(),node->getRowUpperElements());
+        cdrup_[i]=cpv_rup.denseVector(nrow+irow)+irow;
+
+        CoinPackedVector cpv_clo(node->getColLowerLength(),node->getColLowerIndices(),node->getColLowerElements());
+        cdclo_[i]=cpv_clo.denseVector(ncol+icol)+icol;
+
+        CoinPackedVector cpv_cup(node->getColUpperLength(),node->getColUpperIndices(),node->getColUpperElements());
+        cdcup_[i]=cpv_cup.denseVector(ncol+icol)+icol;
+    }
+
+}
+
 void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients, SmiTreeNode<SmiScnNode*>* root_node)
 {
     // We want to transform the problem to staircase structure
@@ -1686,6 +1778,131 @@ void SmiNodeData::transformElements( int start, SmiNodeData* deterministic_node,
         }
     }
     assert(stoch_index == stoch_length); // Otherwise we forgot an element.
+}
+
+void SmiNodeData::moveBoundsInMatrix( ){
+    if ( this->isCoreNode() ){
+        // If we have non-zero bounds at either upper or lower or both we need to insert new constraints for this!
+        const double* col_lower = this->getColLowerElements();
+        const int* col_lower_indices = this->getColLowerIndices();
+        int col_lower_length = this->getColLowerLength();
+        int col_upper_length = this->getColUpperLength();
+        const int* col_upper_indices = this->getColUpperIndices();
+        const double* col_upper = this->getColUpperElements();
+        std::vector<int> elements;
+        std::vector<int> indices;
+        std::vector<int> row_bound;
+        if ( col_lower_length ){
+            // Find the values != 0
+            for (int i = 0; i < col_lower_length; i++){
+                if ( col_lower[i] != 0 && col_lower[i] != -this->core_->getInfinity() ){
+                    // We need to add an entry to row_lower
+                    elements.push_back(1); indices.push_back(col_lower_indices[i]); row_bound.push_back(col_lower[i]);
+                }
+            }
+        }
+        if ( col_upper_length ){
+            // Find the values != 0
+            for (int i = 0; i < col_upper_length; i++){
+                if ( col_upper[i] != 0 && col_upper[i] != this->core_->getInfinity() ){
+                    // We need to add an entry to row_lower
+                    elements.push_back(-1); indices.push_back(col_upper_indices[i]); row_bound.push_back(-col_upper[i]);
+                }
+            }
+        }
+        // Now we add the rows with only row_lower bounds and infinite row_upper bounds
+        assert( elements.size() == indices.size());
+        assert( indices.size() == row_bound.size());
+        if ( elements.size() ){
+            int num_new_rows = elements.size();
+            // We need num_new_rows matrix entries, and num_new_rows new row_lower and row_upper bounds => 3*num_new_rows new entries in dels_ and inds_ and num_new_rows new entries in strt_
+
+            // Now we need to realloc dels_ and inds_ arrays to make room for the new rows and row lower bounds as well as row upper bounds. Also make a copy of dels_ and inds_
+            int new_overall_size = strt_[nstrt_-1]+3*num_new_rows;
+            int* temp_array_inds = new int[strt_[nstrt_-1]];
+            double* temp_array_dels = new double[strt_[nstrt_-1]];
+            dels_ = (double*)realloc(dels_,new_overall_size*sizeof(double));
+            inds_ = (int*)realloc(inds_,new_overall_size*sizeof(int));
+            memmove(temp_array_inds,inds_,strt_[nstrt_-1]*sizeof(int));
+            memmove(temp_array_dels,dels_,strt_[nstrt_-1]*sizeof(double));
+            for (int i = 0; i < num_new_rows; i++){
+                // Matrix element
+                dels_[i+strt_[clo_strt_] ] = elements[i];
+                inds_[i+strt_[clo_strt_]] = indices[i];
+                // Row lower : Insert new rows after old lower row bounds + the newly added matrix coefficients (+num_new_rows)
+                dels_[i+strt_[rup_strt_]+num_new_rows] = row_bound[i];
+                inds_[i+strt_[rup_strt_]+num_new_rows] = nrow_-1+i;
+                // Row upper : Insert new row upper after old row upper + new row lower + new matrix coefficients (+2num_new_rows)
+                dels_[i+strt_[rup_strt_+1]+2*num_new_rows] = this->core_->getInfinity();
+                inds_[i+strt_[rup_strt_+1]+2*num_new_rows] = nrow_-1+i;
+            }
+            // Now we just need to copy the correct clo/cup/obj/rlo and the remaining rup bits into place
+            // This is not yet working
+            // First part
+            memmove(dels_+strt_[clo_strt_]+num_new_rows,temp_array_dels+strt_[clo_strt_],(strt_[rup_strt_]-strt_[clo_strt_])*sizeof(double));
+            memmove(inds_+strt_[clo_strt_]+num_new_rows,temp_array_inds+strt_[clo_strt_],(strt_[rup_strt_]-strt_[clo_strt_])*sizeof(int));
+            // Last part
+            memmove(dels_+strt_[rup_strt_]+2*num_new_rows,temp_array_dels+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(double));
+            memmove(inds_+strt_[rup_strt_]+2*num_new_rows,temp_array_inds+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(int));
+ 
+            // Prepare the new strt_ array
+            strt_ = (int*) realloc(strt_,(nstrt_+num_new_rows)*sizeof(int));
+            int* temp_array = new int[nstrt_-clo_strt_];
+            // Copy old bytes to make room for new ones, but prevent overlapping copies, so we copy in intermediate array
+            memmove(temp_array,strt_+clo_strt_,(nstrt_-clo_strt_)*sizeof(int));
+            // Add the new rows, following the present rows, the new row starts with old clo_strt.
+            for (int i = clo_strt_+1; i < clo_strt_+num_new_rows+1; i++){ // Now we create the new rows
+                strt_[i] = strt_[i-1]+1;
+            }
+            // Move the old strt_ array except the matrix entries (that means we exclude the value for clo_strt because it marks the end of the matrix entries
+            memmove(strt_+cup_strt_+num_new_rows,temp_array+1,(nstrt_-cup_strt_)*sizeof(int));
+            delete [] temp_array;
+            delete [] temp_array_dels;
+            delete [] temp_array_inds;
+
+            strt_[cup_strt_+num_new_rows] += num_new_rows;
+            strt_[obj_strt_+num_new_rows] += num_new_rows;
+            strt_[rlo_strt_+num_new_rows] += num_new_rows;
+            strt_[rup_strt_+num_new_rows] += 2*num_new_rows;
+            strt_[rup_strt_+num_new_rows+1] += 3*num_new_rows;
+
+            // Set the values to the correct ones
+            nrow_ += num_new_rows;
+            nels_ += num_new_rows;
+            nstrt_ += num_new_rows;
+            clo_strt_ += num_new_rows;
+            cup_strt_ += num_new_rows;
+            obj_strt_ += num_new_rows;
+            rlo_strt_ += num_new_rows;
+            rup_strt_ += num_new_rows;
+        }
+
+    }
+    else{
+        
+        if ( has_matrix_ ){
+            // Update the matrix with zero entries for the new nodes, only need other values if we have stochastic bounds!
+            // We need to realloc the strt_ array
+            int number_new_rows = core_->getNumRows(stg_)-nrow_;
+            assert(number_new_rows>=0);
+            strt_ = (int*)realloc(strt_,core_->getNumRows(stg_)-nrow_+nstrt_);
+            int* temp_array = new int[nstrt_];
+            memcpy(temp_array,strt_,nstrt_*sizeof(int));
+            // Create the new empty rows in the new strt_ array 
+            for (int i = 0; i < number_new_rows;i++){
+                strt_[clo_strt_+i+1] = strt_[clo_strt_+i];
+            }
+            // Copy the old other stuff
+            memcpy(strt_+cup_strt_+number_new_rows,temp_array+cup_strt_,(nstrt_-strt_[cup_strt_])*sizeof(int));
+
+            delete [] temp_array;
+        }
+        // Update the essential stats
+        nrow_ = core_->getNumRows(stg_);
+        rowbeg_ = core_->getRowStage(stg_);
+
+    }
+      
 }
 
 void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircase_coefficients,std::vector<std::map<int,int> >& coefficient_transformation,std::vector<int>& new_columns, const int* new_stageColPtr, const int * new_stageRowPtr )

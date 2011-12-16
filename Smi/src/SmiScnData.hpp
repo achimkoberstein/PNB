@@ -179,7 +179,7 @@ protected:
 	void deleteMemory();
 
     void transformElements(int start, SmiNodeData* deterministic_node, int deterministic_start);
-
+    void moveBoundsInMatrix( );
 private:
 
 	SmiStageIndex stg_; //Stage to which the node belongs
@@ -266,6 +266,7 @@ public:
 
     void transformToStaircaseStructure(std::map<int,int>& non_staircase_coefficients, SmiTreeNode<SmiScnNode*>* root_node);
     void aggregateStages(int firstStage, int secondStage, SmiScenarioTree<SmiScnNode*>& smiTree);
+    void moveBoundsIntoMatrix(std::vector<SmiScnNode*>& nodes); // Probably need the SmiTreeNode..
 
     void increaseIndices(SmiNodeData* scn_node, int col_amount, int row_amount);
 
