@@ -2059,6 +2059,20 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
  }
 
+ void SmiScnModel::moveBoundsIntoMatrix(){
+     this->core_->moveBoundsIntoMatrix(smiTree_.wholeTree());
+
+
+     // Update the scenario tree!
+     //std::vector<SmiScnNode*>& tree( smiTree_.wholeTree());
+     //for (int i = 0; i < tree.size(); i++){
+     //    this->ncol_ += core_->getNumCols(tree[i]->getStage());
+     //    this->nrow_ += core_->getNumRows(tree[i]->getStage());
+     //    this->nels_ += core_->getNode(tree[i]->getStage())->getNumMatrixElements();
+     //}
+
+ }
+
  void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromStart )
  {
      // Call the method 
