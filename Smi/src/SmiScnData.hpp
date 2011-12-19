@@ -179,7 +179,7 @@ protected:
 	void deleteMemory();
 
     void transformElements(int start, SmiNodeData* deterministic_node, int deterministic_start);
-    void moveBoundsInMatrix( );
+    bool moveBoundsInMatrix( );
 private:
 
 	SmiStageIndex stg_; //Stage to which the node belongs
