@@ -40,7 +40,8 @@ namespace parallel_benders {
 
         if ( bounds_in_matrix_ ){
             smi_->moveBoundsIntoMatrix();
-            smi_->writeSmps("no_bounds",true,false);
+            //smi_->writeSmps("no_bounds",true,false);
+            bounds_in_matrix_ = false;
         }
         // Check for integrality right away
         if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)

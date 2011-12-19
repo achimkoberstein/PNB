@@ -343,9 +343,14 @@ SmiCoreData::~SmiCoreData()
 
 void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
 {
+    bool carry_on = false;
     for ( int i = 0; i < this->getNumStages(); i++){
-        this->getNode(i)->moveBoundsInMatrix();
+        if (this->getNode(i)->moveBoundsInMatrix())
+            carry_on = true;
     }
+    if ( !carry_on)
+        return; // We did nothing
+    
 
     // Delete the old cup/clo/rup/rlo as we will update these values
     for(int t=0; t<this->getNumStages(); ++t)
@@ -372,12 +377,8 @@ void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
     }
     // Allocate new arrays
     int * old_rowStage = new int[nrow_];
-    //int * old_rowex2in = new int[nrow_];
-    //int * old_rowin2ex = new int[nrow_];
     // Copy old arrays
     memcpy(old_rowStage,rowStage_,nrow_*sizeof(int));
-    //memcpy(old_rowex2in,rowEx2In_,nrow_*sizeof(int));
-    //memcpy(old_rowin2ex,rowIn2Ex_,nrow_*sizeof(int));
     // Delete and reallocate old arrays
     delete [] rowStage_;
     delete [] rowEx2In_;
@@ -402,11 +403,6 @@ void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
     for (int i = 0; i < new_num_rows;i++){
         rowEx2In_[i] = i;
         rowIn2Ex_[i] = i;
-        // We should assert some things!
-        if ( i < nrow_){
-            assert(rowEx2In_[i] == i);
-            assert(rowIn2Ex_[i] == i);
-        }
     }
     // Update nRowInStage and stageRowPtr
     for (int i=0;i<nstag_;i++){
@@ -421,8 +417,6 @@ void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
     for (int i = 0; i < nodes.size(); i++){
         nodes[i]->getNode()->moveBoundsInMatrix();
     }
-
-
 
     for (int i = 0; i < nstag_; i++){
         SmiNodeData* node = this->getNode(i);
@@ -1792,7 +1786,8 @@ void SmiNodeData::transformElements( int start, SmiNodeData* deterministic_node,
     assert(stoch_index == stoch_length); // Otherwise we forgot an element.
 }
 
-void SmiNodeData::moveBoundsInMatrix( ){
+bool SmiNodeData::moveBoundsInMatrix()
+{
     if ( this->isCoreNode() ){
         // If we have non-zero bounds at either upper or lower or both we need to insert new constraints for this!
         const double* col_lower = this->getColLowerElements();
@@ -1908,8 +1903,10 @@ void SmiNodeData::moveBoundsInMatrix( ){
             obj_strt_ += num_new_rows;
             rlo_strt_ += num_new_rows;
             rup_strt_ += num_new_rows;
+            return true;
         }
-
+        else 
+            return false;
     }
     else{
         if ( has_matrix_ ){
@@ -1952,6 +1949,8 @@ void SmiNodeData::moveBoundsInMatrix( ){
         // Update the essential stats
         nrow_ = core_->getNumRows(stg_);
         rowbeg_ = core_->getRowStage(stg_);
+
+        return true;
 
     }
       
