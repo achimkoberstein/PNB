@@ -40,6 +40,7 @@ namespace parallel_benders {
 
         if ( bounds_in_matrix_ ){
             smi_->moveBoundsIntoMatrix();
+            smi_->writeSmps("no_bounds",true,false);
         }
         // Check for integrality right away
         if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
@@ -1702,9 +1703,9 @@ namespace parallel_benders {
                 boost::dynamic_bitset<> upper_column_indices(stage_data_[current_stage_]->num_columns_);
                 boost::dynamic_bitset<> lower_column_indices(stage_data_[current_stage_]->num_columns_);
                 for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
-                    if ( benders_node_pointer->column_upper_[i] != 0 )
+                    if ( benders_node_pointer->column_upper_[i] != 0 && benders_node_pointer->column_upper_[i] < infinity_)
                         upper_column_indices.set(i);
-                    if ( benders_node_pointer->column_lower_[i] != 0 )
+                    if ( benders_node_pointer->column_lower_[i] != 0 && benders_node_pointer->column_lower_[i] > -infinity_)
                         lower_column_indices.set(i);
                 }
                 for (int i = upper_column_indices.find_first(); i< upper_column_indices.npos; i = upper_column_indices.find_next(i)){
