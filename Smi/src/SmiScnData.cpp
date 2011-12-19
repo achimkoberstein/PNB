@@ -346,6 +346,22 @@ void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
     for ( int i = 0; i < this->getNumStages(); i++){
         this->getNode(i)->moveBoundsInMatrix();
     }
+
+    // Delete the old cup/clo/rup/rlo as we will update these values
+    for(int t=0; t<this->getNumStages(); ++t)
+    {
+        int irow=this->getRowStart(t);
+        int icol=this->getColStart(t);
+        cdrlo_[t]-=irow;
+        cdrup_[t]-=irow;
+        cdclo_[t]-=icol;
+        cdcup_[t]-=icol;
+        delete [] cdrlo_[t];
+        delete [] cdrup_[t];
+        delete [] cdclo_[t];
+        delete [] cdcup_[t];
+    }
+
     // Adjust arrays with number of cols and rows
     // num rows in stage
     int new_num_rows = nrow_;
@@ -406,13 +422,9 @@ void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
         nodes[i]->getNode()->moveBoundsInMatrix();
     }
 
-    // Core Dense Row Lower / Dense Row Upper
-    for (int i = 0; i < nstag_; i++){
-        delete [] cdrlo_[i];
-        delete [] cdrup_[i];
-        delete [] cdclo_[i];
-        delete [] cdcup_[i];
 
+
+    for (int i = 0; i < nstag_; i++){
         SmiNodeData* node = this->getNode(i);
         int nrow=this->getNumRows(i);
         int ncol=this->getNumCols(i);
@@ -1798,6 +1810,7 @@ void SmiNodeData::moveBoundsInMatrix( ){
                 if ( col_lower[i] != 0 && col_lower[i] != -this->core_->getInfinity() ){
                     // We need to add an entry to row_lower
                     elements.push_back(1); indices.push_back(col_lower_indices[i]); row_bound.push_back(col_lower[i]);
+                    dels_[strt_[clo_strt_]+i] = -this->core_->getInfinity();
                 }
             }
         }
@@ -1807,6 +1820,7 @@ void SmiNodeData::moveBoundsInMatrix( ){
                 if ( col_upper[i] != 0 && col_upper[i] != this->core_->getInfinity() ){
                     // We need to add an entry to row_lower
                     elements.push_back(-1); indices.push_back(col_upper_indices[i]); row_bound.push_back(-col_upper[i]);
+                    dels_[strt_[cup_strt_]+i] = this->core_->getInfinity();
                 }
             }
         }
@@ -1825,16 +1839,27 @@ void SmiNodeData::moveBoundsInMatrix( ){
             inds_ = (int*)realloc(inds_,new_overall_size*sizeof(int));
             memmove(temp_array_inds,inds_,strt_[nstrt_-1]*sizeof(int));
             memmove(temp_array_dels,dels_,strt_[nstrt_-1]*sizeof(double));
+
+            // To have the correct row_indices we need to add the number of rows we already added to the previous stage nodes.
+            int added_rows_to_previous_stages = 0;
+            int number_of_total_rows = 0;
+            for (int i = 0; i < stg_; i++){
+                number_of_total_rows += core_->getNode(i)->nrow_;
+            }
+            // Look at current rowbeg_
+            added_rows_to_previous_stages = number_of_total_rows-rowbeg_; // The number of rows that were added in previous stages
+            assert( added_rows_to_previous_stages >= 0);
+
             for (int i = 0; i < num_new_rows; i++){
                 // Matrix element
                 dels_[i+strt_[clo_strt_] ] = elements[i];
                 inds_[i+strt_[clo_strt_]] = indices[i];
                 // Row lower : Insert new rows after old lower row bounds + the newly added matrix coefficients (+num_new_rows)
                 dels_[i+strt_[rup_strt_]+num_new_rows] = row_bound[i];
-                inds_[i+strt_[rup_strt_]+num_new_rows] = nrow_-1+i;
+                inds_[i+strt_[rup_strt_]+num_new_rows] = rowbeg_+nrow_+i+added_rows_to_previous_stages; // Index of new row starts with nrow_ ( nrow is not yet given to another row, but nrow-1 is)
                 // Row upper : Insert new row upper after old row upper + new row lower + new matrix coefficients (+2num_new_rows)
                 dels_[i+strt_[rup_strt_+1]+2*num_new_rows] = this->core_->getInfinity();
-                inds_[i+strt_[rup_strt_+1]+2*num_new_rows] = nrow_-1+i;
+                inds_[i+strt_[rup_strt_+1]+2*num_new_rows] = rowbeg_+nrow_+i+added_rows_to_previous_stages;
             }
             // Now we just need to copy the correct clo/cup/obj/rlo and the remaining rup bits into place
             // This is not yet working
@@ -1844,6 +1869,14 @@ void SmiNodeData::moveBoundsInMatrix( ){
             // Last part
             memmove(dels_+strt_[rup_strt_]+2*num_new_rows,temp_array_dels+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(double));
             memmove(inds_+strt_[rup_strt_]+2*num_new_rows,temp_array_inds+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(int));
+            // Update the row indices of all the row lower and row upper bounds for the stuff just copied
+            for (int i = 0; i < strt_[rup_strt_]-strt_[rlo_strt_];i++){
+                inds_[strt_[rlo_strt_]+num_new_rows+i] += added_rows_to_previous_stages;
+            }
+            for (int i = 0; i < strt_[rup_strt_+1]-strt_[rup_strt_];i++){
+                inds_[strt_[rup_strt_]+2*num_new_rows+i] += added_rows_to_previous_stages;
+            }
+
  
             // Prepare the new strt_ array
             strt_ = (int*) realloc(strt_,(nstrt_+num_new_rows)*sizeof(int));
@@ -1879,7 +1912,6 @@ void SmiNodeData::moveBoundsInMatrix( ){
 
     }
     else{
-        
         if ( has_matrix_ ){
             // Update the matrix with zero entries for the new nodes, only need other values if we have stochastic bounds!
             // We need to realloc the strt_ array
@@ -1897,6 +1929,26 @@ void SmiNodeData::moveBoundsInMatrix( ){
 
             delete [] temp_array;
         }
+        // If we have RHS we need to reflect the added bounds!
+        int added_rows = 0;
+        for (int i = 0; i < stg_; i++){
+            added_rows = this->core_->getNode(i)->nrow_;
+        }
+        added_rows = added_rows- rowbeg_; // The number of rows we added during the process
+        if ( strt_[rup_strt_]-strt_[rlo_strt_] )
+            // Update rlo
+            for (int i = strt_[rlo_strt_]; i < strt_[rup_strt_]; i++)
+                inds_[i] += added_rows;
+
+        if ( strt_[rup_strt_+1]-strt_[rup_strt_])
+            for ( int i = strt_[rup_strt_]; i < strt_[rup_strt_+1]; i++)
+                inds_[i] += added_rows;
+
+        // Test for stochastic bounds
+        if ( strt_[rlo_strt_]-strt_[clo_strt_] )
+            assert(false); //TODO
+        
+
         // Update the essential stats
         nrow_ = core_->getNumRows(stg_);
         rowbeg_ = core_->getRowStage(stg_);
