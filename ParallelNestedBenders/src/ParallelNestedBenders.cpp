@@ -40,7 +40,7 @@ namespace parallel_benders {
 
         if ( bounds_in_matrix_ ){
             smi_->moveBoundsIntoMatrix();
-            //smi_->writeSmps("no_bounds",true,false);
+            smi_->writeSmps("no_bounds",true,false);
             bounds_in_matrix_ = false;
         }
         // Check for integrality right away
@@ -1614,6 +1614,8 @@ namespace parallel_benders {
         memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), stage_pointer->num_rows_*sizeof(double));
         if ( stage_pointer->stochastic_rhs_ )
             for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
+                assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
+                assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < stage_pointer->num_rows_);
                 benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
             }
 

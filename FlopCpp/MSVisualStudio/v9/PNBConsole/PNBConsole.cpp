@@ -2,9 +2,13 @@
 //
 #include <stdio.h>
 #include <string>
+#include <exception>
 
+#include <boost/exception/all.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+
+#include <glog/logging.h>
 
 #include "OsiCpxSolverInterface.hpp"
 #include "SmiScnModel.hpp"
@@ -16,6 +20,10 @@
 
 int main(int argc,  char* argv[])
 {
+    google::InitGoogleLogging(argv[0]);
+    google::LogToStderr();
+
+
     std::string smps;
     std::string core;
     std::string time;
@@ -43,28 +51,41 @@ int main(int argc,  char* argv[])
         return 1;
     }
 
-    SmiScnModel smi_model;
-    if (vm.count("smps")) {
-        smi_model.readSmps(smps.c_str());
-    } else {
-        if ( vm.count("core") && vm.count("time") && vm.count("stoch") ){
-            smi_model.readSmps(core.c_str(),time.c_str(),stoch.c_str());
-        }
-        else{
-            std::cout << "You have to specify a problem by --smps or --time --core --stoch.";
-            return -1;
-        }
-    }
-
     // Parameter file
     parallel_benders::Parameter param;
     param.init();
+    //write_xml("param.xml",param.parameter_);
 
     if ( vm.count("parameter")){
         // reading file.xml
-        read_xml(parameter.c_str(), param.parameter_);
+        try {
+            read_xml(parameter.c_str(), param.parameter_);
+        }
+        catch (std::exception& e ){
+            LOG(ERROR) << "Could not read in parameter file, using standard parameters.";
+        }
     }
 
+    // Subject to property
+    google::SetStderrLogging(0); 
+
+    int smps_read_in = 0;
+    SmiScnModel smi_model;
+    if (vm.count("smps")) {
+        smps_read_in = smi_model.readSmps(smps.c_str());
+    } else {
+        if ( vm.count("core") && vm.count("time") && vm.count("stoch") ){
+            smps_read_in = smi_model.readSmps(core.c_str(),time.c_str(),stoch.c_str());
+        }
+        else{
+            LOG(FATAL) << "You have to specify a problem by --smps or --time --core --stoch.";
+            return -1;
+        }
+    }
+    if ( smps_read_in != 0){
+        LOG(FATAL) << "Reading in your SMPS file failed.";
+        return -1;
+    }
 
     // Create a new OsiStochasticPNB interface
     OsiSolverInterface* osi_solver = new OsiCpxSolverInterface();
