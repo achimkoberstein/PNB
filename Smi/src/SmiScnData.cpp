@@ -1822,6 +1822,27 @@ bool SmiNodeData::moveBoundsInMatrix()
         // Now we add the rows with only row_lower bounds and infinite row_upper bounds
         assert( elements.size() == indices.size());
         assert( indices.size() == row_bound.size());
+        // To have the correct row_indices we need to add the number of rows we already added to the previous stage nodes.
+        int added_rows_to_previous_stages = 0;
+        int number_of_total_rows = 0;
+        for (int i = 0; i < stg_; i++){
+            number_of_total_rows += core_->getNode(i)->nrow_;
+        }
+        // Look at current rowbeg_
+        added_rows_to_previous_stages = number_of_total_rows-rowbeg_; // The number of rows that were added in previous stages
+        assert( added_rows_to_previous_stages >= 0);
+
+        if ( added_rows_to_previous_stages ){
+            // Increment existing rows
+            // Update the row indices of all the row lower and row upper bounds for the stuff just copied
+            for (int i = 0; i < strt_[rup_strt_]-strt_[rlo_strt_];i++){
+                inds_[strt_[rlo_strt_]+i] += added_rows_to_previous_stages;
+            }
+            for (int i = 0; i < strt_[rup_strt_+1]-strt_[rup_strt_];i++){
+                inds_[strt_[rup_strt_]+i] += added_rows_to_previous_stages;
+            }
+        }
+
         if ( elements.size() ){
             int num_new_rows = elements.size();
             // We need num_new_rows matrix entries, and num_new_rows new row_lower and row_upper bounds => 3*num_new_rows new entries in dels_ and inds_ and num_new_rows new entries in strt_
@@ -1834,16 +1855,6 @@ bool SmiNodeData::moveBoundsInMatrix()
             inds_ = (int*)realloc(inds_,new_overall_size*sizeof(int));
             memmove(temp_array_inds,inds_,strt_[nstrt_-1]*sizeof(int));
             memmove(temp_array_dels,dels_,strt_[nstrt_-1]*sizeof(double));
-
-            // To have the correct row_indices we need to add the number of rows we already added to the previous stage nodes.
-            int added_rows_to_previous_stages = 0;
-            int number_of_total_rows = 0;
-            for (int i = 0; i < stg_; i++){
-                number_of_total_rows += core_->getNode(i)->nrow_;
-            }
-            // Look at current rowbeg_
-            added_rows_to_previous_stages = number_of_total_rows-rowbeg_; // The number of rows that were added in previous stages
-            assert( added_rows_to_previous_stages >= 0);
 
             for (int i = 0; i < num_new_rows; i++){
                 // Matrix element
@@ -1864,14 +1875,6 @@ bool SmiNodeData::moveBoundsInMatrix()
             // Last part
             memmove(dels_+strt_[rup_strt_]+2*num_new_rows,temp_array_dels+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(double));
             memmove(inds_+strt_[rup_strt_]+2*num_new_rows,temp_array_inds+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(int));
-            // Update the row indices of all the row lower and row upper bounds for the stuff just copied
-            for (int i = 0; i < strt_[rup_strt_]-strt_[rlo_strt_];i++){
-                inds_[strt_[rlo_strt_]+num_new_rows+i] += added_rows_to_previous_stages;
-            }
-            for (int i = 0; i < strt_[rup_strt_+1]-strt_[rup_strt_];i++){
-                inds_[strt_[rup_strt_]+2*num_new_rows+i] += added_rows_to_previous_stages;
-            }
-
  
             // Prepare the new strt_ array
             strt_ = (int*) realloc(strt_,(nstrt_+num_new_rows)*sizeof(int));
@@ -1905,8 +1908,10 @@ bool SmiNodeData::moveBoundsInMatrix()
             rup_strt_ += num_new_rows;
             return true;
         }
-        else 
+        else {
             return false;
+        }
+            
     }
     else{
         if ( has_matrix_ ){
@@ -1929,11 +1934,11 @@ bool SmiNodeData::moveBoundsInMatrix()
         // If we have RHS we need to reflect the added bounds!
         int added_rows = 0;
         for (int i = 0; i < stg_; i++){
-            added_rows = this->core_->getNode(i)->nrow_;
+            added_rows += this->core_->getNode(i)->nrow_;
         }
-        added_rows = added_rows- rowbeg_; // The number of rows we added during the process
+        added_rows = added_rows-rowbeg_; // The number of rows we added during the process
+        assert( added_rows >= 0);
         if ( strt_[rup_strt_]-strt_[rlo_strt_] )
-            // Update rlo
             for (int i = strt_[rlo_strt_]; i < strt_[rup_strt_]; i++)
                 inds_[i] += added_rows;
 
@@ -1942,7 +1947,7 @@ bool SmiNodeData::moveBoundsInMatrix()
                 inds_[i] += added_rows;
 
         // Test for stochastic bounds
-        if ( strt_[rlo_strt_]-strt_[clo_strt_] )
+        if ( strt_[obj_strt_]-strt_[clo_strt_] )
             assert(false); //TODO
         
 
