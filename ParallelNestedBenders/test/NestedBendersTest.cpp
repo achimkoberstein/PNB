@@ -81,7 +81,7 @@ public:
             //benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION,true);
             benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,0);
             benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,i+1);
 
             //// Bounds in matrix
@@ -892,7 +892,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.scfxm*";
     //::testing::GTEST_FLAG(filter) = "*watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*FELT*";
+    ::testing::GTEST_FLAG(filter) = "*pltexp*";
     //::testing::GTEST_FLAG(filter) = "*.PiaTest";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
