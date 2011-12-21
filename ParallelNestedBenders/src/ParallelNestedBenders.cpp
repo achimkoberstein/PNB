@@ -554,6 +554,7 @@ namespace parallel_benders {
         double gap = 0;
         int gap_counter = 0;
         int gap_counter_maximum = 10;
+        double threshold = 1;
         wall_clock_solution_time_.Start(0);
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
@@ -711,7 +712,16 @@ namespace parallel_benders {
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
                     //LOG(INFO) << "Discrepancy-" << current_stage_-1 << " : " << discrepancy;
                     // TODO: Find reasonable absolute and relative value, depending on available solutions, probably!
-                    if (discrepancy > 1 && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
+                    // What is the absolute gap?
+                    double absolute_gap = upper_bound_-lower_bound_;
+                    if ( lower_bound_ == -infinity_ || upper_bound_ == infinity_)
+                        threshold = 1;
+                    else
+                    {
+                        // Find number of significant bits of absolute_gap
+                        threshold = std::pow(10,std::log10(absolute_gap)-2);
+                    }
+                    if (discrepancy > threshold && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
                         forward_ = false;
                     }
                     else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
