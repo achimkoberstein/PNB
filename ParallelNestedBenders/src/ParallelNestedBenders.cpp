@@ -241,7 +241,7 @@ namespace parallel_benders {
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),minor_iteration_(0),max_iteration_(1000),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
+        current_iteration_(0),max_iteration_(1000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
@@ -546,7 +546,7 @@ namespace parallel_benders {
             createRoundRobinAggregation(node,num_childs,num_cuts,num_subproblems_per_cut);
         }
 
-        timer_.Stop(setup_timer);
+
 
 
 
@@ -554,7 +554,16 @@ namespace parallel_benders {
         double gap = 0;
         int gap_counter = 0;
         int gap_counter_maximum = 10;
+
+        // Variables needed for dynamic strategy PNB_INT_FASTPASS_WITH_FASTBACK
         double threshold = 1;
+        bool time_not_measured = true;
+        double initial_time = 0;
+        std::vector<double> initial_time_for_stage(num_stages_,0.0);
+        int bouncing_stage = 1; // The minimum bouncing stage, which is always viable
+        double percent_threshold = 0.1;
+
+        timer_.Stop(setup_timer);
         wall_clock_solution_time_.Start(0);
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
@@ -595,10 +604,12 @@ namespace parallel_benders {
             else
                 gap_counter = 0;
 
-            minor_iteration_++;
             if ( current_stage_ == 0 ){ // Things to do if we are in the first stage
                 current_iteration_++;
+                minor_iteration_++;
             }
+            if ( current_stage_ == num_stages_-1)// We only have a major iteration, if we are at the last stage!
+                major_iteration_++;
 
             // Change direction depending on last or first stage. This holds for all sequencing protocols.
 
@@ -722,10 +733,14 @@ namespace parallel_benders {
                         threshold = std::pow(10,std::log10(absolute_gap)-2);
                     }
                     if (discrepancy > threshold && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
-                        forward_ = false;
+                        forward_ = false; // Discrepancy is greater than treshold, so we do not go forward
                     }
-                    else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
-                        made_one_turn = false;
+                    else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK){ // Discrepany is lower than threshold.
+                        // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
+                        // We decided the bouncing stage by the initial time it took to compute these stages!
+                        if ( current_stage_ == bouncing_stage )
+                            made_one_turn = false; 
+                    }
                 
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
                 }
@@ -846,7 +861,7 @@ namespace parallel_benders {
                 // Workaround: Load empty problem. 
                 assert(id_solver_pair.second->getNumCols() == 0);
             }
-            timer_.Stop(current_stage_);
+
 
             if ( store_primal_and_dual_ ){
                 // Depending on if we store primal and dual solution, we need to delete the memory allocated for its storage, to lower memory requirements!
@@ -855,6 +870,34 @@ namespace parallel_benders {
                 }
             }
 
+            timer_.Stop(current_stage_);
+            // Decide the bouncing stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
+            if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 ){ // Store the time it takes to compute certain stages!
+                // Store the time in a vector
+                initial_time = timer_.GetAggregatedTime();
+                for (int i = 0; i< num_stages_; i++)
+                    initial_time_for_stage[i] = timer_.GetTime(i);
+                time_not_measured = false;
+                bool changed_bouncing_stage = false;
+                for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
+                    if ( initial_time_for_stage[i]/initial_time > percent_threshold ){
+                        bouncing_stage = i;
+                        changed_bouncing_stage = true;
+                        break;
+                    }
+                }
+                // Do some result checking
+                if ( changed_bouncing_stage ){ // If we changed the bouncing stage
+                    if ( bouncing_stage == num_stages_-1 && num_stages_ > 2){ // If we chose last stage as bouncing stage, our threshold was probably to high
+                        bouncing_stage = num_stages_-2;
+                        LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
+                    }
+                }
+                if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
+                    LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
+                }
+                LOG(INFO) << "Bouncing stage is stage " << bouncing_stage;
+            }
             // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
         }
@@ -863,6 +906,8 @@ namespace parallel_benders {
         std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
         std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
         std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+        std::cout << "Major Iterations: " << major_iteration_ << std::endl;
+        std::cout << "Overall Iterations: " << current_iteration_ << std::endl;
         int cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
         	cut_counter += added_optimality_cuts_[i];
@@ -880,6 +925,7 @@ namespace parallel_benders {
             upper_bound_ = -infinity_;
             LOG(INFO) << "Problem is infeasible.";
         }
+        
 
         // Do a Cut Analyzation
         // Iterate over the stages 
@@ -959,7 +1005,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 8){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
