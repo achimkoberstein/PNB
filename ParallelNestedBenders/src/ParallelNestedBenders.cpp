@@ -729,8 +729,9 @@ namespace parallel_benders {
                         threshold = 1;
                     else
                     {
-                        // Find number of significant bits of absolute_gap
-                        threshold = std::pow(10,std::log10(absolute_gap)-2);
+                        // Find number of significant bits of absolute_gap. Threshold is 10^(number of digits of absolute gap - 2)
+                        // Example: Absolute Gap is 10. Then log10(10) is 1. Threshold is 10^-1 = 0.1
+                        threshold = std::pow(10,std::log10(absolute_gap)-1);
                     }
                     if (discrepancy > threshold && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
                         forward_ = false; // Discrepancy is greater than treshold, so we do not go forward
@@ -738,7 +739,7 @@ namespace parallel_benders {
                     else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK){ // Discrepany is lower than threshold.
                         // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
                         // We decided the bouncing stage by the initial time it took to compute these stages!
-                        if ( current_stage_ == bouncing_stage )
+                        if ( current_stage_ == bouncing_stage ) // We go on forward from the bouncing_stage so it is the wrong term *G*
                             made_one_turn = false; 
                     }
                 
@@ -768,12 +769,18 @@ namespace parallel_benders {
                 }
             }
 
-            std::string direction(forward_ ? "F " : "B ");
-            std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
-            if ( current_stage_ == 0){
-                std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-                std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-                std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+            bool pretty_printing = true;
+            if ( pretty_printing ){
+
+            }
+            else {
+                std::string direction(forward_ ? "F " : "B ");
+                std::cout << minor_iteration_ << "Iteration " << direction << current_iteration_ << "." << current_stage_ << std::endl;
+                if ( current_stage_ == 0){
+                    std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
+                    std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+                    std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+                }
             }
 
             // If we had unbounded problems, we have to stop the algorihtm.
@@ -879,7 +886,9 @@ namespace parallel_benders {
                     initial_time_for_stage[i] = timer_.GetTime(i);
                 time_not_measured = false;
                 bool changed_bouncing_stage = false;
+                LOG(INFO) << "Overall initial time" << initial_time;
                 for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
+                    LOG(INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
                     if ( initial_time_for_stage[i]/initial_time > percent_threshold ){
                         bouncing_stage = i;
                         changed_bouncing_stage = true;
@@ -889,8 +898,8 @@ namespace parallel_benders {
                 // Do some result checking
                 if ( changed_bouncing_stage ){ // If we changed the bouncing stage
                     if ( bouncing_stage == num_stages_-1 && num_stages_ > 2){ // If we chose last stage as bouncing stage, our threshold was probably to high
-                        bouncing_stage = num_stages_-2;
-                        LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
+                        //bouncing_stage = num_stages_-2;
+                        //LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high. Last stage was chosen.";
                     }
                 }
                 if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
@@ -2220,7 +2229,7 @@ namespace parallel_benders {
                 }
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
-                    LOG(INFO)<< "CPXdualfarks :" << cpx_stat;
+                    LOG_IF(INFO,cpx_stat)<< "CPXdualfarks :" << cpx_stat;
                     if ( !(cpx_stat == CPX_STAT_OPTIMAL || cpx_stat == CPX_STAT_NUM_BEST) ) // If cpx_stat is not correct, we need to try the other stuff
                         use_cplex = false;
                     else if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
