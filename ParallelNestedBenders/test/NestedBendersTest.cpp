@@ -72,7 +72,7 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        int num_repetitions = 2; // To rule out system instability
+        int num_repetitions = 3; // To rule out system instability
         for (int i = 1; i < num_repetitions; i++){
             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); // Use Benchmark instance up front ( fast forward/fast backward
             benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // Use all Cores
@@ -93,7 +93,7 @@ public:
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
             }
-
+            benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
             //for (int k = 0; k < num_stages; k++){
             //    //if ( k == 0)
             //    //    benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
@@ -104,8 +104,7 @@ public:
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,k);
-
-
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // multi cut
             //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //    //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
             //    //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
@@ -132,6 +131,7 @@ public:
 
             //    //}
             //}
+            
 
        
         // Test stage aggregation by reducing number of consecutive stages
