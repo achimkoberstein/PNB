@@ -213,6 +213,10 @@ private:
 	bool seperate_first_stage_solver_;
 	bool seperate_stage_solver_;
 
+    // Output parameters
+    bool pretty_printing_;
+    bool pretty_printing_verbose_;
+
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
     staircase_container non_staircase_coefficients_;
     
