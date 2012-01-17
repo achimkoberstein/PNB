@@ -250,7 +250,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),optimality_cut_counter_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(true),pretty_printing_verbose_(true),optimality_cut_counter_(0)
     {
 
     }
@@ -771,11 +771,10 @@ namespace parallel_benders {
                 }
             }
 
-            bool pretty_printing = true;
-            bool pretty_printing_verbose = false;
-            if ( pretty_printing ){
+            
+            if ( pretty_printing_ ){
                 // Format output so that it looks nice
-                if ( (major_iteration_ > last_major_iteration || (pretty_printing_verbose && current_iteration_ > last_current_iteration)) && current_stage_ == 0 ){
+                if ( (major_iteration_ > last_major_iteration || (pretty_printing_verbose_ && current_iteration_ > last_current_iteration)) && current_stage_ == 0 ){
                     
                     last_major_iteration = major_iteration_;
                     last_current_iteration = current_iteration_;
@@ -787,7 +786,7 @@ namespace parallel_benders {
 
                     //ostringstream os;
                 std::string direction_string("F");
-                std::string iteration_string = boost::lexical_cast<std::string>(major_iteration_) + ( pretty_printing_verbose ? +"."+boost::lexical_cast<std::string>(current_iteration_) : "");
+                std::string iteration_string = boost::lexical_cast<std::string>(pretty_printing_verbose_ ? major_iteration_:last_major_iteration) + ( pretty_printing_verbose_ ? +"."+boost::lexical_cast<std::string>(current_iteration_) : "");
                 if ( !forward_ )
                     direction_string = "B";
                 std::cout << "\r" << left << std::setw(7) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << last_gap << std::setw(5) << direction_string << current_stage_;
