@@ -569,8 +569,9 @@ namespace parallel_benders {
         // Variables for pretty printing
         int last_major_iteration = 0;
         int last_current_iteration = 0;
-        int last_lower_bound = lower_bound_;
-        int last_upper_bound = upper_bound_;
+        double last_lower_bound = lower_bound_;
+        double last_upper_bound = upper_bound_;
+        double last_gap = infinity_;
 
         timer_.Stop(setup_timer);
         wall_clock_solution_time_.Start(0);
@@ -780,6 +781,7 @@ namespace parallel_benders {
                     last_current_iteration = current_iteration_;
                     last_lower_bound = lower_bound_;
                     last_upper_bound = upper_bound_;
+                    last_gap = gap;
                     std::cout << std::endl;
                 }
 
@@ -788,7 +790,7 @@ namespace parallel_benders {
                 std::string iteration_string = boost::lexical_cast<std::string>(major_iteration_) + ( pretty_printing_verbose ? +"."+boost::lexical_cast<std::string>(current_iteration_) : "");
                 if ( !forward_ )
                     direction_string = "B";
-                std::cout << "\r" << left << std::setw(7) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << gap << std::setw(5) << direction_string << current_stage_;
+                std::cout << "\r" << left << std::setw(7) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << last_gap << std::setw(5) << direction_string << current_stage_;
                     
                 
                 // Output at which stage we are currently like this. Put current mode up Front, followed by current stage. F3, F4 F5, B6 . But let it overwrite in the same position of the stream. Is this possible? TODO
