@@ -1,11 +1,14 @@
 #include "ParallelNestedBenders.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <math.h>
 #include <sstream>
 
+
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 #include "boost/multi_array.hpp"
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
@@ -410,7 +413,6 @@ namespace parallel_benders {
        if ( compute_stage_bounds_ ){
             // Initialize all upper and lower bounds
             stage_lower_upper_bounds_.reserve(num_stages_);
-
 			for (int i = 0; i < num_stages_;i++){
                 stage_lower_upper_bounds_.push_back( std::make_pair(-infinity_,infinity_));
 				old_lower_upper_bounds_.push_back( std::make_pair(-infinity_,infinity_));
@@ -550,6 +552,7 @@ namespace parallel_benders {
 
 
 
+        
         double old_gap = 0;
         double gap = 0;
         int gap_counter = 0;
@@ -560,11 +563,19 @@ namespace parallel_benders {
         bool time_not_measured = true;
         double initial_time = 0;
         std::vector<double> initial_time_for_stage(num_stages_,0.0);
-        int bouncing_stage = 1; // The minimum bouncing stage, which is always viable
+        int critical_stage = 1; // The minimum critical stage, which is always viable is the second stage
         double percent_threshold = 0.1;
+
+        // Variables for pretty printing
+        int last_major_iteration = 0;
+        int last_current_iteration = 0;
+        int last_lower_bound = lower_bound_;
+        int last_upper_bound = upper_bound_;
 
         timer_.Stop(setup_timer);
         wall_clock_solution_time_.Start(0);
+        // Print initial solution line
+        std::cout << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: " << std::endl; // This has to be done only once!
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
             std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
@@ -718,11 +729,10 @@ namespace parallel_benders {
                 stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound_;
                 stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound_;
                 // Discrepancy: expected value of next stage with approximation for later stages - approximation of later stages at this stage.
-                if ( current_stage_ < num_stages_ && current_stage_ > 0){
+                if ( current_stage_ < num_stages_ && current_stage_ > 0 && forward_ ){ // If we go backward already, we do it till the start. So no rechecking necessary
                     // Discrepancy makes sense on the way forward, but only for values actually solved!
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
                     //LOG(INFO) << "Discrepancy-" << current_stage_-1 << " : " << discrepancy;
-                    // TODO: Find reasonable absolute and relative value, depending on available solutions, probably!
                     // What is the absolute gap?
                     double absolute_gap = upper_bound_-lower_bound_;
                     if ( lower_bound_ == -infinity_ || upper_bound_ == infinity_)
@@ -738,22 +748,13 @@ namespace parallel_benders {
                     }
                     else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK){ // Discrepany is lower than threshold.
                         // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
-                        // We decided the bouncing stage by the initial time it took to compute these stages!
-                        if ( current_stage_ == bouncing_stage ) // We go on forward from the bouncing_stage so it is the wrong term *G*
+                        // We decided the critical stage by the initial time it took to compute these stages!
+                        if ( current_stage_ == critical_stage ) // We make a full sweep from here by setting made_one_turn to false
                             made_one_turn = false; 
                     }
                 
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
                 }
-                //if ( at_last_iteration_ && current_stage_ < num_stages_-1) { // Absolute error: values of all later stages, minus approxmation of later stages at current stage.
-                //    double absolute_error = 0; 
-                //    for (int t = current_stage_+1; t < num_stages_; ++t){ // Add all the concrete values
-                //        absolute_error += stage_lower_upper_bounds_[t].second;
-                //    }
-                //    absolute_error += (stage_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].first);
-                //    LOG(INFO) << "Absolute Error" << current_stage_ << " : " << absolute_error;
-                //}
-                
             }
 
             // Update upper bound if we solved all problems in this iteration once
@@ -770,8 +771,27 @@ namespace parallel_benders {
             }
 
             bool pretty_printing = true;
+            bool pretty_printing_verbose = false;
             if ( pretty_printing ){
+                // Format output so that it looks nice
+                if ( (major_iteration_ > last_major_iteration || (pretty_printing_verbose && current_iteration_ > last_current_iteration)) && current_stage_ == 0 ){
+                    
+                    last_major_iteration = major_iteration_;
+                    last_current_iteration = current_iteration_;
+                    last_lower_bound = lower_bound_;
+                    last_upper_bound = upper_bound_;
+                    std::cout << std::endl;
+                }
 
+                    //ostringstream os;
+                std::string direction_string("F");
+                std::string iteration_string = boost::lexical_cast<std::string>(major_iteration_) + ( pretty_printing_verbose ? +"."+boost::lexical_cast<std::string>(current_iteration_) : "");
+                if ( !forward_ )
+                    direction_string = "B";
+                std::cout << "\r" << left << std::setw(7) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << gap << std::setw(5) << direction_string << current_stage_;
+                    
+                
+                // Output at which stage we are currently like this. Put current mode up Front, followed by current stage. F3, F4 F5, B6 . But let it overwrite in the same position of the stream. Is this possible? TODO
             }
             else {
                 std::string direction(forward_ ? "F " : "B ");
@@ -878,8 +898,8 @@ namespace parallel_benders {
             }
 
             timer_.Stop(current_stage_);
-            // Decide the bouncing stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
-            if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 ){ // Store the time it takes to compute certain stages!
+            // Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
+            if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 && current_stage_ == 0 && theta_approximations_everywhere_){ // Store the time it takes to compute certain stages!
                 // Store the time in a vector
                 initial_time = timer_.GetAggregatedTime();
                 for (int i = 0; i< num_stages_; i++)
@@ -887,25 +907,26 @@ namespace parallel_benders {
                 time_not_measured = false;
                 bool changed_bouncing_stage = false;
                 LOG(INFO) << "Overall initial time" << initial_time;
+                double overall_time = initial_time_for_stage[0];
                 for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
+                    overall_time+= initial_time_for_stage[i];
                     LOG(INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
-                    if ( initial_time_for_stage[i]/initial_time > percent_threshold ){
-                        bouncing_stage = i;
+                    if ( overall_time/initial_time > percent_threshold ){
+                        critical_stage = i;
                         changed_bouncing_stage = true;
                         break;
                     }
                 }
                 // Do some result checking
                 if ( changed_bouncing_stage ){ // If we changed the bouncing stage
-                    if ( bouncing_stage == num_stages_-1 && num_stages_ > 2){ // If we chose last stage as bouncing stage, our threshold was probably to high
-                        //bouncing_stage = num_stages_-2;
+                    if ( critical_stage == num_stages_-1 && num_stages_ > 2){ // If we chose last stage as bouncing stage, our threshold was probably to high
                         //LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high. Last stage was chosen.";
                     }
                 }
                 if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
                     LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
                 }
-                LOG(INFO) << "Bouncing stage is stage " << bouncing_stage;
+                LOG(INFO) << "Bouncing stage is stage " << critical_stage;
             }
             // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
@@ -1233,13 +1254,13 @@ namespace parallel_benders {
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
                 }
+                else {
+                    theta_approximations_everywhere_ = true;
+                }
                 temporary_upper_bound_ = 0;
             }
             upper_bound_mutex_.lock();
             if ( compute_stage_bounds_ ){
-                // We have to see that we can use FAST_BACKWARD strategy. This can at first happen, when we have theta variables at stage 1.
-                if (current_stage_ == 0 && current_lower_bound > -infinity_)
-                    theta_approximations_everywhere_ = true;
                 temporary_stage_lower_bound_ += current_lower_bound;
                 temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_;
             }
