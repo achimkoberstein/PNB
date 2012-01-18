@@ -98,7 +98,6 @@ public:
 
         //    }
         //}
-
             //for (int k = 0; k < num_stages; k++){
             //    //if ( k == 0)
             //    //    benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
@@ -109,8 +108,7 @@ public:
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,k);
-
-
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // multi cut
             //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //    //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
             //    //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
@@ -137,6 +135,7 @@ public:
 
             //    //}
             //}
+            
 
        
         // Test stage aggregation by reducing number of consecutive stages
