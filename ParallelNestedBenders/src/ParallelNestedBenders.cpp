@@ -2636,6 +2636,7 @@ namespace parallel_benders {
                 }
                 osi_solver->applyRowCuts(1,(*it)->cut_.get());
             }
+            // Now think about removing cuts and apply new ones. We have a warm start, cplex may handle it better than we do.
         }
 
 	}
@@ -2860,10 +2861,10 @@ namespace parallel_benders {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         // We have the dual solution
         if ( benders_node_pointer->dual_solution_ == NULL){
-            LOG(INFO) << "You tried to analyse optimality cuts without dual information.";
+            LOG(WARNING) << "You tried to analyse optimality cuts without dual information.";
         }
-
-        int optimality_cut_start = stage_data_[current_stage_]->num_rows_;
+        // Optimality cuts start after normal rows and feasibility cuts
+        int optimality_cut_start = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Performance issues may arise here
         if ( bounds_in_matrix_ )
             optimality_cut_start += benders_node_pointer->variable_bounds_.size();
 
@@ -2879,7 +2880,7 @@ namespace parallel_benders {
         int maximal_active_creation_iteration = 0;
 
         // Retrieve the data: Iterate over all cuts!
-        int current_cut_index = optimality_cut_start;
+        int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
             if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
                 (*it)->not_active_iterations_++;
@@ -2892,10 +2893,10 @@ namespace parallel_benders {
                 active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
                 (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
                 iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
+                (*it)->not_active_iterations_ = 0;
                 if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
                     latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
                 }
-
                 if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
                     minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
                 if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
@@ -2906,13 +2907,13 @@ namespace parallel_benders {
         }
 
         // Process the data to see if we can aggregate something!
-        int inactive_threshold = 3;
+        int inactive_threshold = 1;
         bool aggregate_aggregates = false;
 
         std::map<int,int> map_old_to_new;
         int new_thetas = 0; 
         std::vector<int> delete_cols;
-        if ( maximal_active_creation_iteration - minimal_active_creation_iteration > inactive_threshold ){
+        if ( maximal_active_creation_iteration - minimal_active_creation_iteration > inactive_threshold ){ // 
             // Compute a new aggregation and change the values accordingly!
             int num_cuts = current_cut_index - stage_data_[current_stage_]->num_rows_;
             std::list<int> aggregates_into_one;
