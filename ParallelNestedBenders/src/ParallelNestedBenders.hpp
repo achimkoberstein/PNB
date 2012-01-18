@@ -137,6 +137,7 @@ private:
     std::vector<int> added_optimality_cuts_;
     std::vector<int> added_feasibility_cuts_;
 	int num_added_feasibility_cuts_;
+    bool store_cut_information_;
 
     // Strategy decision
     bool adaptive_;

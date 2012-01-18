@@ -903,7 +903,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*scdp*";
+    ::testing::GTEST_FLAG(filter) = "*pltexp*";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
