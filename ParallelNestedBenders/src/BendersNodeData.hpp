@@ -148,7 +148,7 @@ public:
     int cols_; 
     int rows_;
     int num_thetas_; // How many aggregates do we have at this node
-    boost::dynamic_bitset<> active_cuts_; // Has to have the size of num_thetas_
+    boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
     CoinWarmStart* warm_start_;
 
     SmiNodeData* smi_node_data_;
