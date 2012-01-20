@@ -3,10 +3,12 @@
 
 #include <vector>
 #include <map>
+#include <functional>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
 
@@ -84,6 +86,14 @@ namespace parallel_benders{
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
         boost::shared_ptr<OsiRowCut> cut_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
+        bool to_use_;
+    };
+
+    // To be able to use find_if on std::list< boost::shared_ptr<CutStuff> >
+    struct CutStuffComparison: public std::binary_function< boost::shared_ptr<CutStuff>, int, bool > {
+        bool operator () ( const boost::shared_ptr<CutStuff> &cut_stuff, const int &number ) const {
+            return cut_stuff->cut_creation_iteration_ == number;
+        }
     };
 
     bool is_active (const boost::shared_ptr<CutStuff>& value);
