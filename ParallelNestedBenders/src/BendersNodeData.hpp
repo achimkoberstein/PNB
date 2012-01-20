@@ -160,6 +160,7 @@ public:
     int num_thetas_; // How many aggregates do we have at this node
     boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
     CoinWarmStart* warm_start_;
+    bool warm_start_added_;
 
     SmiNodeData* smi_node_data_;
     int scenario_index_;
@@ -177,8 +178,6 @@ public:
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
     cut_container::iterator last_iteration_start_feasibility_;
-    typedef std::vector< cut_container::iterator > iteration_cut_pointer;
-    iteration_cut_pointer optimality_cut_pointer_;
     
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;

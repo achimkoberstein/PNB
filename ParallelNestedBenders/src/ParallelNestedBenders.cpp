@@ -322,7 +322,7 @@ namespace parallel_benders {
         adaptive_ = false;
 
         // Intra-Cut Aggregation
-        store_cut_information_ = true;
+        store_cut_information_ = false;
         if ( adaptive_ && store_cut_information_ )
             assert(false);
 
@@ -1058,7 +1058,7 @@ namespace parallel_benders {
         //    console_mutex_.unlock();
         //} // TODO: Debugging stuff
 
-        if ( warm_start_ ){
+        if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ ){
             if ( warm_start_scenarios_ ){
                 if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
                     osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
@@ -1209,6 +1209,7 @@ namespace parallel_benders {
                     stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
                     stage_warm_start_mutex_.unlock();
                 }
+                benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
         }
     }
 
@@ -2309,7 +2310,6 @@ namespace parallel_benders {
 			}
 			// TODO: This can be changed to addRows
 			for (; it != benders_node_pointer->feasibility_cuts_.end();++it) {
-
 				osi_solver->applyRowCuts(1,(*it)->cut_.get());
 			}
 		}
@@ -2323,18 +2323,22 @@ namespace parallel_benders {
             }
             // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
-            // TODO: This can be changed to addRows
-            bool warm_start_added = false;
+
             // Problems with warm start and optimality/feasibility cuts mixes..
             for ( ; it != benders_node_pointer->optimality_cuts_.end();++it) {
-                if ( !warm_start_added && ( (*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
+                if ( !benders_node_pointer->warm_start_added_ && ( (*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
                     // Add warm start
-                    osi_solver->setWarmStart(benders_node_pointer->warm_start_);
-                    warm_start_added = true;
+                    if ( warm_start_scenarios_ )
+                        osi_solver->setWarmStart(benders_node_pointer->warm_start_);
+                    else if ( warm_start_stage_ ){
+                        stage_warm_start_mutex_.lock(); 
+                        osi_solver->setWarmStart(stage_pointer->warm_start_);
+                        stage_warm_start_mutex_.unlock(); 
+                    }
+                    benders_node_pointer->warm_start_added_ = true;
                 }
                 if ( (*it)->to_use_ )
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
-
                 
             }
             // Now think about removing cuts and apply new ones. We have a warm start, cplex may handle it better than we do.
@@ -2611,6 +2615,7 @@ namespace parallel_benders {
                         }
                         double rhs = 0;
 
+                        // Compute the new cut coefficients and right hand side
                         BendersNodeData::cut_container::iterator end_it = benders_node_pointer->optimality_cuts_.end();
                         int number_cuts_in_this_iteration = 0;
                         for ( BendersNodeData::cut_container::iterator it = cut_stuff_it; it != benders_node_pointer->optimality_cuts_.end(); ++it){
@@ -2626,15 +2631,48 @@ namespace parallel_benders {
                             rhs += (*it)->cut_->lb();
                             number_cuts_in_this_iteration++;
                         }
-                        //LOG_IF( WARNING, number_cuts_in_this_iteration < benders_node_pointer->num_thetas_) << "Theta variables " << benders_node_pointer->num_thetas_ << " and cuts " << number_cuts_in_this_iteration;
+
+                        // Now we need to update the osi_solver object to keep a good warm_start!
+                        int current_cut_number = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // This is the first optimality cut!
+                        std::vector<int> cuts_to_remove;
+                        for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){    
+                            // Count the number of cuts, we need to remove from the problem!
+                            if ( (*it)->cut_creation_iteration_ == i && (*it)->to_use_ )
+                                cuts_to_remove.push_back(current_cut_number);
+                            if ( (*it)->cut_creation_iteration_ > i && (*it)->aggregate_number_ != -1 )
+                                break; // We added all the numbers for this iteration!
+                            if ( (*it)->to_use_ )
+                                current_cut_number++;
+                        }
+                        // We have only inactive cuts for this iteration ( all set to no_use = false )
+
+
+                        
+                        // Set the values to our old cut
                         CoinPackedVector new_row(col_size,col_size,new_indices,new_elements); // CoinPackedVector takes ownership of new_indices and new_elements
                         new_single_cut->setRow(new_row);
                         new_single_cut->setLb(rhs);
                         cut_stuff->aggregate_number_ = -1; // Indicate that this cut spans over all aggregates we have (until now, but this can be redone)
                         cut_stuff->active_value = 1.0;
-                        cut_stuff->to_use_ = true;
+                        cut_stuff->to_use_ = true; // Because of this, we must at first sort out the cuts for the solver
+
+
+                        assert( cuts_to_remove.empty() || cuts_to_remove.back() < osi_solver->getNumRows());
+
                         benders_node_pointer->optimality_cuts_.erase(cut_stuff_it, end_it);
                         benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
+                        if ( !cuts_to_remove.empty()){
+                            osi_solver->deleteRows(cuts_to_remove.size(),&cuts_to_remove[0]);
+                            osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
+                            osi_solver->resolve();
+                            if ( osi_solver->isProvenOptimal() ){
+                                // Store warmstart
+                                delete benders_node_pointer->warm_start_;
+                                benders_node_pointer->warm_start_ = osi_solver->getWarmStart();
+                            }
+                            else
+                                LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
+                        }
 
                         //LOG(INFO) << "Building new cut for iteration " << i;
                     }//End If
