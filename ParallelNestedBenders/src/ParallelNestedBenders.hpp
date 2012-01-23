@@ -163,7 +163,8 @@ private:
     boost::mutex infeasible_problem_mutex_; // Mutex for access to infeasible problem setter 
     boost::mutex osi_solver_mutex_; // Mutex that is used if we want to clone an OsiSolverInterface
     boost::mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
-	boost::mutex stage_lower_upper_bounds_mutex_; 
+	boost::mutex stage_lower_upper_bounds_mutex_;  
+    boost::mutex misc_mutex_; // Mutex for miscellanious stuff
     // Further thread management stuff
 	boost::threadpool::pool thread_pool_;
 
@@ -223,9 +224,9 @@ private:
     
 
     // TODO: REMOVE AGAIN
-    bool changed_num_rows;
-
     int optimality_cut_counter_;
+    double intra_cut_aggregation_time_;
+    double adaptive_cut_time_;
 
 
 };
