@@ -54,7 +54,7 @@ int main(int argc,  char* argv[])
     // Parameter file
     parallel_benders::Parameter param;
     param.init();
-    //write_xml("param.xml",param.parameter_);
+    write_xml("param.xml",param.parameter_);
 
     if ( vm.count("parameter")){
         // reading file.xml
@@ -78,7 +78,7 @@ int main(int argc,  char* argv[])
             smps_read_in = smi_model.readSmps(core.c_str(),time.c_str(),stoch.c_str());
         }
         else{
-            LOG(FATAL) << "You have to specify a problem by --smps or --time --core --stoch.";
+            LOG(ERROR) << "You have to specify a problem by --smps or --time --core --stoch.";
             return -1;
         }
     }
