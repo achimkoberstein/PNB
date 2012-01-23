@@ -197,7 +197,7 @@ void Parameter::init()
     //// Aggregation of Cuts ( or single-multi cut )
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
     parameter_.put(PNB_SCENARIOS_PRO_CUT, 0); // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
-	parameter_.put(PNB_DYNAMIC_AGGREGATION, 0); // Do we use Dynamic aggregation? And which strategy?
+	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
     parameter_.put(PNB_RELAXATION, 0); // Solved LP relaxation instead of MIP problem, if we have a MIP problem
 	// Multistage strategies
@@ -213,6 +213,8 @@ void Parameter::init()
     parameter_.put(PNB_STAGE_AGGREGATION_DIRECTION,true); // Direction == true : Aggregate from start
     //Bounds in matrix
     parameter_.put(PNB_BOUNDS_IN_MATRIX,false);
+    // Intra Cut Aggregation
+    parameter_.put(PNB_INTRA_CUT_AGGREGATION,false);
     // Start solution
     parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution, 1 EV solution, 2 ? not yet implemented
 	// Parallel Parameters

@@ -49,6 +49,8 @@ namespace parallel_benders{
     const std::string PNB_STAGE_AGGREGATION_DIRECTION = "PNG_STAGE_AGGREGATION_DIRECTION"; // In which direction do we want to aggregate if difference is greater than one? True means from start to end, false means from end to start
     const std::string PNB_USE_START_SOLUTION = "PNB_USE_START_SOLUTION"; // If we use a start solution or not. At the moment start solution is EV solution!
     const std::string PNB_BOUNDS_IN_MATRIX = "PNB_BOUNDS_IN_MATRIX";
+    const std::string PNB_INTRA_CUT_AGGREGATION = "PNB_INTRA_CUT_AGGREGATION";
+    const std::string PNB_INTRA_CUT_AGGREGATION_STRATEGY = "PNB_INTRA_CUT_AGGREGATION_STRATEGY";
 
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
 
@@ -69,7 +71,8 @@ namespace parallel_benders{
 	const int PNB_INT_SECOND_ITERATION = 5;
     const int PNB_INT_FASTPASS_WITH_FASTBACK = 6;
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
-	//const int PNB_INT_
+	// Intra cut aggregation strategies
+
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
