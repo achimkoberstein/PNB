@@ -433,7 +433,7 @@ namespace parallel_benders {
            seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
        }
        if ( store_cut_information_){
-           seperate_first_stage_solver_ = false;// TODO: Until we worked out how to deal with first stage problem directly, we turn 
+           //seperate_first_stage_solver_ = false;// TODO: Until we worked out how to deal with first stage problem directly, we turn 
        }
 
 
@@ -1766,7 +1766,7 @@ namespace parallel_benders {
 
         int added_cuts = 0;
         bool initialized_iterator = !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty();
-        if ( !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty() )
+        if ( initialized_iterator && seperate_first_stage_solver_ && current_stage_ == 1)
             benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
 
         bool added_iterator = false;
@@ -1855,9 +1855,9 @@ namespace parallel_benders {
         }// End for num_cuts
 
         // Add number of added cuts.
-        if ( added_cuts ){
+        if ( added_cuts && seperate_first_stage_solver_ && current_stage_ == 1){
             if ( initialized_iterator ) 
-                ++benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; // Start at the correct one!
+                ++benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; // Start at the correct one ( points to last of previous iteration before ++operation )
             else
                 benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.begin();
         }
@@ -2315,6 +2315,7 @@ namespace parallel_benders {
 			}
 			// TODO: This can be changed to addRows
 			for (; it != benders_node_pointer->feasibility_cuts_.end();++it) {
+                assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 				osi_solver->applyRowCuts(1,(*it)->cut_.get());
 			}
 		}
@@ -2342,8 +2343,10 @@ namespace parallel_benders {
                     }
                     benders_node_pointer->warm_start_added_ = true;
                 }
-                if ( (*it)->to_use_ )
+                if ( (*it)->to_use_ ){
+                    assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
+                }
                 
             }
             // Now think about removing cuts and apply new ones. We have a warm start, cplex may handle it better than we do.
@@ -2551,6 +2554,14 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
+        // Should we really use this method?
+        if ( adaptive_ ){
+            if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
+                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
+            else
+                return;
+        }
+
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values
@@ -2673,11 +2684,18 @@ namespace parallel_benders {
                         if ( !cuts_to_remove.empty()){
                             osi_solver->deleteRows(cuts_to_remove.size(),&cuts_to_remove[0]);
                             osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
+                            benders_node_pointer->opt_cut_start_index_ -= cuts_to_remove.size()-1;
                             osi_solver->resolve();
+                            if ( seperate_first_stage_solver_ && current_stage_ == 0)
+                                benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
                             if ( osi_solver->isProvenOptimal() ){
                                 // Store warmstart
                                 delete benders_node_pointer->warm_start_;
+                                if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0)
+                                    stage_warm_start_mutex_.lock();                                
                                 benders_node_pointer->warm_start_ = osi_solver->getWarmStart();
+                                if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0)
+                                    stage_warm_start_mutex_.unlock();        
                             }
                             else
                                 LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
@@ -2698,6 +2716,16 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AnalyseOptimalityCuts( OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
+        // Should we really use this method?
+        if ( store_cut_information_ ){
+            if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
+                return;
+            else
+                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
+        }
+
+
+
         double time = CoinCpuTime();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();

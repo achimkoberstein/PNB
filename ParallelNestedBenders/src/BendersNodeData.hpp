@@ -191,6 +191,7 @@ public:
 	bool changed_aggregation_level_;
 	int opt_cut_start_index_; // If we keep instances of the solver, we may want to store which cuts we added last
 	int feas_cut_start_index_;
+    bool alternating_intra_cut_adaptive_; // True = Intra_cut, False = Adaptive
 
     // Values for cut aggregation
     std::vector<double> current_cut_coefficients_;
