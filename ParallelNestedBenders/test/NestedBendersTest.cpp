@@ -71,7 +71,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,100);
         benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
 
