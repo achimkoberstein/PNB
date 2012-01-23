@@ -1052,7 +1052,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
@@ -2602,7 +2602,7 @@ namespace parallel_benders {
                 double intra_aggregate_threshold = zero_tolerance_;
                 for (int i = 1; i< current_iteration_; i++){ // Iterate over all iterations
                     // If the cuts are not active && their old values from former iterations have worn off
-                    if ( cuts_from_iteration[i].second < intra_aggregate_threshold && active_values_for_iterations[i] < intra_aggregate_threshold){
+                    if ( cuts_from_iteration[i].second < intra_aggregate_threshold ){
                         // Let's put all the cuts in one single cut!
                        
                         BendersNodeData::cut_container::iterator cut_stuff_it = std::find_if(benders_node_pointer->optimality_cuts_.begin(), benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
@@ -2813,6 +2813,7 @@ namespace parallel_benders {
         // Iterate once over the set of cuts and create new cuts from the old ones. 
         // Assumption: Cuts are stored in this container en bloc regarding their initial creation. So we can keep the old ones and add the new ones to it
         if ( aggregate_aggregates ){ // Only if we aggregated something, we need to aggregate the actual cuts!
+            assert(removed_thetas>0);
             std::vector< boost::shared_ptr<CutStuff> > pointer_to_cuts(new_thetas); 
             int creation_iteration = 1;
             std::vector<int> delete_rows;
@@ -2831,11 +2832,25 @@ namespace parallel_benders {
                 if ( pointer_to_cuts[new_number] == NULL ){
                     pointer_to_cuts[new_number] = *it;
                     if ( store_cut_information_ && (*it)->aggregate_number_ == -1){ // We only need this if we do IntraCutAggregation
+                        // We have to create a whole new row_ vector, because cplex does not like to add indices that are greater than the number of columns, even if the entries are zero!
                         // We want to change the row that has the form of cut_coefficients*x + unit_vector*\theta-vector so that it is correct with the new theta vector
-                        int number_indices = (*it)->cut_->row().getNumElements();
-                        for (int current_index = number_indices-1-removed_thetas; current_index < number_indices-1; current_index++){
-                            (*it)->cut_->mutableRow().getElements()[current_index] = 0;
+                         OsiRowCut * new_single_cut = (*it)->cut_.get();
+                        // We need to create a new vector
+                        int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_; // This many variables are needed
+                        double * new_elements = new double[col_size]; // Ownership is taken later by CoinPackedVector new_row
+                        int * new_indices = new int[col_size];// Owernship is taken later by CoinPackedVector new_row
+                        // Memcpy all the elements except the theta ones
+                        memcpy(new_elements,new_single_cut->row().getElements(),stage_data_[current_stage_]->num_columns_*sizeof(double));
+                        memcpy(new_indices,new_single_cut->row().getIndices(),stage_data_[current_stage_]->num_columns_*sizeof(int));
+                        for (int i = stage_data_[current_stage_]->num_columns_; i < col_size; i++){
+                            new_elements[i] = 1;
+                            new_indices[i] = i;
                         }
+                        CoinPackedVector cpv(col_size,col_size,new_indices,new_elements); // Assigns elements to vector, arrays get nulled
+                        assert( new_elements == NULL);
+                        assert( new_indices == NULL);
+                        new_single_cut->setRow(cpv);
+
                     }
                     else if ( new_number != (*it)->aggregate_number_ ) {
                         // We need to change the index of the aggregate in the cut!
