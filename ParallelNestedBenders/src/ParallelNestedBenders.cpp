@@ -266,7 +266,7 @@ namespace parallel_benders {
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
 		// Load empty problem (i.e. reset the solver interface
-		//osi_solver_->messageHandler()->setLogLevel(0); // TODO: unsilenced cplex
+		osi_solver_->messageHandler()->setLogLevel(0); // TODO: unsilenced cplex
 		osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         // Cplex specific settings come later
 
@@ -430,7 +430,7 @@ namespace parallel_benders {
        // Set values depending on others
        if ( adaptive_ ){
            store_primal_and_dual_ = true;
-           seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
+           //seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
        }
        if ( store_cut_information_){
            //seperate_first_stage_solver_ = false;// TODO: Until we worked out how to deal with first stage problem directly, we turn 
@@ -2524,6 +2524,7 @@ namespace parallel_benders {
                 return;
         }
 
+
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values
@@ -2574,6 +2575,7 @@ namespace parallel_benders {
                 // Define a threshold to see when we can intra-aggregate the cuts. 
                 double intra_aggregate_threshold = zero_tolerance_;
                 for (int i = 1; i< current_iteration_; i++){ // Iterate over all iterations
+                    //std::cout << "iteration " << i << " : " << cuts_from_iteration[i].second << std::endl;
                     // If the cuts are not active && their old values from former iterations have worn off
                     if ( cuts_from_iteration[i].second < intra_aggregate_threshold ){
                         // Let's put all the cuts in one single cut!
@@ -2709,6 +2711,7 @@ namespace parallel_benders {
         // Retrieve the data: Iterate over all cuts!
         int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
+            assert( current_cut_index <= stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size() );
             if ( (*it)->aggregate_number_ == -1 ){
                 current_cut_index++;
                 continue;
@@ -2870,7 +2873,9 @@ namespace parallel_benders {
             for (BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it)
                 osi_solver->applyRowCuts(1,(*it)->cut_.get());
             osi_solver->resolve();
-           StoreWarmStart(osi_solver,benders_tree_node_pointer);
+            StoreWarmStart(osi_solver,benders_tree_node_pointer);
+           if ( seperate_first_stage_solver_ && current_stage_ == 0)
+               benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
         }
 
 
