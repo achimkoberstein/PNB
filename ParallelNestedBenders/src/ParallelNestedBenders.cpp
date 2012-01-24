@@ -2538,6 +2538,13 @@ namespace parallel_benders {
             std::vector< std::list< std::pair<int,double> > > active_aggregates_per_aggregate(benders_node_pointer->num_thetas_); // Stores information about cut from which iterations are active for an aggregate and how active they are
             std::vector< std::pair<int,double> > cuts_from_iteration(current_iteration_); // Stores information about how many cuts are active from a given iteration and how active they are
             std::vector< double> active_values_for_iterations(current_iteration_);
+
+            // Initialize data structures
+            for (int i = 0; i< current_iteration_; i++){
+                cuts_from_iteration[i].first = 0;
+                cuts_from_iteration[i].second = 0;
+                active_values_for_iterations[i] = 0;
+            }
             
 
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
@@ -2577,6 +2584,8 @@ namespace parallel_benders {
                 for (int i = 1; i< current_iteration_; i++){ // Iterate over all iterations
                     //std::cout << "iteration " << i << " : " << cuts_from_iteration[i].second << std::endl;
                     // If the cuts are not active && their old values from former iterations have worn off
+                    assert( cuts_from_iteration[i] >= 0);
+                    assert( active_values_for_iterations[i] >= 0);
                     if ( cuts_from_iteration[i].second < intra_aggregate_threshold ){
                         // Let's put all the cuts in one single cut!
                        
@@ -2682,9 +2691,6 @@ namespace parallel_benders {
             else
                 benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = true;
         }
-
-
-
         double time = CoinCpuTime();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
@@ -2711,11 +2717,13 @@ namespace parallel_benders {
         // Retrieve the data: Iterate over all cuts!
         int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
-            assert( current_cut_index <= stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size() );
+            assert( current_cut_index <= osi_solver->getNumRows());
             if ( (*it)->aggregate_number_ == -1 ){
                 current_cut_index++;
                 continue;
             }
+            if ( !(*it)->to_use_  )// If we do not use the cut, i.e. it is not in the solver, we must not increase the current_cut_index
+                continue;
             if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
                 (*it)->not_active_iterations_++;
                 if ( (*it)->not_active_iterations_ > threshold ){
