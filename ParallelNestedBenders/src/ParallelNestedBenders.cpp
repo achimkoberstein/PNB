@@ -1060,22 +1060,8 @@ namespace parallel_benders {
         //    console_mutex_.unlock();
         //} // TODO: Debugging stuff
 
-        if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_)){ // We add a warm_start if configured and first stage solver is not seperate!
-            if ( warm_start_scenarios_ ){
-                if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
-                    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
-                else{
-                    stage_warm_start_mutex_.lock(); 
-                    osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
-                    stage_warm_start_mutex_.unlock();
-                }
-            }
-            else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
-                stage_warm_start_mutex_.lock(); 
-                osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
-                stage_warm_start_mutex_.unlock();
-            }
-        }
+        SetWarmStart(osi_solver,benders_tree_node_pointer);
+
         // We set the first stage warm_up solution, if we had one!
         if ( warm_up_  && current_stage_ == 0){
             for (int i = 0; i < stage_data_[0]->num_columns_; i++){
@@ -1193,25 +1179,7 @@ namespace parallel_benders {
 
         }// if not provenOptimal end
         else { // Proven Optimal: 
-            if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_)) // Store WarmStart Information, otherwise we reuse the old one..
-                if ( warm_start_scenarios_ ){
-                    if ( benders_tree_node_pointer->scenario() == 0 && benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL ){
-                        stage_warm_start_mutex_.lock();
-                        delete stage_data_[current_stage_]->warm_start_;
-                        stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
-                        stage_warm_start_mutex_.unlock();
-                    }
-                    delete benders_tree_node_pointer->getDataPtr()->warm_start_;
-                    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
-                }
-                else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_)){
-                    // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
-                    stage_warm_start_mutex_.lock();
-                    delete stage_data_[current_stage_]->warm_start_;
-                    stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
-                    stage_warm_start_mutex_.unlock();
-                }
-                benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
+           StoreWarmStart(osi_solver,benders_tree_node_pointer);
         }
     }
 
@@ -2913,25 +2881,7 @@ namespace parallel_benders {
             for (BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it)
                 osi_solver->applyRowCuts(1,(*it)->cut_.get());
             osi_solver->resolve();
-            // Store warm start
-                        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_)) // Store WarmStart Information, otherwise we reuse the old one..
-                if ( warm_start_scenarios_ ){
-                    if ( benders_tree_node_pointer->scenario() == 0 && benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL ){
-                        stage_warm_start_mutex_.lock();
-                        delete stage_data_[current_stage_]->warm_start_;
-                        stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
-                        stage_warm_start_mutex_.unlock();
-                    }
-                    delete benders_tree_node_pointer->getDataPtr()->warm_start_;
-                    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
-                }
-                else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_)){
-                    // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
-                    stage_warm_start_mutex_.lock();
-                    delete stage_data_[current_stage_]->warm_start_;
-                    stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
-                    stage_warm_start_mutex_.unlock();
-                }
+           StoreWarmStart(osi_solver,benders_tree_node_pointer);
         }
 
 
@@ -3175,7 +3125,49 @@ namespace parallel_benders {
         }//End if primal_degeneracy..
     }
 
+    void ParallelNestedBenders::SetWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_)){ // We add a warm_start if configured and first stage solver is not seperate!
+            if ( warm_start_scenarios_ ){
+                if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
+                    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+                else{
+                    stage_warm_start_mutex_.lock(); 
+                    osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                    stage_warm_start_mutex_.unlock();
+                }
+            }
+            else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
+                stage_warm_start_mutex_.lock(); 
+                osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                stage_warm_start_mutex_.unlock();
+            }
+        }
+    }
 
+    void ParallelNestedBenders::StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_)){ // Store WarmStart Information, otherwise we reuse the old one..
+            if ( warm_start_scenarios_ ){
+                if ( benders_tree_node_pointer->scenario() == 0 && benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL ){
+                    stage_warm_start_mutex_.lock();
+                    delete stage_data_[current_stage_]->warm_start_;
+                    stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                    stage_warm_start_mutex_.unlock();
+                }
+                delete benders_tree_node_pointer->getDataPtr()->warm_start_;
+                benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+            }
+            else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_)){
+                // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
+                stage_warm_start_mutex_.lock();
+                delete stage_data_[current_stage_]->warm_start_;
+                stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                stage_warm_start_mutex_.unlock();
+            }
+            benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
+        }
+    }
     bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
