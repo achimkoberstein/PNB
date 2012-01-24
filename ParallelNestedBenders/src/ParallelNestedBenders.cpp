@@ -2678,7 +2678,7 @@ namespace parallel_benders {
             if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
                 return;
             else
-                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
+                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = true;
         }
 
 
