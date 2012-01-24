@@ -266,7 +266,7 @@ namespace parallel_benders {
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
 		// Load empty problem (i.e. reset the solver interface
-		osi_solver_->messageHandler()->setLogLevel(0);
+		//osi_solver_->messageHandler()->setLogLevel(0); // TODO: unsilenced cplex
 		osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         // Cplex specific settings come later
 
@@ -2896,8 +2896,42 @@ namespace parallel_benders {
                     }
                     benders_node_pointer->optimality_cuts_.erase(it++);
                 }
-            }
-            // Delete the cuts from the solver to keep warm start going? Probably not much use there!
+            }//End For
+            // Delete the columns, delete the cuts and insert all cuts again!
+            std::vector<int> removed_columns(removed_thetas);
+            for (int i = 0; i < removed_thetas; i++)
+                removed_columns[i] = stage_data_[current_stage_]->num_columns_+new_thetas+i;
+            osi_solver->deleteCols(removed_thetas,&removed_columns[0]);
+            // Delete the cuts
+            int num_rows = osi_solver->getNumRows();
+            int num_feas_cuts = benders_node_pointer->feasibility_cuts_.size();
+            std::vector<int> removed_rows(num_rows-stage_data_[current_stage_]->num_rows_-num_feas_cuts);
+            for (int i = 0; i < num_rows-stage_data_[current_stage_]->num_rows_-num_feas_cuts;i++)
+                removed_rows[i] = stage_data_[current_stage_]->num_rows_+num_feas_cuts+i;
+            osi_solver->deleteRows(removed_rows.size(),&removed_rows[0]);
+            // Apply row cuts
+            for (BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it)
+                osi_solver->applyRowCuts(1,(*it)->cut_.get());
+            osi_solver->resolve();
+            // Store warm start
+                        if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_)) // Store WarmStart Information, otherwise we reuse the old one..
+                if ( warm_start_scenarios_ ){
+                    if ( benders_tree_node_pointer->scenario() == 0 && benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL ){
+                        stage_warm_start_mutex_.lock();
+                        delete stage_data_[current_stage_]->warm_start_;
+                        stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                        stage_warm_start_mutex_.unlock();
+                    }
+                    delete benders_tree_node_pointer->getDataPtr()->warm_start_;
+                    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+                }
+                else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_)){
+                    // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
+                    stage_warm_start_mutex_.lock();
+                    delete stage_data_[current_stage_]->warm_start_;
+                    stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                    stage_warm_start_mutex_.unlock();
+                }
         }
 
 

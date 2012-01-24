@@ -11,6 +11,8 @@
 #include "boost/threadpool.hpp"
 
 #include <CoinPackedVector.hpp>
+#include <CoinWarmStart.hpp>
+
 #include "SmiScnModel.hpp"
 #include "SmiScenarioTree.hpp" 
 #include "BendersNodeData.hpp"
@@ -58,6 +60,9 @@ private:
 	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SolveSubproblem( OsiSolverInterface* osi_solver ,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+
+    void SetWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
