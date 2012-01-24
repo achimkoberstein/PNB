@@ -2302,13 +2302,7 @@ namespace parallel_benders {
             for ( ; it != benders_node_pointer->optimality_cuts_.end();++it) {
                 if ( !benders_node_pointer->warm_start_added_ && ( (*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
                     // Add warm start
-                    if ( warm_start_scenarios_ && ( current_stage_ > 0 || !seperate_first_stage_solver_))
-                        osi_solver->setWarmStart(benders_node_pointer->warm_start_);
-                    else if ( warm_start_stage_ && ( current_stage_ > 0 || !seperate_first_stage_solver_)){
-                        stage_warm_start_mutex_.lock(); 
-                        osi_solver->setWarmStart(stage_pointer->warm_start_);
-                        stage_warm_start_mutex_.unlock(); 
-                    }
+                    SetWarmStart(osi_solver,benders_tree_node_pointer);
                     benders_node_pointer->warm_start_added_ = true;
                 }
                 if ( (*it)->to_use_ ){
@@ -2658,12 +2652,7 @@ namespace parallel_benders {
                                 benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
                             if ( osi_solver->isProvenOptimal() ){
                                 // Store warmstart
-                                delete benders_node_pointer->warm_start_;
-                                if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0)
-                                    stage_warm_start_mutex_.lock();                                
-                                benders_node_pointer->warm_start_ = osi_solver->getWarmStart();
-                                if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0)
-                                    stage_warm_start_mutex_.unlock();        
+                                StoreWarmStart(osi_solver,benders_tree_node_pointer);      
                             }
                             else
                                 LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
