@@ -2584,7 +2584,7 @@ namespace parallel_benders {
                 for (int i = 1; i< current_iteration_; i++){ // Iterate over all iterations
                     //std::cout << "iteration " << i << " : " << cuts_from_iteration[i].second << std::endl;
                     // If the cuts are not active && their old values from former iterations have worn off
-                    assert( cuts_from_iteration[i] >= 0);
+                    assert( cuts_from_iteration[i].second >= 0);
                     assert( active_values_for_iterations[i] >= 0);
                     if ( cuts_from_iteration[i].second < intra_aggregate_threshold ){
                         // Let's put all the cuts in one single cut!
