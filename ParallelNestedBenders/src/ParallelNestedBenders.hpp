@@ -243,7 +243,7 @@ private:
 // True if equal with given tolerance
 bool CompareForEquality( double first, double second, double tolerance);
 // True if gap is not small enough yet
-bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon);
+bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
