@@ -591,7 +591,7 @@ namespace parallel_benders {
         // Do initialization stuff necessary for solve process
         while ( lower_bound_ < upper_bound_ &&
             std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
-            ComputeRelativeGap(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
+            RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
             current_iteration_ < max_iteration_ 
             ) 
         {
@@ -658,7 +658,7 @@ namespace parallel_benders {
                     double current_upper_bound = 0;
                     for (int i = current_stage_; i < num_stages_; i++)
                         current_upper_bound += stage_lower_upper_bounds_[i].second;
-					if ( ComputeRelativeGap(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_) ){// If true, values are not equal. 
+					if ( RelativeGapPresent(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_) ){// If true, values are not equal. 
                         forward_ = true; // We want to move forward again, with the newest cuts..
 						// Check for nearby values
 						if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
@@ -834,7 +834,7 @@ namespace parallel_benders {
                         if ( current_stage_ == num_stages_-1 )
                             current_stage_theta = 0;
                         // Compute the gap of this stage with the stage before to decide where to go
-                        if ( !ComputeRelativeGap(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
+                        if ( !RelativeGapPresent(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
                             std::abs(current_stage_x-before_stage_theta+current_stage_theta) <= absolute_epsilon_ ||
                             current_stage_x < before_stage_theta-current_stage_theta ){
                                 // We fulfilled our epsilon distance, so we can move to the next stage
@@ -2511,7 +2511,7 @@ namespace parallel_benders {
 
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
-        // What do we need? The dual values
+        // What do we need? The dual values. They are stored and thus checked against zero tolerance
         assert( benders_node_pointer->dual_solution_ != NULL);
         assert(store_cut_information_); // If we do not want to store cut information this method should not be called
 
@@ -2529,8 +2529,7 @@ namespace parallel_benders {
                 cuts_from_iteration[i].second = 0;
                 active_values_for_iterations[i] = 0;
             }
-            
-
+ 
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             //assert( current_cut == osi_solver->getNumRows()-benders_node_pointer->optimality_cuts_.size()); // TODO: Store size in variable
             // Store the number of rows/columns
@@ -2551,8 +2550,12 @@ namespace parallel_benders {
                     cuts_from_iteration[cut_creation].second += active;
                     (*it)->active_value += active;
                 }
+                else if ( (*it)->active_value > 0.5 ) {
+                    (*it)->active_value -= 0.5;
+                }
                 else 
-                    (*it)->active_value -= (*it)->active_value < 0.5 ? 0 : 0.5;
+                    (*it)->active_value = 0;
+
                 active_values_for_iterations[cut_creation] += (*it)->active_value;
                 current_cut++;
             }
@@ -2564,14 +2567,19 @@ namespace parallel_benders {
             if ( benders_node_pointer->num_thetas_ > 1 ){ // Only if we have more than one aggregate, this aggregation scheme makes sense
 
                 // Define a threshold to see when we can intra-aggregate the cuts. 
-                double intra_aggregate_threshold = zero_tolerance_;
+                double intra_aggregate_threshold = 0.005*benders_node_pointer->num_thetas_;//zero_tolerance_;
+                 // The active value for all cuts sums up to the number of aggregates. All cuts for each aggregate sum up to 1.
                 for (int i = 1; i< current_iteration_; i++){ // Iterate over all iterations
                     //std::cout << "iteration " << i << " : " << cuts_from_iteration[i].second << std::endl;
                     // If the cuts are not active && their old values from former iterations have worn off
                     assert( cuts_from_iteration[i].second >= 0);
                     assert( active_values_for_iterations[i] >= 0);
+
+                    //LOG_IF(INFO,active_values_for_iterations[i]) << "Iteration " << i << " is still active with " << active_values_for_iterations[i] << " compared to actual active value " << cuts_from_iteration[i].second;
                     if ( cuts_from_iteration[i].second < intra_aggregate_threshold ){
                         // Let's put all the cuts in one single cut!
+                        //if ( active_values_for_iterations[i] > intra_aggregate_threshold) // Let's use the active measurements from past times..
+                        //    continue;
                        
                         BendersNodeData::cut_container::iterator cut_stuff_it = std::find_if(benders_node_pointer->optimality_cuts_.begin(), benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
                         if ( cut_stuff_it == benders_node_pointer->optimality_cuts_.end())
@@ -3154,14 +3162,13 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
         }
     }
-    bool ComputeRelativeGap(double upper_bound, double lower_bound, double infinity, double epsilon){
+    bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
-            return true;
-        if (upper_bound == 0) // We have no meaningful comparison
             return true;
         if (std::abs(upper_bound) < 1 && std::abs(lower_bound) < 1) //in this case we do not want relative difference, instead we want absolute difference..
             return true;
-		return (std::abs(upper_bound-lower_bound)/std::abs(upper_bound)) >= epsilon; //See cplex mipgap
+		return std::abs(upper_bound-lower_bound)/(std::abs(lower_bound)+0.00000000001) >= epsilon; //Gap as defined in POSTS test set (except 0.0..01 instead of 0.1)
+        // Cplex MIPGAP is |bestnode-bestinteger| / ( |bestinteger| + 0.0000000001 )
     }
 
     RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode )
