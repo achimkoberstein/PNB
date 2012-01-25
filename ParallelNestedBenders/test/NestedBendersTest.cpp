@@ -66,23 +66,27 @@ public:
 
         benders_parameter_.init();
 
-        // SOlve problem for now
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+        // DetEq
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+        // Solve problem for now
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1000);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
         benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0); 
@@ -585,12 +589,12 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages, tw
 }
 // Posts test set: http://users.iems.northwestern.edu/~jrbirge/html/dholmes/post.html
 TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts, INDEP
- //   EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.686, 0.1); // OK : MSLIP/NEOS: 18416.76
-	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.655, 0.1); // OK : MSLIP/NEOS: 18416.76
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"), 18615.932, 0.1);// Model probability problems
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"), 18438.891, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"), 18616.224, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18438.891, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"),18615.4 , 0.1);// Model probability problems 18615.932
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 }
 
 TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
