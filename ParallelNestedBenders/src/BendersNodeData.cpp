@@ -17,7 +17,7 @@ namespace parallel_benders{
 
 BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),opt_cut_start_index_(0),feas_cut_start_index_(0),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
 
 {
@@ -25,7 +25,7 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),opt_cut_start_index_(0),feas_cut_start_index_(0),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
 {
 
@@ -126,7 +126,7 @@ void BendersNodeData::CleanUnusedMemory( bool direction )
 BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),non_zero_bounds_(false),
-column_indices_(0),row_indices_(0),warm_start_(NULL),osi_solver_map_(),no_staircase_constraints_()
+column_indices_(0),row_indices_(0),warm_start_(NULL),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false)
 {
 
 }

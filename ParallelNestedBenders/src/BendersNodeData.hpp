@@ -189,8 +189,6 @@ public:
 
 	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
 	bool changed_aggregation_level_;
-	int opt_cut_start_index_; // If we keep instances of the solver, we may want to store which cuts we added last
-	int feas_cut_start_index_;
     bool alternating_intra_cut_adaptive_; // True = Intra_cut, False = Adaptive
 
     // Values for cut aggregation
@@ -245,6 +243,9 @@ struct BendersStageData {
 
     // In the non-staircase case
     std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
+
+    // Store if we changed aggregation level
+    bool changed_aggregation_level_;
 
 };
 
