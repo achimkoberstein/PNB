@@ -726,14 +726,6 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            //if ( adaptive_ && current_iteration_ > 1 && ( (current_stage_ < num_stages_-1 && !forward_) || current_stage_ == 0)){
-            //    for ( int i = 0; i < num_nodes; i++ ){
-            //        // Schedule the tasks for this stage
-            //        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AnalyseOptimalityCuts,this,tree_nodes_by_stage_[current_stage_][i]));
-            //    }
-            //    thread_pool_.wait(0); // We wait until all threads are done
-            //}
-
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() && !compute_stage_bounds_)// Update upper bound only, when we have no infeasible problems!
                 if ( temporary_upper_bound_ < upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
@@ -910,6 +902,7 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[current_stage_][i]->getDataPtr()->CleanUnusedMemory(forward_);
                 }
             }
+            stage_data_[current_stage_]->changed_aggregation_level_ = false; // Necessary for adaptive_ methods!
 
             timer_.Stop(current_stage_);
             // Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
@@ -1052,7 +1045,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
@@ -1723,12 +1716,6 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_cuts);
         }
 
-		// We have to set the start index again, but only if we used it ( marked by infinity )
-		if ( current_stage_-1 == 0 ){
-			if ( benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == 0 || benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ == -1)
-				benders_tree_node_pointer->getDataPtr()->opt_cut_start_index_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.size();
-		}
-
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
         // Do some magic to find a good partition for the number of cuts we want to produce: TODO
 
@@ -1882,24 +1869,23 @@ namespace parallel_benders {
             else
                 CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
             
-            //// Write the dual problem, to see what cplex solves
-            //console_mutex_.lock();
-            //double obj_shift = 0;
-            //cpx_stat = CPXdualwrite(env_ptr,lp_ptr,"dual_test",&obj_shift);
-            //console_mutex_.unlock();
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
                 if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){
                     cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);// If we use the primal method, we get the dual ray via the dual variables
+                    if ( cpx_stat != 0){
+                        //Routine was unsuccesful, we need to compute the values by the normal method
+                        LOG_IF(INFO,cpx_stat) << "CPXgetpi : " << cpx_stat;
+                    }
                 }
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
-                    LOG_IF(INFO,cpx_stat)<< "CPXdualfarks :" << cpx_stat;
-                    if ( !(cpx_stat == CPX_STAT_OPTIMAL || cpx_stat == CPX_STAT_NUM_BEST) ) // If cpx_stat is not correct, we need to try the other stuff
+                    LOG_IF(INFO,cpx_stat)<< "CPXdualfarks : " << cpx_stat;
+                    if ( cpx_stat != 0 )// If CPXdualfarkas returns a value that is not zero, it was unsuccessful, so we need to compute the dual ray the normal way
                         use_cplex = false;
-                    else if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the values for the bounds! Where do we get the values? 
-                       // q^T = y^T*A
+                    else if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the dual values for the bounds! Where do we get the values? Link blogpost by OR in an OB World
+                        // q^T = y^T*A 
                         // We can compute this with the column based matrices
                         variable_lower_bounds = benders_tree_node_pointer->getDataPtr()->column_lower_;
                         variable_upper_bounds = benders_tree_node_pointer->getDataPtr()->column_upper_;
@@ -1924,7 +1910,7 @@ namespace parallel_benders {
                                 CoinShallowPackedVector vector = matrix->getVector(i);
                                 double result = 0.0;
                                 for ( int j = 0; j < vector.getNumElements(); j++){
-                                    result += dual_solution_farkas[vector.getIndices()[j]] * vector.getElements()[j];
+                                    result += (CompareWithZero(dual_solution_farkas[vector.getIndices()[j]]) ? 0: dual_solution_farkas[vector.getIndices()[j]] )* vector.getElements()[j];
                                 }
                                 // q_j + v_j - w_j = c_j
                                 // Therefore: We need to compute the resulting value, which is c_j-q_j. But: Cplex does not care about the RHS itself?
@@ -1942,8 +1928,7 @@ namespace parallel_benders {
                 LOG(INFO) << "Solver returned with status code : " << cpx_stat << " while solving the original problem again with primal or dual simplex.";
                 use_cplex = false;
             }
-                
-            
+           
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
                 dual_solution_primal_variable_bounds = new double[number_coss];
                 cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
@@ -1997,7 +1982,7 @@ namespace parallel_benders {
             memcpy(checked_dual_solution,dual_solution,sizeof(double)*number_rows);
 
         for ( int i = 0; i < number_rows; i++)
-            if ( checked_dual_solution[i] >0 && CompareWithZero(checked_dual_solution[i]) )
+            if ( CompareWithZero(checked_dual_solution[i]) )
                 checked_dual_solution[i] = 0;
 
         ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
@@ -2066,18 +2051,20 @@ namespace parallel_benders {
         assert( row == for_bound);
         //// Append values for optimality and feasibility cuts.. ( if we have any at this node )
         // Optimality cuts should not count into the feasibility question
-        for_bound += benders_node_pointer->feasibility_cuts_.size();
+        //for_bound += benders_node_pointer->feasibility_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
+            assert(checked_dual_solution[row] >= 0);
             cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
             row++;
         }
-        for_bound += benders_node_pointer->optimality_cuts_.size();
+        //for_bound += benders_node_pointer->optimality_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
-            row++;
+            assert( checked_dual_solution[row] >= 0);
+            if ( (*it)->to_use_ ) {
+                cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
+                row++;
+            }
         }
-
-
         // Append value for dual variable bounds
         cut_rhs += computed_dual_value_for_variable_bounds;
 
@@ -2094,8 +2081,10 @@ namespace parallel_benders {
 
         benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_stuff);
         if ( num_added_feasibility_cuts_ == 1 ){
-			benders_tree_node_pointer->getParent()->getDataPtr()->feas_cut_start_index_ = benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.size();
             benders_tree_node_pointer->getParent()->getDataPtr()->last_iteration_start_feasibility_ = --benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.end();
+        }
+        if ( store_cut_information_ || adaptive_ ){
+            seperate_first_stage_solver_ = false;
         }
         
         infeasible_problem_mutex_.unlock();
@@ -2220,7 +2209,8 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
 			// Remove theta columns from solver, if we reuse it
 			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_; // This indicates if we reuse a solver, apart from initial run.
-			if ( cols_to_remove && benders_node_pointer->changed_aggregation_level_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ ) ) { 
+            // We only want to remove the theta columns, if they are different in this node from a previous one. This is necessary if we changed aggregation level in this node or if we changed aggregation level during this iteration for nodes at this stage, as we resolve them during the process!
+			if ( cols_to_remove && (benders_node_pointer->changed_aggregation_level_ || stage_data_[current_stage_]->changed_aggregation_level_) && ( current_stage_ > 0 || !seperate_first_stage_solver_ ) ) { 
 				std::vector<int> remove_indices;
 				remove_indices.reserve(cols_to_remove);
 				for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
@@ -2228,20 +2218,16 @@ namespace parallel_benders {
 				osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
 				cols_to_remove = 0;
 
-				// Remove all old cuts also.
-				// Remove all cuts from previous solutions ( includes "Theta" Constraints )
-				int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
-				if ( cuts_to_remove ){
-					std::vector<int> remove_indices;
-					remove_indices.reserve(cuts_to_remove);
-					for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+cuts_to_remove;i++)
-						remove_indices.push_back(i);
-					osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
-				}
-				// Reset start indices for cuts
-				benders_node_pointer->opt_cut_start_index_ = 0;
-				benders_node_pointer->feas_cut_start_index_ = 0; // Also feas cuts, we deleted all old cuts..
-                //LOG(INFO) << osi_solver->getNumCols();
+				//// Remove all old cuts also. This is done in build_subproblem if we reuse a solver. If we do not reuse a solver, we build it from scratch.
+				//// Remove all cuts from previous solutions ( includes "Theta" Constraints )
+				//int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
+				//if ( cuts_to_remove ){
+				//	std::vector<int> remove_indices;
+				//	remove_indices.reserve(cuts_to_remove);
+				//	for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+cuts_to_remove;i++)
+				//		remove_indices.push_back(i);
+				//	osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
+				//}
             }
 			if ( cols_to_remove == 0 ){ // We have no thetas yet, but optimality cuts. So we need thetas.
 				// We set a theta value for every stage
@@ -2293,7 +2279,6 @@ namespace parallel_benders {
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
             if ( seperate_first_stage_solver_ &&  current_stage_ == 0){
                 it = benders_node_pointer->last_iteration_start_optimality_;
-                benders_node_pointer->opt_cut_start_index_ = -1; // We used the start_index and signal this to the cut aggregation routine.
             }
             // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
@@ -2311,7 +2296,6 @@ namespace parallel_benders {
                 }
                 
             }
-            // Now think about removing cuts and apply new ones. We have a warm start, cplex may handle it better than we do.
         }
 
 	}
@@ -2657,7 +2641,6 @@ namespace parallel_benders {
                         if ( !cuts_to_remove.empty()){
                             osi_solver->deleteRows(cuts_to_remove.size(),&cuts_to_remove[0]);
                             osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
-                            benders_node_pointer->opt_cut_start_index_ -= cuts_to_remove.size()-1;
                             osi_solver->resolve();
                             if ( seperate_first_stage_solver_ && current_stage_ == 0)
                                 benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
@@ -2801,6 +2784,7 @@ namespace parallel_benders {
                 benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
                 benders_node_pointer->active_aggregates_.set();
                 benders_node_pointer->nodes_in_cut_ = new_nodes_in_cut;
+                stage_data_[current_stage_]->changed_aggregation_level_ = true; // Set the stage-wise handler also!
                 
             }
         }
