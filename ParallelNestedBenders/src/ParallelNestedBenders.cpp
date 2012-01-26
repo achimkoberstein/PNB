@@ -2528,13 +2528,14 @@ namespace parallel_benders {
                 cuts_from_iteration[i].first = 0;
                 cuts_from_iteration[i].second = 0;
             }
+            // Threshold that defines when active_value is bigger than threshold, we do not aggregates
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
-            // Define a threshold to see when we can intra-aggregate the cuts. 
-            double intra_aggregate_threshold = 0.1*benders_node_pointer->num_thetas_;//zero_tolerance_;
-            CutStuff::strike_threshold_ = 0; // If cut is non-consecutively active for two iterations, we can aggregate it!
+            // Define a threshold above which we do not aggregate cuts for an iteration
+            double intra_aggregate_threshold = benders_node_pointer->num_thetas_;//0.1*benders_node_pointer->num_thetas_;
+            // If cut is non-consecutively non-active for more than strike_threshold iterations, we can aggregate it!
+            CutStuff::strike_threshold_ = 1; 
  
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
-            //assert( current_cut == osi_solver->getNumRows()-benders_node_pointer->optimality_cuts_.size()); // TODO: Store size in variable
             // Store the number of rows/columns
             for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
                 if (!(*it)->to_use_)
@@ -2580,7 +2581,7 @@ namespace parallel_benders {
                     if ( cuts_from_iteration[i].second > intra_aggregate_threshold )
                         continue;
 
-                    //LOG(INFO) << "Iteration " << i << " is still active with " << cuts_from_iteration[i].second << " for only " << cuts_from_iteration[i].first << " cuts";
+                    LOG(INFO) << "Iteration " << i << " is still active with " << cuts_from_iteration[i].second << " for only " << cuts_from_iteration[i].first << " cuts";
                         // Let's put all the cuts of one iteration in one single cut!
                         BendersNodeData::cut_container::iterator cut_stuff_it = std::find_if(benders_node_pointer->optimality_cuts_.begin(), benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
                         if ( cut_stuff_it == benders_node_pointer->optimality_cuts_.end())
@@ -2668,7 +2669,7 @@ namespace parallel_benders {
                                 LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
                         }
 
-                        //LOG(INFO) << "Building new cut for iteration " << i << " that involves " << number_cuts_in_this_iteration << " old cuts.";
+                        LOG(INFO) << "Building new cut for iteration " << i << " that involves " << number_cuts_in_this_iteration << " old cuts.";
                 }//End For
             }// End If 
 
