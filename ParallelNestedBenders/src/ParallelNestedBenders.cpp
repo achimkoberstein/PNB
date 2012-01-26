@@ -1212,8 +1212,8 @@ namespace parallel_benders {
                 benders_node_pointer->col_solution_[i] = 0;
             solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
         }
+        benders_node_pointer->solution_value_ = solution_value;
 
-       
         if ( !forward_ || current_stage_ == 0 || compute_stage_bounds_ ){
             // Compute lower and upper bound estimates on the way back!
             double current_lower_bound = solution_value; 
@@ -1723,6 +1723,28 @@ namespace parallel_benders {
         bool initialized_iterator = !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty();
         if ( initialized_iterator && seperate_first_stage_solver_ && current_stage_ == 1)
             benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+
+        // Analyse thetas
+        if ( !change_aggregation_level && !forward_){
+            double minimum = infinity_;
+            double maximum = -infinity_;
+            for (int i = 0; i < num_cuts; i++){
+
+                //LOG(INFO) << "Approximation of node " << benders_tree_node_pointer->scenario() << " for child nodes is : " << benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+                std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
+                double real_value = 0;
+                for ( int j = 0; j < nodes_in_cut.size(); j++){
+                    real_value +=  tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_ * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
+                }
+                //LOG(INFO) << " Recourse Function value is : " << real_value;
+                minimum = std::min<double>(minimum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
+                maximum = std::max<double>(maximum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
+                LOG(INFO) << " Discrepancy : " << real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+            }
+            LOG(INFO) << "Min Disc: " << minimum;
+            LOG(INFO) << "Max Disc: " << maximum;
+        }
+
 
         bool added_iterator = false;
         for ( int i = 0; i < num_cuts; i++){
