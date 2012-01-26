@@ -189,7 +189,7 @@ public:
     
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;
-
+    // We should store a vector of bitsets, needs less memory // TODO
     std::vector< std::vector<int> > nodes_in_cut_; // Stores which subnodes of current node are aggregated to a cut.
 
 	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
