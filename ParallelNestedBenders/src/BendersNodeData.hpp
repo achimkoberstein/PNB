@@ -82,6 +82,9 @@ namespace parallel_benders{
 
     struct CutStuff
     {
+        static double active_threshold_; // If active_value is less than
+        static int strike_threshold_; // If non_active_iterations_ is more than
+
         CutStuff(int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer);
 
         int cut_creation_iteration_;
@@ -89,15 +92,17 @@ namespace parallel_benders{
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
         boost::shared_ptr<OsiRowCut> cut_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
+        int current_index_in_solver_; // Needs to be updated at each run to be meaningful
         bool to_use_;
     };
 
-    // To be able to use find_if on std::list< boost::shared_ptr<CutStuff> >
+    // To be able to use find_if on std::list< boost::shared_ptr<CutStuff> > in conjunction with active values
     struct CutStuffComparison: public std::binary_function< boost::shared_ptr<CutStuff>, int, bool > {
         bool operator () ( const boost::shared_ptr<CutStuff> &cut_stuff, const int &number ) const {
-            return cut_stuff->cut_creation_iteration_ == number;
+            return cut_stuff->cut_creation_iteration_ == number && cut_stuff->active_value < CutStuff::active_threshold_ && cut_stuff->not_active_iterations_ > CutStuff::strike_threshold_;
         }
     };
+    
 
     bool is_active (const boost::shared_ptr<CutStuff>& value);
 

@@ -56,13 +56,16 @@ public:
         std::string total_core_string = folder+core_name_string;
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
-        int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        assert( smi_read_in == 0);
+
         int num_stages = 2;
-        num_stages = smi->getCore()->getNumStages();
         int num_childs_first_stage = 10;
-        num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
-        delete smi; // Get rid of the model, before we actually solve stuff
+
+        // TODO: Uncomment if we want to use tests based on problem properties!
+        //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //assert( smi_read_in == 0);
+        //num_stages = smi->getCore()->getNumStages();
+        //num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
+        //delete smi; // Get rid of the model, before we actually solve stuff
 
         benders_parameter_.init();
 
