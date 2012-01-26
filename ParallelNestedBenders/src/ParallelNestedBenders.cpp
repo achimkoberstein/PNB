@@ -1771,13 +1771,19 @@ namespace parallel_benders {
             /* If-Condition can be put here, if the cut should be added, instead of just set to to_use_ = false/true */
             /************************************************************************/
             int new_index = 0;
+            // Clear zero elements and create sparse vector for future reference
             for (int index = 0; index < num_columns+num_theta_indices; index++){
                 if ( CompareWithZero(cut_elements[index]) ){
                     // Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise
                     cut_elements[index] = 0;
                 }
+                else {
+                    cut_elements[new_index] = cut_elements[index];
+                    cut_indices[new_index] = cut_indices[index];
+                    new_index++;
+                }
             }
-            new_index = num_columns+num_theta_indices;
+            assert( new_index <= num_columns+num_theta_indices);
 
             // Add cut
             boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
