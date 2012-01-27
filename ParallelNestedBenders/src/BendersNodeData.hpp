@@ -73,6 +73,10 @@ namespace parallel_benders{
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
 	// Intra cut aggregation strategies
 
+    // Dynamic Adapative Aggregation strategies
+    const int PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION = 1;
+    const int PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY = 2;
+
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
@@ -159,6 +163,10 @@ public:
     double* dual_solution_;
     double* reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
     double* next_stage_approximation_;
+    double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
+    double min_discrepancy_;
+    double max_discrepancy_;
+    double average_discrepancy_;
     double dual_value_variable_bounds_;
     bool feasible_;
     

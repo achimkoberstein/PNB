@@ -247,7 +247,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),max_iteration_(1000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -323,8 +323,6 @@ namespace parallel_benders {
 
         // Intra-Cut Aggregation
         store_cut_information_ = param.get(PNB_INTRA_CUT_AGGREGATION,false);
-        //if ( adaptive_ && store_cut_information_ )
-        //    assert(false);
 
 		// Tree walking procedure
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
@@ -430,6 +428,8 @@ namespace parallel_benders {
        // Set values depending on others
        if ( adaptive_ ){
            store_primal_and_dual_ = true;
+           // We need to set an aggregation_scheme
+           aggregation_scheme_ = PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY;
            //seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
        }
        if ( store_cut_information_){
@@ -1725,24 +1725,46 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
 
         // Analyse thetas
-        if ( !change_aggregation_level && !forward_){
+        if ( !change_aggregation_level && !forward_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()){
             double minimum = infinity_;
             double maximum = -infinity_;
+            double average = 0;
+            if ( benders_tree_node_pointer->getDataPtr()->discrepancy_ != NULL)
+                delete [] benders_tree_node_pointer->getDataPtr()->discrepancy_;
+            benders_tree_node_pointer->getDataPtr()->discrepancy_ = new double[benders_tree_node_pointer->getDataPtr()->num_thetas_];
             for (int i = 0; i < num_cuts; i++){
 
                 //LOG(INFO) << "Approximation of node " << benders_tree_node_pointer->scenario() << " for child nodes is : " << benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
                 std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
                 double real_value = 0;
+               
                 for ( int j = 0; j < nodes_in_cut.size(); j++){
                     real_value +=  tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_ * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
                 }
+                benders_tree_node_pointer->getDataPtr()->discrepancy_[i] = real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+                if (CompareWithZero(benders_tree_node_pointer->getDataPtr()->discrepancy_[i]) )
+                    benders_tree_node_pointer->getDataPtr()->discrepancy_[i] = 0;
                 //LOG(INFO) << " Recourse Function value is : " << real_value;
                 minimum = std::min<double>(minimum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
                 maximum = std::max<double>(maximum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
-                LOG(INFO) << " Discrepancy : " << real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+                average += benders_tree_node_pointer->getDataPtr()->discrepancy_[i];
+                //LOG(INFO) << " Discrepancy : " << real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
             }
+            if ( CompareWithZero(minimum))
+                minimum = 0;
+            if ( CompareWithZero(maximum))
+                maximum = 0;
             LOG(INFO) << "Min Disc: " << minimum;
             LOG(INFO) << "Max Disc: " << maximum;
+            benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = minimum;
+            benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = maximum;
+            benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = average/num_cuts;
+        }
+        else {
+            benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = 0;
+            benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = 0;
+            delete [] benders_tree_node_pointer->getDataPtr()->discrepancy_;
+            benders_tree_node_pointer->getDataPtr()->discrepancy_ = NULL;
         }
 
 
@@ -2559,9 +2581,9 @@ namespace parallel_benders {
             // Threshold that defines when active_value is bigger than threshold, we do not aggregates
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
             // Define a threshold above which we do not aggregate cuts for an iteration
-            double intra_aggregate_threshold = benders_node_pointer->num_thetas_;//0.1*benders_node_pointer->num_thetas_;
+            double intra_aggregate_threshold = 0;// 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
             // If cut is non-consecutively non-active for more than strike_threshold iterations, we can aggregate it!
-            CutStuff::strike_threshold_ = 1; 
+            CutStuff::strike_threshold_ = -1; 
  
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             // Store the number of rows/columns
@@ -2575,7 +2597,7 @@ namespace parallel_benders {
                 // Get active value via dual value
                 double active = benders_node_pointer->dual_solution_[current_cut];
                 // Put values in the corresponding vectors!
-                if ( active > CutStuff::active_threshold_ ){
+                if ( active >= CutStuff::active_threshold_ ){
                     if ( active_aggregates_per_aggregate_information )
                         active_aggregates_per_aggregate[aggregate].push_back(make_pair<int,double>(cut_creation,active));
                     cuts_from_iteration[cut_creation].first++;
@@ -2603,10 +2625,8 @@ namespace parallel_benders {
                 int already_removed_cuts = 0;
                  // The active value for all cuts sums up to the number of aggregates. All cuts for each aggregate sum up to 1.
                 for (int i = 1; i< current_iteration_; i++){ // Iterate over all iterations
-                    //std::cout << "iteration " << i << " : " << cuts_from_iteration[i].second << std::endl;
-                    // If the cuts are not active && their old values from former iterations have worn off
                     assert( cuts_from_iteration[i].second >= 0);
-                    if ( cuts_from_iteration[i].second > intra_aggregate_threshold )
+                    if ( cuts_from_iteration[i].second > intra_aggregate_threshold ) // We only proceed with the aggregation if the active level falls below the threshold
                         continue;
 
                     LOG(INFO) << "Iteration " << i << " is still active with " << cuts_from_iteration[i].second << " for only " << cuts_from_iteration[i].first << " cuts";
@@ -2637,7 +2657,7 @@ namespace parallel_benders {
                         int number_cuts_in_this_iteration = 0;
                         std::list<BendersNodeData::cut_container::iterator> to_remove_from_optimality_cuts;
                         std::vector<int> to_remove_from_solver;
-                        CutStuffComparison comparison_object;
+                        CutStuffComparison comparison_object; // Compares number,active value and non-active-generations
                         for ( BendersNodeData::cut_container::iterator it = cut_stuff_it; it != benders_node_pointer->optimality_cuts_.end(); ++it){
                             // We must change the CoinPackedVector!
                             if ( (*it)->cut_creation_iteration_ != i ){
@@ -2743,100 +2763,146 @@ namespace parallel_benders {
         int minimal_active_creation_iteration = current_iteration_;
         int maximal_active_creation_iteration = 0;
 
-        // Retrieve the data: Iterate over all cuts!
-        int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
-        for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
-            assert( current_cut_index <= osi_solver->getNumRows());
-            if ( (*it)->aggregate_number_ < 0 ){
-                current_cut_index++;
-                continue;
-            }
-            if ( !(*it)->to_use_  )// If we do not use the cut, i.e. it is not in the solver, we must not increase the current_cut_index
-                continue;
+        //// Retrieve the data: Iterate over all cuts!
+        //int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
+        //for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
+        //    assert( current_cut_index <= osi_solver->getNumRows());
+        //    if ( (*it)->aggregate_number_ < 0 ){
+        //        current_cut_index++;
+        //        continue;
+        //    }
+        //    if ( !(*it)->to_use_  )// If we do not use the cut, i.e. it is not in the solver, we must not increase the current_cut_index
+        //        continue;
 
-            if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
-                (*it)->not_active_iterations_++;
-                if ( (*it)->not_active_iterations_ > threshold ){
-                    proposed_cuts.push_back(*it);
-                    to_aggregate.set((*it)->aggregate_number_);
-                }
-            }
-            else{
-                active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
-                (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
-                iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
-                (*it)->not_active_iterations_ = 0;
-                if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
-                    latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
-                }
-                if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
-                    minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
-                if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
-                    maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
+        //    if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
+        //        (*it)->not_active_iterations_++;
+        //        if ( (*it)->not_active_iterations_ > threshold ){
+        //            proposed_cuts.push_back(*it);
+        //            to_aggregate.set((*it)->aggregate_number_);
+        //        }
+        //    }
+        //    else{
+        //        active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
+        //        (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
+        //        iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
+        //        (*it)->not_active_iterations_ = 0;
+        //        if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
+        //            latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
+        //        }
+        //        if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
+        //            minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
+        //        if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
+        //            maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
 
-            }
-            current_cut_index++;
-        }
+        //    }
+        //    current_cut_index++;
+        //}
+
+        //int current_cut_index = optimality_cut_start;
 
         // Process the data to see if we can aggregate something!
         int inactive_threshold = 2;
         bool aggregate_aggregates = false;
 
+        /************************************************************************/
+        /* Specify a new aggregation, ultimately stored in map_old_to_new and new_nodes_in_cut
+        /************************************************************************/
         std::map<int,int> map_old_to_new;
         int new_thetas = 0; 
         int removed_thetas = 0;
-        std::vector<int> delete_cols;
-        if ( maximal_active_creation_iteration - minimal_active_creation_iteration > inactive_threshold ){ // 
-            // Compute a new aggregation and change the values accordingly!
-            int num_cuts = current_cut_index - stage_data_[current_stage_]->num_rows_;
-            std::list<int> aggregates_into_one;
-            // Let's see if we have aggregates that we can aggregate together!
+ 
+        std::list<int> aggregates_into_one;
+        /////
+        // Use a specific scheme to aggregate aggregates. 
+        /////
+        if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION ){
+            // Aggregates that have cuts that where inactive long enough get aggregated into one
             for (int i = 0; i < number_of_aggregates; i++){
                 if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration ){
-                    if ( !aggregates_into_one.empty() )
-                        delete_cols.push_back(stage_data_[current_stage_]->num_columns_+i);
                     aggregates_into_one.push_back(i);
                 }
             }
-            if ( aggregates_into_one.size() <= 1 ){
-                // We can break here!
-            }
-            else {
-                aggregate_aggregates = true;
-                new_thetas = number_of_aggregates - (aggregates_into_one.size()-1); // Total new number of aggregates!
-                removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
+        } 
+        else if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY){
+            // Aggregates that have a similar low discrepancy get aggregated together
+            if ( benders_node_pointer->discrepancy_ == NULL || benders_node_pointer->min_discrepancy_ == 0 && benders_node_pointer->max_discrepancy_ == 0)
+                return; // We have a non NULL pointer
 
-                int aggregate_index = 0;
-                int first_agg = aggregates_into_one.front();
-                for (int i = 0; i < number_of_aggregates; i++){
-                    if ( !aggregates_into_one.empty() && i == aggregates_into_one.front() ){
-                        map_old_to_new[i] = first_agg;
-                        aggregates_into_one.pop_front();
-                        if ( i == first_agg)
-                            aggregate_index++;
-                    }
-                    else{
-                        map_old_to_new[i] = aggregate_index;
-                        aggregate_index++;
-                    }
-                }
-                std::vector< std::vector<int> > new_nodes_in_cut(new_thetas);
-                for (int i = 0; i < benders_node_pointer->nodes_in_cut_.size(); i++){
-                    // Insert values of old nodes_in_cut into new_nodes_in_cut.
-                    new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
-                }
-                //LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
-                benders_node_pointer->num_thetas_ = new_thetas;
-                benders_node_pointer->changed_aggregation_level_ = true;
-                benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
-                benders_node_pointer->active_aggregates_.set();
-                benders_node_pointer->nodes_in_cut_ = new_nodes_in_cut;
-                stage_data_[current_stage_]->changed_aggregation_level_ = true; // Set the stage-wise handler also!
-                
+            // Compute a threshold for discrepancies we consider low
+            if ( benders_node_pointer->max_discrepancy_ == 0 && benders_node_pointer->min_discrepancy_ == 0)
+                return; // We can not do anything..
+            double absolute_difference = benders_node_pointer->max_discrepancy_-benders_node_pointer->min_discrepancy_;
+            double relative_difference = benders_node_pointer->max_discrepancy_ / benders_node_pointer->min_discrepancy_;
+            double discrepancy_threshold = 0;
+            //if ( relative_difference < 4 ){ // Values are relatively close together
+            //    discrepancy_threshold = benders_node_pointer->min_discrepancy_ + absolute_difference *0.5;
+            //    LOG(INFO) << "R<4:Disc. Threshold : " << discrepancy_threshold;
+            //}
+            //else { // Values are relative large apart. We do not want to get too much, so we use 
+            //    // Design a threshold based on relative values
+            //    discrepancy_threshold = benders_node_pointer->min_discrepancy_*2;
+            //    LOG(INFO) << "R>4Disc. Threshold : " << discrepancy_threshold;
+            //}
+            double median = 0;
+            // memcpy to find median
+            double * temp_values = new double[number_of_aggregates];
+            memcpy(temp_values,benders_node_pointer->discrepancy_,sizeof(double)*number_of_aggregates);
+            std::nth_element(&temp_values[0],&temp_values[(int)(number_of_aggregates/2)],&temp_values[number_of_aggregates]);
+            median = temp_values[(int)(number_of_aggregates/2)];
+            delete [] temp_values;
+
+            discrepancy_threshold = benders_node_pointer->min_discrepancy_+(median-benders_node_pointer->min_discrepancy_)*0.5;
+            
+            
+            for (int i = 0; i < number_of_aggregates; i++){
+                if ( benders_node_pointer->discrepancy_[i] < discrepancy_threshold)
+                    aggregates_into_one.push_back(i);
             }
+
         }
-       
+
+        //////
+        // Update the BendersNodeData to reflect the new aggregation we achieved
+        //////
+        if ( aggregates_into_one.size() <= 1 ){
+            // We can break here!
+        }
+        else {
+            aggregate_aggregates = true;
+            new_thetas = number_of_aggregates - (aggregates_into_one.size()-1); // Total new number of aggregates!
+            removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
+
+            int aggregate_index = 0;
+            int first_agg = aggregates_into_one.front();
+            for (int i = 0; i < number_of_aggregates; i++){
+                if ( !aggregates_into_one.empty() && i == aggregates_into_one.front() ){
+                    map_old_to_new[i] = first_agg;
+                    aggregates_into_one.pop_front();
+                    if ( i == first_agg)
+                        aggregate_index++;
+                }
+                else{
+                    map_old_to_new[i] = aggregate_index;
+                    aggregate_index++;
+                }
+            }
+            std::vector< std::vector<int> > new_nodes_in_cut(new_thetas);
+            for (int i = 0; i < benders_node_pointer->nodes_in_cut_.size(); i++){
+                // Insert values of old nodes_in_cut into new_nodes_in_cut.
+                new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
+            }
+            LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
+            benders_node_pointer->num_thetas_ = new_thetas;
+            benders_node_pointer->changed_aggregation_level_ = true;
+            benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
+            benders_node_pointer->active_aggregates_.set();
+            benders_node_pointer->nodes_in_cut_ = new_nodes_in_cut;
+            stage_data_[current_stage_]->changed_aggregation_level_ = true; // Set the stage-wise handler also!
+        }
+        
+        //////
         // Change old cuts to the new scheme ( i.e. new aggregates and the old aggregates )
+        /////
         // Iterate once over the set of cuts and create new cuts from the old ones. 
         // Assumption: Cuts are stored in this container en bloc regarding their initial creation. So we can keep the old ones and add the new ones to it
         if ( aggregate_aggregates ){ // Only if we aggregated something, we need to aggregate the actual cuts!
@@ -2932,22 +2998,48 @@ namespace parallel_benders {
         OsiRowCut* second = cut_to_add->cut_.get();
         if ( first == second )
             return;
+        if ( first_cut->aggregate_number_ < 0)
+            assert(false); // We do not know what do do
 
+        // It may be necessary that we have a full blown vector here instead of a sparse one!
         CoinPackedVector& first_vector(first->mutableRow());
         const CoinPackedVector& second_vector(second->row());
-        double* elements = first_vector.getElements();
-        int* indices = first_vector.getIndices();
+        double* elements = first_vector.getElements(); // Elements
+        int* indices = first_vector.getIndices(); // and indices
+        int first_length = first_vector.getNumElements();
 
         const double* elements2 = second_vector.getElements();
         const int* indices2 = second_vector.getIndices();
-        int length = first_vector.getNumElements();
-        if ( second_vector.getNumElements() != first_vector.getNumElements() ){
-            LOG(INFO) << "Vector sizes do not match!";
+        int length = second_vector.getNumElements();
+        if ( first_length == length){
+            // Check if indices match
         }
-        for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
-            LOG_IF(INFO,indices[i]!=indices2[i]) << "Indices do not match";
-            // We need to take care with the probabilities!
-            elements[indices2[i]] += elements2[indices2[i]];
+        // Complicated version
+        if ( first_length != length){ // Not necessarily enough!
+            // We need a new NON-sparse vector
+            elements = new double[stage_data_[current_stage_]->num_columns_+1];
+            indices = new int[stage_data_[current_stage_]->num_columns_+1];
+            // Initialize with 0
+            CoinFillN(elements,stage_data_[current_stage_]->num_columns_+1,0.0);
+            for (int i = 0; i < stage_data_[current_stage_]->num_columns_+1;i++)
+                indices[i] = i;
+
+            // Copy old elements
+            for (int i = 0; i < first_length; i++){
+                elements[first_vector.getIndices()[i]] = first_vector.getElements()[i];
+            }
+            // Add second vector
+            for (int i = 0; i < length-1;i++){
+                elements[second_vector.getIndices()[i]] = elements2[i];
+            }
+        }
+        else{       
+            for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
+                if ( indices[i]!=indices2[i]){
+                    LOG(FATAL)  << "Indices do not match"; // Not a viable option!
+                }
+                elements[i] += elements2[i];
+            }
         }
         first->setLb(first->lb()+second->lb());
     }
