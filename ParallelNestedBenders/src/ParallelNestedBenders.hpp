@@ -146,6 +146,7 @@ private:
 
     // Strategy decision
     bool adaptive_;
+    int aggregation_scheme_;
 
 
     Timer timer_;
