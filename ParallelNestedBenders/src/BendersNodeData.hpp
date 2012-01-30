@@ -86,6 +86,8 @@ namespace parallel_benders{
 
     struct CutStuff
     {
+        const static int AGGREGATE_OVER_ALL = -1;
+        const static int AGGREGATE_OVER_PARTIAL = -2;
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
