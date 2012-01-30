@@ -72,6 +72,8 @@ private:
 
     void CombineTwoCuts( boost::shared_ptr<CutStuff>&, boost::shared_ptr<CutStuff>& );
 
+    int GetNumberOfAggregatesFromCut( boost::shared_ptr<CutStuff>& cut);
+
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
 	void TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme );
@@ -245,6 +247,8 @@ private:
 bool CompareForEquality( double first, double second, double tolerance);
 // True if gap is not small enough yet
 bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
+
+
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);

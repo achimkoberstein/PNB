@@ -1031,10 +1031,9 @@ namespace parallel_benders {
             // Check for degeneracy and stuff, if we like it..
             if ( !forward_ || (store_primal_and_dual_ && current_stage_ > 0))
                 GenerateOptimalityCut(benders_tree_node_pointer);
-            if ( adaptive_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 )){ // Analyse optimality cuts of this node!
+            if ( adaptive_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 )) // Analyse optimality cuts of this node!
                 AnalyseOptimalityCuts(osi_solver,benders_tree_node_pointer);
-            }
-            if ( store_cut_information_ )
+            if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
                 IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
         }
         DeleteSubproblem(benders_tree_node_pointer);
@@ -2552,9 +2551,7 @@ namespace parallel_benders {
     {
         // Should we really use this method?
         if ( adaptive_ ){
-            if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
-                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
-            else
+            if ( !benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
                 return;
         }
 
@@ -2566,6 +2563,7 @@ namespace parallel_benders {
         assert(store_cut_information_); // If we do not want to store cut information this method should not be called
 
         bool active_aggregates_per_aggregate_information = false;
+
 
         if ( forward_ && !benders_node_pointer->changed_aggregation_level_){ // We only try to aggregate cuts, if aggregation level did not changed in this iteration!
              // We want to store the information about cuts!
@@ -2587,6 +2585,10 @@ namespace parallel_benders {
  
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             // Store the number of rows/columns
+
+            /************************************************************************/
+            /* Gather information about the cuts : active values                    */
+            /************************************************************************/
             for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
                 if (!(*it)->to_use_)
                     continue;
@@ -2664,8 +2666,8 @@ namespace parallel_benders {
                                 end_it = it;
                                 break;
                             }
-                            if ( (*it)->aggregate_number_ < 0 ){
-                                // 
+                            if ( (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL || (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL){
+                                // That means
                                 end_it = it;
                                 break; // For now just quit!
                             }
@@ -2693,11 +2695,16 @@ namespace parallel_benders {
                         CoinPackedVector new_row(col_size,col_size,new_indices,new_elements); // CoinPackedVector takes ownership of new_indices and new_elements
                         new_single_cut->setRow(new_row);
                         new_single_cut->setLb(rhs);
-                        cut_stuff->aggregate_number_ = -1; // Indicate that this cut spans over all aggregates we have (until now, but this can be redone)
+                        if ( number_cuts_in_this_iteration == benders_node_pointer->num_thetas_ )
+                            cut_stuff->aggregate_number_ = CutStuff::AGGREGATE_OVER_ALL;  // Indicate that this cut spans over all aggregates we have (until now, but this can be redone)
+                        else
+                            cut_stuff->aggregate_number_ = CutStuff::AGGREGATE_OVER_PARTIAL;
+
                         cut_stuff->active_value = 1.0;
                         cut_stuff->to_use_ = true; // Because of this, we must at first sort out the cuts for the solver
 
 
+                        // TODO: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
                         for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
                             benders_node_pointer->optimality_cuts_.erase(*list_it);
 
@@ -2732,11 +2739,13 @@ namespace parallel_benders {
     void ParallelNestedBenders::AnalyseOptimalityCuts( OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        if ( store_cut_information_ ){
+        if ( store_cut_information_ ){ // We handle the alternate setting only in this method
             if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
-                return;
-            else
+                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
+            else {
                 benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = true;
+                return;
+            }
         }
         if ( benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()) // We can only do something meaninungful if we have cuts to examine
             return;
@@ -2752,51 +2761,9 @@ namespace parallel_benders {
         if ( bounds_in_matrix_ )
             optimality_cut_start += benders_node_pointer->variable_bounds_.size();
 
-        // Keep a candidate list.
-        BendersNodeData::cut_container proposed_cuts;
+
 
         int number_of_aggregates = benders_node_pointer->num_thetas_;
-        std::map<int,double> active_time; // Maps aggregate to overall duals for all cuts for the aggregate
-        boost::dynamic_bitset<> to_aggregate(number_of_aggregates); // Proposes cuts which should be aggregated
-        std::map<int,double> iteration_wise_impact; // Stores the dual values for the iterations
-        std::map<int,int> latest_active_cut_for_aggregate; // Stores the highest iteration creation for an aggregate
-        int minimal_active_creation_iteration = current_iteration_;
-        int maximal_active_creation_iteration = 0;
-
-        //// Retrieve the data: Iterate over all cuts!
-        //int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
-        //for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
-        //    assert( current_cut_index <= osi_solver->getNumRows());
-        //    if ( (*it)->aggregate_number_ < 0 ){
-        //        current_cut_index++;
-        //        continue;
-        //    }
-        //    if ( !(*it)->to_use_  )// If we do not use the cut, i.e. it is not in the solver, we must not increase the current_cut_index
-        //        continue;
-
-        //    if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
-        //        (*it)->not_active_iterations_++;
-        //        if ( (*it)->not_active_iterations_ > threshold ){
-        //            proposed_cuts.push_back(*it);
-        //            to_aggregate.set((*it)->aggregate_number_);
-        //        }
-        //    }
-        //    else{
-        //        active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
-        //        (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
-        //        iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
-        //        (*it)->not_active_iterations_ = 0;
-        //        if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
-        //            latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
-        //        }
-        //        if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
-        //            minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
-        //        if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
-        //            maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
-
-        //    }
-        //    current_cut_index++;
-        //}
 
         //int current_cut_index = optimality_cut_start;
 
@@ -2816,6 +2783,48 @@ namespace parallel_benders {
         // Use a specific scheme to aggregate aggregates. 
         /////
         if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION ){
+            // Keep a candidate list.
+            BendersNodeData::cut_container proposed_cuts;
+            std::map<int,double> active_time; // Maps aggregate to overall duals for all cuts for the aggregate
+            boost::dynamic_bitset<> to_aggregate(number_of_aggregates); // Proposes cuts which should be aggregated
+            std::map<int,double> iteration_wise_impact; // Stores the dual values for the iterations
+            std::map<int,int> latest_active_cut_for_aggregate; // Stores the highest iteration creation for an aggregate
+            int minimal_active_creation_iteration = current_iteration_;
+            int maximal_active_creation_iteration = 0;
+            //// Retrieve the data: Iterate over all cuts!
+            int current_cut_index = optimality_cut_start; // index of rows where optimality cuts starts
+            for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it ){
+                assert( current_cut_index <= osi_solver->getNumRows());
+                if ( (*it)->aggregate_number_ < 0 ){
+                    current_cut_index++;
+                    continue;
+                }
+                if ( !(*it)->to_use_  )// If we do not use the cut, i.e. it is not in the solver, we must not increase the current_cut_index
+                    continue;
+
+                if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
+                    (*it)->not_active_iterations_++;
+                    if ( (*it)->not_active_iterations_ > threshold ){
+                        proposed_cuts.push_back(*it);
+                        to_aggregate.set((*it)->aggregate_number_);
+                    }
+                }
+                else{
+                    active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
+                    (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
+                    iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
+                    (*it)->not_active_iterations_ = 0;
+                    if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
+                        latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
+                    }
+                    if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
+                        minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
+                    if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
+                        maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
+
+                }
+                current_cut_index++;
+            }
             // Aggregates that have cuts that where inactive long enough get aggregated into one
             for (int i = 0; i < number_of_aggregates; i++){
                 if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration ){
@@ -2850,10 +2859,8 @@ namespace parallel_benders {
             std::nth_element(&temp_values[0],&temp_values[(int)(number_of_aggregates/2)],&temp_values[number_of_aggregates]);
             median = temp_values[(int)(number_of_aggregates/2)];
             delete [] temp_values;
-
             discrepancy_threshold = benders_node_pointer->min_discrepancy_+(median-benders_node_pointer->min_discrepancy_)*0.5;
-            
-            
+           
             for (int i = 0; i < number_of_aggregates; i++){
                 if ( benders_node_pointer->discrepancy_[i] < discrepancy_threshold)
                     aggregates_into_one.push_back(i);
@@ -2908,56 +2915,108 @@ namespace parallel_benders {
         if ( aggregate_aggregates ){ // Only if we aggregated something, we need to aggregate the actual cuts!
             assert(removed_thetas>0);
             std::vector< boost::shared_ptr<CutStuff> > pointer_to_cuts(new_thetas); 
-            int creation_iteration = 1;
-            std::vector<int> delete_rows;
-            int cut_number = stage_data_[current_stage_]->num_rows_;
+            int creation_iteration = (*benders_node_pointer->optimality_cuts_.begin())->cut_creation_iteration_;
+            int aggregates_for_creation_iteration = 0;
             for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ){
                 assert( store_cut_information_ || (*it)->cut_creation_iteration_ >= creation_iteration );
-                if ( (*it)->cut_creation_iteration_ != creation_iteration ){
+                if ( (*it)->cut_creation_iteration_ != creation_iteration || (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL){
+                    // Count how many cuts we processed during this creation_iteration. If it is less than new_thetas we have to handle PartialCuts
+                    if ( aggregates_for_creation_iteration < new_thetas ){
+                        // Find remaining partial cuts and integrate them into one single cut. We need to get hold of one cut instance to start with. We start with the pointer_to_cuts array
+                        boost::shared_ptr<CutStuff> new_single_cut;
+                        for (int i = 0; i < new_thetas; i++){
+                            if ( new_single_cut != NULL){
+                                CombineTwoCuts(new_single_cut,pointer_to_cuts[i]);
+                                // Remove added cut from optimality cut set
+                                benders_node_pointer->optimality_cuts_.remove(pointer_to_cuts[i]);
+                            }
+                            if ( pointer_to_cuts[i] != NULL && new_single_cut == NULL){
+                                new_single_cut = pointer_to_cuts[i];
+                            }
+
+                        }
+                        assert( new_single_cut != NULL); // We have a cut to work with
+                        BendersNodeData::cut_container::iterator temp_it = it;
+                        while ( aggregates_for_creation_iteration < new_thetas ){
+                            assert( temp_it != benders_node_pointer->optimality_cuts_.end() );
+                            if ( (*temp_it)->cut_creation_iteration_ == creation_iteration){
+                                CombineTwoCuts(new_single_cut,*temp_it);
+                                // Add the correct number of aggregates TODO
+                                aggregates_for_creation_iteration += GetNumberOfAggregatesFromCut(*temp_it);
+                                // Remove the temp_it cut from the set of optimality cuts!
+                                benders_node_pointer->optimality_cuts_.erase(temp_it++);
+                            }
+                            else
+                                ++temp_it;
+                        }
+
+                    }
                     // Delete the iterator_to_cuts vector
                     pointer_to_cuts.clear();
                     pointer_to_cuts.resize(new_thetas);
                     creation_iteration = (*it)->cut_creation_iteration_;
+                    aggregates_for_creation_iteration = 0;
                 }
+
+                if ( (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL ){
+                    // We want to change the row that has the form of cut_coefficients*x + unit_vector*\theta-vector so that it is correct with the new theta vector
+                    OsiRowCut * new_single_cut = (*it)->cut_.get();
+                    // We need to create a new vector
+                    int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_; // This many variables are needed
+                    double * new_elements = new double[col_size]; // Ownership is taken later by CoinPackedVector new_row
+                    int * new_indices = new int[col_size];// Ownership is taken later by CoinPackedVector new_row
+                    // Initialize part of the vector that stores cut_coefficients
+                    for (int i = 0; i < stage_data_[current_stage_]->num_columns_; i++){
+                        new_elements[i] = 0;
+                        new_indices[i] = i;
+                    }
+
+                    // Add the elements of the current (sparse) vector without the theta part
+                    int number_aggregates_for_cut = GetNumberOfAggregatesFromCut(*it);
+                    for ( int i = 0; i < new_single_cut->row().getNumElements()-number_aggregates_for_cut; i++)
+                        new_elements[ new_single_cut->row().getIndices()[i]] = new_single_cut->row().getElements()[i];
+
+                    // Create part of the vector that stores the theta variables
+                    for (int i = stage_data_[current_stage_]->num_columns_; i < col_size; i++){
+                        new_elements[i] = 1;
+                        new_indices[i] = i;
+                    }
+
+                    CoinPackedVector cpv(col_size,col_size,new_indices,new_elements); // Assigns elements to vector, arrays get nulled
+                    assert( new_elements == NULL);
+                    assert( new_indices == NULL);
+                    new_single_cut->setRow(cpv);
+                    aggregates_for_creation_iteration += benders_node_pointer->num_thetas_;
+                    ++it;
+                    continue; // We go to the next cut (and other iteration
+                }
+                if ( (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL ){
+                    assert(false);
+                }
+                assert((*it)->aggregate_number_ >= 0);
                 
                 int new_number = map_old_to_new[(*it)->aggregate_number_];
                 
                 if ( pointer_to_cuts[new_number] == NULL ){
                     pointer_to_cuts[new_number] = *it;
-                    if ( store_cut_information_ && (*it)->aggregate_number_ == -1){ // We only need this if we do IntraCutAggregation
-                        // We have to create a whole new row_ vector, because cplex does not like to add indices that are greater than the number of columns, even if the entries are zero!
-                        // We want to change the row that has the form of cut_coefficients*x + unit_vector*\theta-vector so that it is correct with the new theta vector
-                         OsiRowCut * new_single_cut = (*it)->cut_.get();
-                        // We need to create a new vector
-                        int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_; // This many variables are needed
-                        double * new_elements = new double[col_size]; // Ownership is taken later by CoinPackedVector new_row
-                        int * new_indices = new int[col_size];// Owernship is taken later by CoinPackedVector new_row
-                        // Memcpy all the elements except the theta ones
-                        memcpy(new_elements,new_single_cut->row().getElements(),stage_data_[current_stage_]->num_columns_*sizeof(double));
-                        memcpy(new_indices,new_single_cut->row().getIndices(),stage_data_[current_stage_]->num_columns_*sizeof(int));
-                        for (int i = stage_data_[current_stage_]->num_columns_; i < col_size; i++){
-                            new_elements[i] = 1;
-                            new_indices[i] = i;
-                        }
-                        CoinPackedVector cpv(col_size,col_size,new_indices,new_elements); // Assigns elements to vector, arrays get nulled
-                        assert( new_elements == NULL);
-                        assert( new_indices == NULL);
-                        new_single_cut->setRow(cpv);
-
-                    }
-                    else if ( new_number != (*it)->aggregate_number_ ) {
+                    if ( new_number != (*it)->aggregate_number_ ) {
                         // We need to change the index of the aggregate in the cut!
                         (*it)->cut_->mutableRow().getIndices()[(*it)->cut_->row().getNumElements()-1] = stage_data_[current_stage_]->num_columns_+new_number;
                         (*it)->aggregate_number_ = new_number;
                     }
+                    if ( !store_cut_information_ )
+                        ++aggregates_for_creation_iteration;
+                    if ( store_cut_information_ )
+                        aggregates_for_creation_iteration += GetNumberOfAggregatesFromCut(*it);
                     ++it;
-                    ++cut_number;
+
                 }
                 else {
                     CombineTwoCuts( pointer_to_cuts[new_number],*it);
-                    if ( (*it)->to_use_ ){
-                        delete_rows.push_back(cut_number);
-                        ++cut_number;
+                    if ( !store_cut_information_ )
+                        ++aggregates_for_creation_iteration;
+                    else {
+                        aggregates_for_creation_iteration += GetNumberOfAggregatesFromCut(*it);
                     }
                     benders_node_pointer->optimality_cuts_.erase(it++);
                 }
@@ -2994,9 +3053,13 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::CombineTwoCuts( boost::shared_ptr<CutStuff>& first_cut, boost::shared_ptr<CutStuff>& cut_to_add)
     {
+        if ( first_cut == NULL)
+            assert(false);
+        if ( cut_to_add == NULL)
+            return;
         OsiRowCut* first = first_cut->cut_.get();
         OsiRowCut* second = cut_to_add->cut_.get();
-        if ( first == second )
+         if ( first == second )
             return;
         if ( first_cut->aggregate_number_ < 0)
             assert(false); // We do not know what do do
@@ -3011,9 +3074,7 @@ namespace parallel_benders {
         const double* elements2 = second_vector.getElements();
         const int* indices2 = second_vector.getIndices();
         int length = second_vector.getNumElements();
-        if ( first_length == length){
-            // Check if indices match
-        }
+
         // Complicated version
         if ( first_length != length){ // Not necessarily enough!
             // We need a new NON-sparse vector
@@ -3036,7 +3097,7 @@ namespace parallel_benders {
         else{       
             for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
                 if ( indices[i]!=indices2[i]){
-                    LOG(FATAL)  << "Indices do not match"; // Not a viable option!
+                    LOG(FATAL)  << "Indices do not match"; // Not a viable option for a release version, so we can do it as in the if-clause TODO
                 }
                 elements[i] += elements2[i];
             }
@@ -3293,6 +3354,26 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
         }
     }
+
+    int ParallelNestedBenders::GetNumberOfAggregatesFromCut( boost::shared_ptr<CutStuff>& cut )
+    {
+        if ( cut->aggregate_number_ >= 0)
+            return 1;
+        if ( cut->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL || cut->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL){
+            int num_aggregates = 0;
+            // Count the number of aggregates. We need to know the number of columns for the current stage for that!
+            for (int i = cut->cut_->row().getNumElements(); i > 0; i--){
+                if ( cut->cut_->row().getIndices()[i-1] > stage_data_[current_stage_]->num_columns_)
+                    num_aggregates++;
+                else
+                    break;
+            }
+            return num_aggregates;
+        }
+        assert(false);
+        return 0;
+
+    }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
@@ -3379,4 +3460,6 @@ namespace parallel_benders {
         osi_solver->setObjSense(1.0); // minimize
         osi_solver->initialSolve();
     }
+
+
 } // end namespace parallel_benders
