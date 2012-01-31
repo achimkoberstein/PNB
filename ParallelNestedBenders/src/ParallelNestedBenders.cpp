@@ -2098,15 +2098,23 @@ namespace parallel_benders {
                 cut_rhs += checked_dual_solution[row]*row_lower[row];
         }
         assert( row == for_bound);
+        // Append values for bounds? bounds are moved in the matrix.. TODO: Test it
+        if ( !benders_node_pointer->variable_bounds_.empty() )
+            for ( int i = 0; i < benders_node_pointer->variable_bounds_.size(); i++){
+                if ( checked_dual_solution[row] < 0 )
+                    cut_rhs += benders_node_pointer->variable_bounds_[i]->ub()*checked_dual_solution[row];
+                else if ( checked_dual_solution[row] > 0)
+                    cut_rhs += benders_node_pointer->variable_bounds_[i]->lb()*checked_dual_solution[row];
+                row++;
+            }
         //// Append values for optimality and feasibility cuts.. ( if we have any at this node )
         // Optimality cuts should not count into the feasibility question
-        //for_bound += benders_node_pointer->feasibility_cuts_.size();
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
             assert(checked_dual_solution[row] >= 0);
             cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
             row++;
         }
-        //for_bound += benders_node_pointer->optimality_cuts_.size();
+
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
             assert( checked_dual_solution[row] >= 0);
             if ( (*it)->to_use_ ) {
@@ -2579,11 +2587,16 @@ namespace parallel_benders {
             // Threshold that defines when active_value is bigger than threshold, we do not aggregates
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
             // Define a threshold above which we do not aggregate cuts for an iteration
-            double intra_aggregate_threshold = 0;// 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
+            double intra_aggregate_threshold = 0.05*benders_node_pointer->num_thetas_;
+            if ( adaptive_ )
+                intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
+            // 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
             // If cut is non-consecutively non-active for more than strike_threshold iterations, we can aggregate it!
             CutStuff::strike_threshold_ = -1; 
  
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
+            if ( !benders_node_pointer->variable_bounds_.empty() )
+                current_cut += benders_node_pointer->variable_bounds_.size();
             // Store the number of rows/columns
 
             /************************************************************************/
@@ -3029,6 +3042,8 @@ namespace parallel_benders {
             // Delete the cuts
             int num_rows = osi_solver->getNumRows();
             int num_feas_cuts = benders_node_pointer->feasibility_cuts_.size();
+            if ( bounds_in_matrix_ )
+                num_feas_cuts += benders_node_pointer->variable_bounds_.size();
             std::vector<int> removed_rows(num_rows-stage_data_[current_stage_]->num_rows_-num_feas_cuts);
             for (int i = 0; i < num_rows-stage_data_[current_stage_]->num_rows_-num_feas_cuts;i++)
                 removed_rows[i] = stage_data_[current_stage_]->num_rows_+num_feas_cuts+i;
