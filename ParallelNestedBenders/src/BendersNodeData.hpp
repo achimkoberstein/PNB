@@ -112,36 +112,6 @@ namespace parallel_benders{
 
     bool is_active (const boost::shared_ptr<CutStuff>& value);
 
-    struct CutInformation
-    {
-        CutInformation();
-
-        int cut_creation_iteration_;
-        int active_iteration_counter_;
-        int inactive_iteration_counter_;
-        std::map<int,double> iteration_forward_active_vector_;
-        std::map<int,double> iteration_backward_active_vector_;
-    };
-
-    class CutManager
-    {
-    public:
-        CutManager(BendersNodeData&);
-        ~CutManager();
-
-        void CreateCut(int iteration); // Initialize a new cut with an index
-        CutInformation& GetCut(int index); // Return a CutInformation struct
-        void DeleteCut(int index);
-        int NumCuts();
-        //std::vector<OsiRowCut*>& OptimalityCuts();
-
-    private:
-        BendersNodeData& node_data_ref_;
-        std::vector<CutInformation> cut_informations_; // 
-        int cut_counter_;
-    };
-
-
 // We can make it a struct anyway?!
 struct BendersNodeData 
 {
@@ -166,6 +136,7 @@ public:
     double* reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
     double* next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
+    boost::dynamic_bitset<> was_under_threshold_; // Has to have the size of num_thetas_
     double min_discrepancy_;
     double max_discrepancy_;
     double average_discrepancy_;
@@ -190,7 +161,6 @@ public:
 
     double solution_value_;
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
-    CutManager cut_information_;
     typedef std::list<boost::shared_ptr<CutStuff> > cut_container;
     cut_container optimality_cuts_;
     cut_container feasibility_cuts_;

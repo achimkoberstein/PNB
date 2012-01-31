@@ -17,7 +17,7 @@ namespace parallel_benders{
 
 BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),max_discrepancy_(0),min_discrepancy_(0),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
 
 {
@@ -25,7 +25,7 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),max_discrepancy_(0),min_discrepancy_(0),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),cut_information_(*this),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
 {
 
@@ -257,45 +257,6 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 }
 
 
-CutManager::CutManager( BendersNodeData& benders_node) : node_data_ref_(benders_node),cut_informations_(),cut_counter_(0)
-{
-   
-}
-
-
-CutManager::~CutManager()
-{
-
-}
-
-void CutManager::CreateCut( int iteration )
-{
-    cut_informations_.push_back( CutInformation() );
-    cut_informations_.back().cut_creation_iteration_ = iteration;
-    cut_counter_++;
-       
-}
-
-CutInformation& CutManager::GetCut( int index )
-{
-    return cut_informations_.at(index);
-}
-
-void CutManager::DeleteCut( int index )
-{
-    cut_informations_.erase(cut_informations_.begin()+index);
-    cut_counter_--;
-}
-
-int CutManager::NumCuts()
-{
-    return cut_counter_;
-}
-CutInformation::CutInformation() : cut_creation_iteration_(0),active_iteration_counter_(0),inactive_iteration_counter_(0),iteration_forward_active_vector_(),iteration_backward_active_vector_()
-{
-
-}
-
 double computeEuclideanNorm( OsiRowCut* cut )
 {
     double sum = 0;
@@ -331,7 +292,7 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 }
 
 double CutStuff::active_threshold_ = 1.0;
-int CutStuff::strike_threshold_ = 0;
+int CutStuff::strike_threshold_ = -1;
 CutStuff::CutStuff( int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),active_value(0.0)
 {
 }
