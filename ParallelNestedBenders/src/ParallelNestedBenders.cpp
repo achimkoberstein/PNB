@@ -995,6 +995,8 @@ namespace parallel_benders {
                 GenerateOptimalityCut(benders_tree_node_pointer);
             if ( adaptive_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 )) // Analyse optimality cuts of this node!
                 AnalyseOptimalityCuts(osi_solver,benders_tree_node_pointer);
+                
+            
             if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
                 IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
         }
@@ -2682,7 +2684,7 @@ namespace parallel_benders {
                         else {
                             cut_stuff->aggregate_number_ = CutStuff::AGGREGATE_OVER_PARTIAL;
                             // We do not want to create these cuts in the case of adaptive_ aggregation
-                            LOG(ERROR) << "We IntraIteration aggregated, but only " << number_cuts_in_this_iteration << " instead of " << benders_node_pointer->num_thetas_;
+                            LOG_IF(ERROR,adaptive_) << "We IntraIteration aggregated, but only " << number_cuts_in_this_iteration << " instead of " << benders_node_pointer->num_thetas_;
                         }
 
                         cut_stuff->active_value = 1.0;
@@ -2837,6 +2839,10 @@ namespace parallel_benders {
             //    discrepancy_threshold = benders_node_pointer->min_discrepancy_*2;
             //    LOG(INFO) << "R>4Disc. Threshold : " << discrepancy_threshold;
             //}
+
+            // Min-based
+            //discrepancy_threshold = benders_node_pointer->min_discrepancy_+(median-benders_node_pointer->min_discrepancy_)*0.5;
+            // Median based
             double median = 0;
             // memcpy to find median
             double * temp_values = new double[number_of_aggregates];
@@ -2844,10 +2850,9 @@ namespace parallel_benders {
             std::nth_element(&temp_values[0],&temp_values[(int)(number_of_aggregates/2)],&temp_values[number_of_aggregates]);
             median = temp_values[(int)(number_of_aggregates/2)];
             delete [] temp_values;
-            // Min-based
-            //discrepancy_threshold = benders_node_pointer->min_discrepancy_+(median-benders_node_pointer->min_discrepancy_)*0.5;
-            // Median based
+
             discrepancy_threshold = median;
+            // Other opportunities for a rule
 
             for (int i = 0; i < number_of_aggregates; i++){
                 if ( benders_node_pointer->discrepancy_[i] < discrepancy_threshold){
@@ -3051,7 +3056,10 @@ namespace parallel_benders {
             StoreWarmStart(osi_solver,benders_tree_node_pointer);
            if ( seperate_first_stage_solver_ && current_stage_ == 0)
                benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
-        }
+
+           // Store the data! That means: We work with the revised values. The presumably "better" RHS values before we aggregated are therefore lost.
+           //StoreData(osi_solver,benders_tree_node_pointer);
+        }// End If Aggregate
 
 
         time = CoinCpuTime()-time;
