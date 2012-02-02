@@ -1167,12 +1167,10 @@ namespace parallel_benders {
         
         // We need the column solution for the next stage problem!
         // We want to differentiate between column solution and theta variables 
-        benders_node_pointer->col_solution_ = new double[stage_data_[current_stage_]->num_columns_];
-        memcpy(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_*sizeof(double));
+        StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
+
         double solution_value = 0; // Compute the value of the c*x solution without all thetas!
         for (int i = 0; i < stage_data_[current_stage_]->num_columns_;i++){
-            if ( CompareWithZero(benders_node_pointer->col_solution_[i]))
-                benders_node_pointer->col_solution_[i] = 0;
             solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
@@ -1223,25 +1221,12 @@ namespace parallel_benders {
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){
             // Store Dual Solution ( only if we move backward ) ( or we need it anyway
-            benders_node_pointer->dual_solution_ = new double[osi_solver->getNumRows()];
-            memcpy(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()*sizeof(double));
-            for (int i = 0; i < osi_solver->getNumRows();i++){
-                if ( CompareWithZero(benders_node_pointer->dual_solution_[i]))
-                    benders_node_pointer->dual_solution_[i] = 0;
-            }
-            // Put this in own method TODO:
-            benders_node_pointer->reduced_cost_ = new double[osi_solver->getNumCols()];
-            memcpy(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols()*sizeof(double));
-            for (int i = 0; i < osi_solver->getNumCols();i++){
-                if ( CompareWithZero(benders_node_pointer->reduced_cost_[i]))
-                    benders_node_pointer->reduced_cost_[i] = 0;
-            }
- 
-
+            StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
+            // Store Reduced Cost ( needed for dual values of primal variable bounds )
+            StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
 
             // Compute the values: \lambda * lower_bound - \mu * upper_bound
             // Compute the resulting values right away, as we have the osi_solver_interface at hand.
-            // TODO: If reduced cost already computed, use these instead of the other ones..
             const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
             const double* variable_lower_bounds = osi_solver->getColLower();
             const double* variable_upper_bounds = osi_solver->getColUpper();
@@ -1719,8 +1704,8 @@ namespace parallel_benders {
                 minimum = 0;
             if ( CompareWithZero(maximum))
                 maximum = 0;
-            LOG(INFO) << "Min Disc: " << minimum;
-            LOG(INFO) << "Max Disc: " << maximum;
+            //LOG(INFO) << "Min Disc: " << minimum;
+            //LOG(INFO) << "Max Disc: " << maximum;
             benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = minimum;
             benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = maximum;
             benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = average/num_cuts;
@@ -2522,10 +2507,10 @@ namespace parallel_benders {
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        if ( adaptive_ ){
-            if ( !benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
-                return;
-        }
+        //if ( adaptive_ ){
+        //    if ( !benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
+        //        return;
+        //}
 
 
         double start_time = CoinCpuTime();
@@ -2729,14 +2714,14 @@ namespace parallel_benders {
     void ParallelNestedBenders::AnalyseOptimalityCuts( OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        if ( store_cut_information_ ){ // We handle the alternate setting only in this method
-            if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
-                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
-            else {
-                benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = true;
-                return;
-            }
-        }
+        //if ( store_cut_information_ ){ // We handle the alternate setting only in this method
+        //    if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
+        //        benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
+        //    else {
+        //        benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = true;
+        //        return;
+        //    }
+        //}
         if ( benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()) // We can only do something meaninungful if we have cuts to examine
             return;
         double time = CoinCpuTime();
@@ -3056,9 +3041,13 @@ namespace parallel_benders {
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
             }
             osi_solver->resolve();
-            StoreWarmStart(osi_solver,benders_tree_node_pointer);
-           if ( seperate_first_stage_solver_ && current_stage_ == 0)
-               benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
+            if ( seperate_first_stage_solver_ && current_stage_ == 0)
+                benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
+
+            if ( osi_solver->isProvenOptimal() ){
+                StoreWarmStart(osi_solver,benders_tree_node_pointer);
+                StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
+            }
 
            // Store the data! That means: We work with the revised values. The presumably "better" RHS values before we aggregated are therefore lost.
            //StoreData(osi_solver,benders_tree_node_pointer);
@@ -3401,6 +3390,18 @@ namespace parallel_benders {
         return 0;
 
     }
+
+    void ParallelNestedBenders::StoreValuesFromSolverInArray( double*& destination_values,const double* source_values,int size )
+    {
+        delete [] destination_values;
+        destination_values = new double[size];
+        memcpy(destination_values,source_values,size*sizeof(double));
+        for (int i = 0; i < size;i++){
+            if ( CompareWithZero(destination_values[i]))
+                destination_values[i] = 0;
+        }
+    }
+
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
