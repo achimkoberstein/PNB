@@ -81,9 +81,9 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
         benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -912,23 +912,28 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
-    ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    //::testing::GTEST_FLAG(filter) = "*.scdp*";
-    //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
-    //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
-    //::testing::GTEST_FLAG(filter) = "*watson_independent*";
-    //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*rand*";
-    //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
-    google::InitGoogleLogging(argv[0]);
-#ifndef _MSC_VER
-    google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
-#endif
-    google::LogToStderr();
-    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
-    int result = RUN_ALL_TESTS();
+    int result = 0;
+    {
 
-	return result;
+
+        ::testing::InitGoogleTest(&argc, argv);
+        //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
+        //::testing::GTEST_FLAG(filter) = "*.scdp*";
+        //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
+        //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
+        //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
+        //::testing::GTEST_FLAG(filter) = "*watson_independent*";
+        //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
+        ::testing::GTEST_FLAG(filter) = "*rand*";
+        //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
+        google::InitGoogleLogging(argv[0]);
+#ifndef _MSC_VER
+        google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
+#endif
+        google::LogToStderr();
+        google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
+        result = RUN_ALL_TESTS();
+    }
+    _CrtDumpMemoryLeaks(); // outside of scoping { }
+    return result;
 }

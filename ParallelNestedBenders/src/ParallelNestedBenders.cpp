@@ -2695,11 +2695,14 @@ namespace parallel_benders {
                         for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
                             benders_node_pointer->optimality_cuts_.erase(*list_it);
 
-                        benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
+                        bool add_new_single_cut = true;
+                        if ( add_new_single_cut )
+                            benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
                         if ( !to_remove_from_solver.empty()){
                             already_removed_cuts += to_remove_from_solver.size();
                             osi_solver->deleteRows(to_remove_from_solver.size(),&to_remove_from_solver[0]);
-                            osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
+                            if ( add_new_single_cut )
+                                osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
                             osi_solver->resolve();
                             if ( seperate_first_stage_solver_ && current_stage_ == 0)
                                 benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
@@ -3097,8 +3100,10 @@ namespace parallel_benders {
         // Complicated version
         if ( first_length != length){ // Not necessarily enough!
             int num_columns = stage_data_[current_stage_]->num_columns_+1;
-            if ( first_length > num_columns)
+            if ( first_length > num_columns){
+                LOG(INFO) << "Why?";
                 num_columns += first_length;
+            }
             // We need a new NON-sparse vector
             elements = new double[num_columns];
             indices = new int[num_columns];
