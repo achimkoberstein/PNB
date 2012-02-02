@@ -107,11 +107,13 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
+				PreprocessorDefinitions=""
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				EnablePREfast="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
