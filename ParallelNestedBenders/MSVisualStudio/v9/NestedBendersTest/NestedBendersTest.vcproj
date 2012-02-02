@@ -159,6 +159,8 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+				LocksVerification="0"
+				PageHeapConserveMemory="false"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
