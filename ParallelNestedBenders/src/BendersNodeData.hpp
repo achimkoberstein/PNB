@@ -137,9 +137,12 @@ public:
     double* next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
     boost::dynamic_bitset<> was_under_threshold_; // Has to have the size of num_thetas_
-    double min_discrepancy_;
     double max_discrepancy_;
+    double min_discrepancy_;
     double average_discrepancy_;
+    double median_discrepancy_;
+    std::list<double> average_discrepancies_;
+    std::list<double> median_discrepancies_;
     double dual_value_variable_bounds_;
     bool feasible_;
     
@@ -297,6 +300,11 @@ struct Parameter {
     // Stores every parameter as a std::string with a value that is stored as either double or int..
     boost::property_tree::ptree parameter_;
 };
+
+// Comparator and Helper functions
+
+bool comparator_less_int_double_pair ( const std::pair<int,double>& l, const std::pair<int,double>& r);
+
 
 } // end namespace parallel_benders
 #endif // BendersNodeData_h__

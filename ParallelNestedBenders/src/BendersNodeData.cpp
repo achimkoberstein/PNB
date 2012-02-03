@@ -15,7 +15,7 @@ using namespace std;
 
 namespace parallel_benders{
 
-BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),max_discrepancy_(0),min_discrepancy_(0),dual_value_variable_bounds_(0.0),feasible_(true),
+BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),max_discrepancy_(0),min_discrepancy_(0),average_discrepancy_(0.0),median_discrepancy_(0.0),average_discrepancies_(),median_discrepancies_(),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
@@ -23,7 +23,7 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 {
 }
 
-BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),max_discrepancy_(0),min_discrepancy_(0),dual_value_variable_bounds_(0.0),feasible_(true),
+BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),max_discrepancy_(0),min_discrepancy_(0),average_discrepancy_(0.0),median_discrepancy_(0.0),average_discrepancies_(),median_discrepancies_(),dual_value_variable_bounds_(0.0),feasible_(true),
 cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(),last_iteration_start_feasibility_(),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_()
@@ -300,5 +300,10 @@ CutStuff::CutStuff( int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer): c
 bool is_active( const boost::shared_ptr<CutStuff>& value )
 {
     return value->active_value < 0;
+}
+
+bool comparator_less_int_double_pair( const std::pair<int,double>& l, const std::pair<int,double>& r )
+{
+    return l.second < r.second; 
 }
 } // end namespace parallel benders
