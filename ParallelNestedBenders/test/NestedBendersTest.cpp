@@ -522,7 +522,7 @@ TEST_F(NestedBendersTest, gas_OTHER) { // ok
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
-    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
