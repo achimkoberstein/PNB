@@ -79,12 +79,12 @@ public:
             //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
             benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,number_cuts);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-            benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
             benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -522,7 +522,7 @@ TEST_F(NestedBendersTest, gas_OTHER) { // ok
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
-    //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);

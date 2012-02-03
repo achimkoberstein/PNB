@@ -14,6 +14,8 @@
 #include "boost/multi_array.hpp"
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/random_access_index.hpp>
 
 #include <glog/logging.h>
 // Include all the other files
@@ -247,7 +249,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),max_iteration_(1000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -1161,8 +1163,7 @@ namespace parallel_benders {
 
 		// Retrieve and store the theta variables
         if ( num_theta ){
-            benders_node_pointer->next_stage_approximation_ = new double[num_theta];
-            memcpy(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta*sizeof(double) );
+            StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
         }
         
         // We need the column solution for the next stage problem!
@@ -1674,8 +1675,8 @@ namespace parallel_benders {
         if ( initialized_iterator && seperate_first_stage_solver_ && current_stage_ == 1)
             benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
 
-        // Analyse thetas
-        if ( !change_aggregation_level && !forward_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()){
+        // Analyse thetas 
+        if ( benders_tree_node_pointer->getDataPtr()->next_stage_approximation_ && !forward_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()){
             double minimum = infinity_;
             double maximum = -infinity_;
             double average = 0;
@@ -1689,7 +1690,7 @@ namespace parallel_benders {
                 double real_value = 0;
                
                 for ( int j = 0; j < nodes_in_cut.size(); j++){
-                    real_value +=  tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_ * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
+                    real_value += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_ * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
                 }
                 benders_tree_node_pointer->getDataPtr()->discrepancy_[i] = real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
                 if (CompareWithZero(benders_tree_node_pointer->getDataPtr()->discrepancy_[i]) )
@@ -1704,8 +1705,6 @@ namespace parallel_benders {
                 minimum = 0;
             if ( CompareWithZero(maximum))
                 maximum = 0;
-            //LOG(INFO) << "Min Disc: " << minimum;
-            //LOG(INFO) << "Max Disc: " << maximum;
             benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = minimum;
             benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = maximum;
             benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = average/num_cuts;
@@ -1713,6 +1712,7 @@ namespace parallel_benders {
         else {
             benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = 0;
             benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = 0;
+            benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = 0;
             delete [] benders_tree_node_pointer->getDataPtr()->discrepancy_;
             benders_tree_node_pointer->getDataPtr()->discrepancy_ = NULL;
         }
@@ -2511,7 +2511,8 @@ namespace parallel_benders {
         //    if ( !benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
         //        return;
         //}
-
+        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ == 1)
+            return;
 
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
@@ -2713,16 +2714,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AnalyseOptimalityCuts( OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        // Should we really use this method?
-        //if ( store_cut_information_ ){ // We handle the alternate setting only in this method
-        //    if ( benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
-        //        benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = false;
-        //    else {
-        //        benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ = true;
-        //        return;
-        //    }
-        //}
+
         if ( benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()) // We can only do something meaninungful if we have cuts to examine
+            return;
+        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ == 1)
             return;
         double time = CoinCpuTime();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
@@ -2740,9 +2735,8 @@ namespace parallel_benders {
 
         int number_of_aggregates = benders_node_pointer->num_thetas_;
 
-        //int current_cut_index = optimality_cut_start;
 
-        // Process the data to see if we can aggregate something!
+         // Process the data to see if we can aggregate something!
         int inactive_threshold = 2;
         bool aggregate_aggregates = false;
 
@@ -2753,7 +2747,13 @@ namespace parallel_benders {
         int new_thetas = 0; 
         int removed_thetas = 0;
  
+        bool all_into_one = false;
+        if ( number_of_aggregates < 2 )
+            all_into_one = true;
         std::list<int> aggregates_into_one;
+        typedef std::map<int, std::list<int> > many_many_aggregate;
+        many_many_aggregate aggregates_into_many;
+
         /////
         // Use a specific scheme to aggregate aggregates. 
         /////
@@ -2818,73 +2818,144 @@ namespace parallel_benders {
             double absolute_difference = benders_node_pointer->max_discrepancy_-benders_node_pointer->min_discrepancy_;
             double relative_difference = benders_node_pointer->max_discrepancy_ / benders_node_pointer->min_discrepancy_;
             double discrepancy_threshold = 0;
-            //if ( relative_difference < 4 ){ // Values are relatively close together
-            //    discrepancy_threshold = benders_node_pointer->min_discrepancy_ + absolute_difference *0.5;
-            //    LOG(INFO) << "R<4:Disc. Threshold : " << discrepancy_threshold;
-            //}
-            //else { // Values are relative large apart. We do not want to get too much, so we use 
-            //    // Design a threshold based on relative values
-            //    discrepancy_threshold = benders_node_pointer->min_discrepancy_*2;
-            //    LOG(INFO) << "R>4Disc. Threshold : " << discrepancy_threshold;
-            //}
 
             // Min-based
             //discrepancy_threshold = benders_node_pointer->min_discrepancy_+(median-benders_node_pointer->min_discrepancy_)*0.5;
             // Median based
             double median = 0;
-            // memcpy to find median
+            // memcpy to find median, because we need the original discrepancy matching by aggregate number to perform the later comparison
             double * temp_values = new double[number_of_aggregates];
             memcpy(temp_values,benders_node_pointer->discrepancy_,sizeof(double)*number_of_aggregates);
-            std::nth_element(&temp_values[0],&temp_values[(int)(number_of_aggregates/2)],&temp_values[number_of_aggregates]);
-            median = temp_values[(int)(number_of_aggregates/2)];
+            int median_index = number_of_aggregates/2;
+            std::nth_element(&temp_values[0],&temp_values[median_index],&temp_values[number_of_aggregates]);
+            median = temp_values[median_index];
+            if ( number_of_aggregates % 2 == 0){// If we have an even number of aggregates, median is average of the two middle elements of the sequence. Middle Elements are Elements/2 and Elements/2-1. Example: 8/2 = 4, 8/2-1 = 3. 8 numbers are indexed from 0 to 7. Two middle elements are correctly 3 and 4.
+                --median_index;
+                std::nth_element(&temp_values[0],&temp_values[median_index],&temp_values[number_of_aggregates]);
+                median = (median+temp_values[median_index])/ 2.0;
+            }
             delete [] temp_values;
-
+            
+            // Set threshold
             discrepancy_threshold = median;
-            // Other opportunities for a rule
 
-            for (int i = 0; i < number_of_aggregates; i++){
-                if ( benders_node_pointer->discrepancy_[i] < discrepancy_threshold){
-                    if ( benders_node_pointer->was_under_threshold_[i] == true || true){ // FIXME: Set a parameter here!
-                        aggregates_into_one.push_back(i);
-                        benders_node_pointer->was_under_threshold_[i] = false;
-                    }
-                    else
-                        benders_node_pointer->was_under_threshold_[i] = true;
-                }
+            //double average = std::accumulate(&benders_node_pointer->discrepancy_[0],&benders_node_pointer->discrepancy_[number_of_aggregates],0.0)/ number_of_aggregates;
+            LOG(INFO) << "Minimum : " << benders_node_pointer->min_discrepancy_;
+            LOG(INFO) << "Median  : " << median;
+            LOG(INFO) << "Average : " << benders_node_pointer->average_discrepancy_;
+            LOG(INFO) << "Maximum : " << benders_node_pointer->max_discrepancy_;
+            benders_node_pointer->average_discrepancies_.push_back(benders_node_pointer->average_discrepancy_);
+            benders_node_pointer->median_discrepancies_.push_back(median);
+
+            // Compute average averages and average medians
+            double average_averages = std::accumulate(benders_node_pointer->average_discrepancies_.begin(),benders_node_pointer->average_discrepancies_.end(),0.0)/benders_node_pointer->average_discrepancies_.size();
+            double average_medians = std::accumulate(benders_node_pointer->median_discrepancies_.begin(),benders_node_pointer->median_discrepancies_.end(),0.0)/benders_node_pointer->median_discrepancies_.size();
+            LOG(INFO) << "Average Averages : " << average_averages;
+            LOG(INFO) << "Average Medians  : " << average_medians;
+
+            if ( average_averages < benders_node_pointer->max_discrepancy_){
+                LOG(INFO) << "Not aggregating, because average discrepancy is already higher than on average.";
+                return;
+            }
+            if ( average_medians < median){
+                LOG(INFO) << "Not aggregating, because median discrepancy is already higher than on average.";
+                return;
             }
 
+            
+ 
+            // Other opportunities for a rule
+            if ( all_into_one ){
+                for (int i = 0; i < number_of_aggregates; i++){
+                    if ( benders_node_pointer->discrepancy_[i] < discrepancy_threshold){
+                        if ( benders_node_pointer->was_under_threshold_[i] == true || true){ // FIXME: Set a parameter here! (After first aggregation?)
+                            aggregates_into_one.push_back(i);
+                            benders_node_pointer->was_under_threshold_[i] = false;
+                        }
+                        else
+                            benders_node_pointer->was_under_threshold_[i] = true;
+                    }
+                }
+            }
+            else {
+                std::vector< std::pair<int,double> > discrepancy_vector;
+                discrepancy_vector.reserve(number_of_aggregates);
+                for (int i = 0; i < number_of_aggregates; i++)
+                    discrepancy_vector.push_back(std::make_pair(i,benders_node_pointer->discrepancy_[i]));
+
+                // Try another approach: Aggregates_Into_Many.
+                // Idea: Sort values (ascending or descending?) and pick always the two on the most opposite to aggregate into one.
+                std::sort(discrepancy_vector.begin(),discrepancy_vector.end(),comparator_less_int_double_pair);
+                int half_index = (int)number_of_aggregates/2; 
+                for (int i = 0; i < half_index; i++){
+                    many_many_aggregate::iterator it = aggregates_into_many.find(discrepancy_vector[i].first);
+                    if ( it == aggregates_into_many.end()){
+                        std::list<int> temp_list;
+                        temp_list.push_back(discrepancy_vector[i].first);
+                        temp_list.push_back(discrepancy_vector[number_of_aggregates-1-i].first);
+                        aggregates_into_many.insert(std::make_pair(discrepancy_vector[i].first,temp_list));
+                    }
+                }
+                if ( number_of_aggregates % 2 == 1){// If we have an odd number_of_aggregates, we need to add the last entry by hand!
+                    half_index;
+                    std::list<int> temp_list;
+                    temp_list.push_back(discrepancy_vector[half_index].first);
+                    aggregates_into_many.insert(std::make_pair(discrepancy_vector[half_index].first,temp_list));
+                }
+            }
         }
 
         //////
         // Update the BendersNodeData to reflect the new aggregation we achieved
         //////
-        if ( aggregates_into_one.size() <= 1 ){
+        if ( aggregates_into_one.size() <= 1 && aggregates_into_many.empty()){
             // We can break here!
         }
         else {
             aggregate_aggregates = true;
-            new_thetas = number_of_aggregates - (aggregates_into_one.size()-1); // Total new number of aggregates!
-            removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
+
 
             int aggregate_index = 0;
-            int first_agg = aggregates_into_one.front();
-            for (int i = 0; i < number_of_aggregates; i++){
-                if ( !aggregates_into_one.empty() && i == aggregates_into_one.front() ){
-                    map_old_to_new[i] = first_agg;
-                    aggregates_into_one.pop_front();
-                    if ( i == first_agg)
+            // Determine the mapping of old aggregates to new aggregates
+            if ( all_into_one && aggregates_into_one.size() > 1){
+                new_thetas = number_of_aggregates - (aggregates_into_one.size()-1); // Total new number of aggregates!
+                removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
+                int first_agg = aggregates_into_one.front();
+                for (int i = 0; i < number_of_aggregates; i++){
+                    if ( !aggregates_into_one.empty() && i == aggregates_into_one.front() ){
+                        map_old_to_new[i] = first_agg;
+                        aggregates_into_one.pop_front();
+                        if ( i == first_agg)
+                            aggregate_index++;
+                    }
+                    else{
+                        map_old_to_new[i] = aggregate_index;
                         aggregate_index++;
-                }
-                else{
-                    map_old_to_new[i] = aggregate_index;
-                    aggregate_index++;
+                    }
                 }
             }
+            else if ( !all_into_one && !aggregates_into_many.empty()) {
+                new_thetas = number_of_aggregates - aggregates_into_many.size(); // Total new number of aggregates! Only counts for entries with more than one other value!
+                if ( number_of_aggregates % 2 == 1) // In case of odd number, we have to reduce the number of new_thetas by one!
+                    new_thetas++;
+                removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
+                for ( many_many_aggregate::iterator it = aggregates_into_many.begin(); it != aggregates_into_many.end() ; ++it){
+                    for ( std::list<int>::iterator list_it = it->second.begin(); list_it != it->second.end(); ++list_it){
+                        map_old_to_new[*list_it] = aggregate_index;
+                    }
+                    aggregate_index++;
+                }
+             // In the end every old aggregate should have a correct mapping
+            }
+           
+
+            // Determine the mapping of scenarios to aggregates
             std::vector< std::vector<int> > new_nodes_in_cut(new_thetas);
             for (int i = 0; i < benders_node_pointer->nodes_in_cut_.size(); i++){
                 // Insert values of old nodes_in_cut into new_nodes_in_cut.
                 new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
             }
+
             LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
             benders_node_pointer->num_thetas_ = new_thetas;
             benders_node_pointer->changed_aggregation_level_ = true;
@@ -3046,14 +3117,32 @@ namespace parallel_benders {
 
             if ( osi_solver->isProvenOptimal() ){
                 StoreWarmStart(osi_solver,benders_tree_node_pointer);
-                StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
+                StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()); // Store duals
+                StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
             }
+            else{
+                LOG(ERROR) << "Solver did not solve problem to optimality after aggregation.";
+                // Get CPLEX error code
+                OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                if ( cpx_ptr ){
+                    // Get ENV and LP ptr
+                    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    int stat = CPXgetstat(env_ptr,lp_ptr);
+                    LOG(INFO) << "Cplex returned solution process with " << stat;
+                    //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                    //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+                }
+            }
+
+            no_aggregation_ = false; // We did some aggregation, so we can no longer claim we did not aggregated.
 
            // Store the data! That means: We work with the revised values. The presumably "better" RHS values before we aggregated are therefore lost.
            //StoreData(osi_solver,benders_tree_node_pointer);
         }// End If Aggregate
 
 
+        
         time = CoinCpuTime()-time;
         misc_mutex_.lock();
         adaptive_cut_time_ += time;
