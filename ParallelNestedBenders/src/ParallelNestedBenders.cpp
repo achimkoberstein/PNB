@@ -2731,10 +2731,9 @@ namespace parallel_benders {
         if ( bounds_in_matrix_ )
             optimality_cut_start += benders_node_pointer->variable_bounds_.size();
 
-
-
         int number_of_aggregates = benders_node_pointer->num_thetas_;
-
+      /*  if ( number_of_aggregates < 10)
+            return;*/
 
          // Process the data to see if we can aggregate something!
         int inactive_threshold = 2;
@@ -2747,7 +2746,7 @@ namespace parallel_benders {
         int new_thetas = 0; 
         int removed_thetas = 0;
  
-        bool all_into_one = false;
+        bool all_into_one = true;
         if ( number_of_aggregates < 2 )
             all_into_one = true;
         std::list<int> aggregates_into_one;
@@ -2853,14 +2852,14 @@ namespace parallel_benders {
             LOG(INFO) << "Average Averages : " << average_averages;
             LOG(INFO) << "Average Medians  : " << average_medians;
 
-            if ( average_averages < benders_node_pointer->max_discrepancy_){
-                LOG(INFO) << "Not aggregating, because average discrepancy is already higher than on average.";
-                return;
-            }
-            if ( average_medians < median){
-                LOG(INFO) << "Not aggregating, because median discrepancy is already higher than on average.";
-                return;
-            }
+            //if ( average_averages < benders_node_pointer->average_discrepancy_){
+            //    LOG(INFO) << "Not aggregating, because average discrepancy is already higher than on average.";
+            //    return;
+            //}
+            //if ( average_medians < median){
+            //    LOG(INFO) << "Not aggregating, because median discrepancy is already higher than on average.";
+            //    return;
+            //}
 
             
  
