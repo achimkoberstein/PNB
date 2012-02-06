@@ -1690,7 +1690,7 @@ namespace parallel_benders {
                 double real_value = 0;
                
                 for ( int j = 0; j < nodes_in_cut.size(); j++){
-                    real_value += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_ * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
+                    real_value += (tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_) * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
                 }
                 benders_tree_node_pointer->getDataPtr()->discrepancy_[i] = real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
                 if (CompareWithZero(benders_tree_node_pointer->getDataPtr()->discrepancy_[i]) )
@@ -1699,8 +1699,10 @@ namespace parallel_benders {
                 minimum = std::min<double>(minimum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
                 maximum = std::max<double>(maximum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
                 average += benders_tree_node_pointer->getDataPtr()->discrepancy_[i];
-                //LOG(INFO) << " Discrepancy : " << real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+
             }
+            
+                        
             if ( CompareWithZero(minimum))
                 minimum = 0;
             if ( CompareWithZero(maximum))
@@ -1708,6 +1710,18 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = minimum;
             benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = maximum;
             benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = average/num_cuts;
+            benders_tree_node_pointer->getDataPtr()->discrepancy_value_ = std::accumulate(&benders_tree_node_pointer->getDataPtr()->discrepancy_[0],&benders_tree_node_pointer->getDataPtr()->discrepancy_[num_cuts],0.0);
+            if ( upper_bound_ != infinity_ && lower_bound_ != -infinity_)
+                benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_ = (upper_bound_-lower_bound_)/num_cuts;
+            LOG(INFO) << "Discrepancy is : " <<  benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
+            if ( benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ > benders_tree_node_pointer->getDataPtr()->discrepancy_value_ )
+                benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ = benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
+            if ( benders_tree_node_pointer->getDataPtr()->average_lower_bound_ > benders_tree_node_pointer->getDataPtr()->average_discrepancy_ )
+                benders_tree_node_pointer->getDataPtr()->average_lower_bound_ = benders_tree_node_pointer->getDataPtr()->average_discrepancy_;
+            if ( upper_bound_ != infinity_ && lower_bound_ != -infinity_)
+                if ( benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_lower_bound_ > benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_)
+                    benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_lower_bound_ = (upper_bound_-lower_bound_)/num_cuts;
+            
         }
         else {
             benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = 0;
@@ -2426,6 +2440,8 @@ namespace parallel_benders {
         tree_nodes_by_stage_[0].push_back(tree_.getRoot());
         // Set probability 1 to root node, to prevent numerical issues
         tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
+        tree_nodes_by_stage_[0][0]->getDataPtr()->discrepancy_lower_bound_ = infinity_;
+        tree_nodes_by_stage_[0][0]->getDataPtr()->average_lower_bound_ = infinity_;
         // Set multicut aggregation for the first stage also
         if ( num_scen_pro_cut)
             tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
@@ -2441,6 +2457,8 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i].push_back((*children)[k]);
                     tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
                     tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
+                    tree_nodes_by_stage_[i].back()->getDataPtr()->discrepancy_lower_bound_ = infinity_;
+                    tree_nodes_by_stage_[i].back()->getDataPtr()->average_lower_bound_ = infinity_;
                     number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
                     // Set num_scen_pro_cut, if we want to use it..
                     if ( num_scen_pro_cut ){
@@ -2732,8 +2750,8 @@ namespace parallel_benders {
             optimality_cut_start += benders_node_pointer->variable_bounds_.size();
 
         int number_of_aggregates = benders_node_pointer->num_thetas_;
-      /*  if ( number_of_aggregates < 10)
-            return;*/
+        if ( number_of_aggregates <= 3)
+            return;
 
          // Process the data to see if we can aggregate something!
         int inactive_threshold = 2;
@@ -2747,7 +2765,7 @@ namespace parallel_benders {
         int removed_thetas = 0;
  
         bool all_into_one = true;
-        if ( number_of_aggregates < 2 )
+        if ( number_of_aggregates <= 3 )
             all_into_one = true;
         std::list<int> aggregates_into_one;
         typedef std::map<int, std::list<int> > many_many_aggregate;
@@ -2836,21 +2854,22 @@ namespace parallel_benders {
             delete [] temp_values;
             
             // Set threshold
-            discrepancy_threshold = median;
+            discrepancy_threshold = median; // We use the median normally here TODO
 
-            //double average = std::accumulate(&benders_node_pointer->discrepancy_[0],&benders_node_pointer->discrepancy_[number_of_aggregates],0.0)/ number_of_aggregates;
-            LOG(INFO) << "Minimum : " << benders_node_pointer->min_discrepancy_;
-            LOG(INFO) << "Median  : " << median;
+            ////double average = std::accumulate(&benders_node_pointer->discrepancy_[0],&benders_node_pointer->discrepancy_[number_of_aggregates],0.0)/ number_of_aggregates;
+            //LOG(INFO) << "Minimum : " << benders_node_pointer->min_discrepancy_;
+            //LOG(INFO) << "Median  : " << median;
             LOG(INFO) << "Average : " << benders_node_pointer->average_discrepancy_;
-            LOG(INFO) << "Maximum : " << benders_node_pointer->max_discrepancy_;
-            benders_node_pointer->average_discrepancies_.push_back(benders_node_pointer->average_discrepancy_);
-            benders_node_pointer->median_discrepancies_.push_back(median);
+            //LOG(INFO) << "Maximum : " << benders_node_pointer->max_discrepancy_;
+            //benders_node_pointer->average_discrepancies_.push_back(benders_node_pointer->average_discrepancy_);
+            //benders_node_pointer->median_discrepancies_.push_back(median);
+            LOG(INFO) << "Gap per Aggregate : " << benders_node_pointer->average_gap_per_aggregate_;
 
-            // Compute average averages and average medians
-            double average_averages = std::accumulate(benders_node_pointer->average_discrepancies_.begin(),benders_node_pointer->average_discrepancies_.end(),0.0)/benders_node_pointer->average_discrepancies_.size();
-            double average_medians = std::accumulate(benders_node_pointer->median_discrepancies_.begin(),benders_node_pointer->median_discrepancies_.end(),0.0)/benders_node_pointer->median_discrepancies_.size();
-            LOG(INFO) << "Average Averages : " << average_averages;
-            LOG(INFO) << "Average Medians  : " << average_medians;
+            //// Compute average averages and average medians
+            //double average_averages = std::accumulate(benders_node_pointer->average_discrepancies_.begin(),benders_node_pointer->average_discrepancies_.end(),0.0)/benders_node_pointer->average_discrepancies_.size();
+            //double average_medians = std::accumulate(benders_node_pointer->median_discrepancies_.begin(),benders_node_pointer->median_discrepancies_.end(),0.0)/benders_node_pointer->median_discrepancies_.size();
+            //LOG(INFO) << "Average Averages : " << average_averages;
+            //LOG(INFO) << "Average Medians  : " << average_medians;
 
             //if ( average_averages < benders_node_pointer->average_discrepancy_){
             //    LOG(INFO) << "Not aggregating, because average discrepancy is already higher than on average.";
@@ -2860,9 +2879,20 @@ namespace parallel_benders {
             //    LOG(INFO) << "Not aggregating, because median discrepancy is already higher than on average.";
             //    return;
             //}
+            if ( benders_node_pointer->discrepancy_lower_bound_ < benders_node_pointer->discrepancy_value_ ){
+                LOG(INFO) << "Not aggregating, because discrepancy was higher than the discrepancy lower bound!";
+                return;
+            }
+            if ( benders_node_pointer->average_lower_bound_ < benders_node_pointer->average_discrepancy_ ){
+                LOG(INFO) << "Not aggregating, because of average";
+                return;
+            }
+            if ( benders_node_pointer->average_gap_per_aggregate_lower_bound_ < benders_node_pointer->average_gap_per_aggregate_){
+                LOG(INFO) << "Not aggregating, because of average gap violation";
+                return;
+            }
 
-            
- 
+
             // Other opportunities for a rule
             if ( all_into_one ){
                 for (int i = 0; i < number_of_aggregates; i++){
@@ -2890,9 +2920,19 @@ namespace parallel_benders {
                     many_many_aggregate::iterator it = aggregates_into_many.find(discrepancy_vector[i].first);
                     if ( it == aggregates_into_many.end()){
                         std::list<int> temp_list;
-                        temp_list.push_back(discrepancy_vector[i].first);
-                        temp_list.push_back(discrepancy_vector[number_of_aggregates-1-i].first);
-                        aggregates_into_many.insert(std::make_pair(discrepancy_vector[i].first,temp_list));
+                        if (discrepancy_vector[number_of_aggregates-1-i].second - discrepancy_vector[i].second > median/2.0){ // Condition is set here, if we want to aggregate more than two cuts into one!.
+                            temp_list.push_back(discrepancy_vector[i].first);
+                            temp_list.push_back(discrepancy_vector[number_of_aggregates-1-i].first);
+                            aggregates_into_many.insert(std::make_pair(discrepancy_vector[i].first,temp_list));
+                        }
+                        else{ // We need to add aggregates anyway, but in a way that we do not aggregate them!
+                            temp_list.push_back(discrepancy_vector[i].first);
+                            aggregates_into_many.insert(std::make_pair(discrepancy_vector[i].first,temp_list));
+                            std::list<int> temp2_list;
+                            temp2_list.push_back(discrepancy_vector[number_of_aggregates-1-i].first);
+                            aggregates_into_many.insert(std::make_pair(discrepancy_vector[number_of_aggregates-1-i].first,temp2_list));
+
+                        }
                     }
                 }
                 if ( number_of_aggregates % 2 == 1){// If we have an odd number_of_aggregates, we need to add the last entry by hand!
@@ -2912,7 +2952,6 @@ namespace parallel_benders {
         }
         else {
             aggregate_aggregates = true;
-
 
             int aggregate_index = 0;
             // Determine the mapping of old aggregates to new aggregates
@@ -2934,47 +2973,53 @@ namespace parallel_benders {
                 }
             }
             else if ( !all_into_one && !aggregates_into_many.empty()) {
-                new_thetas = number_of_aggregates - aggregates_into_many.size(); // Total new number of aggregates! Only counts for entries with more than one other value!
-                if ( number_of_aggregates % 2 == 1) // In case of odd number, we have to reduce the number of new_thetas by one!
-                    new_thetas++;
-                removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
+                //new_thetas = number_of_aggregates - aggregates_into_many.size(); // Total new number of aggregates! Only counts for entries with more than one other value!
+                //if ( number_of_aggregates % 2 == 1) // In case of odd number, we have to reduce the number of new_thetas by one!
+                //    new_thetas++;
+                //removed_thetas = benders_node_pointer->num_thetas_-new_thetas;
                 for ( many_many_aggregate::iterator it = aggregates_into_many.begin(); it != aggregates_into_many.end() ; ++it){
                     for ( std::list<int>::iterator list_it = it->second.begin(); list_it != it->second.end(); ++list_it){
                         map_old_to_new[*list_it] = aggregate_index;
                     }
                     aggregate_index++;
                 }
+                new_thetas = aggregate_index;
+                removed_thetas = benders_node_pointer->num_thetas_ - new_thetas;
+                if ( removed_thetas == 0)
+                    aggregate_aggregates = false;
+                assert( removed_thetas >= 0);
              // In the end every old aggregate should have a correct mapping
             }
            
+            if ( aggregate_aggregates ){
+                // Determine the mapping of scenarios to aggregates
+                std::vector< std::vector<int> > new_nodes_in_cut(new_thetas);
+                for (int i = 0; i < benders_node_pointer->nodes_in_cut_.size(); i++){
+                    // Insert values of old nodes_in_cut into new_nodes_in_cut.
+                    new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
+                }
 
-            // Determine the mapping of scenarios to aggregates
-            std::vector< std::vector<int> > new_nodes_in_cut(new_thetas);
-            for (int i = 0; i < benders_node_pointer->nodes_in_cut_.size(); i++){
-                // Insert values of old nodes_in_cut into new_nodes_in_cut.
-                new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
+                LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
+                benders_node_pointer->num_thetas_ = new_thetas;
+                benders_node_pointer->changed_aggregation_level_ = true;
+                benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
+                benders_node_pointer->active_aggregates_.set(); // Set all to 1
+                // Keep old was_under_threshold values!
+                boost::dynamic_bitset<> new_threshold_set(new_thetas);
+                size_t index = benders_node_pointer->was_under_threshold_.find_first();
+                while( index != boost::dynamic_bitset<>::npos){
+                    // Look up new index
+                    std::map<int,int>::iterator it = map_old_to_new.find(index);
+                    if ( it != map_old_to_new.end())
+                        new_threshold_set[it->second] = true;
+                    else
+                        assert(false);
+                    index = benders_node_pointer->was_under_threshold_.find_next(index);
+                }
+                benders_node_pointer->was_under_threshold_ = new_threshold_set;
+                benders_node_pointer->nodes_in_cut_ = new_nodes_in_cut;
+                stage_data_[current_stage_]->changed_aggregation_level_ = true; // Set the stage-wise handler also!
             }
-
-            LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
-            benders_node_pointer->num_thetas_ = new_thetas;
-            benders_node_pointer->changed_aggregation_level_ = true;
-            benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
-            benders_node_pointer->active_aggregates_.set(); // Set all to 1
-            // Keep old was_under_threshold values!
-            boost::dynamic_bitset<> new_threshold_set(new_thetas);
-            size_t index = benders_node_pointer->was_under_threshold_.find_first();
-            while( index != boost::dynamic_bitset<>::npos){
-                // Look up new index
-                std::map<int,int>::iterator it = map_old_to_new.find(index);
-                if ( it != map_old_to_new.end())
-                    new_threshold_set[it->second] = true;
-                else
-                    assert(false);
-                index = benders_node_pointer->was_under_threshold_.find_next(index);
-            }
-            benders_node_pointer->was_under_threshold_ = new_threshold_set;
-            benders_node_pointer->nodes_in_cut_ = new_nodes_in_cut;
-            stage_data_[current_stage_]->changed_aggregation_level_ = true; // Set the stage-wise handler also!
         }
         
         //////
