@@ -141,6 +141,11 @@ public:
     double min_discrepancy_;
     double average_discrepancy_;
     double median_discrepancy_;
+    double discrepancy_value_;
+    double discrepancy_lower_bound_;
+    double average_lower_bound_;
+    double average_gap_per_aggregate_;
+    double average_gap_per_aggregate_lower_bound_;
     std::list<double> average_discrepancies_;
     std::list<double> median_discrepancies_;
     double dual_value_variable_bounds_;
