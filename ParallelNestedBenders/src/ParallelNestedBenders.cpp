@@ -2525,10 +2525,6 @@ namespace parallel_benders {
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        //if ( adaptive_ ){
-        //    if ( !benders_tree_node_pointer->getDataPtr()->alternating_intra_cut_adaptive_ )
-        //        return;
-        //}
         if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ == 1)
             return;
 
@@ -2545,7 +2541,6 @@ namespace parallel_benders {
              // We want to store the information about cuts!
             std::vector< std::list< std::pair<int,double> > > active_aggregates_per_aggregate(benders_node_pointer->num_thetas_); // Stores information about cut from which iterations are active for an aggregate and how active they are
             std::vector< std::pair<int,double> > cuts_from_iteration(current_iteration_); // Stores information about how many cuts are active from a given iteration and how active they are
-
 
             // Initialize data structures
             for (int i = 0; i< current_iteration_; i++){
