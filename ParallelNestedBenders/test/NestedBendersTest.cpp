@@ -11,6 +11,10 @@
 #include <sstream>
 #include <sys/stat.h>
 
+
+// windows only header
+#include <crtdbg.h>
+
 #include <glog/logging.h>
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -640,12 +644,12 @@ TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
@@ -952,6 +956,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
+    //_CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_WNDW);
     int result = 0;
     {
 
@@ -960,8 +965,8 @@ int main(int argc, char *argv[]) {
         //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
         //::testing::GTEST_FLAG(filter) = "*.scdp*";
         //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
-        //::testing::GTEST_FLAG(filter) = "*.FeasibilityCutTest*";
-        ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
+        ::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
+        //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
         //::testing::GTEST_FLAG(filter) = "*watson_independent*";
         //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
         //::testing::GTEST_FLAG(filter) = "*rand*";
@@ -974,6 +979,6 @@ int main(int argc, char *argv[]) {
         google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
         result = RUN_ALL_TESTS();
     }
-    _CrtDumpMemoryLeaks(); // outside of scoping { }
+    //_CrtDumpMemoryLeaks(); // outside of scoping { }
     return result;
 }
