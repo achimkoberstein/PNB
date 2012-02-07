@@ -1,5 +1,7 @@
 #include "ParallelNestedBenders.hpp"
 
+#include <assert.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
@@ -435,7 +437,7 @@ namespace parallel_benders {
            //seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
        }
        if ( store_cut_information_){
-           //seperate_first_stage_solver_ = false;// TODO: Until we worked out how to deal with first stage problem directly, we turn 
+           store_primal_and_dual_ = true; 
        }
 
 
@@ -1674,6 +1676,9 @@ namespace parallel_benders {
         bool initialized_iterator = !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty();
         if ( initialized_iterator && seperate_first_stage_solver_ && current_stage_ == 1)
             benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = --benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+        else if ( seperate_first_stage_solver_ && current_stage_ == 1){
+            benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
+        }
 
         // Analyse thetas 
         if ( benders_tree_node_pointer->getDataPtr()->next_stage_approximation_ && !forward_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()){
@@ -1713,7 +1718,7 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->discrepancy_value_ = std::accumulate(&benders_tree_node_pointer->getDataPtr()->discrepancy_[0],&benders_tree_node_pointer->getDataPtr()->discrepancy_[num_cuts],0.0);
             if ( upper_bound_ != infinity_ && lower_bound_ != -infinity_)
                 benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_ = (upper_bound_-lower_bound_)/num_cuts;
-            LOG(INFO) << "Discrepancy is : " <<  benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
+            //LOG(INFO) << "Discrepancy is : " <<  benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
             if ( benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ > benders_tree_node_pointer->getDataPtr()->discrepancy_value_ )
                 benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ = benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
             if ( benders_tree_node_pointer->getDataPtr()->average_lower_bound_ > benders_tree_node_pointer->getDataPtr()->average_discrepancy_ )
@@ -1822,12 +1827,12 @@ namespace parallel_benders {
         }// End for num_cuts
 
         // Add number of added cuts.
-        if ( added_cuts && seperate_first_stage_solver_ && current_stage_ == 1){
-            if ( initialized_iterator ) 
-                ++benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; // Start at the correct one ( points to last of previous iteration before ++operation )
-            else
-                benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.begin();
-        }
+        //if ( added_cuts && seperate_first_stage_solver_ && current_stage_ == 1){
+        //    if ( initialized_iterator ) 
+        //        ++benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; // Start at the correct one ( points to last of previous iteration before ++operation )
+        //    else
+        //        benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.begin();
+        //}
 
         add_cut_counter_mutex_.lock();
         added_optimality_cuts_[current_stage_-1] += added_cuts;
@@ -2079,8 +2084,11 @@ namespace parallel_benders {
         }
 
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            assert( checked_dual_solution[row] >= 0);
             if ( (*it)->to_use_ ) {
+                LOG_IF(INFO,checked_dual_solution[row] < 0) << "Problem at cut with row " << row << " has dual value " << checked_dual_solution[row] << " writing problem.";
+                if ( checked_dual_solution[row] < 0) 
+                    osi_solver->writeLp("murks");
+                assert( checked_dual_solution[row] >= 0 || CompareWithZero(checked_dual_solution[row]));
                 cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
                 row++;
             }
@@ -2283,9 +2291,9 @@ namespace parallel_benders {
 		if ( !benders_node_pointer->feasibility_cuts_.empty()){
 			// Add the cuts
 			BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin();
-			if ( seperate_first_stage_solver_ && current_stage_ == 0){
+			if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
 				it = benders_node_pointer->last_iteration_start_feasibility_;
-				// If we apply feasibility cuts, we always go back and apply them right away. No need for setting the value to infinity, as in the optimality case.
+				// This points to the last cut that was NOT applied to the solver, but added to the feasibility set.
 			}
 			// TODO: This can be changed to addRows
 			for (; it != benders_node_pointer->feasibility_cuts_.end();++it) {
@@ -2297,8 +2305,9 @@ namespace parallel_benders {
         if ( !benders_node_pointer->optimality_cuts_.empty()){
             // Add the cuts
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
-            if ( seperate_first_stage_solver_ &&  current_stage_ == 0){
+            if ( seperate_first_stage_solver_ &&  current_stage_ == 0 && benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
                 it = benders_node_pointer->last_iteration_start_optimality_;
+                ++it; // This points to the last cut we added to the solver object. So we need to increment it by one, to get to the next one, so that we do not add a cut twice!
             }
             // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
@@ -2525,13 +2534,13 @@ namespace parallel_benders {
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ == 1)
+        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
             return;
 
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values. They are stored and thus checked against zero tolerance
-        assert( benders_node_pointer->dual_solution_ != NULL);
+        _ASSERT( benders_node_pointer->dual_solution_ != NULL);
         assert(store_cut_information_); // If we do not want to store cut information this method should not be called
 
         bool active_aggregates_per_aggregate_information = false;
@@ -2591,8 +2600,12 @@ namespace parallel_benders {
                 current_cut++;
             }
             int number_rows = osi_solver->getNumRows();
-            LOG_IF(INFO,current_cut != osi_solver->getNumRows() ) << "Difference between counted cuts " << current_cut << " and solver cuts " << number_rows;
-            assert( current_cut == osi_solver->getNumRows() || current_cut == osi_solver->getNumRows()-1); // First case should be default, second case can appear during solution (add one cut to allow a solution )
+            //console_mutex_.lock();
+            //LOG_IF(INFO,current_cut != osi_solver->getNumRows() ) << "Difference between counted cuts " << current_cut << " and solver cuts " << number_rows;
+            //console_mutex_.unlock();
+            if (!( current_cut == number_rows || current_cut == number_rows-1))
+                osi_solver->writeLp("murks");
+            assert( current_cut == number_rows || current_cut == number_rows-1); // First case should be default, second case can appear during solution (add one cut to allow a solution )
 
             /************************************************************************/
             /* Goal: Aggregate all cuts of one iteration into one new single cut for this generation
@@ -2607,7 +2620,7 @@ namespace parallel_benders {
                     if ( cuts_from_iteration[i].second > intra_aggregate_threshold ) // We only proceed with the aggregation if the active level falls below the threshold
                         continue;
 
-                    LOG_IF(INFO,cuts_from_iteration[i].second > 0) << "Iteration " << i << " is still active with " << cuts_from_iteration[i].second << " for only " << cuts_from_iteration[i].first << " cuts";
+                    //LOG_IF(INFO,cuts_from_iteration[i].second > 0) << "Iteration " << i << " is still active with " << cuts_from_iteration[i].second << " for only " << cuts_from_iteration[i].first << " cuts";
                         // Let's put all the cuts of one iteration in one single cut!
                         BendersNodeData::cut_container::iterator cut_stuff_it = std::find_if(benders_node_pointer->optimality_cuts_.begin(), benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
                         if ( cut_stuff_it == benders_node_pointer->optimality_cuts_.end())
@@ -2689,7 +2702,6 @@ namespace parallel_benders {
                         cut_stuff->active_value = 1.0;
                         cut_stuff->to_use_ = true; // Because of this, we must at first sort out the cuts for the solver
 
-
                         // TODO: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
                         for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
                             benders_node_pointer->optimality_cuts_.erase(*list_it);
@@ -2697,23 +2709,29 @@ namespace parallel_benders {
                         bool add_new_single_cut = true;
                         if ( add_new_single_cut )
                             benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
+
                         if ( !to_remove_from_solver.empty()){
                             already_removed_cuts += to_remove_from_solver.size();
                             osi_solver->deleteRows(to_remove_from_solver.size(),&to_remove_from_solver[0]);
-                            if ( add_new_single_cut )
-                                osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
-                            osi_solver->resolve();
-                            if ( seperate_first_stage_solver_ && current_stage_ == 0)
-                                benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
-                            if ( osi_solver->isProvenOptimal() ){
-                                // Store warmstart
-                                StoreWarmStart(osi_solver,benders_tree_node_pointer);      
-                            }
-                            else
-                                LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
                         }
+                        if ( add_new_single_cut )
+                            osi_solver->applyRowCuts(1,cut_stuff->cut_.get());
 
-                        LOG(INFO) << "Building new cut for iteration " << i << " that involves " << number_cuts_in_this_iteration << " old cuts.";
+                        osi_solver->resolve(); // Resolve it in any case ( either we remove cuts 
+                        if ( osi_solver->isProvenOptimal() ){
+                            // Store warmstart
+                            StoreWarmStart(osi_solver,benders_tree_node_pointer);      
+                        }
+                        else{
+                            console_mutex_.lock();
+                            LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
+                            console_mutex_.unlock();
+                        }
+                        // Just keep it up to date ( should do no harm, as we update it in AggregateOptimalityCuts anyway )
+                        if ( seperate_first_stage_solver_ && current_stage_ == 0)
+                            benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
+
+                        //LOG(INFO) << "Building new cut for iteration " << i << " that involves " << number_cuts_in_this_iteration << " old cuts.";
                 }//End For
             }// End If 
 
