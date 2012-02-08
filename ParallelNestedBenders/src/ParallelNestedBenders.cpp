@@ -2767,7 +2767,7 @@ namespace parallel_benders {
         many_many_aggregate aggregates_into_many;
 
         /////
-        // Use a specific scheme to aggregate aggregates. 
+        // Use a specific scheme to aggregate aggregates. Each scheme sets either aggregates_into_one or aggregates_into_many.
         /////
         if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION ){
             // Keep a candidate list.
@@ -2850,6 +2850,8 @@ namespace parallel_benders {
             
             // Set threshold
             discrepancy_threshold = median; // We use the median normally here TODO
+            if ( CompareWithZero(discrepancy_threshold ))
+                discrepancy_threshold = zero_tolerance_;
 
             ////double average = std::accumulate(&benders_node_pointer->discrepancy_[0],&benders_node_pointer->discrepancy_[number_of_aggregates],0.0)/ number_of_aggregates;
             //LOG(INFO) << "Minimum : " << benders_node_pointer->min_discrepancy_;
@@ -2900,6 +2902,7 @@ namespace parallel_benders {
                             benders_node_pointer->was_under_threshold_[i] = true;
                     }
                 }
+                LOG_IF(INFO,aggregates_into_one.size() <= 1) << "Our threshold was " << discrepancy_threshold;
             }
             else {
                 std::vector< std::pair<int,double> > discrepancy_vector;
@@ -2940,10 +2943,11 @@ namespace parallel_benders {
         }
 
         //////
-        // Update the BendersNodeData to reflect the new aggregation we achieved
+        // Update the BendersNodeData to reflect the new aggregation we achieved by parsing aggregates_into_one or aggregates_into_many
         //////
         if ( aggregates_into_one.size() <= 1 && aggregates_into_many.empty()){
             // We can break here!
+            LOG(INFO) << "We did not aggregate any aggregate in this iteration. #Aggregates " << benders_node_pointer->num_thetas_;
         }
         else {
             aggregate_aggregates = true;
@@ -3061,6 +3065,7 @@ namespace parallel_benders {
                         }
 
                     }
+                    // TODO: Sparsify existing cuts!
                     // Delete the iterator_to_cuts vector
                     pointer_to_cuts.clear();
                     pointer_to_cuts.resize(new_thetas);
@@ -3151,6 +3156,7 @@ namespace parallel_benders {
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
             }
             osi_solver->resolve();
+            //osi_solver->writeLp("aggregated");
             if ( seperate_first_stage_solver_ && current_stage_ == 0)
                 benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
 
@@ -3215,13 +3221,30 @@ namespace parallel_benders {
         int length = second_vector.getNumElements();
 
         // Complicated version
-        if ( first_length != length){ // Not necessarily enough!
-            int num_columns = stage_data_[current_stage_]->num_columns_+1;
-            if ( first_length > num_columns){
-                LOG(INFO) << "Why?";
-                num_columns += first_length;
+        //if ( first_length == length){ // Not necessarily enough!
+        //    for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
+        //        if ( indices[i]!=indices2[i]){
+        //            create_new = true;
+        //            break;
+        //            LOG(FATAL)  << "Indices do not match"; // Not a viable option for a release version, so we can do it as in the if-clause TODO
+        //        }
+        //        elements[i] += elements2[i];
+        //    }
+
+
+        int num_columns = stage_data_[current_stage_]->num_columns_+1;
+        if ( first_length > num_columns){
+            LOG(INFO) << "Why?";
+            num_columns += first_length;
+        }
+        if ( first_length == num_columns ) {
+            for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
+                assert( indices2[i]<first_length);
+                elements[indices2[i]] += elements2[i];
             }
-            // We need a new NON-sparse vector
+        }
+        else {
+            // We need a new NON-sparse vector, so we can not just use memcpy
             elements = new double[num_columns];
             indices = new int[num_columns];
             // Initialize with 0
@@ -3246,15 +3269,11 @@ namespace parallel_benders {
                 assert( second_vector.getIndices()[i] < num_columns);
                 elements[second_vector.getIndices()[i]] += elements2[i];
             }
+            // Create NEW CoinPackedVector that takes ownership of supplied arrays
+            CoinPackedVector cpv(num_columns, num_columns,indices, elements);
+            first_cut->cut_->setRow(cpv);
         }
-        else{       
-            for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
-                if ( indices[i]!=indices2[i]){
-                    LOG(FATAL)  << "Indices do not match"; // Not a viable option for a release version, so we can do it as in the if-clause TODO
-                }
-                elements[i] += elements2[i];
-            }
-        }
+  
         first->setLb(first->lb()+second->lb());
     }
 
