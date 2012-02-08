@@ -78,7 +78,7 @@ public:
 
         for (int i = 0; i < num_repetitions; i++){
             // Solve problem for now
-            for (int number_cuts = 0; number_cuts <= num_childs_first_stage/2; number_cuts++){
+        for (int number_cuts = 0; number_cuts < 1000; number_cuts += 200){
                 benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,number_cuts);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
@@ -560,11 +560,11 @@ TEST_F(NestedBendersTest, gas_OTHER) { // ok
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
-    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
-    EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
     //EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
@@ -665,22 +665,22 @@ TEST_F(NestedBendersTest, stormG2_POSTS) {
     double solutionValue = 0;
     double referenceValue = 0;
     double relGap = 0;
-    solutionValue = solveSMPS("stormG2_3");
-    referenceValue = 15535235.730;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
+    //solutionValue = solveSMPS("posts/storm/stormG2_3");
+    //referenceValue = 15535235.730;
+    //relGap = abs(referenceValue-solutionValue)/solutionValue;
+    //EXPECT_LE(relGap,0.000001);
 
-    solutionValue = solveSMPS("stormG2_27");
-    referenceValue = 15508982.306;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
+    //solutionValue = solveSMPS("posts/storm/stormG2_27");
+    //referenceValue = 15508982.306;
+    //relGap = abs(referenceValue-solutionValue)/solutionValue;
+    //EXPECT_LE(relGap,0.000001);
 
-    solutionValue = solveSMPS("stormG2_125");
-    referenceValue = 15512091.185;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
+    //solutionValue = solveSMPS("posts/storm/stormG2_125");
+    //referenceValue = 15512091.185;
+    //relGap = abs(referenceValue-solutionValue)/solutionValue;
+    //EXPECT_LE(relGap,0.000001);
 
-    solutionValue = solveSMPS("stormG2_1000");
+    solutionValue = solveSMPS("posts/storm/stormG2_1000");
     referenceValue = 15802589.698;
     relGap = abs(referenceValue-solutionValue)/solutionValue;
     EXPECT_LE(relGap,0.000001);
@@ -964,7 +964,7 @@ int main(int argc, char *argv[]) {
         ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
         //::testing::GTEST_FLAG(filter) = "*watson_independent*";
         //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-        //::testing::GTEST_FLAG(filter) = "*rand*";
+        ::testing::GTEST_FLAG(filter) = "*stormG2_POSTS*";
         //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
         google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
