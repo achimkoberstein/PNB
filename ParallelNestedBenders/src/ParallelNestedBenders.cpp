@@ -2525,7 +2525,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ == 1)
+        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
             return;
 
         double start_time = CoinCpuTime();
@@ -2730,7 +2730,7 @@ namespace parallel_benders {
 
         if ( benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()) // We can only do something meaninungful if we have cuts to examine
             return;
-        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ == 1)
+        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
             return;
         double time = CoinCpuTime();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
@@ -2894,7 +2894,7 @@ namespace parallel_benders {
             if ( all_into_one ){
                 for (int i = 0; i < number_of_aggregates; i++){
                     if ( benders_node_pointer->discrepancy_[i] < discrepancy_threshold){
-                        if ( benders_node_pointer->was_under_threshold_[i] == true || true){ // FIXME: Set a parameter here! (After first aggregation?)
+                        if ( benders_node_pointer->was_under_threshold_[i] == true ){ // FIXME: Set a parameter here! (After first aggregation?)
                             aggregates_into_one.push_back(i);
                             benders_node_pointer->was_under_threshold_[i] = false;
                         }
