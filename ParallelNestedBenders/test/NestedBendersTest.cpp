@@ -82,6 +82,7 @@ public:
                 benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,number_cuts);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
