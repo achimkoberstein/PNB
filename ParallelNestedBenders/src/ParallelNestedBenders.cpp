@@ -2772,7 +2772,7 @@ namespace parallel_benders {
         many_many_aggregate aggregates_into_many;
 
         /////
-        // Use a specific scheme to aggregate aggregates. 
+        // Use a specific scheme to aggregate aggregates. Each scheme sets either aggregates_into_one or aggregates_into_many.
         /////
         if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION ){
             // Keep a candidate list.
@@ -2948,7 +2948,7 @@ namespace parallel_benders {
         }
 
         //////
-        // Update the BendersNodeData to reflect the new aggregation we achieved
+        // Update the BendersNodeData to reflect the new aggregation we achieved by parsing aggregates_into_one or aggregates_into_many
         //////
         if ( aggregates_into_one.size() <= 1 && aggregates_into_many.empty()){
             // We can break here!
@@ -3070,6 +3070,7 @@ namespace parallel_benders {
                         }
 
                     }
+                    // TODO: Sparsify existing cuts!
                     // Delete the iterator_to_cuts vector
                     pointer_to_cuts.clear();
                     pointer_to_cuts.resize(new_thetas);
@@ -3241,34 +3242,42 @@ namespace parallel_benders {
             LOG(INFO) << "Why?";
             num_columns += first_length;
         }
-        // We need a new NON-sparse vector, so we can not just use memcpy
-        elements = new double[num_columns];
-        indices = new int[num_columns];
-        // Initialize with 0
-        CoinFillN(elements,num_columns,0.0);
-        for (int i = 0; i < num_columns;i++)
-            indices[i] = i;
+        if ( first_length == num_columns ) {
+            for (int i = 0; i < length-1; i++){ // We do not add the theta indices! TODO: What if we already have other cuts?!
+                assert( indices2[i]<first_length);
+                elements[indices2[i]] += elements2[i];
+            }
+        }
+        else {
+            // We need a new NON-sparse vector, so we can not just use memcpy
+            elements = new double[num_columns];
+            indices = new int[num_columns];
+            // Initialize with 0
+            CoinFillN(elements,num_columns,0.0);
+            for (int i = 0; i < num_columns;i++)
+                indices[i] = i;
 
-        // Copy old elements (except the aggregate number)
-        for (int i = 0; i < first_length-1; i++){
-            if ( first_vector.getIndices()[i] >= num_columns ) 
-                assert(false);
-            assert( first_vector.getIndices()[i] < num_columns);
-            elements[first_vector.getIndices()[i]] = first_vector.getElements()[i];
+            // Copy old elements (except the aggregate number)
+            for (int i = 0; i < first_length-1; i++){
+                if ( first_vector.getIndices()[i] >= num_columns ) 
+                    assert(false);
+                assert( first_vector.getIndices()[i] < num_columns);
+                elements[first_vector.getIndices()[i]] = first_vector.getElements()[i];
+            }
+            // Copy old aggregate number
+            elements[num_columns-1] = 1;
+            indices[num_columns-1] = first_vector.getIndices()[first_length-1];
+            // Add second vector ( except the aggregate number )
+            for (int i = 0; i < length-1;i++){
+                if ( second_vector.getIndices()[i] >= num_columns)
+                    assert(false);
+                assert( second_vector.getIndices()[i] < num_columns);
+                elements[second_vector.getIndices()[i]] += elements2[i];
+            }
+            // Create NEW CoinPackedVector that takes ownership of supplied arrays
+            CoinPackedVector cpv(num_columns, num_columns,indices, elements);
+            first_cut->cut_->setRow(cpv);
         }
-        // Copy old aggregate number
-        elements[num_columns-1] = 1;
-        indices[num_columns-1] = first_vector.getIndices()[first_length-1];
-        // Add second vector ( except the aggregate number )
-        for (int i = 0; i < length-1;i++){
-            if ( second_vector.getIndices()[i] >= num_columns)
-                assert(false);
-            assert( second_vector.getIndices()[i] < num_columns);
-            elements[second_vector.getIndices()[i]] += elements2[i];
-        }
-        // Create NEW CoinPackedVector that takes ownership of supplied arrays
-        CoinPackedVector cpv(num_columns, num_columns,indices, elements);
-        first_cut->cut_->setRow(cpv);
   
         first->setLb(first->lb()+second->lb());
     }
