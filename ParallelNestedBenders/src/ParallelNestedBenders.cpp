@@ -1223,30 +1223,36 @@ namespace parallel_benders {
 
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){
-            // Store Dual Solution ( only if we move backward ) ( or we need it anyway
+            // Store Dual Solution ( only if we move backward ) ( or we need it anyway )
+            if ( integer_problems_[current_stage_] ){
+                return; // We can not compute the dual and reduced cost for this problem
+            }
+                
             StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
             // Store Reduced Cost ( needed for dual values of primal variable bounds )
             StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
 
-            // Compute the values: \lambda * lower_bound - \mu * upper_bound
-            // Compute the resulting values right away, as we have the osi_solver_interface at hand.
-            const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
-            const double* variable_lower_bounds = osi_solver->getColLower();
-            const double* variable_upper_bounds = osi_solver->getColUpper();
-            double computed_dual_value_for_variable_bounds = 0;
-            const double* column_solution = osi_solver->getColSolution();
-            for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
-                // Look at variable value and their bounds
-                if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
-                    
-                    // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
-                    if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
-                        computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                    else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
-                        computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+            if ( current_stage_ > 0 ) {
+                // Compute the values: \lambda * lower_bound - \mu * upper_bound
+                // Compute the resulting values right away, as we have the osi_solver_interface at hand.
+                const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
+                const double* variable_lower_bounds = osi_solver->getColLower();
+                const double* variable_upper_bounds = osi_solver->getColUpper();
+                double computed_dual_value_for_variable_bounds = 0;
+                const double* column_solution = osi_solver->getColSolution();
+                for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
+                    // Look at variable value and their bounds
+                    if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+
+                        // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
+                        if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                            computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
+                        else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                            computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                    }
                 }
+                benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
             }
-            benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
 
         }
 
