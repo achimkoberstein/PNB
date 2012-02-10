@@ -1010,13 +1010,13 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
-        //} // TODO: Debugging stuff
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        } // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1073,6 +1073,7 @@ namespace parallel_benders {
                         // we bound all thetas with one extra row?
                         // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
                         osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-100000000000, infinity_); // We assume that will work. I mean: Half infinity? 
+                        // DO we remove this bound eventually? What if it is in the first stage?
                         // Solve the model again
                         if ( current_stage_ == 0 && integer_problems_[current_stage_] )
                             osi_solver->branchAndBound();
@@ -1944,23 +1945,25 @@ namespace parallel_benders {
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
                 dual_solution_primal_variable_bounds = new double[number_coss];
                 cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
-
-                // Compute the value of the primal variable bounds * dual multipliers
-                if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
-                    variable_lower_bounds = osi_solver->getColLower();
-                    variable_upper_bounds = osi_solver->getColUpper();
-                    if ( stage_data_[current_stage_]->non_zero_bounds_)
-                        for (int i = 0; i < number_coss; i++){
-                            if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && dual_solution_primal_variable_bounds[i] > 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
-                                computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_lower_bounds[i];
-                            }
-                            else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && dual_solution_primal_variable_bounds[i] < 0){ // Variable has non-zero upper bound and the current variable value is above
-                                computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_upper_bounds[i];
-                            }
-                        }
-                        delete [] dual_solution_primal_variable_bounds;
-                }
             }
+
+            // Compute the value of the primal variable bounds * dual multipliers
+            if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
+                variable_lower_bounds = osi_solver->getColLower();
+                variable_upper_bounds = osi_solver->getColUpper();
+                if ( stage_data_[current_stage_]->non_zero_bounds_)
+                    for (int i = 0; i < number_coss; i++){
+                        if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && dual_solution_primal_variable_bounds[i] > 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
+                            computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_lower_bounds[i];
+                        }
+                        else if ( variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ && dual_solution_primal_variable_bounds[i] < 0){ // Variable has non-zero upper bound and the current variable value is above
+                            computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_upper_bounds[i];
+                        }
+                    }
+                    delete [] dual_solution_primal_variable_bounds;
+                    dual_solution_primal_variable_bounds = NULL;
+            }
+            
 
         }
 #endif // CPLEX_PRESENT
@@ -2008,7 +2011,7 @@ namespace parallel_benders {
             dual_values_variable_bounds = const_cast<double*> (dual_ray_problem->getReducedCost());
             variable_lower_bounds = osi_solver->getColLower();
             variable_upper_bounds = osi_solver->getColUpper();
-            double computed_dual_value_for_variable_bounds = 0;
+            computed_dual_value_for_variable_bounds = 0;
             const double* column_solution = dual_ray_problem->getColSolution(); // We need to check if the column solution is at one of the bounds..
 
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
@@ -2124,6 +2127,7 @@ namespace parallel_benders {
             delete row_upper;
 
         delete [] checked_dual_solution;
+        delete [] dual_solution_primal_variable_bounds;
     }
 
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
