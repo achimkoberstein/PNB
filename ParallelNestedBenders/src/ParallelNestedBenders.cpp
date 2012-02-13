@@ -2543,6 +2543,9 @@ namespace parallel_benders {
         if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
             return;
 
+        if ( benders_tree_node_pointer->getDataPtr()->dual_solution_ == NULL)
+            return;
+
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values. They are stored and thus checked against zero tolerance
