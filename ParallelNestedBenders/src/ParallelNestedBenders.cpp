@@ -248,7 +248,7 @@ namespace parallel_benders {
         smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),max_iteration_(1000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
+        current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
@@ -968,6 +968,7 @@ namespace parallel_benders {
         }
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to intra-aggregate cuts.";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
+        LOG_IF(WARNING,current_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
         
    }
 
@@ -1010,13 +1011,13 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            console_mutex_.lock();
-            osi_solver->writeLp(stream.str().c_str());
-            console_mutex_.unlock();
-        } // TODO: Debugging stuff
+        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    console_mutex_.lock();
+        //    osi_solver->writeLp(stream.str().c_str());
+        //    console_mutex_.unlock();
+        //} // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1224,28 +1225,30 @@ namespace parallel_benders {
         if ( !forward_ || store_primal_and_dual_ ){
             // Store Dual Solution ( only if we move backward ) ( or we need it anyway
             StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
-            // Store Reduced Cost ( needed for dual values of primal variable bounds )
-            StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
-
+            
             // Compute the values: \lambda * lower_bound - \mu * upper_bound
             // Compute the resulting values right away, as we have the osi_solver_interface at hand.
-            const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
-            const double* variable_lower_bounds = osi_solver->getColLower();
-            const double* variable_upper_bounds = osi_solver->getColUpper();
-            double computed_dual_value_for_variable_bounds = 0;
-            const double* column_solution = osi_solver->getColSolution();
-            for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
-                // Look at variable value and their bounds
-                if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
-                    
-                    // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
-                    if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
-                        computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                    else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
-                        computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+            if ( stage_data_[current_stage_]->non_zero_bounds_ ){
+                // Store Reduced Cost ( needed for dual values of primal variable bounds )
+                StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
+                const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
+                const double* variable_lower_bounds = osi_solver->getColLower();
+                const double* variable_upper_bounds = osi_solver->getColUpper();
+                double computed_dual_value_for_variable_bounds = 0;
+                const double* column_solution = osi_solver->getColSolution();
+                for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
+                    // Look at variable value and their bounds
+                    if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+
+                        // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
+                        if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                            computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
+                        else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                            computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                    }
                 }
+                benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
             }
-            benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
 
         }
 
@@ -1714,7 +1717,7 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->discrepancy_value_ = std::accumulate(&benders_tree_node_pointer->getDataPtr()->discrepancy_[0],&benders_tree_node_pointer->getDataPtr()->discrepancy_[num_cuts],0.0);
             if ( upper_bound_ != infinity_ && lower_bound_ != -infinity_)
                 benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_ = (upper_bound_-lower_bound_)/num_cuts;
-            LOG(INFO) << "Discrepancy is : " <<  benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
+            //LOG(INFO) << "Discrepancy is : " <<  benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
             if ( benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ > benders_tree_node_pointer->getDataPtr()->discrepancy_value_ )
                 benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ = benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
             if ( benders_tree_node_pointer->getDataPtr()->average_lower_bound_ > benders_tree_node_pointer->getDataPtr()->average_discrepancy_ )
@@ -1754,7 +1757,6 @@ namespace parallel_benders {
             }
             
             // For all the indices, that belong to this cut.
-            // TODO We can store the cut as a sparse cut!
             std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
             for ( int j = 0; j < nodes_in_cut.size(); j++){
                 for (int k = 0; k < num_columns; k++)
@@ -1779,6 +1781,8 @@ namespace parallel_benders {
             /************************************************************************/
             /* If-Condition can be put here, if the cut should be added, instead of just set to to_use_ = false/true */
             /************************************************************************/
+
+            // "Sparsify" the cut
             int new_index = 0;
             // Clear zero elements and create sparse vector for future reference
             for (int index = 0; index < num_columns+num_theta_indices; index++){
@@ -3567,8 +3571,9 @@ namespace parallel_benders {
             return true;
         if (std::abs(upper_bound) < 1 && std::abs(lower_bound) < 1) //in this case we do not want relative difference, instead we want absolute difference..
             return true;
-		return std::abs(upper_bound-lower_bound)/(std::abs(lower_bound)+0.00000000001) >= epsilon; //Gap as defined in POSTS test set (except 0.0..01 instead of 0.1)
+		return std::abs(upper_bound-lower_bound)/(std::abs(lower_bound)+0.00000000001) >= epsilon; 
         // Cplex MIPGAP is |bestnode-bestinteger| / ( |bestinteger| + 0.0000000001 )
+        //Gap as defined in POSTS test set (except 0.0..01 instead of 0.1)
     }
 
     RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode )

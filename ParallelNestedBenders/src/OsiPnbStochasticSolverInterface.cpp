@@ -52,8 +52,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 				osi->branchAndBound();
 			}
 			else {
-                //CPXdualopt(envPtr,lpPtr);
-				CPXbaropt(envPtr,lpPtr);
+                CPXdualopt(envPtr,lpPtr);
+				//CPXbaropt(envPtr,lpPtr);
 			}
             //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
