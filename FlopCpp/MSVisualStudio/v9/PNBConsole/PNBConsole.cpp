@@ -10,10 +10,11 @@
 
 #include <glog/logging.h>
 
+#include "CoinTime.hpp"
 #include "OsiCpxSolverInterface.hpp"
-#include "SmiScnModel.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "ParallelNestedBenders.hpp"
+#include "SmiScnModel.hpp"
 
 
 
@@ -68,6 +69,8 @@ int main(int argc,  char* argv[])
 
     // Subject to property
     google::SetStderrLogging(0); 
+    
+    double time_d = CoinCpuTime(); 
 
     int smps_read_in = 0;
     SmiScnModel smi_model;
@@ -95,6 +98,8 @@ int main(int argc,  char* argv[])
     pnb.initialSolve();
 
     delete osi_solver;
+    time_d = CoinCpuTime()-time_d;
+    LOG(INFO) << "Overall solution time : "<< time_d << " s.";
 	return 0;
 }
 

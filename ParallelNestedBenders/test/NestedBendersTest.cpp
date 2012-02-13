@@ -61,24 +61,25 @@ public:
         int num_childs_first_stage = 10;
 
         // TODO: Uncomment if we want to use tests based on problem properties!
-        int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        assert( smi_read_in == 0);
-        num_stages = smi->getCore()->getNumStages();
-        num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
-        delete smi; // Get rid of the model, before we actually solve stuff
+        //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //assert( smi_read_in == 0);
+        //num_stages = smi->getCore()->getNumStages();
+        //num_childs_first_stage = smi->getSmiTree()->getRoot()->numChildren();
+        //delete smi; // Get rid of the model, before we actually solve stuff
 
         benders_parameter_.init();
 
         // Solve DetEq as comparison
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
-        int num_repetitions = 1; // Solve each problem three times!
+        int num_repetitions = 0; // Solve each problem three times!
+        num_childs_first_stage = 1; // Only solve once!
 
         for (int i = 0; i < num_repetitions; i++){
             // Solve problem for now
-        for (int number_cuts = 0; number_cuts < 1000; number_cuts += 200){
+        for (int number_cuts = 0; number_cuts < num_childs_first_stage; number_cuts += 200){
                 benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,number_cuts);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
@@ -822,8 +823,12 @@ TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
 }
 
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
-    EXPECT_NEAR(solveSMPS("saphir/saphir_50"),-149, 0.1); 
-    EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
+    EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
+    EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
+    EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); 
+    EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
+    EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
