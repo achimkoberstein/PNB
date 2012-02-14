@@ -251,7 +251,7 @@ namespace parallel_benders {
         current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
-        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(false),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
+        warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
         warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
@@ -365,7 +365,7 @@ namespace parallel_benders {
             warm_up_ = true;
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = true;
+        only_one_feasibility_cut_ = false;
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -1782,6 +1782,8 @@ namespace parallel_benders {
             /* If-Condition can be put here, if the cut should be added, instead of just set to to_use_ = false/true */
             /************************************************************************/
 
+            if ( current_iteration_ >= 44 )
+                LOG(INFO) << "Break here!.";
             // "Sparsify" the cut
             int new_index = 0;
             // Clear zero elements and create sparse vector for future reference
