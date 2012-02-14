@@ -70,11 +70,11 @@ public:
         benders_parameter_.init();
 
         // Solve DetEq as comparison
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
-        int num_repetitions = 0; // Solve each problem three times!
+        int num_repetitions = 1; // Solve each problem three times!
         num_childs_first_stage = 1; // Only solve once!
 
         for (int i = 0; i < num_repetitions; i++){
@@ -823,11 +823,11 @@ TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
 }
 
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
-    EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
-    EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); 
-    EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
-    EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
     //EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
 }
 
@@ -980,6 +980,6 @@ int main(int argc, char *argv[]) {
         google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
         result = RUN_ALL_TESTS();
     }
-    _CrtDumpMemoryLeaks(); // outside of scoping { }
+    //_CrtDumpMemoryLeaks(); // outside of scoping { }
     return result;
 }
