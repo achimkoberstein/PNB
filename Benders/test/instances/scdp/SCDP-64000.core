@@ -759,4 +759,10 @@ BOUNDS
  FR BOUND cfp_0_3 1e+030
  FR BOUND cfp_1_3 1e+030
  FR BOUND cf_ref_3 1e+030
+ BV BOUND y_build_0_0 1
+ BV BOUND y_build_0_1 1
+ BV BOUND y_build_0_2 1
+ BV BOUND y_build_1_0 1
+ BV BOUND y_build_1_1 1
+ BV BOUND y_build_1_2 1
 ENDATA
