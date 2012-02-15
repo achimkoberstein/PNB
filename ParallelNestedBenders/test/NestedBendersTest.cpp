@@ -70,9 +70,9 @@ public:
         benders_parameter_.init();
 
         // Solve DetEq as comparison
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
         int num_repetitions = 1; // Solve each problem three times!
         num_childs_first_stage = 1; // Only solve once!
@@ -832,12 +832,12 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 1); 
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-6301005010, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 1);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -5183755359, 1);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3963345343, 10);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
 }
 
 TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
@@ -970,7 +970,7 @@ int main(int argc, char *argv[]) {
         //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
         //::testing::GTEST_FLAG(filter) = "*watson_independent*";
         //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-        ::testing::GTEST_FLAG(filter) = "*saphir*";
+        ::testing::GTEST_FLAG(filter) = "*scdp*";
         //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
         google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

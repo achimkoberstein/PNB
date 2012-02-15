@@ -140,3 +140,13 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
     }
     return cut_counter;
 }
+
+void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics()
+{
+    if ( osi_solver_ ){
+        double cols = osi_solver_->getNumCols();
+        double rows = osi_solver_->getNumRows();
+        double elems  = osi_solver_->getNumElements();
+        LOG(INFO) << "Cols: " << cols << " Rows: " << rows << " Nonzeroes: " << elems;
+    }
+}
