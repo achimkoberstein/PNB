@@ -18,6 +18,7 @@ public:
     ~OsiStochasticParallelNestedBendersSolverInterface();
 
     void initialSolve();
+    void printProblemCharacteristics();
 
     double getObjValue();
     int getNumOptimalityCuts();

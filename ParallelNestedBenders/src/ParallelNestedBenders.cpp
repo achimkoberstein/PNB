@@ -365,7 +365,7 @@ namespace parallel_benders {
             warm_up_ = true;
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = false;
+        only_one_feasibility_cut_ = true;
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -960,8 +960,12 @@ namespace parallel_benders {
         }
         LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
         // We finished solving
-        if (!infeasible_problem_)
-            LOG(INFO) << "Solution: " << upper_bound_;
+        if (!infeasible_problem_){
+            std::cout.setf(std::ios::fixed);
+            std::cout << "Solution: " << upper_bound_ << std::endl;
+            //LOG(INFO) << "Solution: " << upper_bound_;
+            std::cout.unsetf(std::ios::fixed);
+        }
         else{
             upper_bound_ = -infinity_;
             LOG(INFO) << "Problem is infeasible.";
@@ -1224,6 +1228,9 @@ namespace parallel_benders {
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){
             // Store Dual Solution ( only if we move backward ) ( or we need it anyway
+            if ( integer_problems_[current_stage_] ){
+                return; // We do not store dual values if we have integer problems (for now!)
+            }
             StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
             
             // Compute the values: \lambda * lower_bound - \mu * upper_bound
@@ -1782,8 +1789,8 @@ namespace parallel_benders {
             /* If-Condition can be put here, if the cut should be added, instead of just set to to_use_ = false/true */
             /************************************************************************/
 
-            if ( current_iteration_ >= 44 )
-                LOG(INFO) << "Break here!.";
+            //if ( current_iteration_ >= 44 )
+            //    LOG(INFO) << "Break here!.";
             // "Sparsify" the cut
             int new_index = 0;
             // Clear zero elements and create sparse vector for future reference

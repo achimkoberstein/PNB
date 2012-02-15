@@ -396,7 +396,7 @@ int main(int argc, char* argv[]) {
     npv_stage.free();
     MP_variable y_build(L,P); 
     y_build.setName("y_build"); // {l in L, p1 in P} binary; #1 if line l is built to produce product p, 0 otherwise
-    //y_build.binary();
+    y_build.binary();
 
 #pragma endregion
 
