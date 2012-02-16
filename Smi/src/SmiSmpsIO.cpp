@@ -551,6 +551,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                     }
                 }// End While
                 //process SmiBlockStructure into Scenarios
+                // We would like to keep the original blocks and sample from this distribution?!
                 smi->processBlockStructureIntoScenarios(&smiBS);
                 return 0;
 
