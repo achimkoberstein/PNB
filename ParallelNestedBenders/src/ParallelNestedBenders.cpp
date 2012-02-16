@@ -365,7 +365,7 @@ namespace parallel_benders {
             warm_up_ = true;
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = true;
+        only_one_feasibility_cut_ = false;
 
 		// Thread related stuff
 		num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -859,7 +859,7 @@ namespace parallel_benders {
 
 
             // Aggregate optimality cuts for nodes at the stage before the current stage
-            if ( !forward_ && infeasible_problems_.none() ){ 
+            if ( !forward_ && infeasible_problems_.none() ){ // TODO: if generate_feas_and_opt_cuts we need to change this
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -1015,7 +1015,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
@@ -2302,6 +2302,7 @@ namespace parallel_benders {
 			BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin();
 			if ( seperate_first_stage_solver_ && current_stage_ == 0){
 				it = benders_node_pointer->last_iteration_start_feasibility_;
+                benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
 				// If we apply feasibility cuts, we always go back and apply them right away. No need for setting the value to infinity, as in the optimality case.
 			}
 			// TODO: This can be changed to addRows
@@ -2316,6 +2317,7 @@ namespace parallel_benders {
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
             if ( seperate_first_stage_solver_ &&  current_stage_ == 0){
                 it = benders_node_pointer->last_iteration_start_optimality_;
+                benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
             }
             // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;

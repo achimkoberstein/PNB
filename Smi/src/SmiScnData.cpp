@@ -1796,15 +1796,15 @@ bool SmiNodeData::moveBoundsInMatrix()
         int col_upper_length = this->getColUpperLength();
         const int* col_upper_indices = this->getColUpperIndices();
         const double* col_upper = this->getColUpperElements();
-        std::vector<int> elements;
+        std::vector<double> elements;
         std::vector<int> indices;
-        std::vector<int> row_bound;
+        std::vector<double> row_bound;
         if ( col_lower_length ){
             // Find the values != 0
             for (int i = 0; i < col_lower_length; i++){
                 if ( col_lower[i] != 0 && col_lower[i] != -this->core_->getInfinity() ){
                     // We need to add an entry to row_lower
-                    elements.push_back(1); indices.push_back(col_lower_indices[i]); row_bound.push_back(col_lower[i]);
+                    elements.push_back(1.0); indices.push_back(col_lower_indices[i]); row_bound.push_back(col_lower[i]);
                     dels_[strt_[clo_strt_]+i] = -this->core_->getInfinity();
                 }
             }
@@ -1814,7 +1814,7 @@ bool SmiNodeData::moveBoundsInMatrix()
             for (int i = 0; i < col_upper_length; i++){
                 if ( col_upper[i] != 0 && col_upper[i] != this->core_->getInfinity() ){
                     // We need to add an entry to row_lower
-                    elements.push_back(-1); indices.push_back(col_upper_indices[i]); row_bound.push_back(-col_upper[i]);
+                    elements.push_back(-1.0); indices.push_back(col_upper_indices[i]); row_bound.push_back(-col_upper[i]);
                     dels_[strt_[cup_strt_]+i] = this->core_->getInfinity();
                 }
             }
@@ -1919,7 +1919,7 @@ bool SmiNodeData::moveBoundsInMatrix()
             // We need to realloc the strt_ array
             int number_new_rows = core_->getNumRows(stg_)-nrow_;
             assert(number_new_rows>=0);
-            strt_ = (int*)realloc(strt_,core_->getNumRows(stg_)-nrow_+nstrt_);
+            strt_ = (int*)realloc(strt_,(number_new_rows+nstrt_)*sizeof(int));
             int* temp_array = new int[nstrt_];
             memcpy(temp_array,strt_,nstrt_*sizeof(int));
             // Create the new empty rows in the new strt_ array 
@@ -1927,9 +1927,16 @@ bool SmiNodeData::moveBoundsInMatrix()
                 strt_[clo_strt_+i+1] = strt_[clo_strt_+i];
             }
             // Copy the old other stuff
-            memcpy(strt_+cup_strt_+number_new_rows,temp_array+cup_strt_,(nstrt_-strt_[cup_strt_])*sizeof(int));
+            memcpy(strt_+cup_strt_+number_new_rows,temp_array+cup_strt_,(nstrt_-cup_strt_)*sizeof(int));
 
             delete [] temp_array;
+            // We need to adjust clo_strt etc..
+            clo_strt_ += number_new_rows;
+            cup_strt_ += number_new_rows;
+            rlo_strt_ += number_new_rows;
+            rup_strt_ += number_new_rows;
+            obj_strt_ += number_new_rows;
+            nstrt_ += number_new_rows;
         }
         // If we have RHS we need to reflect the added bounds!
         int added_rows = 0;
@@ -1953,7 +1960,7 @@ bool SmiNodeData::moveBoundsInMatrix()
 
         // Update the essential stats
         nrow_ = core_->getNumRows(stg_);
-        rowbeg_ = core_->getRowStage(stg_);
+        rowbeg_ = core_->getRowStart(stg_);
 
         return true;
 
