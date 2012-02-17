@@ -173,7 +173,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 {
     std::vector<int> samples;
     samples.push_back(0);
-    samples.push_back(10000);
+    samples.push_back(10);
     osi_pnb.getSmiModel()->sampleScenarioTree(samples,0);
     osi_pnb.getSmiModel()->writeSmps("saa_test");
     osi_pnb.initialSolve();
