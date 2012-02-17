@@ -1,6 +1,10 @@
 #ifndef OsiPnbStochasticSolverInterface_h__
 #define OsiPnbStochasticSolverInterface_h__
 
+
+#include <boost/shared_ptr.hpp>
+#include <boost/random.hpp>
+
 #include "OsiStochasticSolverInterface.hpp"
 #include "BendersNodeData.hpp"
 
@@ -35,6 +39,21 @@ public:
 private:
     parallel_benders::ParallelNestedBenders* nested_benders_;
 
+};
+
+
+
+
+typedef boost::mt19937 base_generator_type; //Set RNG
+typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
+
+// Stores Uniform01Generator, hides implementation from .hpp
+struct Uniform01Generator {
+    boost::shared_ptr<base_generator_type> rng;
+    boost::shared_ptr<uniform_distr_gen> uniform;
+    unsigned int seed;
+
+    Uniform01Generator();
 };
 
 class SampleAverageApproximationSolverInterface {
