@@ -1,5 +1,17 @@
 #include "OsiPnbStochasticSolverInterface.hpp"
 
+//Windows. Construct necessary as VisualC++ include stdlib.h before I can set _CRT_RAND_S
+#ifdef _MSC_VER
+#ifndef _CRT_RAND_S
+#define _CRT_RAND_S
+#endif 
+#include <stdlib.h>
+#else
+#include <stdio.h>
+#include <fcntl.h>
+#endif
+//Linux: Call /dev/urandom to generate a seed
+
 #include <glog/logging.h>
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
@@ -10,6 +22,8 @@
 #include "cplex.h"
 #include "OsiCpxSolverInterface.hpp"
 #endif
+
+
 
 
 void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const parallel_benders::Parameter& parameters){
@@ -171,10 +185,14 @@ SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInter
 
 void SampleAverageApproximationSolverInterface::initialSolve()
 {
+    typedef boost::uniform_01<> distr_type;
+    typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
+    boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_distr_gen,distr_type);
     std::vector<int> samples;
     samples.push_back(0);
     samples.push_back(10);
-    osi_pnb.getSmiModel()->sampleScenarioTree(samples,0);
+    // We need a random generator function here!
+    osi_pnb.getSmiModel()->sampleScenarioTree(samples,0,&variateGen );
     osi_pnb.getSmiModel()->writeSmps("saa_test");
     osi_pnb.initialSolve();
 }
@@ -182,4 +200,30 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 void SampleAverageApproximationSolverInterface::setParameters( const parallel_benders::Parameter& parameters )
 {
     osi_pnb.setParameters(parameters);
+}
+
+Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
+//#ifdef _MSC_VER
+//    //Windows
+//    errno_t err;
+//    err = rand_s(&seed); //Write seed in seed variable
+//    if (err != 0){
+//        std::cerr << "Error occured during seed generation: " << err << std::endl;
+//        // We need to abort here TODO
+//    }
+//#endif
+//    //So we are not compiling using windows compiler, so we have /dev/urandom
+//#ifndef _MSC_VER
+//    //Copied from Good Practice RNG.pdf (google for it)
+//    int fn;
+//    fn = open("/dev/urandom", O_RDONLY);
+//    if (fn == -1)
+//        exit(-1); /* Failed! */
+//    if (read(fn, &seed, 4) != 4)
+//        exit(-1); /* Failed! */
+//    close(fn);
+//    //Without random numbers this does not make much sense
+//#endif
+
+    std::cout << "Seed is: " << seed << std::endl;
 }
