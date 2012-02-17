@@ -32,6 +32,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
         OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
+        if ( nested_benders_->smi_->getNumScenarios() == 0){
+            // We have no scenarios
+            LOG(ERROR) << "No scenarios available.";
+        }
         // Model statistics
         std::cout << "Variables: " << osi->getNumCols() << " Rows: " << osi->getNumRows() << " Elements: " << osi->getNumElements() << " Integer: " << osi->getNumIntegers() << std::endl;
         solution_time.Stop(1);
@@ -149,4 +153,33 @@ void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacterist
         double elems  = osi_solver_->getNumElements();
         LOG(INFO) << "Cols: " << cols << " Rows: " << rows << " Nonzeroes: " << elems;
     }
+}
+
+SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
+{
+    return nested_benders_->smi_;
+}
+
+OsiSolverInterface* OsiStochasticParallelNestedBendersSolverInterface::getOsiSolverInterface()
+{
+    return nested_benders_->osi_solver_;
+}
+SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb(osi_solver,smi_model)
+{
+
+}
+
+void SampleAverageApproximationSolverInterface::initialSolve()
+{
+    std::vector<int> samples;
+    samples.push_back(0);
+    samples.push_back(10000);
+    osi_pnb.getSmiModel()->sampleScenarioTree(samples,0);
+    osi_pnb.getSmiModel()->writeSmps("saa_test");
+    osi_pnb.initialSolve();
+}
+
+void SampleAverageApproximationSolverInterface::setParameters( const parallel_benders::Parameter& parameters )
+{
+    osi_pnb.setParameters(parameters);
 }

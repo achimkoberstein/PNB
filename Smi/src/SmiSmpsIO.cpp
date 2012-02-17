@@ -383,9 +383,12 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             {
                                 smiDD->addDiscreteRV(smiRV);
                             }
-                            //process discrete distribution
-                            smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
-                            delete smiDD;
+                            if ( sampling_ )
+                                smi->setDiscreteDistribution(smiDD);
+                            else {
+                                smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                                delete smiDD;
+                            }
                             delete matrix;
                             continue;
                         }
@@ -552,7 +555,8 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                 }// End While
                 //process SmiBlockStructure into Scenarios
                 // We would like to keep the original blocks and sample from this distribution?!
-                smi->processBlockStructureIntoScenarios(&smiBS);
+                if ( !sampling_)
+                    smi->processBlockStructureIntoScenarios(&smiBS);
                 return 0;
 
                
@@ -1557,3 +1561,7 @@ void SmiSmpsIO::writeSmps(const char* filename, bool winFileExtensions, bool str
     this->freeAll();
 }
 
+void SmiSmpsIO::setSampling( bool do_sample )
+{
+    sampling_ = do_sample;
+}

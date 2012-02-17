@@ -49,7 +49,7 @@ public:
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
         folder = "../../../../../Benders/test/instances/";
 #endif
-        SmiScnModel* smi = new SmiScnModel();
+        SmiScnModel smi;
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
         std::string stoch_name_string(stoch_name);
@@ -59,6 +59,26 @@ public:
 
         int num_stages = 2;
         int num_childs_first_stage = 10;
+
+        //// SAA TEST
+        // We set the correct folder here: All files are in Benders/instances
+        double time = CoinCpuTime();  
+        OsiCpxSolverInterface osi_cpx;
+        smi.setOsiSolverHandle(&osi_cpx);
+        smi.setSampling(true);
+        int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        if ( read_in != 0 ){
+            LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+            return -osi_cpx.getInfinity();
+        }
+        // Load ParallelNestedBendersSolver
+        double solver_time = CoinCpuTime();
+        SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
+        saa.setParameters(benders_parameter_);
+        saa.initialSolve();
+        solver_time = CoinCpuTime()-solver_time; // Solver only time
+        time = CoinCpuTime()-time; // Overall WallClockTime;
+        LOG(INFO) << "Solution Time: " << time;
 
         // TODO: Uncomment if we want to use tests based on problem properties!
         //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());

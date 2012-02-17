@@ -71,6 +71,9 @@ SmiScnModel::~SmiScnModel()
 
     if (maxNelsPerScenInStage)
         delete [] maxNelsPerScenInStage;
+
+    delete discrete_distribution_;
+    delete block_structure_;
 }
 
 //Generates Tree Nodes with Data for given scenario
@@ -1323,6 +1326,8 @@ SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* st
     }
 
     smiSmpsIO = new SmiSmpsIO();
+    if ( sampling_ )
+        smiSmpsIO->setSampling(sampling_);
     if (osiStoch_) 
         smiSmpsIO->setInfinity(osiStoch_->getInfinity()); // Set solver infinity..
 
@@ -1836,6 +1841,9 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 	SmiScenarioIndex is;
 	SmiCoreData *core = smiBS->getCore();
 	SmiCoreCombineRule *r = smiBS->getCombineWithCoreRule();
+    // Test if block structure is empty!
+    if ( smiBS->getBlock(0,1) == NULL)
+        return;
     // We now generate scenarios out of the block events. If we have more than one block for a stage, we have to combine them first.
     // Combine blocks stagewise.
     for (int stage = 1; stage < core->getNumStages(); stage++){
@@ -2111,3 +2119,155 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
          this->nels_ += core_->getNode(tree[i]->getStage())->getNumMatrixElements();
      }
  }
+
+ void SmiScnModel::sampleScenarioTree( std::vector<int> number_samples, int sampling_method )
+ {
+    // We have a discrete distribution
+    // We need a random_number generator
+    // 
+
+     SmiDiscreteDistribution* smiDD = discrete_distribution_;
+     assert(smiDD);
+     SmiCoreData *core=smiDD->getCore();
+     int nstages = core->getNumStages();
+     assert(nstages>0);
+
+     SmiBlockStructure* smiBS = new SmiBlockStructure(core);
+     // Delete old scenario tree
+     smiTree_ = SmiScenarioTree<SmiScnNode *>();
+
+     int number_of_independent_vars = smiDD->getNumRV(); 
+     std::vector<int> number_of_random_vars_per_stage(nstages);
+ 
+
+     // Iterate over all RV to get the number of blocks we need..
+     std::map<int,std::vector<SmiDiscreteRV*> > stage_rv_map;
+     for (int i = 1; i< nstages; i++)
+         stage_rv_map[i] = std::vector<SmiDiscreteRV*> (0);
+     for (int i = 0; i< number_of_independent_vars;i++){
+         assert( smiDD->getDiscreteRV(i)->getStage()>= 0 && smiDD->getDiscreteRV(i)->getStage()< nstages);
+         stage_rv_map[smiDD->getDiscreteRV(i)->getStage()].push_back(smiDD->getDiscreteRV(i));
+     }
+     // Sample the random numbers from our function
+     
+     std::map<int,std::vector< std::vector<double> > > random_numbers_per_stage;
+     int number_of_samples = 1;
+     for (int cur_stage = 1; cur_stage < nstages; cur_stage++){
+         number_of_random_vars_per_stage[cur_stage] = stage_rv_map[cur_stage].size();
+         std::vector<std::vector<double> > random_numbers(number_of_independent_vars);
+         number_of_samples *= number_samples[cur_stage];
+         for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
+             random_numbers[i].resize(number_of_samples);
+             CoinFillN(&random_numbers[i][0],number_of_samples,0.0);
+             // Get the random numbers via the function // TODO: Here we can use Latin Hypercube Sampling, Antithetic Sampling or Crude Monte Carlo Sampling.
+         }
+         random_numbers_per_stage[cur_stage] = random_numbers;
+     }
+        
+     // Now we have a sample of [0,1] numbers for each random independent variable
+     // Get the realization via inverse transformation!
+     // Store the SmiDiscreteEV in the random_events_per_stage vector
+     std::map<int,std::vector< std::vector<SmiDiscreteEvent*> > > random_events_per_stage;
+     for (int cur_stage = 1; cur_stage < nstages; cur_stage++){
+         std::vector<std::vector<double> > &random_numbers(random_numbers_per_stage[cur_stage]);
+         std::vector< std::vector<SmiDiscreteEvent*> > random_events(number_of_random_vars_per_stage[cur_stage]);
+            
+         for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
+             random_events[i].reserve(random_numbers[i].size());
+             for (int j = 0; j < random_numbers[i].size(); j++){
+                 random_events[i].push_back(stage_rv_map[cur_stage][i]->inverseTransformation(random_numbers[i][j]));
+             }
+         }
+         // Now we have all the information for this stage
+         random_events_per_stage[cur_stage] = random_events;
+     }
+
+     // Now we can start and build the blocks! 
+
+     // Assume we have independent stages!
+     // We need to do that stagewise. 
+     // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.
+
+     // Delete Old Scenario Tree!
+     
+
+     // Create a new block here
+     int cur_stage = 1;
+     int current_sample = 0;
+     int branch = 1;
+     int anc = 0;
+     double prob = 0;
+     int cur_scen = 0;
+     // We need counter for every stage!
+     std::vector<int> current_sample_per_stage(nstages,0);
+     std::vector<int> current_sample_per_stage_modulo_size(nstages,0);
+
+     SmiBlock* smi_block = new SmiBlock(cur_stage);
+     while ( cur_stage >= 1 ){
+
+         current_sample = current_sample_per_stage[cur_stage];
+         CoinPackedMatrix matrix;
+         matrix.setDimensions(core->getNumRows(),core->getNumCols());
+         CoinPackedVector obj;
+         CoinPackedVector clo;
+         CoinPackedVector cup;
+         CoinPackedVector rlo;
+         CoinPackedVector rup;
+         // Combine all random variables at this stage
+         for (int current_var = 0; current_var < number_of_random_vars_per_stage[cur_stage]; current_var++){
+             // Append the vector stuff to the existing ones.
+             obj.append(random_events_per_stage[cur_stage][current_var][current_sample]->getObjective());
+             clo.append(random_events_per_stage[cur_stage][current_var][current_sample]->getColLower());
+             cup.append(random_events_per_stage[cur_stage][current_var][current_sample]->getColUpper());
+             rlo.append(random_events_per_stage[cur_stage][current_var][current_sample]->getRowLower());
+             rup.append(random_events_per_stage[cur_stage][current_var][current_sample]->getRowUpper());
+             const CoinPackedMatrix& matrix2(random_events_per_stage[cur_stage][current_var][current_sample]->getMatrix());
+             if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
+                 int pos = 0; // position in the elements / indice arrays
+                 const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
+                 for (int k = 0; k < matrix2.getNumRows(); k++) {
+                     pos = colStartIndices[k];
+                     for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+                         matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
+                         pos++;
+                     }
+                 }
+                 assert( pos == matrix2.getNumElements());
+             }
+             
+         }
+         prob = 1.0 / number_samples[cur_stage];
+         // Create SmiBlockEvent with modified matrix and stuff
+         cur_scen = generateScenario(core,&matrix,&clo,&cup,&obj,&rlo,&rup,branch,anc,prob);
+         current_sample_per_stage[cur_stage]++;
+         current_sample_per_stage_modulo_size[cur_stage]++;
+
+         // Go to next stage, if possible
+         if ( cur_stage < nstages -1 ){
+             cur_stage++;
+             branch++;
+             anc = cur_scen;
+         } // If we added all samples for this stage, we can go back a stage, else we don't
+         else if ( current_sample_per_stage_modulo_size[cur_stage] >= number_samples[cur_stage]  ){
+             cur_stage--;
+             current_sample_per_stage_modulo_size[cur_stage] = 0;
+             branch--;
+             if ( cur_stage == 1)
+                 anc = 0;
+         }
+         else{
+             // We stay at this stage!
+         }
+     }
+}
+
+void SmiScnModel::setDiscreteDistribution( SmiDiscreteDistribution* smiDD )
+{
+    delete discrete_distribution_;
+    discrete_distribution_ = smiDD;
+}
+
+void SmiScnModel::setSampling( bool do_sample)
+{
+    sampling_ = do_sample;
+}
