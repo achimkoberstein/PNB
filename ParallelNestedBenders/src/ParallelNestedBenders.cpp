@@ -261,6 +261,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Init()
     {
+        num_stages_ = core_->getNumStages();
+        num_scenarios_ = smi_->getNumScenarios();
+        integer_problems_ = boost::dynamic_bitset<>(num_stages_);
+        infeasible_problems_ =  boost::dynamic_bitset<>(num_stages_);
         timer_.Start(num_stages_);
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)
@@ -571,7 +575,7 @@ namespace parallel_benders {
         double old_gap = 0;
         double gap = 0;
         int gap_counter = 0;
-        int gap_counter_maximum = 10;
+        int gap_counter_maximum = 20;
 
         // Variables needed for dynamic strategy PNB_INT_FASTPASS_WITH_FASTBACK
         double threshold = 1;
