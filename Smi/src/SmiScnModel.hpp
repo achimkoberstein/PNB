@@ -294,13 +294,20 @@ public:
 
     void transformToStaircaseStructure( std::map<int,int>& coefficients );
 
+    void sampleScenarioTree(std::vector<int> number_samples, int sampling_method);//TODO: Add Pointer to function that returns a double (RNG)
+
+    void setDiscreteDistribution(SmiDiscreteDistribution* smiDD);
+
+    void setSampling(bool value);
+
 
     // constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
     SmiScnModel():
     handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
         drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
         dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
-        solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL)
+        solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL),
+        discrete_distribution_(NULL),block_structure_(NULL),sampling_(false)
     { }
 
     // destructor
@@ -376,6 +383,10 @@ private:
 
     vector<int> intIndices;
     int* maxNelsPerScenInStage;
+
+    SmiDiscreteDistribution* discrete_distribution_;
+    SmiBlockStructure* block_structure_;
+    bool sampling_;
 };
 
 class SmiScnNode

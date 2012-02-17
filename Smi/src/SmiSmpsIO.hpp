@@ -170,9 +170,14 @@ public:
     @param strictFormat optional, true by default. Set to false if SMPS files should be written in free format.
     */
 	void writeSmps(const char* filename, bool winFileExtensions = false, bool strictFormat = true);
+
+    /** Set if we read in a problem, where we do not want to build the full scenario tree but instead keep the distributions
+    @param do_sample true, if we want to sample later on                                                                   
+    */
+    void setSampling(bool do_sample);
 public:
-	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),solverInf_(COIN_DBL_MAX),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(NULL),tree(NULL),periodMap_(),scenarioMap_() {}
-    SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),solverInf_(COIN_DBL_MAX),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_() {}
+	SmiSmpsIO():CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),solverInf_(COIN_DBL_MAX),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(NULL),tree(NULL),periodMap_(),scenarioMap_(),sampling_(false) {}
+    SmiSmpsIO(SmiCoreData * core, SmiScenarioTree<SmiScnNode *> * smiTree):CoinMpsIO(),nstag_(0),cstag_(NULL),rstag_(NULL),solverInf_(COIN_DBL_MAX),iftime(false),ifstoch(false),smpsCardReader_(NULL),combineRule_(NULL),combineRuleSet(false),core(core),tree(smiTree),periodMap_(),scenarioMap_(),sampling_(false) {}
 
     ~SmiSmpsIO(){delete [] cstag_;delete[] rstag_;delete smpsCardReader_;}
 private:
@@ -250,6 +255,9 @@ private:
     
     /// Maps the name of a scenario to the scenario index
     StringIntMap scenarioMap_;
+
+    // If we read in a problem, where we only want the distributions, so that we can sample later on!
+    bool sampling_;
 };
 
 

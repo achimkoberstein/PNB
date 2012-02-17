@@ -28,9 +28,25 @@ public:
 	const parallel_benders::Parameter& getParameters() const;
     const parallel_benders::Timer& getTimer() const;
 
+    SmiScnModel* getSmiModel();
+    OsiSolverInterface* getOsiSolverInterface();
+
 
 private:
     parallel_benders::ParallelNestedBenders* nested_benders_;
 
+};
+
+class SampleAverageApproximationSolverInterface {
+public:
+    SampleAverageApproximationSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
+
+    void initialSolve();
+    void setParameters(const parallel_benders::Parameter& parameters);
+
+
+
+private:
+    OsiStochasticParallelNestedBendersSolverInterface osi_pnb;
 };
 #endif // OsiPnbStochasticSolverInterface_h__

@@ -105,6 +105,20 @@ public:
 		events_.push_back(e); 
 		prob_+=prob;
 	}
+
+    SmiDiscreteEvent* const inverseTransformation(double value){
+        assert(prob_ <= 1.0);
+        int num_events = events_.size();
+        // Do a simple test
+        double summed_prob = 0;
+        for ( int i = 0; i < num_events; i++){
+            summed_prob += getEventProb(i);
+            if ( value <= summed_prob )
+                return events_[i];
+        }
+        assert(false);
+        return NULL;
+    }
     
 	inline const CoinPackedMatrix &getEventMatrix(int i)   {return events_[i]->getMatrix(); }
 	inline const CoinPackedVector &getEventColLower(int i) {return events_[i]->getColLower();}
