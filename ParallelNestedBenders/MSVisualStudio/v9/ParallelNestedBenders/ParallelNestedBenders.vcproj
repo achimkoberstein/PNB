@@ -45,6 +45,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
+				PreprocessorDefinitions="_CRT_RAND_S"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -107,7 +108,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
-				PreprocessorDefinitions=""
+				PreprocessorDefinitions="_CRT_RAND_S"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -172,6 +173,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
+				PreprocessorDefinitions="_CRT_RAND_S"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -235,6 +237,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
+				PreprocessorDefinitions="_CRT_RAND_S"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -297,6 +300,10 @@
 				RelativePath="..\..\..\src\ParallelNestedBenders.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\PseudoRandomGenerator.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -321,6 +328,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\ParallelNestedBenders.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\PseudoRandomGenerator.hpp"
 				>
 			</File>
 		</Filter>

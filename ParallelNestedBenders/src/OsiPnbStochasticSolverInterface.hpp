@@ -2,9 +2,7 @@
 #define OsiPnbStochasticSolverInterface_h__
 
 
-#include <boost/shared_ptr.hpp>
-#include <boost/random.hpp>
-
+#include "PseudoRandomGenerator.hpp"
 #include "OsiStochasticSolverInterface.hpp"
 #include "BendersNodeData.hpp"
 
@@ -43,29 +41,24 @@ private:
 
 
 
-
-typedef boost::mt19937 base_generator_type; //Set RNG
-typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
-
-// Stores Uniform01Generator, hides implementation from .hpp
-struct Uniform01Generator {
-    boost::shared_ptr<base_generator_type> rng;
-    boost::shared_ptr<uniform_distr_gen> uniform;
-    unsigned int seed;
-
-    Uniform01Generator();
-};
-
 class SampleAverageApproximationSolverInterface {
 public:
     SampleAverageApproximationSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
 
     void initialSolve();
     void setParameters(const parallel_benders::Parameter& parameters);
-
+    double* getRandomVariates(int number_of_variates);
 
 
 private:
-    OsiStochasticParallelNestedBendersSolverInterface osi_pnb;
+    boost::shared_ptr<OsiStochasticParallelNestedBendersSolverInterface> osi_pnb_;
+    parallel_benders::Parameter parameters_;
 };
+// Done this way to be able to call it from Smi without changing Smi to implement boost stuff
+static Uniform01Generator uniform_generator_struct;
+
+double get_random_0_1_variate();
+double * get_random_01_variates(int number_of_variates);
+double * get_latin_hypercube_random_01_variates(int number_of_variates);
+double * get_antithetic_random_01_variates(int number_of_variates);
 #endif // OsiPnbStochasticSolverInterface_h__

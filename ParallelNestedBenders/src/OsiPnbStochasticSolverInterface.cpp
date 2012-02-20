@@ -1,17 +1,6 @@
 #include "OsiPnbStochasticSolverInterface.hpp"
 
-//Windows. Construct necessary as VisualC++ include stdlib.h before I can set _CRT_RAND_S
-#ifdef _MSC_VER
-#ifndef _CRT_RAND_S
-#define _CRT_RAND_S
-#endif 
-#include <stdlib.h>
-#else
-#include <stdio.h>
-#include <fcntl.h>
-#endif
-//Linux: Call /dev/urandom to generate a seed
-
+#include "PseudoRandomGenerator.hpp"
 #include <glog/logging.h>
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
@@ -178,52 +167,122 @@ OsiSolverInterface* OsiStochasticParallelNestedBendersSolverInterface::getOsiSol
 {
     return nested_benders_->osi_solver_;
 }
-SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb(osi_solver,smi_model)
+SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model))
 {
 
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()
 {
-    typedef boost::uniform_01<> distr_type;
-    typedef boost::variate_generator<base_generator_type&, boost::uniform_01<double> > uniform_distr_gen;
-    boost::variate_generator<uniform_distr_gen,distr_type > variateGen(uniform_distr_gen,distr_type);
+    unsigned int seed;
+
+    // How it works: We need a random generator and a distribution we want to draw numbers from.
+    // Set the seed 
+    uniform_generator_struct.seed = get_random_number_from_system();
+    // Create a random number generator instance
+    uniform_generator_struct.rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed));
+    // Create a random [0,1) variate generator;
+    boost::uniform_01<> uniform_01_distribution;
+    uniform_generator_struct.uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
+
+    // Some things we need to share later on
+    OsiSolverInterface* osi_solver = osi_pnb_->getOsiSolverInterface();
+    SmiScnModel* smi_model = osi_pnb_->getSmiModel();
+
+
     std::vector<int> samples;
     samples.push_back(0);
-    samples.push_back(10);
+    samples.push_back(50);
     // We need a random generator function here!
-    osi_pnb.getSmiModel()->sampleScenarioTree(samples,0,&variateGen );
-    osi_pnb.getSmiModel()->writeSmps("saa_test");
-    osi_pnb.initialSolve();
+    osi_pnb_->getSmiModel()->sampleScenarioTree(samples,0, get_random_01_variates );
+    osi_pnb_->getSmiModel()->writeSmps("saa_monte_carlo_test");
+    osi_pnb_->initialSolve();
+    // get results
+
+    osi_solver = osi_pnb_->getOsiSolverInterface();
+    osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+    osi_pnb_->setParameters(parameters_);
+
+    osi_pnb_->getSmiModel()->sampleScenarioTree(samples,0, get_antithetic_random_01_variates );
+    osi_pnb_->getSmiModel()->writeSmps("saa_antithetic_test");
+    osi_pnb_->initialSolve();
+    
+    osi_solver = osi_pnb_->getOsiSolverInterface();
+    osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+    osi_pnb_->setParameters(parameters_);
+
+    osi_pnb_->getSmiModel()->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
+    osi_pnb_->getSmiModel()->writeSmps("saa_latin_hypercube_test");
+    osi_pnb_->initialSolve();
 }
 
 void SampleAverageApproximationSolverInterface::setParameters( const parallel_benders::Parameter& parameters )
 {
-    osi_pnb.setParameters(parameters);
+    osi_pnb_->setParameters(parameters);
+    parameters_ = parameters;
 }
 
-Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
-//#ifdef _MSC_VER
-//    //Windows
-//    errno_t err;
-//    err = rand_s(&seed); //Write seed in seed variable
-//    if (err != 0){
-//        std::cerr << "Error occured during seed generation: " << err << std::endl;
-//        // We need to abort here TODO
-//    }
-//#endif
-//    //So we are not compiling using windows compiler, so we have /dev/urandom
-//#ifndef _MSC_VER
-//    //Copied from Good Practice RNG.pdf (google for it)
-//    int fn;
-//    fn = open("/dev/urandom", O_RDONLY);
-//    if (fn == -1)
-//        exit(-1); /* Failed! */
-//    if (read(fn, &seed, 4) != 4)
-//        exit(-1); /* Failed! */
-//    close(fn);
-//    //Without random numbers this does not make much sense
-//#endif
 
-    std::cout << "Seed is: " << seed << std::endl;
+double get_random_0_1_variate(){
+    // If seed is 0, random generator is not initialized!
+    double random_variate = 0;
+    if ( uniform_generator_struct.seed != 0 )
+        random_variate = (*uniform_generator_struct.uniform)();
+
+    return random_variate;
 }
+
+// Crude Monte Carlo Versions!
+double * get_random_01_variates(int number_of_variates){
+    assert( number_of_variates > 0);
+    if ( uniform_generator_struct.seed == 0)
+        return NULL;
+
+    double* random_variates = new double[number_of_variates];
+    for (int i = 0; i < number_of_variates; i++)
+        random_variates[i] = (*uniform_generator_struct.uniform)();
+    return random_variates;
+}
+
+// Antithetic Crude Monte Carlo Sampling 
+double * get_antithetic_random_01_variates(int number_of_variates){
+    assert( number_of_variates > 0);
+    if ( uniform_generator_struct.seed == 0)
+        return NULL;
+
+    double* random_variates = new double[number_of_variates];
+    for (int i = 0; i < number_of_variates; i++){
+        if ( i % 2 == 0 )
+            random_variates[i] = (*uniform_generator_struct.uniform)();
+        else
+            random_variates[i] = 1-random_variates[i-1];
+    }
+    return random_variates;
+}
+
+// Latin Hypercube Sampling
+double * get_latin_hypercube_random_01_variates(int number_of_variates){
+    assert( number_of_variates > 0);
+    if ( uniform_generator_struct.seed == 0)
+        return NULL;
+
+    // Generate one variate uniformly at random in every interval
+    double* random_variates = new double[number_of_variates];
+    double division = 1.0/number_of_variates;
+
+    int i = 0;
+    for ( double lower_interval = 0.0; lower_interval < 1; lower_interval += division){
+        // Sample one variable from [lower_interval,lower_interval+division)
+        boost::uniform_real<> uniform_real_distribution(lower_interval,lower_interval+division);
+        boost::variate_generator<base_generator_type&, boost::uniform_real<double> > variate_gen(*uniform_generator_struct.rng,uniform_real_distribution);
+        random_variates[i] = variate_gen();
+        assert( random_variates[i] >= lower_interval && random_variates[i] < lower_interval+division);
+        i++;
+    }
+    // Shuffle random_variates randomly. TODO: Use random number generator uniform_int(0,number_of_variates-1) from boost
+    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates]);
+
+    assert( i == number_of_variates);
+    return random_variates;
+}
+

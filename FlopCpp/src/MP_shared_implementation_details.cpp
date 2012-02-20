@@ -15,27 +15,27 @@
 using namespace flopc;
 
 Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
-            #ifdef _MSC_VER
-            //Windows
-            errno_t err;
-            err = rand_s(&seed); //Write seed in seed variable
-            if (err != 0){
-                std::cerr << "Error occured during seed generation: " << err << std::endl;
-                // We need to abort here TODO
-            }
-            #endif
-            //So we are not compiling using windows compiler, so we have /dev/urandom
-            #ifndef _MSC_VER
-            //Copied from Good Practice RNG.pdf (google for it)
-            int fn;
-            fn = open("/dev/urandom", O_RDONLY);
-            if (fn == -1)
-                exit(-1); /* Failed! */
-            if (read(fn, &seed, 4) != 4)
-                exit(-1); /* Failed! */
-            close(fn);
-            //Without random numbers this does not make much sense
-            #endif
+#ifdef _MSC_VER
+    //Windows
+    errno_t err;
+    err = rand_s(&seed); //Write seed in seed variable
+    if (err != 0){
+        std::cerr << "Error occured during seed generation: " << err << std::endl;
+        // We need to abort here TODO
+    }
+#endif
+    //So we are not compiling using windows compiler, so we have /dev/urandom
+#ifndef _MSC_VER
+    //Copied from Good Practice RNG.pdf (google for it)
+    int fn;
+    fn = open("/dev/urandom", O_RDONLY);
+    if (fn == -1)
+        exit(-1); /* Failed! */
+    if (read(fn, &seed, 4) != 4)
+        exit(-1); /* Failed! */
+    close(fn);
+    //Without random numbers this does not make much sense
+#endif
 
-            std::cout << "Seed is: " << seed << std::endl;
-        }
+    std::cout << "Seed is: " << seed << std::endl;
+}
