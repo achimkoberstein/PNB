@@ -229,6 +229,10 @@ private:
     bool pretty_printing_;
     bool pretty_printing_verbose_;
 
+    // Store solutions if necessary
+    int compute_primal_solutions_for_stage_;
+    int compute_dual_solutions_for_stage_;
+
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
     staircase_container non_staircase_coefficients_;
     
@@ -237,6 +241,8 @@ private:
     int optimality_cut_counter_;
     double intra_cut_aggregation_time_;
     double adaptive_cut_time_;
+
+   
 
 
 };
