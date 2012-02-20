@@ -23,6 +23,7 @@ public:
     void printProblemCharacteristics();
 
     double getObjValue();
+    const double * getSolution();
     int getNumOptimalityCuts();
     int getNumFeasibilityCuts();
     void setParameters(const parallel_benders::Parameter& parameters);

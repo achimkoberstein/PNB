@@ -229,6 +229,9 @@ void Parameter::init()
 	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-6));
     parameter_.put(PNB_EPSILON_ABSOLUTE, std::pow(10.0,-6));
     parameter_.put(PNB_EPSILON_RELATIVE, std::pow(10.0,-6));
+    // Solution management
+    parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
+    parameter_.put(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
 }
 
 void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )

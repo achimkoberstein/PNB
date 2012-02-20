@@ -254,7 +254,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
     {
 
     }
@@ -272,9 +272,11 @@ namespace parallel_benders {
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
 		// Load empty problem (i.e. reset the solver interface
-		osi_solver_->messageHandler()->setLogLevel(0); // TODO: unsilenced cplex
+		osi_solver_->messageHandler()->setLogLevel(0); 
 		osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         // Cplex specific settings come later
+
+
 
 
 
@@ -289,6 +291,11 @@ namespace parallel_benders {
 
         // Iterate over property map..
         boost::property_tree::ptree& param(parameter_.parameter_);
+
+        // Specify if we want to keep solutions or not
+        compute_primal_solutions_for_stage_ = param.get(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
+        compute_dual_solutions_for_stage_ = param.get(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
+        // Memory switch: Compute solutions and store them during algorithm?
 
         // Tolerances
         zero_tolerance_ = param.get(PNB_TOLERANCE_ZERO,0.0);
@@ -597,13 +604,29 @@ namespace parallel_benders {
         // Print initial solution line
         std::cout << left << std::setw(7) << "It." << std::setw(16) << "Lower Bound: " << std::setw(16) << "Upper Bound: " << std::setw(16) << "Relative Gap: " << std::endl; // This has to be done only once!
         // Do initialization stuff necessary for solve process
-        while ( lower_bound_ < upper_bound_ &&
-            std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
-            RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
-            current_iteration_ < max_iteration_ 
-            ) 
+        bool not_stop_loop = false;
+        while ( true  ) 
         {
+            not_stop_loop = lower_bound_ < upper_bound_ &&
+                std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
+                RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
+                current_iteration_ < max_iteration_;
+            if ( !not_stop_loop ){
+                if (compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_NO && compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_NO)
+                    break;
+                // Do some things to ensure proper termination
+                store_primal_and_dual_ = true;
+                sequencing_protocol_ = PNB_INT_FASTPASS;
+                if ( current_stage_ > compute_dual_solutions_for_stage_ && current_stage_ > compute_primal_solutions_for_stage_)
+                    break;
+                if ( !forward_ && current_stage_ < num_stages_-1){
+                    assert( current_stage_ == num_stages_-2);
+                    break;
+                }
+            }
             wall_clock_solution_time_.Stop(0);
+            
+
             // Check if we already went over the time limit
             if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
                 LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
@@ -904,8 +927,8 @@ namespace parallel_benders {
             }
 
 
-            if ( store_primal_and_dual_ ){
-                // Depending on if we store primal and dual solution, we need to delete the memory allocated for its storage, to lower memory requirements!
+            if ( store_primal_and_dual_ && !not_stop_loop){ 
+                // Depending on if we store primal and dual solution, we need to delete the memory allocated for its storage, to lower memory requirements! Only if we are not in the last run to compute solutions we want to return!.
                 for (int i = 0; i < tree_nodes_by_stage_[current_stage_].size(); i++){
                     tree_nodes_by_stage_[current_stage_][i]->getDataPtr()->CleanUnusedMemory(forward_);
                 }

@@ -61,6 +61,10 @@ namespace parallel_benders{
     const std::string PNB_EPSILON_ABSOLUTE = "PNB_EPSILON_ABSOLUTE";           //
     const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
 
+    // Do we want to compute (and return) solutions?
+    const std::string PNB_COMPUTE_PRIMAL_SOLUTIONS = "PNB_COMPUTE PRIMAL_SOLUTIONS";
+    const std::string PNB_COMPUTE_DUAL_SOLUTIONS = "PNB_COMPUTE_DUAL_SOLUTIONS";
+
 
 	// Some fixed integer to avoid magic numbers
 	const int PNB_INT_FASTPASS = 0;
@@ -81,6 +85,12 @@ namespace parallel_benders{
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
     const int PNB_INT_BARRIER_MASTER = 12;
+
+    // SOlution handling
+    const int PNB_INT_SOLUTION_PRIMAL_NO = -2;
+    const int PNB_INT_SOLUTION_PRIMAL_ALL = -1;
+    const int PNB_INT_SOLUTION_DUAL_NO = -2;
+    const int PNB_INT_SOLUTION_DUAL_ALL = -1;
 
     struct BendersNodeData;
 
