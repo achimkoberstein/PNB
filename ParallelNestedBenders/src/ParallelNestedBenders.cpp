@@ -264,7 +264,7 @@ namespace parallel_benders {
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios();
         integer_problems_ = boost::dynamic_bitset<>(num_stages_);
-        infeasible_problems_ =  boost::dynamic_bitset<>(num_stages_);
+        infeasible_problems_ =  boost::dynamic_bitset<>(num_scenarios_);
         timer_.Start(num_stages_);
         // Initialize osiSolver
         if (smi_->getOsiSolverInterface() == NULL)

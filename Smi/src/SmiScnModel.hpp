@@ -294,7 +294,7 @@ public:
 
     void transformToStaircaseStructure( std::map<int,int>& coefficients );
 
-    void sampleScenarioTree(std::vector<int> number_samples, int sampling_method, double (*random_generator)() );//TODO: Add Pointer to function that returns a double (RNG)
+    void sampleScenarioTree(std::vector<int> number_samples, int sampling_method, double* (*random_generator)(int) );//TODO: Add Pointer to function that returns a double (RNG)
 
     void setDiscreteDistribution(SmiDiscreteDistribution* smiDD);
 

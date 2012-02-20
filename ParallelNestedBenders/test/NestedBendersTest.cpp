@@ -74,6 +74,7 @@ public:
         // Load ParallelNestedBendersSolver
         double solver_time = CoinCpuTime();
         SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,100);
         saa.setParameters(benders_parameter_);
         saa.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
@@ -94,7 +95,7 @@ public:
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
-        int num_repetitions = 1; // Solve each problem three times!
+        int num_repetitions = 0; // Solve each problem three times!
         num_childs_first_stage = 2; // Only solve once!
 
         for (int i = 0; i < num_repetitions; i++){

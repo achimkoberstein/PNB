@@ -2120,7 +2120,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      }
  }
 
- void SmiScnModel::sampleScenarioTree( std::vector<int> number_samples, int sampling_method, double (*random_generator)() )
+ void SmiScnModel::sampleScenarioTree( std::vector<int> number_samples, int sampling_method, double* (*random_generator)(int ) )
  {
     // We have a discrete distribution
     // We need a random_number generator
@@ -2158,10 +2158,15 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
          number_of_samples *= number_samples[cur_stage];
          for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
              random_numbers[i].resize(number_of_samples);
-             for (int j = 0; j < number_of_samples; j++)
-                 random_numbers[i][j] = random_generator();
-             //CoinFillN(&random_numbers[i][0],number_of_samples,0.0);
-             // Get the random numbers via the function // TODO: Here we can use Latin Hypercube Sampling, Antithetic Sampling or Crude Monte Carlo Sampling.
+             for (int current_batch = 0; current_batch < number_of_samples/number_samples[cur_stage]; current_batch += number_samples[cur_stage]){
+                 // random_numbers[i].push_back(0.0); // Allows the use of memcpy later on
+                 // Get the random numbers via the function // TODO: Here we can use Latin Hypercube Sampling, Antithetic Sampling or Crude Monte Carlo Sampling.
+                 // Caller of this function decides that!
+                 double * generated_random_numbers = random_generator(number_samples[cur_stage]);
+                 assert(generated_random_numbers != NULL); // Not NULL
+                 memcpy(&random_numbers[i][current_batch],generated_random_numbers,sizeof(double)*number_samples[cur_stage]);
+             }
+
          }
          random_numbers_per_stage[cur_stage] = random_numbers;
      }

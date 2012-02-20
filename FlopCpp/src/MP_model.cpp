@@ -101,10 +101,6 @@ mSolverState(((s==0)?(MP_model::DETACHED):(MP_model::SOLVER_ONLY))),uniformGener
     MP_model::current_model = this;
     uniformGenerator->rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed ? seed : uniformGenerator->seed));
     uniformGenerator->uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniformGenerator->rng ,boost::uniform_01<double>() ));
-    // Create a new taskmgr for PFunc
-#ifdef PFUNC_ENABLED_FLOPCPP
-    initializePfunc();
-#endif
 }
 
 MP_model::~MP_model() {
@@ -118,10 +114,6 @@ MP_model::~MP_model() {
     if (MP_model::current_model == this)
         MP_model::current_model = &MP_model::getDefaultModel();
     --numOfInstances;
-#ifdef PFUNC_ENABLED_FLOPCPP
-    if (numOfInstances == 0)
-    	::pfunc::clear();
-#endif
 }
 
 unsigned int MP_model::getSeed() {
