@@ -3,6 +3,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
+#include <boost/math/distributions/students_t.hpp>
 
 
 
@@ -20,5 +21,8 @@ struct Uniform01Generator {
 
 int get_random_number_from_system();
 
+double computeSampleVarianceEstimator(int number_of_samples, double* sampled_values, double average);
+
+double computeSymmetricConfidenceInterval(int number_of_batches, double alpha, double variance);
 
 #endif // PseudoRandomGenerator_hpp__

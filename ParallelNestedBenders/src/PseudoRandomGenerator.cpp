@@ -43,3 +43,21 @@ int get_random_number_from_system()
     //Without random numbers this does not make much sense
 #endif
 }
+
+double computeSymmetricConfidenceInterval( int number_of_batches, double alpha, double variance )
+{
+    assert( number_of_batches > 1);
+    assert(alpha > 0 && alpha < 1);
+    boost::math::students_t_distribution<double> students_t(number_of_batches-1); // Degrees of distribution is number of variables - 1
+    return quantile(students_t,1-alpha/2.0)*(std::sqrt(variance/(number_of_batches)) );
+}
+
+double computeSampleVarianceEstimator( int number_of_samples, double* sampled_values, double average )
+{
+    assert( number_of_samples > 1);
+    double sum = 0;
+    for (int i = 0; i < number_of_samples; i++)
+        sum += std::pow(sampled_values[i]-average,2);
+    sum *= 1.0/(number_of_samples-1);
+    return sum;
+}
