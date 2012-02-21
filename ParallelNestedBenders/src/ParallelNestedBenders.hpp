@@ -45,6 +45,10 @@ public:
     ParallelNestedBenders(SmiScnModel* smi_model_ptr);
     ~ParallelNestedBenders();
     void Solve();
+    // Access solution methods
+    double computeScenarioValue(int scenario);
+    void fixFirstStageVariables(double* solution);
+    void unfixFirstStageVariables();
 
 private:
     void Init();
@@ -86,6 +90,9 @@ private:
     void findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut );
     void IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  );
     void PrimalDegeneracyHandling(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+
+
+
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
@@ -232,6 +239,13 @@ private:
     // Store solutions if necessary
     int compute_primal_solutions_for_stage_;
     int compute_dual_solutions_for_stage_;
+    bool compute_objective_values_;
+
+    // Fixing first-stage variables : If unfixed write back to Smi->Core->cdclo
+    boost::scoped_array<double> first_stage_original_col_lower_;
+    boost::scoped_array<double> first_stage_original_col_upper_;
+    boost::scoped_array<double> fixed_solution_;
+    bool fixed_first_stage_;
 
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
     staircase_container non_staircase_coefficients_;

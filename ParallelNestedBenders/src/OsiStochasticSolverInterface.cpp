@@ -14,6 +14,10 @@ void OsiStochasticSolverInterface::initialSolve()
 {
 }
 
+OsiSolverInterface* OsiStochasticSolverInterface::getOsiSolverInterface()
+{
+    return osi_solver_;
+}
 
 
 OsiStochasticDetEqSolverInterface::OsiStochasticDetEqSolverInterface( OsiSolverInterface* osiSolver,SmiScnModel* smiModel )

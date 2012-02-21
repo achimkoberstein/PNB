@@ -232,6 +232,7 @@ void Parameter::init()
     // Solution management
     parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
     parameter_.put(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
+    parameter_.put(PNB_COMPUTE_OBJECTIVE_VALUES,false);
 }
 
 void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )
