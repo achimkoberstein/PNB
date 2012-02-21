@@ -271,10 +271,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     // "Naive" Upper Bound calculation
     {
-        samples[1] = 50;
+        samples[1] = 5000;
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES,true); // Undo later
         osi_solver = osi_pnb_->getOsiSolverInterface();
-        smi_model->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
+        smi_model->sampleScenarioTree(samples,0, get_random_01_variates );
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
         osi_pnb_->setParameters(parameters_);
         // Find a way to fix some variables to a given value!
@@ -297,7 +297,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(samples[num_stages-1],&upper_bound_solution_values[0],upper_bound_estimator);
 
         // Compute confidence interval for upper bound
-        double half_length_upper = computeSymmetricConfidenceInterval(samples[num_stages-1],alpha*2,upper_bound_sample_variance_estimator); // Bonferroni: 2*alpha
+        double half_length_upper = computeSymmetricConfidenceInterval(samples[num_stages-1],alpha/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha
         // Output everything for lower bound
         LOG(INFO) << "Upper Bound : [ " << upper_bound_estimator-half_length_upper << " <= " << upper_bound_estimator << " <= " << upper_bound_estimator+half_length_upper;
     }
