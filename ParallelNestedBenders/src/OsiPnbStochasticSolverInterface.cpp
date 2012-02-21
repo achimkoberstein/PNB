@@ -1,7 +1,10 @@
+#include <glog/logging.h>
+
+#include <boost/shared_array.hpp>
+
 #include "OsiPnbStochasticSolverInterface.hpp"
 
 #include "PseudoRandomGenerator.hpp"
-#include <glog/logging.h>
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
 #include "BendersNodeData.hpp"
@@ -163,10 +166,42 @@ SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
     return nested_benders_->smi_;
 }
 
-OsiSolverInterface* OsiStochasticParallelNestedBendersSolverInterface::getOsiSolverInterface()
+const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage )
 {
-    return nested_benders_->osi_solver_;
+    assert( stage < nested_benders_->num_stages_);
+    assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
+    return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->col_solution_;
 }
+
+const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageSolution()
+{
+    return getSolutionByNodeAndStage(0,0);
+}
+
+const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageDuals()
+{
+    return getDualsByNodeAndStage(0,0);
+}
+
+const double * OsiStochasticParallelNestedBendersSolverInterface::getDualsByNodeAndStage( int node_number, int stage )
+{
+    assert( stage < nested_benders_->num_stages_);
+    assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
+    return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->dual_solution_;
+}
+
+double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForScenario( int scenario )
+{
+    assert( scenario < nested_benders_->num_scenarios_ );
+    return nested_benders_->computeScenarioValue(scenario);
+}
+
+void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( double* solution )
+{
+    assert(solution != NULL);
+    nested_benders_->fixFirstStageVariables(solution);
+}
+
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model))
 {
 
@@ -188,32 +223,90 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     // Some things we need to share later on
     OsiSolverInterface* osi_solver = osi_pnb_->getOsiSolverInterface();
     SmiScnModel* smi_model = osi_pnb_->getSmiModel();
+    int num_first_stage_cols = smi_model->getCore()->getNumCols(0);
 
 
     std::vector<int> samples;
     samples.push_back(0);
-    samples.push_back(50);
-    // We need a random generator function here!
-    osi_pnb_->getSmiModel()->sampleScenarioTree(samples,0, get_random_01_variates );
-    osi_pnb_->getSmiModel()->writeSmps("saa_monte_carlo_test");
-    osi_pnb_->initialSolve();
-    // get results
+    samples.push_back(25);
+    int number_batches = 2;
 
+    parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_DUAL_NO);
+    parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Store only first-stage primal solution
+
+    std::vector<double> objective_values(number_batches,0);
+    std::vector< boost::shared_array<double> > first_stage_solutions(number_batches);
+    // Compute lower bound approximation!
+    for (int i = 0; i < number_batches; i++){
+        smi_model->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
+        osi_solver = osi_pnb_->getOsiSolverInterface();
+        osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+        osi_pnb_->setParameters(parameters_);
+        osi_pnb_->initialSolve();
+        objective_values[i] = osi_pnb_->getObjValue();
+        first_stage_solutions[i].reset(new double[smi_model->getCore()->getNumCols(0)]);
+        memcpy(first_stage_solutions[i].get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*smi_model->getCore()->getNumCols(0));
+    }
+    // Now we have number_batches many different objective values
+
+    // Compute lower_bound_estimator
+    double lower_bound_estimator = 0;
+    for (int i = 0; i < number_batches; i++){
+        lower_bound_estimator += objective_values[i]*1.0/number_batches;
+    }
+    // Compute Sample Variance Estimator ( is this also allowed for LHS?)
+    double sample_variance_estimator = 0;
+    for (int i = 0; i < number_batches; i++){
+        sample_variance_estimator += std::pow(objective_values[i]-lower_bound_estimator,2);
+    }
+    sample_variance_estimator *= 1.0/(number_batches-1);
+
+    // Compute confidence interval 
+
+    // Output everything for lower bound
+
+    // Compute upper bound estimator: We take a larger sample and try to evaluate the function!
+    // TODO: Change samples vector
+    samples[1] = 50;
+
+    parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES,true); // Undo later
     osi_solver = osi_pnb_->getOsiSolverInterface();
+    smi_model->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
     osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
     osi_pnb_->setParameters(parameters_);
-
-    osi_pnb_->getSmiModel()->sampleScenarioTree(samples,0, get_antithetic_random_01_variates );
-    osi_pnb_->getSmiModel()->writeSmps("saa_antithetic_test");
+    // Find a way to fix some variables to a given value!
+    // Compute a candidate solution!
+    // For now we do a convex combination of our lower bound solutions
+    std::vector<double> candidate_solution(num_first_stage_cols,0);
+    for (int i = 0; i < number_batches; i++){
+        for (int j = 0; j < num_first_stage_cols; j++)
+            candidate_solution[j] += first_stage_solutions[i][j] / number_batches;
+    }
+    osi_pnb_->fixFirstStageVariables(&candidate_solution[0]);
     osi_pnb_->initialSolve();
+    double upper_bound_estimator = osi_pnb_->getObjValue();
+    // Compute sample variance estimator for this problem ( we need the complete solution of the whole problem to be able to compute it )
+    // Get the objective values for every scenario
+    std::vector<double> upper_bound_solution_values(samples[smi_model->getCore()->getNumStages()-1],0);
+    for (int i = 0; i < samples[smi_model->getCore()->getNumStages()-1];i++){
+        upper_bound_solution_values[i] = osi_pnb_->getSolutionValueForScenario(i);
+    }
+
+    double upper_bound_sample_variance_estimator = 0;
+    for (int i = 0; i < samples[smi_model->getCore()->getNumStages()-1]; i++)
+        upper_bound_sample_variance_estimator += std::pow(upper_bound_solution_values[i]-upper_bound_estimator,2);
+    upper_bound_sample_variance_estimator *= 1.0/ (samples[smi_model->getCore()->getNumStages()-1]-1);
+
+    // Output upper bound confidence interval!
+
+
     
-    osi_solver = osi_pnb_->getOsiSolverInterface();
-    osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
-    osi_pnb_->setParameters(parameters_);
 
-    osi_pnb_->getSmiModel()->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
-    osi_pnb_->getSmiModel()->writeSmps("saa_latin_hypercube_test");
-    osi_pnb_->initialSolve();
+
+    LOG(INFO) << "Done.";
+    
+    //osi_pnb_->getSmiModel()->writeSmps("saa_latin_hypercube_test");
+
 }
 
 void SampleAverageApproximationSolverInterface::setParameters( const parallel_benders::Parameter& parameters )

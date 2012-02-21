@@ -23,7 +23,16 @@ public:
     void printProblemCharacteristics();
 
     double getObjValue();
-    const double * getSolution();
+    const double * getFirstStageSolution();
+    const double * getSolutionByNodeAndStage(int node_number, int stage);
+
+    const double * getFirstStageDuals();
+    const double * getDualsByNodeAndStage(int node_number, int stage);
+
+    void fixFirstStageVariables(double* solution);
+
+    double getSolutionValueForScenario(int scenario);
+
     int getNumOptimalityCuts();
     int getNumFeasibilityCuts();
     void setParameters(const parallel_benders::Parameter& parameters);
@@ -32,7 +41,6 @@ public:
     const parallel_benders::Timer& getTimer() const;
 
     SmiScnModel* getSmiModel();
-    OsiSolverInterface* getOsiSolverInterface();
 
 
 private:

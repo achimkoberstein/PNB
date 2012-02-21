@@ -254,7 +254,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
     {
 
     }
@@ -295,6 +295,7 @@ namespace parallel_benders {
         // Specify if we want to keep solutions or not
         compute_primal_solutions_for_stage_ = param.get(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
         compute_dual_solutions_for_stage_ = param.get(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
+        compute_objective_values_ = param.get(PNB_COMPUTE_OBJECTIVE_VALUES,false);
         // Memory switch: Compute solutions and store them during algorithm?
 
         // Tolerances
@@ -612,12 +613,12 @@ namespace parallel_benders {
                 RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
                 current_iteration_ < max_iteration_;
             if ( !not_stop_loop ){
-                if (compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_NO && compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_NO)
+                if (compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_NO && compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_NO && !compute_objective_values_)
                     break;
                 // Do some things to ensure proper termination
                 store_primal_and_dual_ = true;
                 sequencing_protocol_ = PNB_INT_FASTPASS;
-                if ( current_stage_ > compute_dual_solutions_for_stage_ && current_stage_ > compute_primal_solutions_for_stage_)
+                if ( current_stage_ > compute_dual_solutions_for_stage_ && current_stage_ > compute_primal_solutions_for_stage_ && !compute_objective_values_)
                     break;
                 if ( !forward_ && current_stage_ < num_stages_-1){
                     assert( current_stage_ == num_stages_-2);
@@ -1359,7 +1360,7 @@ namespace parallel_benders {
                     benders_node_pointer->column_lower_[node_pointer->getColLowerIndices()[i] - core_->getColStart(current_stage_)] = node_pointer->getColLowerElements()[i];
                 }
         }
-        else
+        else 
             benders_node_pointer->column_lower_ = const_cast<double*> (core_->getDenseColLower(current_stage_));
 
         // Column upper bounds
@@ -1373,6 +1374,12 @@ namespace parallel_benders {
         }
         else
             benders_node_pointer->column_upper_ = const_cast<double*> (core_->getDenseColUpper(current_stage_));
+
+        // If we have a fixed_solution we change the bounds to the fixed solution!
+        if ( current_stage_ == 0 && fixed_first_stage_ ){
+            benders_node_pointer->column_upper_ = fixed_solution_.get();
+            benders_node_pointer->column_lower_ = fixed_solution_.get();
+        }
 
         // Objective function coefficients
         if ( node_pointer->getObjectiveLength()) {
@@ -3604,6 +3611,29 @@ namespace parallel_benders {
         }
     }
 
+    double ParallelNestedBenders::computeScenarioValue( int scenario )
+    {
+        double sum = 0.0;
+        std::vector<BendersNodeData*> scenario_nodes = tree_.getScenario(scenario);
+        for ( std::vector<BendersNodeData*>::iterator it = scenario_nodes.begin(); it != scenario_nodes.end(); ++it)
+            sum += (*it)->solution_value_;
+            
+        return sum;
+
+    }
+
+    void ParallelNestedBenders::fixFirstStageVariables( double* solution )
+    {
+        // Copy old bounds
+        first_stage_original_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        first_stage_original_col_upper_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        fixed_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        memcpy(first_stage_original_col_lower_.get(),smi_->getCore()->getDenseColLower(0),sizeof(double)*smi_->getCore()->getNumCols(0));
+        memcpy(first_stage_original_col_upper_.get(),smi_->getCore()->getDenseColUpper(0),sizeof(double)*smi_->getCore()->getNumCols(0));
+        memcpy(fixed_solution_.get(),solution,sizeof(double)*smi_->getCore()->getNumCols(0));
+        fixed_first_stage_ = true;
+       
+    }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;

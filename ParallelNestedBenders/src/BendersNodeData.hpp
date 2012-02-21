@@ -64,6 +64,7 @@ namespace parallel_benders{
     // Do we want to compute (and return) solutions?
     const std::string PNB_COMPUTE_PRIMAL_SOLUTIONS = "PNB_COMPUTE PRIMAL_SOLUTIONS";
     const std::string PNB_COMPUTE_DUAL_SOLUTIONS = "PNB_COMPUTE_DUAL_SOLUTIONS";
+    const std::string PNB_COMPUTE_OBJECTIVE_VALUES = "PNB_COMPUTE_OBJECTIVE_VALUES";
 
 
 	// Some fixed integer to avoid magic numbers
@@ -176,7 +177,7 @@ public:
     int child_node_start_;
     double probability_; // Overal probability
     double conditional_probability_; // Probability with respect to the parent node
-
+    // solution without approximation terms
     double solution_value_;
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
     typedef std::list<boost::shared_ptr<CutStuff> > cut_container;
