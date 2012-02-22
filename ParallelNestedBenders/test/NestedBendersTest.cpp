@@ -76,13 +76,14 @@ public:
         SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,100);
         saa.setParameters(benders_parameter_);
-        saa.setNumberBatches(15);
-        saa.setNumberBatchesUpperBound(15);
+
+        saa.setNumberBatches(2);
+        saa.setNumberBatchesUpperBound(2);
         std::vector<int> sample_size(2,0);
         sample_size[1] = 100;
         saa.setSampleSize(sample_size);
         std::vector<int> sample_size_upper(2,0);
-        sample_size_upper[1] = 10000;
+        sample_size_upper[1] = 20000;
         saa.setSampleSizeUpperBound(sample_size_upper);
         double alpha = 0.95;
         saa.setConfidenceLevel(alpha);
