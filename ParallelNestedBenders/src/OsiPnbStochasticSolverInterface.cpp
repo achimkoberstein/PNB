@@ -240,16 +240,22 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_DUAL_NO);
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Store only first-stage primal solution
 
+    double lower_bound_estimator = 0;
+    double half_length_lower = 0;
+
+    double upper_bound_estimator = 0;
+    double half_length_upper = 0;
+
     // Define boolean variables to set the method we want to use
     // Set Sampling Method!
 
     // Set Sampling Method Upper Bound!
-    //
     bool batch_means_upper_bound = true;
 
     // Stores a candidate solution
     boost::shared_array<double> candidate_array;
 
+    // Possibilities to estimate upper bound and/or gap
     bool naive_estimation = false;
     bool mak_morton_wood = false;
     bool linderoth_shapiro_wright = true;
@@ -333,14 +339,14 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     // Now we have number_batches many different objective values
 
     // Compute lower_bound_estimator
-    double lower_bound_estimator = std::accumulate(objective_values.begin(),objective_values.end(),0.0)/number_batches_;
+    lower_bound_estimator = std::accumulate(objective_values.begin(),objective_values.end(),0.0)/number_batches_;
     // Compute Sample Variance Estimator ( is this also allowed for LHS?)
     double sample_variance_estimator = computeSampleVarianceEstimator(number_batches_,&objective_values[0],lower_bound_estimator);
     // Compute symmetric confidence interval half length
-    double half_length = computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_variance_estimator);
+    half_length_lower = computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_variance_estimator);
     // Output everything for lower bound
-    LOG(INFO) << "Lower Bound : [ " << lower_bound_estimator-half_length << " <= " << lower_bound_estimator << " <= " << lower_bound_estimator+half_length;
-    LOG(INFO) << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length;
+    LOG(INFO) << "Lower Bound : [ " << lower_bound_estimator-half_length_lower << " <= " << lower_bound_estimator << " <= " << lower_bound_estimator+half_length_lower;
+    LOG(INFO) << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower;
 
     if ( mak_morton_wood ){
         double gap_estimator = std::accumulate(gap_estimates.begin(),gap_estimates.end(),0.0)/number_batches_;
@@ -395,11 +401,11 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             //    upper_bound_solution_values[i] = osi_pnb_->getSolutionValueForScenario(i);
             //}
         }
-        double upper_bound_estimator = std::accumulate(upper_bound_values.begin(),upper_bound_values.end(),0.0)/number_batches_upper_;        
+        upper_bound_estimator = std::accumulate(upper_bound_values.begin(),upper_bound_values.end(),0.0)/number_batches_upper_;        
         double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(number_batches_upper_,&upper_bound_values[0],upper_bound_estimator);
 
         // Compute confidence interval for upper bound
-        double half_length_upper = computeSymmetricConfidenceInterval(number_batches_upper_,alpha_,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
+        half_length_upper = computeSymmetricConfidenceInterval(number_batches_upper_,alpha_,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
         // Output everything for lower bound
         LOG(INFO) << "Upper Bound : [ " << upper_bound_estimator-half_length_upper << " <= " << upper_bound_estimator << " <= " << upper_bound_estimator+half_length_upper;
     }
@@ -419,14 +425,18 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         for (int i = 0; i < samples_upper_[num_stages-1];i++){
             upper_bound_solution_values[i] = osi_pnb_->getSolutionValueForScenario(i);
         }
-        double upper_bound_estimator = osi_pnb_->getObjValue();      
+        upper_bound_estimator = osi_pnb_->getObjValue();      
         double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(samples_upper_[num_stages-1],&upper_bound_solution_values[0],upper_bound_estimator);
 
         // Compute confidence interval for upper bound
-        double half_length_upper = computeSymmetricConfidenceInterval(samples_upper_[num_stages-1],alpha_/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
+        half_length_upper = computeSymmetricConfidenceInterval(samples_upper_[num_stages-1],alpha_/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
         // Output everything for lower bound
         LOG(INFO) << "Upper Bound : [ " << upper_bound_estimator-half_length_upper << " <= " << upper_bound_estimator << " <= " << upper_bound_estimator+half_length_upper;
+        LOG(INFO) << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper;
     }
+    // Conclusion
+    LOG(INFO) << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower;
+    LOG(INFO) << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper;
 
 
     LOG(INFO) << "Done.";
