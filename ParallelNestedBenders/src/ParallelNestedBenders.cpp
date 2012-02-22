@@ -3641,6 +3641,64 @@ namespace parallel_benders {
         warm_up_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
         memcpy(warm_up_solution_.get(),solution,smi_->getCore()->getNumCols(0)*sizeof(double));
     }
+
+    void ParallelNestedBenders::AppendTrustRegionToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        // Method gets called right before SolveSubproblem!
+        int num_cols = stage_data_[current_stage_]->num_columns_;
+        int solver_cols = osi_solver->getNumCols();
+        double* candidate_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
+        if ( candidate_solution == NULL)
+            return;
+        // We need 2 times the basic columns as variables 
+
+        // Trust Region with L_\infty -norm or L_1 norm
+        bool infty_norm = true;
+ 
+        double trust_region_radius = 0.0;
+
+        // In case of not infty_norm it is -infinity/infinity
+        std::vector<double> colum_lower_bounds(num_cols,trust_region_radius);
+        std::vector<double> colum_upper_bounds(num_cols,trust_region_radius);
+        std::vector<double> column_objective(num_cols,0);
+        // We need new rows: \mu + x = x' (that is: old column solution!)
+        CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
+        // Put the row elements in the CoinVector!
+        for (int i = 0; i < num_cols; i++){
+            coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
+        }
+        osi_solver->addCols(num_cols,coin_vector,&colum_lower_bounds[0],&colum_upper_bounds[0],&column_objective[0]);
+        
+        // Define the new rows: Equality rows (rlb = rub = candidate solution) with two/three entries \mu- + \mu+ + x = x' or \mu + x = x'
+        std::vector<double> row_lower_bounds(num_cols,0);
+        std::vector<double> row_upper_bounds(num_cols,0);
+        memcpy(&row_lower_bounds[0],candidate_solution,sizeof(double)*num_cols);
+        memcpy(&row_upper_bounds[0],candidate_solution,sizeof(double)*num_cols);
+        CoinPackedVectorBase** coin_vector_rows = new CoinPackedVectorBase*[num_cols];
+        for (int i = 0; i < num_cols; i++){
+            int* inds = new int[2];
+            double* elems = new double[2];
+            inds[0] = i;
+            inds[1] = solver_cols+i;
+            elems[0] = 1;
+            elems[1] = 1;
+            coin_vector_rows[i] = new CoinShallowPackedVector(0,inds,elems,false);
+        }
+        osi_solver->addRows(num_cols,coin_vector_rows,&row_lower_bounds[0],&row_upper_bounds[0]);
+
+        upper_bound_mutex_.lock();
+        osi_solver->writeLp("TrustRegionTest");
+        upper_bound_mutex_.unlock();
+
+        // Delete these vectors again!
+        for (int i = 0; i< num_cols; i++){
+            delete coin_vector_rows[i];
+            delete coin_vector[i];
+        }
+        delete [] coin_vector_rows;
+        delete [] coin_vector;
+    }
+
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
