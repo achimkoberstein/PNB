@@ -76,6 +76,17 @@ public:
         SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,100);
         saa.setParameters(benders_parameter_);
+        saa.setNumberBatches(15);
+        saa.setNumberBatchesUpperBound(15);
+        std::vector<int> sample_size(2,0);
+        sample_size[1] = 100;
+        saa.setSampleSize(sample_size);
+        std::vector<int> sample_size_upper(2,0);
+        sample_size_upper[1] = 10000;
+        saa.setSampleSizeUpperBound(sample_size_upper);
+        double alpha = 0.95;
+        saa.setConfidenceLevel(alpha);
+        
         saa.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
         time = CoinCpuTime()-time; // Overall WallClockTime;
@@ -192,7 +203,7 @@ public:
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_SECOND_ITERATION);
             //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,k);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // multi cut
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0); // multi cut
             //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
             //    //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
             //    //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
