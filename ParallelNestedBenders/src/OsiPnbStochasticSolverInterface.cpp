@@ -200,15 +200,20 @@ double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForSce
     return nested_benders_->computeScenarioValue(scenario);
 }
 
-void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( double* solution )
+void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( const double* solution )
 {
     assert(solution != NULL);
     nested_benders_->fixFirstStageVariables(solution);
 }
 
-SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model))
+void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution )
 {
+    nested_benders_->setWarmUpSolution(solution);
+}
 
+SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
+{
+    parameters_.init();
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()
@@ -230,38 +235,76 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     int num_first_stage_cols = smi_model->getCore()->getNumCols(0);
     int num_stages = smi_model->getCore()->getNumStages();
 
-    // Important parameters
-    std::vector<int> samples;
-    samples.push_back(0);
-    samples.push_back(25);
-    int number_batches = 10;
-    int number_batches_upper = 20;
-    double alpha = 0.05;
-
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_DUAL_NO);
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Store only first-stage primal solution
 
-    std::vector<double> objective_values(number_batches,0);
-    std::vector< boost::shared_array<double> > first_stage_solutions(number_batches);
-    // Compute lower bound approximation!
-    for (int i = 0; i < number_batches; i++){
-        smi_model->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
-        osi_solver = osi_pnb_->getOsiSolverInterface();
+    // Define boolean variables to set the method we want to use
+    // Set Sampling Method!
+
+    // Set Sampling Method Upper Bound!
+
+    bool naive_estimation = false;
+    bool mak_morton_wood = true;
+    bool linderoth_shapiro_wright = false;
+
+    // Necessary variables for mak_morton_wood
+    std::vector<double> gap_estimates;
+    std::vector<int> candidate_samples(samples_);
+    boost::shared_array<double> candidate_array;
+
+
+    if ( mak_morton_wood ){
+        gap_estimates.resize(number_batches_,0);
+        // Use double the size for normal batches for a candidate solution!
+        for (std::vector<int>::iterator it = candidate_samples.begin(); it != candidate_samples.end(); ++it)
+            *it += *it;
+        // Solve a candidate problem
+        smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates );
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
         osi_pnb_->setParameters(parameters_);
+        osi_pnb_->initialSolve();
+        // Copy first stage solution => candidate solution \hat x
+        candidate_array.reset(new double[num_first_stage_cols]);
+        memcpy(candidate_array.get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
+    }
+
+    std::vector<double> objective_values(number_batches_,0);
+    std::vector< boost::shared_array<double> > first_stage_solutions(number_batches_);
+    // Compute lower bound approximation!
+    for (int i = 0; i < number_batches_; i++){
+        smi_model->sampleScenarioTree(samples_,0, get_latin_hypercube_random_01_variates );
+        osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+        osi_pnb_->setParameters(parameters_);
+        if ( mak_morton_wood )
+            osi_pnb_->giveStartSolution(candidate_array.get());
         osi_pnb_->initialSolve();
         objective_values[i] = osi_pnb_->getObjValue();
         first_stage_solutions[i].reset(new double[num_first_stage_cols]);
         memcpy(first_stage_solutions[i].get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
+        if ( mak_morton_wood ){
+            // Evaluate candidate solution with the given sample set
+            osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+            osi_pnb_->fixFirstStageVariables(candidate_array.get());
+            osi_pnb_->setParameters(parameters_);
+            osi_pnb_->initialSolve();
+            gap_estimates[i] = osi_pnb_->getObjValue() - objective_values[i];
+         }
     }
     // Now we have number_batches many different objective values
 
     // Compute lower_bound_estimator
-    double lower_bound_estimator = std::accumulate(objective_values.begin(),objective_values.end(),0.0)/number_batches;
+    double lower_bound_estimator = std::accumulate(objective_values.begin(),objective_values.end(),0.0)/number_batches_;
     // Compute Sample Variance Estimator ( is this also allowed for LHS?)
-    double sample_variance_estimator = computeSampleVarianceEstimator(number_batches,&objective_values[0],lower_bound_estimator);
+    double sample_variance_estimator = computeSampleVarianceEstimator(number_batches_,&objective_values[0],lower_bound_estimator);
     // Compute symmetric confidence interval half length
-    double half_length = computeSymmetricConfidenceInterval(number_batches,alpha,sample_variance_estimator);
+    double half_length = computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_variance_estimator);
+
+    if ( mak_morton_wood ){
+        double gap_estimator = std::accumulate(gap_estimates.begin(),gap_estimates.end(),0.0)/number_batches_;
+        double sample_gap_variance_estimator = computeSampleVarianceEstimator(number_batches_,&gap_estimates[0],gap_estimator);
+        double gap_half_length = computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_gap_variance_estimator);
+        LOG(INFO) << " Gap Confidence Interval with " << 1-alpha_ << "% confidence : " << "[0," << gap_estimator+gap_half_length << "]";
+    }
     
     // Output everything for lower bound
     LOG(INFO) << "Lower Bound : [ " << lower_bound_estimator-half_length << " <= " << lower_bound_estimator << " <= " << lower_bound_estimator+half_length;
@@ -272,24 +315,23 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     std::vector<double> candidate_solution(num_first_stage_cols,0);
 
     // Just use the convex combination of the already solved SAA problems
-    for (int i = 0; i < number_batches; i++){
+    for (int i = 0; i < number_batches_; i++){
         for (int j = 0; j < num_first_stage_cols; j++)
-            candidate_solution[j] += first_stage_solutions[i][j] / number_batches;
+            candidate_solution[j] += first_stage_solutions[i][j] / number_batches_;
     }
 
-    // Set alpha for confidence interval for gap or upper bound computation to a new value, if we use a candidate solution derived from the lower bound estimation!
+    // Set alpha_ for confidence interval for gap or upper bound computation to a new value, if we use a candidate solution derived from the lower bound estimation!
     
 
     // "Naive" Upper Bound calculation
     {
-        samples[1] = 5000;
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES,true); // Undo later
 
-        std::vector<double> upper_bound_values(number_batches_upper,0.0);
+        std::vector<double> upper_bound_values(number_batches_upper_,0.0);
 
-        for (int i = 0; i < number_batches_upper; i++){
+        for (int i = 0; i < number_batches_upper_; i++){
             osi_solver = osi_pnb_->getOsiSolverInterface();
-            smi_model->sampleScenarioTree(samples,0, get_latin_hypercube_random_01_variates );
+            smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             osi_pnb_->setParameters(parameters_);
 
@@ -300,21 +342,22 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
             // Compute sample variance estimator for this problem ( we need the complete solution of the whole problem to be able to compute it )
             // Get the objective values for every scenario
-            //std::vector<double> upper_bound_solution_values(samples[num_stages-1],0);
-            //for (int i = 0; i < samples[num_stages-1];i++){
+            //std::vector<double> upper_bound_solution_values(samples_upper_[num_stages-1],0);
+            //for (int i = 0; i < samples_upper_[num_stages-1];i++){
             //    upper_bound_solution_values[i] = osi_pnb_->getSolutionValueForScenario(i);
             //}
         }
-        double upper_bound_estimator = std::accumulate(upper_bound_values.begin(),upper_bound_values.end(),0.0)/number_batches_upper;        
-        double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(number_batches_upper,&upper_bound_values[0],upper_bound_estimator);
+        double upper_bound_estimator = std::accumulate(upper_bound_values.begin(),upper_bound_values.end(),0.0)/number_batches_upper_;        
+        double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(number_batches_upper_,&upper_bound_values[0],upper_bound_estimator);
 
         // Compute confidence interval for upper bound
-        double half_length_upper = computeSymmetricConfidenceInterval(number_batches_upper,alpha/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha TODO: Change alpha/2 to alpha if we use another candidate solution than that by lower bound..
+        double half_length_upper = computeSymmetricConfidenceInterval(number_batches_upper_,alpha_/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
         // Output everything for lower bound
         LOG(INFO) << "Upper Bound : [ " << upper_bound_estimator-half_length_upper << " <= " << upper_bound_estimator << " <= " << upper_bound_estimator+half_length_upper;
     }
 
-    // Gap calculation with common random numbers (Mak,Morton,Wood)
+    // Gap calculation with common random numbers (Mak,Morton,Wood 1999)
+    // We want to estimate E G_n, where G_n is the gap of upper_bound = candidate solution evaluated for sample and stochastic solution of sample set
     {
 
     }
@@ -334,6 +377,34 @@ void SampleAverageApproximationSolverInterface::setParameters( const parallel_be
 {
     osi_pnb_->setParameters(parameters);
     parameters_ = parameters;
+}
+
+void SampleAverageApproximationSolverInterface::setSampleSizeUpperBound( const std::vector<int>& sample_size )
+{
+    assert(!sample_size.empty());
+    samples_upper_ = sample_size;
+}
+
+void SampleAverageApproximationSolverInterface::setSampleSize( const std::vector<int>& sample_size )
+{
+    assert(!sample_size.empty());
+    samples_ = sample_size;
+}
+
+void SampleAverageApproximationSolverInterface::setNumberBatches( int batches )
+{
+    number_batches_ = batches;
+}
+
+void SampleAverageApproximationSolverInterface::setNumberBatchesUpperBound( int batches )
+{
+    number_batches_upper_ = batches;
+}
+
+void SampleAverageApproximationSolverInterface::setConfidenceLevel( double one_minus_alpha )
+{
+    assert( one_minus_alpha > 0 && one_minus_alpha < 1);
+    alpha_ = 1-one_minus_alpha;
 }
 
 

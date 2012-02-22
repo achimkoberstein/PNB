@@ -524,9 +524,9 @@ namespace parallel_benders {
         // Warm up period
         if ( warm_up_){
             // We should not use the osi_solver_ we use for the first stage?
-            std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
-            warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
+            //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
+            //osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
+            //warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
         }
 
         // Solve WS-problem
@@ -635,7 +635,7 @@ namespace parallel_benders {
             }
             wall_clock_solution_time_.Start(0);
             timer_.Start(current_stage_);
-            if ( upper_bound_ <= lower_bound_ ){
+            if ( upper_bound_ < lower_bound_ ){
                 LOG(INFO) << "Upper Bound is lower than lower Bound. This should not happen, unfortunately it has. Iteration: " << current_iteration_;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
@@ -3622,7 +3622,7 @@ namespace parallel_benders {
 
     }
 
-    void ParallelNestedBenders::fixFirstStageVariables( double* solution )
+    void ParallelNestedBenders::fixFirstStageVariables( const double* solution )
     {
         // Copy old bounds
         first_stage_original_col_lower_.reset(new double[smi_->getCore()->getNumCols(0)]);
@@ -3633,6 +3633,13 @@ namespace parallel_benders {
         memcpy(fixed_solution_.get(),solution,sizeof(double)*smi_->getCore()->getNumCols(0));
         fixed_first_stage_ = true;
        
+    }
+
+    void ParallelNestedBenders::setWarmUpSolution( const double* solution )
+    {
+        warm_up_ = true;
+        warm_up_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
+        memcpy(warm_up_solution_.get(),solution,smi_->getCore()->getNumCols(0)*sizeof(double));
     }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)

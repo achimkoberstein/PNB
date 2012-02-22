@@ -29,7 +29,8 @@ public:
     const double * getFirstStageDuals();
     const double * getDualsByNodeAndStage(int node_number, int stage);
 
-    void fixFirstStageVariables(double* solution);
+    void fixFirstStageVariables(const double* solution);
+    void giveStartSolution(const double* solution);
 
     double getSolutionValueForScenario(int scenario);
 
@@ -55,6 +56,15 @@ public:
     SampleAverageApproximationSolverInterface(OsiSolverInterface* osi_solver, SmiScnModel* smi_model);
 
     void initialSolve();
+
+    void setSampleSize(const std::vector<int>& sample_size);
+    void setSampleSizeUpperBound(const std::vector<int>& sample_size);
+
+    void setNumberBatches(int batches);
+    void setNumberBatchesUpperBound(int batches);
+
+    void setConfidenceLevel(double one_minus_alpha);
+
     void setParameters(const parallel_benders::Parameter& parameters);
     double* getRandomVariates(int number_of_variates);
 
@@ -62,6 +72,11 @@ public:
 private:
     boost::shared_ptr<OsiStochasticParallelNestedBendersSolverInterface> osi_pnb_;
     parallel_benders::Parameter parameters_;
+    std::vector<int> samples_;
+    std::vector<int> samples_upper_;
+    int number_batches_;
+    int number_batches_upper_;
+    double alpha_;
 };
 // Done this way to be able to call it from Smi without changing Smi to implement boost stuff
 static Uniform01Generator uniform_generator_struct;

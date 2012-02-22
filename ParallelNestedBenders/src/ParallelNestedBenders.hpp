@@ -47,7 +47,12 @@ public:
     void Solve();
     // Access solution methods
     double computeScenarioValue(int scenario);
-    void fixFirstStageVariables(double* solution);
+    void fixFirstStageVariables(const double* solution);
+
+    /************************************************************************/
+    /* Takes ownership of solution                                          */
+    /************************************************************************/
+    void setWarmUpSolution( const double* solution);
     void unfixFirstStageVariables();
 
 private:
