@@ -192,6 +192,8 @@ public:
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
     cut_container::iterator last_iteration_start_feasibility_;
+    cut_container trust_region_cuts_;
+
     
     // Multicut Aggregation Strategies..
     int num_scen_pro_cut_;

@@ -455,6 +455,7 @@ namespace parallel_benders {
            store_primal_and_dual_ = true; 
        }
 
+       store_primal_and_dual_ = false; 
 
        build_problem_timer_ = 0;
        solve_problem_timer_ = 1;
@@ -501,8 +502,10 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
-        for (int i = 1; i < num_stages_;i++)
+        for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
+            integer_problems_[i] = false; // Ensure we do solve the LP relaxation!
+        }
         
 
         // Stage Aggregation!
@@ -1251,10 +1254,6 @@ namespace parallel_benders {
             upper_bound_mutex_.unlock();
             // Delete column solution, if we do not need to store primal_and_dual solutions. 
             // We can delete the column solution only if we move backward and we do not need to store both!
-            if ( !forward_ && !store_primal_and_dual_  ){
-                delete [] benders_node_pointer->col_solution_;
-                benders_node_pointer->col_solution_ = NULL;
-            }
         }
 
         // If we go forward, we add to our upper bound!
@@ -1265,55 +1264,63 @@ namespace parallel_benders {
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){
             // Store Dual Solution ( only if we move backward ) ( or we need it anyway )
-            if ( integer_problems_[current_stage_] && current_stage_ == 0){
-                return; // We can not compute the dual and reduced cost for this problem
+            if ( integer_problems_[current_stage_] ){
+                
             }
+            else { // In case of non-integer problems
+                StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
 
-            StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
+                if ( current_stage_ > 0 ) {
+                    // Compute the values: \lambda * lower_bound - \mu * upper_bound
+                    // Compute the resulting values right away, as we have the osi_solver_interface at hand.
+                    if ( stage_data_[current_stage_]->non_zero_bounds_ ){
+                        // Store Reduced Cost ( needed for dual values of primal variable bounds )
+                        StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
+                        const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
+                        const double* variable_lower_bounds = osi_solver->getColLower();
+                        const double* variable_upper_bounds = osi_solver->getColUpper();
+                        double computed_dual_value_for_variable_bounds = 0;
+                        const double* column_solution = benders_node_pointer->col_solution_;
+                        assert(column_solution!=NULL);
+                        for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
+                            // Look at variable value and their bounds
+                            if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
 
-            if ( current_stage_ > 0 ) {
-                // Compute the values: \lambda * lower_bound - \mu * upper_bound
-                // Compute the resulting values right away, as we have the osi_solver_interface at hand.
-                if ( stage_data_[current_stage_]->non_zero_bounds_ ){
-                    // Store Reduced Cost ( needed for dual values of primal variable bounds )
-                    StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
-                    const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
-                    const double* variable_lower_bounds = osi_solver->getColLower();
-                    const double* variable_upper_bounds = osi_solver->getColUpper();
-                    double computed_dual_value_for_variable_bounds = 0;
-                    const double* column_solution = osi_solver->getColSolution();
-                    for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
-                        // Look at variable value and their bounds
-                        if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
-
-                            // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
-                            if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
-                                computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                            else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
-                                computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                                // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
+                                if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                                    computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
+                                else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                                    computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                            }
                         }
+                        benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
                     }
-                    benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
-                }
 
+                }
             }
+        }
+        // If we go backward AND we computed all the dual values we need, we can delete the column solution.
+        if ( !forward_ && !store_primal_and_dual_  ){
+            delete [] benders_node_pointer->col_solution_;
+            benders_node_pointer->col_solution_ = NULL;
         }
 
         // We got all the data stored, now we can remove TrustRegionConstraints!
         if ( trust_region_ ){
-            // Remove trust region constraints or rows from the problem!
-            if ( benders_node_pointer->num_trust_region_cols_ > 0)
-                osi_solver->deleteCols(benders_node_pointer->num_trust_region_cols_,benders_node_pointer->trust_region_cols_.get());
-            if ( benders_node_pointer->num_trust_region_rows_ > 0)
-                osi_solver->deleteRows(benders_node_pointer->num_trust_region_rows_,benders_node_pointer->trust_region_rows_.get());
-            if ( benders_node_pointer->num_trust_region_cols_  > 0 || benders_node_pointer->num_trust_region_rows_ > 0){
-                // Store WarmStart!
-                osi_solver->resolve();
-                //osi_solver->writeLp("After_Trust_region");
-                StoreWarmStart(osi_solver,benders_tree_node_pointer);
-                benders_node_pointer->num_trust_region_cols_ = 0;
-                benders_node_pointer->num_trust_region_rows_ = 0;
-            }
+            // Just keep old trust region constraints!!
+            //// Remove trust region constraints or rows from the problem!
+            //if ( benders_node_pointer->num_trust_region_cols_ > 0)
+            //    osi_solver->deleteCols(benders_node_pointer->num_trust_region_cols_,benders_node_pointer->trust_region_cols_.get());
+            //if ( benders_node_pointer->num_trust_region_rows_ > 0)
+            //    osi_solver->deleteRows(benders_node_pointer->num_trust_region_rows_,benders_node_pointer->trust_region_rows_.get());
+            //if ( benders_node_pointer->num_trust_region_cols_  > 0 || benders_node_pointer->num_trust_region_rows_ > 0){
+            //    // Store WarmStart!
+            //    osi_solver->resolve();
+            //    //osi_solver->writeLp("After_Trust_region");
+            //    StoreWarmStart(osi_solver,benders_tree_node_pointer);
+            //    benders_node_pointer->num_trust_region_cols_ = 0;
+            //    benders_node_pointer->num_trust_region_rows_ = 0;
+            //}
         }
 
     
@@ -3725,7 +3732,7 @@ namespace parallel_benders {
                 manhattan_norm = false;
                 num_cols = 0;
                 num_rows = 1; // Only one row
-                trust_region_radius = 0.4*stage_data_[current_stage_]->num_columns_; 
+                trust_region_radius = 0.2*stage_data_[current_stage_]->num_columns_; 
                 if ( trust_region_radius < 1)
                     trust_region_radius = 1.0;
             }
