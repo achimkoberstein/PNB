@@ -65,37 +65,37 @@ public:
         int num_childs_first_stage = 1;
 
         //// SAA TEST
-        // We set the correct folder here: All files are in Benders/instances
-        double time = CoinCpuTime();  
-        OsiCpxSolverInterface osi_cpx;
-        smi.setOsiSolverHandle(&osi_cpx);
-        smi.setSampling(true);
-        int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        if ( read_in != 0 ){
-            LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-            return -osi_cpx.getInfinity();
-        }
-        // Load ParallelNestedBendersSolver
-        double solver_time = CoinCpuTime();
-        SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
-        saa.setParameters(benders_parameter_);
+        //// We set the correct folder here: All files are in Benders/instances
+        //double time = CoinCpuTime();  
+        //OsiCpxSolverInterface osi_cpx;
+        //smi.setOsiSolverHandle(&osi_cpx);
+        //smi.setSampling(true);
+        //int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //if ( read_in != 0 ){
+        //    LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+        //    return -osi_cpx.getInfinity();
+        //}
+        //// Load ParallelNestedBendersSolver
+        //double solver_time = CoinCpuTime();
+        //SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
+        //saa.setParameters(benders_parameter_);
 
-        saa.setNumberBatches(15);
-        saa.setNumberBatchesUpperBound(50);
-        std::vector<int> sample_size(2,0);
-        sample_size[1] = 5000;
-        saa.setSampleSize(sample_size);
-        std::vector<int> sample_size_upper(2,0);
-        sample_size_upper[1] = 20000;
-        saa.setSampleSizeUpperBound(sample_size_upper);
-        double alpha = 0.95;
-        saa.setConfidenceLevel(alpha);
-        
-        saa.initialSolve();
-        solver_time = CoinCpuTime()-solver_time; // Solver only time
-        time = CoinCpuTime()-time; // Overall WallClockTime;
-        LOG(INFO) << "Solution Time: " << time;
+        //saa.setNumberBatches(15);
+        //saa.setNumberBatchesUpperBound(50);
+        //std::vector<int> sample_size(2,0);
+        //sample_size[1] = 5000;
+        //saa.setSampleSize(sample_size);
+        //std::vector<int> sample_size_upper(2,0);
+        //sample_size_upper[1] = 20000;
+        //saa.setSampleSizeUpperBound(sample_size_upper);
+        //double alpha = 0.95;
+        //saa.setConfidenceLevel(alpha);
+        //
+        //saa.initialSolve();
+        //solver_time = CoinCpuTime()-solver_time; // Solver only time
+        //time = CoinCpuTime()-time; // Overall WallClockTime;
+        //LOG(INFO) << "Solution Time: " << time;
 
         // TODO: Uncomment if we want to use tests based on problem properties!
         //int smi_read_in = smi->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -112,16 +112,17 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
         
-        int num_repetitions = 0; // Solve each problem three times!
+        int num_repetitions = 1; // Solve each problem three times!
         num_childs_first_stage = 2; // Only solve once!
 
         for (int i = 0; i < num_repetitions; i++){
             // Solve problem for now
-            for (int number_cuts = 1; number_cuts < num_childs_first_stage; number_cuts += 200){
+            for (int number_cuts = 1; number_cuts < num_childs_first_stage; number_cuts++){
                 benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,number_cuts);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TRUST_REGION,true);
 
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
@@ -637,10 +638,10 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
 
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
     //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
@@ -1024,10 +1025,10 @@ int main(int argc, char *argv[]) {
         //::testing::GTEST_FLAG(filter) = "*.scdp*";
         //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
         //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
-        ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
+        ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
         //::testing::GTEST_FLAG(filter) = "*watson_independent*";
         //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-        ::testing::GTEST_FLAG(filter) = "*20term*";
+        //::testing::GTEST_FLAG(filter) = "*20term*";
         //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
         google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
