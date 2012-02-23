@@ -1233,34 +1233,35 @@ namespace parallel_benders {
             if ( integer_problems_[current_stage_] ){
                 return; // We can not compute the dual and reduced cost for this problem
             }
-                
+
             StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
-            
+
             if ( current_stage_ > 0 ) {
                 // Compute the values: \lambda * lower_bound - \mu * upper_bound
                 // Compute the resulting values right away, as we have the osi_solver_interface at hand.
-            if ( stage_data_[current_stage_]->non_zero_bounds_ ){
-                // Store Reduced Cost ( needed for dual values of primal variable bounds )
-                StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
-                const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
-                const double* variable_lower_bounds = osi_solver->getColLower();
-                const double* variable_upper_bounds = osi_solver->getColUpper();
-                double computed_dual_value_for_variable_bounds = 0;
-                const double* column_solution = osi_solver->getColSolution();
-                for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
-                    // Look at variable value and their bounds
-                    if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
+                if ( stage_data_[current_stage_]->non_zero_bounds_ ){
+                    // Store Reduced Cost ( needed for dual values of primal variable bounds )
+                    StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
+                    const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
+                    const double* variable_lower_bounds = osi_solver->getColLower();
+                    const double* variable_upper_bounds = osi_solver->getColUpper();
+                    double computed_dual_value_for_variable_bounds = 0;
+                    const double* column_solution = osi_solver->getColSolution();
+                    for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
+                        // Look at variable value and their bounds
+                        if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
 
-                        // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
-                        if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
-                            computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
-                        else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
-                            computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                            // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
+                            if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
+                                computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
+                            else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
+                                computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_upper_bounds[i]; 
+                        }
                     }
+                    benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
                 }
-                benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
-            }
 
+            }
         }
 
     
@@ -2581,12 +2582,12 @@ namespace parallel_benders {
             // Threshold that defines when active_value is bigger than threshold, we do not aggregates
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
             // Define a threshold above which we do not aggregate cuts for an iteration
-            double intra_aggregate_threshold = 0.05*benders_node_pointer->num_thetas_;
+            double intra_aggregate_threshold = 0;//0.05*benders_node_pointer->num_thetas_;
             if ( adaptive_ )
                 intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
             // 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
-            // If cut is non-consecutively non-active for more than strike_threshold iterations, we can aggregate it!
-            CutStuff::strike_threshold_ = -1; 
+            // If cut is consecutively non-active for more than strike_threshold iterations, we can aggregate it!
+            CutStuff::strike_threshold_ = 2; 
  
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             if ( !benders_node_pointer->variable_bounds_.empty() )
