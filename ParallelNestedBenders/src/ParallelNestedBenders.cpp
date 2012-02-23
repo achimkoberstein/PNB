@@ -2360,8 +2360,11 @@ namespace parallel_benders {
             // Add the cuts
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
             if ( seperate_first_stage_solver_ &&  current_stage_ == 0 && benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
-                it = benders_node_pointer->last_iteration_start_optimality_;
-                benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
+                it = benders_node_pointer->last_iteration_start_optimality_; // We already added 
+                if ( benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
+                    ++it;
+                    benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
+                }
             }
             // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
