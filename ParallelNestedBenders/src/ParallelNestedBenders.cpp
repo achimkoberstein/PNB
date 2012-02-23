@@ -1071,7 +1071,7 @@ namespace parallel_benders {
              osi_solver->setHintParam(OsiDoDualInInitial,true);
 
         // Set the Trust Region
-        if ( trust_region_)
+        if ( trust_region_ && current_stage_ < num_stages_-1)
             AppendTrustRegionToSubproblem(osi_solver,benders_tree_node_pointer);
 
         // MIP Solving only at first stage..
@@ -3772,18 +3772,21 @@ namespace parallel_benders {
                 double * elems = new double[binary_indices.size()];
                 int number_of_ones = 0;
                 for (int i = 0; i < binary_indices.size(); i++){
-                    if ( candidate_solution[binary_indices[i]] >= 1-zero_tolerance_ ){
+                    if ( candidate_solution[binary_indices[i]] >= 1-integer_tolerance_ ){
                         inds[i] = binary_indices[i];
                         elems[i] = -1;
                         number_of_ones++;
                     }
 
-                    else if ( candidate_solution[binary_indices[i]] <= 0 +zero_tolerance_ ){
+                    else if ( candidate_solution[binary_indices[i]] <= 0 + integer_tolerance_){
                         inds[i] = binary_indices[i];
                         elems[i] = 1;
                     }
-                    else
+                    else{
+                        LOG(INFO) << "Variable " << binary_indices[i] << " has value " << candidate_solution[binary_indices[i]];
                         assert(false);
+                    }
+                        
 
                 }
                 coin_vector_rows[0] = new CoinPackedVector(stage_data_[current_stage_]->num_columns_,inds,elems,false);
