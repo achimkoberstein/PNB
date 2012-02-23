@@ -251,7 +251,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -339,6 +339,9 @@ namespace parallel_benders {
 
         // Intra-Cut Aggregation
         store_cut_information_ = param.get(PNB_INTRA_CUT_AGGREGATION,false);
+
+        // Trust Region
+        trust_region_ = param.get(PNB_TRUST_REGION,false);
 
 		// Tree walking procedure
 		sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
@@ -1032,8 +1035,6 @@ namespace parallel_benders {
                 GenerateOptimalityCut(benders_tree_node_pointer);
             if ( adaptive_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 )) // Analyse optimality cuts of this node!
                 AnalyseOptimalityCuts(osi_solver,benders_tree_node_pointer);
-                
-            
             if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
                 IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
         }
@@ -1045,7 +1046,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
@@ -1068,6 +1069,10 @@ namespace parallel_benders {
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         else 
              osi_solver->setHintParam(OsiDoDualInInitial,true);
+
+        // Set the Trust Region
+        if ( trust_region_)
+            AppendTrustRegionToSubproblem(osi_solver,benders_tree_node_pointer);
 
         // MIP Solving only at first stage..
         if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
@@ -1195,6 +1200,8 @@ namespace parallel_benders {
 
 		// Copy theta variables
 		int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
+        if ( trust_region_ )
+            num_theta -= benders_node_pointer->num_trust_region_cols_; // We have to subtract the added trust_region variables!
 		assert(num_theta >= 0);
 
 		// Retrieve and store the theta variables
@@ -1289,6 +1296,23 @@ namespace parallel_benders {
                     benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
                 }
 
+            }
+        }
+
+        // We got all the data stored, now we can remove TrustRegionConstraints!
+        if ( trust_region_ ){
+            // Remove trust region constraints or rows from the problem!
+            if ( benders_node_pointer->num_trust_region_cols_ > 0)
+                osi_solver->deleteCols(benders_node_pointer->num_trust_region_cols_,benders_node_pointer->trust_region_cols_.get());
+            if ( benders_node_pointer->num_trust_region_rows_ > 0)
+                osi_solver->deleteRows(benders_node_pointer->num_trust_region_rows_,benders_node_pointer->trust_region_rows_.get());
+            if ( benders_node_pointer->num_trust_region_cols_  > 0 || benders_node_pointer->num_trust_region_rows_ > 0){
+                // Store WarmStart!
+                osi_solver->resolve();
+                //osi_solver->writeLp("After_Trust_region");
+                StoreWarmStart(osi_solver,benders_tree_node_pointer);
+                benders_node_pointer->num_trust_region_cols_ = 0;
+                benders_node_pointer->num_trust_region_rows_ = 0;
             }
         }
 
@@ -3669,9 +3693,14 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::AppendTrustRegionToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
+        if ( current_stage_ >= num_stages_-1 )
+            return; // We do not need trust region at the last stage!
+
         // Method gets called right before SolveSubproblem!
         int num_cols = stage_data_[current_stage_]->num_columns_;
+        int num_rows = num_cols; // In case of infty_norm
         int solver_cols = osi_solver->getNumCols();
+        int solver_rows = osi_solver->getNumRows();
         double* candidate_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
         if ( candidate_solution == NULL)
             return;
@@ -3680,10 +3709,10 @@ namespace parallel_benders {
         // Trust Region with L_\infty -norm or L_1 norm
         bool infty_norm = true;
  
-        double trust_region_radius = 0.0;
+        double trust_region_radius = 10;
 
         // In case of not infty_norm it is -infinity/infinity
-        std::vector<double> colum_lower_bounds(num_cols,trust_region_radius);
+        std::vector<double> colum_lower_bounds(num_cols,-trust_region_radius);
         std::vector<double> colum_upper_bounds(num_cols,trust_region_radius);
         std::vector<double> column_objective(num_cols,0);
         // We need new rows: \mu + x = x' (that is: old column solution!)
@@ -3693,27 +3722,41 @@ namespace parallel_benders {
             coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
         }
         osi_solver->addCols(num_cols,coin_vector,&colum_lower_bounds[0],&colum_upper_bounds[0],&column_objective[0]);
+         // Store the cols we added into a int array!
+        int* added_cols = new int[num_cols];
+        for (int i = 0; i < num_cols; i++)
+            added_cols[i] = solver_cols+i;
+        benders_tree_node_pointer->getDataPtr()->trust_region_cols_.reset(added_cols);
+        benders_tree_node_pointer->getDataPtr()->num_trust_region_cols_ = num_cols;
         
         // Define the new rows: Equality rows (rlb = rub = candidate solution) with two/three entries \mu- + \mu+ + x = x' or \mu + x = x'
-        std::vector<double> row_lower_bounds(num_cols,0);
-        std::vector<double> row_upper_bounds(num_cols,0);
+        std::vector<double> row_lower_bounds(num_rows,0);
+        std::vector<double> row_upper_bounds(num_rows,0);
         memcpy(&row_lower_bounds[0],candidate_solution,sizeof(double)*num_cols);
         memcpy(&row_upper_bounds[0],candidate_solution,sizeof(double)*num_cols);
-        CoinPackedVectorBase** coin_vector_rows = new CoinPackedVectorBase*[num_cols];
-        for (int i = 0; i < num_cols; i++){
-            int* inds = new int[2];
-            double* elems = new double[2];
+        // If L1-Norm we need another row!
+        CoinPackedVectorBase** coin_vector_rows = new CoinPackedVectorBase*[num_rows];
+        int number_elements = 2;
+        for (int i = 0; i < num_rows; i++){
+            int* inds = new int[number_elements];
+            double* elems = new double[number_elements];
             inds[0] = i;
             inds[1] = solver_cols+i;
             elems[0] = 1;
             elems[1] = 1;
-            coin_vector_rows[i] = new CoinShallowPackedVector(0,inds,elems,false);
+            coin_vector_rows[i] = new CoinShallowPackedVector(number_elements,inds,elems,false);
         }
-        osi_solver->addRows(num_cols,coin_vector_rows,&row_lower_bounds[0],&row_upper_bounds[0]);
+        osi_solver->addRows(num_rows,coin_vector_rows,&row_lower_bounds[0],&row_upper_bounds[0]);
+        // Store the rows we added into a int array!
+        int* added_rows = new int[num_rows];
+        for (int i = 0; i < num_rows; i++)
+            added_rows[i] = solver_rows+i;
+        benders_tree_node_pointer->getDataPtr()->trust_region_rows_.reset(added_rows);
+        benders_tree_node_pointer->getDataPtr()->num_trust_region_rows_ = num_rows;
 
-        upper_bound_mutex_.lock();
-        osi_solver->writeLp("TrustRegionTest");
-        upper_bound_mutex_.unlock();
+        //upper_bound_mutex_.lock();
+        //osi_solver->writeLp("TrustRegionTest");
+        //upper_bound_mutex_.unlock();
 
         // Delete these vectors again!
         for (int i = 0; i< num_cols; i++){

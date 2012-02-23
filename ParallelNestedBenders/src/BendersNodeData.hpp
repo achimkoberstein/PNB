@@ -8,6 +8,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 
@@ -161,6 +162,12 @@ public:
     std::list<double> median_discrepancies_;
     double dual_value_variable_bounds_;
     bool feasible_;
+
+    // Trust region information
+    boost::scoped_array<int> trust_region_rows_;
+    int num_trust_region_rows_;
+    boost::scoped_array<int> trust_region_cols_;
+    int num_trust_region_cols_;
     
 
     int cols_; 
