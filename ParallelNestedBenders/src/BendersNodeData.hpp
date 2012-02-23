@@ -63,7 +63,7 @@ namespace parallel_benders{
     const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
 
     // Do we want to compute (and return) solutions?
-    const std::string PNB_COMPUTE_PRIMAL_SOLUTIONS = "PNB_COMPUTE PRIMAL_SOLUTIONS";
+    const std::string PNB_COMPUTE_PRIMAL_SOLUTIONS = "PNB_COMPUTE_PRIMAL_SOLUTIONS";
     const std::string PNB_COMPUTE_DUAL_SOLUTIONS = "PNB_COMPUTE_DUAL_SOLUTIONS";
     const std::string PNB_COMPUTE_OBJECTIVE_VALUES = "PNB_COMPUTE_OBJECTIVE_VALUES";
 

@@ -1265,7 +1265,7 @@ namespace parallel_benders {
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){
             // Store Dual Solution ( only if we move backward ) ( or we need it anyway )
-            if ( integer_problems_[current_stage_] ){
+            if ( integer_problems_[current_stage_] && current_stage_ == 0){
                 return; // We can not compute the dual and reduced cost for this problem
             }
 
@@ -2248,6 +2248,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer )
     {
+        assert( dual_solution != NULL);
         SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         assert(cut_coefficients_pointer->size() == stage_data_[current_stage_-1]->num_columns_);
@@ -3696,6 +3697,10 @@ namespace parallel_benders {
         if ( current_stage_ >= num_stages_-1 )
             return; // We do not need trust region at the last stage!
 
+        bool infty_norm = true;
+        bool manhattan_norm = false;
+        // at most one must be true
+
         // Method gets called right before SolveSubproblem!
         int num_cols = stage_data_[current_stage_]->num_columns_;
         int num_rows = num_cols; // In case of infty_norm
@@ -3704,67 +3709,128 @@ namespace parallel_benders {
         double* candidate_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
         if ( candidate_solution == NULL)
             return;
-        // We need 2 times the basic columns as variables 
-
-        // Trust Region with L_\infty -norm or L_1 norm
-        bool infty_norm = true;
- 
+        // Our integer indices
+        std::vector<int> binary_indices;
         double trust_region_radius = 10;
 
-        // In case of not infty_norm it is -infinity/infinity
-        std::vector<double> colum_lower_bounds(num_cols,-trust_region_radius);
-        std::vector<double> colum_upper_bounds(num_cols,trust_region_radius);
-        std::vector<double> column_objective(num_cols,0);
-        // We need new rows: \mu + x = x' (that is: old column solution!)
-        CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
-        // Put the row elements in the CoinVector!
-        for (int i = 0; i < num_cols; i++){
-            coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
+        bool binary_constraint = integer_problems_[current_stage_];
+        if ( binary_constraint ){
+            // Get Integer Colums
+            binary_indices = core_->getBinaryCols(current_stage_);
+            if ( binary_indices.empty())
+                binary_constraint = false;
+            else {
+                // Deactivate other trust_region_radius stuff
+                infty_norm = false;
+                manhattan_norm = false;
+                num_cols = 0;
+                num_rows = 1; // Only one row
+                trust_region_radius = 0.4*stage_data_[current_stage_]->num_columns_; 
+                if ( trust_region_radius < 1)
+                    trust_region_radius = 1.0;
+            }
         }
-        osi_solver->addCols(num_cols,coin_vector,&colum_lower_bounds[0],&colum_upper_bounds[0],&column_objective[0]);
-         // Store the cols we added into a int array!
-        int* added_cols = new int[num_cols];
-        for (int i = 0; i < num_cols; i++)
-            added_cols[i] = solver_cols+i;
-        benders_tree_node_pointer->getDataPtr()->trust_region_cols_.reset(added_cols);
-        benders_tree_node_pointer->getDataPtr()->num_trust_region_cols_ = num_cols;
         
-        // Define the new rows: Equality rows (rlb = rub = candidate solution) with two/three entries \mu- + \mu+ + x = x' or \mu + x = x'
-        std::vector<double> row_lower_bounds(num_rows,0);
-        std::vector<double> row_upper_bounds(num_rows,0);
-        memcpy(&row_lower_bounds[0],candidate_solution,sizeof(double)*num_cols);
-        memcpy(&row_upper_bounds[0],candidate_solution,sizeof(double)*num_cols);
-        // If L1-Norm we need another row!
-        CoinPackedVectorBase** coin_vector_rows = new CoinPackedVectorBase*[num_rows];
-        int number_elements = 2;
-        for (int i = 0; i < num_rows; i++){
-            int* inds = new int[number_elements];
-            double* elems = new double[number_elements];
-            inds[0] = i;
-            inds[1] = solver_cols+i;
-            elems[0] = 1;
-            elems[1] = 1;
-            coin_vector_rows[i] = new CoinShallowPackedVector(number_elements,inds,elems,false);
+
+        // Trust Region with L_\infty -norm or L_1 norm
+        // In case of not infty_norm it is -infinity/infinity
+        if ( num_cols > 0){
+            std::vector<double> colum_lower_bounds(num_cols,-trust_region_radius);
+            std::vector<double> colum_upper_bounds(num_cols,trust_region_radius);
+            std::vector<double> column_objective(num_cols,0);
+            // We need new rows: \mu + x = x' (that is: old column solution!)
+            CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
+            // Put the row elements in the CoinVector!
+            for (int i = 0; i < num_cols; i++){
+                coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
+            }
+            osi_solver->addCols(num_cols,coin_vector,&colum_lower_bounds[0],&colum_upper_bounds[0],&column_objective[0]);
+            // Store the cols we added into a int array!
+            int* added_cols = new int[num_cols];
+            for (int i = 0; i < num_cols; i++)
+                added_cols[i] = solver_cols+i;
+            benders_tree_node_pointer->getDataPtr()->trust_region_cols_.reset(added_cols);
+            benders_tree_node_pointer->getDataPtr()->num_trust_region_cols_ = num_cols;
+
+            for (int i = 0; i< num_cols; i++){
+                delete coin_vector[i];
+            }
+            delete [] coin_vector;
         }
-        osi_solver->addRows(num_rows,coin_vector_rows,&row_lower_bounds[0],&row_upper_bounds[0]);
-        // Store the rows we added into a int array!
-        int* added_rows = new int[num_rows];
-        for (int i = 0; i < num_rows; i++)
-            added_rows[i] = solver_rows+i;
-        benders_tree_node_pointer->getDataPtr()->trust_region_rows_.reset(added_rows);
-        benders_tree_node_pointer->getDataPtr()->num_trust_region_rows_ = num_rows;
+
+        if ( num_rows > 0 ){
+            CoinPackedVectorBase** coin_vector_rows = new CoinPackedVectorBase*[num_rows];
+            // Define the new rows: Equality rows (rlb = rub = candidate solution) with two/three entries \mu- + \mu+ + x = x' or \mu + x = x'
+            std::vector<double> row_lower_bounds(num_rows,0);
+            std::vector<double> row_upper_bounds(num_rows,0);
+
+            if ( binary_constraint ){
+                row_lower_bounds[0] = -infinity_;
+                row_upper_bounds[0] = trust_region_radius;
+                // Create the elements!
+                int * inds = new int[binary_indices.size()];
+                double * elems = new double[binary_indices.size()];
+                int number_of_ones = 0;
+                for (int i = 0; i < binary_indices.size(); i++){
+                    if ( candidate_solution[binary_indices[i]] >= 1-zero_tolerance_ ){
+                        inds[i] = binary_indices[i];
+                        elems[i] = -1;
+                        number_of_ones++;
+                    }
+
+                    else if ( candidate_solution[binary_indices[i]] <= 0 +zero_tolerance_ ){
+                        inds[i] = binary_indices[i];
+                        elems[i] = 1;
+                    }
+                    else
+                        assert(false);
+
+                }
+                coin_vector_rows[0] = new CoinPackedVector(stage_data_[current_stage_]->num_columns_,inds,elems,false);
+                // The cut has the form sum (1-x) + sum (x) <= trust_region_radius. So we need to get all the ones to the RHS,i.e. row_upper_bound
+                row_upper_bounds[0] -= number_of_ones;
+            }
+            else {
+                memcpy(&row_lower_bounds[0],candidate_solution,sizeof(double)*num_cols);
+                memcpy(&row_upper_bounds[0],candidate_solution,sizeof(double)*num_cols);
+            }
+
+            if ( infty_norm ){
+                // If L1-Norm we need another row!
+                int number_elements = 2;
+                for (int i = 0; i < num_rows; i++){
+                    int* inds = new int[number_elements];
+                    double* elems = new double[number_elements];
+                    inds[0] = i;
+                    inds[1] = solver_cols+i;
+                    elems[0] = 1;
+                    elems[1] = 1;
+                    coin_vector_rows[i] = new CoinShallowPackedVector(number_elements,inds,elems,false);
+                }
+            }
+            // Add rows to solver
+            osi_solver->addRows(num_rows,coin_vector_rows,&row_lower_bounds[0],&row_upper_bounds[0]);
+            // Store the rows we added into a int array!
+            int* added_rows = new int[num_rows];
+            for (int i = 0; i < num_rows; i++)
+                added_rows[i] = solver_rows+i;
+            benders_tree_node_pointer->getDataPtr()->trust_region_rows_.reset(added_rows);
+            benders_tree_node_pointer->getDataPtr()->num_trust_region_rows_ = num_rows;
+
+            for (int i = 0; i< num_rows; i++){
+                delete coin_vector_rows[i];
+            }
+
+            delete [] coin_vector_rows;
+        }
 
         //upper_bound_mutex_.lock();
         //osi_solver->writeLp("TrustRegionTest");
         //upper_bound_mutex_.unlock();
 
         // Delete these vectors again!
-        for (int i = 0; i< num_cols; i++){
-            delete coin_vector_rows[i];
-            delete coin_vector[i];
-        }
-        delete [] coin_vector_rows;
-        delete [] coin_vector;
+
+        
     }
 
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){

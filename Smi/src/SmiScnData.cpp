@@ -42,11 +42,12 @@ double **cdcup_;
 vector<SmiNodeData*> nodes_; //Nodes, that contain stage dependent constraints (with Bounds,Ranges,Objective,Matrix), so called CoreNodes 
 vector<double *> pDenseRow_; //dense probability vector
 vector< vector<int> > intColsStagewise; // For each stage separately, it contains the position of every integer column
+vector< vector<int> > binaryColsStagewise;
 
 SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
 nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
 colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
-cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
+cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),binaryColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
 {	//Copies all values already stored in the Solver..
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -73,7 +74,7 @@ cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDense
 SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag,int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
 nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
 colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
-cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
+cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),binaryColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
 {
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -216,6 +217,11 @@ void SmiCoreData::gutsOfConstructor( int nrow,int ncol,int nstag, int *cstag,int
         int indice = integerIndices[i];
         int stage = colStage_[indice];
         intColsStagewise[stage].push_back(indice - nColInPrevStages[stage]);
+    }
+    for (i=0; i<binaryLength_; i++) {
+        int indice = integerIndices[i];
+        int stage = colStage_[indice];
+        binaryColsStagewise[stage].push_back(indice - nColInPrevStages[stage]);
     }
     delete nColInPrevStages;
 
