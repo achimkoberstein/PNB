@@ -165,6 +165,10 @@ private:
     int aggregation_scheme_;
     bool no_aggregation_;
 
+    // Trust Region stuff
+    bool trust_region_;
+
+
 
     Timer timer_;
     Timer wall_clock_solution_time_;
