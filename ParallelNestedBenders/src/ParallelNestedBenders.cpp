@@ -448,12 +448,14 @@ namespace parallel_benders {
        if ( adaptive_ ){
            store_primal_and_dual_ = true;
            // We need to set an aggregation_scheme
-           aggregation_scheme_ = PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY;
+           aggregation_scheme_ = PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION;
            //seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
        }
        if ( store_cut_information_){
            store_primal_and_dual_ = true; 
        }
+       if ( trust_region_)
+           store_primal_and_dual_ = true;
 
 
        build_problem_timer_ = 0;
@@ -3101,7 +3103,7 @@ namespace parallel_benders {
                     new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
                 }
 
-                LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
+                //LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
                 benders_node_pointer->num_thetas_ = new_thetas;
                 benders_node_pointer->changed_aggregation_level_ = true;
                 benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
