@@ -36,22 +36,17 @@
 #ifndef GTEST_INCLUDE_GTEST_INTERNAL_GTEST_TUPLE_H_
 #define GTEST_INCLUDE_GTEST_INTERNAL_GTEST_TUPLE_H_
 
-#if _MSC_VER < 1500
-	#include <utility>  // For ::std::pair.
-	//.. also define tuple below for <=VS2008
-#else
-	#include <tuple> //VS010
-#endif
-
+#include <utility>  // For ::std::pair.
 
 // The compiler used in Symbian has a bug that prevents us from declaring the
 // tuple template as a friend (it complains that tuple is redefined).  This
 // hack bypasses the bug by declaring the members that should otherwise be
 // private as public.
-#if defined(__SYMBIAN32__)
-#define GTEST_DECLARE_TUPLE_AS_FRIEND_ public:
+// Sun Studio versions < 12 also have the above bug.
+#if defined(__SYMBIAN32__) || (defined(__SUNPRO_CC) && __SUNPRO_CC < 0x590)
+# define GTEST_DECLARE_TUPLE_AS_FRIEND_ public:
 #else
-#define GTEST_DECLARE_TUPLE_AS_FRIEND_ \
+# define GTEST_DECLARE_TUPLE_AS_FRIEND_ \
     template <GTEST_10_TYPENAMES_(U)> friend class tuple; \
    private:
 #endif
@@ -101,7 +96,6 @@
     typename T##3, typename T##4, typename T##5, typename T##6, \
     typename T##7, typename T##8, typename T##9
 
-#if _MSC_VER < 1500
 // In theory, defining stuff in the ::std namespace is undefined
 // behavior.  We can do this as we are playing the role of a standard
 // library vendor.
@@ -190,7 +184,7 @@ class GTEST_1_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0) : f0_(f0) {}
 
@@ -222,7 +216,7 @@ class GTEST_2_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1) : f0_(f0),
       f1_(f1) {}
@@ -265,7 +259,7 @@ class GTEST_3_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2) : f0_(f0), f1_(f1), f2_(f2) {}
@@ -302,7 +296,7 @@ class GTEST_4_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3) : f0_(f0), f1_(f1), f2_(f2),
@@ -343,7 +337,7 @@ class GTEST_5_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_(), f4_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3,
@@ -387,7 +381,7 @@ class GTEST_6_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_(), f4_(), f5_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3, GTEST_BY_REF_(T4) f4,
@@ -434,7 +428,7 @@ class GTEST_7_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_(), f4_(), f5_(), f6_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3, GTEST_BY_REF_(T4) f4,
@@ -483,7 +477,7 @@ class GTEST_8_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_(), f4_(), f5_(), f6_(), f7_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3, GTEST_BY_REF_(T4) f4,
@@ -535,7 +529,7 @@ class GTEST_9_TUPLE_(T) {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_(), f4_(), f5_(), f6_(), f7_(), f8_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3, GTEST_BY_REF_(T4) f4,
@@ -589,7 +583,8 @@ class tuple {
  public:
   template <int k> friend class gtest_internal::Get;
 
-  tuple() {}
+  tuple() : f0_(), f1_(), f2_(), f3_(), f4_(), f5_(), f6_(), f7_(), f8_(),
+      f9_() {}
 
   explicit tuple(GTEST_BY_REF_(T0) f0, GTEST_BY_REF_(T1) f1,
       GTEST_BY_REF_(T2) f2, GTEST_BY_REF_(T3) f3, GTEST_BY_REF_(T4) f4,
@@ -969,7 +964,5 @@ inline bool operator!=(const GTEST_10_TUPLE_(T)& t,
 #undef GTEST_BY_REF_
 #undef GTEST_ADD_REF_
 #undef GTEST_TUPLE_ELEMENT_
-
-#endif  // _MFC_VER 0x0A00
 
 #endif  // GTEST_INCLUDE_GTEST_INTERNAL_GTEST_TUPLE_H_
