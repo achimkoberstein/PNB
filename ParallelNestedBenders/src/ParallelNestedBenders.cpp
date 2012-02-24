@@ -2966,11 +2966,11 @@ namespace parallel_benders {
             ////double average = std::accumulate(&benders_node_pointer->discrepancy_[0],&benders_node_pointer->discrepancy_[number_of_aggregates],0.0)/ number_of_aggregates;
             //LOG(INFO) << "Minimum : " << benders_node_pointer->min_discrepancy_;
             //LOG(INFO) << "Median  : " << median;
-            LOG(INFO) << "Average : " << benders_node_pointer->average_discrepancy_;
+            //LOG(INFO) << "Average : " << benders_node_pointer->average_discrepancy_;
             //LOG(INFO) << "Maximum : " << benders_node_pointer->max_discrepancy_;
             //benders_node_pointer->average_discrepancies_.push_back(benders_node_pointer->average_discrepancy_);
             //benders_node_pointer->median_discrepancies_.push_back(median);
-            LOG(INFO) << "Gap per Aggregate : " << benders_node_pointer->average_gap_per_aggregate_;
+            //LOG(INFO) << "Gap per Aggregate : " << benders_node_pointer->average_gap_per_aggregate_;
 
             //// Compute average averages and average medians
             //double average_averages = std::accumulate(benders_node_pointer->average_discrepancies_.begin(),benders_node_pointer->average_discrepancies_.end(),0.0)/benders_node_pointer->average_discrepancies_.size();
@@ -2986,18 +2986,18 @@ namespace parallel_benders {
             //    LOG(INFO) << "Not aggregating, because median discrepancy is already higher than on average.";
             //    return;
             //}
-            if ( benders_node_pointer->discrepancy_lower_bound_ < benders_node_pointer->discrepancy_value_ ){
-                LOG(INFO) << "Not aggregating, because discrepancy was higher than the discrepancy lower bound!";
-                return;
-            }
-            if ( benders_node_pointer->average_lower_bound_ < benders_node_pointer->average_discrepancy_ ){
-                LOG(INFO) << "Not aggregating, because of average";
-                return;
-            }
-            if ( benders_node_pointer->average_gap_per_aggregate_lower_bound_ < benders_node_pointer->average_gap_per_aggregate_){
-                LOG(INFO) << "Not aggregating, because of average gap violation";
-                return;
-            }
+            //if ( benders_node_pointer->discrepancy_lower_bound_ < benders_node_pointer->discrepancy_value_ ){
+            //    LOG(INFO) << "Not aggregating, because discrepancy was higher than the discrepancy lower bound!";
+            //    return;
+            //}
+            //if ( benders_node_pointer->average_lower_bound_ < benders_node_pointer->average_discrepancy_ ){
+            //    LOG(INFO) << "Not aggregating, because of average";
+            //    return;
+            //}
+            //if ( benders_node_pointer->average_gap_per_aggregate_lower_bound_ < benders_node_pointer->average_gap_per_aggregate_){
+            //    LOG(INFO) << "Not aggregating, because of average gap violation";
+            //    return;
+            //}
 
 
             // Other opportunities for a rule
@@ -3012,7 +3012,7 @@ namespace parallel_benders {
                             benders_node_pointer->was_under_threshold_[i] = true;
                     }
                 }
-                LOG_IF(INFO,aggregates_into_one.size() <= 1) << "Our threshold was " << discrepancy_threshold;
+                //LOG_IF(INFO,aggregates_into_one.size() <= 1) << "Our threshold was " << discrepancy_threshold;
             }
             else {
                 std::vector< std::pair<int,double> > discrepancy_vector;
@@ -3057,7 +3057,7 @@ namespace parallel_benders {
         //////
         if ( aggregates_into_one.size() <= 1 && aggregates_into_many.empty()){
             // We can break here!
-            LOG(INFO) << "We did not aggregate any aggregate in this iteration. #Aggregates " << benders_node_pointer->num_thetas_;
+            //LOG(INFO) << "We did not aggregate any aggregate in this iteration. #Aggregates " << benders_node_pointer->num_thetas_;
         }
         else {
             aggregate_aggregates = true;
@@ -3108,7 +3108,7 @@ namespace parallel_benders {
                     new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
                 }
 
-                LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
+                //LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
                 benders_node_pointer->num_thetas_ = new_thetas;
                 benders_node_pointer->changed_aggregation_level_ = true;
                 benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
@@ -3276,6 +3276,7 @@ namespace parallel_benders {
                 StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
             }
             else{
+                console_mutex_.lock();
                 LOG(ERROR) << "Solver did not solve problem to optimality after aggregation.";
                 // Get CPLEX error code
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -3288,6 +3289,7 @@ namespace parallel_benders {
                     //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
                     //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
                 }
+                console_mutex_.unlock();
             }
 
             no_aggregation_ = false; // We did some aggregation, so we can no longer claim we did not aggregated.
