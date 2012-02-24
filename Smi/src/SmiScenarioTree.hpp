@@ -232,6 +232,20 @@ public:
 	/**@name Iterators */
 	//@{
 
+    // Assignment operator
+    SmiScenarioTree<T> operator=(const SmiScenarioTree<T>& tree){
+        if ( this == &tree)// Gracefully handle self assignment
+            return *this;
+        // Delete old tree
+        delete root_;
+        // Copy new tree ( bend this pointer??)
+        node_data = tree.node_data;
+        scen_data = tree.scen_data;
+        leaf_ = tree.leaf_;
+        root_ = tree.root_;
+        return *this;
+    }
+
 
 	/** begin */
 	typename vector<T>::iterator treeBegin() {
