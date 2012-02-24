@@ -75,30 +75,46 @@ public:
             LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
             return -osi_cpx.getInfinity();
         }
-        // Load ParallelNestedBendersSolver
-        double solver_time = CoinCpuTime();
-        SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
-        benders_parameter_.init();
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TRUST_REGION,false);
 
-        saa.setParameters(benders_parameter_);
-
-        saa.setNumberBatches(2);
-        saa.setNumberBatchesUpperBound(2);
-        std::vector<int> sample_size(2,0);
-        sample_size[1] = 25;
-        saa.setSampleSize(sample_size);
-        std::vector<int> sample_size_upper(2,0);
-        sample_size_upper[1] = 100;
-        saa.setSampleSizeUpperBound(sample_size_upper);
-        double alpha = 0.95;
-        saa.setConfidenceLevel(alpha);
+        int runs = 5;
+        std::map< int, std::pair<int,int> > sample_map;
+        sample_map[0] = make_pair(50,20000);
+        sample_map[1] = make_pair(100,20000);
+        sample_map[2] = make_pair(500,20000);
+        sample_map[3] = make_pair(1000,20000);
+        sample_map[4] = make_pair(5000,20000);
+        fstream logfile;
+        for (int i = 0; i < runs; i++){
+            logfile.open("saa-log",fstream::out | fstream::app);
+            logfile << core_name_string << std::endl;
+            logfile.close();
+            double solver_time = CoinCpuTime();
+            SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
+            benders_parameter_.init();
+            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
+            saa.setParameters(benders_parameter_);
+            // These values do not change!
+            saa.setNumberBatches(10);
+            saa.setNumberBatchesUpperBound(50);
+            // End values that not change
+            std::vector<int> sample_size(2,0);
+            sample_size[1] = sample_map[i].first;
+            saa.setSampleSize(sample_size);
+            std::vector<int> sample_size_upper(2,0);
+            sample_size_upper[1] = sample_map[i].second;
+            saa.setSampleSizeUpperBound(sample_size_upper);
+            double alpha = 0.95;
+            saa.setConfidenceLevel(alpha);
+            saa.initialSolve();
+            solver_time = CoinCpuTime()-solver_time; // Solver only time
+            
+            logfile.open("saa-log", fstream::out | fstream::app);
+            logfile << "Solution Time: " << solver_time << std::endl;
+            logfile << "--------------------------------------------";
+            logfile.close();
+            LOG(INFO) << "Solution Time: " << solver_time;
+        }
         
-        saa.initialSolve();
-        solver_time = CoinCpuTime()-solver_time; // Solver only time
-        time = CoinCpuTime()-time; // Overall WallClockTime;
-        LOG(INFO) << "Solution Time: " << time;
 
         // TODO: Uncomment if we want to use tests based on problem properties!
         //SmiScnModel* smi_model;
@@ -806,15 +822,15 @@ TEST_F(NestedBendersTest,20term_WRIGHT){// 1.1 * 10^12 scenarios
 TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
     EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
 }
-//TEST_F(NestedBendersTest,ssn_WRIGHT){// 10^70 scenarios
-//    EXPECT_NEAR(solveSMPS("wright/data-ssn/ssn"), 0, 0.1); //two-stage
-//}
+TEST_F(NestedBendersTest,ssn_WRIGHT){// 10^70 scenarios
+    EXPECT_NEAR(solveSMPS("wright/data-ssn/ssn"), 0, 0.1); //two-stage
+}
 TEST_F(NestedBendersTest,LandS_WRIGHT){// 10^6 scenarios
     EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
 }
-//TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
-//    EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
-//}
+TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
+    EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
+}
 
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
@@ -1000,7 +1016,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*20term*";
+    ::testing::GTEST_FLAG(filter) = "*_WRIGHT*";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

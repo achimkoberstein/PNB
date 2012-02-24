@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 #include <numeric>
 #include <vector>
 
@@ -440,6 +441,23 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     LOG(INFO) << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower;
     LOG(INFO) << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper;
 
+    std::fstream logfile;
+    logfile.open("saa-log", fstream::out | fstream::app);
+    // Conclusion
+    logfile << "N : ";
+    for (int i = 1; i < num_stages; i++)
+            logfile << samples_[i] << " ";
+    logfile << std::endl;
+    logfile << "M : " << number_batches_ << std::endl;
+    logfile << "\bar N : ";
+    for (int i = 1; i < num_stages; i++)
+        logfile << samples_upper_[i] << " ";
+    logfile << std::endl;
+    logfile << "T: " << number_batches_upper_ << std::endl;
+    logfile << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower << std::endl;
+    logfile << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper << std::endl;
+    logfile << "Confidence Level : " << 1-alpha_ << "%" << std::endl;
+    logfile.close();
 
     LOG(INFO) << "Done.";
     
