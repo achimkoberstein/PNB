@@ -2132,8 +2132,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      int nstages = core->getNumStages();
      assert(nstages>0);
 
-     SmiBlockStructure* smiBS = new SmiBlockStructure(core);
-     // Delete old scenario tree
+     //SmiBlockStructure* smiBS = new SmiBlockStructure(core);
+     // Delete old scenario tree. Should be done by copy constructor!
      smiTree_ = SmiScenarioTree<SmiScnNode *>();
 
      int number_of_independent_vars = smiDD->getNumRV(); 
@@ -2165,6 +2165,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
                  double * generated_random_numbers = random_generator(number_samples[cur_stage]);
                  assert(generated_random_numbers != NULL); // Not NULL
                  memcpy(&random_numbers[i][current_batch],generated_random_numbers,sizeof(double)*number_samples[cur_stage]);
+                 delete [] generated_random_numbers;
              }
 
          }
@@ -2193,10 +2194,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
      // Assume we have independent stages!
      // We need to do that stagewise. 
-     // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.
-
-     // Delete Old Scenario Tree!
-     
+     // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.     
 
      // Create a new block here
      int cur_stage = 1;
