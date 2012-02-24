@@ -275,7 +275,8 @@ public:
         double average = 0;
         for (int i = 0; i < solutions.size(); i++)
             average += solutions[i];
-        average = average / solutions.size();
+        if (! solutions.empty())
+            average = average / solutions.size();
         return average;
  
     }
