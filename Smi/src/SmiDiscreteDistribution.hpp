@@ -107,7 +107,8 @@ public:
 	}
 
     SmiDiscreteEvent* const inverseTransformation(double value){
-        assert(prob_ <= 1.0);
+        assert(prob_ <= 1.0 + 0.000000001); // Allow a small divergence
+		assert(prob_ >= 1.0 - 0.000000001 );
         int num_events = events_.size();
         // Do a simple test
         double summed_prob = 0;
