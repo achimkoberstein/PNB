@@ -131,7 +131,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
 
     // generate the names with the suffixes for every instance of this row and copy them into the array
     int current_row = 0;
-    int string_length;
+    int string_length = 0;
     for (int k = 0; k < size(); k++) {
         string free = nameFree + this->generateNamesSuffixFree(k);
         if ( free == nameFree ){
@@ -142,7 +142,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         if ( current_row == real_size )
             string_length = nameFree.length();
     }
-    assert(current_row==real_size);
+    //assert(current_row==real_size); // TODO: Think about it: Such_that on constraint can change real_size!
     
 
     // now for the strict-type
