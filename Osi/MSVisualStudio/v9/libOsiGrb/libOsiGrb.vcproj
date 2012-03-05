@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="libOsiGrb"
 	ProjectGUID="{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
 	RootNamespace="libOsiGrb"
@@ -106,7 +106,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\gurobi450\win64\include;..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
+				AdditionalIncludeDirectories="..\..\..\..\ThirdParty\gurobi\include"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
