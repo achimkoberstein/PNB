@@ -543,6 +543,7 @@ void MP_model::attach(OsiSolverInterface *_solver) { //TODO: give pointer to sam
         int size = (*it)->size();
         boost::dynamic_bitset<> indicator(size);
         // Iterate over all cfs to see if we got empty indices. This is only necessary if the Index_exp we stored in the coefficient is not the same as the set.
+        // What about such_that constraints that are at work?
         // We can check for this.
         for (int i = 0; i < cfs.size(); i++){
             assert( cfs[i]->row-offset < size); // If not, wrong coefficients got generated.
