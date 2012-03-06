@@ -295,6 +295,7 @@ namespace flopc {
 
         MP_constraint& such_that(const MP_boolean& b) {
             B = b; 
+            such_that_enabled_ = true;
             return *this; 
         }
 
@@ -305,6 +306,8 @@ namespace flopc {
         void operator=(const Constraint& v); 
 
         void display(string s="") const;
+
+        bool is_such_that_enabled() const;
 
         void generateNames(std::set<string> &nameSetFix, std::set<string> &nameSetFree, std::vector<std::string> &rowNamesFix, std::vector<std::string> &rowNamesFree);
 
@@ -322,6 +325,7 @@ namespace flopc {
         inline int getOffsetedIndex(const int k);
 
         MP_boolean B;
+        bool such_that_enabled_;
         const MP_set_base &S1, &S2, &S3, &S4, &S5; 
         MP_index_exp I1, I2, I3, I4, I5;
     };

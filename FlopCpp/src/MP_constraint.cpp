@@ -53,7 +53,7 @@ RowMajor(s1.size(),s2.size(),s3.size(),s4.size(),s5.size()),
 M(MP_model::current_model),
 offset(-1),real_size(-1),
 S1(s1),S2(s2),S3(s3),S4(s4),S5(s5),
-I1(0),I2(0),I3(0),I4(0),I5(0)
+I1(0),I2(0),I3(0),I4(0),I5(0),such_that_enabled_(false)
 {
     M->add(*this);
 }
@@ -142,7 +142,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
         if ( current_row == real_size )
             string_length = nameFree.length();
     }
-    //assert(current_row==real_size); // TODO: Think about it: Such_that on constraint can change real_size!
+    assert(current_row==real_size || such_that_enabled_); // TODO: Think about it: Such_that on constraint can change real_size!
     
 
     // now for the strict-type
@@ -161,7 +161,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
             rowNamesStrict[getOffsetedIndex(current_row)] = strict.c_str();
             ++current_row;
         }
-        assert(current_row==real_size);
+        assert(current_row==real_size || such_that_enabled_);
     }
     else {
         // use the offset as suffix
@@ -275,4 +275,9 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
         return ss.str();
     else 
         return "";
+}
+
+bool flopc::MP_constraint::is_such_that_enabled() const
+{
+    return such_that_enabled_;
 }
