@@ -271,7 +271,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     std::vector<double> upper_bound_estimates;
     
 
-
+    // Solve a first problem to get a candidate solution for the upper bounding
     if ( mak_morton_wood ){
         gap_estimates.resize(number_batches_,0.0);
         candidate_samples = samples_;
@@ -279,7 +279,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         for (std::vector<int>::iterator it = candidate_samples.begin(); it != candidate_samples.end(); ++it)
             *it += *it;
         // Solve a candidate problem
-        smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates );
+        smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates ); // TODO: Is this allowed here?
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         osi_pnb_->setParameters(parameters_);
@@ -374,7 +374,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         std::vector<double>::iterator min_element_it = std::min_element(upper_bound_estimates.begin(),upper_bound_estimates.end()); 
         assert( min_element_it != upper_bound_estimates.end());
         int min_element_index = min_element_it-upper_bound_estimates.begin();
-        assert( min_element_index >= 0 && min_element_index < num_first_stage_cols);
+        assert( min_element_index >= 0 && min_element_index < number_batches_);
         candidate_array.reset(new double[num_first_stage_cols]);
         memcpy(candidate_array.get(),first_stage_solutions[min_element_index].get(),sizeof(double)*num_first_stage_cols);
     }
