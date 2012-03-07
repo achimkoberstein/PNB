@@ -2277,12 +2277,3 @@ void SmiScnModel::setSampling( bool do_sample)
     sampling_ = do_sample;
 }
 
-SmiScnModel::SmiScnModel() :
-handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
-drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
-dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
-solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL),
-discrete_distribution_(NULL),block_structure_(NULL),sampling_(false)
-{
-
-}
