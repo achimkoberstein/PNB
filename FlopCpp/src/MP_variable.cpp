@@ -102,50 +102,48 @@ int MP_variable::getCurrentStage(int i1, int i2, int i3, int i4, int i5){
 }
 
 void MP_variable::operator()() const {
-    if (S1!=&MP_set::getEmpty()) cout << i1.evaluate() << " ";
-    if (S2!=&MP_set::getEmpty()) cout << i2.evaluate() << " ";
-    if (S3!=&MP_set::getEmpty()) cout << i3.evaluate() << " ";
-    if (S4!=&MP_set::getEmpty()) cout << i4.evaluate() << " ";
-    if (S5!=&MP_set::getEmpty()) cout << i5.evaluate() << " ";
+    int curOffset = offset+ f(i1.evaluate(),
+        i2.evaluate(),
+        i3.evaluate(),
+        i4.evaluate(),
+        i5.evaluate());
+    if ( offset > M->N()) // should take realn anyway
+        assert(false);
+    if ( M->colIndirection[curOffset] == outOfBound )
+        return;
+
+    std::stringstream string_stream; // Store everything in a string stream!
+    if (S1!=&MP_set::getEmpty()) string_stream << i1.evaluate() << " ";
+    if (S2!=&MP_set::getEmpty()) string_stream << i2.evaluate() << " ";
+    if (S3!=&MP_set::getEmpty()) string_stream << i3.evaluate() << " ";
+    if (S4!=&MP_set::getEmpty()) string_stream << i4.evaluate() << " ";
+    if (S5!=&MP_set::getEmpty()) string_stream << i5.evaluate() << " ";
     // Problem when variables get added to a model via added constraints. This will not work then.
     // A variable can not be in two models at the same time obviously, or can it be?
     if ( M->getStochastic() ){ 
         int length = 0;
         double* values = 0;
-        int curOffset = offset+ f(i1.evaluate(),
-            i2.evaluate(),
-            i3.evaluate(),
-            i4.evaluate(),
-            i5.evaluate());
         if ( stageSet >= 0){
-            // get current stage
-            //int curStage = getCurrentStage(i1.evaluate(),i2.evaluate,i3.evaluate(),i4.evaluate(),i5.evaluate());
+            // get values for every scenario
             for (int i = 0; i < M->scenSet.size(); i++){
-                values = M->smiModel->getColSolution(i,&length);
+                values = M->smiModel->getColSolution(i,&length); // Gets column solution values for scenario, i.e. values for the core model!
                 //TODO: Check length //Check colIndirection for outOfBound..
                 //TODO: Terribly inefficient.. It really is.. We can enhance this by getting the correct colIndex via the 
-                cout<< " Sc. " << i << ": " << values[M->colIndirection[curOffset]];
+                string_stream<< " Sc. " << i << ": " << values[M->colIndirection[curOffset]];
                 ::free(values); //we need to use free, as smi callocs the values..
             }
-            cout << endl;
+            string_stream << endl;
         }
         else { 
-            if ( M->colIndirection[curOffset] == outOfBound ) {
-                cout << " OutOfBound " << endl;
-            }
-            else {
-                cout << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
-            }
+            string_stream << " " << M->smiModel->getColSolution(0,0,M->colIndirection[curOffset]) << endl;
         }
     }
     else { 
-            cout<<"  "<< M->Solver->getColSolution()[offset +
-                f(i1.evaluate(),
-                i2.evaluate(),
-                i3.evaluate(),
-                i4.evaluate(),
-                i5.evaluate())]<<endl;
-        }
+        string_stream<<"  "<< M->Solver->getColSolution()[curOffset]<<endl;
+    }
+
+    // Output the string stream we build
+    cout << string_stream.str();
 
 }
 

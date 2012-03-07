@@ -7187,10 +7187,10 @@ TEST_F(UseCaseTest,Postponement){
 
     //postponement.verbose();
     postponement.solve(MP_model::MAXIMIZE);
-    postponement->writeLp("postponement-problem");
+    //postponement->writeLp("postponement-problem");
 
     ////std::cout << "Writing SMPS" << std::endl;
-    postponement.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
+    //postponement.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
 
     /*
     //// solve the det. equivalent
@@ -7206,7 +7206,7 @@ TEST_F(UseCaseTest,Postponement){
     */
 
     //demand_constraint(T+1,P,F).such_that(FC(F)).display("Demand"); 
-    supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
+    //supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
     z1.display("z1");
     u1.display("u1");
     x1.display("x1");
