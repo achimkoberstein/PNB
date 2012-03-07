@@ -255,7 +255,7 @@ namespace parallel_benders {
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
 		sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
-        stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),
+        stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),
         warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
     {
 
@@ -675,7 +675,6 @@ namespace parallel_benders {
                 major_iteration_++;
 
             // Change direction depending on last or first stage. This holds for all sequencing protocols.
-
             if ( current_stage_ == 0 ){
                 forward_ = true;
                 // If we had infeasible problems in the last backward run, we added all the feas cuts and can start fresh
@@ -683,6 +682,9 @@ namespace parallel_benders {
             }
             else if ( current_stage_ == num_stages_ -1)
                 forward_ = false;
+
+            if ( current_stage_ == enforce_stage_ )
+                enforce_direction_ = false;
 
             if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD) ){
                 if ( current_stage_ > 0 ){
@@ -781,7 +783,6 @@ namespace parallel_benders {
                 if ( current_stage_ < num_stages_ && current_stage_ > 0 && forward_ ){ // If we go backward already, we do it till the start. So no rechecking necessary
                     // Discrepancy makes sense on the way forward, but only for values actually solved!
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
-                    //LOG(INFO) << "Discrepancy-" << current_stage_-1 << " : " << discrepancy;
                     // What is the absolute gap?
                     double absolute_gap = upper_bound_-lower_bound_;
                     if ( lower_bound_ == -infinity_ || upper_bound_ == infinity_)
@@ -792,14 +793,26 @@ namespace parallel_benders {
                         // Example: Absolute Gap is 10. Then log10(10) is 1. Threshold is 10^-1 = 0.1
                         threshold = std::pow(10,std::log10(absolute_gap)-1);
                     }
-                    if (discrepancy > threshold && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && made_one_turn){
-                        forward_ = false; // Discrepancy is greater than treshold, so we do not go forward
+                    if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK ){
+                        if (discrepancy > threshold && made_one_turn){
+                            forward_ = false; // Discrepancy is greater than treshold, so we do not go forward. Only if we are at stages, that are higher than the critical stage, we do not change the direction.
+                        }
+                        else if ( forward_ ) // Discrepancy is lower than threshold.
+                            // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
+                            // We decided the critical stage by the initial time it took to compute these stages!
+                            if ( current_stage_ == critical_stage ) // We make a full sweep from here by setting made_one_turn to false
+                                made_one_turn = false; 
+
                     }
-                    else if ( forward_ && sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK){ // Discrepany is lower than threshold.
-                        // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
-                        // We decided the critical stage by the initial time it took to compute these stages!
-                        if ( current_stage_ == critical_stage ) // We make a full sweep from here by setting made_one_turn to false
-                            made_one_turn = false; 
+
+                    if ( sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD && theta_approximations_everywhere_){
+                        if ( discrepancy > (strategy_epsilon_/(num_stages_-1)) * std::min(std::abs(lower_bound_),std::abs(upper_bound_)) ){
+                            forward_ = false;
+                            enforce_stage_ = 0;
+                            enforce_direction_ = true;
+                        }
+                        else if ( !enforce_direction_)
+                            forward_ = true;
                     }
                 
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
@@ -809,6 +822,7 @@ namespace parallel_benders {
             // Update upper bound if we solved all problems in this iteration once
             // Lower bound is updated in the StoreData Method after solving first stage problem
             // This does only work for methods, that do not reiterate and use the stage_bounds.. Other methods update the upper_bound_ 
+            // Has to be put here, because otherwise the stage_lower_upper_bounds array is not fully calculated!
             if ( current_stage_ == num_stages_ -1 && infeasible_problems_.none() ){
                 if ( compute_stage_bounds_ ){
                     double sum_stage_solutions = 0;
@@ -823,7 +837,6 @@ namespace parallel_benders {
             if ( pretty_printing_ ){
                 // Format output so that it looks nice
                 if ( (major_iteration_ > last_major_iteration || (pretty_printing_verbose_ && current_iteration_ > last_current_iteration)) && current_stage_ == 0 ){
-                    
                     last_major_iteration = major_iteration_;
                     last_current_iteration = current_iteration_;
                     last_lower_bound = lower_bound_;
@@ -861,37 +874,37 @@ namespace parallel_benders {
                 }
             }
 
-            // If we use fast backward strategy, we have to decide where we go now
-            if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
-                // Or we should test the discrepancy thesis ( either relative or absolute )
-                // We always check the gap between this and the stage before.
-                if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
-                    && stage_lower_upper_bounds_[current_stage_-1].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
-                        // What do we want to compute? Discrepancy it is.
-                        double before_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
-                        double current_stage_x = stage_lower_upper_bounds_[current_stage_].second;
-                        double current_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
-                        if ( current_stage_ == num_stages_-1 )
-                            current_stage_theta = 0;
-                        // Compute the gap of this stage with the stage before to decide where to go
-                        if ( !RelativeGapPresent(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
-                            std::abs(current_stage_x-before_stage_theta+current_stage_theta) <= absolute_epsilon_ ||
-                            current_stage_x < before_stage_theta-current_stage_theta ){
-                                // We fulfilled our epsilon distance, so we can move to the next stage
-                                // Question: What happens, if we get so close, we do not add any cuts to the lower stage problem and go here forever?
-                                // Same must in principle hold for the EPSILON_FORWARD algorithm. Not foreseen in Morton 1996.
-                                // Solve this by storing current lower / upper bounds and compare if we come here again
-                                forward_ = true; // skip this stage, i.e. move forward this stage
-                                if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
-                                    && std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
-                                        // We have the same old_lower_upper_bound.first and second. we do not go forward, but apply the cuts we already have.
-                                        forward_ = false;
-                                        LOG(INFO) << "Your Epsilon chosen for your tree-walking strategy might be too big. We switch to fastpass, because we can not update your solution at stage " << current_stage_-1 << " anymore.";
-                                        sequencing_protocol_ = PNB_INT_FASTPASS;
-                                }
-                        }//End If Gap checking
-                }// End If Stage and Value Checking
-            }//End If FastBackward/FastEpsilonBackward Procedure
+            //// If we use fast backward strategy, we have to decide where we go now
+            //if ( theta_approximations_everywhere_ && infeasible_problems_.none() && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD )){
+            //    // Or we should test the discrepancy thesis ( either relative or absolute )
+            //    // We always check the gap between this and the stage before.
+            //    if ( current_stage_< num_stages_-1 && current_stage_ > 0 && stage_lower_upper_bounds_[current_stage_-1].second < infinity_
+            //        && stage_lower_upper_bounds_[current_stage_-1].first > -infinity_ && stage_lower_upper_bounds_[current_stage_].second < infinity_ ){
+            //            // What do we want to compute? Discrepancy it is.
+            //            double before_stage_theta = stage_lower_upper_bounds_[current_stage_-1].first-stage_lower_upper_bounds_[current_stage_-1].second;
+            //            double current_stage_x = stage_lower_upper_bounds_[current_stage_].second;
+            //            double current_stage_theta = stage_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].second;
+            //            if ( current_stage_ == num_stages_-1 )
+            //                current_stage_theta = 0;
+            //            // Compute the gap of this stage with the stage before to decide where to go
+            //            if ( !RelativeGapPresent(current_stage_x,before_stage_theta-current_stage_theta,infinity_,strategy_epsilon_) ||
+            //                std::abs(current_stage_x-before_stage_theta+current_stage_theta) <= absolute_epsilon_ ||
+            //                current_stage_x < before_stage_theta-current_stage_theta ){
+            //                    // We fulfilled our epsilon distance, so we can move to the next stage
+            //                    // Question: What happens, if we get so close, we do not add any cuts to the lower stage problem and go here forever?
+            //                    // Same must in principle hold for the EPSILON_FORWARD algorithm. Not foreseen in Morton 1996.
+            //                    // Solve this by storing current lower / upper bounds and compare if we come here again
+            //                    forward_ = true; // skip this stage, i.e. move forward this stage
+            //                    if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
+            //                        && std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
+            //                            // We have the same old_lower_upper_bound.first and second. we do not go forward, but apply the cuts we already have.
+            //                            forward_ = false;
+            //                            LOG(INFO) << "Your Epsilon chosen for your tree-walking strategy might be too big. We switch to fastpass, because we can not update your solution at stage " << current_stage_-1 << " anymore.";
+            //                            sequencing_protocol_ = PNB_INT_FASTPASS;
+            //                    }
+            //            }//End If Gap checking
+            //    }// End If Stage and Value Checking
+            //}//End If FastBackward/FastEpsilonBackward Procedure
 
 
             // Aggregate optimality cuts for nodes at the stage before the current stage

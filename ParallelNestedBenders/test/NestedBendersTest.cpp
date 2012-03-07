@@ -11,10 +11,6 @@
 #include <sstream>
 #include <sys/stat.h>
 
-
-// windows only header
-#include <crtdbg.h>
-
 #include <glog/logging.h>
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -66,65 +62,65 @@ public:
 
         //// SAA TEST
         //// We set the correct folder here: All files are in Benders/instances
-        double time = CoinCpuTime();  
-        OsiCpxSolverInterface osi_cpx;
-        smi.setOsiSolverHandle(&osi_cpx);
-        smi.setSampling(true);
-        int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        if ( read_in != 0 ){
-            LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-            return -osi_cpx.getInfinity();
-        }
+        //double time = CoinCpuTime();  
+        //OsiCpxSolverInterface osi_cpx;
+        //smi.setOsiSolverHandle(&osi_cpx);
+        //smi.setSampling(true);
+        //int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        //if ( read_in != 0 ){
+        //    LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+        //    return -osi_cpx.getInfinity();
+        //}
 
-        int runs = 5;
-        std::map< int, std::pair<int,int> > sample_map;
-        sample_map[0] = make_pair(50,20000);
-        sample_map[1] = make_pair(100,20000);
-        sample_map[2] = make_pair(500,20000);
-        sample_map[3] = make_pair(1000,20000);
-        sample_map[4] = make_pair(5000,20000);
-        fstream logfile;
-        for (int i = 0; i < runs; i++){
-            logfile.open("saa-log",fstream::out | fstream::app);
-            logfile << core_name_string << std::endl;
-            logfile.close();
-            double solver_time = CoinCpuTime();
-            SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
-            benders_parameter_.init();
-            benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
-            saa.setParameters(benders_parameter_);
-            // These values do not change!
-            saa.setNumberBatches(10);
-            saa.setNumberBatchesUpperBound(50);
-            // End values that not change
-            std::vector<int> sample_size(2,0);
-            sample_size[1] = sample_map[i].first;
-            saa.setSampleSize(sample_size);
-            std::vector<int> sample_size_upper(2,0);
-            sample_size_upper[1] = sample_map[i].second;
-            saa.setSampleSizeUpperBound(sample_size_upper);
-            double alpha = 0.95;
-            saa.setConfidenceLevel(alpha);
-            saa.initialSolve();
-            solver_time = CoinCpuTime()-solver_time; // Solver only time
-            
-            logfile.open("saa-log", fstream::out | fstream::app);
-            logfile << "Solution Time: " << solver_time << std::endl;
-            logfile << "--------------------------------------------";
-            logfile.close();
-            LOG(INFO) << "Solution Time: " << solver_time;
-        }
+        //int runs = 5;
+        //std::map< int, std::pair<int,int> > sample_map;
+        //sample_map[0] = make_pair(50,20000);
+        //sample_map[1] = make_pair(100,20000);
+        //sample_map[2] = make_pair(500,20000);
+        //sample_map[3] = make_pair(1000,20000);
+        //sample_map[4] = make_pair(5000,20000);
+        //fstream logfile;
+        //for (int i = 0; i < runs; i++){
+        //    logfile.open("saa-log",fstream::out | fstream::app);
+        //    logfile << core_name_string << std::endl;
+        //    logfile.close();
+        //    double solver_time = CoinCpuTime();
+        //    SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
+        //    benders_parameter_.init();
+        //    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
+        //    saa.setParameters(benders_parameter_);
+        //    // These values do not change!
+        //    saa.setNumberBatches(10);
+        //    saa.setNumberBatchesUpperBound(50);
+        //    // End values that not change
+        //    std::vector<int> sample_size(2,0);
+        //    sample_size[1] = sample_map[i].first;
+        //    saa.setSampleSize(sample_size);
+        //    std::vector<int> sample_size_upper(2,0);
+        //    sample_size_upper[1] = sample_map[i].second;
+        //    saa.setSampleSizeUpperBound(sample_size_upper);
+        //    double alpha = 0.95;
+        //    saa.setConfidenceLevel(alpha);
+        //    saa.initialSolve();
+        //    solver_time = CoinCpuTime()-solver_time; // Solver only time
+        //    
+        //    logfile.open("saa-log", fstream::out | fstream::app);
+        //    logfile << "Solution Time: " << solver_time << std::endl;
+        //    logfile << "--------------------------------------------";
+        //    logfile.close();
+        //    LOG(INFO) << "Solution Time: " << solver_time;
+        //}
         
 
         // TODO: Uncomment if we want to use tests based on problem properties!
-        //SmiScnModel* smi_model;
-        //int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        //assert( smi_read_in == 0);
-        //num_stages = smi_model->getCore()->getNumStages();
-        //num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
-        //delete smi_model; // Get rid of the model, before we actually solve stuff
-        //
-        //benders_parameter_.init();
+        SmiScnModel* smi_model = new SmiScnModel();
+        int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+        assert( smi_read_in == 0);
+        num_stages = smi_model->getCore()->getNumStages();
+        num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
+        delete smi_model; // Get rid of the model, before we actually solve stuff
+        
+        benders_parameter_.init();
 
         // Solve DetEq as comparison
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
@@ -132,8 +128,7 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
         
-        int num_repetitions = 0; // Solve each problem three times!
-        num_childs_first_stage = 2; // Only solve once!
+        int num_repetitions = 1; // Solve each problem three times!
 
         for (int i = 0; i < num_repetitions; i++){
             // Solve problem for now
@@ -145,13 +140,15 @@ public:
                 benders_parameter_.parameter_.put(parallel_benders::PNB_TRUST_REGION,false);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
 
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.001);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-                //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-                //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-                //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
                 //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
@@ -878,9 +875,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
@@ -1011,13 +1008,13 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.StageAggregationTest*";
-    //::testing::GTEST_FLAG(filter) = "*.scdp*";
+    ::testing::GTEST_FLAG(filter) = "*.scdp*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    ::testing::GTEST_FLAG(filter) = "*_WRIGHT*";
+    //::testing::GTEST_FLAG(filter) = "*_WRIGHT*";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
