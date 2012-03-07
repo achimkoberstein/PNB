@@ -366,6 +366,7 @@ namespace flopc {
         //SmiScnModel* generateScenario(MP_model* flopModel, const std::vector< std::vector< flopc::RandomVariable* > >& randomVariableVector, SmiCoreData* smiCore,int scen, int branchStage);
         bool differFromPrevious(const std::vector<std::vector<boost::shared_ptr<MP::Coef> > >& randomVariableVector,int curStage,int curScen,int compareScen);
 
+        int N() const { return n; }
 
         Messenger* messenger;
         MP_stage stage;
@@ -386,6 +387,7 @@ namespace flopc {
         int m;
         int realm;
         int n;
+
         int realn;
         int nz;
         int realnz;
