@@ -225,6 +225,7 @@ private:
     int cuts_added_last_round_;
     bool theta_approximations_everywhere_;
 	bool enforce_direction_;
+    int enforce_stage_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;

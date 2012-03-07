@@ -174,7 +174,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops;..\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -248,7 +248,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			InheritedPropertySheets="..\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\IncludeFiles.vsprops;..\CplexConfiguration-x64.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
