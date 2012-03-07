@@ -455,8 +455,6 @@ namespace parallel_benders {
            store_primal_and_dual_ = true; 
        }
 
-       store_primal_and_dual_ = false; 
-
        build_problem_timer_ = 0;
        solve_problem_timer_ = 1;
        cut_generation_timer_ = 2;
