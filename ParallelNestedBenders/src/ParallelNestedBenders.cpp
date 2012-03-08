@@ -444,12 +444,14 @@ namespace parallel_benders {
        if ( adaptive_ ){
            store_primal_and_dual_ = true;
            // We need to set an aggregation_scheme
-           aggregation_scheme_ = PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY;
+           aggregation_scheme_ = PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION;
            //seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
        }
        if ( store_cut_information_){
            store_primal_and_dual_ = true; 
        }
+       if ( trust_region_)
+           store_primal_and_dual_ = true;
 
        build_problem_timer_ = 0;
        solve_problem_timer_ = 1;
