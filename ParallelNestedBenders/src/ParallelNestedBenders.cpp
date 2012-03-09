@@ -797,7 +797,7 @@ namespace parallel_benders {
                         threshold = std::pow(10,std::log10(absolute_gap)-1);
                     }
                     if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK ){
-                        if (discrepancy > threshold && made_one_turn){
+                        if (discrepancy > threshold && made_one_turn && forward_){
                             forward_ = false; // Discrepancy is greater than treshold, so we do not go forward. Only if we are at stages, that are higher than the critical stage, we do not change the direction.
                         }
                         else if ( forward_ ) // Discrepancy is lower than threshold.
