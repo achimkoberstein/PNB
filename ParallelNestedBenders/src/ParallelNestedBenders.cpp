@@ -352,13 +352,15 @@ namespace parallel_benders {
                 param.put(PNB_TREE_WALK_STRATEGY_STAGE,second_iteration_stage_); // Update parameter to reflect that we care.
             // TODO: If we aggregate stages, we do not care about second_iteration_stage!
         }
-        strategy_epsilon_ = param.get(PNB_TREE_WALK_STRATEGY_EPSILON,0.0);
+        strategy_epsilon_ = param.get(PNB_TREE_WALK_STRATEGY_EPSILON,0.0); // Needed for epsilon-variants!
         if ( strategy_epsilon_ < relative_epsilon_ )
             strategy_epsilon_ = relative_epsilon_;
 
         switch (sequencing_protocol_){
             case PNB_INT_FAST_BACKWARD:
+                strategy_epsilon_ = relative_epsilon_;
             case PNB_INT_FAST_FORWARD:
+                strategy_epsilon_ = relative_epsilon_;
             case PNB_INT_EPSILON_FAST_BACKWARD:
             case PNB_INT_EPSILON_FAST_FORWARD:
             case PNB_INT_FASTPASS_WITH_FASTBACK:
@@ -694,6 +696,7 @@ namespace parallel_benders {
                 if ( current_stage_ < num_stages_-1){// We can update the upper bound, because we do not do that elsewhere if we use this strategy.
                     // Decide wether we want to go forward again 
                     // We want to test if the lower bound for this stage is close enough to the upper bound
+                    // We compute the absolute difference here between approximation and actual results!, not the discrepancy!
                     double current_upper_bound = 0;
                     for (int i = current_stage_; i < num_stages_; i++)
                         current_upper_bound += stage_lower_upper_bounds_[i].second;
@@ -805,7 +808,7 @@ namespace parallel_benders {
 
                     }
 
-                    if ( sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD && theta_approximations_everywhere_){
+                    if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD) && theta_approximations_everywhere_){
                         if ( discrepancy > (strategy_epsilon_/(num_stages_-1)) * std::min(std::abs(lower_bound_),std::abs(upper_bound_)) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
                             forward_ = false;
                             enforce_stage_ = 0;

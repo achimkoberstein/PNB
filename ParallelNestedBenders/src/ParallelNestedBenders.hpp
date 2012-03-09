@@ -218,8 +218,8 @@ private:
 	// Stage wise upper and lower bound, necessary for certain sequencing protocols
 	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
 	std::vector<std::pair<double,double> > old_lower_upper_bounds_;
-	double temporary_stage_lower_bound_;
-	double temporary_stage_upper_bound_;
+	double temporary_stage_lower_bound_;// p * c * x + \theta <- actual values for this stage plus recourse function
+	double temporary_stage_upper_bound_;// p * c * x <- actual values for this stage
     bool compute_stage_bounds_;
     bool at_last_iteration_;
     int cuts_added_last_round_;
