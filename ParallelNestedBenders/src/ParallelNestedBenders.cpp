@@ -686,7 +686,7 @@ namespace parallel_benders {
 
             // Cautious or FastBackward : Always go back, but not when no new cuts got generated!
             if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD) ){
-                if ( current_stage_ > 0 ){
+                if ( current_stage_ > 0 && current_stage_ < num_stages_-1){
                     forward_ = false;
                     cuts_added_last_round_ = added_optimality_cuts_[current_stage_-1]; // count how many cuts were present before this iteration!
                 }
@@ -695,7 +695,7 @@ namespace parallel_benders {
 
             // Try the shuffle or FastForward Strategy
             if ( (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD) && !forward_ ){
-                if ( current_stage_ < num_stages_-1){// We can update the upper bound, because we do not do that elsewhere if we use this strategy.
+                if ( current_stage_ > 0 && current_stage_ < num_stages_-1){// We can update the upper bound, because we do not do that elsewhere if we use this strategy.
                     // Decide wether we want to go forward again 
                     // We want to test if the lower bound for this stage is close enough to the upper bound
                     // We compute the absolute difference here between approximation and actual results!, not the discrepancy!
@@ -773,9 +773,11 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() && !compute_stage_bounds_)// Update upper bound only, when we have no infeasible problems!
+            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() && !compute_stage_bounds_){// Update upper bound only, when we have no infeasible problems!
+                theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD!
                 if ( temporary_upper_bound_ < upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
+            }
 
             // Update stage wise upper/lower bounds, only if we did not had infeasible problems.
             if ( infeasible_problems_.none() && compute_stage_bounds_){
@@ -785,7 +787,7 @@ namespace parallel_benders {
                 stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound_;
                 stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound_;
                 // Discrepancy: expected value of next stage with approximation for later stages - approximation of later stages at this stage.
-                if ( current_stage_ < num_stages_ && current_stage_ > 0  ){ 
+                if ( current_stage_ < num_stages_-1 && current_stage_ > 0  ){ 
                     // Discrepancy makes sense on the way forward, but only for values actually solved!
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
                     // What is the absolute gap?
@@ -811,13 +813,15 @@ namespace parallel_benders {
                     }
 
                     if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD) && theta_approximations_everywhere_){
-                        if ( discrepancy > (strategy_epsilon_/(num_stages_-1)) * std::min(std::abs(lower_bound_),std::abs(upper_bound_)) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
-                            forward_ = false;
-                            enforce_stage_ = 0;
-                            enforce_direction_ = true;
+                        if ( current_stage_ > 0 && current_stage_ < num_stages_-1){
+                            if ( discrepancy > (strategy_epsilon_/(num_stages_-1)) * std::min(std::abs(lower_bound_),std::abs(upper_bound_)) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
+                                forward_ = false;
+                                enforce_stage_ = 0;
+                                enforce_direction_ = true;
+                            }
+                            else if ( !enforce_direction_)
+                                forward_ = true;
                         }
-                        else if ( !enforce_direction_)
-                            forward_ = true;
                     }
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
                 }
@@ -944,7 +948,7 @@ namespace parallel_benders {
 
             // When we did not added any cuts, we have to go forward! (except last stage of course and when all problems were feasible!)
             if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD )&& theta_approximations_everywhere_ && !forward_){
-                if ( current_stage_ > 0 && cuts_added_last_round_ == added_optimality_cuts_[current_stage_-1] && !infeasible_problem_ && current_stage_ < num_stages_-1 && !enforce_direction_){
+                if ( current_stage_ > 0 && current_stage_ < num_stages_-1 && cuts_added_last_round_ == added_optimality_cuts_[current_stage_-1] && !infeasible_problem_ && !enforce_direction_){
                     forward_ = true;
                     LOG_IF(INFO,sequencing_protocol_==PNB_INT_EPSILON_FAST_BACKWARD) << "Going forward to next stage because of no new cuts!.";
                 }
@@ -1000,6 +1004,7 @@ namespace parallel_benders {
                 }
                 LOG(INFO) << "Bouncing stage is stage " << critical_stage;
             }
+            // Sanity Check for direction!
             // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
         }
@@ -1258,16 +1263,13 @@ namespace parallel_benders {
                 if ( num_theta == 0 && current_stage_ < num_stages_-1) // If no theta, set to -infinity, but if last stage we have no approximation, so leave it.
                     current_lower_bound = -infinity_;
             }
-            if ( current_stage_ == 0){ // This work in the multithreaded cases, as we have only one thread for the first stage problem{
+            if ( current_stage_ == 0){ // This works in the multithreaded cases, as we have only one thread for the first stage problem{
                 // We are again at stage 0, test for new upper bound!
                 old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
                 lower_bound_ = current_lower_bound;
                 if (num_theta == 0){// We have no thetas yet
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
-                }
-                else {
-                    theta_approximations_everywhere_ = true;
                 }
                 temporary_upper_bound_ = 0;
             }
