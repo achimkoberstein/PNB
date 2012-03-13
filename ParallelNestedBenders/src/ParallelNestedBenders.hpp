@@ -63,7 +63,7 @@ private:
     void AggregateStages(int startingStage,int endingStage);
 
     void HandleSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-    void DeleteSubproblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void DeleteSubproblem(OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     
     void BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);

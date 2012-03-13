@@ -162,6 +162,7 @@ public:
     std::list<double> median_discrepancies_;
     double dual_value_variable_bounds_;
     bool feasible_;
+    bool unbounded_;
 
     // Trust region information
     boost::scoped_array<int> trust_region_rows_;
