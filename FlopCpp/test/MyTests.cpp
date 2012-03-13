@@ -8,23 +8,46 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <sys/stat.h>
+#include <time.h>
+
+#include <crtdbg.h>
+
+
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+
+#include "OsiGrbSolverInterface.hpp"
+#include "OsiClpSolverInterface.hpp"
+#include "CoinTime.hpp"
 
 #include <glog/logging.h>
 
-#include "OsiCpxSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCbcSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
+
 #include "CoinFloatEqual.hpp"
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
+
+#include "Benders.hpp"
+
+#include "ParallelNestedBenders.hpp"
+#include "OsiPnbStochasticSolverInterface.hpp"
+#include "OsiBenStochasticSolverInterface.hpp"
+
+
 //#include "SAA.hpp"
-//#include "OsiStochasticSolverInterface.hpp"
+#include "OsiStochasticSolverInterface.hpp"
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
 //TODO: Test scenario tree generation for RV that are not for themselves part of the model. Maybe this is already working, maybe not..
 
 //using namespace flopc;
+
 namespace flopc {
     void writeReadSMPSTest(MP_model& model, MP_model::MP_direction direction, const std::string& filename="test", const bool strictFormat=true){
         // write SMPS files
@@ -56,7 +79,7 @@ namespace flopc {
         ASSERT_EQ(0,remove( (filename+".sto").c_str() ));
         delete clp;
     }
-    
+
     void compareEVPTest(MP_model& model, MP_model::MP_direction direction) {
         double ev_calculated = model.getSmi()->getEVValue(model.Solver, direction, true);
         double ev = model.getSmi()->getEVValue(model.Solver, direction, false);
@@ -257,30 +280,30 @@ namespace flopc {
 
     //}
 
-TEST_F(UseCaseTest,InfinityHandlingTest){
-    MP_model testModel(new OsiClpSolverInterface);
-    MP_data data1;
-    data1() = testModel->getInfinity();
-    MP_data data2;
-    data2() = 1000000000;
-    
-    MP_variable x,y;
-    x.upperLimit() = data1();
-    y.upperLimit() = data2();
+    TEST_F(UseCaseTest,InfinityHandlingTest){
+        MP_model testModel(new OsiClpSolverInterface);
+        MP_data data1;
+        data1() = testModel->getInfinity();
+        MP_data data2;
+        data2() = 1000000000;
 
-    MP_constraint con1,con2;
-    con1() = x() <= data1();
-    con2() = y() <= data2();
+        MP_variable x,y;
+        x.upperLimit() = data1();
+        y.upperLimit() = data2();
 
-    testModel.setObjective(x()+y());
-    testModel.solve(MP_model::MAXIMIZE);
+        MP_constraint con1,con2;
+        con1() = x() <= data1();
+        con2() = y() <= data2();
 
-    EXPECT_EQ(MP_model::DUAL_INFEASIBLE,testModel.getStatus());
-    //testModel->writeMps("testFile"); //We write no direction into MPS files.. that is not good.
-    //testModel->readMps("testFile");
-    //testModel->initialSolve();
-   
-}
+        testModel.setObjective(x()+y());
+        testModel.solve(MP_model::MAXIMIZE);
+
+        EXPECT_EQ(MP_model::DUAL_INFEASIBLE,testModel.getStatus());
+        //testModel->writeMps("testFile"); //We write no direction into MPS files.. that is not good.
+        //testModel->readMps("testFile");
+        //testModel->initialSolve();
+
+    }
 
     TEST_F(UseCaseTest,ConditionalValueAtRiskTest){
         MP_model testModel(new OsiClpSolverInterface);
@@ -759,7 +782,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
 
-        goalConstr(T+3) = wealth(T) == goal() + overage(T) - shortage(T); 
+        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
         MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
 
         investmentModel.setObjective( valueFunction );
@@ -791,7 +814,6 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         EXPECT_NEAR(10.76479,result,0.0001);
     }
 
-    
 
     TEST_F(MP_modelTest,RandomParameterInObjectiveTest){
         MP_model testModel(new OsiClpSolverInterface());
@@ -931,10 +953,10 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         probs.push_back(0.8);
         values.push_back(5);
         values.push_back(20);
-        
+
         RandomVariable* var[1] = { new EmpiricalRandomVariable(values,probs) };
         MP_random_data randomData(&var[0],T);
-        
+
         MP_constraint firstStage,secondStage(T);
         firstStage() = x() >= 10;
         secondStage(T) = y(T) >= x()+randomData(T);
@@ -992,7 +1014,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
             }
         };
         MP_random_data yield(&yields[0][0][0], T,R);
-
+        yield.display();
         MP_variable 
             x(R),   // Ressourcenbedarf
             y(T,R), // Einkaufsmenge
@@ -1024,9 +1046,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         y.display("y");
         wSugar.display("wSugar");
         farmer.getSmi()->writeSmps("bla");
-        //std::vector< std::pair<double,double> > ws;
+        std::vector< std::pair<double,double> > ws;
         //ws = farmer.getSmi()->solveWS(&cplex);
-        //double eev = farmer.getSmi()->solveEEV(&cplex);
+        double eev = farmer.getSmi()->solveEEV(&cplex);
     }
 
     // Dacota  Model to test the EV-, EEV- and WS-Problems
@@ -1088,7 +1110,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         dacota.attach(dacota.Solver);
         this->testCorrectStageAssignment(dacota);
 
-                // solve EV-, EEV-, WS- and here-and-now-Problem
+        // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
 
 
@@ -1114,7 +1136,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
         compareEVPTest(dacota,MP_model::MAXIMIZE);
-              
+
 
 
     }
@@ -2817,7 +2839,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
             }
 
-	        EXPECT_EQ(ns, smiModel->getNumScenarios());
+            EXPECT_EQ(ns, smiModel->getNumScenarios());
             cout << "ModelScenario: Finished adding scenarios" << endl;
 
 
@@ -3179,7 +3201,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
                 for (int jc=0; jc<j.size(); jc++) {
                     myf(jc) = ftable[k][jc] - w(jc);
                 }
-// Compare with gapmin original file..
+                // Compare with gapmin original file..
                 MP_model testModel(new OsiCbcSolverInterface);
 
                 //MP_set j(numItems);
@@ -3413,7 +3435,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         for (int ij = 0; ij < 11; ij++) {
 
             OsiClpSolverInterface clpSolver;
-            
+
             MP_model thisModel(new OsiCbcSolverInterface(&clpSolver));
             enum {nw,ne,se,sw,numK};
 
@@ -3779,9 +3801,9 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         MP_set K(p);
         MP_subset<3> F(J,J,J);
 #ifdef _MSC_VER
-	        std::string fname="../../../test/testFiles/fixed.dat";
+        std::string fname="../../../test/testFiles/fixed.dat";
 #else
-            std::string fname="testFiles/fixed.dat";
+        std::string fname="testFiles/fixed.dat";
 #endif
         std::ifstream file(fname.c_str());
 
@@ -3955,7 +3977,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
             map<string, vector<double> > d;
 #ifdef _MSC_VER
-	        std::string dataDir="../../../test/testFiles/train.dat";
+            std::string dataDir="../../../test/testFiles/train.dat";
 #else
             std::string dataDir="testFiles/train.dat";
 #endif
@@ -4182,19 +4204,19 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         testModel.setObjective(sum(T, x1(T)));
 
         testModel.Solver->setIntParam(OsiNameDiscipline, 1);
-        
+
         testModel.attach();
 
         //testModel.Solver->writeLp("columnNamesTest");
 
         testModel.solve(MP_model::MINIMIZE);
-        
+
         //testModel.getSmi()->writeSmps("smpsFree", false, false);
         //testModel.getSmi()->writeSmps("smpsStrict", false, true);
 
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", false);
         writeReadSMPSTest(testModel,MP_model::MINIMIZE,"test", true);
-        
+
         cout << "Finished";
     }
 
@@ -4227,231 +4249,231 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         void testingMessage( const char * const msg )
         {
-	        DLOG(INFO) <<endl <<"*****************************************"
-		        <<endl <<msg <<endl;
+            DLOG(INFO) <<endl <<"*****************************************"
+                <<endl <<msg <<endl;
         }
 
         void myAssert(const char * file, const int line, bool c )
         {
             EXPECT_EQ(true, c);
-	        if(!c)
-	        {
-		        char l[10];
-		        sprintf(l,"%d",line);
-		        string e("[Smi] Error in MyTest");
-		        e+=", line ";
-		        e+=l;
-		        DLOG(ERROR) << e << endl;
-	        }
+            if(!c)
+            {
+                char l[10];
+                sprintf(l,"%d",line);
+                string e("[Smi] Error in MyTest");
+                e+=", line ";
+                e+=l;
+                DLOG(ERROR) << e << endl;
+            }
         }
 
         TEST_F(SmiUnitTest, DecompUnitTest) {
-	        OsiClpSolverInterface osi;
-	        double INF=osi.getInfinity();
+            OsiClpSolverInterface osi;
+            double INF=osi.getInfinity();
 
-	        /* Problem Statement:
-	         *
-	         *    minimize x01 + x02 + x03 + 1/2 E[ x04 + x05 + x06 ]
-	         *
-	         *    subject to:
-	         *      xN =>  0
-	         *      0  <=  x01 + x02 + x03
-	         *      C1 <=  x01 + x02 +              x04 + x05
-	         *      C2 <=      + x02 + x03                x05 + x06
-	         *      C3 <=  x01       + x03          x04 +     + x06
-	         *
-	         *    (C1, C2, C3) = ( 1, 1, 0) wp 1/2
-	         *    (C1, C2, C3) = ( 0, 1, 0) wp 1/2
-	         */
+            /* Problem Statement:
+            *
+            *    minimize x01 + x02 + x03 + 1/2 E[ x04 + x05 + x06 ]
+            *
+            *    subject to:
+            *      xN =>  0
+            *      0  <=  x01 + x02 + x03
+            *      C1 <=  x01 + x02 +              x04 + x05
+            *      C2 <=      + x02 + x03                x05 + x06
+            *      C3 <=  x01       + x03          x04 +     + x06
+            *
+            *    (C1, C2, C3) = ( 1, 1, 0) wp 1/2
+            *    (C1, C2, C3) = ( 0, 1, 0) wp 1/2
+            */
 
 
-	        int nCoreRows=4;
-	        double dCoreRup[] = { INF, INF, INF, INF };
+            int nCoreRows=4;
+            double dCoreRup[] = { INF, INF, INF, INF };
 
-	        int nCoreCols=6;
-	        double dCoreClo[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-	        double dCoreCup[] = {INF, INF, INF, INF, INF, INF};
-	        double dCoreObj[] = {1.0, 1.0, 1.0, 0.5, 0.5, 0.5};
+            int nCoreCols=6;
+            double dCoreClo[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+            double dCoreCup[] = {INF, INF, INF, INF, INF, INF};
+            double dCoreObj[] = {1.0, 1.0, 1.0, 0.5, 0.5, 0.5};
 
-	        int iCoreColStarts[] = {0,
-		        3,
-		        6,
-		        9,
-		        11,
-		        13,
-		        15};
-	        int iCoreRowIndice[] = {3,1,0,
-		        2,1,0,
-		        3,2,0,
-		        3,1,
-		        2,1,
-		        3,2};
-	        double dCoreMatEntries[] = {1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0,
-		        1.0, 1.0,
-		        1.0, 1.0 };
-	        double dCoreRlo[] = { 0.0, 1.0, 1.0, 1.0 };
+            int iCoreColStarts[] = {0,
+                3,
+                6,
+                9,
+                11,
+                13,
+                15};
+            int iCoreRowIndice[] = {3,1,0,
+                2,1,0,
+                3,2,0,
+                3,1,
+                2,1,
+                3,2};
+            double dCoreMatEntries[] = {1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0,
+                1.0, 1.0,
+                1.0, 1.0 };
+            double dCoreRlo[] = { 0.0, 1.0, 1.0, 1.0 };
 
-	        int nCoreStages = 2;
-	        int iColStages[] = {0,0,0,1,1,1};
-	        int iRowStages[] = {0,1,1,1};
+            int nCoreStages = 2;
+            int iColStages[] = {0,0,0,1,1,1};
+            int iRowStages[] = {0,1,1,1};
 
-	        int iBranchStage[] = {1,1};
+            int iBranchStage[] = {1,1};
 
-	        int iAncestorScn[] = {0,0};
-	        double dProbScn[] = {0.5, 0.5};
+            int iAncestorScn[] = {0,0};
+            double dProbScn[] = {0.5, 0.5};
 
-	        double drlo0[] = {1.0, 1.0, 0.0 };
-	        int indices[]  = {1, 2, 3};
-	        CoinPackedVector *rlo0 = new CoinPackedVector(3, indices,drlo0);
-	        double drlo1[] = {0.0, 1.0, 0.0 };
-	        CoinPackedVector *rlo1 = new CoinPackedVector(3, indices,drlo1);
+            double drlo0[] = {1.0, 1.0, 0.0 };
+            int indices[]  = {1, 2, 3};
+            CoinPackedVector *rlo0 = new CoinPackedVector(3, indices,drlo0);
+            double drlo1[] = {0.0, 1.0, 0.0 };
+            CoinPackedVector *rlo1 = new CoinPackedVector(3, indices,drlo1);
 
-	        // generate Core model
+            // generate Core model
 
-	        osi.loadProblem(nCoreCols,
-		        nCoreRows,iCoreColStarts,iCoreRowIndice,dCoreMatEntries,dCoreClo,
-		        dCoreCup,dCoreObj,
-		        dCoreRlo,dCoreRup);
-	        SmiCoreData *osiCore = new
-		        SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
+            osi.loadProblem(nCoreCols,
+                nCoreRows,iCoreColStarts,iCoreRowIndice,dCoreMatEntries,dCoreClo,
+                dCoreCup,dCoreObj,
+                dCoreRlo,dCoreRup);
+            SmiCoreData *osiCore = new
+                SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
 
-	        // initialize SmiScnModel
-	        SmiScnModel *smiModel = new SmiScnModel();
+            // initialize SmiScnModel
+            SmiScnModel *smiModel = new SmiScnModel();
             smiModel->setCore(osiCore);
 
-	        // Add Scenarios
-	        int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-		        rlo0,NULL,iBranchStage[0],
-		        iAncestorScn[0],dProbScn[0]);
+            // Add Scenarios
+            int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+                rlo0,NULL,iBranchStage[0],
+                iAncestorScn[0],dProbScn[0]);
 
-	        is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-		        rlo1,NULL,iBranchStage[1],
-		        iAncestorScn[1],dProbScn[1]);
-
-
-	        /*
-	         *  set up vector of submodels, one for each scenario
-	         */
-	        vector<SmiScnModel *> submodel;
-	        for( int jj=0; jj<smiModel->getNumScenarios(); jj++)
-	        {
-		        submodel.push_back(new SmiScnModel());
-		        submodel[jj]->setOsiSolverHandle(OsiClpSolverInterface() );
-	        }
+            is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+                rlo1,NULL,iBranchStage[1],
+                iAncestorScn[1],dProbScn[1]);
 
 
-	        // add root node to submodel[0]
-	        myAssert(__FILE__,__LINE__,1 == submodel[0]->addNodeToSubmodel(smiModel->getRootNode()) );
-
-	        // add leaf node to submodel[0]
-	        myAssert(__FILE__,__LINE__,1 == submodel[0]->addNodeToSubmodel(smiModel->getLeafNode(0)) );
-	        submodel[is]->setModelProb(1.0);
-
-	        vector<SmiScnNode *> vecSub0 = submodel[0]->getSmiTree()->wholeTree();
-	        submodel[1]->setModelProb(1.0);
-
-	        myAssert(__FILE__,__LINE__,    !vecSub0[0]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub0[0]->getNumCols() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[0]->getNumRows() == 1 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[0]->getProb() == 1.0 );
-
-	        myAssert(__FILE__,__LINE__,    !vecSub0[1]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumCols() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumRows() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getProb() == 0.5 );
-
-	        // add leaf node to submodel[1]
-	        myAssert(__FILE__,__LINE__,2 == submodel[1]->addNodeToSubmodel(smiModel->getLeafNode(1)) );
-	        submodel[1]->setModelProb(1.0);
-
-	        vector<SmiScnNode *> vecSub1 = submodel[1]->getSmiTree()->wholeTree();
-
-	        myAssert(__FILE__,__LINE__,     vecSub1[0]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub1[0]->getNumCols() == 3 );
-
-	        myAssert(__FILE__,__LINE__,    !vecSub1[1]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumCols() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumRows() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getProb() == 0.5 );
-
-	        /*
-	         * set up vector of OSI models, one for each submodel
-	         */
-	        vector<OsiSolverInterface *> osiSubmodel;
-	        osiSubmodel.reserve(submodel.size());
-
-	        //myAssert(__FILE__,__LINE__,     osiSubmodel[0]=submodel[0]->loadOsiSolverData());
-	        //myAssert(__FILE__,__LINE__,     osiSubmodel[1]=submodel[1]->loadOsiSolverData());
-	        osiSubmodel.push_back(submodel[0]->loadOsiSolverData());
-	        osiSubmodel.push_back(submodel[1]->loadOsiSolverData());
+            /*
+            *  set up vector of submodels, one for each scenario
+            */
+            vector<SmiScnModel *> submodel;
+            for( int jj=0; jj<smiModel->getNumScenarios(); jj++)
+            {
+                submodel.push_back(new SmiScnModel());
+                submodel[jj]->setOsiSolverHandle(OsiClpSolverInterface() );
+            }
 
 
-	        myAssert(__FILE__,__LINE__,    !vecSub0[0]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__, vecSub0[0]->getNumCols() == 3 );
-	        myAssert(__FILE__,__LINE__, vecSub0[0]->getNumRows() == 1 );
-	        myAssert(__FILE__,__LINE__, vecSub0[0]->getColStart() == 0 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[0]->getRowStart() == 0 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[0]->getProb() == 1.0 );
+            // add root node to submodel[0]
+            myAssert(__FILE__,__LINE__,1 == submodel[0]->addNodeToSubmodel(smiModel->getRootNode()) );
 
-	        myAssert(__FILE__,__LINE__,    !vecSub0[1]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumCols() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumRows() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getColStart() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getRowStart() == 1 );
-	        myAssert(__FILE__,__LINE__,     vecSub0[1]->getProb() == 0.5 );
+            // add leaf node to submodel[0]
+            myAssert(__FILE__,__LINE__,1 == submodel[0]->addNodeToSubmodel(smiModel->getLeafNode(0)) );
+            submodel[is]->setModelProb(1.0);
+
+            vector<SmiScnNode *> vecSub0 = submodel[0]->getSmiTree()->wholeTree();
+            submodel[1]->setModelProb(1.0);
+
+            myAssert(__FILE__,__LINE__,    !vecSub0[0]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub0[0]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub0[0]->getNumRows() == 1 );
+            myAssert(__FILE__,__LINE__,     vecSub0[0]->getProb() == 1.0 );
+
+            myAssert(__FILE__,__LINE__,    !vecSub0[1]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumRows() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getProb() == 0.5 );
+
+            // add leaf node to submodel[1]
+            myAssert(__FILE__,__LINE__,2 == submodel[1]->addNodeToSubmodel(smiModel->getLeafNode(1)) );
+            submodel[1]->setModelProb(1.0);
+
+            vector<SmiScnNode *> vecSub1 = submodel[1]->getSmiTree()->wholeTree();
+
+            myAssert(__FILE__,__LINE__,     vecSub1[0]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub1[0]->getNumCols() == 3 );
+
+            myAssert(__FILE__,__LINE__,    !vecSub1[1]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumRows() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getProb() == 0.5 );
+
+            /*
+            * set up vector of OSI models, one for each submodel
+            */
+            vector<OsiSolverInterface *> osiSubmodel;
+            osiSubmodel.reserve(submodel.size());
+
+            //myAssert(__FILE__,__LINE__,     osiSubmodel[0]=submodel[0]->loadOsiSolverData());
+            //myAssert(__FILE__,__LINE__,     osiSubmodel[1]=submodel[1]->loadOsiSolverData());
+            osiSubmodel.push_back(submodel[0]->loadOsiSolverData());
+            osiSubmodel.push_back(submodel[1]->loadOsiSolverData());
+
+
+            myAssert(__FILE__,__LINE__,    !vecSub0[0]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__, vecSub0[0]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__, vecSub0[0]->getNumRows() == 1 );
+            myAssert(__FILE__,__LINE__, vecSub0[0]->getColStart() == 0 );
+            myAssert(__FILE__,__LINE__,     vecSub0[0]->getRowStart() == 0 );
+            myAssert(__FILE__,__LINE__,     vecSub0[0]->getProb() == 1.0 );
+
+            myAssert(__FILE__,__LINE__,    !vecSub0[1]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getNumRows() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getColStart() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getRowStart() == 1 );
+            myAssert(__FILE__,__LINE__,     vecSub0[1]->getProb() == 0.5 );
 
 
 
-	        myAssert(__FILE__,__LINE__,     vecSub1[0]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub1[0]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub1[0]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub1[0]->getNumCols() == 3 );
 
-	        myAssert(__FILE__,__LINE__,    !vecSub1[1]->isVirtualNode() );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumCols() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumRows() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getColStart() == 3 );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getRowStart() == 0 );
-	        myAssert(__FILE__,__LINE__,     vecSub1[1]->getProb() == 0.5 );
+            myAssert(__FILE__,__LINE__,    !vecSub1[1]->isVirtualNode() );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumCols() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getNumRows() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getColStart() == 3 );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getRowStart() == 0 );
+            myAssert(__FILE__,__LINE__,     vecSub1[1]->getProb() == 0.5 );
 
-	         /* Submodels
-	         *
-	         * 1:   dobj = [1, 1, 1, 0.25, 0.25, 0.25]
-	         *      drlo = [0, 1, 1, 0 ],     drup = [inf, inf, inf, inf]
-	         *      dclo = [0,0,0,0,0,0],     dcup = [inf,inf,inf,inf,inf,inf]
-	         *      matrix = [ 1 1 1 0 0 0
-	         *                 1 1 0 1 1 0
-	         *                 0 1 1 0 1 1
-	         *                 1 0 1 1 0 1 ]
-	         *      nrows = 4
-	         *      ncols = 6
-	         *      coffset = 0
-	         *      roffset = 0
-	         *
-	         * 2:   dobj = [0, 0, 0, 0.25, 0.25, 0.25]
-	         *      drlo = [0, 1, 0],           drup = [inf, inf, inf]
-	         *      dclo = [inf,inf,inf,0,0,0], dcup = [inf, inf, inf, inf, inf, inf]
-	         *      matrix = [ 1 1 0 1 1 0
-	         *                 0 1 1 0 1 1
-	         *                 1 0 1 1 0 1 ]
-	         *      nrows = 3
-	         *      ncols = 6
-	         *      coffset = 3
-	         *      roffset = 0
-	         */
+            /* Submodels
+            *
+            * 1:   dobj = [1, 1, 1, 0.25, 0.25, 0.25]
+            *      drlo = [0, 1, 1, 0 ],     drup = [inf, inf, inf, inf]
+            *      dclo = [0,0,0,0,0,0],     dcup = [inf,inf,inf,inf,inf,inf]
+            *      matrix = [ 1 1 1 0 0 0
+            *                 1 1 0 1 1 0
+            *                 0 1 1 0 1 1
+            *                 1 0 1 1 0 1 ]
+            *      nrows = 4
+            *      ncols = 6
+            *      coffset = 0
+            *      roffset = 0
+            *
+            * 2:   dobj = [0, 0, 0, 0.25, 0.25, 0.25]
+            *      drlo = [0, 1, 0],           drup = [inf, inf, inf]
+            *      dclo = [inf,inf,inf,0,0,0], dcup = [inf, inf, inf, inf, inf, inf]
+            *      matrix = [ 1 1 0 1 1 0
+            *                 0 1 1 0 1 1
+            *                 1 0 1 1 0 1 ]
+            *      nrows = 3
+            *      ncols = 6
+            *      coffset = 3
+            *      roffset = 0
+            */
 
-	        myAssert(__FILE__,__LINE__,osiSubmodel[0]->getNumCols()==6);
-	        myAssert(__FILE__,__LINE__,osiSubmodel[0]->getNumRows()==4);
+            myAssert(__FILE__,__LINE__,osiSubmodel[0]->getNumCols()==6);
+            myAssert(__FILE__,__LINE__,osiSubmodel[0]->getNumRows()==4);
 
-	        myAssert(__FILE__,__LINE__,osiSubmodel[1]->getNumCols()==6);
-	        myAssert(__FILE__,__LINE__,osiSubmodel[1]->getNumRows()==3);
+            myAssert(__FILE__,__LINE__,osiSubmodel[1]->getNumCols()==6);
+            myAssert(__FILE__,__LINE__,osiSubmodel[1]->getNumRows()==3);
 
-	        delete smiModel;
-	        //delete osiCore;
+            delete smiModel;
+            //delete osiCore;
 
-	        delete rlo0;
-	        delete rlo1;
+            delete rlo0;
+            delete rlo1;
 
             for (int i = 0; i < submodel.size(); i++)
                 delete submodel[i];
@@ -4459,304 +4481,304 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         }
 
         TEST_F(SmiUnitTest, SmiScenarioTreeUnitTest) {
-	        int  *i1 = new int(1);
-	        int  *i2= new int(12);
-	        int  *i3= new int(13);
-	        int  *i4= new int(24);
-	        int  *i5= new int(25);
-	        int  *i6= new int(36);
-	        int  *i7= new int(37);
-	        int  *i8= new int(38);
+            int  *i1 = new int(1);
+            int  *i2= new int(12);
+            int  *i3= new int(13);
+            int  *i4= new int(24);
+            int  *i5= new int(25);
+            int  *i6= new int(36);
+            int  *i7= new int(37);
+            int  *i8= new int(38);
 
-	        vector<int *> path4(3);
-	        path4[0]= i1;
-	        path4[1]= i2;
-	        path4[2]= i4;
+            vector<int *> path4(3);
+            path4[0]= i1;
+            path4[1]= i2;
+            path4[2]= i4;
 
-	        vector<int *> path5(1, i5);
+            vector<int *> path5(1, i5);
 
-	        vector<int *> path6(2);
-	        path6[0]= i3;
-	        path6[1]= i6;
+            vector<int *> path6(2);
+            path6[0]= i3;
+            path6[1]= i6;
 
-	        vector<int *> path7(1, i7);
+            vector<int *> path7(1, i7);
 
-	        vector<int *> path8(1, i8);
-
-
-	        SmiScenarioTree<int*> s;
-
-	        int is1 = s.addPathtoLeaf(0,0,path4);
-	        int is2 = s.addPathtoLeaf(is1,1,path5);
-	        int is3 = s.addPathtoLeaf(is2,0,path6);
-	        int is4 = s.addPathtoLeaf(is3,1,path7);
-	        int is5 = s.addPathtoLeaf(is3,1,path8);
-
-	        int  *ii1 = new int(1);
-	        int  *ii2= new int(12);
-	        int  *ii3= new int(13);
-	        int  *ii4= new int(24);
-	        int  *ii5= new int(25);
-	        int  *ii6= new int(36);
-	        int  *ii7= new int(37);
-	        int  *ii8= new int(38);
+            vector<int *> path8(1, i8);
 
 
-	        vector<int *> ppath4(3);
-	        vector<int> label4(3);
-	        ppath4[0]= ii1; label4[0]=*ii1;
-	        ppath4[1]= ii2; label4[1]=*ii2;
-	        ppath4[2]= ii4; label4[2]=*ii4;
+            SmiScenarioTree<int*> s;
 
-	        vector<int *> ppath5(3);
-	        ppath5[0] = ppath4[0];
-	        ppath5[1] = ppath4[1];
-	        ppath5[2] = ii5;
-	        vector<int> label5(3);
-	        label5[0] = label4[0];
-	        label5[1] = label4[1];
-	        label5[2] = *ii5;
+            int is1 = s.addPathtoLeaf(0,0,path4);
+            int is2 = s.addPathtoLeaf(is1,1,path5);
+            int is3 = s.addPathtoLeaf(is2,0,path6);
+            int is4 = s.addPathtoLeaf(is3,1,path7);
+            int is5 = s.addPathtoLeaf(is3,1,path8);
 
-	        vector<int *> ppath6(3);
-	        ppath6[0] = ppath5[0];
+            int  *ii1 = new int(1);
+            int  *ii2= new int(12);
+            int  *ii3= new int(13);
+            int  *ii4= new int(24);
+            int  *ii5= new int(25);
+            int  *ii6= new int(36);
+            int  *ii7= new int(37);
+            int  *ii8= new int(38);
+
+
+            vector<int *> ppath4(3);
+            vector<int> label4(3);
+            ppath4[0]= ii1; label4[0]=*ii1;
+            ppath4[1]= ii2; label4[1]=*ii2;
+            ppath4[2]= ii4; label4[2]=*ii4;
+
+            vector<int *> ppath5(3);
+            ppath5[0] = ppath4[0];
+            ppath5[1] = ppath4[1];
+            ppath5[2] = ii5;
+            vector<int> label5(3);
+            label5[0] = label4[0];
+            label5[1] = label4[1];
+            label5[2] = *ii5;
+
+            vector<int *> ppath6(3);
+            ppath6[0] = ppath5[0];
             ppath6[1]= ii3;
             ppath6[2]= ii6;
-	        
+
             vector<int> label6(3);
-	        label6[0] = label5[0];
+            label6[0] = label5[0];
             label6[1] = *ii3;
             label6[2] = *ii6;
-            
-
-
-	        vector<int *> ppath7(3);
-	        ppath7[0] = ppath6[0];
-	        ppath7[1] = ppath6[1];
-	        ppath7[2] = ii7;
-
-	        vector<int> label7(3);
-	        label7[0] = label6[0];
-	        label7[1] = label6[1];
-	        label7[2] = *ii7;
-
-	        vector<int *> ppath8(3);
-	        ppath8[0] = ppath6[0];
-	        ppath8[1] = ppath6[1];
-	        ppath8[2] = ii8;
-	        vector<int> label8(3);
-	        label8[0] = label6[0];
-	        label8[1] = label6[1];
-	        label8[2] = *ii8;
-
-	        // tree s1 is identical to s just uses labels to id nodes
-	        SmiScenarioTree<int* > s1;
-
-
-	        SmiTreeNode<int *> *node;
-
-	        int is11 = s1.addPathtoLeaf(label4,ppath4);
-	        s1.setChildLabels(s1.getRoot(),label4);
-			// To get to the node via the label, we have to forget the first index
-			std::vector<int> find_label4;
-			find_label4.push_back(label4[1]);
-	        node = s1.find(find_label4);
-			// They are not correctly added..
-	        int is12 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath5,
-		        node->depth()+1);
-	        s1.setChildLabels(node,label5);
-			std::vector<int> find_label5;
-			find_label5.push_back(label5[0]);
-			node = s1.find(find_label5);
-	        int is13 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath6,
-		        node->depth()+1);
-	        s1.setChildLabels(node,label6);
-			std::vector<int> find_label6;
-			find_label6.push_back(label6[1]);
-			node = s1.find(find_label6);
-
-			int is14 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath7,
-		        node->depth()+1);
-	        s1.setChildLabels(node,label7);
-			std::vector<int> find_label7;
-			find_label7.push_back(label7[1]);
-			node = s1.find(find_label7);
-
-			int is15 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath8,
-		        node->depth()+1);
-	        s1.setChildLabels(node,label8);
 
 
 
-	        vector<int *> vec1 = s.getScenario(is1);
-	        myAssert(__FILE__,__LINE__, vec1[0] == i1 );
-	        myAssert(__FILE__,__LINE__, vec1[1] == i2 );
-	        myAssert(__FILE__,__LINE__, vec1[2] == i4 );
+            vector<int *> ppath7(3);
+            ppath7[0] = ppath6[0];
+            ppath7[1] = ppath6[1];
+            ppath7[2] = ii7;
 
-	        vector<int *> vec11 = s1.getScenario(is11);
-	        myAssert(__FILE__,__LINE__, vec11[0] == ii1 );
-	        myAssert(__FILE__,__LINE__, vec11[1] == ii2 );
-	        myAssert(__FILE__,__LINE__, vec11[2] == ii4 );
+            vector<int> label7(3);
+            label7[0] = label6[0];
+            label7[1] = label6[1];
+            label7[2] = *ii7;
 
-	        vector<int *>::iterator vbeg = s.scenBegin(is1);
-	        vector<int *>::iterator vend = s.scenEnd(is1);
-	        myAssert(__FILE__,__LINE__, *vbeg++ == i1 );
-	        myAssert(__FILE__,__LINE__, *vbeg++ == i2 );
-	        myAssert(__FILE__,__LINE__, *vbeg++ == i4 );
-	        myAssert(__FILE__,__LINE__, vbeg == vend );
+            vector<int *> ppath8(3);
+            ppath8[0] = ppath6[0];
+            ppath8[1] = ppath6[1];
+            ppath8[2] = ii8;
+            vector<int> label8(3);
+            label8[0] = label6[0];
+            label8[1] = label6[1];
+            label8[2] = *ii8;
 
-	        vector<int *>::iterator vbeg1 = s1.scenBegin(is11);
-	        vector<int *>::iterator vend1 = s1.scenEnd(is11);
-	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii1 );
-	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii2 );
-	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii4 );
-	        myAssert(__FILE__,__LINE__, vbeg1 == vend1 );
+            // tree s1 is identical to s just uses labels to id nodes
+            SmiScenarioTree<int* > s1;
 
 
-	        vector<int *> vec2 = s.getScenario(is2);
-	        myAssert(__FILE__,__LINE__, vec2[0] == i1 );
-	        myAssert(__FILE__,__LINE__, vec2[1] == i2 );
-	        myAssert(__FILE__,__LINE__, vec2[2] == i5 );
+            SmiTreeNode<int *> *node;
+
+            int is11 = s1.addPathtoLeaf(label4,ppath4);
+            s1.setChildLabels(s1.getRoot(),label4);
+            // To get to the node via the label, we have to forget the first index
+            std::vector<int> find_label4;
+            find_label4.push_back(label4[1]);
+            node = s1.find(find_label4);
+            // They are not correctly added..
+            int is12 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath5,
+                node->depth()+1);
+            s1.setChildLabels(node,label5);
+            std::vector<int> find_label5;
+            find_label5.push_back(label5[0]);
+            node = s1.find(find_label5);
+            int is13 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath6,
+                node->depth()+1);
+            s1.setChildLabels(node,label6);
+            std::vector<int> find_label6;
+            find_label6.push_back(label6[1]);
+            node = s1.find(find_label6);
+
+            int is14 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath7,
+                node->depth()+1);
+            s1.setChildLabels(node,label7);
+            std::vector<int> find_label7;
+            find_label7.push_back(label7[1]);
+            node = s1.find(find_label7);
+
+            int is15 = s1.addPathtoLeaf(node->scenario(),node->depth(),ppath8,
+                node->depth()+1);
+            s1.setChildLabels(node,label8);
 
 
-	        vector<int *> vec12 = s1.getScenario(is12);
-	        myAssert(__FILE__,__LINE__, vec12[0] == ii1 );
-	        myAssert(__FILE__,__LINE__, vec12[1] == ii2 );
-	        myAssert(__FILE__,__LINE__, vec12[2] == ii5 );
 
-	        vector<int *> vec3 = s.getScenario(is3);
-	        myAssert(__FILE__,__LINE__, vec3[0] == i1 );
-	        myAssert(__FILE__,__LINE__, vec3[1] == i3 );
-	        myAssert(__FILE__,__LINE__, vec3[2] == i6 );
+            vector<int *> vec1 = s.getScenario(is1);
+            myAssert(__FILE__,__LINE__, vec1[0] == i1 );
+            myAssert(__FILE__,__LINE__, vec1[1] == i2 );
+            myAssert(__FILE__,__LINE__, vec1[2] == i4 );
 
-	        vector<int *> vec13 = s1.getScenario(is13);
-	        myAssert(__FILE__,__LINE__, vec13[0] == ii1 );
-	        myAssert(__FILE__,__LINE__, vec13[1] == ii3 );
-	        myAssert(__FILE__,__LINE__, vec13[2] == ii6 );
+            vector<int *> vec11 = s1.getScenario(is11);
+            myAssert(__FILE__,__LINE__, vec11[0] == ii1 );
+            myAssert(__FILE__,__LINE__, vec11[1] == ii2 );
+            myAssert(__FILE__,__LINE__, vec11[2] == ii4 );
 
-	        vector<int *> vec4 = s.getScenario(is4);
-	        myAssert(__FILE__,__LINE__, vec4[0] == i1 );
-	        myAssert(__FILE__,__LINE__, vec4[1] == i3 );
-	        myAssert(__FILE__,__LINE__, vec4[2] == i7 );
+            vector<int *>::iterator vbeg = s.scenBegin(is1);
+            vector<int *>::iterator vend = s.scenEnd(is1);
+            myAssert(__FILE__,__LINE__, *vbeg++ == i1 );
+            myAssert(__FILE__,__LINE__, *vbeg++ == i2 );
+            myAssert(__FILE__,__LINE__, *vbeg++ == i4 );
+            myAssert(__FILE__,__LINE__, vbeg == vend );
 
-
-	        vector<int *> vec14 = s1.getScenario(is14);
-	        myAssert(__FILE__,__LINE__, vec14[0] == ii1 );
-	        myAssert(__FILE__,__LINE__, vec14[1] == ii3 );
-	        myAssert(__FILE__,__LINE__, vec14[2] == ii7 );
-
-	        vector<int *> vec5 = s.getScenario(is5);
-	        myAssert(__FILE__,__LINE__, vec5[0] == i1 );
-	        myAssert(__FILE__,__LINE__, vec5[1] == i3 );
-	        myAssert(__FILE__,__LINE__, vec5[2] == i8 );
+            vector<int *>::iterator vbeg1 = s1.scenBegin(is11);
+            vector<int *>::iterator vend1 = s1.scenEnd(is11);
+            myAssert(__FILE__,__LINE__, *vbeg1++ == ii1 );
+            myAssert(__FILE__,__LINE__, *vbeg1++ == ii2 );
+            myAssert(__FILE__,__LINE__, *vbeg1++ == ii4 );
+            myAssert(__FILE__,__LINE__, vbeg1 == vend1 );
 
 
-	        vector<int *> vec15 = s1.getScenario(is15);
-	        myAssert(__FILE__,__LINE__, vec15[0] == ii1 );
-	        myAssert(__FILE__,__LINE__, vec15[1] == ii3 );
-	        myAssert(__FILE__,__LINE__, vec15[2] == ii8 );
+            vector<int *> vec2 = s.getScenario(is2);
+            myAssert(__FILE__,__LINE__, vec2[0] == i1 );
+            myAssert(__FILE__,__LINE__, vec2[1] == i2 );
+            myAssert(__FILE__,__LINE__, vec2[2] == i5 );
 
-	        vector<int*>::iterator i;
-	        i=s.treeBegin();
-	        myAssert(__FILE__,__LINE__,*i==i1);
-	        i++;
-	        myAssert(__FILE__,__LINE__,*i==i2);
-	        i = s.treeEnd();
-	        i--;
-	        myAssert(__FILE__,__LINE__,*i==i8);
 
-	        vector<int*>::iterator ii;
-	        ii=s1.treeBegin();
-	        myAssert(__FILE__,__LINE__,*ii==ii1);
-	        ii++;
-	        myAssert(__FILE__,__LINE__,*ii==ii2);
-	        ii = s1.treeEnd();
-	        ii--;
-	        myAssert(__FILE__,__LINE__,*ii==ii8);
+            vector<int *> vec12 = s1.getScenario(is12);
+            myAssert(__FILE__,__LINE__, vec12[0] == ii1 );
+            myAssert(__FILE__,__LINE__, vec12[1] == ii2 );
+            myAssert(__FILE__,__LINE__, vec12[2] == ii5 );
 
-	        vbeg = s.scenBegin(is1);
-	        vend = s.scenEnd(is1);
-	        myAssert(__FILE__,__LINE__, *vbeg++ == i1 );
-	        myAssert(__FILE__,__LINE__, *vbeg++ == i2 );
-	        myAssert(__FILE__,__LINE__, *vbeg++ == i4 );
-	        myAssert(__FILE__,__LINE__, vbeg == vend );
+            vector<int *> vec3 = s.getScenario(is3);
+            myAssert(__FILE__,__LINE__, vec3[0] == i1 );
+            myAssert(__FILE__,__LINE__, vec3[1] == i3 );
+            myAssert(__FILE__,__LINE__, vec3[2] == i6 );
 
-	        vbeg1 = s1.scenBegin(is11);
-	        vend1 = s1.scenEnd(is11);
-	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii1 );
-	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii2 );
-	        myAssert(__FILE__,__LINE__, *vbeg1++ == ii4 );
-	        myAssert(__FILE__,__LINE__, vbeg1 == vend1 );
+            vector<int *> vec13 = s1.getScenario(is13);
+            myAssert(__FILE__,__LINE__, vec13[0] == ii1 );
+            myAssert(__FILE__,__LINE__, vec13[1] == ii3 );
+            myAssert(__FILE__,__LINE__, vec13[2] == ii6 );
+
+            vector<int *> vec4 = s.getScenario(is4);
+            myAssert(__FILE__,__LINE__, vec4[0] == i1 );
+            myAssert(__FILE__,__LINE__, vec4[1] == i3 );
+            myAssert(__FILE__,__LINE__, vec4[2] == i7 );
+
+
+            vector<int *> vec14 = s1.getScenario(is14);
+            myAssert(__FILE__,__LINE__, vec14[0] == ii1 );
+            myAssert(__FILE__,__LINE__, vec14[1] == ii3 );
+            myAssert(__FILE__,__LINE__, vec14[2] == ii7 );
+
+            vector<int *> vec5 = s.getScenario(is5);
+            myAssert(__FILE__,__LINE__, vec5[0] == i1 );
+            myAssert(__FILE__,__LINE__, vec5[1] == i3 );
+            myAssert(__FILE__,__LINE__, vec5[2] == i8 );
+
+
+            vector<int *> vec15 = s1.getScenario(is15);
+            myAssert(__FILE__,__LINE__, vec15[0] == ii1 );
+            myAssert(__FILE__,__LINE__, vec15[1] == ii3 );
+            myAssert(__FILE__,__LINE__, vec15[2] == ii8 );
+
+            vector<int*>::iterator i;
+            i=s.treeBegin();
+            myAssert(__FILE__,__LINE__,*i==i1);
+            i++;
+            myAssert(__FILE__,__LINE__,*i==i2);
+            i = s.treeEnd();
+            i--;
+            myAssert(__FILE__,__LINE__,*i==i8);
+
+            vector<int*>::iterator ii;
+            ii=s1.treeBegin();
+            myAssert(__FILE__,__LINE__,*ii==ii1);
+            ii++;
+            myAssert(__FILE__,__LINE__,*ii==ii2);
+            ii = s1.treeEnd();
+            ii--;
+            myAssert(__FILE__,__LINE__,*ii==ii8);
+
+            vbeg = s.scenBegin(is1);
+            vend = s.scenEnd(is1);
+            myAssert(__FILE__,__LINE__, *vbeg++ == i1 );
+            myAssert(__FILE__,__LINE__, *vbeg++ == i2 );
+            myAssert(__FILE__,__LINE__, *vbeg++ == i4 );
+            myAssert(__FILE__,__LINE__, vbeg == vend );
+
+            vbeg1 = s1.scenBegin(is11);
+            vend1 = s1.scenEnd(is11);
+            myAssert(__FILE__,__LINE__, *vbeg1++ == ii1 );
+            myAssert(__FILE__,__LINE__, *vbeg1++ == ii2 );
+            myAssert(__FILE__,__LINE__, *vbeg1++ == ii4 );
+            myAssert(__FILE__,__LINE__, vbeg1 == vend1 );
         }
 
 
         TEST_F(SmiUnitTest, SmiTreeNodeUnitTest) {
-	        int  *i1 = new int(1);
-	        int  *i2= new int(12);
-	        int  *i3= new int(13);
-	        int  *i4= new int(24);
-	        int  *i5= new int(25);
-	        int  *i6= new int(36);
-	        int  *i7= new int(37);
-	        int  *i8= new int(38);
+            int  *i1 = new int(1);
+            int  *i2= new int(12);
+            int  *i3= new int(13);
+            int  *i4= new int(24);
+            int  *i5= new int(25);
+            int  *i6= new int(36);
+            int  *i7= new int(37);
+            int  *i8= new int(38);
 
-	        SmiTreeNode<int *> *n1 = new SmiTreeNode<int *>(i1);
+            SmiTreeNode<int *> *n1 = new SmiTreeNode<int *>(i1);
 
-	        SmiTreeNode<int *> *n2;
-	        SmiTreeNode<int *> *n3;
-	        SmiTreeNode<int *> *n4;
-	        SmiTreeNode<int *> *n5;
-	        SmiTreeNode<int *> *n6;
-	        SmiTreeNode<int *> *n7;
-	        SmiTreeNode<int *> *n8;
+            SmiTreeNode<int *> *n2;
+            SmiTreeNode<int *> *n3;
+            SmiTreeNode<int *> *n4;
+            SmiTreeNode<int *> *n5;
+            SmiTreeNode<int *> *n6;
+            SmiTreeNode<int *> *n7;
+            SmiTreeNode<int *> *n8;
 
-	        n2 = n1->addChild(i2,0);
-	        n3 = n1->addChild(i3,1);
-	        n4 = n2->addChild(i4,0);
-	        n5 = n2->addChild(i5,2);
-	        n6 = n3->addChild(i6,1);
-	        n7 = n3->addChild(i7,3);
-	        n8 = n3->addChild(i8,4);
+            n2 = n1->addChild(i2,0);
+            n3 = n1->addChild(i3,1);
+            n4 = n2->addChild(i4,0);
+            n5 = n2->addChild(i5,2);
+            n6 = n3->addChild(i6,1);
+            n7 = n3->addChild(i7,3);
+            n8 = n3->addChild(i8,4);
 
-	        myAssert(__FILE__,__LINE__, n1->depth() == 0 );
-	        myAssert(__FILE__,__LINE__, n2->depth() == 1 );
-	        myAssert(__FILE__,__LINE__, n3->depth() == 1 );
-	        myAssert(__FILE__,__LINE__, n4->depth() == 2 );
-	        myAssert(__FILE__,__LINE__, n5->depth() == 2 );
-	        myAssert(__FILE__,__LINE__, n6->depth() == 2 );
-	        myAssert(__FILE__,__LINE__, n7->depth() == 2 );
-	        myAssert(__FILE__,__LINE__, n8->depth() == 2 );
+            myAssert(__FILE__,__LINE__, n1->depth() == 0 );
+            myAssert(__FILE__,__LINE__, n2->depth() == 1 );
+            myAssert(__FILE__,__LINE__, n3->depth() == 1 );
+            myAssert(__FILE__,__LINE__, n4->depth() == 2 );
+            myAssert(__FILE__,__LINE__, n5->depth() == 2 );
+            myAssert(__FILE__,__LINE__, n6->depth() == 2 );
+            myAssert(__FILE__,__LINE__, n7->depth() == 2 );
+            myAssert(__FILE__,__LINE__, n8->depth() == 2 );
 
-	        // parents point to last children
-	        myAssert(__FILE__,__LINE__, n1->getChild() == n3 );
-	        myAssert(__FILE__,__LINE__, n3->getChild() == n8 );
+            // parents point to last children
+            myAssert(__FILE__,__LINE__, n1->getChild() == n3 );
+            myAssert(__FILE__,__LINE__, n3->getChild() == n8 );
 
-	        // siblings
-	        myAssert(__FILE__,__LINE__, n3->hasSibling() );
-	        myAssert(__FILE__,__LINE__, n3->getSibling() == n2 );
-	        myAssert(__FILE__,__LINE__, !n2->hasSibling() );
+            // siblings
+            myAssert(__FILE__,__LINE__, n3->hasSibling() );
+            myAssert(__FILE__,__LINE__, n3->getSibling() == n2 );
+            myAssert(__FILE__,__LINE__, !n2->hasSibling() );
 
-	        // sibling and cousin pointers are a linked list
-	        // for same level nodes
-	        myAssert(__FILE__,__LINE__, n8->hasSibling() );
-	        myAssert(__FILE__,__LINE__, n8->getSibling() == n7 );
-	        myAssert(__FILE__,__LINE__, n7->hasSibling() );
-	        myAssert(__FILE__,__LINE__, n7->getSibling() == n6 );
-	        myAssert(__FILE__,__LINE__, !n6->hasSibling());
+            // sibling and cousin pointers are a linked list
+            // for same level nodes
+            myAssert(__FILE__,__LINE__, n8->hasSibling() );
+            myAssert(__FILE__,__LINE__, n8->getSibling() == n7 );
+            myAssert(__FILE__,__LINE__, n7->hasSibling() );
+            myAssert(__FILE__,__LINE__, n7->getSibling() == n6 );
+            myAssert(__FILE__,__LINE__, !n6->hasSibling());
 
-	        myAssert(__FILE__,__LINE__, n6->getParent()->getSibling()  == n2
-		        );
-	        myAssert(__FILE__,__LINE__, n2->getChild() == n5 );
-	        myAssert(__FILE__,__LINE__, n5->hasSibling() );
-	        myAssert(__FILE__,__LINE__, n5->getSibling() == n4 );
-	        // last element of same level list
-	        myAssert(__FILE__,__LINE__, !n4->hasSibling());
+            myAssert(__FILE__,__LINE__, n6->getParent()->getSibling()  == n2
+                );
+            myAssert(__FILE__,__LINE__, n2->getChild() == n5 );
+            myAssert(__FILE__,__LINE__, n5->hasSibling() );
+            myAssert(__FILE__,__LINE__, n5->getSibling() == n4 );
+            // last element of same level list
+            myAssert(__FILE__,__LINE__, !n4->hasSibling());
 
-	        vector<SmiTreeNode<int *> *> *vec1 = n1->getChildren();
-	        assert ((*vec1)[0] == n2 );
-	        assert ((*vec1)[1] == n3 );
-	        delete vec1;
+            vector<SmiTreeNode<int *> *> *vec1 = n1->getChildren();
+            assert ((*vec1)[0] == n2 );
+            assert ((*vec1)[1] == n3 );
+            delete vec1;
 
-			delete n1;
+            delete n1;
 
         }
 
@@ -4766,591 +4788,591 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
         TEST_F(SmiUnitTest, SmiScnSmpsIOUnitTestReplace) {
 #ifdef _MSC_VER
-	        std::string dataDir="../../../../Smi/test/SmiTestData";
+            std::string dataDir="../../../../Smi/test/SmiTestData";
 #else
             std::string dataDir="../../Smi/test/SmiTestData";
 #endif
-	        int nrows, ncols;
+            int nrows, ncols;
 
-	        // test SMPS files app0110R
-	        SmiScnModel smi;
-	        myAssert(__FILE__,__LINE__,-1!=smi.readSmps((dataDir+"/app0110R").c_str()));
+            // test SMPS files app0110R
+            SmiScnModel smi;
+            myAssert(__FILE__,__LINE__,-1!=smi.readSmps((dataDir+"/app0110R").c_str()));
 
-	        OsiClpSolverInterface *clp = new OsiClpSolverInterface();
-	        smi.setOsiSolverHandle(*clp);
-	        OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+            OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+            smi.setOsiSolverHandle(*clp);
+            OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
 
-	        nrows = osiStoch->getNumRows();
-	        ncols = osiStoch->getNumCols();
-	        myAssert(__FILE__,__LINE__,nrows==129);
-	        myAssert(__FILE__,__LINE__,ncols==268);
+            nrows = osiStoch->getNumRows();
+            ncols = osiStoch->getNumCols();
+            myAssert(__FILE__,__LINE__,nrows==129);
+            myAssert(__FILE__,__LINE__,ncols==268);
 
-	        osiStoch->initialSolve();
-	        myAssert(__FILE__,__LINE__,fabs(osiStoch->getObjValue()-
-		        44.66666) < 0.0001);
-	        printf(" *** Successfully tested SMPS interfaces on app0110	with Replace option.\n");
+            osiStoch->initialSolve();
+            myAssert(__FILE__,__LINE__,fabs(osiStoch->getObjValue()-
+                44.66666) < 0.0001);
+            printf(" *** Successfully tested SMPS interfaces on app0110	with Replace option.\n");
 
-	        delete clp;
+            delete clp;
 
         }
 
         TEST_F(SmiUnitTest, SmiScnSmpsIOUnitTestAdd) {
 #ifdef _MSC_VER
-	        std::string dataDir="../../../../Smi/test/SmiTestData";
+            std::string dataDir="../../../../Smi/test/SmiTestData";
 #else
             std::string dataDir="../../Smi/test/SmiTestData";
 #endif
-	        int nrows, ncols;
+            int nrows, ncols;
 
-	        // test SMPS files app0110 -- ADD scenario values
-	        SmiScnModel smi;
-	        myAssert(__FILE__,__LINE__,-1!=smi.readSmps((dataDir+"/app0110").c_str()));
-	        OsiClpSolverInterface *clp = new OsiClpSolverInterface();
-	        smi.setOsiSolverHandle(*clp);
-	        OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+            // test SMPS files app0110 -- ADD scenario values
+            SmiScnModel smi;
+            myAssert(__FILE__,__LINE__,-1!=smi.readSmps((dataDir+"/app0110").c_str()));
+            OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+            smi.setOsiSolverHandle(*clp);
+            OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
 
-	        nrows = osiStoch->getNumRows();
-	        ncols = osiStoch->getNumCols();
-	        myAssert(__FILE__,__LINE__,nrows==129);
-	        myAssert(__FILE__,__LINE__,ncols==268);
+            nrows = osiStoch->getNumRows();
+            ncols = osiStoch->getNumCols();
+            myAssert(__FILE__,__LINE__,nrows==129);
+            myAssert(__FILE__,__LINE__,ncols==268);
 
-	        osiStoch->initialSolve();
-	        myAssert(__FILE__,__LINE__,fabs(osiStoch->getObjValue()-
-		        44.66666) < 0.0001);
-	        printf(" *** Successfully tested SMPS interfaces on app0110	with Add option.\n");
+            osiStoch->initialSolve();
+            myAssert(__FILE__,__LINE__,fabs(osiStoch->getObjValue()-
+                44.66666) < 0.0001);
+            printf(" *** Successfully tested SMPS interfaces on app0110	with Add option.\n");
 
-	        delete clp;
+            delete clp;
 
         }
 
         TEST_F(SmiUnitTest, SmiScnModelScenarioUnitTest) {
-	        OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
-	        double INF = osiClp1->getInfinity();
-
-	        // exhaustive test of direct interfaces for scenario generation
-
-	        /* Model dimensions */
-	        int ncol=27, nrow=9, nels=44;
-
-	        /* Sparse matrix data...organized by row */
-	        int *mrow,cmrow[]={ 0, 0, 0, 0, 0,
-		        1, 1, 1, 1,
-		        2, 2, 2,
-		        3, 3, 3, 3, 3,
-		        4, 4, 4, 4,
-		        5, 5, 5, 5, 5, 5,
-		        6, 6, 6, 6, 6,
-		        7, 7, 7, 7, 7, 7,
-		        8, 8, 8, 8, 8, 8 };
-	        int *mcol,cmcol[]={ 0, 1, 2, 3, 4,
-		        5, 6, 7, 8,
-		        9,10, 11,
-		        12, 13, 14, 15, 16,
-		        0,        12, 17, 18,
-		        1, 5, 9,  13, 19, 20,
-		        2, 6,     14, 21, 22,
-		        3, 7, 10, 15, 23, 24,
-		        4, 8, 11, 16, 25, 26 };
-
-	        double dels[] = { 1.0, 1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0, 1.0,
-		        16.0,              9.0, -1.0, 1.0,
-		        15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
-		        28.0, 14.0,       22.0, -1.0, 1.0,
-		        23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
-		        81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
-
-	        /* Objective */
-	        double *dobj,cdobj[]={ 18.0, 21.0, 18.0, 16.0, 10.0, 15.0, 16.0,
-		        14.0, 9.0,
-		        10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
-		        13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
-
-	        /* Column bounds */
-	        double *dclo,cdclo[]={ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
-
-	        double *dcup,cdcup[]={ INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
-
-	        /* Row bounds */
-	        double *drlo,cdrlo[]={ -INF, -INF, -INF, -INF,  0.0, 4.0, 0.0,
-		        8.0, 10.0 };
-	        double *drup,cdrup[]={ 10.0, 19.0, 25.0, 15.0,  0.0, 7.0, 0.0,
-		        8.0, 90.0 };
-
-	        /* Stages */
-	        //int nstg=2;
-	        int n_first_stg_rows=4;
-	        int n_second_stg_rows=4;
-	        int n_first_stg_cols=17;
-	        int n_second_stg_cols=8;
-	        int *rstg,crstg[]={ 0,0,0,0,1,1,1,1,2 };
-	        int *cstg,ccstg[]={ 0,0,0,0,0,0,0,0,0,
-		        0,0,0,0,0,0,0,0,1,
-		        1,1,1,1,1,1,1,2,2 };
-
-	        /* Stochastic data */
-	        int nindp=5;
-	        int nsamp[]={ 5, 2, 5, 5, 3 };
-	        double demand[]={ 200, 220, 250, 270, 300,
-		        50, 150,
-		        140, 160, 180, 200, 220,
-		        10, 50, 80, 100, 340,
-		        580, 600, 620 };
-	        double dprobs[]={ 0.2, 0.05, 0.35, 0.2, 0.2,
-		        0.3, 0.7,
-		        0.1, 0.2, 0.4, 0.2, 0.1,
-		        0.2, 0.2, 0.3, 0.2, 0.1,
-		        0.1, 0.8, 0.1 };
-
-	        /* scramble */
-
-	        int irow[]={ 1,2,7,8,0,3,4,5,6};
-	        int icol[]={ 9,2,3,4,5,6,7,8,1,
-		        19,21,23,25,0,26,24,22,20,
-		        10,11,12,13,14,15,16,17,18 };
-
-	        /* local variables */
-	        int ns=1,ii,iii,jj,*indx,*incr;
-	        double dp=1.0;
-
-	        for (ii=0;ii<nindp;ii++) ns *= nsamp[ii];     /* Compute number of
-												          scenarios */
-	        // initialize SmiModel
-	        SmiScnModel *smiModel = new SmiScnModel();
-	        smiModel->setOsiSolverHandle(*osiClp1);
-
-	        /* scramble LP entries -- only to test sorting functionality!! */
-	        mrow = (int*)malloc(nels*sizeof(int));
-	        mcol = (int*)malloc(nels*sizeof(int));
-	        for (ii=0;ii<nels;ii++)
-	        {
-		        mcol[ii] = icol[cmcol[ii]];
-		        mrow[ii] = irow[cmrow[ii]];
-	        }
-
-	        drlo = (double *)malloc(nrow*sizeof(double));
-	        drup = (double *)malloc(nrow*sizeof(double));
-	        rstg = (int *)malloc(nrow*sizeof(int));
-	        for (ii=0;ii<nrow;ii++)
-	        {
-		        drlo[irow[ii]] = cdrlo[ii];
-		        drup[irow[ii]] = cdrup[ii];
-		        rstg[irow[ii]] = crstg[ii];
-	        }
-
-	        dclo = (double *)malloc(ncol*sizeof(double));
-	        dcup = (double *)malloc(ncol*sizeof(double));
-	        dobj = (double *)malloc(ncol*sizeof(double));
-	        cstg = (int *)malloc(ncol*sizeof(int));
-	        for (ii=0;ii<ncol;ii++)
-	        {
-		        dclo[icol[ii]] = cdclo[ii];
-		        dcup[icol[ii]] = cdcup[ii];
-		        dobj[icol[ii]] = cdobj[ii];
-		        cstg[icol[ii]] = ccstg[ii];
-	        }
-
-	        // this to test the matrix update stanza in genScenario
-	        CoinPackedMatrix *origmat = new CoinPackedMatrix(false,mrow,mcol,
-		        dels,nels);
-	        int corenels = nels - 4;
-
-
-	        // set core model using Osi interface
-	        OsiClpSolverInterface ocsi;
-	        ocsi.loadProblem(CoinPackedMatrix(
-		        1,mrow,mcol,dels,corenels),dclo,dcup,dobj,drlo,drup);
-
-	        OsiSolverInterface *ohoh= ocsi.clone();
-
-	        // test Core Model
-	        SmiCoreData *osiCore = new SmiCoreData(ohoh,3,cstg,rstg);
-
-	        myAssert(__FILE__,__LINE__,osiCore->getNumCols(0) ==
-		        n_first_stg_cols);
-	        myAssert(__FILE__,__LINE__,osiCore->getNumCols(1) ==
-		        n_second_stg_cols);
-	        myAssert(__FILE__,__LINE__,osiCore->getNumCols(2) == ncol -
-		        n_first_stg_cols - n_second_stg_cols);
-
-	        myAssert(__FILE__,__LINE__,osiCore->getNumRows(0) ==
-		        n_first_stg_rows);
-	        myAssert(__FILE__,__LINE__,osiCore->getNumRows(1) ==
-		        n_second_stg_rows);
-	        myAssert(__FILE__,__LINE__,osiCore->getNumRows(2) == nrow -
-		        n_first_stg_rows - n_second_stg_rows);
-
-	        myAssert(__FILE__,__LINE__,osiCore->getColStart(0) == 0);
-	        myAssert(__FILE__,__LINE__,osiCore->getColStart(1) ==
-		        n_first_stg_cols );
-	        myAssert(__FILE__,__LINE__,osiCore->getColStart(2) ==
-		        n_first_stg_cols + n_second_stg_cols);
-	        myAssert(__FILE__,__LINE__,osiCore->getColStart(3) == ncol);
-
-	        myAssert(__FILE__,__LINE__,osiCore->getRowStart(0) == 0);
-	        myAssert(__FILE__,__LINE__,osiCore->getRowStart(1) ==
-		        n_first_stg_rows );
-	        myAssert(__FILE__,__LINE__,osiCore->getRowStart(2) ==
-		        n_first_stg_rows + n_second_stg_rows);
-	        myAssert(__FILE__,__LINE__,osiCore->getRowStart(3) == nrow);
-
-	        for (ii = 0; ii < n_first_stg_cols ; ii++)
-		        myAssert(__FILE__,__LINE__,cstg[osiCore->getColExternalIndex(ii)] == 0);
-	        for (ii = n_first_stg_cols; ii < n_first_stg_cols + n_second_stg_cols ; ii++)
-		        myAssert(__FILE__,__LINE__,cstg[osiCore->getColExternalIndex(ii)] == 1);
-	        for (ii = n_first_stg_cols + n_second_stg_cols; ii < ncol ; ii++)
-		        myAssert(__FILE__,__LINE__,cstg[osiCore->getColExternalIndex(ii)] == 2);
-
-	        for (ii = 0; ii < n_first_stg_rows ; ii++)
-		        myAssert(__FILE__,__LINE__,rstg[osiCore->getRowExternalIndex(ii)] == 0);
-	        for (ii = n_first_stg_rows; ii < n_first_stg_rows +	n_second_stg_rows ; ii++)
-		        myAssert(__FILE__,__LINE__,rstg[osiCore->getRowExternalIndex(ii)] == 1);
-	        for (ii = n_first_stg_rows + n_second_stg_rows; ii < nrow ; ii++)
-		        myAssert(__FILE__,__LINE__,rstg[osiCore->getRowExternalIndex(ii)] == 2);
-
-	        const CoinPackedMatrix *origCore = ohoh->getMatrixByRow();
-	        int t;
-	        for ( t=0;t<3;t++)
-	        {
-		        SmiNodeData *n=osiCore->getNode(t);
-		        CoinPackedVector cpvdrlo(n->getRowLowerLength(),n->getRowLowerIndices(),n->getRowLowerElements());
-		        CoinPackedVector cpvdrup(n->getRowUpperLength(),n->getRowUpperIndices(),n->getRowUpperElements());
-		        CoinPackedVector cpvdclo(n->getColLowerLength(),n->getColLowerIndices(),n->getColLowerElements());
-		        CoinPackedVector cpvdcup(n->getColUpperLength(),n->getColUpperIndices(),n->getColUpperElements());
-		        CoinPackedVector cpvdobj(n->getObjectiveLength(),n->getObjectiveIndices(),n->getObjectiveElements());
-
-
-		        double *core_drlo = new double[osiCore->getNumRows(t)];
-		        osiCore->getNode(t)->copyRowLower(core_drlo);
-
-		        double elt1,elt2;
-		        int ic;
-		        for(ii=osiCore->getColStart(t);ii<osiCore->getColStart(t+1);ii++)
-		        {
-			        ic = osiCore->getColExternalIndex(ii);
-			        elt1 = cpvdclo[ii];
-			        elt2 = dclo[ic];
-			        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        elt1 = cpvdcup[ii];
-			        elt2 = dcup[ic];
-			        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        elt1 = cpvdobj[ii];
-			        elt2 = dobj[ic];
-			        myAssert(__FILE__,__LINE__,elt1==elt2);
-		        }
-		        for(ii=osiCore->getRowStart(t);ii<osiCore->getRowStart(t+1);ii++)
-		        {
-			        myAssert(__FILE__,__LINE__,cpvdrlo[ii]==drlo[osiCore->getRowExternalIndex(ii)]);
-			        myAssert(__FILE__,__LINE__,cpvdrup[ii]==drup[osiCore->getRowExternalIndex(ii)]);
-			        myAssert(__FILE__,__LINE__,core_drlo[ii-osiCore->getRowStart(t)] ==drlo[osiCore->getRowExternalIndex(ii)]);
-
-			        CoinPackedVector row1(n->getRowLength(ii),n->getRowIndices(ii),n->getRowElements(ii));
-			        const CoinPackedVector row2 =origCore->getVector(osiCore->getRowExternalIndex(ii));
-			        myAssert(__FILE__,__LINE__,row1.getNumElements() == row2.getNumElements());
-			        int *indx = row1.getIndices();
-			        double *els = row1.getElements();
-			        for (int j=0; j<row1.getNumElements(); j++)
-			        {
-				        elt1 = els[j];
-				        ic = osiCore->getColExternalIndex(indx[j]);
-				        elt2 = row2[ic];
-				        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        }
-		        }
-		        delete[] core_drlo;
-	        }
-
-	        delete ohoh; ohoh = NULL;
-
-	        printf(" *** Successfully tested SmiScnCoreModel.\n");
-
-
-
-	        // Coin structures for scenario updates to right hand sides
-	        CoinPackedVector cpv_rlo;
-	        CoinPackedVector cpv_rup;
-
-	        // Coin structure for scenario "updates" to core matrix
-	        // ..row-ordered
-	        CoinPackedMatrix *cpm_mat = new CoinPackedMatrix(false,mrow+corenels,mcol+corenels,dels+corenels,nels-corenels);
-
-	        // initialize right hand side data for first scenario
-	        indx = (int *) malloc( (1+nindp)*sizeof(int) );
-	        memset( indx,0,(1+nindp)*sizeof(int));
-	        for (jj=0;jj<nindp;jj++) {
-		        indx[jj+1] += indx[jj] + nsamp[jj];
-		        dp *= dprobs[ indx[jj] ];
-
-		        drlo[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
-		        drup[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
-
-		        cpv_rlo.insert(irow[n_first_stg_rows + jj],demand[ indx[jj] ]);
-		        cpv_rup.insert(irow[n_first_stg_rows + jj],demand[ indx[jj] ]);
-	        }
-
-	        // first scenario
-	        int anc = 0;
-	        int branch = 1;
-	        int	is = smiModel->generateScenario(osiCore,cpm_mat,NULL,NULL,NULL,
-				        &cpv_rlo,&cpv_rup,branch,anc,dp);
-
-
-	        myAssert(__FILE__,__LINE__,smiModel->getNumScenarios()==1);
-
-	        // test first scenario
-
-	        // load problem data into OsiSolver
-	        smiModel->loadOsiSolverData();
-	        // get Osi pointer
-	        OsiSolverInterface *smiOsi1 = smiModel->getOsiSolverInterface();
-
-	        int nStochCol = smiOsi1->getNumCols();
-	        int nStochRow = smiOsi1->getNumRows();
-	        double totalProb = dp;
-
-	        // get arrays
-	        const double *stochdrlo = smiOsi1->getRowLower();
-	        const double *stochdrup = smiOsi1->getRowUpper();
-	        const double *stochdclo = smiOsi1->getColLower();
-	        const double *stochdcup = smiOsi1->getColUpper();
-	        const double *stochdobj = smiOsi1->getObjCoefficients();
-
-	        // get matrix
-	        const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow();
-	        for ( t=0;t<3;t++)
-	        {
-		        double elt1,elt2;
-		        int ic;
-		        for(ii=osiCore->getColStart(t);ii<osiCore->getColStart(t+1);ii++)
-		        {
-			        ic = osiCore->getColExternalIndex(ii);
-			        elt1 = stochdclo[ii];
-			        elt2 = dclo[ic];
-			        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        elt1 = stochdcup[ii];
-			        elt2 = dcup[ic];
-			        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        elt1 = stochdobj[ii];
-			        elt2 = dobj[ic];
-			        myAssert(__FILE__,__LINE__,elt1==elt2);
-		        }
-		        int ir;
-		        for(ii=osiCore->getRowStart(t);ii<osiCore->getRowStart(t+1);ii++)
-		        {
-
-			        ir = osiCore->getRowExternalIndex(ii);
-
-			        myAssert(__FILE__,__LINE__,stochdrlo[ii]==drlo[ir]);
-			        myAssert(__FILE__,__LINE__,stochdrup[ii]==drup[ir]);
-
-			        const CoinPackedVector row1 = stochmat->getVector(ii);
-			        const CoinPackedVector row2 = origmat->getVector(ir);
-			        myAssert(__FILE__,__LINE__,row1.getNumElements() == row2.getNumElements());
-			        const int *indx = row1.getIndices();
-			        const double *els = row1.getElements();
-			        for (int j=0; j<row1.getNumElements(); j++)
-			        {
-				        elt1 = els[j];
-				        ic = osiCore->getColExternalIndex(indx[j]);
-				        elt2 = row2[ic];
-				        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        }
-		        }
-	        }
-
-	        printf(" *** Successfully tested problem with scenario %d.\n",is);
-
-
-	        /***** ...main loop to generate scenarios from discrete random
-	        variables
-	        For each scenario index ii:
-	        If the sample size nsamp[jj] divides the scenario index ii,
-	        reverse the increment direction incr[jj]
-	        and increase the random variable index jj by 1.
-	        Increment the jj'th random variable by incr[jj]
-	        and generate new sample data.
-	        ***** */
-
-	        /* sample space increment initialized to 1 */
-	        incr = (int *) malloc( nindp*sizeof(int) );
-	        for (jj=0;jj<nindp;jj++) incr[jj] = 1;
-
-	        for (int iss=1;iss<ns;iss++) {
-		        iii=iss; jj=0;
-		        while ( !(iii%nsamp[jj]) ) {
-			        iii /= nsamp[jj];
-			        incr[jj] = -incr[jj];
-			        jj++;
-		        }
-		        dp /= dprobs[ indx[jj] ];
-		        indx[jj] += incr[jj];
-		        dp *= dprobs[ indx[jj] ];
-
-		        // set data
-		        drlo[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
-		        drup[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
-
-		        cpv_rlo.setElement(cpv_rlo.findIndex(irow[n_first_stg_rows + jj]),demand[ indx[jj] ]);
-		        cpv_rup.setElement(cpv_rup.findIndex(irow[n_first_stg_rows + jj]),demand[ indx[jj] ]);
-
-		        // genScenario
-		        is = smiModel->generateScenario(osiCore,cpm_mat,NULL,NULL,NULL,
-				        &cpv_rlo,&cpv_rup,branch,anc,dp);
-
-
-		        if (is < 3)
-		        {
-			        // test scenario
-
-			        // load problem data into OsiSolver
-			        smiModel->loadOsiSolverData();
-			        // get Osi pointer
-			        OsiSolverInterface *smiOsi1 = smiModel->getOsiSolverInterface();
-
-			        totalProb += dp;
-
-			        // get arrays
-			        stochdrlo = smiOsi1->getRowLower()+nStochRow;
-			        stochdrup = smiOsi1->getRowUpper()+nStochRow;
-			        stochdclo = smiOsi1->getColLower()+nStochCol;
-			        stochdcup = smiOsi1->getColUpper()+nStochCol;
-			        stochdobj = smiOsi1->getObjCoefficients()+nStochCol;
-
-			        // get matrix
-			        const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow();
-			        int t;
-			        for (t=1;t<3;t++)
-			        {
-				        double elt1,elt2;
-				        int ic;
-				        int colOff = osiCore->getColStart(1);
-				        for(ii=osiCore->getColStart(t);ii<osiCore->getColStart(t+1);ii++)
-				        {
-					        ic = osiCore->getColExternalIndex(ii);
-					        elt1 = stochdclo[ii-colOff];
-					        elt2 = dclo[ic];
-					        myAssert(__FILE__,__LINE__,elt1==elt2);
-					        elt1 = stochdcup[ii-colOff];
-					        elt2 = dcup[ic];
-					        myAssert(__FILE__,__LINE__,elt1==elt2);
-					        elt1 = stochdobj[ii-colOff];
-					        elt2 = dobj[ic];
-					        myAssert(__FILE__,__LINE__,fabs(elt1 - (elt2*dp/totalProb)) < 1.0e-8);
-				        }
-				        int ir,rowOff;
-				        rowOff = osiCore->getRowStart(1);
-				        for(ii=osiCore->getRowStart(t);ii<osiCore->getRowStart(t+1);ii++)
-				        {
-
-					        ir = osiCore->getRowExternalIndex(ii);
-
-					        myAssert(__FILE__,__LINE__,stochdrlo[ii-rowOff]==drlo[ir]);
-					        myAssert(__FILE__,__LINE__,stochdrup[ii-rowOff]==drup[ir]);
-
-					        const CoinPackedVector row1 = stochmat->getVector(ii);
-					        const CoinPackedVector row2 = origmat->getVector(ir);
-					        myAssert(__FILE__,__LINE__,row1.getNumElements()== row2.getNumElements());
-					        const int *indx = row1.getIndices();
-					        const double *els = row1.getElements();
-					        for (int j=0; j<row1.getNumElements(); j++)
-					        {
-						        elt1 = els[j];
-						        ic = osiCore->getColExternalIndex(indx[j]);
-						        elt2 = row2[ic];
-						        myAssert(__FILE__,__LINE__,elt1==elt2);
-					        }
-				        }
-			        }
-
-			        nStochCol = smiOsi1->getNumCols();
-			        nStochRow = smiOsi1->getNumRows();
-
-			        printf(" *** Successfully tested problem with scenario %d.\n",is);
-		        }
-	        }
-
-	        myAssert(__FILE__,__LINE__,ns==smiModel->getNumScenarios());
-
-	        // solve with decomp solver
-
-	        // load problem data into OsiSolver
-	        smiModel->loadOsiSolverData();
-	        // get Osi pointer
-	        OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
-	        // set some parameters
-	        smiOsi->setHintParam(OsiDoPresolveInInitial,true);
-	        smiOsi->setHintParam(OsiDoScale,true);
-	        smiOsi->setHintParam(OsiDoCrash,true);
-	        // solve using Osi Solver
-	        smiOsi->initialSolve();
-	        // test optimal value
-	        myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-1566.042)<0.01);
-
-	        // test solutions
-	        const double *dsoln = smiOsi->getColSolution();
-	        double objSum = 0.0;
-
-	        /* The canonical way to traverse the tree:
-	        For each scenario, get the leaf node.
-	        Then get the parent.  Repeat until parent is NULL.
-	        (Only the root node has a NULL parent.)
-	        */
+            OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
+            double INF = osiClp1->getInfinity();
+
+            // exhaustive test of direct interfaces for scenario generation
+
+            /* Model dimensions */
+            int ncol=27, nrow=9, nels=44;
+
+            /* Sparse matrix data...organized by row */
+            int *mrow,cmrow[]={ 0, 0, 0, 0, 0,
+                1, 1, 1, 1,
+                2, 2, 2,
+                3, 3, 3, 3, 3,
+                4, 4, 4, 4,
+                5, 5, 5, 5, 5, 5,
+                6, 6, 6, 6, 6,
+                7, 7, 7, 7, 7, 7,
+                8, 8, 8, 8, 8, 8 };
+            int *mcol,cmcol[]={ 0, 1, 2, 3, 4,
+                5, 6, 7, 8,
+                9,10, 11,
+                12, 13, 14, 15, 16,
+                0,        12, 17, 18,
+                1, 5, 9,  13, 19, 20,
+                2, 6,     14, 21, 22,
+                3, 7, 10, 15, 23, 24,
+                4, 8, 11, 16, 25, 26 };
+
+            double dels[] = { 1.0, 1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0,
+                16.0,              9.0, -1.0, 1.0,
+                15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
+                28.0, 14.0,       22.0, -1.0, 1.0,
+                23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
+                81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
+
+            /* Objective */
+            double *dobj,cdobj[]={ 18.0, 21.0, 18.0, 16.0, 10.0, 15.0, 16.0,
+                14.0, 9.0,
+                10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
+                13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
+
+            /* Column bounds */
+            double *dclo,cdclo[]={ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                0.0,  0.0,
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
+
+            double *dcup,cdcup[]={ INF,  INF,  INF,  INF,  INF,  INF,  INF,
+                INF,  INF,
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
+
+            /* Row bounds */
+            double *drlo,cdrlo[]={ -INF, -INF, -INF, -INF,  0.0, 4.0, 0.0,
+                8.0, 10.0 };
+            double *drup,cdrup[]={ 10.0, 19.0, 25.0, 15.0,  0.0, 7.0, 0.0,
+                8.0, 90.0 };
+
+            /* Stages */
+            //int nstg=2;
+            int n_first_stg_rows=4;
+            int n_second_stg_rows=4;
+            int n_first_stg_cols=17;
+            int n_second_stg_cols=8;
+            int *rstg,crstg[]={ 0,0,0,0,1,1,1,1,2 };
+            int *cstg,ccstg[]={ 0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,1,
+                1,1,1,1,1,1,1,2,2 };
+
+            /* Stochastic data */
+            int nindp=5;
+            int nsamp[]={ 5, 2, 5, 5, 3 };
+            double demand[]={ 200, 220, 250, 270, 300,
+                50, 150,
+                140, 160, 180, 200, 220,
+                10, 50, 80, 100, 340,
+                580, 600, 620 };
+            double dprobs[]={ 0.2, 0.05, 0.35, 0.2, 0.2,
+                0.3, 0.7,
+                0.1, 0.2, 0.4, 0.2, 0.1,
+                0.2, 0.2, 0.3, 0.2, 0.1,
+                0.1, 0.8, 0.1 };
+
+            /* scramble */
+
+            int irow[]={ 1,2,7,8,0,3,4,5,6};
+            int icol[]={ 9,2,3,4,5,6,7,8,1,
+                19,21,23,25,0,26,24,22,20,
+                10,11,12,13,14,15,16,17,18 };
+
+            /* local variables */
+            int ns=1,ii,iii,jj,*indx,*incr;
+            double dp=1.0;
+
+            for (ii=0;ii<nindp;ii++) ns *= nsamp[ii];     /* Compute number of
+                                                          scenarios */
+            // initialize SmiModel
+            SmiScnModel *smiModel = new SmiScnModel();
+            smiModel->setOsiSolverHandle(*osiClp1);
+
+            /* scramble LP entries -- only to test sorting functionality!! */
+            mrow = (int*)malloc(nels*sizeof(int));
+            mcol = (int*)malloc(nels*sizeof(int));
+            for (ii=0;ii<nels;ii++)
+            {
+                mcol[ii] = icol[cmcol[ii]];
+                mrow[ii] = irow[cmrow[ii]];
+            }
+
+            drlo = (double *)malloc(nrow*sizeof(double));
+            drup = (double *)malloc(nrow*sizeof(double));
+            rstg = (int *)malloc(nrow*sizeof(int));
+            for (ii=0;ii<nrow;ii++)
+            {
+                drlo[irow[ii]] = cdrlo[ii];
+                drup[irow[ii]] = cdrup[ii];
+                rstg[irow[ii]] = crstg[ii];
+            }
+
+            dclo = (double *)malloc(ncol*sizeof(double));
+            dcup = (double *)malloc(ncol*sizeof(double));
+            dobj = (double *)malloc(ncol*sizeof(double));
+            cstg = (int *)malloc(ncol*sizeof(int));
+            for (ii=0;ii<ncol;ii++)
+            {
+                dclo[icol[ii]] = cdclo[ii];
+                dcup[icol[ii]] = cdcup[ii];
+                dobj[icol[ii]] = cdobj[ii];
+                cstg[icol[ii]] = ccstg[ii];
+            }
+
+            // this to test the matrix update stanza in genScenario
+            CoinPackedMatrix *origmat = new CoinPackedMatrix(false,mrow,mcol,
+                dels,nels);
+            int corenels = nels - 4;
+
+
+            // set core model using Osi interface
+            OsiClpSolverInterface ocsi;
+            ocsi.loadProblem(CoinPackedMatrix(
+                1,mrow,mcol,dels,corenels),dclo,dcup,dobj,drlo,drup);
+
+            OsiSolverInterface *ohoh= ocsi.clone();
+
+            // test Core Model
+            SmiCoreData *osiCore = new SmiCoreData(ohoh,3,cstg,rstg);
+
+            myAssert(__FILE__,__LINE__,osiCore->getNumCols(0) ==
+                n_first_stg_cols);
+            myAssert(__FILE__,__LINE__,osiCore->getNumCols(1) ==
+                n_second_stg_cols);
+            myAssert(__FILE__,__LINE__,osiCore->getNumCols(2) == ncol -
+                n_first_stg_cols - n_second_stg_cols);
+
+            myAssert(__FILE__,__LINE__,osiCore->getNumRows(0) ==
+                n_first_stg_rows);
+            myAssert(__FILE__,__LINE__,osiCore->getNumRows(1) ==
+                n_second_stg_rows);
+            myAssert(__FILE__,__LINE__,osiCore->getNumRows(2) == nrow -
+                n_first_stg_rows - n_second_stg_rows);
+
+            myAssert(__FILE__,__LINE__,osiCore->getColStart(0) == 0);
+            myAssert(__FILE__,__LINE__,osiCore->getColStart(1) ==
+                n_first_stg_cols );
+            myAssert(__FILE__,__LINE__,osiCore->getColStart(2) ==
+                n_first_stg_cols + n_second_stg_cols);
+            myAssert(__FILE__,__LINE__,osiCore->getColStart(3) == ncol);
+
+            myAssert(__FILE__,__LINE__,osiCore->getRowStart(0) == 0);
+            myAssert(__FILE__,__LINE__,osiCore->getRowStart(1) ==
+                n_first_stg_rows );
+            myAssert(__FILE__,__LINE__,osiCore->getRowStart(2) ==
+                n_first_stg_rows + n_second_stg_rows);
+            myAssert(__FILE__,__LINE__,osiCore->getRowStart(3) == nrow);
+
+            for (ii = 0; ii < n_first_stg_cols ; ii++)
+                myAssert(__FILE__,__LINE__,cstg[osiCore->getColExternalIndex(ii)] == 0);
+            for (ii = n_first_stg_cols; ii < n_first_stg_cols + n_second_stg_cols ; ii++)
+                myAssert(__FILE__,__LINE__,cstg[osiCore->getColExternalIndex(ii)] == 1);
+            for (ii = n_first_stg_cols + n_second_stg_cols; ii < ncol ; ii++)
+                myAssert(__FILE__,__LINE__,cstg[osiCore->getColExternalIndex(ii)] == 2);
+
+            for (ii = 0; ii < n_first_stg_rows ; ii++)
+                myAssert(__FILE__,__LINE__,rstg[osiCore->getRowExternalIndex(ii)] == 0);
+            for (ii = n_first_stg_rows; ii < n_first_stg_rows +	n_second_stg_rows ; ii++)
+                myAssert(__FILE__,__LINE__,rstg[osiCore->getRowExternalIndex(ii)] == 1);
+            for (ii = n_first_stg_rows + n_second_stg_rows; ii < nrow ; ii++)
+                myAssert(__FILE__,__LINE__,rstg[osiCore->getRowExternalIndex(ii)] == 2);
+
+            const CoinPackedMatrix *origCore = ohoh->getMatrixByRow();
+            int t;
+            for ( t=0;t<3;t++)
+            {
+                SmiNodeData *n=osiCore->getNode(t);
+                CoinPackedVector cpvdrlo(n->getRowLowerLength(),n->getRowLowerIndices(),n->getRowLowerElements());
+                CoinPackedVector cpvdrup(n->getRowUpperLength(),n->getRowUpperIndices(),n->getRowUpperElements());
+                CoinPackedVector cpvdclo(n->getColLowerLength(),n->getColLowerIndices(),n->getColLowerElements());
+                CoinPackedVector cpvdcup(n->getColUpperLength(),n->getColUpperIndices(),n->getColUpperElements());
+                CoinPackedVector cpvdobj(n->getObjectiveLength(),n->getObjectiveIndices(),n->getObjectiveElements());
+
+
+                double *core_drlo = new double[osiCore->getNumRows(t)];
+                osiCore->getNode(t)->copyRowLower(core_drlo);
+
+                double elt1,elt2;
+                int ic;
+                for(ii=osiCore->getColStart(t);ii<osiCore->getColStart(t+1);ii++)
+                {
+                    ic = osiCore->getColExternalIndex(ii);
+                    elt1 = cpvdclo[ii];
+                    elt2 = dclo[ic];
+                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                    elt1 = cpvdcup[ii];
+                    elt2 = dcup[ic];
+                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                    elt1 = cpvdobj[ii];
+                    elt2 = dobj[ic];
+                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                }
+                for(ii=osiCore->getRowStart(t);ii<osiCore->getRowStart(t+1);ii++)
+                {
+                    myAssert(__FILE__,__LINE__,cpvdrlo[ii]==drlo[osiCore->getRowExternalIndex(ii)]);
+                    myAssert(__FILE__,__LINE__,cpvdrup[ii]==drup[osiCore->getRowExternalIndex(ii)]);
+                    myAssert(__FILE__,__LINE__,core_drlo[ii-osiCore->getRowStart(t)] ==drlo[osiCore->getRowExternalIndex(ii)]);
+
+                    CoinPackedVector row1(n->getRowLength(ii),n->getRowIndices(ii),n->getRowElements(ii));
+                    const CoinPackedVector row2 =origCore->getVector(osiCore->getRowExternalIndex(ii));
+                    myAssert(__FILE__,__LINE__,row1.getNumElements() == row2.getNumElements());
+                    int *indx = row1.getIndices();
+                    double *els = row1.getElements();
+                    for (int j=0; j<row1.getNumElements(); j++)
+                    {
+                        elt1 = els[j];
+                        ic = osiCore->getColExternalIndex(indx[j]);
+                        elt2 = row2[ic];
+                        myAssert(__FILE__,__LINE__,elt1==elt2);
+                    }
+                }
+                delete[] core_drlo;
+            }
+
+            delete ohoh; ohoh = NULL;
+
+            printf(" *** Successfully tested SmiScnCoreModel.\n");
+
+
+
+            // Coin structures for scenario updates to right hand sides
+            CoinPackedVector cpv_rlo;
+            CoinPackedVector cpv_rup;
+
+            // Coin structure for scenario "updates" to core matrix
+            // ..row-ordered
+            CoinPackedMatrix *cpm_mat = new CoinPackedMatrix(false,mrow+corenels,mcol+corenels,dels+corenels,nels-corenels);
+
+            // initialize right hand side data for first scenario
+            indx = (int *) malloc( (1+nindp)*sizeof(int) );
+            memset( indx,0,(1+nindp)*sizeof(int));
+            for (jj=0;jj<nindp;jj++) {
+                indx[jj+1] += indx[jj] + nsamp[jj];
+                dp *= dprobs[ indx[jj] ];
+
+                drlo[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
+                drup[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
+
+                cpv_rlo.insert(irow[n_first_stg_rows + jj],demand[ indx[jj] ]);
+                cpv_rup.insert(irow[n_first_stg_rows + jj],demand[ indx[jj] ]);
+            }
+
+            // first scenario
+            int anc = 0;
+            int branch = 1;
+            int	is = smiModel->generateScenario(osiCore,cpm_mat,NULL,NULL,NULL,
+                &cpv_rlo,&cpv_rup,branch,anc,dp);
+
+
+            myAssert(__FILE__,__LINE__,smiModel->getNumScenarios()==1);
+
+            // test first scenario
+
+            // load problem data into OsiSolver
+            smiModel->loadOsiSolverData();
+            // get Osi pointer
+            OsiSolverInterface *smiOsi1 = smiModel->getOsiSolverInterface();
+
+            int nStochCol = smiOsi1->getNumCols();
+            int nStochRow = smiOsi1->getNumRows();
+            double totalProb = dp;
+
+            // get arrays
+            const double *stochdrlo = smiOsi1->getRowLower();
+            const double *stochdrup = smiOsi1->getRowUpper();
+            const double *stochdclo = smiOsi1->getColLower();
+            const double *stochdcup = smiOsi1->getColUpper();
+            const double *stochdobj = smiOsi1->getObjCoefficients();
+
+            // get matrix
+            const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow();
+            for ( t=0;t<3;t++)
+            {
+                double elt1,elt2;
+                int ic;
+                for(ii=osiCore->getColStart(t);ii<osiCore->getColStart(t+1);ii++)
+                {
+                    ic = osiCore->getColExternalIndex(ii);
+                    elt1 = stochdclo[ii];
+                    elt2 = dclo[ic];
+                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                    elt1 = stochdcup[ii];
+                    elt2 = dcup[ic];
+                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                    elt1 = stochdobj[ii];
+                    elt2 = dobj[ic];
+                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                }
+                int ir;
+                for(ii=osiCore->getRowStart(t);ii<osiCore->getRowStart(t+1);ii++)
+                {
+
+                    ir = osiCore->getRowExternalIndex(ii);
+
+                    myAssert(__FILE__,__LINE__,stochdrlo[ii]==drlo[ir]);
+                    myAssert(__FILE__,__LINE__,stochdrup[ii]==drup[ir]);
+
+                    const CoinPackedVector row1 = stochmat->getVector(ii);
+                    const CoinPackedVector row2 = origmat->getVector(ir);
+                    myAssert(__FILE__,__LINE__,row1.getNumElements() == row2.getNumElements());
+                    const int *indx = row1.getIndices();
+                    const double *els = row1.getElements();
+                    for (int j=0; j<row1.getNumElements(); j++)
+                    {
+                        elt1 = els[j];
+                        ic = osiCore->getColExternalIndex(indx[j]);
+                        elt2 = row2[ic];
+                        myAssert(__FILE__,__LINE__,elt1==elt2);
+                    }
+                }
+            }
+
+            printf(" *** Successfully tested problem with scenario %d.\n",is);
+
+
+            /***** ...main loop to generate scenarios from discrete random
+            variables
+            For each scenario index ii:
+            If the sample size nsamp[jj] divides the scenario index ii,
+            reverse the increment direction incr[jj]
+            and increase the random variable index jj by 1.
+            Increment the jj'th random variable by incr[jj]
+            and generate new sample data.
+            ***** */
+
+            /* sample space increment initialized to 1 */
+            incr = (int *) malloc( nindp*sizeof(int) );
+            for (jj=0;jj<nindp;jj++) incr[jj] = 1;
+
+            for (int iss=1;iss<ns;iss++) {
+                iii=iss; jj=0;
+                while ( !(iii%nsamp[jj]) ) {
+                    iii /= nsamp[jj];
+                    incr[jj] = -incr[jj];
+                    jj++;
+                }
+                dp /= dprobs[ indx[jj] ];
+                indx[jj] += incr[jj];
+                dp *= dprobs[ indx[jj] ];
+
+                // set data
+                drlo[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
+                drup[irow[n_first_stg_rows + jj]] = demand[ indx[jj] ];
+
+                cpv_rlo.setElement(cpv_rlo.findIndex(irow[n_first_stg_rows + jj]),demand[ indx[jj] ]);
+                cpv_rup.setElement(cpv_rup.findIndex(irow[n_first_stg_rows + jj]),demand[ indx[jj] ]);
+
+                // genScenario
+                is = smiModel->generateScenario(osiCore,cpm_mat,NULL,NULL,NULL,
+                    &cpv_rlo,&cpv_rup,branch,anc,dp);
+
+
+                if (is < 3)
+                {
+                    // test scenario
+
+                    // load problem data into OsiSolver
+                    smiModel->loadOsiSolverData();
+                    // get Osi pointer
+                    OsiSolverInterface *smiOsi1 = smiModel->getOsiSolverInterface();
+
+                    totalProb += dp;
+
+                    // get arrays
+                    stochdrlo = smiOsi1->getRowLower()+nStochRow;
+                    stochdrup = smiOsi1->getRowUpper()+nStochRow;
+                    stochdclo = smiOsi1->getColLower()+nStochCol;
+                    stochdcup = smiOsi1->getColUpper()+nStochCol;
+                    stochdobj = smiOsi1->getObjCoefficients()+nStochCol;
+
+                    // get matrix
+                    const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow();
+                    int t;
+                    for (t=1;t<3;t++)
+                    {
+                        double elt1,elt2;
+                        int ic;
+                        int colOff = osiCore->getColStart(1);
+                        for(ii=osiCore->getColStart(t);ii<osiCore->getColStart(t+1);ii++)
+                        {
+                            ic = osiCore->getColExternalIndex(ii);
+                            elt1 = stochdclo[ii-colOff];
+                            elt2 = dclo[ic];
+                            myAssert(__FILE__,__LINE__,elt1==elt2);
+                            elt1 = stochdcup[ii-colOff];
+                            elt2 = dcup[ic];
+                            myAssert(__FILE__,__LINE__,elt1==elt2);
+                            elt1 = stochdobj[ii-colOff];
+                            elt2 = dobj[ic];
+                            myAssert(__FILE__,__LINE__,fabs(elt1 - (elt2*dp/totalProb)) < 1.0e-8);
+                        }
+                        int ir,rowOff;
+                        rowOff = osiCore->getRowStart(1);
+                        for(ii=osiCore->getRowStart(t);ii<osiCore->getRowStart(t+1);ii++)
+                        {
+
+                            ir = osiCore->getRowExternalIndex(ii);
+
+                            myAssert(__FILE__,__LINE__,stochdrlo[ii-rowOff]==drlo[ir]);
+                            myAssert(__FILE__,__LINE__,stochdrup[ii-rowOff]==drup[ir]);
+
+                            const CoinPackedVector row1 = stochmat->getVector(ii);
+                            const CoinPackedVector row2 = origmat->getVector(ir);
+                            myAssert(__FILE__,__LINE__,row1.getNumElements()== row2.getNumElements());
+                            const int *indx = row1.getIndices();
+                            const double *els = row1.getElements();
+                            for (int j=0; j<row1.getNumElements(); j++)
+                            {
+                                elt1 = els[j];
+                                ic = osiCore->getColExternalIndex(indx[j]);
+                                elt2 = row2[ic];
+                                myAssert(__FILE__,__LINE__,elt1==elt2);
+                            }
+                        }
+                    }
+
+                    nStochCol = smiOsi1->getNumCols();
+                    nStochRow = smiOsi1->getNumRows();
+
+                    printf(" *** Successfully tested problem with scenario %d.\n",is);
+                }
+            }
+
+            myAssert(__FILE__,__LINE__,ns==smiModel->getNumScenarios());
+
+            // solve with decomp solver
+
+            // load problem data into OsiSolver
+            smiModel->loadOsiSolverData();
+            // get Osi pointer
+            OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
+            // set some parameters
+            smiOsi->setHintParam(OsiDoPresolveInInitial,true);
+            smiOsi->setHintParam(OsiDoScale,true);
+            smiOsi->setHintParam(OsiDoCrash,true);
+            // solve using Osi Solver
+            smiOsi->initialSolve();
+            // test optimal value
+            myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-1566.042)<0.01);
+
+            // test solutions
+            const double *dsoln = smiOsi->getColSolution();
+            double objSum = 0.0;
+
+            /* The canonical way to traverse the tree:
+            For each scenario, get the leaf node.
+            Then get the parent.  Repeat until parent is NULL.
+            (Only the root node has a NULL parent.)
+            */
             double probSum = 0;
 
-	        for(is=0; is<ns; ++is)
-	        {
-		        /* this loop calculates the scenario objective value */
-		        double scenSum = 0.0;
+            for(is=0; is<ns; ++is)
+            {
+                /* this loop calculates the scenario objective value */
+                double scenSum = 0.0;
 
-		        // start with leaf node
-		        SmiScnNode *node = smiModel->getLeafNode(is);
+                // start with leaf node
+                SmiScnNode *node = smiModel->getLeafNode(is);
 
-		        // leaf node probability is the scenario probability
-		        double scenprob = node->getProb();
+                // leaf node probability is the scenario probability
+                double scenprob = node->getProb();
 
-		        while (node != NULL)
-		        {
-			        // getColStart returns the starting index of node in OSI model
-			        for(int j=node->getColStart();j<node->getColStart()+node->getNumCols(); ++j)
-			        {
-				        // getCoreColIndex returns the corresponding Core index
-				        // in the original (user's) ordering
-				        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];
-			        }
-			        // get parent of node
-			        node = node->getParent();
-		        }
-		        objSum += scenSum*scenprob;
+                while (node != NULL)
+                {
+                    // getColStart returns the starting index of node in OSI model
+                    for(int j=node->getColStart();j<node->getColStart()+node->getNumCols(); ++j)
+                    {
+                        // getCoreColIndex returns the corresponding Core index
+                        // in the original (user's) ordering
+                        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];
+                    }
+                    // get parent of node
+                    node = node->getParent();
+                }
+                objSum += scenSum*scenprob;
                 probSum += scenprob;
-	        }
+            }
 
             myAssert(__FILE__,__LINE__,fabs(probSum-1) < 0.01);
-	        myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-objSum) <	0.01);
-	        free (incr);
-	        free (indx);
-	        free( mrow) ;
-	        free( mcol) ;
-	        free( drlo) ;
-	        free( drup) ;
-	        free( rstg) ;
-	        free( dclo) ;
-	        free( dcup) ;
-	        free( dobj) ;
-	        free( cstg) ;
-	        delete smiModel;
+            myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-objSum) <	0.01);
+            free (incr);
+            free (indx);
+            free( mrow) ;
+            free( mcol) ;
+            free( drlo) ;
+            free( drup) ;
+            free( rstg) ;
+            free( dclo) ;
+            free( dcup) ;
+            free( dobj) ;
+            free( cstg) ;
+            delete smiModel;
 
-	        delete osiClp1;
-	        delete osiCore;
-	        delete origmat;
-	        delete cpm_mat;
+            delete osiClp1;
+            delete osiCore;
+            delete origmat;
+            delete cpm_mat;
         }
 
         void replaceFirstWithSecond(CoinPackedVector &dfirst, const CoinPackedVector &dsecond)
@@ -5363,849 +5385,849 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         }
 
         TEST_F(SmiUnitTest, SmiScnModelDiscreteUnitTest) {
-	        // test of direct interfaces for discrete distribution
-
-	        OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
-	        double INF=osiClp1->getInfinity();
-
-	        /* Model dimensions */
-	        int ncol=27, nrow=9, nels=44;
-
-	        /* Sparse matrix data...organized by row */
-	        int *mrow,cmrow[]={ 0, 0, 0, 0, 0,
-		        1, 1, 1, 1,
-		        2, 2, 2,
-		        3, 3, 3, 3, 3,
-		        4, 4, 4, 4,
-		        5, 5, 5, 5, 5, 5,
-		        6, 6, 6, 6, 6,
-		        7, 7, 7, 7, 7, 7,
-		        8, 8, 8, 8, 8, 8 };
-	        int *mcol,cmcol[]={ 0, 1, 2, 3, 4,
-		        5, 6, 7, 8,
-		        9,10, 11,
-		        12, 13, 14, 15, 16,
-		        0,        12, 17, 18,
-		        1, 5, 9,  13, 19, 20,
-		        2, 6,     14, 21, 22,
-		        3, 7, 10, 15, 23, 24,
-		        4, 8, 11, 16, 25, 26 };
-
-	        double dels[] = { 1.0, 1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0, 1.0, 1.0,
-		        16.0,              9.0, -1.0, 1.0,
-		        15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
-		        28.0, 14.0,       22.0, -1.0, 1.0,
-		        23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
-		        81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
-
-	        /* Objective */
-	        double *dobj,cdobj[]={ 18.0, 21.0, 18.0, 16.0, 10.0, 15.0, 16.0,
-		        14.0, 9.0,
-		        10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
-		        13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
-
-	        /* Column bounds */
-	        double *dclo,cdclo[]={ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
-		        0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
-
-
-	        double *dcup,cdcup[]={ INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
-		        INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
-
-	        /* Row bounds */
-	        double *drlo,cdrlo[]={ -INF, -INF, -INF, -INF,  0.0, 4.0, 0.0,
-		        8.0, 10.0 };
-	        double *drup,cdrup[]={ 10.0, 19.0, 25.0, 15.0,  0.0, 7.0, 0.0,
-		        8.0, 90.0 };
-
-	        /* Stages */
-	        //int nstg=2;
-	        int n_first_stg_rows=4;
-	        int *rstg,crstg[]={ 0,0,0,0,1,1,1,1,2 };
-	        int *cstg,ccstg[]={ 0,0,0,0,0,0,0,0,0,
-		        0,0,0,0,0,0,0,0,1,
-		        1,1,1,1,1,1,1,2,2 };
-
-	        /* Stochastic data */
-	        int nindp=5;
-	        int nsamp[]={ 5, 2, 5, 5, 3 };
-	        double demand[]={ 200, 220, 250, 270, 300,
-		        50, 150,
-		        140, 160, 180, 200, 220,
-		        10, 50, 80, 100, 340,
-		        580, 600, 620 };
-	        double dprobs[]={ 0.2, 0.05, 0.35, 0.2, 0.2,
-		        0.3, 0.7,
-		        0.1, 0.2, 0.4, 0.2, 0.1,
-		        0.2, 0.2, 0.3, 0.2, 0.1,
-		        0.1, 0.8, 0.1 };
-
-	        /* scramble */
-
-	        int irow[]={ 1,2,7,8,0,3,4,5,6};
-	        int icol[]={ 9,2,3,4,5,6,7,8,1,
-		        19,21,23,25,0,26,24,22,20,
-		        10,11,12,13,14,15,16,17,18 };
-
-	        /* local variables */
-	        int ii,jj;
-
-
-	        // initialize SmiModel
-	        SmiScnModel *smiModel = new SmiScnModel();
-
-
-
-	        smiModel->setOsiSolverHandle(*osiClp1);
-
-	        /* scramble LP entries --- just for testing!! */
-	        mrow = (int*)malloc(nels*sizeof(int));
-	        mcol = (int*)malloc(nels*sizeof(int));
-	        for (ii=0;ii<nels;ii++)
-	        {
-		        mcol[ii] = icol[cmcol[ii]];
-		        mrow[ii] = irow[cmrow[ii]];
-	        }
-
-	        drlo = (double *)malloc(nrow*sizeof(double));
-	        drup = (double *)malloc(nrow*sizeof(double));
-	        rstg = (int *)malloc(nrow*sizeof(int));
-	        for (ii=0;ii<nrow;ii++)
-	        {
-		        drlo[irow[ii]] = cdrlo[ii];
-		        drup[irow[ii]] = cdrup[ii];
-		        rstg[irow[ii]] = crstg[ii];
-	        }
-
-	        dclo = (double *)malloc(ncol*sizeof(double));
-	        dcup = (double *)malloc(ncol*sizeof(double));
-	        dobj = (double *)malloc(ncol*sizeof(double));
-	        cstg = (int *)malloc(ncol*sizeof(int));
-	        for (ii=0;ii<ncol;ii++)
-	        {
-		        dclo[icol[ii]] = cdclo[ii];
-		        dcup[icol[ii]] = cdcup[ii];
-		        dobj[icol[ii]] = cdobj[ii];
-		        cstg[icol[ii]] = ccstg[ii];
-	        }
-
-	        // this to test the matrix update stanza in genScenario
-	        CoinPackedMatrix *origmat = new CoinPackedMatrix(false,mrow,mcol,dels,nels);
-	        int corenels = nels - 4;
-
-
-	        // set core model using Osi interface
-	        OsiClpSolverInterface ocsi;
-	        ocsi.loadProblem(CoinPackedMatrix(1,mrow,mcol,dels,corenels),dclo,dcup,dobj,drlo,drup);
-
-	        // core model with 3 stages
-	        SmiCoreData *smiCore = new SmiCoreData(&ocsi,3,cstg,rstg);
-
-	        // Coin structure for scenario "updates" to core matrix
-	        // ..row-ordered
-	        CoinPackedMatrix *cpm_mat = new CoinPackedMatrix(false,mrow+corenels,mcol+corenels,dels+corenels,nels-corenels);
-
-
-
-	        // Create discrete distribution
-	        SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(
-		        smiCore);
-
-	        int index=0;
-	        for (jj=0;jj<nindp;jj++)
-	        {
-		        SmiDiscreteRV *smiRV = new SmiDiscreteRV(1);
-		        for (ii=0;ii<nsamp[jj];ii++)
-		        {
-			        CoinPackedVector empty_vec;
-			        CoinPackedVector cpv_rlo ;
-			        CoinPackedVector cpv_rup ;
-			        cpv_rlo.insert(irow[n_first_stg_rows + jj], demand[index+
-				        ii]);
-			        cpv_rup.insert(irow[n_first_stg_rows + jj], demand[index+
-				        ii]);
-			        smiRV->addEvent(*cpm_mat,empty_vec,empty_vec,empty_vec,
-				        cpv_rlo,cpv_rup,dprobs[index+ii]);
-			        cpv_rlo.clear();
-			        cpv_rup.clear();
-		        }
-		        myAssert(__FILE__,__LINE__,static_cast<int>(smiRV->
-			        getNumEvents())==nsamp[jj]);
-		        for (ii=0;ii<nsamp[jj];ii++)
-		        {
-			        myAssert(__FILE__,__LINE__,smiRV->getEventColLower(ii).
-				        getNumElements()==0);
-			        myAssert(__FILE__,__LINE__,smiRV->getEventColUpper(ii).
-				        getNumElements()==0);
-			        myAssert(__FILE__,__LINE__,smiRV->getEventObjective(ii).
-				        getNumElements()==0);
-			        myAssert(__FILE__,__LINE__,smiRV->getEventMatrix(ii).
-				        getNumElements()==cpm_mat->getNumElements());
-			        myAssert(__FILE__,__LINE__,smiRV->getEventRowLower(ii).
-				        getElements()[0] == demand[index+ii]);
-			        myAssert(__FILE__,__LINE__,smiRV->getEventRowLower(ii).
-				        getIndices()[0] == irow[n_first_stg_rows + jj]);
-			        myAssert(__FILE__,__LINE__,smiRV->getEventRowUpper(ii).
-				        getElements()[0] == demand[index+ii]);
-			        //printf("event prob %g\n",smiRV->getEventProb(ii));
-			        myAssert(__FILE__,__LINE__,fabs(smiRV->getEventProb(ii) -
-				        dprobs[index+ii]) < 0.0000001);
-		        }
-		        smiDD->addDiscreteRV(smiRV);
-		        index+=nsamp[jj];
-	        }
-
-	        myAssert(__FILE__,__LINE__,smiDD->getNumRV() == nindp);
-
-	        // this is cut-pasted from
-	        smiModel->processDiscreteDistributionIntoScenarios(smiDD);
-
-	        if (0)
-	        {
-		        SmiCoreData *core=smiDD->getCore();
-
-		        int nindp = smiDD->getNumRV();
-		        myAssert(__FILE__,__LINE__,nindp > 0);
-
-		        int ns=1;
-		        double dp=1.0;
-
-		        CoinPackedMatrix matrix ;
-		        CoinPackedVector cpv_dclo ;
-		        CoinPackedVector cpv_dcup ;
-		        CoinPackedVector cpv_dobj ;
-		        CoinPackedVector cpv_drlo ;
-		        CoinPackedVector cpv_drup ;
-
-		        cpv_dclo.setTestForDuplicateIndex(true);
-		        cpv_dcup.setTestForDuplicateIndex(true);
-		        cpv_dobj.setTestForDuplicateIndex(true);
-		        cpv_drlo.setTestForDuplicateIndex(true);
-		        cpv_drup.setTestForDuplicateIndex(true);
-
-		        // initialize data for first scenario
-		        vector<int> indx(nindp);
-		        vector<int> nsamp(nindp);
-		        vector<int> label(core->getNumStages());
-		        vector<int>::iterator iLabel;
-
-		        for (iLabel=label.begin(); iLabel<label.end(); ++iLabel)
-			        *iLabel=0;
-
-		        int jj;
-		        int index=0;
-		        for (jj=0;jj<nindp;jj++) {
-			        SmiDiscreteRV *smiRV = smiDD->getDiscreteRV(jj);
-
-			        indx[jj] = 0;
-			        nsamp[jj] = smiRV->getNumEvents();
-			        ns *= nsamp[jj];
-			        dp *= smiRV->getEventProb(indx[jj]);
-
-			        //AJK -debug code for unitTest
-			        drlo[irow[n_first_stg_rows + jj]] = demand[ index + indx[jj]
-			        ];
-			        drup[irow[n_first_stg_rows + jj]] = demand[ index + indx[jj]
-			        ];
-			        index += nsamp[jj];
-			        //AJK -debug end
-
-
-			        cpv_dclo.append(smiRV->getEventColLower(indx[jj]));
-
-			        cpv_dcup.append(smiRV->getEventColUpper(indx[jj]));
-
-			        cpv_dobj.append(smiRV->getEventObjective(indx[jj]));
-
-			        cpv_drlo.append(smiRV->getEventRowLower(indx[jj]));
-
-			        cpv_drup.append(smiRV->getEventRowUpper(indx[jj]));
-
-
-			        CoinPackedMatrix m = smiRV->getEventMatrix(indx[jj]);
-			        myAssert(__FILE__,__LINE__,!m.isColOrdered());
-			        if (matrix.getNumElements())
-			        {
-				        for (int i=0; i<m.getNumRows(); ++i)
-				        {
-					        CoinPackedVector row=m.getVector(i);
-					        CoinPackedVector rrow=matrix.getVector(i);
-					        for (int j=m.getVectorFirst(i); j<m.getVectorLast(j); ++j)
-					        {
-
-						        myAssert(__FILE__,__LINE__,rrow[j] == 0.0);//tests duplicate index
-						        matrix.modifyCoefficient(i,j,row[j],true);
-					        }
-				        }
-			        }
-			        else
-				        matrix = m;
-
-
-		        }
-
-		        // first scenario
-		        int anc = 0;
-		        int branch = 1;
-		        int	is = smiModel->generateScenario(core,&matrix,&cpv_dclo,&
-			        cpv_dcup,&cpv_dobj,
-
-			        &cpv_drlo,&cpv_drup,branch,anc,dp)
-			        ;
-
-		        // test first scenario
-
-		        // load problem data into OsiSolver
-		        smiModel->loadOsiSolverData();
-		        // get Osi pointer
-		        OsiSolverInterface *smiOsi1 = smiModel->getOsiSolverInterface();
-
-		        int nStochCol = smiOsi1->getNumCols();
-		        int nStochRow = smiOsi1->getNumRows();
-		        double totalProb = dp;
-
-		        // get arrays
-		        const double *stochdrlo = smiOsi1->getRowLower();
-		        const double *stochdrup = smiOsi1->getRowUpper();
-		        const double *stochdclo = smiOsi1->getColLower();
-		        const double *stochdcup = smiOsi1->getColUpper();
-		        const double *stochdobj = smiOsi1->getObjCoefficients();
-
-		        // get matrix
-		        const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow();
-		        for (int t=0;t<3;t++)
-		        {
-			        double elt1,elt2;
-			        int ic;
-			        for(ii=core->getColStart(t);ii<core->getColStart(t+1);ii++)
-			        {
-				        ic = core->getColExternalIndex(ii);
-				        elt1 = stochdclo[ii];
-				        elt2 = dclo[ic];
-				        myAssert(__FILE__,__LINE__,elt1==elt2);
-				        elt1 = stochdcup[ii];
-				        elt2 = dcup[ic];
-				        myAssert(__FILE__,__LINE__,elt1==elt2);
-				        elt1 = stochdobj[ii];
-				        elt2 = dobj[ic];
-				        myAssert(__FILE__,__LINE__,elt1==elt2);
-			        }
-			        int ir;
-			        for(ii=core->getRowStart(t);ii<core->getRowStart(t+1);ii++)
-			        {
-
-				        ir = core->getRowExternalIndex(ii);
-
-				        myAssert(__FILE__,__LINE__,stochdrlo[ii]==drlo[ir]);
-				        myAssert(__FILE__,__LINE__,stochdrup[ii]==drup[ir]);
-
-				        const CoinPackedVector row1 = stochmat->getVector(ii);
-				        const CoinPackedVector row2 = origmat->getVector(ir);
-				        myAssert(__FILE__,__LINE__,row1.getNumElements() == row2.
-					        getNumElements());
-				        const int *indx = row1.getIndices();
-				        const double *els = row1.getElements();
-				        for (int j=0; j<row1.getNumElements(); j++)
-				        {
-					        elt1 = els[j];
-					        ic = core->getColExternalIndex(indx[j]);
-					        elt2 = row2[ic];
-					        myAssert(__FILE__,__LINE__,elt1==elt2);
-				        }
-			        }
-		        }
-
-		        printf(" *** Successfully tested problem with scenario %d.\n",is);
-
-
-
-		        SmiTreeNode<SmiScnNode *> *root = smiModel->getSmiTree()->getRoot();
-		        smiModel->getSmiTree()->setChildLabels(root,label);
-
-		        /* sample space increment initialized to 1 */
-		        int *incr = (int *) malloc( nindp*sizeof(int) );
-		        for (jj=0;jj<nindp;jj++) incr[jj] = 1;
-
-		        /***** ...main loop to generate scenarios from discrete random
-		        variables
-		        For each scenario index ii:
-		        If the sample size nsamp[jj] divides the scenario index ii,
-		        reverse the increment direction incr[jj]
-		        and increase the random variable index jj by 1.
-		        Increment the jj'th random variable by incr[jj]
-		        and generate new sample data.
-		        ***** */
-
-		        for (int iss=1;iss<ns;iss++) {
-			        int iii=iss; jj=0;
-			        while ( !(iii%nsamp[jj]) ) {
-				        iii /= nsamp[jj];
-				        incr[jj] = -incr[jj];
-				        jj++;
-			        }
-
-			        SmiDiscreteRV *smiRV = smiDD->getDiscreteRV(jj);
-
-			        dp /= smiRV->getEventProb(indx[jj]);
-			        indx[jj] += incr[jj];
-			        dp *= smiRV->getEventProb(indx[jj]);
-
-			        //AJK -debug code for unitTest
-			        index = 0;
-
-
-			        for (iLabel=label.begin(); iLabel<label.end(); ++iLabel)
-				        *iLabel=0;
-
-			        for (int jjj=0;jjj<smiDD->getNumRV();++jjj)
-			        {
-				        int nEvents = smiDD->getDiscreteRV(jjj)->getNumEvents();
-				        int iStage = smiDD->getDiscreteRV(jjj)->getStage();
-
-				        label[iStage] *= nEvents;
-				        label[iStage] += indx[jjj];
-
-				        drlo[irow[n_first_stg_rows + jjj]] = demand[ indx[jjj]+
-					        index ];
-				        drup[irow[n_first_stg_rows + jjj]] = demand[ indx[jjj]+
-					        index ];
-				        index += nsamp[jjj];
-
-			        }
-			        //AJK -debug end
-
-			        // set data
-			        //TODO -- should we declare NULL entries to have 0 entries?
-			        //smiModel would eliminate these tests
-			        replaceFirstWithSecond(cpv_dclo,smiRV->getEventColLower(indx[jj]));
-
-
-			        replaceFirstWithSecond(cpv_dcup,smiRV->getEventColUpper(indx[jj]));
-
-			        replaceFirstWithSecond(cpv_dobj,smiRV->getEventObjective(indx[jj]));
-
-			        replaceFirstWithSecond(cpv_drlo,smiRV->getEventRowLower(indx[jj]));
-
-
-			        replaceFirstWithSecond(cpv_drup,smiRV->getEventRowUpper(indx[jj]));
-
-
-			        //TODO test smiModel code
-			        CoinPackedMatrix m = smiRV->getEventMatrix(indx[jj]);
-			        myAssert(__FILE__,__LINE__,!m.isColOrdered());
-			        if (matrix.getNumElements())
-			        {
-				        for (int i=0; i<m.getNumRows(); ++i)
-				        {
-					        CoinPackedVector row=m.getVector(i);
-					        CoinPackedVector rrow=matrix.getVector(i);
-					        for (int j=m.getVectorFirst(i); j<m.getVectorLast(j);
-						        ++j)
-					        {
-						        matrix.modifyCoefficient(i,j,row[j],true);
-					        }
-				        }
-			        }
-			        else
-				        matrix = m;
-
-			        // find ancestor node
-			        SmiTreeNode<SmiScnNode *> *tnode = smiModel->getSmiTree()->find(
-				        label);
-
-			        // add scenario
-			        anc = tnode->scenario();
-			        myAssert(__FILE__,__LINE__,anc==0);
-			        branch = tnode->depth();
-			        myAssert(__FILE__,__LINE__,branch==1);
-			        is = smiModel->generateScenario(core,&matrix,&cpv_dclo,&
-				        cpv_dcup,&cpv_dobj,
-				        &cpv_drlo,&cpv_drup,branch,anc,dp)
-				        ;
-
-			        smiModel->getSmiTree()->setChildLabels(tnode,label);
-
-			        if (is < 3)
-			        {
-				        // test scenario
-
-				        // load problem data into OsiSolver
-				        smiModel->loadOsiSolverData();
-				        // get Osi pointer
-				        OsiSolverInterface *smiOsi1 = smiModel->
-					        getOsiSolverInterface();
-
-				        totalProb += dp;
-
-				        // get arrays
-				        stochdrlo = smiOsi1->getRowLower()+nStochRow;
-				        stochdrup = smiOsi1->getRowUpper()+nStochRow;
-				        stochdclo = smiOsi1->getColLower()+nStochCol;
-				        stochdcup = smiOsi1->getColUpper()+nStochCol;
-				        stochdobj = smiOsi1->getObjCoefficients()+nStochCol;
-
-				        // get matrix
-				        const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow
-					        ();
-				        int t;
-				        for (t=1;t<3;t++)
-				        {
-					        double elt1,elt2;
-					        int ic;
-					        int colOff = core->getColStart(1);
-					        for(ii=core->getColStart(t);ii<core->getColStart(t+1);
-						        ii++)
-					        {
-						        ic = core->getColExternalIndex(ii);
-						        elt1 = stochdclo[ii-colOff];
-						        elt2 = dclo[ic];
-						        myAssert(__FILE__,__LINE__,elt1==elt2);
-						        elt1 = stochdcup[ii-colOff];
-						        elt2 = dcup[ic];
-						        myAssert(__FILE__,__LINE__,elt1==elt2);
-						        elt1 = stochdobj[ii-colOff];
-						        elt2 = dobj[ic];
-						        myAssert(__FILE__,__LINE__,fabs(elt1 - (elt2*dp/
-							        totalProb)) < 1.0e-8);
-					        }
-					        int ir,rowOff;
-					        rowOff = core->getRowStart(1);
-					        for(ii=core->getRowStart(t);ii<core->getRowStart(t+1);
-						        ii++)
-					        {
-
-						        ir = core->getRowExternalIndex(ii);
-
-						        myAssert(__FILE__,__LINE__,stochdrlo[ii-rowOff]==
-							        drlo[ir]);
-						        myAssert(__FILE__,__LINE__,stochdrup[ii-rowOff]==
-							        drup[ir]);
-
-						        const CoinPackedVector row1 = stochmat->getVector(
-							        ii);
-						        const CoinPackedVector row2 = origmat->getVector(
-							        ir);
-						        myAssert(__FILE__,__LINE__,row1.getNumElements()
-							        == row2.getNumElements());
-						        const int *indx = row1.getIndices();
-						        const double *els = row1.getElements();
-						        for (int j=0; j<row1.getNumElements(); j++)
-						        {
-							        elt1 = els[j];
-							        ic = core->getColExternalIndex(indx[j]);
-							        elt2 = row2[ic];
-							        myAssert(__FILE__,__LINE__,elt1==elt2);
-						        }
-					        }
-				        }
-
-				        nStochCol = smiOsi1->getNumCols();
-				        nStochRow = smiOsi1->getNumRows();
-
-				        printf(" *** Successfully tested problem with scenario %d.\n",is);
-			        }
-
-		        }
-
-		        free( incr) ;
-		        free( drlo) ;
-		        free( drup) ;
-		        free( rstg) ;
-		        free( dclo) ;
-		        free( dcup) ;
-		        free( cstg) ;
-
-	        } else { // if (0)
-		        free( drlo) ;
-		        free( drup) ;
-		        free( rstg) ;
-		        free( dclo) ;
-		        free( dcup) ;
-		        free( cstg) ;
-	        }
-
-
-	        // solve with decomp solver
-
-	        // load problem data into OsiSolver
-	        smiModel->loadOsiSolverData();
-	        // get Osi pointer
-	        OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
-	        // set some parameters
-	        smiOsi->setHintParam(OsiDoPresolveInInitial,true);
-	        smiOsi->setHintParam(OsiDoScale,true);
-	        smiOsi->setHintParam(OsiDoCrash,true);
-	        // solve using Osi Solver
-	        smiOsi->initialSolve();
-	        // test optimal value
-	        myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-1566.042)<
-		        0.01);
-
-	        // test solutions
-	        const double *dsoln = smiOsi->getColSolution();
-	        double objSum = 0.0;
-
-	        /* The canonical way to traverse the tree:
-	        For each scenario, get the leaf node.
-	        Then get the parent.  Repeat until parent is NULL.
-	        (Only the root node has a NULL parent.)
-	        */
-	        for(int is=0; is<smiModel->getNumScenarios(); ++is)
-	        {
-		        /* this loop calculates the scenario objective value */
-		        double scenSum = 0.0;
-
-		        // start with leaf node
-		        SmiScnNode *node = smiModel->getLeafNode(is);
-
-		        // leaf node probability is the scenario probability
-		        double scenprob = node->getModelProb();
-
-		        while (node != NULL)
-		        {
-
-			        // getColStart returns the starting index of node in OSI model
-			        for(int j=node->getColStart();
-				        j<node->getColStart()+node->getNumCols(); ++j)
-			        {
-				        // getCoreColIndex returns the corresponding Core index
-				        // in the original (user's) ordering
-				        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];
-
-
-			        }
-			        // get parent of node
-			        node = node->getParent();
-		        }
-		        objSum += scenSum*scenprob;
-	        }
-	        myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-objSum) <	0.01);
-
-	        printf(" *** Completed all tests for SmiScnModel.\n");
-	        delete smiModel;
-	        delete osiClp1;
-	        delete smiCore;
-	        delete cpm_mat;
-	        delete smiDD;
-	        delete origmat;
-
-	        free( dobj) ;
-	        free( mrow) ;
-	        free( mcol) ;
+            // test of direct interfaces for discrete distribution
+
+            OsiClpSolverInterface *osiClp1 = new OsiClpSolverInterface();
+            double INF=osiClp1->getInfinity();
+
+            /* Model dimensions */
+            int ncol=27, nrow=9, nels=44;
+
+            /* Sparse matrix data...organized by row */
+            int *mrow,cmrow[]={ 0, 0, 0, 0, 0,
+                1, 1, 1, 1,
+                2, 2, 2,
+                3, 3, 3, 3, 3,
+                4, 4, 4, 4,
+                5, 5, 5, 5, 5, 5,
+                6, 6, 6, 6, 6,
+                7, 7, 7, 7, 7, 7,
+                8, 8, 8, 8, 8, 8 };
+            int *mcol,cmcol[]={ 0, 1, 2, 3, 4,
+                5, 6, 7, 8,
+                9,10, 11,
+                12, 13, 14, 15, 16,
+                0,        12, 17, 18,
+                1, 5, 9,  13, 19, 20,
+                2, 6,     14, 21, 22,
+                3, 7, 10, 15, 23, 24,
+                4, 8, 11, 16, 25, 26 };
+
+            double dels[] = { 1.0, 1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0, 1.0, 1.0,
+                16.0,              9.0, -1.0, 1.0,
+                15.0, 10.0,  5.0, 11.0, -1.0, 1.0,
+                28.0, 14.0,       22.0, -1.0, 1.0,
+                23.0, 15.0,  7.0, 17.0, -1.0, 1.0,
+                81.0, 57.0, 29.0, 55.0, -1.0, 1.0 };
+
+            /* Objective */
+            double *dobj,cdobj[]={ 18.0, 21.0, 18.0, 16.0, 10.0, 15.0, 16.0,
+                14.0, 9.0,
+                10.0,  9.0,  6.0, 17.0, 16.0, 17.0, 15.0, 10.0, 0.0,
+                13.0,  0.0, 13.0,  0.0,  7.0,  0.0,  7.0,  0.0, 1.0 };
+
+            /* Column bounds */
+            double *dclo,cdclo[]={ 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                0.0,  0.0,
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0 };
+
+
+            double *dcup,cdcup[]={ INF,  INF,  INF,  INF,  INF,  INF,  INF,
+                INF,  INF,
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,
+                INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF,  INF };
+
+            /* Row bounds */
+            double *drlo,cdrlo[]={ -INF, -INF, -INF, -INF,  0.0, 4.0, 0.0,
+                8.0, 10.0 };
+            double *drup,cdrup[]={ 10.0, 19.0, 25.0, 15.0,  0.0, 7.0, 0.0,
+                8.0, 90.0 };
+
+            /* Stages */
+            //int nstg=2;
+            int n_first_stg_rows=4;
+            int *rstg,crstg[]={ 0,0,0,0,1,1,1,1,2 };
+            int *cstg,ccstg[]={ 0,0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,1,
+                1,1,1,1,1,1,1,2,2 };
+
+            /* Stochastic data */
+            int nindp=5;
+            int nsamp[]={ 5, 2, 5, 5, 3 };
+            double demand[]={ 200, 220, 250, 270, 300,
+                50, 150,
+                140, 160, 180, 200, 220,
+                10, 50, 80, 100, 340,
+                580, 600, 620 };
+            double dprobs[]={ 0.2, 0.05, 0.35, 0.2, 0.2,
+                0.3, 0.7,
+                0.1, 0.2, 0.4, 0.2, 0.1,
+                0.2, 0.2, 0.3, 0.2, 0.1,
+                0.1, 0.8, 0.1 };
+
+            /* scramble */
+
+            int irow[]={ 1,2,7,8,0,3,4,5,6};
+            int icol[]={ 9,2,3,4,5,6,7,8,1,
+                19,21,23,25,0,26,24,22,20,
+                10,11,12,13,14,15,16,17,18 };
+
+            /* local variables */
+            int ii,jj;
+
+
+            // initialize SmiModel
+            SmiScnModel *smiModel = new SmiScnModel();
+
+
+
+            smiModel->setOsiSolverHandle(*osiClp1);
+
+            /* scramble LP entries --- just for testing!! */
+            mrow = (int*)malloc(nels*sizeof(int));
+            mcol = (int*)malloc(nels*sizeof(int));
+            for (ii=0;ii<nels;ii++)
+            {
+                mcol[ii] = icol[cmcol[ii]];
+                mrow[ii] = irow[cmrow[ii]];
+            }
+
+            drlo = (double *)malloc(nrow*sizeof(double));
+            drup = (double *)malloc(nrow*sizeof(double));
+            rstg = (int *)malloc(nrow*sizeof(int));
+            for (ii=0;ii<nrow;ii++)
+            {
+                drlo[irow[ii]] = cdrlo[ii];
+                drup[irow[ii]] = cdrup[ii];
+                rstg[irow[ii]] = crstg[ii];
+            }
+
+            dclo = (double *)malloc(ncol*sizeof(double));
+            dcup = (double *)malloc(ncol*sizeof(double));
+            dobj = (double *)malloc(ncol*sizeof(double));
+            cstg = (int *)malloc(ncol*sizeof(int));
+            for (ii=0;ii<ncol;ii++)
+            {
+                dclo[icol[ii]] = cdclo[ii];
+                dcup[icol[ii]] = cdcup[ii];
+                dobj[icol[ii]] = cdobj[ii];
+                cstg[icol[ii]] = ccstg[ii];
+            }
+
+            // this to test the matrix update stanza in genScenario
+            CoinPackedMatrix *origmat = new CoinPackedMatrix(false,mrow,mcol,dels,nels);
+            int corenels = nels - 4;
+
+
+            // set core model using Osi interface
+            OsiClpSolverInterface ocsi;
+            ocsi.loadProblem(CoinPackedMatrix(1,mrow,mcol,dels,corenels),dclo,dcup,dobj,drlo,drup);
+
+            // core model with 3 stages
+            SmiCoreData *smiCore = new SmiCoreData(&ocsi,3,cstg,rstg);
+
+            // Coin structure for scenario "updates" to core matrix
+            // ..row-ordered
+            CoinPackedMatrix *cpm_mat = new CoinPackedMatrix(false,mrow+corenels,mcol+corenels,dels+corenels,nels-corenels);
+
+
+
+            // Create discrete distribution
+            SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(
+                smiCore);
+
+            int index=0;
+            for (jj=0;jj<nindp;jj++)
+            {
+                SmiDiscreteRV *smiRV = new SmiDiscreteRV(1);
+                for (ii=0;ii<nsamp[jj];ii++)
+                {
+                    CoinPackedVector empty_vec;
+                    CoinPackedVector cpv_rlo ;
+                    CoinPackedVector cpv_rup ;
+                    cpv_rlo.insert(irow[n_first_stg_rows + jj], demand[index+
+                        ii]);
+                    cpv_rup.insert(irow[n_first_stg_rows + jj], demand[index+
+                        ii]);
+                    smiRV->addEvent(*cpm_mat,empty_vec,empty_vec,empty_vec,
+                        cpv_rlo,cpv_rup,dprobs[index+ii]);
+                    cpv_rlo.clear();
+                    cpv_rup.clear();
+                }
+                myAssert(__FILE__,__LINE__,static_cast<int>(smiRV->
+                    getNumEvents())==nsamp[jj]);
+                for (ii=0;ii<nsamp[jj];ii++)
+                {
+                    myAssert(__FILE__,__LINE__,smiRV->getEventColLower(ii).
+                        getNumElements()==0);
+                    myAssert(__FILE__,__LINE__,smiRV->getEventColUpper(ii).
+                        getNumElements()==0);
+                    myAssert(__FILE__,__LINE__,smiRV->getEventObjective(ii).
+                        getNumElements()==0);
+                    myAssert(__FILE__,__LINE__,smiRV->getEventMatrix(ii).
+                        getNumElements()==cpm_mat->getNumElements());
+                    myAssert(__FILE__,__LINE__,smiRV->getEventRowLower(ii).
+                        getElements()[0] == demand[index+ii]);
+                    myAssert(__FILE__,__LINE__,smiRV->getEventRowLower(ii).
+                        getIndices()[0] == irow[n_first_stg_rows + jj]);
+                    myAssert(__FILE__,__LINE__,smiRV->getEventRowUpper(ii).
+                        getElements()[0] == demand[index+ii]);
+                    //printf("event prob %g\n",smiRV->getEventProb(ii));
+                    myAssert(__FILE__,__LINE__,fabs(smiRV->getEventProb(ii) -
+                        dprobs[index+ii]) < 0.0000001);
+                }
+                smiDD->addDiscreteRV(smiRV);
+                index+=nsamp[jj];
+            }
+
+            myAssert(__FILE__,__LINE__,smiDD->getNumRV() == nindp);
+
+            // this is cut-pasted from
+            smiModel->processDiscreteDistributionIntoScenarios(smiDD);
+
+            if (0)
+            {
+                SmiCoreData *core=smiDD->getCore();
+
+                int nindp = smiDD->getNumRV();
+                myAssert(__FILE__,__LINE__,nindp > 0);
+
+                int ns=1;
+                double dp=1.0;
+
+                CoinPackedMatrix matrix ;
+                CoinPackedVector cpv_dclo ;
+                CoinPackedVector cpv_dcup ;
+                CoinPackedVector cpv_dobj ;
+                CoinPackedVector cpv_drlo ;
+                CoinPackedVector cpv_drup ;
+
+                cpv_dclo.setTestForDuplicateIndex(true);
+                cpv_dcup.setTestForDuplicateIndex(true);
+                cpv_dobj.setTestForDuplicateIndex(true);
+                cpv_drlo.setTestForDuplicateIndex(true);
+                cpv_drup.setTestForDuplicateIndex(true);
+
+                // initialize data for first scenario
+                vector<int> indx(nindp);
+                vector<int> nsamp(nindp);
+                vector<int> label(core->getNumStages());
+                vector<int>::iterator iLabel;
+
+                for (iLabel=label.begin(); iLabel<label.end(); ++iLabel)
+                    *iLabel=0;
+
+                int jj;
+                int index=0;
+                for (jj=0;jj<nindp;jj++) {
+                    SmiDiscreteRV *smiRV = smiDD->getDiscreteRV(jj);
+
+                    indx[jj] = 0;
+                    nsamp[jj] = smiRV->getNumEvents();
+                    ns *= nsamp[jj];
+                    dp *= smiRV->getEventProb(indx[jj]);
+
+                    //AJK -debug code for unitTest
+                    drlo[irow[n_first_stg_rows + jj]] = demand[ index + indx[jj]
+                    ];
+                    drup[irow[n_first_stg_rows + jj]] = demand[ index + indx[jj]
+                    ];
+                    index += nsamp[jj];
+                    //AJK -debug end
+
+
+                    cpv_dclo.append(smiRV->getEventColLower(indx[jj]));
+
+                    cpv_dcup.append(smiRV->getEventColUpper(indx[jj]));
+
+                    cpv_dobj.append(smiRV->getEventObjective(indx[jj]));
+
+                    cpv_drlo.append(smiRV->getEventRowLower(indx[jj]));
+
+                    cpv_drup.append(smiRV->getEventRowUpper(indx[jj]));
+
+
+                    CoinPackedMatrix m = smiRV->getEventMatrix(indx[jj]);
+                    myAssert(__FILE__,__LINE__,!m.isColOrdered());
+                    if (matrix.getNumElements())
+                    {
+                        for (int i=0; i<m.getNumRows(); ++i)
+                        {
+                            CoinPackedVector row=m.getVector(i);
+                            CoinPackedVector rrow=matrix.getVector(i);
+                            for (int j=m.getVectorFirst(i); j<m.getVectorLast(j); ++j)
+                            {
+
+                                myAssert(__FILE__,__LINE__,rrow[j] == 0.0);//tests duplicate index
+                                matrix.modifyCoefficient(i,j,row[j],true);
+                            }
+                        }
+                    }
+                    else
+                        matrix = m;
+
+
+                }
+
+                // first scenario
+                int anc = 0;
+                int branch = 1;
+                int	is = smiModel->generateScenario(core,&matrix,&cpv_dclo,&
+                    cpv_dcup,&cpv_dobj,
+
+                    &cpv_drlo,&cpv_drup,branch,anc,dp)
+                    ;
+
+                // test first scenario
+
+                // load problem data into OsiSolver
+                smiModel->loadOsiSolverData();
+                // get Osi pointer
+                OsiSolverInterface *smiOsi1 = smiModel->getOsiSolverInterface();
+
+                int nStochCol = smiOsi1->getNumCols();
+                int nStochRow = smiOsi1->getNumRows();
+                double totalProb = dp;
+
+                // get arrays
+                const double *stochdrlo = smiOsi1->getRowLower();
+                const double *stochdrup = smiOsi1->getRowUpper();
+                const double *stochdclo = smiOsi1->getColLower();
+                const double *stochdcup = smiOsi1->getColUpper();
+                const double *stochdobj = smiOsi1->getObjCoefficients();
+
+                // get matrix
+                const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow();
+                for (int t=0;t<3;t++)
+                {
+                    double elt1,elt2;
+                    int ic;
+                    for(ii=core->getColStart(t);ii<core->getColStart(t+1);ii++)
+                    {
+                        ic = core->getColExternalIndex(ii);
+                        elt1 = stochdclo[ii];
+                        elt2 = dclo[ic];
+                        myAssert(__FILE__,__LINE__,elt1==elt2);
+                        elt1 = stochdcup[ii];
+                        elt2 = dcup[ic];
+                        myAssert(__FILE__,__LINE__,elt1==elt2);
+                        elt1 = stochdobj[ii];
+                        elt2 = dobj[ic];
+                        myAssert(__FILE__,__LINE__,elt1==elt2);
+                    }
+                    int ir;
+                    for(ii=core->getRowStart(t);ii<core->getRowStart(t+1);ii++)
+                    {
+
+                        ir = core->getRowExternalIndex(ii);
+
+                        myAssert(__FILE__,__LINE__,stochdrlo[ii]==drlo[ir]);
+                        myAssert(__FILE__,__LINE__,stochdrup[ii]==drup[ir]);
+
+                        const CoinPackedVector row1 = stochmat->getVector(ii);
+                        const CoinPackedVector row2 = origmat->getVector(ir);
+                        myAssert(__FILE__,__LINE__,row1.getNumElements() == row2.
+                            getNumElements());
+                        const int *indx = row1.getIndices();
+                        const double *els = row1.getElements();
+                        for (int j=0; j<row1.getNumElements(); j++)
+                        {
+                            elt1 = els[j];
+                            ic = core->getColExternalIndex(indx[j]);
+                            elt2 = row2[ic];
+                            myAssert(__FILE__,__LINE__,elt1==elt2);
+                        }
+                    }
+                }
+
+                printf(" *** Successfully tested problem with scenario %d.\n",is);
+
+
+
+                SmiTreeNode<SmiScnNode *> *root = smiModel->getSmiTree()->getRoot();
+                smiModel->getSmiTree()->setChildLabels(root,label);
+
+                /* sample space increment initialized to 1 */
+                int *incr = (int *) malloc( nindp*sizeof(int) );
+                for (jj=0;jj<nindp;jj++) incr[jj] = 1;
+
+                /***** ...main loop to generate scenarios from discrete random
+                variables
+                For each scenario index ii:
+                If the sample size nsamp[jj] divides the scenario index ii,
+                reverse the increment direction incr[jj]
+                and increase the random variable index jj by 1.
+                Increment the jj'th random variable by incr[jj]
+                and generate new sample data.
+                ***** */
+
+                for (int iss=1;iss<ns;iss++) {
+                    int iii=iss; jj=0;
+                    while ( !(iii%nsamp[jj]) ) {
+                        iii /= nsamp[jj];
+                        incr[jj] = -incr[jj];
+                        jj++;
+                    }
+
+                    SmiDiscreteRV *smiRV = smiDD->getDiscreteRV(jj);
+
+                    dp /= smiRV->getEventProb(indx[jj]);
+                    indx[jj] += incr[jj];
+                    dp *= smiRV->getEventProb(indx[jj]);
+
+                    //AJK -debug code for unitTest
+                    index = 0;
+
+
+                    for (iLabel=label.begin(); iLabel<label.end(); ++iLabel)
+                        *iLabel=0;
+
+                    for (int jjj=0;jjj<smiDD->getNumRV();++jjj)
+                    {
+                        int nEvents = smiDD->getDiscreteRV(jjj)->getNumEvents();
+                        int iStage = smiDD->getDiscreteRV(jjj)->getStage();
+
+                        label[iStage] *= nEvents;
+                        label[iStage] += indx[jjj];
+
+                        drlo[irow[n_first_stg_rows + jjj]] = demand[ indx[jjj]+
+                            index ];
+                        drup[irow[n_first_stg_rows + jjj]] = demand[ indx[jjj]+
+                            index ];
+                        index += nsamp[jjj];
+
+                    }
+                    //AJK -debug end
+
+                    // set data
+                    //TODO -- should we declare NULL entries to have 0 entries?
+                    //smiModel would eliminate these tests
+                    replaceFirstWithSecond(cpv_dclo,smiRV->getEventColLower(indx[jj]));
+
+
+                    replaceFirstWithSecond(cpv_dcup,smiRV->getEventColUpper(indx[jj]));
+
+                    replaceFirstWithSecond(cpv_dobj,smiRV->getEventObjective(indx[jj]));
+
+                    replaceFirstWithSecond(cpv_drlo,smiRV->getEventRowLower(indx[jj]));
+
+
+                    replaceFirstWithSecond(cpv_drup,smiRV->getEventRowUpper(indx[jj]));
+
+
+                    //TODO test smiModel code
+                    CoinPackedMatrix m = smiRV->getEventMatrix(indx[jj]);
+                    myAssert(__FILE__,__LINE__,!m.isColOrdered());
+                    if (matrix.getNumElements())
+                    {
+                        for (int i=0; i<m.getNumRows(); ++i)
+                        {
+                            CoinPackedVector row=m.getVector(i);
+                            CoinPackedVector rrow=matrix.getVector(i);
+                            for (int j=m.getVectorFirst(i); j<m.getVectorLast(j);
+                                ++j)
+                            {
+                                matrix.modifyCoefficient(i,j,row[j],true);
+                            }
+                        }
+                    }
+                    else
+                        matrix = m;
+
+                    // find ancestor node
+                    SmiTreeNode<SmiScnNode *> *tnode = smiModel->getSmiTree()->find(
+                        label);
+
+                    // add scenario
+                    anc = tnode->scenario();
+                    myAssert(__FILE__,__LINE__,anc==0);
+                    branch = tnode->depth();
+                    myAssert(__FILE__,__LINE__,branch==1);
+                    is = smiModel->generateScenario(core,&matrix,&cpv_dclo,&
+                        cpv_dcup,&cpv_dobj,
+                        &cpv_drlo,&cpv_drup,branch,anc,dp)
+                        ;
+
+                    smiModel->getSmiTree()->setChildLabels(tnode,label);
+
+                    if (is < 3)
+                    {
+                        // test scenario
+
+                        // load problem data into OsiSolver
+                        smiModel->loadOsiSolverData();
+                        // get Osi pointer
+                        OsiSolverInterface *smiOsi1 = smiModel->
+                            getOsiSolverInterface();
+
+                        totalProb += dp;
+
+                        // get arrays
+                        stochdrlo = smiOsi1->getRowLower()+nStochRow;
+                        stochdrup = smiOsi1->getRowUpper()+nStochRow;
+                        stochdclo = smiOsi1->getColLower()+nStochCol;
+                        stochdcup = smiOsi1->getColUpper()+nStochCol;
+                        stochdobj = smiOsi1->getObjCoefficients()+nStochCol;
+
+                        // get matrix
+                        const CoinPackedMatrix *stochmat = smiOsi1->getMatrixByRow
+                            ();
+                        int t;
+                        for (t=1;t<3;t++)
+                        {
+                            double elt1,elt2;
+                            int ic;
+                            int colOff = core->getColStart(1);
+                            for(ii=core->getColStart(t);ii<core->getColStart(t+1);
+                                ii++)
+                            {
+                                ic = core->getColExternalIndex(ii);
+                                elt1 = stochdclo[ii-colOff];
+                                elt2 = dclo[ic];
+                                myAssert(__FILE__,__LINE__,elt1==elt2);
+                                elt1 = stochdcup[ii-colOff];
+                                elt2 = dcup[ic];
+                                myAssert(__FILE__,__LINE__,elt1==elt2);
+                                elt1 = stochdobj[ii-colOff];
+                                elt2 = dobj[ic];
+                                myAssert(__FILE__,__LINE__,fabs(elt1 - (elt2*dp/
+                                    totalProb)) < 1.0e-8);
+                            }
+                            int ir,rowOff;
+                            rowOff = core->getRowStart(1);
+                            for(ii=core->getRowStart(t);ii<core->getRowStart(t+1);
+                                ii++)
+                            {
+
+                                ir = core->getRowExternalIndex(ii);
+
+                                myAssert(__FILE__,__LINE__,stochdrlo[ii-rowOff]==
+                                    drlo[ir]);
+                                myAssert(__FILE__,__LINE__,stochdrup[ii-rowOff]==
+                                    drup[ir]);
+
+                                const CoinPackedVector row1 = stochmat->getVector(
+                                    ii);
+                                const CoinPackedVector row2 = origmat->getVector(
+                                    ir);
+                                myAssert(__FILE__,__LINE__,row1.getNumElements()
+                                    == row2.getNumElements());
+                                const int *indx = row1.getIndices();
+                                const double *els = row1.getElements();
+                                for (int j=0; j<row1.getNumElements(); j++)
+                                {
+                                    elt1 = els[j];
+                                    ic = core->getColExternalIndex(indx[j]);
+                                    elt2 = row2[ic];
+                                    myAssert(__FILE__,__LINE__,elt1==elt2);
+                                }
+                            }
+                        }
+
+                        nStochCol = smiOsi1->getNumCols();
+                        nStochRow = smiOsi1->getNumRows();
+
+                        printf(" *** Successfully tested problem with scenario %d.\n",is);
+                    }
+
+                }
+
+                free( incr) ;
+                free( drlo) ;
+                free( drup) ;
+                free( rstg) ;
+                free( dclo) ;
+                free( dcup) ;
+                free( cstg) ;
+
+            } else { // if (0)
+                free( drlo) ;
+                free( drup) ;
+                free( rstg) ;
+                free( dclo) ;
+                free( dcup) ;
+                free( cstg) ;
+            }
+
+
+            // solve with decomp solver
+
+            // load problem data into OsiSolver
+            smiModel->loadOsiSolverData();
+            // get Osi pointer
+            OsiSolverInterface *smiOsi = smiModel->getOsiSolverInterface();
+            // set some parameters
+            smiOsi->setHintParam(OsiDoPresolveInInitial,true);
+            smiOsi->setHintParam(OsiDoScale,true);
+            smiOsi->setHintParam(OsiDoCrash,true);
+            // solve using Osi Solver
+            smiOsi->initialSolve();
+            // test optimal value
+            myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-1566.042)<
+                0.01);
+
+            // test solutions
+            const double *dsoln = smiOsi->getColSolution();
+            double objSum = 0.0;
+
+            /* The canonical way to traverse the tree:
+            For each scenario, get the leaf node.
+            Then get the parent.  Repeat until parent is NULL.
+            (Only the root node has a NULL parent.)
+            */
+            for(int is=0; is<smiModel->getNumScenarios(); ++is)
+            {
+                /* this loop calculates the scenario objective value */
+                double scenSum = 0.0;
+
+                // start with leaf node
+                SmiScnNode *node = smiModel->getLeafNode(is);
+
+                // leaf node probability is the scenario probability
+                double scenprob = node->getModelProb();
+
+                while (node != NULL)
+                {
+
+                    // getColStart returns the starting index of node in OSI model
+                    for(int j=node->getColStart();
+                        j<node->getColStart()+node->getNumCols(); ++j)
+                    {
+                        // getCoreColIndex returns the corresponding Core index
+                        // in the original (user's) ordering
+                        scenSum += dobj[node->getCoreColIndex(j)]*dsoln[j];
+
+
+                    }
+                    // get parent of node
+                    node = node->getParent();
+                }
+                objSum += scenSum*scenprob;
+            }
+            myAssert(__FILE__,__LINE__,fabs(smiOsi->getObjValue()-objSum) <	0.01);
+
+            printf(" *** Completed all tests for SmiScnModel.\n");
+            delete smiModel;
+            delete osiClp1;
+            delete smiCore;
+            delete cpm_mat;
+            delete smiDD;
+            delete origmat;
+
+            free( dobj) ;
+            free( mrow) ;
+            free( mcol) ;
         }
 
 
         TEST_F(SmiUnitTest, ModelBug) {
-	        OsiClpSolverInterface osi;
-	        double INF=osi.getInfinity();
+            OsiClpSolverInterface osi;
+            double INF=osi.getInfinity();
 
-	        /*
-	        NAME    BUG
-	        ROWS
-	        N  obj
-	        G  C0
-	        G  C1
-	        G  C2
-	        G  C3
-	        */
-	        int nCoreRows=4;
-	        double dCoreRup[] = { INF, INF, INF, INF };
-	        /*
-	        COLUMNS
-	        x01   obj   1
-	        x01   C3    1
-	        x01   C1    1
-	        x01   C0    1
-	        x02   obj   1
-	        x02   C2    1
-	        x02   C1    1
-	        x02   C0    1
-	        x03   obj   1
-	        x03   C3    1
-	        x03   C2    1
-	        x03   C0    1
-	        x04   obj   0.5
-	        x04   C3    1
-	        x04   C1    1
-	        x05   obj   0.5
-	        x05   C2    1
-	        x05   C1    1
-	        x06   obj   0.5
-	        x06   C3    1
-	        x06   C2    1
-	        */
-	        int nCoreCols=6;
-	        double dCoreClo[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-	        double dCoreCup[] = {INF, INF, INF, INF, INF, INF};
-	        double dCoreObj[] = {1.0, 1.0, 1.0, 0.5, 0.5, 0.5};
+            /*
+            NAME    BUG
+            ROWS
+            N  obj
+            G  C0
+            G  C1
+            G  C2
+            G  C3
+            */
+            int nCoreRows=4;
+            double dCoreRup[] = { INF, INF, INF, INF };
+            /*
+            COLUMNS
+            x01   obj   1
+            x01   C3    1
+            x01   C1    1
+            x01   C0    1
+            x02   obj   1
+            x02   C2    1
+            x02   C1    1
+            x02   C0    1
+            x03   obj   1
+            x03   C3    1
+            x03   C2    1
+            x03   C0    1
+            x04   obj   0.5
+            x04   C3    1
+            x04   C1    1
+            x05   obj   0.5
+            x05   C2    1
+            x05   C1    1
+            x06   obj   0.5
+            x06   C3    1
+            x06   C2    1
+            */
+            int nCoreCols=6;
+            double dCoreClo[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+            double dCoreCup[] = {INF, INF, INF, INF, INF, INF};
+            double dCoreObj[] = {1.0, 1.0, 1.0, 0.5, 0.5, 0.5};
 
-	        //int nCoreElts=15;
-	        int iCoreColStarts[] = {0,
-		        3,
-		        6,
-		        9,
-		        11,
-		        13,
-		        15};
-	        int iCoreRowIndice[] = {3,1,0,
-		        2,1,0,
-		        3,2,0,
-		        3,1,
-		        2,1,
-		        3,2};
-	        double dCoreMatEntries[] = {1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0, 1.0,
-		        1.0, 1.0,
-		        1.0, 1.0,
-		        1.0, 1.0 };
+            //int nCoreElts=15;
+            int iCoreColStarts[] = {0,
+                3,
+                6,
+                9,
+                11,
+                13,
+                15};
+            int iCoreRowIndice[] = {3,1,0,
+                2,1,0,
+                3,2,0,
+                3,1,
+                2,1,
+                3,2};
+            double dCoreMatEntries[] = {1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0,
+                1.0, 1.0,
+                1.0, 1.0 };
 
-	        /*
-	        RHS
-	        RHS    C0    0
-	        RHS    C1    1
-	        RHS    C2    1
-	        RHS    C3    1
-	        ENDATA
-	        */
-	        double dCoreRlo[] = { 0.0, 1.0, 1.0, 1.0 };
-	        /*
-	        -----------------------------------------------------------
-	        bug.time:
+            /*
+            RHS
+            RHS    C0    0
+            RHS    C1    1
+            RHS    C2    1
+            RHS    C3    1
+            ENDATA
+            */
+            double dCoreRlo[] = { 0.0, 1.0, 1.0, 1.0 };
+            /*
+            -----------------------------------------------------------
+            bug.time:
 
-	        TIME          BUG
-	        PERIODS       LP
-	        x01       C0                      STG01
-	        x04       C1                      STG02
-	        ENDATA
-	        -----------------------------------------------------------
-	        */
-	        int nCoreStages = 2;
-	        int iColStages[] = {0,0,0,1,1,1};
-	        int iRowStages[] = {0,1,1,1};
+            TIME          BUG
+            PERIODS       LP
+            x01       C0                      STG01
+            x04       C1                      STG02
+            ENDATA
+            -----------------------------------------------------------
+            */
+            int nCoreStages = 2;
+            int iColStages[] = {0,0,0,1,1,1};
+            int iRowStages[] = {0,1,1,1};
 
-	        /*
-	        ----------------------------------------------------------
-	        bug.stoch file:
+            /*
+            ----------------------------------------------------------
+            bug.stoch file:
 
-	        NAME          BUG
-	        SCENARIOS     DISCRETE                REPLACE
-	        SC SCEN01    ROOT           0.500    STG02
-	        RHS       C1             1.000
-	        RHS       C2             1.000
-	        RHS       C3             0.000
-	        SC SCEN02    ROOT           0.500    STG02
-	        RHS       C1             0.000
-	        RHS       C2             1.000
-	        RHS       C3             0.000
-	        ENDATA
-	        */
+            NAME          BUG
+            SCENARIOS     DISCRETE                REPLACE
+            SC SCEN01    ROOT           0.500    STG02
+            RHS       C1             1.000
+            RHS       C2             1.000
+            RHS       C3             0.000
+            SC SCEN02    ROOT           0.500    STG02
+            RHS       C1             0.000
+            RHS       C2             1.000
+            RHS       C3             0.000
+            ENDATA
+            */
 
-	        //int nScenarios = 2;
-	        int iBranchStage[] = {1,1};
+            //int nScenarios = 2;
+            int iBranchStage[] = {1,1};
 
-	        int iAncestorScn[] = {0,0};
-	        double dProbScn[] = {0.5, 0.5};
+            int iAncestorScn[] = {0,0};
+            double dProbScn[] = {0.5, 0.5};
 
-	        double drlo0[] = {1.0, 1.0, 0.0 };
-	        int indices[]  = {1, 2, 3};
-	        CoinPackedVector *rlo0 = new CoinPackedVector(3, indices,drlo0);
-	        double drlo1[] = {0.0, 1.0, 0.0 };
-	        CoinPackedVector *rlo1 = new CoinPackedVector(3, indices,drlo1);
+            double drlo0[] = {1.0, 1.0, 0.0 };
+            int indices[]  = {1, 2, 3};
+            CoinPackedVector *rlo0 = new CoinPackedVector(3, indices,drlo0);
+            double drlo1[] = {0.0, 1.0, 0.0 };
+            CoinPackedVector *rlo1 = new CoinPackedVector(3, indices,drlo1);
 
-	        // generate Core model
+            // generate Core model
 
-	        osi.loadProblem(nCoreCols,
-		        nCoreRows,iCoreColStarts,iCoreRowIndice,dCoreMatEntries,dCoreClo,
-		        dCoreCup,dCoreObj,
-		        dCoreRlo,dCoreRup);
-	        SmiCoreData *osiCore = new SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
+            osi.loadProblem(nCoreCols,
+                nCoreRows,iCoreColStarts,iCoreRowIndice,dCoreMatEntries,dCoreClo,
+                dCoreCup,dCoreObj,
+                dCoreRlo,dCoreRup);
+            SmiCoreData *osiCore = new SmiCoreData(&osi,nCoreStages,iColStages,iRowStages);
 
-	        // initialize SmiScnModel
-	        SmiScnModel *smiModel = new SmiScnModel();
+            // initialize SmiScnModel
+            SmiScnModel *smiModel = new SmiScnModel();
             smiModel->setCore(osiCore);
 
-	        // Add Scenarios
-	        int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-		        rlo0,NULL,iBranchStage[0],
-		        iAncestorScn[0],dProbScn[0]);
+            // Add Scenarios
+            int	is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+                rlo0,NULL,iBranchStage[0],
+                iAncestorScn[0],dProbScn[0]);
 
-	        is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
-		        rlo1,NULL,iBranchStage[1],
-		        iAncestorScn[1],dProbScn[1]);
+            is = smiModel->generateScenario(osiCore,NULL,NULL,NULL,NULL,
+                rlo1,NULL,iBranchStage[1],
+                iAncestorScn[1],dProbScn[1]);
 
-	        // Set Solver
-	        OsiClpSolverInterface osiClp;
-	        smiModel->setOsiSolverHandle(osiClp);
+            // Set Solver
+            OsiClpSolverInterface osiClp;
+            smiModel->setOsiSolverHandle(osiClp);
 
-	        // Load Scenarios into Deterministic Equivalent
-	        smiModel->loadOsiSolverData();
+            // Load Scenarios into Deterministic Equivalent
+            smiModel->loadOsiSolverData();
 
-	        // Get Det Equiv OSI
-	        OsiSolverInterface *osiStoch = smiModel->getOsiSolverInterface();
+            // Get Det Equiv OSI
+            OsiSolverInterface *osiStoch = smiModel->getOsiSolverInterface();
 
-	        // Solve
-	        osiStoch->initialSolve();
+            // Solve
+            osiStoch->initialSolve();
 
-	        // print results
-	        printf("Solved stochastic program %s\n", "BUG");
-	        printf("Number of rows: %d\n",osiStoch->getNumRows());
-	        printf("Number of cols: %d\n",osiStoch->getNumCols());
-	        printf("Optimal value: %g\n",osiStoch->getObjValue());
+            // print results
+            printf("Solved stochastic program %s\n", "BUG");
+            printf("Number of rows: %d\n",osiStoch->getNumRows());
+            printf("Number of cols: %d\n",osiStoch->getNumCols());
+            printf("Optimal value: %g\n",osiStoch->getObjValue());
 
-	        myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
+            myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
 
-	        delete smiModel;
-	        delete rlo0;
-	        delete rlo1;
+            delete smiModel;
+            delete rlo0;
+            delete rlo1;
         }
 
 
         TEST_F(SmiUnitTest, SmpsBug) {
-	        SmiScnModel smi;
+            SmiScnModel smi;
 
 #ifdef _MSC_VER
-	        std::string dataDir="../../../../Smi/test/SmiTestData";
+            std::string dataDir="../../../../Smi/test/SmiTestData";
 #else
             std::string dataDir="../../Smi/test/SmiTestData";
 #endif
-	        dataDir += "/bug";
+            dataDir += "/bug";
 
-	        // read SMPS model from files
-	        // <name>.core, <name>.time, and <name>.stoch
-	        // the argument myCombineRule overrides the combine rule specified in the Stoch file
-	        myAssert(__FILE__,__LINE__,-1!=smi.readSmps(dataDir.c_str()));
+            // read SMPS model from files
+            // <name>.core, <name>.time, and <name>.stoch
+            // the argument myCombineRule overrides the combine rule specified in the Stoch file
+            myAssert(__FILE__,__LINE__,-1!=smi.readSmps(dataDir.c_str()));
 
-	        // generate OSI solver object
-	        // 	here we use OsiClp
-	        OsiClpSolverInterface *clp = new OsiClpSolverInterface();
+            // generate OSI solver object
+            // 	here we use OsiClp
+            OsiClpSolverInterface *clp = new OsiClpSolverInterface();
 
-	        // set solver object for SmiScnModel
-	        smi.setOsiSolverHandle(*clp);
+            // set solver object for SmiScnModel
+            smi.setOsiSolverHandle(*clp);
 
-	        // load solver data
-	        // 	this step generates the deterministic equivalent
-	        //	and returns an OsiSolver object
-	        OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
+            // load solver data
+            // 	this step generates the deterministic equivalent
+            //	and returns an OsiSolver object
+            OsiSolverInterface *osiStoch = smi.loadOsiSolverData();
 
-	        // solve
-	        osiStoch->initialSolve();
+            // solve
+            osiStoch->initialSolve();
 
-	        // print results
-	        printf("Solved stochastic program Bug\n");
-	        printf("Number of rows: %d\n",osiStoch->getNumRows());
-	        printf("Number of cols: %d\n",osiStoch->getNumCols());
-	        printf("Optimal value: %g\n",osiStoch->getObjValue());
-	        myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
+            // print results
+            printf("Solved stochastic program Bug\n");
+            printf("Number of rows: %d\n",osiStoch->getNumRows());
+            printf("Number of cols: %d\n",osiStoch->getNumCols());
+            printf("Optimal value: %g\n",osiStoch->getObjValue());
+            myAssert(__FILE__,__LINE__,osiStoch->getObjValue()== 0.5);
 
-	        delete clp;
+            delete clp;
         }
 
     }
@@ -6340,7 +6362,7 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
 
 
         RandomVariable* supply[numStage-1][numSupplier] = {
-            
+
             { new EmpiricalRandomVariable(values,probs),
 
             new EmpiricalRandomVariable(values,probs),
@@ -6400,826 +6422,1140 @@ TEST_F(UseCaseTest,InfinityHandlingTest){
         OsiSolverInterface* osiPtr = smiPtr->loadOsiSolverData();
         osiPtr->writeLp("Atilla");
         model.solve(MP_model::MINIMIZE);
-
     }
 
-    TEST_F(UseCaseTest,PiaTest){
-        char buchstabe = 'a';
-        while ( buchstabe <= 'z' ){ // Könnte funktionieren, bin nicht sicher
-            std::cout << buchstabe << "  " << (int)(buchstabe) << "\n";
-            buchstabe++;
-        }
 
-    }
+    TEST_F(UseCaseTest,Postponement){
+        //Sets 
+        //MP_model postponement(new OsiCpxSolverInterface());
+        MP_model postponement(new OsiCpxSolverInterface());
+        //enum {numT=2};
+        //MP_stage T(numT);
+        MP_stage T(2);
 
-TEST_F(UseCaseTest,Postponement){
-    //Sets 
-    //MP_model postponement(new OsiCpxSolverInterface());
-    MP_model postponement(new OsiCpxSolverInterface());
-    //enum {numT=2};
-    //MP_stage T(numT);
-    MP_stage T(2);
-
-    T.setName("T");
-    //TierID
-    enum {T1, T2, T3, T4, numOfTiers};
-    //FacilityID
-    enum {F1, CW1, RW1, RW2, CZ1, CZ2, numOfFacilities};
-    //ProductID
-    enum {Sweater, SweaterColor1, SweaterColor2, Yarn, YarnColor1, YarnColor2, numOfProducts};
-    //FunctionID
-    enum {Dye, DyeANDKnit, Knit, Nothing, numOfProdActivities};
-    //ScenarioID
-    enum {Scen1, Scen2, numOfScenarios};
-
-    // index set of tiers
-    MP_set S(numOfTiers);
-    S.setName("S");
-    MP_set K(numOfTiers);
-    K.setName("K");
-    MP_subset<1> S123(S);
-    S123.setName("S123");
-    forall(S.such_that(!(S==3)),S123.insert(S));
-    MP_subset<1> S23(S);
-    S23.setName("S23");
-    forall(S.such_that(!(S==0)&&!(S==3)),S23.insert(S));
-    MP_subset<1> S1(S);
-    S1.setName("S1");
-    forall(S.such_that((S==0)),S1.insert(S));
-
-    //Display:
-    S1.display("F_in_LOC members");
-    S23.display("F_in_LOC members");
-    S123.display("F_in_LOC members");
-
-    //index set of products
-    MP_set P(numOfProducts);
-    P.setName("P");
-    MP_set P2(numOfProducts);
-    P2.setName("P2");
-    MP_set P3(numOfProducts);
-    P3.setName("P3");
-    MP_set P4(numOfProducts);
-    P4.setName("P4");
-
-    //index set of different functions
-    MP_set L(numOfProdActivities);
-    L.setName("L");
-    MP_set L2(numOfProdActivities);
-    L2.setName("L2");
-
-    //index set of product variants generated by applying activity l to product p
-    MP_subset<3> TF (L,P2,P3);
-    TF.setName("TF");
+        T.setName("T");
+        //TierID
+        enum {T1, T2, T3, T4, numOfTiers};
+        //FacilityID
+        enum {F1, CW1, RW1, RW2, CZ1, CZ2, numOfFacilities};
+        //ProductID
+        enum {Sweater, SweaterColor1, SweaterColor2, Yarn, YarnColor1, YarnColor2, numOfProducts};
+        //FunctionID
+        enum {Dye, DyeANDKnit, Knit, Nothing, numOfProdActivities};
+        //ScenarioID
+        //enum {Scen1, Scen2, Scen3, Scen4, Scen5, Scen6, Scen7, Scen8, Scen9, Scen10, Scen11, Scen12, Scen13, Scen14, Scen15, numOfScenarios};
+        //ScenarioID
+        enum {Scen_1, Scen_10, Scen_11, Scen_12, Scen_13, Scen_14, Scen_15, Scen_16, Scen_17, Scen_18, Scen_19, Scen_2, Scen_20, Scen_21, Scen_22, Scen_23, Scen_24, Scen_25, Scen_26, Scen_27, Scen_28, Scen_29, Scen_3, Scen_30, Scen_31, Scen_32, Scen_33, Scen_34, Scen_35, Scen_36, Scen_37, Scen_38, Scen_39, Scen_4, Scen_40, Scen_41, Scen_42, Scen_43, Scen_44, Scen_45, Scen_46, Scen_47, Scen_48, Scen_49, Scen_5, Scen_50, Scen_6, Scen_7, Scen_8, Scen_9, numOfScenarios};
 
 
 
-    //index set of possible functions that can be applied to a product variant p
-    MP_subset<2> TL(P,L);
-    TL.setName("TL");
-    //TL.insert(Sweater,Dye);
+        // index set of tiers
+        MP_set S(numOfTiers);
+        S.setName("S");
+        MP_set K(numOfTiers);
+        K.setName("K");
+        MP_subset<1> S123(S);
+        S123.setName("S123");
+        forall(S.such_that(!(S==3)),S123.insert(S));
+        MP_subset<1> S23(S);
+        S23.setName("S23");
+        forall(S.such_that(!(S==0)&&!(S==3)),S23.insert(S));
+        MP_subset<1> S1(S);
+        S1.setName("S1");
+        forall(S.such_that((S==0)),S1.insert(S));
+
+        //Display:
+        S1.display("F_in_LOC members");
+        S23.display("F_in_LOC members");
+        S123.display("F_in_LOC members");
+
+        //index set of products
+        MP_set P(numOfProducts);
+        P.setName("P");
+        MP_set P2(numOfProducts);
+        P2.setName("P2");
+        MP_set P3(numOfProducts);
+        P3.setName("P3");
+        MP_set P4(numOfProducts);
+        P4.setName("P4");
+
+        //index set of different functions
+        MP_set L(numOfProdActivities);
+        L.setName("L");
+        MP_set L2(numOfProdActivities);
+        L2.setName("L2");
+
+        //index set of product variants generated by applying activity l to product p
+        MP_subset<3> TF (L,P2,P3);
+        TF.setName("TF");
 
 
 
-    MP_set F(numOfFacilities);
-    F.setName("F");
-    MP_set F2(numOfFacilities);
-    F2.setName("F2");
-
-    MP_subset<2> LOC (S,F);
-    LOC.setName("LOC");
-
-    //index set of allowed transportation links (facility/facility 
-    //respectively facility/customer zone) at tiers s and s+k, k=1,2,3
-    //MP_subset<4> SL (S,F,K,F2);
-    //SL.setName("SL");
-
-    //help set
-    //MP_subset<4> SL_BIG_S (S,F,K,F2);
-    //SL_BIG_S.setName("SL_BIG_S");
-    //forall(S.such_that(S>=1),SL_BIG_S.insert(S,F,K,F2));
-
-    //MP_subset<4> SL_SMALL_S (S,F,K,F2);
-    //SL_SMALL_S.setName("SL_SMALL_S");
-    //forall(S.such_that(S<1),SL_SMALL_S.insert(S,F,K,F2));
-
-
-    //index set of scenarios
-    MP_scenario_set SC(numOfScenarios);
-    SC.setName("SC");
-
-    MP_subset<2> A (F,F);
-    A.setName("A");
-
-    MP_subset<2> AST1 (F,F);
-    AST1.setName("AST1");
-
-    MP_subset<2> AST1CZ (F,F);
-    AST1CZ.setName("AST1CZ");
-
-    MP_subset<2> AST2 (F,F);
-    AST2.setName("AST2");
-
-    MP_subset<2> AST2CZ (F,F);
-    AST2CZ.setName("AST2CZ");
-
-    //TF, ProductVariantsByFunction 
-    TF.insert(Dye, Sweater, SweaterColor1);
-    TF.insert(Dye, Sweater, SweaterColor2);
-    TF.insert(Dye, Yarn, YarnColor1);
-    TF.insert(Dye, Yarn, YarnColor2);
-    TF.insert(DyeANDKnit, Yarn, SweaterColor1);
-    TF.insert(DyeANDKnit, Yarn, SweaterColor2);
-    TF.insert(Knit, YarnColor1, SweaterColor1);
-    TF.insert(Knit, YarnColor2, SweaterColor2);
-    TF.insert(Nothing, Sweater, Sweater);
-    TF.insert(Nothing, SweaterColor1, SweaterColor1);
-    TF.insert(Nothing, SweaterColor2, SweaterColor2);
-    TF.insert(Nothing, Yarn, Yarn);
-    TF.insert(Nothing, YarnColor1, YarnColor1);
-    TF.insert(Nothing, YarnColor2, YarnColor2);
-    TF.insert(Knit, Yarn, Sweater);
-
-    //TL, FunctionsByProductVariant 
-    TL.insert(Sweater, Dye);
-    TL.insert(Sweater, Nothing);
-    TL.insert(SweaterColor1, Nothing);
-    TL.insert(SweaterColor2, Nothing);
-    TL.insert(Yarn, Dye);
-    TL.insert(Yarn, DyeANDKnit);
-    TL.insert(Yarn, Knit);
-    TL.insert(Yarn, Nothing);
-    TL.insert(YarnColor1, Knit);
-    TL.insert(YarnColor1, Nothing);
-    TL.insert(YarnColor2, Knit);
-    TL.insert(YarnColor2, Nothing);
-
-    //LOC, Locations 
-    LOC.insert(0, F1);
-    LOC.insert(1, CW1);
-    LOC.insert(2, RW1);
-    LOC.insert(2, RW2);
-    LOC.insert(3, CZ1);
-    LOC.insert(3, CZ2);
-
-    MP_subset<1> F_in_LOC(F);
-    MP_index f,p;
-    F_in_LOC(f) <<= LOC(MP_index::Any(),f);
-    F_in_LOC.display("F_in_LOC members");
-
-    MP_index g,h; 
-    MP_subset<1> Ffactory (F);
-    Ffactory.setName("Ffactory");
-    Ffactory.insert(F1);
-
-
-    MP_subset<1> FRest(F);
-    FRest.insert(CW1);
-    FRest.insert(RW1);
-    FRest.insert(RW2);
-    FRest.insert(CZ1);
-    FRest.insert(CZ2);
-    FRest.display();
-
-    MP_subset<1> F23(F);
-    F23.insert(CW1);
-    F23.insert(RW1);
-    F23.insert(RW2);
-    F23.display();
-
-    MP_subset<1> F123(F);
-    F123.insert(F1);
-    F123.insert(CW1);
-    F123.insert(RW1);
-    F123.insert(RW2);
-    F123.display();
-
-    MP_subset<1> FC(F);
-    FC.insert(CZ1);
-    FC.insert(CZ2);
-    FC.display();
-
-    MP_subset<1> FC2(F);
-    FC2.insert(CZ1);
-    FC2.insert(CZ2);
-
-    Ffactory.display();
-
-
-    //A, TransportationLinks 
-    A.insert(F1, CW1);
-    A.insert(F1, RW1);
-    A.insert(F1, RW2);
-    A.insert(F1, CZ1);
-    A.insert(F1, CZ2);
-    A.insert(CW1, RW1);
-    A.insert(CW1, RW2);
-    A.insert(CW1, CZ1);
-    A.insert(CW1, CZ2);
-    A.insert(RW1, CZ1);
-    A.insert(RW1, CZ2);
-    A.insert(RW2, CZ1);
-    A.insert(RW2, CZ2);
-
-    //AST1, TransportationLinksStage1 
-    AST1.insert(F1, CW1);
-    AST1.insert(F1, RW1);
-    AST1.insert(F1, RW2);
-    AST1.insert(F1, CZ1);
-    AST1.insert(F1, CZ2);
-
-    AST1CZ.insert(F1, CZ1);
-    AST1CZ.insert(F1, CZ2);
-
-    //AST2, TransportationLinksStage2 
-    AST2.insert(CW1, RW1);
-    AST2.insert(CW1, RW2);
-    AST2.insert(CW1, CZ1);
-    AST2.insert(CW1, CZ2);
-    AST2.insert(RW1, CZ1);
-    AST2.insert(RW1, CZ2);
-    AST2.insert(RW2, CZ1);
-    AST2.insert(RW2, CZ2);
-
-    // Display:
-    MP_subset<1> SALL(S);
-    //SALL.display("F_in_LOC members");
-    AST1.display("AST1_MEMBERS");
-    AST2.display("AST2_MEMBERS");
+        //index set of possible functions that can be applied to a product variant p
+        MP_subset<2> TL(P,L);
+        TL.setName("TL");
+        //TL.insert(Sweater,Dye);
 
 
 
-    //#####################################################################################################################
+        MP_set F(numOfFacilities);
+        F.setName("F");
+        MP_set F2(numOfFacilities);
+        F2.setName("F2");
+
+        MP_subset<2> LOC (S,F);
+        LOC.setName("LOC");
+
+        //index set of allowed transportation links (facility/facility 
+        //respectively facility/customer zone) at tiers s and s+k, k=1,2,3
+        //MP_subset<4> SL (S,F,K,F2);
+        //SL.setName("SL");
+
+        //help set
+        //MP_subset<4> SL_BIG_S (S,F,K,F2);
+        //SL_BIG_S.setName("SL_BIG_S");
+        //forall(S.such_that(S>=1),SL_BIG_S.insert(S,F,K,F2));
+
+        //MP_subset<4> SL_SMALL_S (S,F,K,F2);
+        //SL_SMALL_S.setName("SL_SMALL_S");
+        //forall(S.such_that(S<1),SL_SMALL_S.insert(S,F,K,F2));
 
 
-    //sales price for p in customer region i
-    double sales_price[numOfProducts][numOfFacilities] =
-    {
-        {0,0,0,0,0,0}, 
-        {0,0,0,0,35,35}, 
-        {0,0,0,0,35,35},
-        {0,0,0,0,0,0},
-        {0,0,0,0,0,0},
-        {0,0,0,0,0,0}
-    };
-    MP_data e(&sales_price[0][0], P, F);
-    e.setName("e");
+        //index set of scenarios
+        MP_scenario_set SC(numOfScenarios);
+        SC.setName("SC");
 
-    e.display();
-    //shipping cost per unit and per unit distance for a product p at tier s
-    A.display();
-    const int i = 13;
+        MP_subset<2> A (F,F);
+        A.setName("A");
 
-    double shipping_costs[13][numOfProducts] =
-    {
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17}, 
-        {0.35,0.8,0.8,0.13,0.17,0.17} 
-    };
-    MP_data cs(&shipping_costs[0][0], A, P);
-    cs.setName("cs");
-    cs.display("values");
+        MP_subset<2> AST1 (F,F);
+        AST1.setName("AST1");
 
-    //processing cost per unit of applying activity l in TLp to product p in P in facility i in N
-    double processing_costs[numOfProducts][numOfProdActivities][numOfFacilities] =
-    {
+        MP_subset<2> AST1CZ (F,F);
+        AST1CZ.setName("AST1CZ");
+
+        MP_subset<2> AST2 (F,F);
+        AST2.setName("AST2");
+
+        MP_subset<2> AST2CZ (F,F);
+        AST2CZ.setName("AST2CZ");
+
+        //TF, ProductVariantsByFunction 
+        TF.insert(Dye, Sweater, SweaterColor1);
+        TF.insert(Dye, Sweater, SweaterColor2);
+        TF.insert(Dye, Yarn, YarnColor1);
+        TF.insert(Dye, Yarn, YarnColor2);
+        TF.insert(DyeANDKnit, Yarn, SweaterColor1);
+        TF.insert(DyeANDKnit, Yarn, SweaterColor2);
+        TF.insert(Knit, YarnColor1, SweaterColor1);
+        TF.insert(Knit, YarnColor2, SweaterColor2);
+        TF.insert(Nothing, Sweater, Sweater);
+        TF.insert(Nothing, SweaterColor1, SweaterColor1);
+        TF.insert(Nothing, SweaterColor2, SweaterColor2);
+        TF.insert(Nothing, Yarn, Yarn);
+        TF.insert(Nothing, YarnColor1, YarnColor1);
+        TF.insert(Nothing, YarnColor2, YarnColor2);
+        TF.insert(Knit, Yarn, Sweater);
+
+        //TL, FunctionsByProductVariant 
+        TL.insert(Sweater, Dye);
+        TL.insert(Sweater, Nothing);
+        TL.insert(SweaterColor1, Nothing);
+        TL.insert(SweaterColor2, Nothing);
+        TL.insert(Yarn, Dye);
+        TL.insert(Yarn, DyeANDKnit);
+        TL.insert(Yarn, Knit);
+        TL.insert(Yarn, Nothing);
+        TL.insert(YarnColor1, Knit);
+        TL.insert(YarnColor1, Nothing);
+        TL.insert(YarnColor2, Knit);
+        TL.insert(YarnColor2, Nothing);
+
+        //LOC, Locations 
+        LOC.insert(0, F1);
+        LOC.insert(1, CW1);
+        LOC.insert(2, RW1);
+        LOC.insert(2, RW2);
+        LOC.insert(3, CZ1);
+        LOC.insert(3, CZ2);
+
+        MP_subset<1> F_in_LOC(F);
+        MP_index f,p;
+        F_in_LOC(f) <<= LOC(MP_index::Any(),f);
+        F_in_LOC.display("F_in_LOC members");
+
+        MP_index g,h; 
+        MP_subset<1> Ffactory (F);
+        Ffactory.setName("Ffactory");
+        Ffactory.insert(F1);
+
+
+        MP_subset<1> FRest(F);
+        FRest.insert(CW1);
+        FRest.insert(RW1);
+        FRest.insert(RW2);
+        FRest.insert(CZ1);
+        FRest.insert(CZ2);
+        FRest.display();
+
+        MP_subset<1> F23(F);
+        F23.insert(CW1);
+        F23.insert(RW1);
+        F23.insert(RW2);
+        F23.display();
+
+        MP_subset<1> F123(F);
+        F123.insert(F1);
+        F123.insert(CW1);
+        F123.insert(RW1);
+        F123.insert(RW2);
+        F123.display();
+
+        MP_subset<1> FC(F);
+        FC.insert(CZ1);
+        FC.insert(CZ2);
+        FC.display();
+
+        MP_subset<1> FC2(F);
+        FC2.insert(CZ1);
+        FC2.insert(CZ2);
+
+        Ffactory.display();
+
+
+        //A, TransportationLinks 
+        A.insert(F1, CW1);
+        A.insert(F1, RW1);
+        A.insert(F1, RW2);
+        A.insert(F1, CZ1);
+        A.insert(F1, CZ2);
+        A.insert(CW1, RW1);
+        A.insert(CW1, RW2);
+        A.insert(CW1, CZ1);
+        A.insert(CW1, CZ2);
+        A.insert(RW1, CZ1);
+        A.insert(RW1, CZ2);
+        A.insert(RW2, CZ1);
+        A.insert(RW2, CZ2);
+
+        //AST1, TransportationLinksStage1 
+        AST1.insert(F1, CW1);
+        AST1.insert(F1, RW1);
+        AST1.insert(F1, RW2);
+        AST1.insert(F1, CZ1);
+        AST1.insert(F1, CZ2);
+
+        AST1CZ.insert(F1, CZ1);
+        AST1CZ.insert(F1, CZ2);
+
+        //AST2, TransportationLinksStage2 
+        AST2.insert(CW1, RW1);
+        AST2.insert(CW1, RW2);
+        AST2.insert(CW1, CZ1);
+        AST2.insert(CW1, CZ2);
+        AST2.insert(RW1, CZ1);
+        AST2.insert(RW1, CZ2);
+        AST2.insert(RW2, CZ1);
+        AST2.insert(RW2, CZ2);
+
+        // Display:
+        MP_subset<1> SALL(S);
+        //SALL.display("F_in_LOC members");
+        AST1.display("AST1_MEMBERS");
+        AST2.display("AST2_MEMBERS");
+
+
+
+        //#####################################################################################################################
+
+
+        //sales price for p in customer region i
+        double sales_price[numOfProducts][numOfFacilities] =
         {
-            {4.19999980926514, 4.40000009536743, 4.80000019073486, 4.80000019073486,0,0},
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {0.330000013113022,0.314999997615814,0.360000014305115,0.360000014305115,0,0} 
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {0.330000013113022,0.314999997615814,0.360000014305115,0.360000014305115,0,0} 
-        },
-        {
-            {4.19999980926514,4.40000009536743,4.80000019073486,4.80000019073486,0,0}, 
-            {21,22,24,24,0,0}, 
-            {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395,0,0}, 
-            {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
-            {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
-            {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
-        }
-    };
-    MP_data cp(&processing_costs[0][0][0], P, L, F);
-    cp.setName("cp");
-    cp.display("cp");
-
-    // fixed cost of establishing activity l in L in a facility i in N
-    double fixed_costs[numOfFacilities][numOfProdActivities] =
-    {
-        {5500000,10000000,5500000,1500000}, 
-        {5000000,9000000,5000000,1000000}, 
-        {6000000,10000000,6000000,2000000}, 
-        {6000000,10000000,6000000,2000000},
-        {0,0,0,0},
-        {0,0,0,0}
-    };
-    MP_data cf(&fixed_costs[0][0], F, L);
-    cf.setName("cf");
-
-    //maximum throughput for product p in P at factory i in N for activity l in TLp
-    double throughput_quantity[numOfProducts][numOfProdActivities][numOfFacilities] =
-    {
-        {
-            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}, 
             {0,0,0,0,0,0}, 
+            {0,0,0,0,35,35}, 
+            {0,0,0,0,35,35},
+            {0,0,0,0,0,0},
             {0,0,0,0,0,0},
             {0,0,0,0,0,0}
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0}, 
-            {0,0,0,0,0,0},
-            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0}, 
-            {0,0,0,0,0,0},
-            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-        },
-        {
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0}, 
-            {0,1000000000,1000000000,1000000000,1000000000,1000000000},
-            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-        },
-        {
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0}, 
-            {0,1000000000,1000000000,1000000000,1000000000,1000000000},
-            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-        }
-    };
-    MP_data ut(&throughput_quantity[0][0][0],P, L, F);
-    ut.setName("ut");
+        };
+        MP_data e(&sales_price[0][0], P, F);
+        e.setName("e");
 
-    //maximum shipping quantities for product p in P on arc i,j in A
-    double shipping_quantity[13][numOfProducts] =
-    {
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
-    };
-    MP_data us(&shipping_quantity[0][0], A, P);
-    us.setName("us");
+        e.display();
+        //shipping cost per unit and per unit distance for a product p at tier s
+        A.display();
+        const int i = 13;
 
+        double shipping_costs[13][numOfProducts] =
+        {
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17}, 
+            {0.35,0.8,0.8,0.13,0.17,0.17} 
+        };
+        MP_data cs(&shipping_costs[0][0], A, P);
+        cs.setName("cs");
+        cs.display("values");
 
-    //demand for product p  in P in customer zone i in LOC S
-    double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
-    {
+        //processing cost per unit of applying activity l in TLp to product p in P in facility i in N
+        double processing_costs[numOfProducts][numOfProdActivities][numOfFacilities] =
         {
             {
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}
+                {4.19999980926514, 4.40000009536743, 4.80000019073486, 4.80000019073486,0,0},
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
             },
             {
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {997273,1002178}, 
-                {997274,1002178}
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {0.314999997615814 ,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
             },
             {
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {997275,1002178}, 
-                {997276,1002178}
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
             },
             {
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}
+                {4.19999980926514, 4.40000009536743,4.80000019073486,4.80000019073486,0,0}, 
+                {21,22,24,24,0,0}, 
+                {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395,0,0}, 
+                {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
             },
             {
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
+                {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
             },
             {
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}, 
-                {0,0}
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0},
+                {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
+                {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
             }
-        }
-    };
-    MP_random_data dem(&demand[0][0][0][0],T, P, F);
-    dem.setName("dem");
-
-
-
-    //supply of product p in P in factory i in LOC1
-    double supply[numOfFacilities][numOfProducts]=
-    {
-        {0,0,0,1000000000,0,0},
-        {0,0,0,0,0,0},
-        {0,0,0,0,0,0}, 
-        {0,0,0,0,0,0}, 
-        {0,0,0,0,0,0}, 
-        {0,0,0,0,0,0}
-    };
-    MP_data sup(&supply[0][0], F, P);
-    sup.setName("sup");
-
-    ///probability of scenario w
-    double probability[numOfScenarios]={1.0/2, 1.0/2};  //{0.00571781238321666, 0.0211039074890618, 0.0582671832435135, 0.120373626527764, 0.186103922517481, 0.21534421591229, 0.18649967087763, 0.120886596554084, 0.0586398880282614, 0.0212842485139399, 0.00577892795275867};
-    MP_data prob(&probability[0], SC);
-    prob.setName("prob");
-    postponement.setProbabilities(prob);
-
-
-    //#########################################################################################
-    //Variables
-    //binary
-    // 1, if function l is established in facility i at tier s; 0 otherwise;
-    MP_variable y(F123,L);
-    y.binary();
-    y.setName("y");
-
-    //Decision Variables
-    // quantities in scenario of product p shipped from a facility at candidate 
-    // location i at tier s to a facility at candidate location j at tier s+k where
-    // function l is executed at tier s and l2 at tier s+k
-    MP_variable z(P,AST2,T);
-    z.setName("z");	
-
-    MP_variable z1(P,AST1);
-    z1.setName("z1");
-
-    // quantity in scenario   of product p processed in a facility at candidate 
-    // location i at tier s by the implemented function l;
-    MP_variable x(P,P2,F23,L,T);
-    x.setName("x");	
-    MP_variable x1(P,P2,Ffactory,L);
-    x1.setName("x1");	
-    //TL(P,L)
-
-    MP_variable v(P,F23,T);
-    v.setName("v");	
-    //MP_variable v(P,FRest,T);
-    //MP_variable v1(P,Ffactory);
-
-    MP_variable u(P,F23,T);
-    u.setName("u");	
-    MP_variable u1(P,Ffactory);
-    u1.setName("u1");	
-
-    MP_index arci,arcj;
-    MP_index arci2,arcj2;
-    MP_index func;
-    MP_index pS;
-
-    MP_index p1, p2, p3, f23;
-    MP_index l1, ffactory;
-    MP_index f123, fc;
-
-
-    //##############################################################################################
-    postponement.setObjective(
-        //sum(P, 
-        //sum(AST1(arci,FC(F)), e(P,FC(F))*z1(P,(arci,FC(F))))
-        //	)
-        //sum(P*AST1(arci,arcj).such_that(arcj==FC), z1(P,AST1))
-        sum(P*AST1(arci,arcj).such_that(arcj==FC(F)), e(P,arcj) * z1(P,AST1(arci,arcj)))		   
-        -sum(P,
-        sum(AST1(A), cs(AST1(A),P)*z1(P,AST1(A)))
-        )
-        -sum(P,
-        sum(Ffactory(F),
-        sum(L.such_that(TL(P,L)),
-        sum(P2.such_that(TF(L,P,P2)),cp(P,L,Ffactory(F))*x1(P,P2,Ffactory(F),L))
-        )
-        )
-        )
-        //+sum(P, 
-        //sum(AST2(arci2,arcj2).such_that(arcj2==FC(F)), e(P,arcj2)*z(P,AST2(arci,arcj),T.last()))
-        //	)
-        +sum(P, 
-        sum(AST2(arci2,arcj2).such_that(arcj2==FC(F)), e(P,arcj2) * z(P,AST2(arci2,arcj2),T+1))
-        )
-
-        -sum(P,
-        sum(AST2(A), cs(AST2(A),P)*z(P,AST2(A),T+1))
-        )
-
-        -sum(P,
-        sum(F23(F),
-        sum(L.such_that(TL(P,L)),
-        sum(P2.such_that(TF(L,P,P2)),cp(P,L,F23(F))*x(P,P2,F23(F),L,T+1))
-        )
-        )
-        )
+        };
+        MP_data cp(&processing_costs[0][0][0], P, L, F);
+        cp.setName("cp");
+        cp.display("cp");
+
+        // fixed cost of establishing activity l in L in a facility i in N
+        double fixed_costs[numOfFacilities][numOfProdActivities] =
+        {
+            {5500000,10000000,5500000,1500000}, 
+            {5000000,9000000,5000000,1000000}, 
+            {6000000,10000000,6000000,2000000}, 
+            {6000000,10000000,6000000,2000000},
+            {0,0,0,0},
+            {0,0,0,0}
+        };
+        MP_data cf(&fixed_costs[0][0], F, L);
+        cf.setName("cf");
+
+        //maximum throughput for product p in P at factory i in N for activity l in TLp
+        double throughput_quantity[numOfProducts][numOfProdActivities][numOfFacilities] =
+        {
+            {
+                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}, 
+                {0,0,0,0,0,0}, 
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0}
+            },
+            {
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0}, 
+                {0,0,0,0,0,0},
+                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+            },
+            {
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0}, 
+                {0,0,0,0,0,0},
+                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+            },
+            {
+                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
+                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
+                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
+                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
+            },
+            {
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0}, 
+                {0,1000000000,1000000000,1000000000,1000000000,1000000000},
+                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+            },
+            {
+                {0,0,0,0,0,0},
+                {0,0,0,0,0,0}, 
+                {0,1000000000,1000000000,1000000000,1000000000,1000000000},
+                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+            }
+        };
+        MP_data ut(&throughput_quantity[0][0][0],P, L, F);
+        ut.setName("ut");
+
+        //maximum shipping quantities for product p in P on arc i,j in A
+        double shipping_quantity[5][numOfProducts] =
+        {
+
+            //{900000,900000,900000,900000,900000,900000}, 
+            //{900000,900000,900000,900000,900000,900000}, 
+            //{900000,900000,900000,900000,900000,900000}, 
+            //{900000,900000,900000,900000,900000,900000}, 
+            //{900000,900000,900000,900000,900000,900000}
+            //{10000,10000,10000,10000,10000,10000}, 
+            //{10000,10000,10000,10000,10000,10000}, 
+            //{10000,10000,10000,10000,10000,10000},  
+            //{10000,10000,10000,10000,10000,10000}, 
+            //{10000,10000,10000,10000,10000,10000}, 
+            //{10000,10000,10000,10000,10000,10000}, 
+            //{10000,10000,10000,10000,10000,10000}, 
+            //{10000,10000,10000,10000,10000,10000}
+
+
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
+        };
+        MP_data us(&shipping_quantity[0][0], AST1, P);
+        us.setName("us");
+
+
+
+        double shipping_quantity2[8][numOfProducts] =
+        {
+
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
+        };
+        MP_data us2(&shipping_quantity2[0][0], AST2, P);
+        us2.setName("us2");
+
+        //demand for product p  in P in customer zone i in LOC S
+        //double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
+        //{
+        //{
+        //{
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0}
+        //},
+        //{
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{997273,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}, 
+        //{997274,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}
+        //},
+        //{
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{997275,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}, 
+        //{997276,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}
+        //},
+        //{
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0}
+        //},
+        //{
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0}
+        //},
+        //{
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0},
+        //{0,0,0,0,0,0,0,0,0,0,0}, 
+        //{0,0,0,0,0,0,0,0,0,0,0}
+        //}
+        //}
+        //};
+        //MP_random_data dem(&demand[0][0][0][0],T, P, F);
+        //dem.setName("dem");
+
+
+        //demand for product p  in P in customer zone i in LOC
+        double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
+        {
+            {
+                {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+                },
+                {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100},
+                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100}
+                },
+                {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100},
+                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100}
+                },
+                {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+                },
+                {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+                },
+                {
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+                }
+            }
+        };
+        MP_random_data dem(&demand[0][0][0][0],T, P, F);
+        dem.setName("dem");
+
+
+        //probability of scenario w
+        double probability[numOfScenarios]= {0.000639728546532731, 0.00852403193428644, 0.0105765779135223, 0.012935952944857, 0.0155961407723669, 0.0185340790816787, 0.0217106622092895, 0.025068735723926, 0.0285340991358651, 0.0320135004782923, 0.0354036606911876, 0.000904443807166965, 0.0385952844586071, 0.0414730602086839, 0.0439286953347946, 0.0458659297421633, 0.0472035439758227, 0.0478873917324611, 0.0478873917324611, 0.0472035439758227, 0.0458659297421633, 0.0439286953347946, 0.00125840019733319, 0.0414730602086839, 0.0385952844586071, 0.0354036606911876, 0.0320135004782923, 0.0285340991358651, 0.025068735723926, 0.0217106622092895, 0.0185340790816787, 0.0155961407723669, 0.012935952944857, 0.00172666545004602, 0.0105765779135223, 0.00852403193428644, 0.00677229875122581, 0.00530332959656993, 0.00409305944662478, 0.00311441514973458, 0.00233631271696123, 0.00172666545004602, 0.00125840019733319, 0.000904443807166965, 0.00233631271696123, 0.000639728546532731, 0.00311441514973458, 0.00409305944662478, 0.00530332959656993, 0.00677229875122581};
+        MP_data prob(&probability[0], SC);
+        prob.setName("prob");
+
+        postponement.setProbabilities(prob);
+
+        ////demand for product p  in P in customer zone i in LOC S
+        //double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
+        //{
+        //	{
+        //		{
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}
+        //		},
+        //		{
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{997273,1002178}, 
+        //			{997274,1002178}
+        //		},
+        //		{
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{997275,1002178}, 
+        //			{997276,1002178}
+        //		},
+        //		{
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}
+        //		},
+        //		{
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}
+        //		},
+        //		{
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}, 
+        //			{0,0}
+        //		}
+        //	}
+        //};
+        //MP_random_data dem(&demand[0][0][0][0],T, P, F);
+        //dem.setName("dem");
+
+
+
+        //supply of product p in P in factory i in LOC1
+        double supply[numOfFacilities][numOfProducts]=
+        {
+            {0,0,0,1000000000,0,0},
+            {0,0,0,0,0,0},
+            {0,0,0,0,0,0}, 
+            {0,0,0,0,0,0}, 
+            {0,0,0,0,0,0}, 
+            {0,0,0,0,0,0}
+        };
+        MP_data sup(&supply[0][0], F, P);
+        sup.setName("sup");
+
+
+
+        /////probability of scenario w
+        //double probability[numOfScenarios]= {0.00571781238321666, 0.0211039074890618, 0.0582671832435135, 0.120373626527764, 0.186103922517481, 0.21534421591229, 0.18649967087763, 0.120886596554084, 0.0586398880282614, 0.0212842485139399, 0.00577892795275867}; //{1.0/2, 1.0/2};
+        //MP_data prob(&probability[0], SC);
+        //prob.setName("prob");
+        //postponement.setProbabilities(prob);
+
+
+        //#########################################################################################
+        //Variables
+        //binary
+        // 1, if function l is established in facility i at tier s; 0 otherwise;
+        MP_variable y(F,L); //F123
+        //y.binary();
+        y.setName("y");
+
+        //Decision Variables
+        // quantities in scenario of product p shipped from a facility at candidate 
+        // location i at tier s to a facility at candidate location j at tier s+k where
+        // function l is executed at tier s and l2 at tier s+k
+        MP_variable z(P,AST2,T);
+        z.setName("z");	
+
+        MP_variable z1(P,AST1);
+        z1.setName("z1");
+
+        // quantity in scenario   of product p processed in a facility at candidate 
+        // location i at tier s by the implemented function l;
+        MP_variable x(P,P2,F,L,T); //F23
+        x.setName("x");	
+        MP_variable x1(P,P2,F,L); //Ffactory
+        x1.setName("x1");	
+        //TL(P,L)
+
+        MP_variable v(P,F,T); //F23
+        v.setName("v");	
+        //MP_variable v(P,FRest,T);
+        //MP_variable v1(P,Ffactory);
+
+        MP_variable u(P,F,T); //F23
+        u.setName("u");	
+        MP_variable u1(P,F); //Ffactory
+        u1.setName("u1");	
+
+        MP_index arci,arcj;
+        MP_index arci2,arcj2;
+        MP_index func;
+        MP_index pS;
+
+        MP_index p1, p2, p3, f23;
+        MP_index l1, ffactory;
+        MP_index f123, fc;
+
+
+        //##############################################################################################
+        postponement.setObjective(
+            //sum(P, 
+            //sum(AST1(arci,FC(F)), e(P,FC(F))*z1(P,(arci,FC(F))))
+            //	)
+            //sum(P*AST1(arci,arcj).such_that(arcj==FC), z1(P,AST1))
+
+            -sum(P*AST1(arci,arcj).such_that(FC(arcj)), e(P,arcj) * z1(P,AST1))		   
+
+
+            +sum(P,
+            sum(AST1, cs(AST1,P)*z1(P,AST1))
+            )
+
+            +sum(P,
+            sum(Ffactory(F),
+            sum(L.such_that(TL(P,L)),
+            sum(P2.such_that(TF(L,P,P2)),cp(P,L,F)*x1(P,P2,F,L))
+            )
+            )
+            )
+
+            //+sum(P, 
+            //sum(AST2(arci2,arcj2).such_that(arcj2==FC(F)), e(P,arcj2)*z(P,AST2(arci,arcj),T.last()))
+            //	)
+
+            -sum(P, 
+            sum(AST2(arci2,arcj2).such_that(FC(arcj2)), e(P,arcj2) * z(P,AST2,T+1))
+            )
+
+            +sum(P,
+            sum(AST2, cs(AST2,P)*z(P,AST2,T+1))
+            )
+
+            +sum(P,
+            sum(F23(F),
+            sum(L.such_that(TL(P,L)),
+            sum(P2.such_that(TF(L,P,P2)),cp(P,L,F)*x(P,P2,F,L,T+1))
+            )
+            )
+            )
+
+            +sum(F123(F)*L,cf(F,L)*y(F,L))
+            );
+        ////// CONSTRAINTS
+
+        // Material balance
+        //Flows entering a facility
+        //MP_constraint material_balance_entering(P,F23,T);
+
+        //material_balance_entering(p1,f23,T)=
+
+        //	v(p1,f23,T) + sum(L.such_that(TL(p1,L))*P2(p2).such_that(TF(L,p1,p2)),x(p1,p2,f23,L,T)) 
+
+        //	== 
+
+        //	sum(A(arci,arcj).such_that(arcj==f23),z(p1,A(arci,arcj).such_that(arcj==f23),T));
+
+        //material_balance_entering.setName("material_balance_entering");
+
+        //Flows entering a facility
+
+        MP_constraint material_balance_entering(P,F,T);
+
+        material_balance_entering(P,F,T+1).such_that(F23(F))=
+
+            v(P,F,T) + 
+
+            //sum(TL(p1,L).such_that(p1==P)*TF(l1,p1,P2).such_that(l1==L && p1==P),
+            sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x(P,P2,F,L,T))
+
+            ==
+
+            sum(AST2(arci,F),z(P,AST2,T))
+            +
+            sum(AST1(arci,F),z1(P,AST1));
+
+
+        material_balance_entering.setName("material_balance_entering");
+
+        //Demand
+
+        /*
+        //AST1, TransportationLinksStage1 (F,F)
+        AST1.insert(F1, CW1);
+        AST1.insert(F1, RW1);
+        AST1.insert(F1, RW2);
+        AST1.insert(F1, CZ1);
+        AST1.insert(F1, CZ2);
+
+        //AST2, TransportationLinksStage2 (F,F)
+        AST2.insert(CW1, RW1);
+        AST2.insert(CW1, RW2);
+        AST2.insert(CW1, CZ1);
+        AST2.insert(CW1, CZ2);
+        AST2.insert(RW1, CZ1);
+        AST2.insert(RW1, CZ2);
+        AST2.insert(RW2, CZ1);
+        AST2.insert(RW2, CZ2);
+        */
+        //MP_variable z(P,AST2,T);	
+        //material_balance_entering(P,F,T).such_that(F23(F))=
+        //	MP_variable z1(P,AST1);
+
+        MP_constraint demand_constraint(T,P,F);
+        //demand_constraint(T+1,P,F).such_that(FC(F))=
+
+        //	dem(T,P,F) >= (sum(AST2(arci,arcj).such_that(arcj==F), z(P,AST2(arci,arcj),T)) 
+        //				   +
+        //sum(AST1,z1(P,AST1));
+        //				   sum(AST1(arci,arcj).such_that(arcj==F), z1(P,AST1(arci,arcj)))
+        //				   );
+        demand_constraint(T+1,P,F).such_that(FC(F)) = dem(T,P,F) >= sum(AST2(arci,F),z(P,AST2,T))
+            +
+            sum(AST1(arci,F),z1(P,AST1));
+        /*sum(P*AST1(arci,arcj).such_that(arcj==FC(F)), e(P,arcj) * z1(P,AST1(arci,arcj)))
+        dem(T,P,FC(F)) >=(sum(AST2(arci,f), z(P,A(arci,f),T)) 
+        + 
+        sum(AST1(arci,f), z1(P,A(arci,f))));
+        */
+        //flows leaving a facility stage1
+
+
+        MP_constraint material_balance_leaving_stage1(P2,F);
+
+        material_balance_leaving_stage1(P2,F).such_that(Ffactory(F))=
+
+            sum(L,
+            sum(P.such_that(TF(L,P,P2)), x1(P,P2,F,L)))
+
+            ==
+
+            u1(P2,F) + sum(AST1(F,arcj), z1(P2,AST1));
+
+        material_balance_leaving_stage1.setName("material_balance_leaving_stage1");
+
+
+        //flows leaving a facility stage2
+        MP_constraint material_balance_leaving_stage2(P2,F,T);
+        material_balance_leaving_stage2(P2,F,T+1).such_that(F23(F)) =
+
+            sum(L,
+            sum(P.such_that(TF(L,P,P2)), x(P,P2,F,L,T)))
+
+            == 
+
+            u(P2,F,T) + sum(AST2(F,arcj), z(P2,AST2,T));
+
+        material_balance_leaving_stage2.setName("material_balance_leaving_stage2");
+
+
+        //Supply
+        MP_constraint supply_constraint(F,P);
+
+        supply_constraint(F,P).such_that(Ffactory(F))=
+            //sup(P,Ffactory(F)) >= sum(L.such_that(TL(P,L))*P2(p2).such_that(TF(L,P,p2)),x1(P,p2,F,L));
+            sup(F,P) >= sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x1(P,P2,F,L));
+
+        supply_constraint.setName("supply_constraint");
+
+
+
+        //capacity constraint
+        //Transport capacity
+        MP_constraint transport_capacity(P,AST1);
+
+        transport_capacity(P,AST1)=
+
+            z1(P,AST1)  <= us(AST1,P);
+
+        transport_capacity.setName("transport_capacity");
+
+
+
+        //Transport capacity_stage2
+        MP_constraint transport_capacity_stage2(P,AST2,T);
+
+        transport_capacity_stage2(P,AST2,T+1)=
+
+            z(P,A,T)  <= us2(AST2,P);
+
+        transport_capacity_stage2.setName("transport_capacity_stage2");
+
+
+
+        //Facility capacity
+        MP_constraint facility_capacity_stage1(P,F,L);
+
+        facility_capacity_stage1(P,F,L).such_that(Ffactory(F))=
+
+            sum(P2.such_that(TF(L,P,P2)), x1(P,P2,F,L) )  
+
+            <=
+
+            ut(P,L,F)* y(F,L);
 
-        -sum(F123(F)*L,cf(F123(F),L)*y(F123(F),L))
-
-        );
-    ////// CONSTRAINTS
-
-    // Material balance
-    //Flows entering a facility
-    //MP_constraint material_balance_entering(P,F23,T);
-
-    //material_balance_entering(p1,f23,T)=
-
-    //	v(p1,f23,T) + sum(L.such_that(TL(p1,L))*P2(p2).such_that(TF(L,p1,p2)),x(p1,p2,f23,L,T)) 
-
-    //	== 
-
-    //	sum(A(arci,arcj).such_that(arcj==f23),z(p1,A(arci,arcj).such_that(arcj==f23),T));
-
-    //material_balance_entering.setName("material_balance_entering");
-
-    //Flows entering a facility
-
-    MP_constraint material_balance_entering(P,F,T);
-
-    material_balance_entering(P,F,T+1).such_that(F23(F))=
-
-        v(P,F23(F),T+1) + 
-
-        //sum(TL(p1,L).such_that(p1==P)*TF(l1,p1,P2).such_that(l1==L && p1==P),
-        sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x(P,P2,F23(F),L,T+1))
-
-        ==
-
-        sum(AST2(arci,F).such_that(F23(F)),z(P,AST2,T+1))
-        +
-        sum(AST1(arci,F).such_that(F23(F)),z1(P,AST1));
-
-
-    material_balance_entering.setName("material_balance_entering");
-
-    //Demand
-
-    /*
-    //AST1, TransportationLinksStage1 (F,F)
-    AST1.insert(F1, CW1);
-    AST1.insert(F1, RW1);
-    AST1.insert(F1, RW2);
-    AST1.insert(F1, CZ1);
-    AST1.insert(F1, CZ2);
-
-    //AST2, TransportationLinksStage2 (F,F)
-    AST2.insert(CW1, RW1);
-    AST2.insert(CW1, RW2);
-    AST2.insert(CW1, CZ1);
-    AST2.insert(CW1, CZ2);
-    AST2.insert(RW1, CZ1);
-    AST2.insert(RW1, CZ2);
-    AST2.insert(RW2, CZ1);
-    AST2.insert(RW2, CZ2);
-    */
-    //MP_variable z(P,AST2,T);	
-    //material_balance_entering(P,F,T).such_that(F23(F))=
-    //	MP_variable z1(P,AST1);
-
-    MP_constraint demand_constraint(T,P,F);
-    //demand_constraint(T+1,P,F).such_that(FC(F))=
-
-    //	dem(T,P,F) >= (sum(AST2(arci,arcj).such_that(arcj==F), z(P,AST2(arci,arcj),T)) 
-    //				   +
-    //sum(AST1,z1(P,AST1));
-    //				   sum(AST1(arci,arcj).such_that(arcj==F), z1(P,AST1(arci,arcj)))
-    //				   );
-    demand_constraint(T+1,P,F).such_that(FC(F)) = dem(T,P,F) >= sum(AST2(arci,F).such_that(FC(F)),z(P,AST2,T))
-        +
-        sum(AST1(arci,F).such_that(FC(F)),z1(P,AST1));
-    /*sum(P*AST1(arci,arcj).such_that(arcj==FC(F)), e(P,arcj) * z1(P,AST1(arci,arcj)))
-    dem(T,P,FC(F)) >=(sum(AST2(arci,f), z(P,A(arci,f),T)) 
-    + 
-    sum(AST1(arci,f), z1(P,A(arci,f))));
-    */
-    //flows leaving a facility stage1
-
-
-    MP_constraint material_balance_leaving_stage1(P2,F);
-
-    material_balance_leaving_stage1(P2,F).such_that(Ffactory(F))=
-
-        sum(L,
-        sum(P.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
-
-        ==
-
-        u1(P2,Ffactory(F)) + sum(AST1(F,arcj).such_that(Ffactory(F)), z1(P2,AST1));
-
-    material_balance_leaving_stage1.setName("material_balance_leaving_stage1");
-
-
-    //flows leaving a facility stage2
-    MP_constraint material_balance_leaving_stage2(P2,F,T);
-    material_balance_leaving_stage2(P2,F,T+1).such_that(F23(F)) =
-
-        sum(L,
-        sum(P.such_that(TF(L,P,P2)), x(P,P2,F23(F),L,T)))
-
-        == 
-
-        u(P2,F23(F),T+1) + sum(AST2(F23(F),arcj).such_that(F23(F)), z(P,AST2,T));
-
-    material_balance_leaving_stage2.setName("material_balance_leaving_stage2");
-
-
-    //Supply
-    MP_constraint supply_constraint(F,P);
-
-    supply_constraint(F,P).such_that(Ffactory(F))=
-        //sup(P,Ffactory(F)) >= sum(L.such_that(TL(P,L))*P2(p2).such_that(TF(L,P,p2)),x1(P,p2,F,L));
-        sup(Ffactory(F),P) >= sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L));
-
-    supply_constraint.setName("supply_constraint");
-
-
-
-    //capacity constraint
-    //Transport capacity
-    MP_constraint transport_capacity(P,A,T);
-
-    transport_capacity(P,A,T+1)=
-
-        z(P,AST2(A),T) + z1(P,AST1(A)) <= us(A,P);
-
-    transport_capacity.setName("transport_capacity");
-
-
-    //Facility capacity
-    MP_constraint facility_capacity_stage1(P,F,L,T);
-
-    facility_capacity_stage1(P,F,L,T+1).such_that(Ffactory(F))=
-
-        sum(P2.such_that(TF(L,P,P2)), x1(P,P2,F,L)  + x(P,P2,F,L,T))  
-
-        <=
-
-        ut(P,L,F)* y(F,L);
-
-    //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
-
-    facility_capacity_stage1.setName("facility_capacity_stage1");
-
-
-    //Facility capacity Stage 2
-    MP_constraint facility_capacity_stage2(P,F,L,T);
-
-    facility_capacity_stage2(P,F,L,T+1).such_that(F23(F))=
-
-        //sum(P2.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
         //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
 
-        sum(P2.such_that(TF(L,P,P2)),  x(P,P2,F,L,T))
-
-        <=
-        ut(P,L,F)* y(F,L);
-
-    facility_capacity_stage2.setName("facility_capacity_stage2");
+        facility_capacity_stage1.setName("facility_capacity_stage1");
 
 
-    //sum(P.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
+        //Facility capacity Stage 2
+        MP_constraint facility_capacity_stage2(P,F,L,T);
 
-    //Non anticipativity
+        facility_capacity_stage2(P,F,L,T+1).such_that(F23(F))=
 
-    //MP_constraint non_ant_x(P,F,L,P2,T);
-    //		non_ant_x(P,F,L,P2,T+1).such_that(Ffactory(F) && TL(P,L) && TF(L,P,P2)) =
+            //sum(P2.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
+            //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
 
-    //		x1(P,P2,F,L) == x(P,P2,F,L,T);
-    //	non_ant_x.setName("non_ant_x");
+            sum(P2.such_that(TF(L,P,P2)),  x(P,P2,F,L,T))
+
+            <=
+            ut(P,L,F)* y(F,L);
+
+        facility_capacity_stage2.setName("facility_capacity_stage2");
 
 
+        //sum(P.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
+
+        //Non anticipativity
+
+        //MP_constraint non_ant_x(P,F,L,P2,T);
+        //		non_ant_x(P,F,L,P2,T+1).such_that(Ffactory(F) && TL(P,L) && TF(L,P,P2)) =
+
+        //		x1(P,P2,F,L) == x(P,P2,F,L,T);
+        //	non_ant_x.setName("non_ant_x");
 
 
-    MP_constraint facility_x(P,P2,F,L,T);
-    facility_x(P,P2,F,L,T).such_that(F23(F))=
+        /*
+
+        MP_constraint facility_x(P,P2,F,L,T);
+        facility_x(P,P2,F,L,T).such_that(F23(F))=
 
         x(P,P2,F23(F),L,T)<= 100000000;
-    facility_x.setName("facility_x");
+        facility_x.setName("facility_x");
+        */
+        /*	
+        MP_constraint nfacility_xeins(P,P2,Ffactory,L);
+        nfacility_xeins(P,P2,Ffactory,L)=
+        x1(P,P2,Ffactory,L) <= 100000000;
+        nfacility_xeins.setName("nfacility_xeins");
+        */
 
-    /*	
-    MP_constraint nfacility_xeins(P,P2,Ffactory,L);
-    nfacility_xeins(P,P2,Ffactory,L)=
-    x1(P,P2,Ffactory,L) <= 100000000;
-    nfacility_xeins.setName("nfacility_xeins");
-    */
-
-
-    MP_constraint zz(P,AST2,T);
-    zz(P,AST2,T)=
+        /*
+        MP_constraint zz(P,AST2,T);
+        zz(P,AST2,T)=
 
         z(P,AST2,T)<= 10000000;
-    zz.setName("zz");
+        zz.setName("zz");
 
-    /*	
-    MP_constraint zeins(P,AST1);
-    zeins(P,AST1)=
-    z1(P,AST1) <= 1000000000;
-    zeins.setName("zeins");
-    */
+        /*	
+        MP_constraint zeins(P,AST1);
+        zeins(P,AST1)=
+        z1(P,AST1) <= 1000000000;
+        zeins.setName("zeins");
+        */
 
-    //Cplex
-    postponement.attach(postponement.Solver);
-    postponement.getSmi()->writeSmps("Postponement", false, false);
-    //OsiStochasticBendersTwoStageSolverInterface benders(postponement.getSmi()->getOsiSolverInterface(),postponement.getSmi());
-    //benders.initialSolve();
+        //Cplex
+        clock_t init, final;
 
+        postponement.attach(postponement.Solver);
 
-    OsiCpxSolverInterface cplex;
-
-    //postponement.verbose();
-    postponement.solve(MP_model::MAXIMIZE);
-    //postponement->writeLp("postponement-problem");
-
-    ////std::cout << "Writing SMPS" << std::endl;
-    //postponement.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
-
-    /*
-    //// solve the det. equivalent
-    SmiScnModel* smiModel = new SmiScnModel();
-    OsiCpxSolverInterface c1;
-    smiModel->setOsiSolverHandle(c1);
+        postponement.getSmi()->writeSmps("PostponementMPS", false, false);
 
 
-    OsiSolverInterface *osiStoch =  postponement.smiModel->loadOsiSolverData();
-    osiStoch->setObjSense(MP_model::MINIMIZE);
-    osiStoch->branchAndBound();
-    osiStoch->writeLp("Postponement_Output");
-    */
 
-    //demand_constraint(T+1,P,F).such_that(FC(F)).display("Demand"); 
-    //supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
-    z1.display("z1");
-    u1.display("u1");
-    x1.display("x1");
-    y.display("y");
-    z.display("z");	
-    x.display("x");
-    v.display("v");	
-    dem.display("dem",0);
-    dem.display("dem",1);
-    dem.display("dem",2);
+        ////		//////postponement.verbose();
+        init=clock();
+        postponement.solve(MP_model::MINIMIZE);
+        postponement->writeLp("postponement-problem");
+        postponement->writeMps("postponement-problem");
+        final=clock()-init;
 
-}
 
+        //	///////////////////////////////////////////////////////////////////////////////////
+        //freopen( "postponement_results_det_equivalent.txt", "w", stdout );
+        cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
+        cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
+        double result = postponement.Solver->getObjValue();
+        cout << "Obj. Value: " << result << endl;
+
+
+        //u1.display("u1");
+        //x1.display("x1");
+        //z1.display("z1");
+        //y.display("y");
+        //z.display("z");	
+        //x.display("x");
+        //v.display("v");
+        //u.display("u");
+
+        //// solve the det. equivalent
+        //OsiCpxSolverInterface osi_cpx;
+        //postponement.smiModel->setOsiSolverHandle(&osi_cpx);
+        //OsiSolverInterface *osiStoch =  postponement.smiModel->loadOsiSolverData();
+        //osiStoch->setObjSense(MP_model::MINIMIZE);
+        //osiStoch->branchAndBound();
+        //osiStoch->writeMps("Postponement_Output");
+
+
+        OsiCpxSolverInterface osi_cpx;
+        OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, postponement.smiModel);
+
+        parallel_benders::Parameter benders_parameter;
+        benders_parameter.init();
+        benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,true);
+        benders_parameter.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
+        benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+        nested_benders.setParameters(benders_parameter);
+
+        init=clock();
+        nested_benders.initialSolve();
+        final=clock()-init;
+        //freopen( "postponement_results.txt", "w", stdout );
+
+        cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
+        cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
+        double result2 = nested_benders.getObjValue();
+        cout << "Obj. Value: " << result2 << endl;
+        const double* first_stage_solution= nested_benders.getFirstStageSolution();
+        //
+        //for (int i=0; i<67; i++)
+        //{
+        //	cout << first_stage_solution[i]<<endl;
+
+        //}
+
+
+        //const double* second_solution_1 = nested_benders.getSolutionByNodeAndStage(0,1);
+        //const double* second_solution_2 = nested_benders.getSolutionByNodeAndStage(1,1);
+
+        //demand_constraint(T+1,P,F).such_that(FC(F)).display("Demand"); 
+        //supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
+
+        //z1.display("z1");
+        //u1.display("u1");
+        //x1.display("x1");
+        //y.display("y");
+        //z.display("z");	
+        //x.display("x");
+        //v.display("v");
+        //u.display("u");
+        //dem.display("dem",0);
+        //dem.display("dem",1);
+        //dem.display("dem",2);
+
+
+    }
+
+    TEST_F(UseCaseTest,Test1) {
+        MP_model test11(new OsiClpSolverInterface()); 
+        MP_stage T(2);
+
+        enum {low, normal, high, numScenarios};
+        MP_scenario_set scen(numScenarios);
+
+        MP_data prob(scen);
+        prob(low)    = 1.0/3;
+        prob(normal) =  1.0/3;
+        prob(high)   = 1.0/3;
+        test11.setProbabilities(prob);
+
+        enum {weat, corn, sugar,numProducts};
+        MP_set R(numProducts);
+
+        //enum {lumber, finishing, carpentry, numResources};
+        //MP_set R(numResources);
+
+        MP_data sellValue(R);
+        sellValue(weat) = 170;
+        sellValue(corn) = 150;
+        sellValue(sugar) = 36;
+
+
+        MP_data buyPrice(R);
+        buyPrice(weat) = 238;
+        buyPrice(corn) = 210;
+
+        MP_data prodCost(R);
+        prodCost(weat) = 150;
+        prodCost(corn) = 230;
+        prodCost(sugar) = 260;
+
+        MP_data minAmount(R);
+        minAmount(weat) = 200;
+        minAmount(corn) = 240;
+
+        double yields[1][3][3] = {
+            {
+                { 2, 2.5, 3 }, // weat
+                { 2.4, 3, 3.6}, // corn
+                { 16, 20, 24 } // sugar
+
+
+            }
+        };
+        MP_random_data yield(&yields[0][0][0], T,R);
+
+        MP_variable 
+            x(R),   // Ressourcenbedarf
+            y(T,R), // Einkaufsmenge
+            w(T,R), // Verkaufsmenge
+            wSugar(T); // ExtraVerkaufsmenge Zucker
+
+        MP_constraint minAmountConstraint(T,R),productionConstraint,sugarConstraint1(T),sugarConstraint2(T);//fixConstraint1,fixConstraint2,fixConstraint3;
+        minAmountConstraint(T+1,R) = y(T,R)+x(R)*yield(T,R) -w(T,R) >= minAmount(R);
+        productionConstraint() = sum(R,x(R) ) <= 500;
+        sugarConstraint1(T+1) = w(T,sugar) <= 6000;
+        sugarConstraint2(T+1) = w(T,sugar)+wSugar(T) <= yield(T,sugar)*x(sugar);
+        //fixConstraint1() = x(weat) == 120; // normal: 170
+        //fixConstraint2() = x(corn) == 80;// 80
+
+        MP_data wsugar_price(T);
+        wsugar_price(1) = 10;
+        //x.fix() // I want to fix the variables to a given value, not yet implemneted
+
+        test11.setObjective(
+            sum(R, -prodCost(R)*x(R) + w(T.last(),R)*sellValue(R) - y(T.last(),R)*buyPrice(R))  +wsugar_price(T.last())*wSugar(T.last())
+            );
+
+        OsiClpSolverInterface cplex;
+        test11.solve(MP_model::MAXIMIZE);
+
+
+        // Display results;
+
+        minAmount.display("minAmount");
+        yield.display("yield");
+        x.display("x");
+        w.display("w");
+        y.display("y");
+        wSugar.display("wSugar");
+        /*
+        test11.getSmi()->writeSmps("bla");
+        std::vector< std::pair<double,double> > ws;
+        ws = test11.getSmi()->solveWS(&cplex);
+        double eev = test11.getSmi()->solveEEV(&cplex);
+        */
+    }
+
+    // Dacota  Model to test the EV-, EEV- and WS-Problems
 } //end namespace
 
 //TODO: Write Tests for right-hand-side with RV and constant term
@@ -7227,6 +7563,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
+    //::testing::GTEST_FLAG(filter) = "*.Test1";
     ::testing::GTEST_FLAG(filter) = "*.Postponement";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
