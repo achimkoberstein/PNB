@@ -1,0 +1,5 @@
+TIME          gbd-1000
+PERIODS
+    C0000000 R0000000                 STAGE_0
+    C0000017 R0000004                 STAGE_1
+ENDATA

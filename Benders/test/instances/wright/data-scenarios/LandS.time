@@ -1,0 +1,5 @@
+TIME          LandS-10
+PERIODS
+    C0000000 R0000000                 STAGE_0
+    C0000004 R0000002                 STAGE_1
+ENDATA
