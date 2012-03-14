@@ -7074,7 +7074,7 @@ namespace flopc {
         //binary
         // 1, if function l is established in facility i at tier s; 0 otherwise;
         MP_variable y(F,L); //F123
-        //y.binary();
+        y.binary();
         y.setName("y");
 
         //Decision Variables
@@ -7382,19 +7382,19 @@ namespace flopc {
 
 
         ////		//////postponement.verbose();
-        init=clock();
-        postponement.solve(MP_model::MINIMIZE);
-        postponement->writeLp("postponement-problem");
-        postponement->writeMps("postponement-problem");
-        final=clock()-init;
+        //init=clock();
+        //postponement.solve(MP_model::MINIMIZE);
+        //postponement->writeLp("postponement-problem");
+        //postponement->writeMps("postponement-problem");
+        //final=clock()-init;
 
 
-        //	///////////////////////////////////////////////////////////////////////////////////
-        //freopen( "postponement_results_det_equivalent.txt", "w", stdout );
-        cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
-        cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
-        double result = postponement.Solver->getObjValue();
-        cout << "Obj. Value: " << result << endl;
+        ////	///////////////////////////////////////////////////////////////////////////////////
+        ////freopen( "postponement_results_det_equivalent.txt", "w", stdout );
+        //cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
+        //cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
+        //double result = postponement.Solver->getObjValue();
+        //cout << "Obj. Value: " << result << endl;
 
 
         //u1.display("u1");
@@ -7435,16 +7435,20 @@ namespace flopc {
         double result2 = nested_benders.getObjValue();
         cout << "Obj. Value: " << result2 << endl;
         const double* first_stage_solution= nested_benders.getFirstStageSolution();
-        //
-        //for (int i=0; i<67; i++)
-        //{
-        //	cout << first_stage_solution[i]<<endl;
+        
+        for (int i=0; i<67; i++)
+        {
+            cout << i << " : " << first_stage_solution[i]<<endl;
 
-        //}
+        }
+        for (int scenario = 0; scenario < 50; scenario++){
+            for (int i = 0; i<postponement.getSmi()->getCore()->getNumCols(1); i++){
 
+            }
+        }
 
-        //const double* second_solution_1 = nested_benders.getSolutionByNodeAndStage(0,1);
-        //const double* second_solution_2 = nested_benders.getSolutionByNodeAndStage(1,1);
+        const double* second_solution_1 = nested_benders.getSolutionByNodeAndStage(0,1);
+        const double* second_solution_2 = nested_benders.getSolutionByNodeAndStage(1,1);
 
         //demand_constraint(T+1,P,F).such_that(FC(F)).display("Demand"); 
         //supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
