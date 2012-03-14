@@ -220,10 +220,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {
     parameters_.init();
-}
-
-void SampleAverageApproximationSolverInterface::initialSolve()
-{
+    // Initialize random generator
     unsigned int seed;
 
     // How it works: We need a random generator and a distribution we want to draw numbers from.
@@ -234,6 +231,11 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     // Create a random [0,1) variate generator;
     boost::uniform_01<> uniform_01_distribution;
     uniform_generator_struct.uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
+}
+
+void SampleAverageApproximationSolverInterface::initialSolve()
+{
+
 
     // Some things we need to share later on
     OsiSolverInterface* osi_solver = osi_pnb_->getOsiSolverInterface();
