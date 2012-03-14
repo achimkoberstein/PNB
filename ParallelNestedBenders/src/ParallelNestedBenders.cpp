@@ -295,6 +295,10 @@ namespace parallel_benders {
         compute_dual_solutions_for_stage_ = param.get(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
         compute_objective_values_ = param.get(PNB_COMPUTE_OBJECTIVE_VALUES,false);
         // Memory switch: Compute solutions and store them during algorithm?
+        if ( compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_ALL )
+            compute_primal_solutions_for_stage_ = num_stages_;
+        if ( compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_ALL )
+            compute_dual_solutions_for_stage_ = num_stages_;
 
         // Tolerances
         zero_tolerance_ = param.get(PNB_TOLERANCE_ZERO,0.0);
@@ -1081,7 +1085,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    console_mutex_.lock();
@@ -1291,11 +1295,14 @@ namespace parallel_benders {
             // Delete column solution, if we do not need to store primal_and_dual solutions. 
             // We can delete the column solution only if we move backward and we do not need to store both!
         }
+        if ( !compute_stage_bounds_ ){
+            // If we go forward, we add to our upper bound!
+            upper_bound_mutex_.lock();
+            temporary_upper_bound_ += solution_value*benders_node_pointer->probability_; // Add current solution to overall temporary upper bound, but only on way back?
+            upper_bound_mutex_.unlock();
+        }
 
-        // If we go forward, we add to our upper bound!
-        upper_bound_mutex_.lock();
-        temporary_upper_bound_ += solution_value*benders_node_pointer->probability_; // Add current solution to overall temporary upper bound, but only on way back?
-        upper_bound_mutex_.unlock();
+
 
         // Store dual solutions
         if ( !forward_ || store_primal_and_dual_ ){

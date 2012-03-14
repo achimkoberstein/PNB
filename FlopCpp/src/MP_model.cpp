@@ -1343,6 +1343,7 @@ MP_model::MP_status MP_model::solve(const MP_model::MP_direction &dir) {
         // Delete current solver before we overwrite the Pointer with the new solver interface
         delete Solver;
         Solver = smiModel->loadOsiSolverData();
+        //smiModel->releaseSolver();
         Solver->setObjSense(dir); //Important: After loading solver data, objSense is not specified..
         stochasticClock = CoinCpuTime();        
         DLOG(INFO) << "Generation of deterministic equivalent took " << CoinCpuTime()-startClock << "s";

@@ -123,6 +123,7 @@ OsiStochasticParallelNestedBendersSolverInterface::OsiStochasticParallelNestedBe
 {
     if ( smi_model == NULL )
         assert(false);
+    this->smi_model_->releaseSolver(); // Forget about previous solver, we do not care about it!
     this->smi_model_->setOsiSolverHandle(this->osi_solver_);
     nested_benders_ = new parallel_benders::ParallelNestedBenders(smi_model_);
 }
