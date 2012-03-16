@@ -250,7 +250,7 @@ namespace parallel_benders {
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
+        current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_((int)infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
@@ -679,6 +679,8 @@ namespace parallel_benders {
             // Change direction depending on last or first stage. This holds for all sequencing protocols.
             if ( current_stage_ == 0 ){
                 forward_ = true;
+                if ( !infeasible_problem_ )
+                    feasible_iteration_++;
                 // If we had infeasible problems in the last backward run, we added all the feas cuts and can start fresh
                 infeasible_problem_ = false;
             }
@@ -698,7 +700,7 @@ namespace parallel_benders {
             }
 
             // Try the shuffle or FastForward Strategy
-            if ( (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD) && !forward_ ){
+            if ( (sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD) && !forward_ && !enforce_direction_){
                 if ( current_stage_ > 0 && current_stage_ < num_stages_-1){// We can update the upper bound, because we do not do that elsewhere if we use this strategy.
                     // Decide wether we want to go forward again 
                     // We want to test if the lower bound for this stage is close enough to the upper bound
@@ -778,13 +780,16 @@ namespace parallel_benders {
             thread_pool_.wait(0); // We wait until all threads are done
 
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
-                theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD!
+                theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
+                // This ensures that we get back to the first stage when we finally reached the last stage!
+                enforce_stage_ = 0;
+                enforce_direction_ = true;
                 if ( !compute_stage_bounds_ && temporary_upper_bound_ < upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
             }
 
             // Update stage wise upper/lower bounds, only if we did not had infeasible problems.
-            if ( infeasible_problems_.none() && compute_stage_bounds_){
+            if ( !infeasible_problem_ && compute_stage_bounds_){
                 old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
                 old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
                 // If we solved all problems without infeasibility, we update these values.
@@ -816,14 +821,14 @@ namespace parallel_benders {
 
                     }
 
-                    if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD) && theta_approximations_everywhere_){
+                    if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD) && theta_approximations_everywhere_ && !enforce_direction_){
                         if ( current_stage_ > 0 && current_stage_ < num_stages_-1){
                             if ( discrepancy > (strategy_epsilon_/(num_stages_-1)) * std::min(std::abs(lower_bound_),std::abs(upper_bound_)) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
                                 forward_ = false;
                                 enforce_stage_ = 0;
                                 enforce_direction_ = true;
                             }
-                            else if ( !enforce_direction_)
+                            else 
                                 forward_ = true;
                         }
                     }
@@ -948,6 +953,9 @@ namespace parallel_benders {
                 added_feasibility_cuts_[current_stage_-1] += num_added_feasibility_cuts_;
                 // Reset num_added_feasibility_cuts_
                 num_added_feasibility_cuts_ = 0;
+                // If we encounter an infeasible problem, we go straight back to the first stage!
+                enforce_direction_ = true;
+                enforce_stage_ = 0;
             }
 
             // When we did not added any cuts, we have to go forward! (except last stage of course and when all problems were feasible!)
@@ -2897,6 +2905,7 @@ namespace parallel_benders {
             return;
         double time = CoinCpuTime();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
+        double inactive_ratio = 0.7; // Aggregates that are inactive for more than inactive_ratio of all iterations (only feasible iterations!)
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         // We have the dual solution
         if ( benders_node_pointer->dual_solution_ == NULL){
@@ -2912,7 +2921,7 @@ namespace parallel_benders {
             return;
 
         // Process the data to see if we can aggregate something!
-        int inactive_threshold = 2;
+        int inactive_threshold = 2; 
         bool aggregate_aggregates = false;
 
         /************************************************************************/
@@ -2939,6 +2948,8 @@ namespace parallel_benders {
             boost::dynamic_bitset<> to_aggregate(number_of_aggregates); // Proposes cuts which should be aggregated
             std::map<int,double> iteration_wise_impact; // Stores the dual values for the iterations
             std::map<int,int> latest_active_cut_for_aggregate; // Stores the highest iteration creation for an aggregate
+            for (int i = 0; i < benders_node_pointer->num_thetas_; i++)
+                latest_active_cut_for_aggregate[i] = 0;
             int minimal_active_creation_iteration = current_iteration_;
             int maximal_active_creation_iteration = 0;
             //// Retrieve the data: Iterate over all cuts!
@@ -2954,32 +2965,34 @@ namespace parallel_benders {
 
                 if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
                     (*it)->not_active_iterations_++;
-                    if ( (*it)->not_active_iterations_ > threshold ){
-                        proposed_cuts.push_back(*it);
-                        to_aggregate.set((*it)->aggregate_number_);
-                    }
+                    //if ( (*it)->not_active_iterations_ > threshold ){
+                    latest_active_cut_for_aggregate[(*it)->aggregate_number_]++; // Count one up for this aggregate!
                 }
-                else{
-                    active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
-                    (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
-                    iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
-                    (*it)->not_active_iterations_ = 0;
-                    if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
-                        latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
-                    }
-                    if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
-                        minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
-                    if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
-                        maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
+                //else{
+                //    active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
+                //    (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
+                //    iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
+                //    //(*it)->not_active_iterations_ = 0;
+                //    if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
+                //        latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
+                //    }
+                //    if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
+                //        minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
+                //    if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
+                //        maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
 
-                }
+                //}
                 current_cut_index++;
             }
             // Aggregates that have cuts that where inactive long enough get aggregated into one
             for (int i = 0; i < number_of_aggregates; i++){
-                if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration ){
+                //if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration ){
+                //    aggregates_into_one.push_back(i);
+                //}
+                if ( latest_active_cut_for_aggregate[i]/feasible_iteration_ > inactive_ratio ){
                     aggregates_into_one.push_back(i);
                 }
+
             }
         } 
         else if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY){
