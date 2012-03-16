@@ -138,6 +138,7 @@ private:
     const int max_iteration_;
     int minor_iteration_;
     int major_iteration_;
+    int feasible_iteration_;
     double lower_bound_;
     double upper_bound_;
     double temporary_upper_bound_;
