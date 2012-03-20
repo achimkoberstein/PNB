@@ -2965,34 +2965,37 @@ namespace parallel_benders {
 
                 if ( CompareWithZero(benders_node_pointer->dual_solution_[current_cut_index]) ){
                     (*it)->not_active_iterations_++;
-                    //if ( (*it)->not_active_iterations_ > threshold ){
-                    latest_active_cut_for_aggregate[(*it)->aggregate_number_]++; // Count one up for this aggregate!
+                    if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_)
+                        latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_; 
                 }
-                //else{
-                //    active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
-                //    (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
-                //    iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
-                //    //(*it)->not_active_iterations_ = 0;
-                //    if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
-                //        latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
-                //    }
-                //    if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
-                //        minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
-                //    if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
-                //        maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
+                else{
+                    active_time[(*it)->aggregate_number_] += benders_node_pointer->dual_solution_[current_cut_index];
+                    (*it)->active_value += benders_node_pointer->dual_solution_[current_cut_index];
+                    iteration_wise_impact[(*it)->cut_creation_iteration_] += benders_node_pointer->dual_solution_[current_cut_index];
+                    //(*it)->not_active_iterations_ = 0;
+                    if ( latest_active_cut_for_aggregate[(*it)->aggregate_number_] < (*it)->cut_creation_iteration_ ){
+                        latest_active_cut_for_aggregate[(*it)->aggregate_number_] = (*it)->cut_creation_iteration_;
+                    }
+                    if ( (*it)->cut_creation_iteration_ < minimal_active_creation_iteration )
+                        minimal_active_creation_iteration = (*it)->cut_creation_iteration_;
+                    if ( (*it)->cut_creation_iteration_ > maximal_active_creation_iteration )
+                        maximal_active_creation_iteration = (*it)->cut_creation_iteration_;
 
-                //}
+                }
                 current_cut_index++;
             }
             // Aggregates that have cuts that where inactive long enough get aggregated into one
-            for (int i = 0; i < number_of_aggregates; i++){
-                //if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration ){
-                //    aggregates_into_one.push_back(i);
-                //}
-                if ( latest_active_cut_for_aggregate[i]/feasible_iteration_ > inactive_ratio ){
-                    aggregates_into_one.push_back(i);
+            // Check if we want to 
+            if ( current_iteration_-minimal_active_creation_iteration > 5 ){ // Fixed threshold for now!
+                for (int i = 0; i < number_of_aggregates; i++){
+                    if ( aggregates_into_one.size() <= 10 ){
+                        if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration )
+                            aggregates_into_one.push_back(i);
+                    }
+                    else
+                        break;// Else we can skip the rest!
+                        
                 }
-
             }
         } 
         else if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY){
@@ -3174,7 +3177,7 @@ namespace parallel_benders {
                     new_nodes_in_cut[map_old_to_new[i]].insert(new_nodes_in_cut[map_old_to_new[i]].begin(),benders_node_pointer->nodes_in_cut_[i].begin(), benders_node_pointer->nodes_in_cut_[i].end());
                 }
 
-                //LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
+                LOG(INFO) << " Aggregated cuts from " << benders_node_pointer->num_thetas_ << " to " << new_thetas;
                 benders_node_pointer->num_thetas_ = new_thetas;
                 benders_node_pointer->changed_aggregation_level_ = true;
                 benders_node_pointer->active_aggregates_ = boost::dynamic_bitset<>(new_thetas);
