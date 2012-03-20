@@ -54,6 +54,8 @@ int main(){
     std::string replacement_plus("[+]");// Replace all + literals with [+], so we can use that later as a regex
 
     while(std::getline(not_yet_processed,line)){
+        if (line == "")
+            continue;
         boost::tokenizer<boost::escaped_list_separator<char> > tok(line,esl);
         int current_index = 0;
         int count_occurences = 1;
@@ -94,11 +96,14 @@ int main(){
                 count_occurences++;
                 for (int i = 1; i < matches.size(); i++)
                     results[i] += strtod(std::string(matches[i]).c_str(),NULL);
-                    
             }
             else { // Write output to temporary file or std::stringstream!
                 temp_stream << search_string << std::endl;
             }
+        }
+        if ( temp_stream.str() == ""){
+            std::cout << "Temp_stream is empty";
+            std::cout << "regex: " << regex;
         }
         // Now create the string again
         std::stringstream output_string;
@@ -131,6 +136,7 @@ int main(){
         not_yet_processed << temp_stream.rdbuf();
         //std::cout << not_yet_processed.str();
         not_yet_processed.seekg(0,ios::beg);
+
         temp_stream.clear(); // 
         temp_stream.str("");
 
@@ -145,4 +151,5 @@ int main(){
     // 
     original.close();
     output.close();
+    std::cout << "Closing process.";
 }
