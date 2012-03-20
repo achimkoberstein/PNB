@@ -125,7 +125,7 @@ public:
         //}
         
 
-        int num_repetitions = 0; 
+        int num_repetitions = 1; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         if ( num_repetitions ){
@@ -135,34 +135,50 @@ public:
             num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
         }
         delete smi_model; // Get rid of the model, before we actually solve stuff
+        num_repetitions = 0;
         
         benders_parameter_.init();
 
         // Solve with aggregation and removal of cuts!
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+        std::vector<int> aggregates;
+        aggregates.push_back(0);
+        aggregates.push_back(1);
+        aggregates.push_back(5);
+        aggregates.push_back(10);
+        aggregates.push_back(25);
+        aggregates.push_back(50);
+        aggregates.push_back(100);
+        aggregates.push_back(200);
+        aggregates.push_back(500);
+        aggregates.push_back(1000);
+        aggregates.push_back(2000);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TRUST_REGION,false);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        for (int j = 0; j < 2; j++){
+            for (int i = 0; i < aggregates.size(); i++){
+                if ( aggregates[i] >= num_childs_first_stage)
+                    continue;
+                benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
+                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TRUST_REGION,false);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
+                //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+                //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
+                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,true);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            }
+        }
 
         // Solve DetEq as comparison
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
@@ -170,7 +186,7 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1);
 
         
- // Solve each problem three times!
+        // Solve each problem three times!
         //num_childs_first_stage = 2; // Only solve once!
 
         for (int i = 0; i < num_repetitions; i++){
@@ -783,7 +799,16 @@ TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
 TEST_F(NestedBendersTest,scenarios_WRIGHT){
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
+
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
+
+
 }
 
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
