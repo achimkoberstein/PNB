@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 #pragma region sets
 
     // Stages
-    enum {T2009, T2010, T2011, T2012, numT};
+    enum {T2009, T2010, T2011, T2012, T2013, T2014, T2015, T2016, T2017, numT};
     MP_stage T(numT);
     T.setName("T");
 
@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
     // c_build{l in L, p1 in P}; #costs für building line l
     double costs_building[numL][numP] =
     {
-        {250000, 250000, 250000},
-        {250000, 250000, 250000}
+        {250000000, 250000000, 250000000},
+        {250000000, 250000000, 250000000}
     };
     MP_data c_build(&costs_building[0][0], L, P);
     c_build.setName("c_build");
@@ -85,8 +85,8 @@ int main(int argc, char* argv[]) {
     // c_operate{l in L, p1 in P}; #costs für operating line l
     double costs_operate[numL][numP] =
     {
-        {5000, 5000, 5000},
-        {5000, 5000, 5000}
+        {50000000, 50000000, 50000000},
+        {50000000, 50000000, 50000000}
     };
     MP_data c_operate(&costs_operate[0][0], L, P);
     c_operate.setName("c_operate");
@@ -100,31 +100,29 @@ int main(int argc, char* argv[]) {
     MP_data m(&capacity[0][0], L, P);
     m.setName("m");
 
-    const int numberStages = 8; // I want to decouple the stages with the array size!
-
     // q_prod{l in L, p in P, t in T}; # production costs per unit of product p on line l in time period t
-    double productionCosts[numL][numP][numberStages] =
+    double productionCosts[numL][numP][numT] =
     {
         { // L3
             { // P1
-                0, 700, 700, 700, 700, 700, 700, 700
+                0, 700, 700, 700, 700, 700, 700, 700, 700
             },
             { // P2
-                0, 1200, 1200, 1200, 1200, 1200, 1200, 1200
+                0, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200
             },
             { // P3
-                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700
+                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700
             }
         },
         { // L8
             { // P1
-                0, 500, 500, 500, 500, 500, 500, 500
+                0, 500, 500, 500, 500, 500, 500, 500, 500
             },
             { // P2
-                0, 1000, 1000, 1000, 1000, 1000, 1000, 1000
+                0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
             },
             { // P3
-                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700
+                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700
             }
         }
     };
@@ -132,28 +130,28 @@ int main(int argc, char* argv[]) {
     q_prod.setName("q_prod");
 
     // d_basis{m in M,p in P,t in T}; # basis_demand, used to calculate the real demand
-    double basisDemand[numM][numP][numberStages] =
+    double basisDemand[numM][numP][numT] =
     {
         { // M1
             { // P1
-                0, 200000, 200000, 100000, 0, 0,  0, 0
+                0, 200000, 200000, 100000, 0, 0,  0, 0, 0
             },
             { // P2
-                0, 70000, 140000, 140000, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 70000, 140000, 140000, 14000 
             },
             { // P3
-                0, 20000, 60000, 70000, 80000, 60000, 30000, 20000
+                0, 20000, 60000, 70000, 80000, 60000, 30000, 20000, 20000
             }
         },
         { // M6
             { // P1
-                0, 130000, 130000, 50000, 0, 0, 0, 0
+                0, 130000, 130000, 50000, 0, 0, 0, 0, 0
             },
             { // P2
-                0,  50000, 100000, 100000,0, 0, 0, 0
+                0, 0, 0, 0, 0, 50000, 100000, 100000, 50000
             },
             { // P3
-                0, 20000, 70000, 80000, 80000, 60000, 30000, 20000
+                0, 20000, 70000, 80000, 80000, 60000, 30000, 20000, 2000
             }
         }
     };
@@ -178,8 +176,7 @@ int main(int argc, char* argv[]) {
     valuesD.push_back(1/df);
 
 
-    //RandomVariable* rVarDemand[numberStages-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
-    RandomVariable* rVarDemand[numberStages-1] = { new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(10)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(10)), new ContinuousNormalRandomVariable(1.1,0.5,new BracketMeanDiscretization(10)), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
     MP_random_data d_factor(&rVarDemand[0], T);
 
     
@@ -188,57 +185,57 @@ int main(int argc, char* argv[]) {
     d.setName("d");
 
     // q_trans{l in L, p in P, m in M, t in T}; transportation costs for one unit of product p from line l to market m in period t
-    double transportationCosts[numL][numP][numM][numberStages] =
+    double transportationCosts[numL][numP][numM][numT] =
     {
         { // L3
             { // P1
                 { // M1
-                    0, 20, 20, 20, 20, 20, 20, 20
+                    0, 20, 20, 20, 20, 20, 20, 20, 20
                 },
                 { // M6
-                    0, 300, 300, 300, 300, 300, 300, 300
+                    0, 300, 300, 300, 300, 300, 300, 300, 300
                 }
             },
             { // P2
                 { // M1
-                    0, 25, 25, 25, 25, 25, 25, 25
+                    0, 25, 25, 25, 25, 25, 25, 25, 25
                 },
                 { // M6
-                    0, 400, 400, 400, 400, 400, 400, 400
+                    0, 400, 400, 400, 400, 400, 400, 400, 400
                 }   
             },
             { // P3
                 { // M1
-                    0, 25, 25, 25, 25, 25, 25, 25
+                    0, 25, 25, 25, 25, 25, 25, 25, 25
                 },
                 { // M6
-                    0, 600, 600, 600, 600, 600, 600, 600
+                    0, 600, 600, 600, 600, 600, 600, 600, 600
                 }  
             }
         },
         { // L8
             { // P1
                 { // M1
-                    0, 300, 300, 300, 300, 300, 300, 300
+                    0, 300, 300, 300, 300, 300, 300, 300, 300
                 },
                 { // M6
-                    0, 30, 30, 30, 30, 30, 30, 30
+                    0, 30, 30, 30, 30, 30, 30, 30, 30
                 }
             },
             { // P2
                 { // M1
-                    0, 400, 400, 400, 400, 400, 400, 400
+                    0, 400, 400, 400, 400, 400, 400, 400, 400
                 },
                 { // M6
-                    0, 40, 40, 40, 40, 40, 40, 40
+                    0, 40, 40, 40, 40, 40, 40, 40, 40
                 }   
             },
             { // P3
                 { // M1
-                    0, 600, 600, 600, 600, 600, 600, 600
+                    0, 600, 600, 600, 600, 600, 600, 600, 600
                 },
                 { // M6
-                    0, 40, 40, 40, 40, 40, 40, 40
+                    0, 40, 40, 40, 40, 40, 40, 40, 40
                 }  
             }
         }
@@ -252,28 +249,28 @@ int main(int argc, char* argv[]) {
     r.setName("r");
     
     // price{m in M, p in P, t in T}; #price of product p on market/currency in time period t
-    double valPrice[numM][numP][numberStages] = 
+    double valPrice[numM][numP][numT] = 
     {
         { // M1
             { // P1
-                0, 3000, 3000, 3000, 3000, 3000, 3000, 3000
+                0, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000
             },
             { // P2
-                0, 5000, 5000, 5000, 5000, 5000, 5000, 5000
+                0, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000
             },
             { // P3
-                0, 9000, 9000, 9000, 9000, 9000, 900, 900
+                0, 9000, 9000, 9000, 9000, 9000, 900, 900, 900
             }
         },
         { // M6
             { // P1
-                0, 2500, 2500, 2500, 2500, 2500, 2500, 2500
+                0, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500
             },
             { // P2
-                0, 3500, 3500, 3500, 3500, 3500, 3500, 3500
+                0, 3500, 3500, 3500, 3500, 3500, 3500, 3500, 3500
             },
             { // P3
-                0, 6000, 6000, 6000, 6000, 6000, 6000, 6000
+                0, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000
             }
         }
     };
@@ -304,7 +301,7 @@ int main(int argc, char* argv[]) {
     valuesE.push_back(ef);
     valuesE.push_back(1/ef);
 
-    RandomVariable* rVarExr[numberStages-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE) };
+    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE) };
     
     MP_random_data exr_factor(&rVarExr[0], T);
     exr_factor.setName("exr_factor");
@@ -570,12 +567,12 @@ int main(int argc, char* argv[]) {
     model.attach(); // Load OsiSolverData??
     std::cout << "Writing SMPS" << std::endl;
     model.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
-    //std::cout << "Solving model" << std::endl;
-    //model.solve(MP_model::MINIMIZE);
-    //model->writeMps("scdp-problem"); // We should take objective sense into account
-    //std::cout << model->getObjValue();
+    std::cout << "Solving model" << std::endl;
+    model.solve(MP_model::MINIMIZE);
+    model->writeMps("scdp-problem"); // We should take objective sense into account
+    std::cout << model->getObjValue();
 
-    //cost_linebuild.display("cost_linebuild");
+    cost_linebuild.display("cost_linebuild");
 
     //revenue.display();
 
