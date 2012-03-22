@@ -872,6 +872,9 @@ TEST_F(NestedBendersTest,dakota){// dakota model
     EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
 }
 
+TEST_F(NestedBendersTest,temporary){// dakota model
+    EXPECT_NEAR(solveSMPS("../../../FlopCpp/MsVisualStudio/v9/x64/Release/SCDP"),24014.05, 1); 
+}
 
 TEST_F(NestedBendersTest,FeasibilityCutTest){
     using namespace flopc;
@@ -989,7 +992,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*pltexp*";
-    ::testing::GTEST_FLAG(filter) = "*scenarios_WRIGHT*";
+    ::testing::GTEST_FLAG(filter) = "*temporary*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
