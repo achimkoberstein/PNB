@@ -569,8 +569,10 @@ int main(int argc, char* argv[]) {
     model.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
     std::cout << "Solving model" << std::endl;
     model.solve(MP_model::MINIMIZE);
+    std::cout << "Optimal: " << model->isProvenOptimal();
+    std::cout << "Objective-Value " << model->getObjValue();
     model->writeMps("scdp-problem"); // We should take objective sense into account
-    std::cout << model->getObjValue();
+    
 
     cost_linebuild.display("cost_linebuild");
 

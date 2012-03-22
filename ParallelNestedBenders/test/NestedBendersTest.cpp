@@ -125,7 +125,7 @@ public:
         //}
         
 
-        int num_repetitions = 1; 
+        int num_repetitions = 0; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         if ( num_repetitions ){
