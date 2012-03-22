@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 #pragma region sets
 
     // Stages
-    enum {T2009, T2010, T2011, T2012, T2013, T2014, T2015, T2016, T2017, numT};
+    enum {T2009, T2010, T2011, T2012, T2013, T2014, T2015, T2016, T2017, T2018,numT};
     MP_stage T(numT);
     T.setName("T");
 
@@ -105,24 +105,24 @@ int main(int argc, char* argv[]) {
     {
         { // L3
             { // P1
-                0, 700, 700, 700, 700, 700, 700, 700, 700
+                0, 700, 700, 700, 700, 700, 700, 700, 700, 700
             },
             { // P2
-                0, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200
+                0, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200
             },
             { // P3
-                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700
+                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700
             }
         },
         { // L8
             { // P1
-                0, 500, 500, 500, 500, 500, 500, 500, 500
+                0, 500, 500, 500, 500, 500, 500, 500, 500, 500
             },
             { // P2
-                0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
+                0, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000
             },
             { // P3
-                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700
+                0, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700, 1700
             }
         }
     };
@@ -134,24 +134,24 @@ int main(int argc, char* argv[]) {
     {
         { // M1
             { // P1
-                0, 200000, 200000, 100000, 0, 0,  0, 0, 0
+                0, 200000, 200000, 100000, 0, 0,  0, 0, 0, 0
             },
             { // P2
-                0, 0, 0, 0, 0, 70000, 100000, 110000, 70000 
+                0, 0, 0, 0, 0, 70000, 100000, 110000, 70000 , 70000 
             },
             { // P3
-                0, 20000, 60000, 70000, 80000, 60000, 30000, 10000, 10000
+                0, 20000, 60000, 70000, 80000, 60000, 30000, 10000, 10000, 10000
             }
         },
         { // M6
             { // P1
-                0, 130000, 130000, 50000, 0, 0, 0, 0, 0
+                0, 130000, 130000, 50000, 0, 0, 0, 0, 0, 0
             },
             { // P2
-                0, 0, 0, 0, 0, 50000, 100000, 50000, 50000
+                0, 0, 0, 0, 0, 50000, 100000, 50000, 50000, 50000
             },
             { // P3
-                0, 10000, 70000, 80000, 70000, 60000, 30000, 20000, 20000
+                0, 10000, 70000, 80000, 70000, 60000, 30000, 20000, 20000, 20000
             }
         }
     };
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
     valuesD.push_back(1/df);
 
 
-    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD),new EmpiricalRandomVariable(valuesD,probsD) };
     MP_random_data d_factor(&rVarDemand[0], T);
 
     
@@ -190,52 +190,52 @@ int main(int argc, char* argv[]) {
         { // L3
             { // P1
                 { // M1
-                    0, 20, 20, 20, 20, 20, 20, 20, 20
+                    0, 20, 20, 20, 20, 20, 20, 20, 20, 20
                 },
                 { // M6
-                    0, 300, 300, 300, 300, 300, 300, 300, 300
+                    0, 300, 300, 300, 300, 300, 300, 300, 300, 300
                 }
             },
             { // P2
                 { // M1
-                    0, 25, 25, 25, 25, 25, 25, 25, 25
+                    0, 25, 25, 25, 25, 25, 25, 25, 25, 25
                 },
                 { // M6
-                    0, 400, 400, 400, 400, 400, 400, 400, 400
+                    0, 400, 400, 400, 400, 400, 400, 400, 400, 400
                 }   
             },
             { // P3
                 { // M1
-                    0, 25, 25, 25, 25, 25, 25, 25, 25
+                    0, 25, 25, 25, 25, 25, 25, 25, 25, 25
                 },
                 { // M6
-                    0, 600, 600, 600, 600, 600, 600, 600, 600
+                    0, 600, 600, 600, 600, 600, 600, 600, 600, 600
                 }  
             }
         },
         { // L8
             { // P1
                 { // M1
-                    0, 300, 300, 300, 300, 300, 300, 300, 300
+                    0, 300, 300, 300, 300, 300, 300, 300, 300, 300
                 },
                 { // M6
-                    0, 30, 30, 30, 30, 30, 30, 30, 30
+                    0, 30, 30, 30, 30, 30, 30, 30, 30, 30
                 }
             },
             { // P2
                 { // M1
-                    0, 400, 400, 400, 400, 400, 400, 400, 400
+                    0, 400, 400, 400, 400, 400, 400, 400, 400, 400
                 },
                 { // M6
-                    0, 40, 40, 40, 40, 40, 40, 40, 40
+                    0, 40, 40, 40, 40, 40, 40, 40, 40, 40
                 }   
             },
             { // P3
                 { // M1
-                    0, 600, 600, 600, 600, 600, 600, 600, 600
+                    0, 600, 600, 600, 600, 600, 600, 600, 600, 600
                 },
                 { // M6
-                    0, 40, 40, 40, 40, 40, 40, 40, 40
+                    0, 40, 40, 40, 40, 40, 40, 40, 40, 40
                 }  
             }
         }
@@ -253,24 +253,24 @@ int main(int argc, char* argv[]) {
     {
         { // M1
             { // P1
-                0, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000
+                0, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000
             },
             { // P2
-                0, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000
+                0, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000
             },
             { // P3
-                0, 9000, 9000, 9000, 9000, 9000, 900, 900, 900
+                0, 9000, 9000, 9000, 9000, 9000, 900, 900, 900, 900
             }
         },
         { // M6
             { // P1
-                0, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500
+                0, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500, 2500
             },
             { // P2
-                0, 3500, 3500, 3500, 3500, 3500, 3500, 3500, 3500
+                0, 3500, 3500, 3500, 3500, 3500, 3500, 3500, 3500, 3500
             },
             { // P3
-                0, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000
+                0, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000, 6000
             }
         }
     };
@@ -301,7 +301,7 @@ int main(int argc, char* argv[]) {
     valuesE.push_back(ef);
     valuesE.push_back(1/ef);
 
-    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE) };
+    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE), new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE) };
     
     MP_random_data exr_factor(&rVarExr[0], T);
     exr_factor.setName("exr_factor");
