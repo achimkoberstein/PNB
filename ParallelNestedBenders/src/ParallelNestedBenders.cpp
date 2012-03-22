@@ -90,22 +90,23 @@ namespace parallel_benders {
                 }
             }
         }
-        // What do we want to do?
-        if ( non_staircase_problem_ ){ // We have non_staircase_rows! How do we handle these?
-            // Iterate over all rows
-            BOOST_FOREACH( non_staircase_row_map::value_type vec_ref,non_staircase_rows){
-                for (int i = 0; i < vec_ref.second.size(); i++){
-                    // Do something here!
-                }
-            }
-            // We have to go through it from bottom to top.
-            // If we have a non-staircase row in the last stage, we have to find the coefficient of the lowest stage.
-            // Then we have to insert new rows with free variables ( and most likely stochastic coefficients.. ) in all stages lower than the last stage.
-            // Because it would be necessary to change the whole SmiTree to handle Non-Staircase structure, we can add non-staircase handling behaviour inside our algorithm.
-            // We have to manipulate the last stage in the following way: insert the new column, and insert the new row.
-            // 
+        //// What do we want to do?
+        //if ( non_staircase_problem_ ){ // We have non_staircase_rows! How do we handle these?
+        //    // Iterate over all rows
+        //    BOOST_FOREACH( non_staircase_row_map::value_type vec_ref,non_staircase_rows){
+        //        for (int i = 0; i < vec_ref.second.size(); i++){
+        //            // Do something here!
+        //            LOG(FATAL) << "Not yet implemented.";
+        //        }
+        //    }
+        //    // We have to go through it from bottom to top.
+        //    // If we have a non-staircase row in the last stage, we have to find the coefficient of the lowest stage.
+        //    // Then we have to insert new rows with free variables ( and most likely stochastic coefficients.. ) in all stages lower than the last stage.
+        //    // Because it would be necessary to change the whole SmiTree to handle Non-Staircase structure, we can add non-staircase handling behaviour inside our algorithm.
+        //    // We have to manipulate the last stage in the following way: insert the new column, and insert the new row.
+        //    // 
 
-        }
+        //}
         // 1. Check for stochasticity of the model 
         for (int i = 0; i < num_stages_; i++)
             thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AdjustProblemInStage,this,i) );

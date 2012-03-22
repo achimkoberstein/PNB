@@ -2072,30 +2072,34 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
         int start_index = strt_[clo_strt_];
         int strt_index = clo_strt_;
         int count = 0;
+        int offset = 0;
+        for (int i = 0; i< stg_-1;i++){
+            offset += new_columns[i];
+        }
         // We iterate over the coefficient_transformation_map to create the required constraints!
         for (std::map<int,int>::iterator it = coefficient_transformation[stg_].begin(); it != coefficient_transformation[stg_].end(); ++it){
-            int first_index = -1;
-            int second_index = -1;
-            if ( core_->getColStage(it->first) == stg_-1 ){
-                first_index = it->first;
-                second_index = it->second;
-            } // We need to create a new row that maps it->first to it->second
-            else { // We are in a stage where we have not direct access to it->first, but we already need to use a new column we introduced. Therefore we need the it->second of it->first of the stage before.
+            // If it->first is from previous stage
+            int first_index = it->first;
+            int second_index = it->second;
+            //int original_index_stage = stg_-1;
+            if ( core_->getColStage(it->first) < stg_-1 ){
+            // We need to create a new row that maps it->first to it->second
+             // We are in a stage where we have not direct access to it->first, but we already need to use a new column we introduced. Therefore we need the it->second of it->first of the stage before.
                 assert( core_->getColStage(it->first) < stg_-1);
                 std::map<int,int>::iterator it2(coefficient_transformation[stg_-1].find(it->first));
                 if ( it2 != coefficient_transformation[stg_-1].end() ){
                     first_index = it2->second;
                     second_index = it->second;
+                    //original_index_stage = core_->getColStage(it2->first);
                 }
                 else
                     assert(false);
             }
-            // The first index is the index of the OLD columns, but not the new ones. So we *must* add the number of new columns we added
-            int offset = 0;
-            for (int i = 0; i< core_->getColStage(it->first);i++){
-                offset += new_columns[i];
+            else {
+                // We have an original index from the previous stage. We need to add the offset!
+                first_index += offset;
             }
-            first_index += offset;
+
             new_dels[start_index+2*count] = 1.0;
             new_dels[start_index+2*count+1] = -1.0;
             new_inds[start_index+2*count] = first_index;
