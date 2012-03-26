@@ -275,7 +275,7 @@ namespace parallel_benders {
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
         // Load empty problem (i.e. reset the solver interface
-        osi_solver_->messageHandler()->setLogLevel(0); 
+        //osi_solver_->messageHandler()->setLogLevel(0); 
         osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         // Cplex specific settings come later
 
@@ -471,8 +471,8 @@ namespace parallel_benders {
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
             //CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
-            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+            //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
         }
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -1176,17 +1176,18 @@ namespace parallel_benders {
                 }
                 else if ( !osi_solver->isProvenOptimal()){
                     if ( osi_solver->isProvenDualInfeasible() ){
-                        if ( seperate_first_stage_solver_ ) // Strange behaviour results if we use the seperate_first_stage_solver!
+                        if ( seperate_first_stage_solver_ ) // Strange behaviour may results if we use the seperate_first_stage_solver!
                             seperate_first_stage_solver_ = false;
                         console_mutex_.lock();
                         LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
-                        LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem.";
+                        LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
                         osi_solver->initialSolve();
                         if ( osi_solver->isProvenDualInfeasible() ){
                             // We can not work with that in a reasonable manner..
                             upper_bound_ = infinity_;
                             unbounded_problem_ = true; // If a problem is really unbounded, the whole problem is unbounded ( see paper VanSlyke & Wets )
-                            osi_solver->writeLp("unboundedProblem.lp");
+                            osi_solver->writeLp("unboundedProblem");
+                            osi_solver->writeMps("unboundedProblem");
                         }
                         console_mutex_.unlock();
 
@@ -1223,8 +1224,6 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
                     int stat = CPXgetstat(env_ptr,lp_ptr);
                     LOG(INFO) << "Cplex returned solution process with " << stat;
-                    //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-                    //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
                 }
 
             }
@@ -2296,8 +2295,8 @@ namespace parallel_benders {
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
                 CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
-                CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+                //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+                //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
             }
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
