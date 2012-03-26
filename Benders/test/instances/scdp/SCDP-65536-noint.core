@@ -1871,12 +1871,6 @@ BOUNDS
  FX BOUND f_cost_1_0_2 0
  FX BOUND f_cost_1_0_3 0
  FX BOUND f_cost_1_0_4 0
- BV BOUND y_build_0_0 1
- BV BOUND y_build_0_1 1
- BV BOUND y_build_0_2 1
- BV BOUND y_build_1_0 1
- BV BOUND y_build_1_1 1
- BV BOUND y_build_1_2 1
  FX BOUND put_b_0_0_1 0
  FX BOUND put_b_0_0_2 0
  FX BOUND put_b_0_0_3 0
