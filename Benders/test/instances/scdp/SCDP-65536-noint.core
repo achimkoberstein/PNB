@@ -2211,4 +2211,10 @@ BOUNDS
  FR BOUND cf_0_8 1e+030
  FR BOUND cf_1_8 1e+030
  FR BOUND cf_ref_8 1e+030
+ UP BOUND y_build_0_0 1
+ UP BOUND y_build_0_1 1
+ UP BOUND y_build_0_2 1
+ UP BOUND y_build_1_0 1
+ UP BOUND y_build_1_1 1
+ UP BOUND y_build_1_2 1
 ENDATA

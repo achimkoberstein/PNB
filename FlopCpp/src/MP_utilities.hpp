@@ -44,8 +44,8 @@ namespace flopc {
     struct not_initialized_exception: virtual exception_base { };
 
     //These values are default values for the comparison function compareDouble and can be changed if needed.
-    static double absoluteTolerance = 0.0001;
-    static double relativeTolerance = 0.0001;
+    static double absoluteTolerance = 0.00000001;
+    static double relativeTolerance = 0.000000000000000001;
 
     bool compareDouble(double x, double y, double absoluteTolerance = flopc::absoluteTolerance, double relativeTolerance = flopc::relativeTolerance);
     int round(double x);

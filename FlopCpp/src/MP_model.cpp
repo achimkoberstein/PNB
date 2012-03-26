@@ -1461,22 +1461,22 @@ namespace flopc {
         std::vector<CoinPackedMatrix*> rupVec(nScen);
         std::vector<CoinPackedMatrix*> bloVec(nScen);
         std::vector<CoinPackedMatrix*> bupVec(nScen);
-        for (int curScen = 0; curScen < nScen;curScen++){ //Think about that in terms of lazy evaluation..?!
+        for (int curScenTemp = 0; curScenTemp < nScen;curScenTemp++){ //Think about that in terms of lazy evaluation..?!
             //Initialize all matrices
-            matrixVec[curScen] = new CoinPackedMatrix();
-            matrixVec[curScen]->reverseOrdering();
-            matrixVec[curScen]->setDimensions(m,n);
+            matrixVec[curScenTemp] = new CoinPackedMatrix();
+            matrixVec[curScenTemp]->reverseOrdering();
+            matrixVec[curScenTemp]->setDimensions(m,n);
             //Initialize all vectors
-            objVec[curScen] = new CoinPackedMatrix();
-            objVec[curScen]->setDimensions(n,1);
-            rloVec[curScen] = new CoinPackedMatrix();
-            rloVec[curScen]->setDimensions(m,1);
-            rupVec[curScen] = new CoinPackedMatrix();
-            rupVec[curScen]->setDimensions(m,1);
-            bloVec[curScen] = new CoinPackedMatrix();
-            bloVec[curScen]->setDimensions(n,1);
-            bupVec[curScen] = new CoinPackedMatrix();
-            bupVec[curScen]->setDimensions(n,1);
+            objVec[curScenTemp] = new CoinPackedMatrix();
+            objVec[curScenTemp]->setDimensions(n,1);
+            rloVec[curScenTemp] = new CoinPackedMatrix();
+            rloVec[curScenTemp]->setDimensions(m,1);
+            rupVec[curScenTemp] = new CoinPackedMatrix();
+            rupVec[curScenTemp]->setDimensions(m,1);
+            bloVec[curScenTemp] = new CoinPackedMatrix();
+            bloVec[curScenTemp]->setDimensions(n,1);
+            bupVec[curScenTemp] = new CoinPackedMatrix();
+            bupVec[curScenTemp]->setDimensions(n,1);
 
         }
 
