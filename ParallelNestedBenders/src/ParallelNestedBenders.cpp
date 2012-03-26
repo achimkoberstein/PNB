@@ -275,7 +275,7 @@ namespace parallel_benders {
         else
             osi_solver_ = smi_->getOsiSolverInterface()->clone();
         // Load empty problem (i.e. reset the solver interface
-        //osi_solver_->messageHandler()->setLogLevel(0); 
+        osi_solver_->messageHandler()->setLogLevel(0); 
         osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         // Cplex specific settings come later
 
@@ -465,15 +465,9 @@ namespace parallel_benders {
         cut_generation_timer_ = 2;
         // Detailed_timer 
 
-        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-        if ( cpx_ptr ){
-            // Get ENV and LP ptr
-            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            //CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
-            //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-            //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-        }
+        // Set options for solver!
+        SetSolverOptions(osi_solver_);
+
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -2289,15 +2283,7 @@ namespace parallel_benders {
             // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
             osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
             // We want to emphasize numerical stability / for CPLEX
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr ){
-                // Get ENV and LP ptr
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
-                CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
-                //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
-                //CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
-            }
+            SetSolverOptions(osi_solver);
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
         }
@@ -3918,6 +3904,19 @@ namespace parallel_benders {
         // Delete these vectors again!
 
 
+    }
+
+    void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
+    {
+        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        if ( cpx_ptr ){
+            // Get ENV and LP ptr
+            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
+            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
+        }
     }
 
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
