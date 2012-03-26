@@ -1079,7 +1079,7 @@ namespace parallel_benders {
             // Check for degeneracy and stuff, if we like it..
             if ( !forward_ || (store_primal_and_dual_ && current_stage_ > 0))
                 GenerateOptimalityCut(benders_tree_node_pointer);
-            if ( !benders_tree_node_pointer->getDataPtr()->unbounded_){ // Only if problem was not bounded by special row, we want to call these methods!
+            if ( !benders_tree_node_pointer->getDataPtr()->unbounded_ && !integer_problems_[current_stage_]){ // Only if problem was not bounded by special row, we want to call these methods and only if we have true LPs, no MIPS
                 if ( adaptive_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ) ) // Analyse optimality cuts of this node!
                     AnalyseOptimalityCuts(osi_solver,benders_tree_node_pointer);
                 if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
@@ -2713,11 +2713,17 @@ namespace parallel_benders {
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
             // Define a threshold above which we do not aggregate cuts for an iteration
             double intra_aggregate_threshold = 0;//0.05*benders_node_pointer->num_thetas_;
-            if ( adaptive_ )
-                intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
+
+
             // 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
             // If cut is consecutively non-active for more than strike_threshold iterations, we can aggregate it!
             CutStuff::strike_threshold_ = 2; 
+
+            if ( adaptive_ ){
+                intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
+                CutStuff::strike_threshold_ = 0; // Otherwise we could end up having no active cut, but not inactive enough, so we do not aggregate all cuts together 
+
+            }
 
             int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             if ( !benders_node_pointer->variable_bounds_.empty() )
@@ -2986,12 +2992,12 @@ namespace parallel_benders {
             }
             // Aggregates that have cuts that where inactive long enough get aggregated into one
             // Check if we want to 
-            if ( current_iteration_-minimal_active_creation_iteration > 5 ){ // Fixed threshold for now!
+            if ( current_iteration_-minimal_active_creation_iteration > threshold ){ // Fixed threshold for now!
                 for (int i = 0; i < number_of_aggregates; i++){
-                    if ( aggregates_into_one.size() <= 10 ){
+                    //if ( aggregates_into_one.size() <= 10 ){
                         if ( latest_active_cut_for_aggregate[i] == minimal_active_creation_iteration )
                             aggregates_into_one.push_back(i);
-                    }
+                    //}
                     else
                         break;// Else we can skip the rest!
                         
