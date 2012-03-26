@@ -871,12 +871,12 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
 }
 
