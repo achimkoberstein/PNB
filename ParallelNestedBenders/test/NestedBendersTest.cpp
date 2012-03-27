@@ -984,7 +984,7 @@ TEST_F(NestedBendersTest,StageAggregationTest){
     //testModel.getSmi()->writeSmps("stageAggreg2Test");
     parallel_benders::Parameter benders_parameter_;
     benders_parameter_.init(); // This should be called by the standard constructor anyway!
-    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); //Use deteq
+    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); 
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
     OsiStochasticParallelNestedBendersSolverInterface pnb(new_solver,testModel.getSmi());

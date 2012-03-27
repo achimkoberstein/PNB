@@ -5071,8 +5071,8 @@ dem(T,P,F) = rvar(T,P);
 
 		parallel_benders::Parameter benders_parameter;
 		benders_parameter.init();
-		benders_parameter.parameter_.add(parallel_benders::PNB_BENDERS,true);
-		benders_parameter.parameter_.add(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
+		benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,1);
+		benders_parameter.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
 		nested_benders.setParameters(benders_parameter);
 
 		init_bender=clock();
