@@ -99,6 +99,8 @@ private:
     void IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  );
     void PrimalDegeneracyHandling(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
+    void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+
 
 
     // Problem data
@@ -171,6 +173,13 @@ private:
     // Trust Region stuff
     bool trust_region_;
 
+    // Regularization
+    bool regularization_;
+    double regularized_solution_value_;
+    double regularized_sigma_;
+    bool regularized_initialized_;
+    int regularized_start_row_;
+
 
 
     Timer timer_;
@@ -233,6 +242,7 @@ private:
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
     boost::scoped_array<double> warm_up_solution_;
+    boost::scoped_array<double> regularized_solution_;
 
     // Stage Aggreagtion
     bool stage_aggregation_;
