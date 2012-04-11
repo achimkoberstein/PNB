@@ -896,9 +896,20 @@ namespace parallel_benders {
             }
             else {
                 if ( current_stage_ == 0){
-                    std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-                    std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-                    std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+                    if ( regularization_ ){
+                        std::cout << "Current Incumbent solution " << regularized_solution_value_ << std::endl;
+                        double current_solution = 0;
+                        for (int i = 0; i < num_stages_; i++)
+                            current_solution += stage_lower_upper_bounds_[i].second;
+                        double regularized_tolerance = 1e-10;
+                        std::cout << "Current Iteration solution " << current_solution << std::endl;
+                        std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << std::endl;
+                    }
+                    else {
+                        std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
+                        std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+                        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+                    }
                 }
             }
 
@@ -2729,7 +2740,7 @@ namespace parallel_benders {
 
             }
 
-            int current_cut = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
+            int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             if ( !benders_node_pointer->variable_bounds_.empty() )
                 current_cut += benders_node_pointer->variable_bounds_.size();
             // Store the number of rows/columns
@@ -2762,13 +2773,14 @@ namespace parallel_benders {
                 (*it)->current_index_in_solver_ = current_cut; // Update current_index_in_solver_ with actual index used in osi_solver
                 current_cut++;
             }
-            int number_rows = osi_solver->getNumRows();
+            // TODO: Write a method that gives the number of rows a problem has! ( by specifically asking for it, nodewise!)
+            int number_rows_solver = osi_solver->getNumRows();
             //console_mutex_.lock();
             //LOG_IF(INFO,current_cut != osi_solver->getNumRows() ) << "Difference between counted cuts " << current_cut << " and solver cuts " << number_rows;
             //console_mutex_.unlock();
-            if (!( current_cut == number_rows || current_cut == number_rows-1))
-                osi_solver->writeLp("murks");
-            assert( current_cut == number_rows || current_cut == number_rows-1); // First case should be default, second case can appear during solution (add one cut to allow a solution )
+            //if (!( current_cut == number_rows || current_cut == number_rows-1))
+            //    osi_solver->writeLp("murks");
+            assert( current_cut == number_rows_solver || current_cut == number_rows_solver-1); // First case should be default, second case can appear during solution (add one cut to allow a solution )
 
             /************************************************************************/
             /* Goal: Aggregate all cuts of one iteration into one new single cut for this generation
@@ -4086,23 +4098,42 @@ namespace parallel_benders {
                 if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_ + regularized_gamma_*approximation_solution)
                     regularized_sigma_ *= 2;
             }
-            if ( old_sigma != regularized_sigma_ ){
-                // Update coefficients in the objective function!
-                std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+benders_tree_node_pointer->getDataPtr()->num_thetas_,0);
-                CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+benders_tree_node_pointer->getDataPtr()->num_thetas_],stage_data_[current_stage_]->num_columns_,regularized_sigma_);
-                CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
-
-            }
+            //if ( old_sigma != regularized_sigma_ ){
+            //    // Update coefficients in the objective function!
+            //    std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+benders_tree_node_pointer->getDataPtr()->num_thetas_,0);
+            //    CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+benders_tree_node_pointer->getDataPtr()->num_thetas_],stage_data_[current_stage_]->num_columns_,regularized_sigma_);
+            //    for (int i = stage_data_[current_stage_]->num_columns_+num_thetas; i < stage_data_[current_stage_]->num_columns_*2+num_thetas; i++)
+            //        CPXchgqpcoef(env_ptr,lp_ptr,i,i,regularized_sigma_);
+            //    //CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
+            //}
             // Solve problem!
             CPXqpopt(env_ptr,lp_ptr);
             int code = CPXgetstat(env_ptr,lp_ptr);
             LOG_IF(WARNING,code != 1) << "Cplex returned CPXqpopt with " << code;
+            StoreWarmStart(osi_solver,benders_tree_node_pointer);
 
             // Write problem
-            osi_solver->writeLp("masterRDwith");
+            //osi_solver->writeLp("masterRDwith");
         }//end cplex
 
 
+    }
+
+    void ParallelNestedBenders::getNumRows( OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+
+        if ( regularization_ && current_stage_ == 0)
+            return osi_solver->getNumRows()+stage_data_[current_stage_]->num_columns_; // We have to add the number of rows we added for the regulariaztion problem!
+        else 
+            return osi_solver->getNumRows();
+    }
+
+    void ParallelNestedBenders::getNumRowsProblem()
+    {
+        if ( regularization_ && current_stage_ == 0)
+            return stage_data_[current_stage_]->num_rows_+stage_data_[current_stage_]->num_columns_;
+        else
+            return stage_data_[current_stage_]->num_rows_;
     }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
