@@ -349,7 +349,7 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     else
         osiStoch_->initialSolve(); //Solve this problem.
 
-    osiStoch_->writeLp("ev_problem.lp");
+    //osiStoch_->writeLp("ev_problem.lp");
 
     //Delete new-ed objects
     delete matrix_;
@@ -379,10 +379,10 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     }
 #endif
 
-    string name;
-    if (calculateAverageValues) name = "ev_calculated";
-    else name = "ev";
-    osiStoch_->writeLp(name.c_str());
+    //string name;
+    //if (calculateAverageValues) name = "ev_calculated";
+    //else name = "ev";
+    //osiStoch_->writeLp(name.c_str());
 
     double * colSolution = new double[core_->getNumCols()];
     memcpy(colSolution, osiStoch_->getColSolution(), (core_->getNumCols()* sizeof(double)) );
