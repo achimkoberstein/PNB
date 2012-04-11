@@ -177,6 +177,7 @@ private:
     bool regularization_;
     double regularized_solution_value_;
     double regularized_sigma_;
+    double regularized_gamma_;
     bool regularized_initialized_;
     int regularized_start_row_;
 

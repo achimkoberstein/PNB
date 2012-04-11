@@ -252,7 +252,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1),regularized_initialized_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -633,12 +633,14 @@ namespace parallel_benders {
             {
                 if ( regularized_solution_value_ >= infinity_)
                     not_stop_loop = true;
-                else {
+                else if ( current_stage_ == 0){
                     double solution_qx = 0;
                     double ten_to_minus_ten = 1e-10;
                     for (int i = 0; i < num_stages_; i++)
                         solution_qx += stage_lower_upper_bounds_[i].second;
-                    not_stop_loop = std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > relative_epsilon_;
+                    not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > relative_epsilon_);
+                    if ( !not_stop_loop )
+                        LOG(INFO) << "BREAK";
                 }
 
             }
@@ -1261,7 +1263,7 @@ namespace parallel_benders {
                     num_theta = 0;
                 if ( num_theta > stage_data_[current_stage_]->num_columns_)
                     num_theta -= stage_data_[current_stage_]->num_columns_;
-                 StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_*2,num_theta);
+                 StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
             }
             else 
                 StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
@@ -3948,13 +3950,14 @@ namespace parallel_benders {
         int num_columns = stage_data_[current_stage_]->num_columns_;
         int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
 
-
         // Compute Q(x^it)
         double solution_qx = 0;
         for (int i = 0; i < num_stages_; i++)
             solution_qx += stage_lower_upper_bounds_[i].second;
 
         bool updated_incumbent = false;
+        regularized_gamma_ = 0.9;
+
 
         // Test if we should update the regularized solution
         if ( solution_qx < regularized_solution_value_ ){
@@ -3966,21 +3969,7 @@ namespace parallel_benders {
             updated_incumbent = true;
         }
 
-        // Update Sigma term
-
-
-        //if ( regularized_solution_value_ >= infinity_ )
-        //    // We should solve the normal problem!
-        //{
-        //    SolveSubproblem(osi_solver,benders_tree_node_pointer);
-        //    return;
-        //}
-        if ( num_thetas == 0){// We have no thetas yet, so we do the normal stuff without regularization
-            SolveSubproblem(osi_solver,benders_tree_node_pointer);
-            return;
-        }
-
-        // Get Cplex solver
+         // Get Cplex solver
 
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         if ( cpx_ptr ){
@@ -3989,23 +3978,13 @@ namespace parallel_benders {
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
             if ( !regularized_initialized_ ){
                 regularized_initialized_ = true;
+                if ( num_thetas == 0)
+                    num_thetas = stage_data_[current_stage_]->num_thetas_;
 
-                double * quaddels = new double[num_columns]; // contains entries of the matrix 
-                int * quadiels = new int[num_columns]; // contains column (variable) which belongs to the coefficient 
-                int * quadbeg = new int[2*num_columns+num_thetas+1]; // stores the beginning of a new column of the matrix (+1 for convenience)
-                int * quadcnt = new int[2*num_columns+num_thetas]; // stores the number of entries a certain column (variable) appears in the column of the matrix
-                quadbeg[0] = 0;
-                double term = 1/regularized_sigma_; // Cplex multiplies all coefficients with 1/2
-                for (int i = 0; i < num_columns+num_thetas; i++){
-                    quadbeg[i+1] = 0;
-                    quadcnt[i] = 0;
-                }
-                for ( int i = num_columns+num_thetas;i < 2*num_columns+num_thetas; i++) {
-                    quaddels[i-num_columns-num_thetas] = term;
-                    quadiels[i-num_columns-num_thetas] = i;
-                    quadbeg[i+1] = quadbeg[i]+1;
-                    quadcnt[i] = 1;
-                }
+                double * quaddels = new double[num_columns*2+num_thetas]; // contains entries of the matrix 
+                double term = 1.0/regularized_sigma_; // Cplex multiplies all coefficients with 1/2
+                CoinFillN(quaddels,num_columns+num_thetas,0.0);
+                CoinFillN(quaddels+num_columns+num_thetas,num_columns,term);
                 // We add the new columns to the problem
                 double * collb = new double[num_columns];
                 double * colub = new double[num_columns];
@@ -4055,8 +4034,9 @@ namespace parallel_benders {
                 else
                     error = CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_QP);
                 DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXchgprobtype";
-                error = CPXcopyquad(env_ptr,lp_ptr,quadbeg,quadcnt,quadiels, quaddels);
+                error = CPXcopyqpsep(env_ptr,lp_ptr,quaddels);
                 DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXcopyquad";
+                CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
 
                 // delete new-ed arrays for rows
                 delete[] rowlb;
@@ -4066,10 +4046,7 @@ namespace parallel_benders {
                 delete[] elements;
                 // delete new-ed arrays for objective function var
                 delete[] quaddels; // contains entries of the matrix 
-                delete[] quadiels; // contains column (variable) which belongs to the coefficient 
-                delete[] quadbeg; // stores the beginning of a new column of the matrix (+1 for convenience)
-                delete[] quadcnt;
-
+ 
                 // TODO: care about integers!
                 // Ensure the integer indices are still present
                 //if (mnInt_)
@@ -4099,14 +4076,27 @@ namespace parallel_benders {
             }
 
             // Update Sigma!
+            // Test for a sigma update
+            double approximation_solution = stage_lower_upper_bounds_[0].first;
+            double old_sigma = regularized_sigma_;
+            if ( regularized_solution_value_ < infinity_ ){
+                // Change sigma adaptive to algorithm progress
+                if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution)
+                    regularized_sigma_ *= 0.5;
+                if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_ + regularized_gamma_*approximation_solution)
+                    regularized_sigma_ *= 2;
+            }
+            if ( old_sigma != regularized_sigma_ ){
+                // Update coefficients in the objective function!
+                std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+benders_tree_node_pointer->getDataPtr()->num_thetas_,0);
+                CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+benders_tree_node_pointer->getDataPtr()->num_thetas_],stage_data_[current_stage_]->num_columns_,regularized_sigma_);
+                CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
 
-
+            }
             // Solve problem!
-            CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
-            int error_code = CPXqpopt(env_ptr,lp_ptr);
+            CPXqpopt(env_ptr,lp_ptr);
             int code = CPXgetstat(env_ptr,lp_ptr);
-
-            LOG_IF(WARNING,code) << "Cplex returned CPXqpopt with " << code;
+            LOG_IF(WARNING,code != 1) << "Cplex returned CPXqpopt with " << code;
 
             // Write problem
             osi_solver->writeLp("masterRDwith");
