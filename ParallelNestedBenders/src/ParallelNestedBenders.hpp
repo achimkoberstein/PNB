@@ -101,6 +101,7 @@ private:
 
     void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
+    void SolveSolverInterface(OsiSolverInterface* osi_solver);
     int getNumRowsProblem();
 
 
