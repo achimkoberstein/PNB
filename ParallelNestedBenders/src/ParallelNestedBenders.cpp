@@ -2751,8 +2751,8 @@ namespace parallel_benders {
             }
             if ( regularization_ ){
                 intra_aggregate_threshold = 0.5*benders_node_pointer->num_thetas_;
-                CutStuff::strike_threshold_ = 0;
-                add_new_single_cut = false;
+                CutStuff::strike_threshold_ = 1;
+                add_new_single_cut = true;
             }
 
             int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
