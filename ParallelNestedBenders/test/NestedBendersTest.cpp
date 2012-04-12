@@ -202,7 +202,7 @@ public:
                 benders_parameter_.parameter_.put(parallel_benders::PNB_TRUST_REGION,false);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_DYNAMIC_AGGREGATION,false);
 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,1);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,0);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
@@ -871,9 +871,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
@@ -1015,7 +1015,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*NestedBenders*";
-    ::testing::GTEST_FLAG(filter) = "*storm*";
+    ::testing::GTEST_FLAG(filter) = "*scdp*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)

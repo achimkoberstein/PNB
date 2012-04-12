@@ -2065,6 +2065,15 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
  void SmiScnModel::transformToStaircaseStructure( std::map<int,int>& coefficients )
  {
     core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
+    for (int i = 0; i < core_->getNumStages();i++){
+        this->maxNelsPerScenInStage[i] = core_->getNode(i)->getNumMatrixElements()+
+            core_->getNode(i)->getColLowerLength() +
+            core_->getNode(i)->getColUpperLength() +
+            core_->getNode(i)->getObjectiveLength() +
+            core_->getNode(i)->getRowLowerLength() +
+            core_->getNode(i)->getRowUpperLength();
+    }
+
  }
 
  void SmiScnModel::moveBoundsIntoMatrix(){

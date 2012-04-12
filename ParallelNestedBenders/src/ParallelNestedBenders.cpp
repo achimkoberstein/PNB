@@ -341,13 +341,22 @@ namespace parallel_benders {
         // Intra-Cut Aggregation
         store_cut_information_ = param.get(PNB_INTRA_CUT_AGGREGATION,false);
 
+        // Warm Up Period
+        int start_solution = param.get(PNB_USE_START_SOLUTION,0);
+        if ( start_solution == 1)// At the moment we only have EV solution 
+            warm_up_ = true;
+
         // Trust Region
         trust_region_ = param.get(PNB_TRUST_REGION,false);
 
         // Regularization
-        regularization_ = true;
-        if ( regularization_ )
+        regularization_ = false;
+        if ( regularization_ ){
             compute_stage_bounds_ = true;
+            if ( start_solution != 1){
+                warm_up_ = true; // We need EEV start solution!
+            }
+        }
 
         // Tree walking procedure
         sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
@@ -385,10 +394,7 @@ namespace parallel_benders {
         cascading_second_iteration_ = param.get(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,true);
         repeat_second_iteration_ = param.get(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,2);
 
-        // Warm Up Period
-        int start_solution = param.get(PNB_USE_START_SOLUTION,0);
-        if ( start_solution == 1)// At the moment we only have EV solution 
-            warm_up_ = true;
+
         // 
         // Feasibility problems
         only_one_feasibility_cut_ = true;
@@ -474,7 +480,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        osi_solver_->messageHandler()->setLogLevel(0);
 
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -906,7 +912,7 @@ namespace parallel_benders {
                         std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << std::endl;
                     }
                 }
-                else{
+                else if ( current_stage_ == 0){
                     std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
                     std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
                     std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
@@ -1292,7 +1298,7 @@ namespace parallel_benders {
                     current_lower_bound += benders_node_pointer->next_stage_approximation_[i];
                 }
                 current_lower_bound *= benders_node_pointer->probability_; 
-                if ( num_theta == 0 && current_stage_ < num_stages_-1) // If no theta, set to -infinity, but if last stage we have no approximation, so leave it.
+                if ( benders_node_pointer->num_thetas_ == 0 && current_stage_ < num_stages_-1) // If no theta, set to -infinity, but if last stage we have no approximation, so leave it.
                     current_lower_bound = -infinity_;
             }
             if ( current_stage_ == 0){ // This works in the multithreaded cases, as we have only one thread for the first stage problem{
@@ -2381,6 +2387,14 @@ namespace parallel_benders {
     {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersStageData* stage_pointer = stage_data_[current_stage_];
+        int num_theta = benders_node_pointer->num_thetas_;
+        bool no_real_thetas = false;
+        if ( num_theta == 0 ){
+            num_theta = stage_data_[current_stage_]->num_thetas_;
+            if ( num_theta > benders_tree_node_pointer->numChildren() )
+                num_theta = benders_tree_node_pointer->numChildren();
+            no_real_thetas = true;
+        }
         // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. ) TODO: Reuse stuff
         if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
             // Remove theta columns from solver, if we reuse it
@@ -2424,7 +2438,7 @@ namespace parallel_benders {
         else {
             if ( current_stage_ == 0 && seperate_first_stage_solver_ && current_iteration_ == 1){
                 // Add the columns only once!
-                int num_cols = stage_data_[current_stage_]->num_thetas_;
+                int num_cols = num_theta;
                 std::vector<double> lower(num_cols,-infinity_);
                 std::vector<double> upper(num_cols,infinity_);
                 std::vector<double> objective(num_cols,0); 
@@ -2752,7 +2766,7 @@ namespace parallel_benders {
             if ( regularization_ ){
                 intra_aggregate_threshold = 0.5*benders_node_pointer->num_thetas_;
                 CutStuff::strike_threshold_ = 1;
-                add_new_single_cut = true;
+                add_new_single_cut = false;
             }
 
             int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
