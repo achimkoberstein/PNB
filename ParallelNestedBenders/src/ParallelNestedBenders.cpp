@@ -2653,11 +2653,27 @@ namespace parallel_benders {
         SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_;
         if ( warm_up_ && current_stage_ == 0 ){
             if ( seperate_first_stage_solver_ ){ // We need to reset the bounds of the variables!
+                // We need to store warm start before that
+                CoinWarmStart* coin_warm_start = osi_solver->getWarmStart();
                 for (int i = 0; i < stage_data_[0]->num_columns_; i++){
                     osi_solver->setColBounds(i,benders_node_pointer->column_lower_[i],benders_node_pointer->column_upper_[i]);
                 }
+                osi_solver->setWarmStart(coin_warm_start);
+
                 if ( !regularization_ )
                     osi_solver->resolve(); // Prevents no solution exists error messages! 
+                else if ( regularization_ ){
+                    // We need cplex to do a qpopt
+                    // Get ENV and LP ptr
+                    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                    if ( cpx_ptr ){
+                        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                        CPXqpopt(env_ptr,lp_ptr);
+                    }
+                }
+                delete coin_warm_start;
+
             }
             /* osi_solver->setColLower(benders_node_pointer->column_lower_);
             osi_solver->setColUpper(benders_node_pointer->column_upper_);*/
@@ -4109,6 +4125,8 @@ namespace parallel_benders {
             CPXqpopt(env_ptr,lp_ptr);
             int code = CPXgetstat(env_ptr,lp_ptr);
             LOG_IF(WARNING,code != 1) << "CPXqpopt returned with status code " << code;
+            // Store warmstart
+            benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             
             //if ( old_sigma != regularized_sigma_ ){
             //    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
