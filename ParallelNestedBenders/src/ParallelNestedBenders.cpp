@@ -350,7 +350,8 @@ namespace parallel_benders {
         trust_region_ = param.get(PNB_TRUST_REGION,false);
 
         // Regularization
-        regularization_ = false;
+        if ( start_solution == 2)
+            regularization_ = true;
         if ( regularization_ ){
             compute_stage_bounds_ = true;
             if ( start_solution != 1){
@@ -480,7 +481,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(0);
+        osi_solver_->messageHandler()->setLogLevel(1);
 
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -538,6 +539,15 @@ namespace parallel_benders {
         if ( second_iteration_stage_ > num_stages_-2 && sequencing_protocol_ == PNB_INT_SECOND_ITERATION) // Fix second iteration stage by disabling it!
             sequencing_protocol_ = PNB_INT_FASTPASS;
         bool made_one_turn = false;
+
+        // Initialize solver instance for every thread?
+        current_stage_ = 1;
+        for ( int i = 0; i < num_cpu_*2; i++ ){
+            // Schedule the tasks for this stage
+            thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GetSolverByThread,this));
+        }
+        thread_pool_.wait(0); // We wait until all threads are done
+        current_stage_ = 0;
 
 
         // Warm up period
@@ -613,7 +623,7 @@ namespace parallel_benders {
         double initial_time = 0;
         std::vector<double> initial_time_for_stage(num_stages_,0.0);
         int critical_stage = 1; // The minimum critical stage, which is always viable is the second stage
-        double percent_threshold = 0.1;
+        double percent_threshold = 0.3;
 
         // Variables for pretty printing
         int last_major_iteration = 0;
@@ -674,10 +684,12 @@ namespace parallel_benders {
             wall_clock_solution_time_.Start(0);
             timer_.Start(current_stage_);
             if ( upper_bound_ < lower_bound_ ){
-                LOG(INFO) << "Upper Bound is lower than lower Bound. This should not happen, unfortunately it has. Iteration: " << current_iteration_;
+                if ( !regularization_)
+                    LOG(INFO) << "Upper Bound is lower than lower Bound. This should not happen, unfortunately it has. Iteration: " << current_iteration_;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
-                LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
+                if ( !regularization_)
+                    LOG(INFO) << "New Lower bound " << lower_bound_ << " is less than old lower bound " << old_lower_bound_;
             }
             if ( !infeasible_problem_ ){
                 // Count if gap is similar
@@ -784,8 +796,8 @@ namespace parallel_benders {
 
             if ( current_stage_ == num_stages_-1 ){// We are in last stage
                 at_last_iteration_ = true;
-                //if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
-                //    made_one_turn = true; // Needed to indicate that we made a whole major iteration!
+                if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK)
+                    made_one_turn = true; // Needed to indicate that we made a whole major iteration!
             }
 
             // Initialize lower/upper bounds for this stage.
@@ -1004,6 +1016,7 @@ namespace parallel_benders {
                 bool changed_bouncing_stage = false;
                 LOG(INFO) << "Overall initial time" << initial_time;
                 double overall_time = initial_time_for_stage[0];
+                LOG(INFO) << "Percentage stage 0 " << initial_time_for_stage[0]/initial_time;
                 for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
                     overall_time+= initial_time_for_stage[i];
                     LOG(INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
@@ -1106,7 +1119,7 @@ namespace parallel_benders {
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
     }
 
-    void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
+        void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
@@ -1131,17 +1144,8 @@ namespace parallel_benders {
         if ( trust_region_ && current_stage_ < num_stages_-1)
             AppendTrustRegionToSubproblem(osi_solver,benders_tree_node_pointer);
 
-        // MIP Solving only at first stage..
-        if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
-            // We need to set the integer indices.
-            std::vector<int> integer_indices = core_->getIntCols(current_stage_);
-            osi_solver->setInteger(&integer_indices[0],integer_indices.size());
-            osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
-        }
-        else{
-            osi_solver->initialSolve();
-        }
 
+        SolveSolverInterface(osi_solver);
 
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
@@ -2390,9 +2394,7 @@ namespace parallel_benders {
         int num_theta = benders_node_pointer->num_thetas_;
         bool no_real_thetas = false;
         if ( num_theta == 0 ){
-            num_theta = stage_data_[current_stage_]->num_thetas_;
-            if ( num_theta > benders_tree_node_pointer->numChildren() )
-                num_theta = benders_tree_node_pointer->numChildren();
+            num_theta = getNumThetasByStage(benders_tree_node_pointer);
             no_real_thetas = true;
         }
         // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. ) TODO: Reuse stuff
@@ -2420,6 +2422,7 @@ namespace parallel_benders {
             }
             if ( current_stage_ > 0 && cols_to_remove == 0){ // We have no thetas yet, so we add them all!
                 int num_cols = benders_node_pointer->num_thetas_;
+                assert( num_cols > 0);
                 std::vector<double> lower(num_cols,-infinity_);
                 std::vector<double> upper(num_cols,infinity_);
                 std::vector<double> objective(num_cols,1); 
@@ -2439,6 +2442,7 @@ namespace parallel_benders {
             if ( current_stage_ == 0 && seperate_first_stage_solver_ && current_iteration_ == 1){
                 // Add the columns only once!
                 int num_cols = num_theta;
+                assert( num_cols > 0);
                 std::vector<double> lower(num_cols,-infinity_);
                 std::vector<double> upper(num_cols,infinity_);
                 std::vector<double> objective(num_cols,0); 
@@ -4029,7 +4033,7 @@ namespace parallel_benders {
                 //osi_solver->writeLp("masterRDwithout");
                 regularized_initialized_ = true;
                 if ( num_thetas == 0)
-                    num_thetas = stage_data_[current_stage_]->num_thetas_;
+                    num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 
                 double * quaddels = new double[num_columns*2+num_thetas]; // contains entries of the matrix 
                 double term = 1.0/regularized_sigma_; // Cplex multiplies all coefficients with 1/2
@@ -4138,9 +4142,7 @@ namespace parallel_benders {
             }
 
             // Solve problem!
-            CPXqpopt(env_ptr,lp_ptr);
-            int code = CPXgetstat(env_ptr,lp_ptr);
-            LOG_IF(WARNING,code != 1) << "CPXqpopt returned with status code " << code;
+            SolveSolverInterface(osi_solver);
             // Store warmstart
             benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             
@@ -4172,21 +4174,49 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSolverInterface( OsiSolverInterface* osi_solver )
     {
-        if ( regularization_ && current_stage_ == 0){
-            // Solve quadratic problem
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr ){
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-                CPXqpopt(env_ptr,lp_ptr);
-                int code = CPXgetstat(env_ptr,lp_ptr);
-                LOG_IF(WARNING,code != 1) << "Quadratic problem solved with status " << code;
 
+        // MIP Solving only at first stage..
+        if ( current_stage_ == 0 && integer_problems_[current_stage_] ){
+            // We need to set the integer indices.
+            std::vector<int> integer_indices = core_->getIntCols(current_stage_);
+            osi_solver->setInteger(&integer_indices[0],integer_indices.size());
+            if ( regularization_ ){
+                // We have a QP, so branchAndBound method throws an error..
+                OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                if ( cpx_ptr ){
+                    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    CPXmipopt(env_ptr,lp_ptr);
+                    int code = CPXgetstat(env_ptr,lp_ptr);
+                    LOG_IF(WARNING,code != 1) << "MIQP solved with status " << code;
+                }
             }
+            else
+                osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
         }
-        else if ( !regularization_ )
-            osi_solver->initialSolve();
+        else{
+            if ( regularization_ && current_stage_ == 0){
+                // Solve quadratic problem
+                OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                if ( cpx_ptr ){
+                    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    CPXqpopt(env_ptr,lp_ptr);
+                    int code = CPXgetstat(env_ptr,lp_ptr);
+                    LOG_IF(WARNING,code != 1) << "Quadratic problem solved with status " << code;
+                }
+            }
+            else 
+                osi_solver->initialSolve();
+        }
+    }
 
+    int ParallelNestedBenders::getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer)
+    {
+        int num_theta = stage_data_[current_stage_]->num_thetas_;
+        if ( num_theta > benders_tree_node_pointer->numChildren() )
+            num_theta = benders_tree_node_pointer->numChildren();
+        return num_theta;
     }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)

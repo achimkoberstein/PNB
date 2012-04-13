@@ -103,6 +103,7 @@ private:
 
     void SolveSolverInterface(OsiSolverInterface* osi_solver);
     int getNumRowsProblem();
+    int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
 
 
