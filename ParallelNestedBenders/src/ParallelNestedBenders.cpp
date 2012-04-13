@@ -612,7 +612,7 @@ namespace parallel_benders {
         bool time_not_measured = true;
         double initial_time = 0;
         std::vector<double> initial_time_for_stage(num_stages_,0.0);
-        int critical_stage = num_stages_-1; // The minimum critical stage, which is always viable is the second stage
+        int critical_stage = 1; // The minimum critical stage, which is always viable is the second stage
         double percent_threshold = 0.1;
 
         // Variables for pretty printing
@@ -838,14 +838,14 @@ namespace parallel_benders {
                         threshold = std::pow(10,std::log10(absolute_gap)-1);
                     }
                     if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK ){
-                        if (discrepancy > threshold && theta_approximations_everywhere_ && forward_){
+                        if (discrepancy > threshold && theta_approximations_everywhere_ && forward_ && made_one_turn){
                             forward_ = false; // Discrepancy is greater than treshold, so we do not go forward. Only if we are at stages, that are higher than the critical stage, we do not change the direction.
                         }
-                        //else if ( forward_ ) // Discrepancy is lower than threshold.
-                        //    // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
-                        //    // We decided the critical stage by the initial time it took to compute these stages!
-                        //    if ( current_stage_ == critical_stage ) // We make a full sweep from here by setting made_one_turn to false
-                        //        made_one_turn = false; 
+                        else if ( forward_ ) // Discrepancy is lower than threshold.
+                            // We must decide if we want to check for discrepancy violations also at this stage, or not by setting made_one_turn!
+                            // We decided the critical stage by the initial time it took to compute these stages!
+                            if ( current_stage_ == critical_stage ) // We make a full sweep from here by setting made_one_turn to false
+                                made_one_turn = false; 
 
                     }
 
@@ -994,36 +994,36 @@ namespace parallel_benders {
             stage_data_[current_stage_]->changed_aggregation_level_ = false; // Necessary for adaptive_ methods!
 
             timer_.Stop(current_stage_);
-            //// Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
-            //if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 && current_stage_ == 0 && theta_approximations_everywhere_){ // Store the time it takes to compute certain stages!
-            //    // Store the time in a vector
-            //    initial_time = timer_.GetAggregatedTime();
-            //    for (int i = 0; i< num_stages_; i++)
-            //        initial_time_for_stage[i] = timer_.GetTime(i);
-            //    time_not_measured = false;
-            //    bool changed_bouncing_stage = false;
-            //    LOG(INFO) << "Overall initial time" << initial_time;
-            //    double overall_time = initial_time_for_stage[0];
-            //    for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
-            //        overall_time+= initial_time_for_stage[i];
-            //        LOG(INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
-            //        if ( overall_time/initial_time > percent_threshold ){
-            //            critical_stage = i;
-            //            changed_bouncing_stage = true;
-            //            break;
-            //        }
-            //    }
-            //    // Do some result checking
-            //    if ( changed_bouncing_stage ){ // If we changed the bouncing stage
-            //        if ( critical_stage == num_stages_-1 && num_stages_ > 2){ // If we chose last stage as bouncing stage, our threshold was probably to high
-            //            //LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high. Last stage was chosen.";
-            //        }
-            //    }
-            //    if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
-            //        LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
-            //    }
-            //    LOG(INFO) << "Bouncing stage is stage " << critical_stage;
-            //}
+            // Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
+            if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 && current_stage_ == 0 && theta_approximations_everywhere_){ // Store the time it takes to compute certain stages!
+                // Store the time in a vector
+                initial_time = timer_.GetAggregatedTime();
+                for (int i = 0; i< num_stages_; i++)
+                    initial_time_for_stage[i] = timer_.GetTime(i);
+                time_not_measured = false;
+                bool changed_bouncing_stage = false;
+                LOG(INFO) << "Overall initial time" << initial_time;
+                double overall_time = initial_time_for_stage[0];
+                for (int i = 1; i < num_stages_;i++){ // Assumption: Later stages take longer than earlier stages
+                    overall_time+= initial_time_for_stage[i];
+                    LOG(INFO) << "Percentage stage " << i << " " << initial_time_for_stage[i]/initial_time;
+                    if ( overall_time/initial_time > percent_threshold ){
+                        critical_stage = i;
+                        changed_bouncing_stage = true;
+                        break;
+                    }
+                }
+                // Do some result checking
+                if ( changed_bouncing_stage ){ // If we changed the bouncing stage
+                    if ( critical_stage == num_stages_-1 && num_stages_ > 2){ // If we chose last stage as bouncing stage, our threshold was probably to high
+                        //LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high. Last stage was chosen.";
+                    }
+                }
+                if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
+                    LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
+                }
+                LOG(INFO) << "Bouncing stage is stage " << critical_stage;
+            }
             // Sanity Check for direction!
             // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
