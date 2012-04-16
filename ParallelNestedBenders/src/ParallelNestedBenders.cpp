@@ -63,7 +63,7 @@ namespace parallel_benders {
             for (int i = 0; i < num_stages_;i++){
                 if ( !core_->getIntCols(i).empty() )
                     integer_problems_[i] = true;
-            }
+            } //TODO: No integer
         }
         typedef std::map<int,std::vector< std::pair<int,double> > > non_staircase_row_map;
         non_staircase_row_map non_staircase_rows;
@@ -4056,6 +4056,8 @@ namespace parallel_benders {
                 }
                 
                 osi_solver->addCols(num_columns,cpvb, collb, colub , colobj);
+                int number_cols = osi_solver->getNumCols();
+                assert(number_cols == 2*num_columns+num_thetas);
                 // Delete arrays for columns
                 delete[] collb;
                 delete[] colub;
@@ -4074,7 +4076,7 @@ namespace parallel_benders {
                 for (int i = 0; i < num_columns; i++){
                     rowlb[i] = regularized_solution_[i]; rowub[i] = regularized_solution_[i]; // we have an equality constraint
                     columns[2*i] = i; columns[2*i+1] = num_columns+num_thetas+i;
-                    elements[2*i] = -1; elements[2*i+1] = 1;
+                    elements[2*i] = 1; elements[2*i+1] = -1;
                     rowstrt[i+1] = rowstrt[i]+2; // We have two elements per row, so we have to add two
                 }
                 int start_rows = osi_solver->getNumRows();    
@@ -4096,7 +4098,7 @@ namespace parallel_benders {
                 DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXcopyquad";
                 CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
 
-                // delete new-ed arrays for rows
+                //// delete new-ed arrays for rows
                 delete[] rowlb;
                 delete[] rowub;
                 delete[] rowstrt;
@@ -4147,6 +4149,13 @@ namespace parallel_benders {
 
             // Solve problem!
             SolveSolverInterface(osi_solver);
+            //CPXwriteprob(env_ptr,lp_ptr,"test.lp","lp");
+
+            double solution_value = osi_solver->getObjValue();
+
+            
+            double * temp_array = new double[stage_data_[current_stage_]->num_columns_];
+            StoreValuesFromSolverInArray( temp_array,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_+num_thetas,stage_data_[current_stage_]->num_columns_);
             // Store warmstart
             if ( integer_problems_[current_stage_] == false )
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
@@ -4161,14 +4170,6 @@ namespace parallel_benders {
             //    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
             //    SolveSolverInterface(osi_solver);
             //}
-
-            //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
-            //        std::stringstream stream;
-            //        stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            //        console_mutex_.lock();
-            //        osi_solver->writeLp(stream.str().c_str());
-            //        console_mutex_.unlock();
-            //} // TODO: Debugging stuff
         }//end cplex
 
 
