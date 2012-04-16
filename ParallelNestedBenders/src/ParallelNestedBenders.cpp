@@ -35,7 +35,9 @@
 // Include files only necessary if we have cplex
 #define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
-#include "cplex.h"
+#include "ilcplex/cplex.h"
+#include "ilcplex/cplexcheck.h"
+#include "check.c"
 #include "OsiCpxSolverInterface.hpp"
 #endif
 
@@ -4001,7 +4003,7 @@ namespace parallel_benders {
         // To compute ||x-a||^2, we introduce a new variable w that is set to w = x-a and we use ||w||^2 in the objective. 
         // Initialize quadratic matrix with entries on the diagonal axis only
         int num_columns = stage_data_[current_stage_]->num_columns_;
-        int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
+        int num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 
         // Compute Q(x^it)
         double solution_qx = 0;
@@ -4090,6 +4092,8 @@ namespace parallel_benders {
                 DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXchgprobtype";
                 error = CPXcopyqpsep(env_ptr,lp_ptr,quaddels);
                 DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXcopyquad";
+                error = CPXcheckcopyqpsep(env_ptr,lp_ptr,quaddels);
+                DLOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXcopyquad";
                 CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
 
                 // delete new-ed arrays for rows
@@ -4144,21 +4148,27 @@ namespace parallel_benders {
             // Solve problem!
             SolveSolverInterface(osi_solver);
             // Store warmstart
-            benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+            if ( integer_problems_[current_stage_] == false )
+                benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             
             //if ( old_sigma != regularized_sigma_ ){
             //    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             //    // Update coefficients in the objective function!
-            //    std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+benders_tree_node_pointer->getDataPtr()->num_thetas_,0);
-            //    CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+benders_tree_node_pointer->getDataPtr()->num_thetas_],stage_data_[current_stage_]->num_columns_,1.0/regularized_sigma_);
+            //    std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+num_thetas,0);
+            //    CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+num_thetas],stage_data_[current_stage_]->num_columns_,1.0/regularized_sigma_);
             //    CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
-            //    //osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
-            //    int error = CPXqpopt(env_ptr,lp_ptr);
-            //    int code2 = CPXgetstat(env_ptr,lp_ptr);
-            //    LOG_IF(WARNING,code2!=1) << "cpxqpopt returned with status code " << code2;
+            //    int error_code2 = CPXcheckcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
+            //    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+            //    SolveSolverInterface(osi_solver);
             //}
 
-            //osi_solver->writeLp("masterRDwith");
+            //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+            //        std::stringstream stream;
+            //        stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            //        console_mutex_.lock();
+            //        osi_solver->writeLp(stream.str().c_str());
+            //        console_mutex_.unlock();
+            //} // TODO: Debugging stuff
         }//end cplex
 
 
@@ -4186,6 +4196,7 @@ namespace parallel_benders {
                 if ( cpx_ptr ){
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    //CPXsetintparam(env_ptr,)
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     LOG_IF(WARNING,code != 1) << "MIQP solved with status " << code;
