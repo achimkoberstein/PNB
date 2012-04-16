@@ -13,7 +13,7 @@
 #include <ctime>
 #include <iomanip>
 
-#include "cplex.h" // Only for RegularizedDecomposition
+#include "ilcplex/cplex.h" // Only for RegularizedDecomposition
 
 #include "SmiDiscreteDistribution.hpp"
 #include "SmiScenarioTree.hpp"

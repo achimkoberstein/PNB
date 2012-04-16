@@ -18,7 +18,7 @@
 
 #define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
-#include "cplex.h"
+#include "ilcplex/cplex.h"
 #include "OsiCpxSolverInterface.hpp"
 #endif
 

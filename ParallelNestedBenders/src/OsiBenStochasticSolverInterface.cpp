@@ -4,7 +4,7 @@
 #include "glog/logging.h"
 
 #include "OsiCpxSolverInterface.hpp"
-#include "cplex.h"
+#include "ilcplex/cplex.h"
 
 OsiStochasticBendersTwoStageSolverInterface::OsiStochasticBendersTwoStageSolverInterface( OsiSolverInterface* osiSolver, SmiScnModel* smiModel )
 : OsiStochasticSolverInterface(osiSolver,smiModel),benders(0)
