@@ -23,7 +23,7 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
-#include "cplex.h"
+#include "ilcplex/cplex.h"
 
 // CPLEX 10.0 removed CPXERR_NO_INT_SOLN
 #if !defined(CPXERR_NO_INT_SOLN)

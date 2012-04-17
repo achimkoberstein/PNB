@@ -656,7 +656,7 @@ namespace parallel_benders {
                     double ten_to_minus_ten = 1e-10;
                     for (int i = 0; i < num_stages_; i++)
                         solution_qx += stage_lower_upper_bounds_[i].second;
-                    not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > relative_epsilon_);
+                    not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > ten_to_minus_ten);
                     if ( !not_stop_loop )
                         LOG(INFO) << "BREAK";
                 }
@@ -4107,24 +4107,6 @@ namespace parallel_benders {
                 // delete new-ed arrays for objective function var
                 delete[] quaddels; // contains entries of the matrix 
  
-                // TODO: care about integers!
-                // Ensure the integer indices are still present
-                //if (mnInt_)
-                //    osiMaster_->setInteger(miInt_, mnInt_);
-                //int numberOfInt = CPXgetnumint(envPtr,lpPtr);
-                //int numberOfBin = CPXgetnumbin(envPtr,lpPtr);
-                //if (numberOfInt == 0 || numberOfBin == 0){
-                //    char* type = new char[mnInt_];
-                //    for (int i = 0; i< mnInt_; i++)
-                //        type[i] = 'I'; // 
-                //    int status = CPXchgctype(envPtr, lpPtr, mnInt_, miInt_, type);
-
-                //    delete[] type;
-                //}
-                //numberOfInt = CPXgetnumint(envPtr,lpPtr);
-                //numberOfBin = CPXgetnumbin(envPtr,lpPtr);
-
-
                 // Store results as usual!
             }// end first time initialization
             else if ( updated_incumbent){ // Problem is initialized, we may have to update matrix coefficients
