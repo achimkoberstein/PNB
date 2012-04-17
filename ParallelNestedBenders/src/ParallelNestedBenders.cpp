@@ -483,7 +483,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(1);
 
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -654,9 +654,10 @@ namespace parallel_benders {
                 else if ( current_stage_ == 0){
                     double solution_qx = 0;
                     double ten_to_minus_ten = 1e-10;
+                    double ten_to_minus_eight = 1e-8;
                     for (int i = 0; i < num_stages_; i++)
                         solution_qx += stage_lower_upper_bounds_[i].second;
-                    not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > ten_to_minus_ten);
+                    not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > ten_to_minus_eight);
                     if ( !not_stop_loop )
                         LOG(INFO) << "BREAK";
                 }
@@ -698,6 +699,13 @@ namespace parallel_benders {
                 if ( current_stage_ == 0 ){
                     old_gap = gap;
                     gap = abs(upper_bound_-lower_bound_)/abs(upper_bound_);
+                    if ( regularization_ ){
+                        double solution_qx = 0;
+                        double ten_to_minus_ten = 1e-10;
+                        for (int i = 0; i < num_stages_; i++)
+                            solution_qx += stage_lower_upper_bounds_[i].second;
+                        gap = std::abs(regularized_solution_value_-solution_qx)/( std::abs(regularized_solution_value_)+ten_to_minus_ten);
+                    }
                     if (CompareForEquality(old_gap,gap,zero_tolerance_) )
                         gap_counter++;
                     else
