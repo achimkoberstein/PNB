@@ -6,7 +6,7 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="../../../../ThirdParty/cplex/cplex123/include/ilcplex;../../../../ThirdParty/gurobi/include"
+		AdditionalIncludeDirectories="../../../../ThirdParty/cplex/cplex123/include/;../../../../ThirdParty/gurobi/include"
 	/>
 	<Tool
 		Name="VCLinkerTool"
