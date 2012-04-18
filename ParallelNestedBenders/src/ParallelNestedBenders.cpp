@@ -664,17 +664,17 @@ namespace parallel_benders {
                     not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > ten_to_minus_eight);
                     if ( !not_stop_loop ){
                         LOG(INFO) << "BREAK";
-                    // We need to check if we also have a solution without regularization!
-                        regularization_ = false;
-                        not_stop_loop = true;
-                        // Remove old cols from solver instance!
+                    //// We need to check if we also have a solution without regularization!
+                    //    regularization_ = false;
+                    //    not_stop_loop = true;
+                    //    // Remove old cols from solver instance!
 
-                        // Remove old rows from solver instance
-                        int num_rows = stage_data_[0]->num_columns_;
-                        std::vector<int> rows(num_rows);
-                        for (int j = 0; j < num_rows; j++)
-                            rows[j] = j + stage_data_[0]->num_rows_;
-                        osi_solver_->deleteRows(num_rows,&rows[0]);
+                    //    // Remove old rows from solver instance
+                    //    int num_rows = stage_data_[0]->num_columns_;
+                    //    std::vector<int> rows(num_rows);
+                    //    for (int j = 0; j < num_rows; j++)
+                    //        rows[j] = j + stage_data_[0]->num_rows_;
+                    //    osi_solver_->deleteRows(num_rows,&rows[0]);
                     }
                 }
 
@@ -4030,6 +4030,9 @@ namespace parallel_benders {
         int num_columns = stage_data_[current_stage_]->num_columns_;
         int num_thetas = getNumThetasByStage(benders_tree_node_pointer);
 
+        double approximation_solution = stage_lower_upper_bounds_[0].first;
+        // Due to the algorithm it always hold that approximation_solution <= solution_qx
+
         // Compute Q(x^it)
         double solution_qx = 0;
         for (int i = 0; i < num_stages_; i++)
@@ -4040,7 +4043,7 @@ namespace parallel_benders {
 
 
         // Test if we should update the regularized solution
-        if ( solution_qx < regularized_solution_value_ ){
+        if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_+ (regularized_gamma_)*approximation_solution ){
             // Update the solution!
             assert( benders_tree_node_pointer->getDataPtr()->col_solution_);
             memcpy(regularized_solution_.get(),benders_tree_node_pointer->getDataPtr()->col_solution_,sizeof(double)*stage_data_[0]->num_columns_);
@@ -4144,14 +4147,29 @@ namespace parallel_benders {
 
             // Update Sigma!
             // Test for a sigma update
-            double approximation_solution = stage_lower_upper_bounds_[0].first;
+            
             double old_sigma = regularized_sigma_;
             if ( regularized_solution_value_ < infinity_ ){
                 // Change sigma adaptive to algorithm progress
-                if ( solution_qx > (regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution) )
-                    regularized_sigma_ *= 2; // Originial should be * 0.5
-                if ( solution_qx < ((1-regularized_gamma_)*regularized_solution_value_ + regularized_gamma_*approximation_solution) )
-                    regularized_sigma_ *= 0.5; // Originial should be * 2
+                //if ( solution_qx > (regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution) )
+                //    regularized_sigma_ *= 0.5; // Originial should be * 0.5
+                //if ( solution_qx < ((1-regularized_gamma_)*regularized_solution_value_ + regularized_gamma_*approximation_solution) )
+                //    regularized_sigma_ *= 2; // Originial should be * 2
+                // Reset when things got too extreme..
+ /*               if ( 1.0/regularized_sigma_ < zero_tolerance_ )
+                    regularized_sigma_ = 1.0;
+                if ( 1.0/regularized_sigma_ > infinity_/2 )
+                    regularized_sigma_ = 1.0;*/
+                if ( updated_incumbent ) {
+                    regularized_sigma_ *= 2;
+                    LOG(INFO) << "Exact serious step";
+                }
+                else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ) {
+                    regularized_sigma_ *= 0.5;
+                    LOG(INFO) << "Null Step";
+                }
+                else 
+                    LOG(INFO) << "Approximate Step";
             }
 
             // Solve problem!
