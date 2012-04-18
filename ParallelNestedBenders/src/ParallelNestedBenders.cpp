@@ -559,6 +559,10 @@ namespace parallel_benders {
             osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
             warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
             double * temp_array = new double[stage_data_[0]->num_columns_];
+            // Set warm_up solution values to zero, if they fail the zero test
+            for (int i = 0; i < stage_data_[0]->num_columns_;i++)
+                if ( CompareWithZero(warm_up_solution_[i]))
+                    warm_up_solution_[i] = 0;
             memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
             regularized_solution_.reset(temp_array);
         }
@@ -658,8 +662,20 @@ namespace parallel_benders {
                     for (int i = 0; i < num_stages_; i++)
                         solution_qx += stage_lower_upper_bounds_[i].second;
                     not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > ten_to_minus_eight);
-                    if ( !not_stop_loop )
+                    if ( !not_stop_loop ){
                         LOG(INFO) << "BREAK";
+                    // We need to check if we also have a solution without regularization!
+                        regularization_ = false;
+                        not_stop_loop = true;
+                        // Remove old cols from solver instance!
+
+                        // Remove old rows from solver instance
+                        int num_rows = stage_data_[0]->num_columns_;
+                        std::vector<int> rows(num_rows);
+                        for (int j = 0; j < num_rows; j++)
+                            rows[j] = j + stage_data_[0]->num_rows_;
+                        osi_solver_->deleteRows(num_rows,&rows[0]);
+                    }
                 }
 
             }
@@ -932,6 +948,7 @@ namespace parallel_benders {
                         double regularized_tolerance = 1e-10;
                         std::cout << "Current Iteration solution " << current_solution << std::endl;
                         std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << std::endl;
+                        std::cout << "Lower Bound: " << lower_bound_ << std::endl;
                     }
                 }
                 else if ( current_stage_ == 0){
@@ -4132,9 +4149,9 @@ namespace parallel_benders {
             if ( regularized_solution_value_ < infinity_ ){
                 // Change sigma adaptive to algorithm progress
                 if ( solution_qx > (regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution) )
-                    regularized_sigma_ *= 0.5;
+                    regularized_sigma_ *= 2; // Originial should be * 0.5
                 if ( solution_qx < ((1-regularized_gamma_)*regularized_solution_value_ + regularized_gamma_*approximation_solution) )
-                    regularized_sigma_ *= 2;
+                    regularized_sigma_ *= 0.5; // Originial should be * 2
             }
 
             // Solve problem!
@@ -4150,15 +4167,27 @@ namespace parallel_benders {
             if ( integer_problems_[current_stage_] == false )
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             
-            //if ( old_sigma != regularized_sigma_ ){
-            //    benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
-            //    // Update coefficients in the objective function!
+            if ( old_sigma != regularized_sigma_ ){
+                benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+                // Update coefficients in the objective function!
+                std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+num_thetas,0);
+                CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+num_thetas],stage_data_[current_stage_]->num_columns_,1.0/regularized_sigma_);
+                CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
+                int error_code2 = CPXcheckcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
+                LOG_IF(FATAL,error_code2!=0) << "Wrong quadratic coefficients, must not happen.";
+                osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+                SolveSolverInterface(osi_solver);
+                LOG(INFO) << "Coefficients: " << 1.0/regularized_sigma_;
+            }
+            //if ( current_iteration_ == 10 ){
             //    std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+num_thetas,0);
-            //    CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+num_thetas],stage_data_[current_stage_]->num_columns_,1.0/regularized_sigma_);
             //    CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
             //    int error_code2 = CPXcheckcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
+            //    LOG_IF(FATAL,error_code2!=0) << "Wrong quadratic coefficients, must not happen.";
             //    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
-            //    SolveSolverInterface(osi_solver);
+            //    osi_solver->initialSolve();
+            //    LOG(INFO) << "Solution of real lp: " << osi_solver->getObjValue();
+            //    // Reset solver to QP..
             //}
         }//end cplex
 
