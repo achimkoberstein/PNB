@@ -66,6 +66,7 @@ private:
     void DeleteSubproblem(OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     
     void BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void AppendColsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void AppendTrustRegionToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SolveSubproblem( OsiSolverInterface* osi_solver ,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
@@ -182,7 +183,8 @@ private:
     double regularized_solution_value_;
     double regularized_sigma_;
     double regularized_gamma_;
-    bool regularized_initialized_;
+    bool regularized_initialized_rows_;
+    bool regularized_initialized_cols_;
     int regularized_start_row_;
 
 

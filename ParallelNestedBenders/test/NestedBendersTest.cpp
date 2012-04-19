@@ -141,6 +141,7 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
+        aggregates.push_back(0);
         aggregates.push_back(1);
         aggregates.push_back(5);
         aggregates.push_back(10);
@@ -167,12 +168,15 @@ public:
                 benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,1);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,2);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,1);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+
 
             }
         }
@@ -892,7 +896,9 @@ TEST_F(NestedBendersTest,dakota){// dakota model
 
 TEST_F(NestedBendersTest,temporary){// dakota model
     // Cut Consolidation tests
-
+    solveSMPS("posts/storm/stormG2_1000");
+    	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
@@ -901,7 +907,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
+
     //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536-noint","scdp/SCDP-65536","scdp/SCDP-65536"), -5183755359, 10); 
