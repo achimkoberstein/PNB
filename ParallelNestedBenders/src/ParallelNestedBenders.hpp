@@ -105,6 +105,7 @@ private:
     void SolveSolverInterface(OsiSolverInterface* osi_solver);
     int getNumRowsProblem();
     int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
 
 
 
