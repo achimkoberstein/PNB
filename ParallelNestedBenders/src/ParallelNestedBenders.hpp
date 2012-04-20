@@ -187,7 +187,7 @@ private:
     bool regularized_initialized_rows_;
     bool regularized_initialized_cols_;
     int regularized_start_row_;
-
+    int start_solution_;
 
 
     Timer timer_;
