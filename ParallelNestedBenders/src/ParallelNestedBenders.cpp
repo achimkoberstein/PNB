@@ -2851,7 +2851,7 @@ namespace parallel_benders {
             CutStuff::strike_threshold_ = 2; 
 
             // We want to add a new single cut after deletion of old cuts!
-            //bool add_new_single_cut = true;
+            bool add_new_single_cut = true;
 
             if ( adaptive_ ){
                 intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
