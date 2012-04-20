@@ -141,12 +141,11 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        aggregates.push_back(0);
-        aggregates.push_back(1);
-        aggregates.push_back(5);
-        aggregates.push_back(10);
-        aggregates.push_back(25);
-        aggregates.push_back(50);
+        //aggregates.push_back(1);
+        //aggregates.push_back(5);
+        //aggregates.push_back(10);
+        //aggregates.push_back(25);
+        //aggregates.push_back(50);
         aggregates.push_back(100);
         aggregates.push_back(500);
         aggregates.push_back(1000);
@@ -170,7 +169,7 @@ public:
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,2);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,1);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,1);
@@ -896,8 +895,8 @@ TEST_F(NestedBendersTest,dakota){// dakota model
 
 TEST_F(NestedBendersTest,temporary){// dakota model
     // Cut Consolidation tests
-    solveSMPS("posts/storm/stormG2_1000");
-    	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+    //solveSMPS("posts/storm/stormG2_1000");
+    	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);

@@ -270,6 +270,74 @@ double SmiScnModel::getEEVValue(OsiSolverInterface* osiSolver, double objSense, 
     return solveEEV(osiSolver,objSense,calculateAverageValues);
 }
 
+SmiScnModel* SmiScnModel::createEVSmiModel(){
+    //Clean up previous stuff.
+    delete[] dclo_;
+    delete[] dcup_;
+    delete[] dobj_;
+    delete[] drlo_;
+    delete[] drup_;
+    delete matrix_;
+
+    // initialize arrays
+    this->dclo_ = new double[this->core_->getNumCols()];
+    this->dcup_ = new double[this->core_->getNumCols()];
+    this->dobj_ = new double[this->core_->getNumCols()];
+    this->drlo_ = new double[this->core_->getNumRows()];
+    this->drup_ = new double[this->core_->getNumRows()];
+
+    int tempNels = 0; //= nels_ ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
+    for (int i = 0; i < this->core_->getNumStages(); i++) //Store this value in Core..
+        tempNels += this->maxNelsPerScenInStage[i];
+
+    // We have an empty model (zero cols,rows,els)
+    ncol_=0;
+    nrow_=0;
+    nels_=0;
+    // initialize row-ordered matrix arrays
+    this->dels_ = new double[tempNels]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+    this->indx_ = new int[tempNels];
+    this->rstrt_ = new int[this->core_->getNumRows()+1];
+    this->rstrt_[0] = 0;
+
+    // Call addNode on all these nodes, this generates the problem with the deterministic data from the core nodes
+    for (int t = 0; t < this->core_->getNumStages(); t++) {
+        addCoreNode(this->core_->getNode(t));
+    }
+
+    // create the matrix
+    matrix_ = new CoinPackedMatrix(false,0,0);
+    int *len=NULL;
+    // Assign values from current arrays (which get nulled thereafter)
+    matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
+
+    // If the core model does not contain the exepected values for the random variables,
+    // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
+    // and then add the weighted values from the other scenarios
+    //
+
+    for (int i = 0; i < this->getNumScenarios(); i++) {
+        std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
+        for (unsigned int j = 0; j < nodes.size(); j++) {
+            if (nodes[j]->getScenarioIndex() == i) {
+                addNodeEVP(nodes[j]);
+            }
+        }
+    }
+    // Update core model with this data? Bad, because that changes the core model!
+    
+    SmiScnModel* smi = new SmiScnModel;
+    smi->setCore(this->core_);
+    CoinPackedVector clo(this->core_->getNumCols(),dclo_);
+    CoinPackedVector cup(this->core_->getNumCols(),dcup_);
+    CoinPackedVector obj(this->core_->getNumCols(),dobj_);
+    CoinPackedVector rlo(this->core_->getNumRows(),drlo_);
+    CoinPackedVector rup(this->core_->getNumRows(),drup_);
+    smi->generateScenario(this->core_,matrix_,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
+    return smi;
+
+}
+
 std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues)
 {
     // We create a new osiSolver Handle at this point. 
@@ -330,6 +398,14 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
             }
         }
     }
+    SmiScnModel* smi = new SmiScnModel;
+    smi->setCore(this->core_);
+    CoinPackedVector clo(this->core_->getNumCols(),dclo_);
+    CoinPackedVector cup(this->core_->getNumCols(),dcup_);
+    CoinPackedVector obj(this->core_->getNumCols(),dobj_);
+    CoinPackedVector rlo(this->core_->getNumRows(),drlo_);
+    CoinPackedVector rup(this->core_->getNumRows(),drup_);
+    smi->generateScenario(this->core_,matrix_,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
 
     // pass data to osiStoch
     osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.

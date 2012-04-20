@@ -555,17 +555,63 @@ namespace parallel_benders {
 
         // Warm up period
         if ( warm_up_){
-            // We should not use the osi_solver_ we use for the first stage?
-            std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
-            warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
-            double * temp_array = new double[stage_data_[0]->num_columns_];
-            // Set warm_up solution values to zero, if they fail the zero test
-            for (int i = 0; i < stage_data_[0]->num_columns_;i++)
-                if ( CompareWithZero(warm_up_solution_[i]))
-                    warm_up_solution_[i] = 0;
-            memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
-            regularized_solution_.reset(temp_array);
+            //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
+            SmiScnModel* ev_smi = smi_->createEVSmiModel();
+            ParallelNestedBenders ev_pnb(ev_smi);
+            // Use standard parameter stuff..
+            Parameter param;
+            param.init();
+            param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,0); // Multi cut
+            ev_pnb.parameter_ = param;
+            ev_pnb.Init();
+            ev_pnb.Solve();
+            // Copy cuts to this problem!
+            ev_smi->releaseCore();
+            //delete ev_smi;
+            // Copy the optimality cuts to this node
+            for (int i = 0; i < num_stages_-1;i++){
+                // copy cuts to all nodes // TODO for multi-stage
+                int num_thetas = stage_data_[i]->num_thetas_;
+                if ( tree_nodes_by_stage_[i][0]->numChildren() < num_thetas )
+                    num_thetas =  tree_nodes_by_stage_[i][0]->numChildren();
+                BendersNodeData::cut_container& cuts_to_add = ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->optimality_cuts_;
+                BendersNodeData::cut_container& insert_cuts_here = tree_nodes_by_stage_[i][0]->getDataPtr()->optimality_cuts_;
+                insert_cuts_here.insert(insert_cuts_here.end(),cuts_to_add.begin(),cuts_to_add.end());
+                tree_nodes_by_stage_[i][0]->getDataPtr()->last_iteration_start_optimality_ = insert_cuts_here.end();
+                tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_ = num_thetas;
+                createRoundRobinAggregation(tree_nodes_by_stage_[i][0]->getDataPtr(),tree_nodes_by_stage_[i][0]->numChildren(),tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_,(int)std::ceil((double)tree_nodes_by_stage_[i][0]->numChildren()/tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_));
+                // We have to transform the old optimality cuts to the new number of theta's we would like to have
+                // We already called a function that gives us a new number of whatever it is we need.
+
+                // Transform all old optimality cuts to new ones.
+                // Set new values
+
+                tree_nodes_by_stage_[i][0]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
+                tree_nodes_by_stage_[i][0]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
+                for( BendersNodeData::cut_container::iterator it = insert_cuts_here.begin(); it != insert_cuts_here.end();++it){
+                    ExpandThetaVariablesInOptimalityCut((*it)->cut_.get(),stage_data_[i]->num_columns_,num_thetas,1);
+                    (*it)->aggregate_number_ = -1;
+                    (*it)->not_active_iterations_ = 0;
+                    (*it)->cut_creation_iteration_ = 0;
+                }
+
+            }
+            warm_up_ = false;
+
+
+            //// We should not use the osi_solver_ we use for the first stage?
+            //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
+            //osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
+            //warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
+            //for (int i = 0; i < stage_data_[0]->num_columns_;i++)
+            //    if ( CompareWithZero(warm_up_solution_[i]))
+            //        warm_up_solution_[i] = 0;
+
+            //if ( regularization_ ){
+            //    double * temp_array = new double[stage_data_[0]->num_columns_];
+            //    memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
+            //    regularized_solution_.reset(temp_array);
+            //}
         }
 
         // Solve WS-problem
@@ -2446,7 +2492,7 @@ namespace parallel_benders {
             // Add the cuts
             BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin();
             if ( seperate_first_stage_solver_ &&  current_stage_ == 0 && benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
-                it = benders_node_pointer->last_iteration_start_optimality_; // We already added 
+                it = benders_node_pointer->last_iteration_start_optimality_; // We already added this cut
                 if ( benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
                     ++it;
                     benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
@@ -2805,7 +2851,7 @@ namespace parallel_benders {
                 double active = benders_node_pointer->dual_solution_[current_cut];
                 // Put values in the corresponding vectors!
                 if ( active >= CutStuff::active_threshold_ ){
-                    if ( active_aggregates_per_aggregate_information )
+                    if ( active_aggregates_per_aggregate_information && aggregate >= 0)
                         active_aggregates_per_aggregate[aggregate].push_back(make_pair<int,double>(cut_creation,active));
                     cuts_from_iteration[cut_creation].first++;
                     cuts_from_iteration[cut_creation].second += active;
@@ -4165,6 +4211,27 @@ namespace parallel_benders {
             num_theta = getNumThetasByStage(benders_tree_node_pointer);
             no_real_thetas = true;
         }
+        if ( current_stage_ == 0 && seperate_first_stage_solver_ && current_iteration_ == 1){
+            // Add the columns only once!
+            int num_cols = num_theta;
+            assert( num_cols > 0);
+            std::vector<double> lower(num_cols,-infinity_);
+            std::vector<double> upper(num_cols,infinity_);
+            double term = 0.0;
+            if (!benders_node_pointer->optimality_cuts_.empty() )
+                term = 1.0;
+            std::vector<double> objective(num_cols,term); 
+            CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
+            for (int i = 0; i < num_cols; i++){
+                coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
+            }
+            osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
+            assert(osi_solver->getNumCols() == stage_pointer->num_columns_+num_cols);
+            for (int i = 0; i < num_cols; i++){
+                delete coin_vector[i];
+            }
+            delete [] coin_vector;
+        }
         // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. ) TODO: Reuse stuff
         if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
             // Remove theta columns from solver, if we reuse it
@@ -4207,24 +4274,7 @@ namespace parallel_benders {
             }
         }
         else {
-            if ( current_stage_ == 0 && seperate_first_stage_solver_ && current_iteration_ == 1){
-                // Add the columns only once!
-                int num_cols = num_theta;
-                assert( num_cols > 0);
-                std::vector<double> lower(num_cols,-infinity_);
-                std::vector<double> upper(num_cols,infinity_);
-                std::vector<double> objective(num_cols,0); 
-                CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
-                for (int i = 0; i < num_cols; i++){
-                    coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
-                }
-                osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
-                assert(osi_solver->getNumCols() == stage_pointer->num_columns_+num_cols);
-                for (int i = 0; i < num_cols; i++){
-                    delete coin_vector[i];
-                }
-                delete [] coin_vector;
-            }
+            
         }
 
         // If we have a regularized problem, we add the following cols
@@ -4293,6 +4343,35 @@ namespace parallel_benders {
                 delete[] quaddels;
             }//End regularized_initialized
         }//End Regularization
+    }
+
+    void ParallelNestedBenders::ExpandThetaVariablesInOptimalityCut( OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas /*= 0*/ )
+    {
+        const CoinPackedVector& row = cut->row();
+        int cols_in_row = row.getNumElements();
+        int first_index_of_theta = cols_in_row-old_number_of_thetas;
+    
+        if ( old_number_of_thetas == 0 ){
+            // We assume the caller knows what he is doing and tells us the number of theta variables!
+            // We need to find the index, from which we need to copy
+            // TODO:
+            assert(false);
+        }
+        int new_cols_in_row = first_index_of_theta+number_of_variables;
+
+        double * new_elements = new double[new_cols_in_row]; // Ownership is taken later by CoinPackedVector new_row
+        int * new_indices = new int[new_cols_in_row];// Owernship is taken later by CoinPackedVector new_row
+        // Memcpy old elements and indices
+        memcpy(new_elements,row.getElements(),sizeof(double)*first_index_of_theta);
+        memcpy(new_indices,row.getIndices(),sizeof(double)*first_index_of_theta);
+        for (int j = 0; j < number_of_variables; j++){
+            new_elements[j+first_index_of_theta] = 1;
+            new_indices[j+first_index_of_theta] = number_of_columns+j;
+        }
+        CoinPackedVector new_row;
+        new_row.assignVector(new_cols_in_row,new_indices,new_elements);
+        cut->setRow(new_row);
+
     }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)

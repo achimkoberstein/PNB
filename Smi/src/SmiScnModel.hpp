@@ -198,6 +198,8 @@ public:
     @return a pair of the objective value and a pointer to the column solution
     */
     std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
+
+    SmiScnModel* createEVSmiModel();
     
     /** Solves the EEV-Problem wich determines the expected value of the solution that provides 
     the average scenario problem, with objective sense of 1 (= minimization) for default.
