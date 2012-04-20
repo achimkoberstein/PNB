@@ -320,19 +320,19 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
         std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
         for (unsigned int j = 0; j < nodes.size(); j++) {
             if (nodes[j]->getScenarioIndex() == i) {
-                addNodeEVP(nodes[j]);
+                addNodeEVPToCore(nodes[j]);
             }
         }
     }
-    // Update core model with this data? Bad, because that changes the core model!
-    
+  
     SmiScnModel* smi = new SmiScnModel;
     smi->setCore(this->core_);
-    CoinPackedVector clo(this->core_->getNumCols(),dclo_);
-    CoinPackedVector cup(this->core_->getNumCols(),dcup_);
-    CoinPackedVector obj(this->core_->getNumCols(),dobj_);
-    CoinPackedVector rlo(this->core_->getNumRows(),drlo_);
-    CoinPackedVector rup(this->core_->getNumRows(),drup_);
+    CoinPackedVector clo;
+    CoinPackedVector cup;
+    CoinPackedVector obj;
+    CoinPackedVector rlo;
+    CoinPackedVector rup;
+    // Generate empty scenario!
     smi->generateScenario(this->core_,matrix_,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
     return smi;
 
@@ -1244,6 +1244,68 @@ SmiScnModel::addNodeEVP(SmiScnNode *tnode)
         }
     }
 }
+
+void
+SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
+{
+    SmiNodeData *snode = tnode->getNode();
+    int stage = snode->getStage();
+
+    // Decide whether to replace or to add the (weighted) stochastic data: when we are in the first stage,
+    // and the SmiCoreCombineRule from the node is replace, then we replace the values. Otherwise, we
+    // have to add the (weighted) values.
+    SmiCoreCombineRule* combineRule;
+    if (tnode->getScenarioIndex() == 0 && snode->getCoreCombineRule() == SmiCoreCombineReplace::Instance()) {
+        combineRule = SmiCoreCombineReplace::Instance();
+    } else {
+        combineRule = SmiCoreCombineAdd::Instance();
+    }
+
+    // Do it for the 5 arrays column lower, column upper, objective, row lower & row upper
+    if (snode->getColLowerLength()) {
+        CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
+        vclo *= tnode->getProb();
+        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getCloStart()), 0, vclo);
+    }
+
+    if (snode->getColUpperLength()) {
+        CoinPackedVector vcup = CoinPackedVector(snode->getColUpperLength(), snode->getColUpperIndices(), snode->getColUpperElements(), false);
+        vcup *= tnode->getProb();
+        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getCupStart()), 0, vcup);
+    }
+
+    if (snode->getObjectiveLength()) {
+        CoinPackedVector vobj = CoinPackedVector(snode->getObjectiveLength(), snode->getObjectiveIndices(), snode->getObjectiveElements(), false);
+        vobj *= tnode->getProb();
+        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getObjStart()), 0, vobj);
+    }
+
+    if (snode->getRowLowerLength()) {
+        CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
+        vrlo *= tnode->getProb();
+        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getRloStart()), 0, vrlo);
+    }
+
+    if (snode->getRowUpperLength()) {
+        CoinPackedVector vrup = CoinPackedVector(snode->getRowUpperLength(), snode->getRowUpperIndices(), snode->getRowUpperElements(), false);
+        vrup *= tnode->getProb();
+        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getRupStart()), 0, vrup);
+    }
+
+    // And now for the matrix entries
+    if (snode->getNumMatrixElements()) {
+        for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
+            for (int j = 0; j < snode->getRowLength(i); j++) {
+                if (combineRule == SmiCoreCombineReplace::Instance())
+                    core_->getNode(stage)->getMutableRowElements(i)[j] = snode->getRowElements(i)[j] * tnode->getProb();
+                else
+                    core_->getNode(stage)->getMutableRowElements(i)[j] += snode->getRowElements(i)[j] * tnode->getProb();
+            }
+        }
+    }
+}
+
+
 
 OsiSolverInterface *
 SmiScnModel::getOsiSolverInterface()
