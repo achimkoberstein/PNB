@@ -254,7 +254,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -344,19 +344,23 @@ namespace parallel_benders {
         store_cut_information_ = param.get(PNB_INTRA_CUT_AGGREGATION,false);
 
         // Warm Up Period
-        int start_solution = param.get(PNB_USE_START_SOLUTION,0);
-        if ( start_solution == 1)// At the moment we only have EV solution 
+        start_solution_ = param.get(PNB_USE_START_SOLUTION,0);
+        // Start_solution=0 Nothing
+        // 1 = Compute EV solution and use that
+        // 2 = Regularization
+        // 4 = Use supplied start solution, otherwise don't
+        if ( start_solution_ == 1)// At the moment we only have EV solution 
             warm_up_ = true;
 
         // Trust Region
         trust_region_ = param.get(PNB_TRUST_REGION,false);
 
         // Regularization
-        if ( start_solution == 2)
+        if ( start_solution_ == 2)
             regularization_ = true;
         if ( regularization_ ){
             compute_stage_bounds_ = true;
-            if ( start_solution != 1){
+            if ( start_solution_ != 1){
                 warm_up_ = true; // We need EEV start solution!
             }
             seperate_stage_solver_ = true;
@@ -554,20 +558,35 @@ namespace parallel_benders {
 
 
         // Warm up period
-        if ( warm_up_){
+        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
             //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
+            
+            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            //osi_solver_ = ev_smi->loadOsiSolverData();
+            //osi_solver_->initialSolve();
+            //double ev_value = osi_solver_->getObjValue();
+            //LOG(INFO) << "EV solution value: " << ev_value;
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             ParallelNestedBenders ev_pnb(ev_smi);
             // Use standard parameter stuff..
             Parameter param;
             param.init();
             param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,0); // Multi cut
+            //param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION); // We need to apply the solution later, otherwise we have a problem!
+            //param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
             ev_pnb.parameter_ = param;
             ev_pnb.Init();
+            //ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
             ev_pnb.Solve();
+
+            //warm_up_solution_.reset(ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_); // Store column solution for warm up problem in scoped_ptr.
+            warm_up_ = false;
             // Copy cuts to this problem!
             ev_smi->releaseCore();
-            //delete ev_smi;
+            ev_smi->releaseSolver();
+            // Reenable osi_solver
+            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
             // Copy the optimality cuts to this node
             for (int i = 0; i < num_stages_-1;i++){
                 // copy cuts to all nodes // TODO for multi-stage
@@ -596,23 +615,35 @@ namespace parallel_benders {
                 }
 
             }
-            warm_up_ = false;
+            delete ev_smi;
 
 
             //// We should not use the osi_solver_ we use for the first stage?
             //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
             //osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
             //warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
-            //for (int i = 0; i < stage_data_[0]->num_columns_;i++)
-            //    if ( CompareWithZero(warm_up_solution_[i]))
-            //        warm_up_solution_[i] = 0;
-
-            //if ( regularization_ ){
-            //    double * temp_array = new double[stage_data_[0]->num_columns_];
-            //    memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
-            //    regularized_solution_.reset(temp_array);
-            //}
         }
+        if ( warm_up_ && start_solution_ == PNB_INT_USE_SUPPLIED_SOLUTION && warm_up_solution_.get() == NULL){
+            LOG(WARNING) << "No startup solution supplied. Starting without initial solution.";
+            warm_up_ = false; start_solution_ = 0;
+        }
+        if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
+            std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
+            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
+            warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
+        }
+        if ( warm_up_ ){
+            for (int i = 0; i < stage_data_[0]->num_columns_;i++)
+                if ( CompareWithZero(warm_up_solution_[i]))
+                    warm_up_solution_[i] = 0;
+
+            if ( regularization_ ){
+                double * temp_array = new double[stage_data_[0]->num_columns_];
+                memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
+                regularized_solution_.reset(temp_array);
+            }
+        }
+
 
         // Solve WS-problem
         bool ws_cut_ = false;
@@ -2813,14 +2844,14 @@ namespace parallel_benders {
             // Threshold that defines when active_value is bigger than threshold, we do not aggregates
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
             // Define a threshold above which we do not aggregate cuts for an iteration
-            double intra_aggregate_threshold = 0;//0.05*benders_node_pointer->num_thetas_;
+            double intra_aggregate_threshold = 0.05*benders_node_pointer->num_thetas_;
 
             // 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
             // If cut is consecutively non-active for more than strike_threshold iterations, we can aggregate it!
             CutStuff::strike_threshold_ = 2; 
 
             // We want to add a new single cut after deletion of old cuts!
-            bool add_new_single_cut = true;
+            //bool add_new_single_cut = true;
 
             if ( adaptive_ ){
                 intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
@@ -3881,6 +3912,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::setWarmUpSolution( const double* solution )
     {
+        start_solution_ = 4; // TODO: Magic number removal
         warm_up_ = true;
         warm_up_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
         memcpy(warm_up_solution_.get(),solution,smi_->getCore()->getNumCols(0)*sizeof(double));

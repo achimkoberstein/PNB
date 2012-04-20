@@ -83,6 +83,12 @@ namespace parallel_benders{
     const int PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION = 1;
     const int PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY = 2;
 
+    const int PNB_INT_NO_START_SOLUTION = 0;
+    const int PNB_INT_COMPUTE_EV_SOLUTION = 1;
+    const int PNB_INT_USE_REGULARIZATION = 2;
+    const int PNB_INT_USE_EV_SOLUTION = 3;
+    const int PNB_INT_USE_SUPPLIED_SOLUTION = 4;
+
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
