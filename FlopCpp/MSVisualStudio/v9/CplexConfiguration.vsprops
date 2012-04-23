@@ -11,7 +11,7 @@
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="cplex110.lib"
+		AdditionalDependencies="cplex123.lib"
 		AdditionalLibraryDirectories="../../../../ThirdParty/cplex/cplex123/lib/x86;../../../../ThirdParty/gurobi/gurobi450/win32/lib/"
 	/>
 </VisualStudioPropertySheet>

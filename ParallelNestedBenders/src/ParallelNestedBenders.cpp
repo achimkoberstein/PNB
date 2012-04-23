@@ -346,21 +346,22 @@ namespace parallel_benders {
         // Warm Up Period
         start_solution_ = param.get(PNB_USE_START_SOLUTION,0);
         // Start_solution=0 Nothing
-        // 1 = Compute EV solution and use that
-        // 2 = Regularization
-        // 4 = Use supplied start solution, otherwise don't
-        if ( start_solution_ == 1)// At the moment we only have EV solution 
+        if ( start_solution_ > PNB_INT_NO_START_SOLUTION)// At the moment we only have EV solution 
             warm_up_ = true;
+
+        // Choice of algorithm
+        int algorithm = param.get(PNB_BENDERS,1); // Use Benders as default
+        if ( algorithm == PNB_INT_ALGORITHM_REGULARIZATION )
+            regularization_ = true;
 
         // Trust Region
         trust_region_ = param.get(PNB_TRUST_REGION,false);
 
         // Regularization
-        if ( start_solution_ == 2)
-            regularization_ = true;
         if ( regularization_ ){
             compute_stage_bounds_ = true;
-            if ( start_solution_ != 1){
+            if ( start_solution_ == PNB_INT_NO_START_SOLUTION ){
+                LOG(WARNING) << "Using EEV solution as default start solution, as none was specified";
                 warm_up_ = true; // We need EEV start solution!
             }
             seperate_stage_solver_ = true;
@@ -567,6 +568,7 @@ namespace parallel_benders {
             //double ev_value = osi_solver_->getObjValue();
             //LOG(INFO) << "EV solution value: " << ev_value;
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
+            ev_smi->writeSmps("ev_problem");
             ParallelNestedBenders ev_pnb(ev_smi);
             // Use standard parameter stuff..
             Parameter param;
@@ -745,20 +747,8 @@ namespace parallel_benders {
                         double regularized_gap = std::abs(regularized_solution_value_-lower_bound_)/(std::abs(regularized_solution_value_)+ten_to_minus_ten);
                         LOG(INFO) << "Current regularized gap " << regularized_gap;
                     }
-                    if ( !not_stop_loop ){
-                        LOG(INFO) << "BREAK";
-                    //// We need to check if we also have a solution without regularization!
-                    //    regularization_ = false;
-                    //    not_stop_loop = true;
-                    //    // Remove old cols from solver instance!
-
-                    //    // Remove old rows from solver instance
-                    //    int num_rows = stage_data_[0]->num_columns_;
-                    //    std::vector<int> rows(num_rows);
-                    //    for (int j = 0; j < num_rows; j++)
-                    //        rows[j] = j + stage_data_[0]->num_rows_;
-                    //    osi_solver_->deleteRows(num_rows,&rows[0]);
-                    }
+                    else // If lower_bound is <= -infinity, we have not yet added any optimality cuts to the problem, so we can not stop!
+                        not_stop_loop = true;
                 }
 
             }
@@ -996,6 +986,10 @@ namespace parallel_benders {
                         sum_stage_solutions += stage_lower_upper_bounds_[i].second;
                     if ( upper_bound_ > sum_stage_solutions)
                         upper_bound_ = sum_stage_solutions;
+                }
+                if ( regularization_ ){
+                    if ( regularized_solution_value_ >= infinity_ && upper_bound_ < infinity_ )
+                        regularized_solution_value_ = upper_bound_;
                 }
             }
 
@@ -1241,13 +1235,13 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
-        //} // TODO: Debugging stuff
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            console_mutex_.lock();
+            osi_solver->writeLp(stream.str().c_str());
+            console_mutex_.unlock();
+        } // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -4137,6 +4131,7 @@ namespace parallel_benders {
 
         if ( updated_incumbent){ // Problem is initialized, we may have to update matrix coefficients
             // Update problem coefficients!
+            // What about warm start?
             for (int index = 0; index < stage_data_[0]->num_columns_; index++)
                 osi_solver->setRowBounds(regularized_start_row_+index,regularized_solution_[index],regularized_solution_[index]);
         }
@@ -4363,7 +4358,6 @@ namespace parallel_benders {
                 //LOG_IF(ERROR,error) << " Error code " << error << " appeared during call to CPXcopyquad";
                 // Set dual simplex as solution method for QP problems
                 CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
-
 
                 // Delete arrays for columns
                 delete[] collb;

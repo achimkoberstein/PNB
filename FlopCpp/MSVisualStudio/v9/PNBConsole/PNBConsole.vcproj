@@ -121,11 +121,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../ParallelNestedBenders/src"
+				AdditionalIncludeDirectories="../../../../ParallelNestedBenders/src;../../../../ThirdParty/threadpool"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -142,7 +142,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
+				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib64"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"
