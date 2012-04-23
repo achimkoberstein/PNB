@@ -141,12 +141,12 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        //aggregates.push_back(1);
-        //aggregates.push_back(5);
-        //aggregates.push_back(10);
-        //aggregates.push_back(25);
-        //aggregates.push_back(50);
-        //aggregates.push_back(100);
+        aggregates.push_back(1);
+        aggregates.push_back(5);
+        aggregates.push_back(10);
+        aggregates.push_back(25);
+        aggregates.push_back(50);
+        aggregates.push_back(100);
         aggregates.push_back(500);
         aggregates.push_back(1000);
         aggregates.push_back(2000);
@@ -167,13 +167,17 @@ public:
                 benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                 benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_COMPUTE_EV_SOLUTION);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+
+
+
 
 
 
