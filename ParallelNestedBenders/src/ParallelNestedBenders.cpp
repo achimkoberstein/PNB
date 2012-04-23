@@ -259,7 +259,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(true),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
     {
 
     }
@@ -364,7 +364,7 @@ namespace parallel_benders {
                 LOG(WARNING) << "Using EEV solution as default start solution, as none was specified";
                 warm_up_ = true; // We need EEV start solution!
             }
-            seperate_stage_solver_ = true;
+            seperate_first_stage_solver_ = true;
         }
 
         // Tree walking procedure
@@ -1010,7 +1010,7 @@ namespace parallel_benders {
                 std::string iteration_string = boost::lexical_cast<std::string>(pretty_printing_verbose_ ? major_iteration_:last_major_iteration) + ( pretty_printing_verbose_ ? +"."+boost::lexical_cast<std::string>(current_iteration_) : "");
                 if ( !forward_ )
                     direction_string = "B";
-                std::cout << "\r" << left << std::setw(7) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << last_gap << std::setw(5) << direction_string << current_stage_;
+                std::cout << "\r" << left << std::setw(10) << iteration_string << std::setw(16) << last_lower_bound << std::setw(16) << last_upper_bound << std::setw(16) << last_gap << std::setw(5) << direction_string << current_stage_;
 
 
                 // Output at which stage we are currently like this. Put current mode up Front, followed by current stage. F3, F4 F5, B6 . But let it overwrite in the same position of the stream. Is this possible? TODO
@@ -1235,13 +1235,13 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            console_mutex_.lock();
-            osi_solver->writeLp(stream.str().c_str());
-            console_mutex_.unlock();
-        } // TODO: Debugging stuff
+        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    console_mutex_.lock();
+        //    osi_solver->writeLp(stream.str().c_str());
+        //    console_mutex_.unlock();
+        //} // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1651,7 +1651,8 @@ namespace parallel_benders {
                     for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
                         // We have to jump over all W indices
                         while ( node_pointer->hasMatrix() && stochastic_element_in_row  ){ // Jump over all consecutive W column entries in this row (As columns are ordered, we should skip the rest of the matrix anyway // TODO: Ensure this
-                            if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns && stochastic_column_index < stochastic_matrix.start_[row+1] )
+                            
+                            if (  stochastic_column_index < stochastic_matrix.start_[row+1] && stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns )
                                 stochastic_column_index++;
                             else if (stochastic_column_index==stochastic_matrix.start_[row+1]) { // If the number of stochastic column indices > current_stage_columns (aka W-entries) equals length of stochastic matrix entries in this row, this is not a row for the T-matrix
                                 stochastic_element_in_row = false;
@@ -2386,6 +2387,7 @@ namespace parallel_benders {
         }
         if ( store_cut_information_ || adaptive_ ){
             seperate_first_stage_solver_ = false;
+            LOG(INFO) << "First stage solver is no longer a seperate instance, but build each time. This is due to feasibility cuts.";
         }
         // Why do we want to not longer allow a seperate_first_stage_solver_ when we add feasibility cuts? Wrong order of cuts? That may well be the case..
 
@@ -2459,7 +2461,7 @@ namespace parallel_benders {
             for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
                 // Handle stochastic columns only in the presence of stochastic matrix..
                 while ( stochastic_element_in_row ){
-                    if ( stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
+                    if ( stochastic_column_index < stochastic_matrix.start_[row+1] && stochastic_matrix.indices_[stochastic_column_index] >= current_stage_columns ){
                         // We need to advance the index, if we are still within this row
                         if ( stochastic_column_index < stochastic_matrix.start_[row+1] )
                             stochastic_column_index++;
@@ -4389,7 +4391,7 @@ namespace parallel_benders {
         int * new_indices = new int[new_cols_in_row];// Owernship is taken later by CoinPackedVector new_row
         // Memcpy old elements and indices
         memcpy(new_elements,row.getElements(),sizeof(double)*first_index_of_theta);
-        memcpy(new_indices,row.getIndices(),sizeof(double)*first_index_of_theta);
+        memcpy(new_indices,row.getIndices(),sizeof(int)*first_index_of_theta);
         for (int j = 0; j < number_of_variables; j++){
             new_elements[j+first_index_of_theta] = 1;
             new_indices[j+first_index_of_theta] = number_of_columns+j;
