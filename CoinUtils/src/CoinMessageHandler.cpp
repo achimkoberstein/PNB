@@ -102,17 +102,17 @@ CoinMessages::CoinMessages(const CoinMessages & rhs)
     class_=rhs.class_;
     lengthMessages_=rhs.lengthMessages_;
     //if (lengthMessages_<0) {
-        if (numberMessages_) {
-            message_ = new CoinOneMessage * [numberMessages_];
-            int i;
-            for (i=0;i<numberMessages_;i++) 
-                if (rhs.message_[i])
-                    message_[i]=new CoinOneMessage(*(rhs.message_[i]));
-                else
-                    message_[i] = NULL;
-        } else {
-            message_=NULL;
-        }
+    if (numberMessages_) {
+        message_ = new CoinOneMessage * [numberMessages_];
+        int i;
+        for (i=0;i<numberMessages_;i++) 
+            if (rhs.message_[i])
+                message_[i]=new CoinOneMessage(*(rhs.message_[i]));
+            else
+                message_[i] = NULL;
+    } else {
+        message_=NULL;
+    }
     //} else {
     //    char * temp = CoinCopyOfArray(reinterpret_cast<char *> (rhs.message_),lengthMessages_);
     //    message_ = reinterpret_cast<CoinOneMessage **> (temp);
