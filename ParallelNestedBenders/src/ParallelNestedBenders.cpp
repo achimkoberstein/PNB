@@ -266,6 +266,12 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Init()
     {
+        // Do not sync console output (makes no difference)
+        //ios_base::sync_with_stdio(true);
+        // Enable Buffering
+        char buffer[18192];
+        setvbuf(stdout, buffer, _IOFBF, sizeof(buffer));
+
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios();
         integer_problems_ = boost::dynamic_bitset<>(num_stages_);
