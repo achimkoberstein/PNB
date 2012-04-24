@@ -306,10 +306,10 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     }
 
     // create the matrix
-    matrix_ = new CoinPackedMatrix(false,0,0);
-    int *len=NULL;
-    // Assign values from current arrays (which get nulled thereafter)
-    matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
+    //matrix_ = new CoinPackedMatrix(false,0,0);
+    //int *len=NULL;
+    //// Assign values from current arrays (which get nulled thereafter)
+    //matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
 
     // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
@@ -327,13 +327,14 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
   
     SmiScnModel* smi = new SmiScnModel;
     smi->setCore(this->core_);
+    CoinPackedMatrix matrix;
     CoinPackedVector clo;
     CoinPackedVector cup;
     CoinPackedVector obj;
     CoinPackedVector rlo;
     CoinPackedVector rup;
     // Generate empty scenario!
-    smi->generateScenario(this->core_,matrix_,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
+    smi->generateScenario(this->core_,&matrix,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
     return smi;
 
 }
