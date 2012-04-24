@@ -259,7 +259,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(true),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
     {
 
     }
@@ -568,27 +568,24 @@ namespace parallel_benders {
         if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
             //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
             
-            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            //osi_solver_ = ev_smi->loadOsiSolverData();
-            //osi_solver_->initialSolve();
-            //double ev_value = osi_solver_->getObjValue();
-            //LOG(INFO) << "EV solution value: " << ev_value;
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
-            ev_smi->writeSmps("ev_problem");
+            //ev_smi->writeSmps("ev_problem",true);
             ParallelNestedBenders ev_pnb(ev_smi);
             // Use standard parameter stuff..
             Parameter param;
             param.init();
             param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,0); // Multi cut
-            //param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION); // We need to apply the solution later, otherwise we have a problem!
             //param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
             ev_pnb.parameter_ = param;
             ev_pnb.Init();
-            //ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
             ev_pnb.Solve();
-
-            //warm_up_solution_.reset(ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_); // Store column solution for warm up problem in scoped_ptr.
-            warm_up_ = false;
+            //double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
+            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            //osi_solver_ = ev_smi->loadOsiSolverData();
+            //osi_solver_->initialSolve();
+            //double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
+            //memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
+            //warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
             // Copy cuts to this problem!
             ev_smi->releaseCore();
             ev_smi->releaseSolver();
@@ -621,15 +618,8 @@ namespace parallel_benders {
                     (*it)->not_active_iterations_ = 0;
                     (*it)->cut_creation_iteration_ = 0;
                 }
-
             }
             delete ev_smi;
-
-
-            //// We should not use the osi_solver_ we use for the first stage?
-            //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
-            //osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
-            //warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
         }
         if ( warm_up_ && start_solution_ == PNB_INT_USE_SUPPLIED_SOLUTION && warm_up_solution_.get() == NULL){
             LOG(WARNING) << "No startup solution supplied. Starting without initial solution.";
@@ -637,6 +627,7 @@ namespace parallel_benders {
         }
         if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
             std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
+            LOG(INFO) << "Calculated EV Solution with value " << ev_result.first;
             osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
             warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
         }
@@ -644,13 +635,18 @@ namespace parallel_benders {
             for (int i = 0; i < stage_data_[0]->num_columns_;i++)
                 if ( CompareWithZero(warm_up_solution_[i]))
                     warm_up_solution_[i] = 0;
-
             if ( regularization_ ){
                 double * temp_array = new double[stage_data_[0]->num_columns_];
                 memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
                 regularized_solution_.reset(temp_array);
             }
+            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
+                warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
         }
+        else
+            if ( regularization_ )
+                LOG(FATAL) << "No supplied start solution for regularization method. Please change your settings to allow an expected value solution for example.";
+
 
 
         // Solve WS-problem
@@ -707,7 +703,7 @@ namespace parallel_benders {
         double old_gap = 0;
         double gap = 0;
         int gap_counter = 0;
-        int gap_counter_maximum = 20;
+        int gap_counter_maximum = 30;
 
         // Variables needed for dynamic strategy PNB_INT_FASTPASS_WITH_FASTBACK
         double threshold = 1;
@@ -752,6 +748,9 @@ namespace parallel_benders {
                     if ( lower_bound_ > -infinity_ ){
                         double regularized_gap = std::abs(regularized_solution_value_-lower_bound_)/(std::abs(regularized_solution_value_)+ten_to_minus_ten);
                         LOG(INFO) << "Current regularized gap " << regularized_gap;
+                        if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
+                            if ( current_iteration_ <= 2 )
+                                not_stop_loop = true;
                     }
                     else // If lower_bound is <= -infinity, we have not yet added any optimality cuts to the problem, so we can not stop!
                         not_stop_loop = true;
@@ -1007,7 +1006,7 @@ namespace parallel_benders {
                     last_current_iteration = current_iteration_;
                     last_lower_bound = lower_bound_;
                     last_upper_bound = upper_bound_;
-                    last_gap = gap;
+                    last_gap = std::abs(last_upper_bound-last_lower_bound) / std::abs(last_upper_bound+1e-10);
                     std::cout << std::endl;
                 }
 
@@ -1037,7 +1036,7 @@ namespace parallel_benders {
                 else if ( current_stage_ == 0){
                     std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
                     std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-                    std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+                    std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
 
                 }
 
@@ -1158,10 +1157,12 @@ namespace parallel_benders {
             forward_ ? current_stage_++ : current_stage_--;
         }
         timer_.Stop(current_stage_);
+        if ( pretty_printing_ )
+            std::cout << std::endl;
         // Output the final values once again!
         std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
         std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_)  << std::endl;
+        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
         std::cout << "Major Iterations: " << major_iteration_ << std::endl;
         std::cout << "Overall Iterations: " << current_iteration_ << std::endl;
         int cut_counter = 0;

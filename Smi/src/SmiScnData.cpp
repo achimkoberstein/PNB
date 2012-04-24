@@ -1643,10 +1643,17 @@ CoinPackedMatrix* SmiNodeData::generateCoinPackedWMatrix() const
 {
     if ( !this->has_matrix_ ) // If we have no matrix, we return an empty matrix
         return new CoinPackedMatrix();
+    // Do we have a number of entries? yes we have!
     std::vector<double> elements;
     std::vector<int> indices;
     std::vector<int> start;
     std::vector<int> length;
+    // Reserve array size (performance reasons)
+    int number_elements = strt_[getMatEnd()];
+    elements.reserve(number_elements);
+    indices.reserve(number_elements);
+    start.reserve(getMatEnd()+1);
+    length.reserve(getMatEnd());
     start.push_back(0);
 
     // Now we have to go through all the elements and add the W entries
