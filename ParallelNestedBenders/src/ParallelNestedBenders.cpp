@@ -575,7 +575,7 @@ namespace parallel_benders {
             Parameter param;
             param.init();
             param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,0); // Multi cut
-            //param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
+            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
             ev_pnb.parameter_ = param;
             ev_pnb.Init();
             ev_pnb.Solve();
@@ -583,9 +583,9 @@ namespace parallel_benders {
             //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
             //osi_solver_ = ev_smi->loadOsiSolverData();
             //osi_solver_->initialSolve();
-            //double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
-            //memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
-            //warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
+            double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
+            memcpy(temp_ptr,ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,sizeof(double)*stage_data_[current_stage_]->num_columns_);
+            warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
             // Copy cuts to this problem!
             ev_smi->releaseCore();
             ev_smi->releaseSolver();
@@ -640,8 +640,10 @@ namespace parallel_benders {
                 memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
                 regularized_solution_.reset(temp_array);
             }
+
             if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
                 warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
+           
         }
         else
             if ( regularization_ )
@@ -3000,44 +3002,43 @@ namespace parallel_benders {
                     cuts_to_add.push_back(cut_stuff);
                 } //End For
 
-                // TODO: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
-                for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
-                    benders_node_pointer->optimality_cuts_.erase(*list_it);
-
-
-                if ( add_new_single_cut ){
-                    // Add all newly created cuts to optimality cut set
-                    benders_node_pointer->optimality_cuts_.insert(benders_node_pointer->optimality_cuts_.end(),cuts_to_add.begin(),cuts_to_add.end());
-                    //benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
-                }
-
                 if ( !to_remove_from_solver.empty()){
-                    already_removed_cuts += to_remove_from_solver.size();
-                    osi_solver->deleteRows(to_remove_from_solver.size(),&to_remove_from_solver[0]);
-                }
-                if ( add_new_single_cut ){
-                    for (BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end(); ++it)
-                        osi_solver->applyRowCuts(1,(*it)->cut_.get());
-                }
-                // Remove And Adding can lead to a singular advanced basis?? cplex is not happy with that!
+                    // TODO: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
+                    for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
+                        benders_node_pointer->optimality_cuts_.erase(*list_it);
 
-                SolveSolverInterface(osi_solver); // Resolve it in any case ( either we remove cuts 
-                if ( osi_solver->isProvenOptimal() ){
-                    // Store warmstart
-                    StoreWarmStart(osi_solver,benders_tree_node_pointer);      
-                }
-                else{
-                    console_mutex_.lock();
-                    LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
-                    console_mutex_.unlock();
-                }
-                // Just keep it up to date ( should do no harm, as we update it in AggregateOptimalityCuts anyway )
-                if ( seperate_first_stage_solver_ && current_stage_ == 0)
-                    benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
 
-                    //LOG(INFO) << "Building new cut for iteration " << i << " that involves " << number_cuts_in_this_iteration << " old cuts.";
-                
-            }// End If 
+                    if ( add_new_single_cut ){
+                        // Add all newly created cuts to optimality cut set
+                        benders_node_pointer->optimality_cuts_.insert(benders_node_pointer->optimality_cuts_.end(),cuts_to_add.begin(),cuts_to_add.end());
+                        //benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
+                    }
+
+                    if ( !to_remove_from_solver.empty()){
+                        already_removed_cuts += to_remove_from_solver.size();
+                        osi_solver->deleteRows(to_remove_from_solver.size(),&to_remove_from_solver[0]);
+                    }
+                    if ( add_new_single_cut ){
+                        for (BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end(); ++it)
+                            osi_solver->applyRowCuts(1,(*it)->cut_.get());
+                    }
+                    SolveSolverInterface(osi_solver); 
+                    if ( osi_solver->isProvenOptimal() ){
+                        // Store warmstart
+                        StoreWarmStart(osi_solver,benders_tree_node_pointer);      
+                    }
+                    else{
+                        console_mutex_.lock();
+                        LOG(INFO)<< "Resolve after deletion of old cuts has not led to a proper solution.";
+                        console_mutex_.unlock();
+                    }
+                    // Just keep it up to date ( should do no harm, as we update it in AggregateOptimalityCuts anyway )
+                    if ( seperate_first_stage_solver_ && current_stage_ == 0)
+                        benders_node_pointer->last_iteration_start_optimality_ = --benders_node_pointer->optimality_cuts_.end();
+
+                }
+
+           }// End If 
 
         }//End If Forward
         start_time = CoinCpuTime()-start_time;
