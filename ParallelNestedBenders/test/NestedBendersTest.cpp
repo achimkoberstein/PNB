@@ -141,13 +141,13 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        //aggregates.push_back(1);
+        aggregates.push_back(1);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
         //aggregates.push_back(50);
         //aggregates.push_back(100);
-        aggregates.push_back(500);
+        //aggregates.push_back(500);
         //aggregates.push_back(1000);
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
@@ -169,8 +169,8 @@ public:
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
 
-                //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                 benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_COMPUTE_EV_SOLUTION);
                 solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -905,6 +905,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     // Cut Consolidation tests
     //solveSMPS("temporary/ev_problem-scenario");
     //solveSMPS("temporary/ev_problem");
+        EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
     	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
