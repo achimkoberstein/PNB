@@ -141,6 +141,7 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
+        aggregates.push_back(0);
         aggregates.push_back(1);
         aggregates.push_back(5);
         aggregates.push_back(10);
@@ -160,7 +161,7 @@ public:
 
         for (int j = 0; j < num_repetitions; j++){
             for (int i = 0; i < aggregates.size(); i++){
-                if ( aggregates[i] > num_childs_first_stage){
+                if ( aggregates[i] >= num_childs_first_stage){
                     LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
                     continue;
                 }
