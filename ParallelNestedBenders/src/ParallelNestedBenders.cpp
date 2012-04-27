@@ -592,10 +592,6 @@ namespace parallel_benders {
             ev_pnb.parameter_ = param;
             ev_pnb.Init();
             ev_pnb.Solve();
-            //double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
-            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            //osi_solver_ = ev_smi->loadOsiSolverData();
-            //osi_solver_->initialSolve();
             double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
             memcpy(temp_ptr,ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,sizeof(double)*stage_data_[current_stage_]->num_columns_);
             warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.

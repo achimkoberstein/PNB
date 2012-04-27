@@ -142,17 +142,17 @@ public:
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
         aggregates.push_back(1);
-        //aggregates.push_back(5);
-        //aggregates.push_back(10);
-        //aggregates.push_back(25);
-        //aggregates.push_back(50);
-        //aggregates.push_back(100);
-        //aggregates.push_back(500);
-        //aggregates.push_back(1000);
-        //aggregates.push_back(2000);
-        //aggregates.push_back(3000);
-        //aggregates.push_back(5000);
-        //aggregates.push_back(10000);
+        aggregates.push_back(5);
+        aggregates.push_back(10);
+        aggregates.push_back(25);
+        aggregates.push_back(50);
+        aggregates.push_back(100);
+        aggregates.push_back(500);
+        aggregates.push_back(1000);
+        aggregates.push_back(2000);
+        aggregates.push_back(3000);
+        aggregates.push_back(5000);
+        aggregates.push_back(10000);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
@@ -595,20 +595,20 @@ TEST_F(NestedBendersTest, gas_OTHER) { // ok
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
-    //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
     EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
     EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 }
 
@@ -666,8 +666,8 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages, tw
 }
 // Posts test set: http://users.iems.northwestern.edu/~jrbirge/html/dholmes/post.html
 TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts, INDEP
- //   EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
-	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"),18615.4 , 0.1);// Model probability problems 18615.932
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
@@ -675,17 +675,17 @@ TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
     ////EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
 }
 
@@ -701,20 +701,20 @@ TEST_F(NestedBendersTest, stormG2_POSTS) {
     double solutionValue = 0;
     double referenceValue = 0;
     double relGap = 0;
-    //solutionValue = solveSMPS("posts/storm/stormG2_3");
-    //referenceValue = 15535235.730;
-    //relGap = abs(referenceValue-solutionValue)/solutionValue;
-    //EXPECT_LE(relGap,0.000001);
+    solutionValue = solveSMPS("posts/storm/stormG2_3");
+    referenceValue = 15535235.730;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
 
-    //solutionValue = solveSMPS("posts/storm/stormG2_27");
-    //referenceValue = 15508982.306;
-    //relGap = abs(referenceValue-solutionValue)/solutionValue;
-    //EXPECT_LE(relGap,0.000001);
+    solutionValue = solveSMPS("posts/storm/stormG2_27");
+    referenceValue = 15508982.306;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
 
-    //solutionValue = solveSMPS("posts/storm/stormG2_125");
-    //referenceValue = 15512091.185;
-    //relGap = abs(referenceValue-solutionValue)/solutionValue;
-    //EXPECT_LE(relGap,0.000001);
+    solutionValue = solveSMPS("posts/storm/stormG2_125");
+    referenceValue = 15512091.185;
+    relGap = abs(referenceValue-solutionValue)/solutionValue;
+    EXPECT_LE(relGap,0.000001);
 
     solutionValue = solveSMPS("posts/storm/stormG2_1000");
     referenceValue = 15802589.698;
@@ -825,16 +825,16 @@ TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
 }
 
 TEST_F(NestedBendersTest,scenarios_WRIGHT){
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
 
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
 
 
 }
@@ -884,9 +884,9 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
@@ -1038,7 +1038,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*scenarios_WRIGHT*";
+    ::testing::GTEST_FLAG(filter) = "*scenarios_WRIGHT*:*watson*:*POSTS*:*scdp*";
     //::testing::GTEST_FLAG(filter) = "*temporary*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
@@ -1046,7 +1046,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*NestedBenders*";
-    ::testing::GTEST_FLAG(filter) = "*temporary*";
+    ::testing::GTEST_FLAG(filter) = "*temporary*:";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
