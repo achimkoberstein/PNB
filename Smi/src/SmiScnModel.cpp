@@ -1251,6 +1251,8 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
 {
     SmiNodeData *snode = tnode->getNode();
     int stage = snode->getStage();
+    int col_beg = core_->getColStart(stage);
+    int row_beg = core_->getRowStart(stage);
 
     // Decide whether to replace or to add the (weighted) stochastic data: when we are in the first stage,
     // and the SmiCoreCombineRule from the node is replace, then we replace the values. Otherwise, we
@@ -1266,31 +1268,31 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     if (snode->getColLowerLength()) {
         CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
         vclo *= tnode->getProb();
-        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getCloStart()), 0, vclo);
+        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getColLowerElements()), col_beg, vclo);
     }
 
     if (snode->getColUpperLength()) {
         CoinPackedVector vcup = CoinPackedVector(snode->getColUpperLength(), snode->getColUpperIndices(), snode->getColUpperElements(), false);
         vcup *= tnode->getProb();
-        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getCupStart()), 0, vcup);
+        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getColUpperElements()), col_beg, vcup);
     }
 
     if (snode->getObjectiveLength()) {
         CoinPackedVector vobj = CoinPackedVector(snode->getObjectiveLength(), snode->getObjectiveIndices(), snode->getObjectiveElements(), false);
         vobj *= tnode->getProb();
-        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getObjStart()), 0, vobj);
+        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getObjectiveElements()), col_beg, vobj);
     }
 
     if (snode->getRowLowerLength()) {
         CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
         vrlo *= tnode->getProb();
-        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getRloStart()), 0, vrlo);
+        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getRowLowerElements()), row_beg, vrlo);
     }
 
     if (snode->getRowUpperLength()) {
         CoinPackedVector vrup = CoinPackedVector(snode->getRowUpperLength(), snode->getRowUpperIndices(), snode->getRowUpperElements(), false);
         vrup *= tnode->getProb();
-        combineRule->Process(core_->getNode(stage)->getMutableRowElements(core_->getNode(stage)->getRupStart()), 0, vrup);
+        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getRowUpperElements()), row_beg, vrup);
     }
 
     // And now for the matrix entries

@@ -63,7 +63,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/fixed:no"
-				AdditionalDependencies="gurobi45.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
 				GenerateManifest="false"

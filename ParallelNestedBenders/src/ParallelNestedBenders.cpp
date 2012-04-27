@@ -369,6 +369,7 @@ namespace parallel_benders {
             if ( start_solution_ == PNB_INT_NO_START_SOLUTION ){
                 LOG(WARNING) << "Using EEV solution as default start solution, as none was specified";
                 warm_up_ = true; // We need EEV start solution!
+                start_solution_ = PNB_INT_USE_EV_SOLUTION;
             }
             seperate_first_stage_solver_ = true;
         }
@@ -563,6 +564,18 @@ namespace parallel_benders {
         thread_pool_.wait(0); // We wait until all threads are done
         current_stage_ = 0;
 
+        // Check if we can really use the warm_up procedures
+        //if ( warm_up_ ){
+        //    for (int i = 1; i < num_stages_;i++)
+        //        if ( stage_data_[i]->stochastic_objective_ || stage_data_[i]->stochastic_matrix_w_ ){
+        //            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION || start_solution_ == PNB_INT_USE_EV_SOLUTION ){
+        //                start_solution_ = PNB_INT_NO_START_SOLUTION;
+        //                warm_up_ = false;
+        //                LOG(INFO) << "Can not use advanced start procedure due to problem structure.";
+        //            }
+        //        }
+        //}
+
 
         // Warm up period
         if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
@@ -626,10 +639,28 @@ namespace parallel_benders {
             warm_up_ = false; start_solution_ = 0;
         }
         if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
-            std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
-            LOG(INFO) << "Calculated EV Solution with value " << ev_result.first;
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
-            warm_up_solution_.reset(ev_result.second); // Store column solution for warm up problem in scoped_ptr.
+            SmiScnModel* ev_smi = smi_->createEVSmiModel();
+            ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            ev_smi->loadOsiSolverData();
+            osi_solver_->initialSolve();
+            //osi_solver_->writeLp("ev_problem");
+            if ( osi_solver_->isProvenOptimal() ){
+                double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
+                memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
+                warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
+
+                //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
+                LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
+                osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
+            }
+            else {
+                warm_up_ = false;
+                start_solution_ = PNB_INT_NO_START_SOLUTION;
+            }
+            ev_smi->releaseSolver();
+            ev_smi->releaseCore();
+            delete ev_smi;
+           
         }
         if ( warm_up_ ){
             for (int i = 0; i < stage_data_[0]->num_columns_;i++)
@@ -4111,7 +4142,7 @@ namespace parallel_benders {
         }
 
         bool updated_incumbent = false;
-        regularized_gamma_ = 0.9;
+        regularized_gamma_ = 0.5;
 
         double old_sigma = regularized_sigma_;
         // Test if we should update the regularized solution
