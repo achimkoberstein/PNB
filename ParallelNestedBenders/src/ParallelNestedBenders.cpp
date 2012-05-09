@@ -587,9 +587,19 @@ namespace parallel_benders {
             // Use standard parameter stuff..
             Parameter param;
             param.init();
-            param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,0); // Multi cut
+            param.parameter_.put(PNB_EPSILON_RELATIVE,0.1);
+            param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,1); // Single cut (only have one scenario anyway..)
             param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
+            param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION);
             ev_pnb.parameter_ = param;
+            // Solve EV first with deteq, then use this as a start solution for EV problem
+            ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            ev_smi->loadOsiSolverData();
+            osi_solver_->initialSolve();
+            if ( osi_solver_->isProvenOptimal() ){
+                // Set parallel benders solution
+                ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
+            }
             ev_pnb.Init();
             ev_pnb.Solve();
             double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
@@ -740,7 +750,7 @@ namespace parallel_benders {
         double initial_time = 0;
         std::vector<double> initial_time_for_stage(num_stages_,0.0);
         int critical_stage = 1; // The minimum critical stage, which is always viable is the second stage
-        double percent_threshold = 0.3;
+        double percent_threshold = 0.1;
 
         // Variables for pretty printing
         int last_major_iteration = 0;
@@ -1179,6 +1189,7 @@ namespace parallel_benders {
                 if ( !changed_bouncing_stage ){ // If we did not changed the bouncing stage
                     LOG(INFO)<< "Your chosen threshold for the tree walk strategy was set to high.";
                 }
+                //critical_stage = num_stages_-1;
                 LOG(INFO) << "Bouncing stage is stage " << critical_stage;
             }
             // Sanity Check for direction!
@@ -2848,8 +2859,10 @@ namespace parallel_benders {
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Should we really use this method?
-        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
-            return;
+        if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1){
+            // IN the case of pure single cuts, we can still remove cuts from the problem!
+            //return;
+        }
 
         if ( benders_tree_node_pointer->getDataPtr()->dual_solution_ == NULL)
             return;
@@ -2882,8 +2895,14 @@ namespace parallel_benders {
             // If cut is consecutively non-active for more than strike_threshold iterations, we can aggregate it!
             CutStuff::strike_threshold_ = 2; 
 
+            
+
             // We want to add a new single cut after deletion of old cuts!
             bool add_new_single_cut = true;
+            if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1 ){
+                add_new_single_cut = false;
+                CutStuff::strike_threshold_ = 5; 
+            }
 
             if ( adaptive_ ){
                 intra_aggregate_threshold = 0; // If we use adaptive cuts, we can only handle single cuts when we change aggregates (for now)
@@ -2952,8 +2971,10 @@ namespace parallel_benders {
                     BendersNodeData::cut_container::iterator cut_stuff_it = std::find_if(benders_node_pointer->optimality_cuts_.begin(), benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
                     if ( cut_stuff_it == benders_node_pointer->optimality_cuts_.end())
                         continue; // In this case we have an iteration where we did not added any optimality cuts
-                    if ( (*cut_stuff_it)->aggregate_number_ < 0 )
+                    if ( (*cut_stuff_it)->aggregate_number_ < 0 ){
+                        // Rethink this // TODO
                         continue; // We jump over cuts we already intra-aggregated
+                    }
                     assert( (*cut_stuff_it)->aggregate_number_ >= 0);
                     assert( (*cut_stuff_it)->active_value < CutStuff::active_threshold_);
 
@@ -3943,7 +3964,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::setWarmUpSolution( const double* solution )
     {
-        start_solution_ = 4; // TODO: Magic number removal
+        start_solution_ = PNB_INT_USE_SUPPLIED_SOLUTION; 
         warm_up_ = true;
         warm_up_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
         memcpy(warm_up_solution_.get(),solution,smi_->getCore()->getNumCols(0)*sizeof(double));
