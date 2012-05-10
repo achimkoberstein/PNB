@@ -324,6 +324,8 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
             }
         }
     }
+    // We need to generate new cdrlo[] and so on arrays!
+    core_->regenerateCoreArrays();
   
     SmiScnModel* smi = new SmiScnModel;
     smi->setCore(this->core_);
@@ -335,6 +337,16 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     CoinPackedVector rup;
     // Generate empty scenario!
     smi->generateScenario(this->core_,&matrix,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
+
+    // Set integer values!
+    smi->integerInd = new int[this->getIntegerLen()];
+    memcpy(smi->integerInd,this->integerInd,sizeof(int)*this->integerLen);
+    smi->binaryInd = new int[this->getBinaryLen()];
+    memcpy(smi->binaryInd,this->binaryInd,sizeof(int)*this->binaryLen);
+    smi->integerLen = this->integerLen;
+    smi->binaryLen = this->binaryLen;
+    smi->intIndices = this->intIndices;
+
     return smi;
 
 }
