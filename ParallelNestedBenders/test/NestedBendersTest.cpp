@@ -163,20 +163,22 @@ public:
         // Solve DetEq as comparison
             //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
- //           for (int i = 0; i < aggregates.size(); i++){
- //               if ( aggregates[i] >= num_childs_first_stage){
- //                   LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
- //                   continue;
- //               }
- //               benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
- //               benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
+            //for (int i = 0; i < aggregates.size(); i++){
+            //    if ( aggregates[i] >= num_childs_first_stage){
+            //        LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
+            //        continue;
+            //    }
+                benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
+                // TODO: Remove later on!
+                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
 
- //               benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
- //               benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,true);
+                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
 
 
- //               //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
- //               //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
  ///*               benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_COMPUTE_EV_SOLUTION);
  //               solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));*/
@@ -914,7 +916,7 @@ TEST_F(NestedBendersTest,dakota){// dakota model
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     // Cut Consolidation tests
     //solveSMPS("temporary/ev_problem-scenario");
     //solveSMPS("temporary/ev_problem");
@@ -931,8 +933,8 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
 
 
-    ////EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
