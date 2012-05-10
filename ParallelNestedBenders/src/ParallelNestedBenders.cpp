@@ -593,13 +593,13 @@ namespace parallel_benders {
             param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION);
             ev_pnb.parameter_ = param;
             // Solve EV first with deteq, then use this as a start solution for EV problem
-            ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            ev_smi->loadOsiSolverData();
-            osi_solver_->initialSolve();
-            if ( osi_solver_->isProvenOptimal() ){
-                // Set parallel benders solution
-                ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
-            }
+            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            //ev_smi->loadOsiSolverData();
+            //osi_solver_->initialSolve();
+            //if ( osi_solver_->isProvenOptimal() ){
+            //    // Set parallel benders solution
+            //    ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
+            //}
             ev_pnb.Init();
             ev_pnb.Solve();
             double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
@@ -648,9 +648,10 @@ namespace parallel_benders {
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
             ev_smi->loadOsiSolverData();
-            osi_solver_->initialSolve();
-            ev_smi->writeSmps("ev_problem",true);
-            osi_solver_->writeLp("ev_problem");
+            SolveSolverInterface(osi_solver_);
+            //TODO Remove write out stuff here!
+            //ev_smi->writeSmps("ev_problem",true);
+            //osi_solver_->writeLp("ev_problem");
             //osi_solver_->writeLp("ev_problem");
             if ( osi_solver_->isProvenOptimal() ){
                 double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
@@ -690,12 +691,12 @@ namespace parallel_benders {
 
 
         if ( integer_problems_.any() ){
-            if ( warm_up_ ) {
-                // No warm start!
-                LOG(INFO) << "Disabling warm start procedure due to MIP";
-                warm_up_ = false;
-                start_solution_ = PNB_INT_NO_START_SOLUTION;
-            }
+            //if ( warm_up_ ) {
+            //    // No warm start!
+            //    LOG(INFO) << "Disabling warm start procedure due to MIP";
+            //    warm_up_ = false;
+            //    start_solution_ = PNB_INT_NO_START_SOLUTION;
+            //}
         }
 
         // Solve WS-problem
@@ -1300,6 +1301,14 @@ namespace parallel_benders {
         //    console_mutex_.lock();
         //    osi_solver->writeLp(stream.str().c_str());
         //    console_mutex_.unlock();
+        //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        //    if ( cpx_ptr ){
+        //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //        stream << "_C";
+        //        //CPXsetintparam(env_ptr,)
+        //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+        //    }
         //} // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
@@ -2822,6 +2831,7 @@ namespace parallel_benders {
                     osi_solver->setColBounds(i,benders_node_pointer->column_lower_[i],benders_node_pointer->column_upper_[i]);
                 }
                 osi_solver->setWarmStart(coin_warm_start);
+                //osi_solver->writeLp("after_warmstart");
                 SolveSolverInterface(osi_solver);
                 delete coin_warm_start;
 
