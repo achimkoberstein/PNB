@@ -271,6 +271,8 @@ public:
 
     void increaseIndices(SmiNodeData* scn_node, int col_amount, int row_amount);
 
+    void regenerateCoreArrays();
+
     SmiCoreData(CoinMpsIO *cMps, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
     SmiCoreData(OsiSolverInterface *osi, int nstag, int *cstag, int *rstag,int *integerIndices = 0, int integerLength = 0, int *binaryIndices = 0, int binaryLength = 0);
 	

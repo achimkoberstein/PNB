@@ -116,6 +116,7 @@ namespace parallel_benders {
 
         // If we have a non-staircase problem, handle it!
 
+
     }
 
     void ParallelNestedBenders::AdjustProblemInStage( int stage )
@@ -269,8 +270,8 @@ namespace parallel_benders {
         // Do not sync console output (makes no difference)
         //ios_base::sync_with_stdio(true);
         // Enable Buffering
-        char buffer[18192];
-        setvbuf(stdout, buffer, _IOFBF, sizeof(buffer));
+        int buffer_size = 16384;
+        setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
 
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios();
@@ -498,7 +499,6 @@ namespace parallel_benders {
         // Unsilence first stage solver!
         //osi_solver_->messageHandler()->setLogLevel(1);
 
-
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
     }
@@ -649,6 +649,8 @@ namespace parallel_benders {
             ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
             ev_smi->loadOsiSolverData();
             osi_solver_->initialSolve();
+            ev_smi->writeSmps("ev_problem",true);
+            osi_solver_->writeLp("ev_problem");
             //osi_solver_->writeLp("ev_problem");
             if ( osi_solver_->isProvenOptimal() ){
                 double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
@@ -657,7 +659,6 @@ namespace parallel_benders {
 
                 //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
                 LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
-                osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
             }
             else {
                 warm_up_ = false;
@@ -665,6 +666,7 @@ namespace parallel_benders {
             }
             ev_smi->releaseSolver();
             ev_smi->releaseCore();
+            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
             delete ev_smi;
            
         }
@@ -687,6 +689,14 @@ namespace parallel_benders {
                 LOG(FATAL) << "No supplied start solution for regularization method. Please change your settings to allow an expected value solution for example.";
 
 
+        if ( integer_problems_.any() ){
+            if ( warm_up_ ) {
+                // No warm start!
+                LOG(INFO) << "Disabling warm start procedure due to MIP";
+                warm_up_ = false;
+                start_solution_ = PNB_INT_NO_START_SOLUTION;
+            }
+        }
 
         // Solve WS-problem
         bool ws_cut_ = false;
@@ -749,7 +759,9 @@ namespace parallel_benders {
         bool time_not_measured = true;
         double initial_time = 0;
         std::vector<double> initial_time_for_stage(num_stages_,0.0);
-        int critical_stage = 1; // The minimum critical stage, which is always viable is the second stage
+        int critical_stage = second_iteration_stage_; // The minimum critical stage, which is always viable is the second stage
+        if ( critical_stage > 0 )// If we have a critical stage that is not trivial, we say that we already have measured the time, i.e. do not set critical stage!
+            time_not_measured = false;
         double percent_threshold = 0.1;
 
         // Variables for pretty printing
@@ -4311,7 +4323,7 @@ namespace parallel_benders {
                 coin_vector[i] = new CoinShallowPackedVector(0,NULL,NULL,false);
             }
             osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
-            assert(osi_solver->getNumCols() == stage_pointer->num_columns_+num_cols);
+            LOG_IF(FATAL,osi_solver->getNumCols() != stage_pointer->num_columns_+num_cols) << osi_solver->getNumCols();
             for (int i = 0; i < num_cols; i++){
                 delete coin_vector[i];
             }
