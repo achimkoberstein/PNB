@@ -2657,3 +2657,60 @@ void SmiCoreData::generateNewStochasticNodeByStage(SmiTreeNode<SmiScnNode*>* cur
     current_node->setNumChildren(num_childs);
 
 }
+
+void SmiCoreData::regenerateCoreArrays()
+{
+    for(int t=0; t<this->getNumStages(); ++t)
+    {
+        int irow=this->getRowStart(t);
+        int icol=this->getColStart(t);
+        cdrlo_[t]-=irow;
+        cdrup_[t]-=irow;
+        cdclo_[t]-=icol;
+        cdcup_[t]-=icol;
+        cdobj_[t]-=icol;
+        delete [] cdrlo_[t];
+        delete [] cdrup_[t];
+        delete [] cdclo_[t];
+        delete [] cdcup_[t];
+        delete [] cdobj_[t];
+    }
+    for (int i = 0; i < nstag_; i++){
+        //delete [] cdclo_[i];
+        //delete [] cdcup_[i];
+        //delete [] cdobj_[i];
+        //delete [] cdrlo_[i];
+        //delete [] cdrup_[i];
+        SmiNodeData * node = nodes_[i];
+        int nrow=this->getNumRows(i);
+        int ncol=this->getNumCols(i);
+        int irow=this->getRowStart(i);
+        int icol=this->getColStart(i);
+        CoinPackedVector cpv_rlo(node->getRowLowerLength(),node->getRowLowerIndices(),node->getRowLowerElements());
+        cdrlo_[i]=cpv_rlo.denseVector(nrow+irow)+irow;
+
+        CoinPackedVector cpv_rup(node->getRowUpperLength(),node->getRowUpperIndices(),node->getRowUpperElements());
+        cdrup_[i]=cpv_rup.denseVector(nrow+irow)+irow;
+
+        CoinPackedVector cpv_clo(node->getColLowerLength(),node->getColLowerIndices(),node->getColLowerElements());
+        cdclo_[i]=cpv_clo.denseVector(ncol+icol)+icol;
+
+        CoinPackedVector cpv_cup(node->getColUpperLength(),node->getColUpperIndices(),node->getColUpperElements());
+        cdcup_[i]=cpv_cup.denseVector(ncol+icol)+icol;
+
+        CoinPackedVector cpv_obj(node->getObjectiveLength(),node->getObjectiveIndices(),node->getObjectiveElements());
+        cdobj_[i]=cpv_obj.denseVector(ncol+icol)+icol;
+
+        // sort indices in each row
+        for (int ii=irow; ii<irow+nrow; ++ii)
+        {
+            if (node->getRowLength(ii)>0)
+            {
+                CoinPackedVector cpv(node->getRowLength(ii),node->getRowIndices(ii),node->getRowElements(ii));
+                cpv.sortIncrIndex();
+                memcpy(node->getMutableRowElements(ii),cpv.getElements(),sizeof(double)*cpv.getNumElements());
+                memcpy(node->getMutableRowIndices(ii),cpv.getIndices(),sizeof(int)*cpv.getNumElements());
+            }
+        }
+    }
+}
