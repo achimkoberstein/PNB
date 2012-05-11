@@ -753,7 +753,7 @@ namespace parallel_benders {
         double old_gap = 0;
         double gap = 0;
         int gap_counter = 0;
-        int gap_counter_maximum = 30;
+        int gap_counter_maximum = 1000;
 
         // Variables needed for dynamic strategy PNB_INT_FASTPASS_WITH_FASTBACK
         double threshold = 1;
