@@ -924,7 +924,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
@@ -934,7 +934,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
 
 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
-    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);

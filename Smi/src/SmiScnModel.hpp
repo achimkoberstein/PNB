@@ -348,6 +348,9 @@ public:
     void moveBoundsIntoMatrix();
     void addNodeEVPToCore(SmiScnNode *tnode);
 private:
+
+    void CopyStochasticDataToDetEQModel(int size,double* array,int offset,const CoinPackedVector&,SmiCoreCombineRule*,double prob);
+
     CoinMessageHandler *handler_;
     SmiMessage *messages_;
 

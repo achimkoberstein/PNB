@@ -1281,6 +1281,7 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
         CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
         vclo *= tnode->getProb();
         combineRule->Process(const_cast<double*>(core_->getNode(stage)->getColLowerElements()), col_beg, vclo);
+        combineRule->Process(vclo.getElements(),col_beg,core_->getNode(stage)->getColLowerElements());
     }
 
     if (snode->getColUpperLength()) {
@@ -1296,9 +1297,11 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     }
 
     if (snode->getRowLowerLength()) {
-        CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
-        vrlo *= tnode->getProb();
-        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getRowLowerElements()), row_beg, vrlo);
+        CoinPackedVector vrlo(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
+        // TODO: Test and adapt for the others, until then
+        assert(false);
+        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowLowerElements(),row_beg,vrlo);
+
     }
 
     if (snode->getRowUpperLength()) {
@@ -1308,6 +1311,7 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     }
 
     // And now for the matrix entries
+    // TODO: We need a new matrix.. unfortunately!
     if (snode->getNumMatrixElements()) {
         for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
             for (int j = 0; j < snode->getRowLength(i); j++) {
@@ -2439,3 +2443,20 @@ void SmiScnModel::setSampling( bool do_sample)
     sampling_ = do_sample;
 }
 
+void SmiScnModel::CopyStochasticDataToDetEQModel( int size,double* array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule* combineRule,double prob )
+{
+    double* temp = new double[size];
+    int* indices = new int[size];
+    memcpy(temp,array,sizeof(double)*size);
+    combineRule->Process(temp,offset,cpv);
+
+    for (int i = 0; i < size; i++){
+        temp[i] *= prob;
+        indices[i] = offset+i;
+    }
+    // Put temp into a CoinPackedVector
+    CoinPackedVector trlo(size,indices,temp,false);
+    combineRule->Process(drlo_, 0, trlo);
+    delete [] temp;
+    delete [] indices;
+}
