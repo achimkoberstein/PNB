@@ -582,7 +582,7 @@ namespace parallel_benders {
             //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
             
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
-            //ev_smi->writeSmps("ev_problem",true);
+            ev_smi->writeSmps("ev_problem",true);
             ParallelNestedBenders ev_pnb(ev_smi);
             // Use standard parameter stuff..
             Parameter param;
@@ -2896,6 +2896,8 @@ namespace parallel_benders {
         assert(store_cut_information_); // If we do not want to store cut information this method should not be called
 
         bool active_aggregates_per_aggregate_information = false;
+        // We want to add a new single cut after deletion of old cuts!
+        bool add_new_single_cut = true;
 
 
         if ( forward_ && !benders_node_pointer->changed_aggregation_level_){ // We only try to aggregate cuts, if aggregation level did not changed in this iteration!
@@ -2915,12 +2917,12 @@ namespace parallel_benders {
 
             // 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
             // If cut is consecutively non-active for more than strike_threshold iterations, we can aggregate it!
-            CutStuff::strike_threshold_ = 2; 
+            CutStuff::strike_threshold_ = 5; 
+            add_new_single_cut = false;
 
             
 
-            // We want to add a new single cut after deletion of old cuts!
-            bool add_new_single_cut = true;
+
             if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1 ){
                 add_new_single_cut = false;
                 CutStuff::strike_threshold_ = 5; 

@@ -306,10 +306,10 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     }
 
     // create the matrix
-    //matrix_ = new CoinPackedMatrix(false,0,0);
-    //int *len=NULL;
-    //// Assign values from current arrays (which get nulled thereafter)
-    //matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
+    matrix_ = new CoinPackedMatrix(false,0,0);
+    int *len=NULL;
+    // Assign values from current arrays (which get nulled thereafter)
+    matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
 
     // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
@@ -324,19 +324,26 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
             }
         }
     }
+    // We need to multiply all entries with the corresponding probabilities?
     // We need to generate new cdrlo[] and so on arrays!
     core_->regenerateCoreArrays();
   
     SmiScnModel* smi = new SmiScnModel;
     smi->setCore(this->core_);
     CoinPackedMatrix matrix;
-    CoinPackedVector clo;
-    CoinPackedVector cup;
-    CoinPackedVector obj;
-    CoinPackedVector rlo;
-    CoinPackedVector rup;
-    // Generate empty scenario!
-    smi->generateScenario(this->core_,&matrix,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
+    int * indices_array_cols = new int[core_->getNumCols()];
+    int * indices_array_rows = new int[core_->getNumRows()];
+    for (int i = 0; i< core_->getNumCols();i++)
+        indices_array_cols[i] = i;
+    for (int i = 0; i< core_->getNumRows();i++)
+        indices_array_rows[i] = i;
+    CoinPackedVector clo(core_->getNumCols(),indices_array_cols,dclo_);
+    CoinPackedVector cup(core_->getNumCols(),indices_array_cols,dcup_);
+    CoinPackedVector obj(core_->getNumCols(),indices_array_cols,dobj_);
+    CoinPackedVector rlo(core_->getNumRows(),indices_array_rows,drlo_);
+    CoinPackedVector rup(core_->getNumRows(),indices_array_rows,drup_);
+    // Generate one scenarios!
+    smi->generateScenario(this->core_,matrix_,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
 
     // Set integer values!
     smi->integerInd = new int[this->getIntegerLen()];
@@ -1265,6 +1272,7 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     int stage = snode->getStage();
     int col_beg = core_->getColStart(stage);
     int row_beg = core_->getRowStart(stage);
+    SmiNodeData *core_node = core_->getNode(stage);
 
     // Decide whether to replace or to add the (weighted) stochastic data: when we are in the first stage,
     // and the SmiCoreCombineRule from the node is replace, then we replace the values. Otherwise, we
@@ -1279,49 +1287,63 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     // Do it for the 5 arrays column lower, column upper, objective, row lower & row upper
     if (snode->getColLowerLength()) {
         CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
-        vclo *= tnode->getProb();
-        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getColLowerElements()), col_beg, vclo);
-        combineRule->Process(vclo.getElements(),col_beg,core_->getNode(stage)->getColLowerElements());
+        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getColLowerElements(),dclo_,col_beg,vclo,combineRule,tnode->getProb());
     }
 
     if (snode->getColUpperLength()) {
         CoinPackedVector vcup = CoinPackedVector(snode->getColUpperLength(), snode->getColUpperIndices(), snode->getColUpperElements(), false);
-        vcup *= tnode->getProb();
-        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getColUpperElements()), col_beg, vcup);
+        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getColUpperElements(),dcup_,col_beg,vcup,combineRule,tnode->getProb());
     }
 
     if (snode->getObjectiveLength()) {
         CoinPackedVector vobj = CoinPackedVector(snode->getObjectiveLength(), snode->getObjectiveIndices(), snode->getObjectiveElements(), false);
-        vobj *= tnode->getProb();
-        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getObjectiveElements()), col_beg, vobj);
+        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getObjectiveElements(),dobj_,col_beg,vobj,combineRule,tnode->getProb());
     }
 
     if (snode->getRowLowerLength()) {
         CoinPackedVector vrlo(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
         // TODO: Test and adapt for the others, until then
-        assert(false);
-        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowLowerElements(),row_beg,vrlo);
-
+        //assert(false);
+        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowLowerElements(),drlo_,row_beg,vrlo,combineRule,tnode->getProb());
     }
 
     if (snode->getRowUpperLength()) {
         CoinPackedVector vrup = CoinPackedVector(snode->getRowUpperLength(), snode->getRowUpperIndices(), snode->getRowUpperElements(), false);
-        vrup *= tnode->getProb();
-        combineRule->Process(const_cast<double*>(core_->getNode(stage)->getRowUpperElements()), row_beg, vrup);
+        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowUpperElements(),drup_,row_beg,vrup,combineRule,tnode->getProb());
     }
 
     // And now for the matrix entries
-    // TODO: We need a new matrix.. unfortunately!
-    if (snode->getNumMatrixElements()) {
-        for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
-            for (int j = 0; j < snode->getRowLength(i); j++) {
-                if (combineRule == SmiCoreCombineReplace::Instance())
-                    core_->getNode(stage)->getMutableRowElements(i)[j] = snode->getRowElements(i)[j] * tnode->getProb();
-                else
-                    core_->getNode(stage)->getMutableRowElements(i)[j] += snode->getRowElements(i)[j] * tnode->getProb();
+    // To rule out all eventualities, we need to get the matrix from each scenario, and add it up to one single matrix!
+    
+    // Get core matrix and replace entries with standard values from core model!
+    // Iterate over stochastic stuff to!
+    for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
+        int node_j = 0;
+        for (int j = 0; j < core_node->getRowLength(i); j++) {
+            double matrix_coef = core_node->getRowElements(i)[j];
+            if ( snode->hasMatrix() && core_node->getRowIndices(i)[j] == snode->getRowIndices(i)[node_j]){
+                matrix_coef = snode->getRowElements(i)[node_j];
+                node_j++;
             }
+            if (combineRule == SmiCoreCombineReplace::Instance())
+                matrix_->modifyCoefficient(i,core_node->getRowIndices(i)[j],core_node->getRowElements(i)[j]*tnode->getProb(),true);
+            else
+                matrix_->modifyCoefficient(i,core_node->getRowIndices(i)[j],matrix_->getCoefficient(i,core_node->getRowIndices(i)[j])+core_node->getRowElements(i)[j]*tnode->getProb(),true);
         }
     }
+    // Replace entries of this node
+
+    //// Multiply all elements with probability and replace the entries of the deterministic matrix!!!!!!!!
+    //if (snode->getNumMatrixElements()) {
+    //    for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
+    //        for (int j = 0; j < snode->getRowLength(i); j++) {
+    //            if (combineRule == SmiCoreCombineReplace::Instance())
+    //                matrix_->modifyCoefficient(i,snode->getRowIndices(i)[j],snode->getRowElements[i](j)*tnode->getProb(),true);
+    //            else
+    //                matrix_->modifyCoefficient(i,snode->getRowIndices(i)[j],matrix_->getCoefficient(i,core_node->getRowIndices(i)[j])+snode->getRowElements[i](j)*tnode->getProb()-,true);
+    //        }
+    //    }
+    //}
 }
 
 
@@ -2443,20 +2465,26 @@ void SmiScnModel::setSampling( bool do_sample)
     sampling_ = do_sample;
 }
 
-void SmiScnModel::CopyStochasticDataToDetEQModel( int size,double* array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule* combineRule,double prob )
+void SmiScnModel::CopyStochasticDataToDetEQModel( int size, const double* array,double* destination_array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule* combineRule,double prob )
 {
+    // For size we need to copy the stuff that is present in array!
     double* temp = new double[size];
     int* indices = new int[size];
     memcpy(temp,array,sizeof(double)*size);
     combineRule->Process(temp,offset,cpv);
-
     for (int i = 0; i < size; i++){
         temp[i] *= prob;
         indices[i] = offset+i;
     }
+    // Update the values with the cpv
+    for (int i = 0; i < cpv.getNumElements();i++){
+        temp[cpv.getIndices()[i]-offset] = cpv.getElements()[i]*prob;
+    }
+
+
     // Put temp into a CoinPackedVector
     CoinPackedVector trlo(size,indices,temp,false);
-    combineRule->Process(drlo_, 0, trlo);
+    combineRule->Process(destination_array, 0, trlo);
     delete [] temp;
     delete [] indices;
 }
