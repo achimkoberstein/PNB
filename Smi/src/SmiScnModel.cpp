@@ -326,7 +326,7 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     }
     // We need to multiply all entries with the corresponding probabilities?
     // We need to generate new cdrlo[] and so on arrays!
-    core_->regenerateCoreArrays();
+    //core_->regenerateCoreArrays();
   
     SmiScnModel* smi = new SmiScnModel;
     smi->setCore(this->core_);
@@ -342,8 +342,23 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     CoinPackedVector obj(core_->getNumCols(),indices_array_cols,dobj_);
     CoinPackedVector rlo(core_->getNumRows(),indices_array_rows,drlo_);
     CoinPackedVector rup(core_->getNumRows(),indices_array_rows,drup_);
+    delete [] indices_array_rows;
+    delete [] indices_array_cols;
     // Generate one scenarios!
     smi->generateScenario(this->core_,matrix_,&clo,&cup,&obj,&rlo,&rup,0,0,1.0);
+    // Copy deteq data
+    smi->matrix_ = new CoinPackedMatrix(*matrix_);
+    smi->dclo_ = new double[this->core_->getNumCols()];
+    smi->dcup_ = new double[this->core_->getNumCols()];
+    smi->dobj_ = new double[this->core_->getNumCols()];
+    smi->drlo_ = new double[this->core_->getNumRows()];
+    smi->drup_ = new double[this->core_->getNumRows()];
+    // Memcpy the stuff
+    memcpy(smi->dclo_,dclo_,sizeof(double)*this->core_->getNumCols());
+    memcpy(smi->dcup_,dcup_,sizeof(double)*this->core_->getNumCols());
+    memcpy(smi->dobj_,dobj_,sizeof(double)*this->core_->getNumCols());
+    memcpy(smi->drlo_,drlo_,sizeof(double)*this->core_->getNumRows());
+    memcpy(smi->drup_,drup_,sizeof(double)*this->core_->getNumRows());
 
     // Set integer values!
     smi->integerInd = new int[this->getIntegerLen()];
@@ -714,6 +729,19 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
     delete osiStoch_;
     osiStoch_ = tempPtr;
     return solutionValues;
+}
+
+OsiSolverInterface*
+SmiScnModel::loadStoredDataInSolver(){
+    osiStoch_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+    // pass data to osiStoch
+    osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
+
+    // If we have integer indices, we add these to the solver.
+    if (intIndices.size()){
+        osiStoch_->setInteger(&intIndices[0],intIndices.size());
+    }
+    return osiStoch_;
 }
 
 //Christian: Generates Deterministic Equivalent (Big Matrix)

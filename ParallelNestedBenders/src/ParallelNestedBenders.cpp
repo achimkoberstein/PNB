@@ -564,18 +564,17 @@ namespace parallel_benders {
         thread_pool_.wait(0); // We wait until all threads are done
         current_stage_ = 0;
 
-        // Check if we can really use the warm_up procedures
-        //if ( warm_up_ ){
-        //    for (int i = 1; i < num_stages_;i++)
-        //        if ( stage_data_[i]->stochastic_objective_ || stage_data_[i]->stochastic_matrix_w_ ){
-        //            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION || start_solution_ == PNB_INT_USE_EV_SOLUTION ){
-        //                start_solution_ = PNB_INT_NO_START_SOLUTION;
-        //                warm_up_ = false;
-        //                LOG(INFO) << "Can not use advanced start procedure due to problem structure.";
-        //            }
-        //        }
-        //}
-
+        // Check if method is applicable!
+        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION){
+            for (int stage = 1; stage < num_stages_; stage++){
+                if ( stage_data_[stage]->stochastic_matrix_w_ || stage_data_[stage]->stochastic_objective_ || stage_data_[stage]->stochastic_bounds_ )
+                {
+                    start_solution_ = PNB_INT_USE_EV_SOLUTION;
+                    LOG(INFO) << "Problem has stochastic coefficents not only in RHS and T-matrix, so we can not use EV-problem cuts.";
+                    break;
+                }
+            }
+        }
 
         // Warm up period
         if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
@@ -618,25 +617,30 @@ namespace parallel_benders {
                 if ( tree_nodes_by_stage_[i][0]->numChildren() < num_thetas )
                     num_thetas =  tree_nodes_by_stage_[i][0]->numChildren();
                 BendersNodeData::cut_container& cuts_to_add = ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->optimality_cuts_;
-                BendersNodeData::cut_container& insert_cuts_here = tree_nodes_by_stage_[i][0]->getDataPtr()->optimality_cuts_;
-                insert_cuts_here.insert(insert_cuts_here.end(),cuts_to_add.begin(),cuts_to_add.end());
-                tree_nodes_by_stage_[i][0]->getDataPtr()->last_iteration_start_optimality_ = insert_cuts_here.end();
-                tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_ = num_thetas;
-                createRoundRobinAggregation(tree_nodes_by_stage_[i][0]->getDataPtr(),tree_nodes_by_stage_[i][0]->numChildren(),tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_,(int)std::ceil((double)tree_nodes_by_stage_[i][0]->numChildren()/tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_));
-                // We have to transform the old optimality cuts to the new number of theta's we would like to have
-                // We already called a function that gives us a new number of whatever it is we need.
+                // We need to add the cuts for all j stuff
+                for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
+                    BendersNodeData::cut_container& insert_cuts_here = tree_nodes_by_stage_[i][j]->getDataPtr()->optimality_cuts_;
+                    insert_cuts_here.insert(insert_cuts_here.end(),cuts_to_add.begin(),cuts_to_add.end());
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->last_iteration_start_optimality_ = insert_cuts_here.end();
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_ = num_thetas;
+                    createRoundRobinAggregation(tree_nodes_by_stage_[i][j]->getDataPtr(),tree_nodes_by_stage_[i][j]->numChildren(),tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_,(int)std::ceil((double)tree_nodes_by_stage_[i][j]->numChildren()/tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_));
+                    // We have to transform the old optimality cuts to the new number of theta's we would like to have
+                    // We already called a function that gives us a new number of whatever it is we need.
 
-                // Transform all old optimality cuts to new ones.
-                // Set new values
+                    // Transform all old optimality cuts to new ones.
+                    // Set new values
 
-                tree_nodes_by_stage_[i][0]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
-                tree_nodes_by_stage_[i][0]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][0]->getDataPtr()->num_thetas_); // Gets initialized with 0
-                for( BendersNodeData::cut_container::iterator it = insert_cuts_here.begin(); it != insert_cuts_here.end();++it){
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
+                }
+                for( BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end();++it){
                     ExpandThetaVariablesInOptimalityCut((*it)->cut_.get(),stage_data_[i]->num_columns_,num_thetas,1);
                     (*it)->aggregate_number_ = -1;
                     (*it)->not_active_iterations_ = 0;
                     (*it)->cut_creation_iteration_ = 0;
                 }
+                
+
             }
             delete ev_smi;
         }
@@ -647,7 +651,8 @@ namespace parallel_benders {
         if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            ev_smi->loadOsiSolverData();
+            // This is no good ;)
+            ev_smi->loadStoredDataInSolver();
             SolveSolverInterface(osi_solver_);
             //TODO Remove write out stuff here!
             //ev_smi->writeSmps("ev_problem",true);
