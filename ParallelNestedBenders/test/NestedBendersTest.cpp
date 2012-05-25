@@ -1058,7 +1058,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*temporary*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*watson_conditional*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";

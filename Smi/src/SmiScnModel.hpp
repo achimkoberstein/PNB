@@ -347,6 +347,7 @@ public:
     void aggregateStages( int firstStage, int secondStage, bool aggregateFromStart = true );
     void moveBoundsIntoMatrix();
     void addNodeEVPToCore(SmiScnNode *tnode);
+    OsiSolverInterface* loadStoredDataInSolver();
 private:
 
     void CopyStochasticDataToDetEQModel(int size,const double* array,double*,int offset,const CoinPackedVector&,SmiCoreCombineRule*,double prob);
