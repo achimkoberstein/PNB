@@ -101,6 +101,7 @@ private:
     void PrimalDegeneracyHandling(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void SolveSolverInterface(OsiSolverInterface* osi_solver);
     int getNumRowsProblem();
@@ -246,6 +247,8 @@ private:
     bool theta_approximations_everywhere_;
 	bool enforce_direction_;
     int enforce_stage_;
+
+    bool level_decomp_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
