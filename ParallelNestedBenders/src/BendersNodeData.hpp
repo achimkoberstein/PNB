@@ -92,6 +92,7 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_DETEQ = 0;
     const int PNB_INT_ALGORITHM_BENDERS = 1;
     const int PNB_INT_ALGORITHM_REGULARIZATION = 2;
+    const int PNB_INT_ALGORITHM_LEVEL = 3;
 
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
