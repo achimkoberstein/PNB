@@ -499,7 +499,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(1);
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -4510,6 +4510,13 @@ namespace parallel_benders {
             // We need to set a quadratic objective, ||x-x'||^2, similar to the regularized decomposition
             // Compute the constant value in the objective function?
 
+            // DEBUG
+            //std::stringstream name_string2;
+            //name_string2 << "before_level";
+            //name_string2 << current_iteration_;
+            //name_string2 << ".lp";
+            //CPXwriteprob(env_ptr,lp_ptr,name_string2.str().c_str(),"lp");
+
 
             // Move the current objective function into a row constraint
             int number_of_problem_cols = cpx_ptr->getNumCols();
@@ -4527,21 +4534,18 @@ namespace parallel_benders {
             // Compute quadratic coefficient matrix!
             int number_of_variables = stage_data_[current_stage_]->num_columns_;
             std::vector<double> quadratic_coefs(number_of_problem_cols,2.0); // Cplex alway calculates 1/2 ||x||^2, so we need to anticipate this
-            for (int i = number_of_variables; i < number_of_problem_cols; i++)
+            for (int i = number_of_variables; i < number_of_problem_cols; i++) // Set theta variables to zero
                 quadratic_coefs[i] = 0.0;
 
-            // Compute normal objective function elements!
+            // Compute normal objective function elements! -2x_i'
             std::vector<double> linear_coefs(number_of_problem_cols,0.0);
             for (int i = 0; i < number_of_variables; i++){
-                linear_coefs[i] = benders_tree_node_pointer->getDataPtr()->col_solution_[i]*2.0;
+                linear_coefs[i] = -benders_tree_node_pointer->getDataPtr()->col_solution_[i]*2.0;
             }
 
             // Store old objective coefs
             std::vector<double> original_obj_coefs(number_of_problem_cols,0.0);
             CPXgetobj(env_ptr,lp_ptr,&original_obj_coefs[0],0,number_of_problem_cols-1);
-
-
-
 
             // Set new linear objective
             CPXchgobj(env_ptr,lp_ptr,number_of_problem_cols,&obj_indices[0],&linear_coefs[0]);
@@ -4557,7 +4561,13 @@ namespace parallel_benders {
             osi_solver->applyRowCuts(1,osi_cut.get());
 
 
-            //CPXwriteprob(env_ptr,lp_ptr,"level","lp");
+            // DEBUG
+            //std::stringstream name_string;
+            //name_string << "level";
+            //name_string << current_iteration_;
+            //name_string << ".lp";
+            //CPXwriteprob(env_ptr,lp_ptr,name_string.str().c_str(),"lp");
+            
             // Reload warm start information!
 
 
@@ -4572,7 +4582,18 @@ namespace parallel_benders {
             assert(number_of_problem_cols-number_of_variables == benders_tree_node_pointer->getDataPtr()->num_thetas_);
             StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,number_of_problem_cols-number_of_variables);
 
+            //// Compute objective value! DEBUG
+            //double solution = 0.0;
+            //for (int i = 0; i < number_of_variables; i++)
+            //    solution += benders_tree_node_pointer->getDataPtr()->col_solution_[i]*original_obj_coefs[i];
+            //for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
+            //    solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+            //LOG(INFO) << "Level problem solution x+theta " << solution;
+            //LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
+
+            
             // Store warm start for level problem!
+
                         
             
             // Remove row constraint and quadratic objective function afterwards!
