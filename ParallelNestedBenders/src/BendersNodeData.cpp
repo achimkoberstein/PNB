@@ -187,7 +187,7 @@ int Timer::GetTimeStages() const
 void Parameter::init()
 {
     // DetEq or Benders
-    parameter_.put(PNB_BENDERS,1); // 0: No Benders (detEq), 1 Benders
+    parameter_.put(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // 0: No Benders (detEq), 1 Benders
     
 	// WarmStart
     parameter_.put(PNB_WARM_START, 1); // 0 = no WarmStart, 1 = WarmStart with solution from previous iteration, 2 = WarmStart with solution from previous scenario (in the same iteration)
@@ -214,7 +214,11 @@ void Parameter::init()
     //Bounds in matrix
     parameter_.put(PNB_BOUNDS_IN_MATRIX,false);
     // Intra Cut Aggregation
-    parameter_.put(PNB_INTRA_CUT_AGGREGATION,false);
+    parameter_.put(PNB_CUT_CONSOLIDATION,false);
+    // Intra cut aggregation strategy
+    parameter_.put(PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,PNB_INT_CUT_CONSOLIDATION_WITH_NEW_CUTS);
+    parameter_.put(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
+    parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
     // Start solution
     parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution, 1 EV solution, 2 ? not yet implemented
 	// Parallel Parameters
@@ -225,8 +229,8 @@ void Parameter::init()
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, false); // Do we want to use TrustRegion TODO: Implement this
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
-    parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-8));
-	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-5)); 
+    parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-6));
+	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-6)); 
     parameter_.put(PNB_EPSILON_ABSOLUTE, std::pow(10.0,-6));
     parameter_.put(PNB_EPSILON_RELATIVE, std::pow(10.0,-6));
     // Solution management
