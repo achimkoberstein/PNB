@@ -50,8 +50,10 @@ namespace parallel_benders{
     const std::string PNB_STAGE_AGGREGATION_DIRECTION = "PNG_STAGE_AGGREGATION_DIRECTION"; // In which direction do we want to aggregate if difference is greater than one? True means from start to end, false means from end to start
     const std::string PNB_USE_START_SOLUTION = "PNB_USE_START_SOLUTION"; // If we use a start solution or not. At the moment start solution is EV solution!
     const std::string PNB_BOUNDS_IN_MATRIX = "PNB_BOUNDS_IN_MATRIX";
-    const std::string PNB_INTRA_CUT_AGGREGATION = "PNB_INTRA_CUT_AGGREGATION";
-    const std::string PNB_INTRA_CUT_AGGREGATION_STRATEGY = "PNB_INTRA_CUT_AGGREGATION_STRATEGY";
+    const std::string PNB_CUT_CONSOLIDATION = "PNB_CUT_CONSOLIDATION";
+    const std::string PNB_CUT_CONSOLIDATION_CUT_COMPUTATION = "PNB_CUT_CONSOLIDATION_CUT_COMPUTATION";
+    const std::string PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD = "PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD";
+    const std::string PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD = "PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD";
 
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
 
@@ -78,6 +80,8 @@ namespace parallel_benders{
     const int PNB_INT_FASTPASS_WITH_FASTBACK = 6;
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
 	// Intra cut aggregation strategies
+    const int PNB_INT_CUT_CONSOLIDATION_WITH_NEW_CUTS = 0;
+    const int PNB_INT_CUT_CONSOLIDATION_WITHOUT_NEW_CUTS = 1;
 
     // Dynamic Adapative Aggregation strategies
     const int PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION = 1;

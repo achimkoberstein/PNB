@@ -177,6 +177,10 @@ private:
     int aggregation_scheme_;
     bool no_aggregation_;
 
+    bool cut_consolidation_add_cut_;
+    int cut_consolidation_strike_threshold_;
+    double cut_consolidation_partial_threshold_;
+
     // Trust Region stuff
     bool trust_region_;
 

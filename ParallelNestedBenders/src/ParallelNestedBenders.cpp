@@ -254,8 +254,8 @@ namespace parallel_benders {
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),max_iteration_(10000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -348,7 +348,10 @@ namespace parallel_benders {
         adaptive_ = param.get(PNB_DYNAMIC_AGGREGATION,false);
 
         // Intra-Cut Aggregation
-        store_cut_information_ = param.get(PNB_INTRA_CUT_AGGREGATION,false);
+        store_cut_information_ = param.get(PNB_CUT_CONSOLIDATION,false);
+        cut_consolidation_add_cut_ = param.get(PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,PNB_INT_CUT_CONSOLIDATION_WITH_NEW_CUTS);
+        cut_consolidation_strike_threshold_ = param.get(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
+        cut_consolidation_partial_threshold_ = param.get(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
 
         // Warm Up Period
         start_solution_ = param.get(PNB_USE_START_SOLUTION,0);
@@ -1270,8 +1273,6 @@ namespace parallel_benders {
         AppendColsToSubproblem(osi_solver,benders_tree_node_pointer);
         AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
 
-        
-
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
         //if ( regularization_ && current_stage_ == 0)
         //    BuildAndSolveRegularizedProblem(osi_solver,benders_tree_node_pointer);
@@ -1328,10 +1329,12 @@ namespace parallel_benders {
         if ( trust_region_ && current_stage_ < num_stages_-1)
             AppendTrustRegionToSubproblem(osi_solver,benders_tree_node_pointer);
 
+        //double time = CoinCpuTime();
         if ( regularization_ && current_stage_ == 0)
             BuildAndSolveRegularizedProblem(osi_solver,benders_tree_node_pointer);
         else
             SolveSolverInterface(osi_solver);
+        //LOG(INFO) << "Solution time: " << CoinCpuTime()-time;
 
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
@@ -2906,8 +2909,6 @@ namespace parallel_benders {
 
         bool active_aggregates_per_aggregate_information = false;
         // We want to add a new single cut after deletion of old cuts!
-        bool add_new_single_cut = true;
-
 
         if ( forward_ && !benders_node_pointer->changed_aggregation_level_){ // We only try to aggregate cuts, if aggregation level did not changed in this iteration!
             // We want to store the information about cuts!
@@ -2922,18 +2923,15 @@ namespace parallel_benders {
             // Threshold that defines when active_value is bigger than threshold, we do not aggregates
             CutStuff::active_threshold_ = zero_tolerance_*2.0;
             // Define a threshold above which we do not aggregate cuts for an iteration
-            double intra_aggregate_threshold = 0.05*benders_node_pointer->num_thetas_;
+            double intra_aggregate_threshold = cut_consolidation_partial_threshold_*benders_node_pointer->num_thetas_;
 
             // 0: aggregate only if NO cut is active for an iteration, benders_node_pointer->num_thetas_
             // If cut is consecutively non-active for more than strike_threshold iterations, we can aggregate it!
-            CutStuff::strike_threshold_ = 5; 
-            add_new_single_cut = false;
-
-            
-
+            CutStuff::strike_threshold_ = cut_consolidation_strike_threshold_; 
+            bool add_cut = cut_consolidation_add_cut_;
 
             if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1 ){
-                add_new_single_cut = false;
+                add_cut = false;
                 CutStuff::strike_threshold_ = 5; 
             }
 
@@ -2944,7 +2942,7 @@ namespace parallel_benders {
             if ( regularization_ ){
                 intra_aggregate_threshold = 0.5*benders_node_pointer->num_thetas_;
                 CutStuff::strike_threshold_ = 1;
-                add_new_single_cut = false;
+                add_cut = false;
             }
 
             int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
@@ -3089,7 +3087,7 @@ namespace parallel_benders {
                         benders_node_pointer->optimality_cuts_.erase(*list_it);
 
 
-                    if ( add_new_single_cut ){
+                    if ( add_cut ){
                         // Add all newly created cuts to optimality cut set
                         benders_node_pointer->optimality_cuts_.insert(benders_node_pointer->optimality_cuts_.end(),cuts_to_add.begin(),cuts_to_add.end());
                         //benders_node_pointer->optimality_cuts_.push_back(cut_stuff);
@@ -3099,7 +3097,7 @@ namespace parallel_benders {
                         already_removed_cuts += to_remove_from_solver.size();
                         osi_solver->deleteRows(to_remove_from_solver.size(),&to_remove_from_solver[0]);
                     }
-                    if ( add_new_single_cut ){
+                    if ( add_cut ){
                         for (BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end(); ++it)
                             osi_solver->applyRowCuts(1,(*it)->cut_.get());
                     }
@@ -3929,7 +3927,7 @@ namespace parallel_benders {
                 delete benders_tree_node_pointer->getDataPtr()->warm_start_;
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             }
-            else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_)){
+            else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){
                 // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
                 stage_warm_start_mutex_.lock();
                 delete stage_data_[current_stage_]->warm_start_;
@@ -4553,8 +4551,11 @@ namespace parallel_benders {
             // Set quadratic objective
             CPXcopyqpsep(env_ptr,lp_ptr,&quadratic_coefs[0]);
 
-            if ( warm_start_)
-                osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+            // We really want to set the warm_start, so we just set the seperate_first_stage_solver to false, regardless of its previous value
+            bool previous_value = seperate_first_stage_solver_;
+            seperate_first_stage_solver_ = false;
+            SetWarmStart(osi_solver,benders_tree_node_pointer);
+            seperate_first_stage_solver_ = previous_value;
 
 
             // Apply level decomposition constraint.

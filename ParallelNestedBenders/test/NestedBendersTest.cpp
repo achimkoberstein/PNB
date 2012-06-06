@@ -128,83 +128,107 @@ public:
         int num_repetitions = 2; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
+        int num_aggregates_by_magic = 0;
         if ( num_repetitions ){
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
             assert( smi_read_in == 0);
             num_stages = smi_model->getCore()->getNumStages();
             num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
+
+            int num_aggregates_by_magic = 0;
+            // We use the following formula: Max(  (1-#objNZ/#Cols)*#Scen/2, 0.1)
+            // The less number of objective nonzeroes we have, the more cuts we use
+            int num_cols = smi_model->getCore()->getNumCols(0);
+            for (int i = 0; i < num_cols; i++){
+                if ( smi_model->getCore()->getNode(0)->getObjectiveElements()[i] != 0.0 )
+                    num_aggregates_by_magic++;
+            }
+            double objective_nonzero_ratio = (double)num_aggregates_by_magic/num_cols;
+            assert( objective_nonzero_ratio>= 0.0 && objective_nonzero_ratio <= 1.00000000001);
+            objective_nonzero_ratio = max( (1-objective_nonzero_ratio)*(smi_model->getNumScenarios()/2), 0.1);
+            num_aggregates_by_magic = objective_nonzero_ratio;
+            assert(num_aggregates_by_magic>=0);
+            assert(num_aggregates_by_magic<=smi_model->getNumScenarios());
+
         }
+        
+
         delete smi_model; // Get rid of the model, before we actually solve stuff
-        num_repetitions = 2;
         
         benders_parameter_.init();
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
+        aggregates.push_back(-1);
         aggregates.push_back(0);
         aggregates.push_back(1);
-        aggregates.push_back(5);
-        aggregates.push_back(10);
-        aggregates.push_back(25);
-        aggregates.push_back(50);
-        aggregates.push_back(100);
-        aggregates.push_back(500);
-        aggregates.push_back(1000);
-        aggregates.push_back(2000);
-        aggregates.push_back(3000);
-        aggregates.push_back(5000);
-        aggregates.push_back(10000);
+        //aggregates.push_back(5);
+        //aggregates.push_back(10);
+        //aggregates.push_back(25);
+        //aggregates.push_back(50);
+        //aggregates.push_back(100);
+        //aggregates.push_back(500);
+        //aggregates.push_back(1000);
+        //aggregates.push_back(2000);
+        //aggregates.push_back(3000);
+        //aggregates.push_back(5000);
+        //aggregates.push_back(10000);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
   /*      solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));*/
 
-        for (int j = 0; j < num_repetitions; j++){
-        // Solve DetEq as comparison
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-            for (int i = 0; i < aggregates.size(); i++){
-                if ( aggregates[i] >= num_childs_first_stage){
-                    LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
-                    continue;
-                }
-                benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
-                // TODO: Remove later on!
-                //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-
-                benders_parameter_.parameter_.put(parallel_benders::PNB_INTRA_CUT_AGGREGATION,false);
-                benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-
-
-                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        for (int cpu = 0; cpu < 1; cpu++){
+            for (int j = 0; j < num_repetitions; j++){
+                // Solve DetEq as comparison
+                //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
                 //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                for (int i = 0; i < aggregates.size(); i++){
+                    if ( aggregates[i] >= num_childs_first_stage){
+                        LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
+                        continue;
+                    }
+                    if ( aggregates[i] < 0 ){
+                        // Compute an aggregate number out of problem characteristics!
+                        aggregates[i] = num_aggregates_by_magic;
+                    }
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,cpu);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
-                benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
- //               //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
- //               //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
 
-                //for (int tree_stage = 0; tree_stage < 1; tree_stage++){
-                //    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_STAGE,num_stages);
-                //    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                //}
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
+                    if ( aggregates[i] != 1 ){
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    }
 
 
- //               if ( num_stages <= 2 ) { // Regularization only for two-stage problems (at the moment)
- //                   benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
- //                   benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
- //                   solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
- //                   //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_COMPUTE_EV_SOLUTION);
- //                   //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
- //                   benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
- //               }
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    
 
-            }//end for: aggregates
-        }
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                 
+                }//end for: aggregates
+            }//end for:repetition
+        }//end for:cpu
 
 
 
@@ -492,112 +516,112 @@ protected:
 class NestedBendersTestMultiStage: public NestedBendersTest
 {};
 
-TEST_F(NestedBendersTest,InvestmentExampleTest){
-    using namespace flopc;
-    MP_model investmentModel(new OsiCpxSolverInterface());
-    MP_data initialWealth,goal;
-    initialWealth() = 55; //set data
-    goal() = 90;
-
-    enum {numStage=3};
-    MP_stage T(numStage); //Time Stages
-    enum {asset1,asset2,numAssets};
-    MP_set assets(numAssets);
-
-    //RandomVariable** random_vars = new RandomVariable*[3];
-    RandomVariable* random_vars[numStage-1][numAssets] = 
-    { 
-        {new DiscreteUniformRandomVariable(0,4,10), new DiscreteUniformRandomVariable(1,2,10)},
-        {new DiscreteUniformRandomVariable(0,4,10), new DiscreteUniformRandomVariable(1,2,10)} 
-    };
-
-    MP_random_data returns(&random_vars[0][0],T,assets);
-
-    MP_variable x(T,assets);
-    MP_variable wealth(T);
-    MP_variable shortage(T), overage(T);
-
-    MP_constraint 
-        initialWealthConstr,
-        returnConstr(T),
-        allocationConstr(T),
-        goalConstr(T);
-
-    initialWealthConstr.setName("initial");
-    returnConstr.setName("return");
-    allocationConstr.setName("allocation");
-    goalConstr.setName("goal");
-
-    initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
-    allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
-    returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
-
-    goalConstr(T+2) = wealth(T) == goal() + overage(T) - shortage(T); 
-    MP_expression valueFunction( +1.3*shortage(T.last()) - 1.1*overage(T.last()));
-
-    investmentModel.setObjective( valueFunction );
-    investmentModel.attach(investmentModel.Solver);
-    investmentModel.getSmi()->writeSmps("investment",true,false);
-    investmentModel.solve(MP_model::MINIMIZE);
-
-    OsiCpxSolverInterface osi_solver;
-    SmiScnModel* smi = investmentModel.getSmi();
-    OsiStochasticParallelNestedBendersSolverInterface nested_solver(&osi_solver,smi);
-    nested_solver.initialSolve();
-
-
-    ////Compare solution values.
-    EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
-    EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
-
-  }
-
-
-TEST_F(NestedBendersTest,BirgeLouveuxFarmersTest){
-    using namespace flopc; // Do not do this ;)
-    // define the model as presented in the book, p. 237ff.
-    MP_model testModel(new OsiCpxSolverInterface());
-
-    enum {numT=3};
-    MP_stage T(numT);
-
-    enum {numScen=4};
-    MP_scenario_set scenSet(numScen);
-
-    double valD[numT-1][numScen] =
-    {
-        {1, 1, 3, 3},
-        {1, 3, 1, 3}
-    };
-    MP_random_data d(&valD[0][0], T);
-
-    MP_variable x(T), w(T), y(T);
-
-    MP_constraint time(T);
-    time(T) = x(T) <= 2;
-
-    MP_constraint demandSt1;
-    demandSt1() = x(0) + w(0) - y(0) == 1;
-
-    //MP_set T1(2);
-    MP_constraint demand(T);
-    demand(T+1) = y(T) + x(T+1) + w(T+1) - y(T+1) == d(T+1);
-
-    testModel.setObjective(
-        x(0) + 3*w(0) + 0.5*y(0)
-        + x(1) + 3*w(1) + 0.5*y(1)
-        + x(2) + 3*w(2)
-        );
-
-    testModel.attach(); // builds the internal model
-
-    // the model is build, so we can continue with our NestedBenders
-    //NestedBenders nb(testModel.getSmi());
-    //nb.solve();
-    //assert(nb.getSolutionValue() == 6.25);
-    parallel_benders::ParallelNestedBenders pnb(testModel.getSmi());
-    pnb.Solve();
-}
+//TEST_F(NestedBendersTest,InvestmentExampleTest){
+//    using namespace flopc;
+//    MP_model investmentModel(new OsiCpxSolverInterface());
+//    MP_data initialWealth,goal;
+//    initialWealth() = 55; //set data
+//    goal() = 90;
+//
+//    enum {numStage=3};
+//    MP_stage T(numStage); //Time Stages
+//    enum {asset1,asset2,numAssets};
+//    MP_set assets(numAssets);
+//
+//    //RandomVariable** random_vars = new RandomVariable*[3];
+//    RandomVariable* random_vars[numStage-1][numAssets] = 
+//    { 
+//        {new DiscreteUniformRandomVariable(0,4,10), new DiscreteUniformRandomVariable(1,2,10)},
+//        {new DiscreteUniformRandomVariable(0,4,10), new DiscreteUniformRandomVariable(1,2,10)} 
+//    };
+//
+//    MP_random_data returns(&random_vars[0][0],T,assets);
+//
+//    MP_variable x(T,assets);
+//    MP_variable wealth(T);
+//    MP_variable shortage(T), overage(T);
+//
+//    MP_constraint 
+//        initialWealthConstr,
+//        returnConstr(T),
+//        allocationConstr(T),
+//        goalConstr(T);
+//
+//    initialWealthConstr.setName("initial");
+//    returnConstr.setName("return");
+//    allocationConstr.setName("allocation");
+//    goalConstr.setName("goal");
+//
+//    initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+//    allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+//    returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
+//
+//    goalConstr(T+2) = wealth(T) == goal() + overage(T) - shortage(T); 
+//    MP_expression valueFunction( +1.3*shortage(T.last()) - 1.1*overage(T.last()));
+//
+//    investmentModel.setObjective( valueFunction );
+//    investmentModel.attach(investmentModel.Solver);
+//    investmentModel.getSmi()->writeSmps("investment",true,false);
+//    investmentModel.solve(MP_model::MINIMIZE);
+//
+//    OsiCpxSolverInterface osi_solver;
+//    SmiScnModel* smi = investmentModel.getSmi();
+//    OsiStochasticParallelNestedBendersSolverInterface nested_solver(&osi_solver,smi);
+//    nested_solver.initialSolve();
+//
+//
+//    ////Compare solution values.
+//    EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
+//    EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+//
+//  }
+//
+//
+//TEST_F(NestedBendersTest,BirgeLouveuxFarmersTest){
+//    using namespace flopc; // Do not do this ;)
+//    // define the model as presented in the book, p. 237ff.
+//    MP_model testModel(new OsiCpxSolverInterface());
+//
+//    enum {numT=3};
+//    MP_stage T(numT);
+//
+//    enum {numScen=4};
+//    MP_scenario_set scenSet(numScen);
+//
+//    double valD[numT-1][numScen] =
+//    {
+//        {1, 1, 3, 3},
+//        {1, 3, 1, 3}
+//    };
+//    MP_random_data d(&valD[0][0], T);
+//
+//    MP_variable x(T), w(T), y(T);
+//
+//    MP_constraint time(T);
+//    time(T) = x(T) <= 2;
+//
+//    MP_constraint demandSt1;
+//    demandSt1() = x(0) + w(0) - y(0) == 1;
+//
+//    //MP_set T1(2);
+//    MP_constraint demand(T);
+//    demand(T+1) = y(T) + x(T+1) + w(T+1) - y(T+1) == d(T+1);
+//
+//    testModel.setObjective(
+//        x(0) + 3*w(0) + 0.5*y(0)
+//        + x(1) + 3*w(1) + 0.5*y(1)
+//        + x(2) + 3*w(2)
+//        );
+//
+//    testModel.attach(); // builds the internal model
+//
+//    // the model is build, so we can continue with our NestedBenders
+//    //NestedBenders nb(testModel.getSmi());
+//    //nb.solve();
+//    //assert(nb.getSolutionValue() == 6.25);
+//    parallel_benders::ParallelNestedBenders pnb(testModel.getSmi());
+//    pnb.Solve();
+//}
 
 TEST_F(NestedBendersTest, farmer_OTHER) { // ok
     EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
@@ -825,21 +849,21 @@ TEST_F(NestedBendersTestMultiStage,stocfor_FELT){// BLOCKS, values are within pl
 }
 
 // Huge problems
-TEST_F(NestedBendersTest,20term_WRIGHT){// 1.1 * 10^12 scenarios
-    EXPECT_NEAR(solveSMPS("wright/data-20/20"), 0, 0.1); //two-stage
-}
-TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
-    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
-}
-TEST_F(NestedBendersTest,ssn_WRIGHT){// 10^70 scenarios
-    EXPECT_NEAR(solveSMPS("wright/data-ssn/ssn"), 0, 0.1); //two-stage
-}
-TEST_F(NestedBendersTest,LandS_WRIGHT){// 10^6 scenarios
-    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
-}
-TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
-    EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
-}
+//TEST_F(NestedBendersTest,20term_WRIGHT){// 1.1 * 10^12 scenarios
+//    EXPECT_NEAR(solveSMPS("wright/data-20/20"), 0, 0.1); //two-stage
+//}
+//TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
+//    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
+//}
+//TEST_F(NestedBendersTest,ssn_WRIGHT){// 10^70 scenarios
+//    EXPECT_NEAR(solveSMPS("wright/data-ssn/ssn"), 0, 0.1); //two-stage
+//}
+//TEST_F(NestedBendersTest,LandS_WRIGHT){// 10^6 scenarios
+//    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
+//}
+//TEST_F(NestedBendersTest,storm_WRIGHT){// 6*10^81 scenarios
+//    EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
+//}
 
 TEST_F(NestedBendersTest,scenarios_WRIGHT){
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
@@ -858,18 +882,18 @@ TEST_F(NestedBendersTest,scenarios_WRIGHT){
 
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
     EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2172.9,0.1); // -2167.62
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2310.7,0.1); //-2027.43
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), -1888.3,0.1); // -1879.43
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), -1849.4,0.1); // -1841.29
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"),-1797.3 ,0.1); // -1787.19
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), -1795.16,0.1); // -1780.13
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), -1798.4 ,0.1); // -1791.18
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), -1723.7,0.1); // -1725.53
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), -1705.8,0.1);// -1693.47
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), -1778.3,0.1); // -1769.45
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), -1674.9,0.1);// -1664.66
-    //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), -1687.7,0.1);// -1679.92
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2172.9,0.1); // -2167.62
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2310.7,0.1); //-2027.43
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), -1888.3,0.1); // -1879.43
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), -1849.4,0.1); // -1841.29
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"),-1797.3 ,0.1); // -1787.19
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), -1795.16,0.1); // -1780.13
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), -1798.4 ,0.1); // -1791.18
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), -1723.7,0.1); // -1725.53
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), -1705.8,0.1);// -1693.47
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), -1778.3,0.1); // -1769.45
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), -1674.9,0.1);// -1664.66
+    EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), -1687.7,0.1);// -1679.92
 }
 
 TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
@@ -886,10 +910,10 @@ TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solve
     EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1920"), -1778.95,0.1);
 }
 
-TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
-    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
-    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
-}
+//TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
+//    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
+//    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
+//}
 
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
@@ -910,146 +934,146 @@ TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
 }
 
-TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
-    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
-}
+//TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
+//    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
+//}
+//
+//TEST_F(NestedBendersTest,dakota){// dakota model
+//    EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
+//}
 
-TEST_F(NestedBendersTest,dakota){// dakota model
-    EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
-}
+//TEST_F(NestedBendersTest,temporary){// dakota model
+//    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+//    // Cut Consolidation tests
+//    //solveSMPS("temporary/ev_problem-scenario");
+//    //solveSMPS("temporary/ev_problem");
+//        //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
+//    	////EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+//    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
+//    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
+//
+//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
+//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
+//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
+//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
+//    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
+//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536-noint","scdp/SCDP-65536","scdp/SCDP-65536"), -5183755359, 10); 
+//
+//}
 
-TEST_F(NestedBendersTest,temporary){// dakota model
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
-    // Cut Consolidation tests
-    //solveSMPS("temporary/ev_problem-scenario");
-    //solveSMPS("temporary/ev_problem");
-        //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
-    	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
-
-
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
-    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536-noint","scdp/SCDP-65536","scdp/SCDP-65536"), -5183755359, 10); 
-
-}
-
-TEST_F(NestedBendersTest,FeasibilityCutTest){
-    using namespace flopc;
-    MP_model testModel(new OsiCpxSolverInterface());
-    MP_stage T(2);
-    MP_variable x,y(T);
-    x.lowerLimit() = -10;
-    y.upperLimit(T) = 15;
-
-    MP_random_data randomData(T);
-    randomData(1) = new DiscreteUniformRandomVariable(10,20,11,new BracketMedianDiscretization(11));
-    randomData(1)->setStage(1);
-
-    MP_constraint firstStage,secondStage(T);
-
-    firstStage() = x() <= 5;
-    secondStage(T+1) = y(T) >= -x()+randomData(T);
-    // Death test only under linux..
-    //EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective" );
-    testModel.setObjective( x()+2*y(T.last()) );
-    testModel.attach();
-    OsiCpxSolverInterface osi_cpx;
-    OsiStochasticParallelNestedBendersSolverInterface pnb(&osi_cpx,testModel.getSmi());
-    parallel_benders::Parameter param;
-    param.init();
-    param.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
-    pnb.setParameters(param);
-    pnb.initialSolve(); // We need the osi_solver interface!
-
-    // We need to assert something here with google assertions
-
-    // Output file
-    //SmiScnModel* smiModel = testModel.getSmi();
-    //smiModel->writeSmps("feasibilityProblem",true,false);
-}
-
-TEST_F(NestedBendersTest,StageAggregationTest){
-    using namespace flopc;
-    OsiSolverInterface* osi_cplex = new OsiCpxSolverInterface();
-    MP_model testModel(osi_cplex);
-    enum { stage1,stage2,stage3,stage4, number_stages};
-    enum { scen1,scen2,scen3,scen4,scen5,scen6,scen7,scen8,scen9,scen10,scen11,scen12,scen13,scen14,scen15,scen16, num_scenarios};
-    MP_stage T(number_stages);
-    MP_scenario_set scenario_set(num_scenarios);
-    MP_variable x,y(T);
-    //x.lowerLimit() = -10;
-    //y.upperLimit(T) = 15;
-    // 
-    double scenario_data[number_stages-1][num_scenarios] = 
-    {
-        {   2.1, 2.1, 2.1, 2.1, 2.1, 2.1, 2.1 , 2.2, 2.2, 2.2, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3  },// Stage 2
-        {    3.1, 3.1, 3.2, 3.2, 3.2, 3.3, 3.3, 3.4, 3.5, 3.5, 3.6, 3.6, 3.7, 3.7, 3.7, 3.8   }, // Stage 3
-        {   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 } // Stage 4
-
-    };//new double[number_stages][num_scenarios];
-
-    MP_random_data randomParam(&scenario_data[0][0],T);
-    double* objCoefs = new double[3];
-    objCoefs[0] = 2;
-    objCoefs[1] = 3;
-    objCoefs[2] = 2;
-    MP_data param1(objCoefs,T);
-    double* objCoefs1 = new double[3];
-    objCoefs1[0] = -1;
-    objCoefs1[1] = 0;
-    objCoefs1[2] = 1;
-    MP_data param2(objCoefs,T);
-
-    MP_constraint firstStage,secondStage(T);
-
-    firstStage() = x() >= 5;
-    secondStage(T+1) = y(T-1)+ randomParam(T)*y(T) >= randomParam(T);
-    testModel.setObjective( x()+sum(T,param1(T)*y(T)) );
-    testModel.attach();
-    testModel.getSmi()->writeSmps("stageAggregTest");
-    //OsiCpxSolverInterface cpx;
-    OsiSolverInterface* new_solver = new OsiCpxSolverInterface();
-    
-
-    testModel.getSmi()->aggregateStages(1,3,false);
-    testModel.getSmi()->writeSmps("testSMPS");
-    //testModel.getSmi()->loadOsiSolverData();
-
-    OsiStochasticBendersTwoStageSolverInterface osi_benders(new_solver,testModel.getSmi());
-    BendersParameter parameter;
-    parameter.setIntParam(BendersParameter::BENDERS,0);
-    osi_benders.setParams(parameter);
-    osi_benders.initialSolve();
-
-
-    //testModel.getSmi()->writeSmps("stageAggreg2Test");
-    parallel_benders::Parameter benders_parameter_;
-    benders_parameter_.init(); // This should be called by the standard constructor anyway!
-    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); //Use deteq
-    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
-    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
-    OsiStochasticParallelNestedBendersSolverInterface pnb(new_solver,testModel.getSmi());
-    pnb.setParameters(benders_parameter_);
-    pnb.initialSolve();
-    EXPECT_NEAR(9.41,pnb.getObjValue(),0.1);
-    // Output file
-    //SmiScnModel* smiModel = testModel.getSmi();
-    //smiModel->writeSmps("feasibilityProblem",true,false);
-    //     testModel.solve(MP_model::MINIMIZE);
-}
+//TEST_F(NestedBendersTest,FeasibilityCutTest){
+//    using namespace flopc;
+//    MP_model testModel(new OsiCpxSolverInterface());
+//    MP_stage T(2);
+//    MP_variable x,y(T);
+//    x.lowerLimit() = -10;
+//    y.upperLimit(T) = 15;
+//
+//    MP_random_data randomData(T);
+//    randomData(1) = new DiscreteUniformRandomVariable(10,20,11,new BracketMedianDiscretization(11));
+//    randomData(1)->setStage(1);
+//
+//    MP_constraint firstStage,secondStage(T);
+//
+//    firstStage() = x() <= 5;
+//    secondStage(T+1) = y(T) >= -x()+randomData(T);
+//    // Death test only under linux..
+//    //EXPECT_DEATH(testModel.attach(),"F.* Your model does not have an objective" );
+//    testModel.setObjective( x()+2*y(T.last()) );
+//    testModel.attach();
+//    OsiCpxSolverInterface osi_cpx;
+//    OsiStochasticParallelNestedBendersSolverInterface pnb(&osi_cpx,testModel.getSmi());
+//    parallel_benders::Parameter param;
+//    param.init();
+//    param.parameter_.put(parallel_benders::PNB_NUM_CPU,1);
+//    pnb.setParameters(param);
+//    pnb.initialSolve(); // We need the osi_solver interface!
+//
+//    // We need to assert something here with google assertions
+//
+//    // Output file
+//    //SmiScnModel* smiModel = testModel.getSmi();
+//    //smiModel->writeSmps("feasibilityProblem",true,false);
+//}
+//
+//TEST_F(NestedBendersTest,StageAggregationTest){
+//    using namespace flopc;
+//    OsiSolverInterface* osi_cplex = new OsiCpxSolverInterface();
+//    MP_model testModel(osi_cplex);
+//    enum { stage1,stage2,stage3,stage4, number_stages};
+//    enum { scen1,scen2,scen3,scen4,scen5,scen6,scen7,scen8,scen9,scen10,scen11,scen12,scen13,scen14,scen15,scen16, num_scenarios};
+//    MP_stage T(number_stages);
+//    MP_scenario_set scenario_set(num_scenarios);
+//    MP_variable x,y(T);
+//    //x.lowerLimit() = -10;
+//    //y.upperLimit(T) = 15;
+//    // 
+//    double scenario_data[number_stages-1][num_scenarios] = 
+//    {
+//        {   2.1, 2.1, 2.1, 2.1, 2.1, 2.1, 2.1 , 2.2, 2.2, 2.2, 2.3, 2.3, 2.3, 2.3, 2.3, 2.3  },// Stage 2
+//        {    3.1, 3.1, 3.2, 3.2, 3.2, 3.3, 3.3, 3.4, 3.5, 3.5, 3.6, 3.6, 3.7, 3.7, 3.7, 3.8   }, // Stage 3
+//        {   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 } // Stage 4
+//
+//    };//new double[number_stages][num_scenarios];
+//
+//    MP_random_data randomParam(&scenario_data[0][0],T);
+//    double* objCoefs = new double[3];
+//    objCoefs[0] = 2;
+//    objCoefs[1] = 3;
+//    objCoefs[2] = 2;
+//    MP_data param1(objCoefs,T);
+//    double* objCoefs1 = new double[3];
+//    objCoefs1[0] = -1;
+//    objCoefs1[1] = 0;
+//    objCoefs1[2] = 1;
+//    MP_data param2(objCoefs,T);
+//
+//    MP_constraint firstStage,secondStage(T);
+//
+//    firstStage() = x() >= 5;
+//    secondStage(T+1) = y(T-1)+ randomParam(T)*y(T) >= randomParam(T);
+//    testModel.setObjective( x()+sum(T,param1(T)*y(T)) );
+//    testModel.attach();
+//    testModel.getSmi()->writeSmps("stageAggregTest");
+//    //OsiCpxSolverInterface cpx;
+//    OsiSolverInterface* new_solver = new OsiCpxSolverInterface();
+//    
+//
+//    testModel.getSmi()->aggregateStages(1,3,false);
+//    testModel.getSmi()->writeSmps("testSMPS");
+//    //testModel.getSmi()->loadOsiSolverData();
+//
+//    OsiStochasticBendersTwoStageSolverInterface osi_benders(new_solver,testModel.getSmi());
+//    BendersParameter parameter;
+//    parameter.setIntParam(BendersParameter::BENDERS,0);
+//    osi_benders.setParams(parameter);
+//    osi_benders.initialSolve();
+//
+//
+//    //testModel.getSmi()->writeSmps("stageAggreg2Test");
+//    parallel_benders::Parameter benders_parameter_;
+//    benders_parameter_.init(); // This should be called by the standard constructor anyway!
+//    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,1); //Use deteq
+//    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_START,1);
+//    benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_AGGREGATION_END,3);
+//    OsiStochasticParallelNestedBendersSolverInterface pnb(new_solver,testModel.getSmi());
+//    pnb.setParameters(benders_parameter_);
+//    pnb.initialSolve();
+//    EXPECT_NEAR(9.41,pnb.getObjValue(),0.1);
+//    // Output file
+//    //SmiScnModel* smiModel = testModel.getSmi();
+//    //smiModel->writeSmps("feasibilityProblem",true,false);
+//    //     testModel.solve(MP_model::MINIMIZE);
+//}
 
 
 
@@ -1061,7 +1085,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*temporary*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*.watson_conditional*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
