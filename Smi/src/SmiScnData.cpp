@@ -652,6 +652,64 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     }
 
     // TODO: What about col/row names? we might have to fix these too.. 
+    // Create new arrays for rowIn2Ex and rowEx2In, same for columns arrays
+
+    delete [] rowEx2In_;
+    delete [] rowIn2Ex_;
+    delete [] colEx2In_;
+    delete [] colIn2Ex_;
+
+    rowEx2In_ = new int[nrow_];
+    rowIn2Ex_ = new int[nrow_];
+    colEx2In_ = new int[ncol_];
+    colIn2Ex_ = new int[ncol_];
+    
+
+    //stageRowPtr_[0] = 0;
+    for (int i=0;i<nstag_;i++)
+        assert(stageRowPtr_[i+1] == stageRowPtr_[i] + nRowInStage_[i]);
+
+    // place index into next open position in its stage
+    for (int i=0;i<nrow_;i++)
+    {
+        rowEx2In_[i] = stageRowPtr_[rowStage_[i]]; //The result of RowEx2In for Row i is the stageRowPointer for the given stage (but because this pointer is increased, nothing happens..)
+        rowIn2Ex_[rowEx2In_[i]] = i;
+        stageRowPtr_[rowStage_[i]]++;
+    }
+    // reset stage pointers
+    stageRowPtr_[0] = 0;
+    for (int i=0;i<nstag_;i++)
+        stageRowPtr_[i+1] = stageRowPtr_[i] + nRowInStage_[i];
+
+
+    //// array to point to start of new stage
+    //stageColPtr_ = new int[nstag_+1];
+
+    //// count cols in each stage
+    //for (i=0;i<ncol_;i++)
+    //    nColInStage_[colStage_[i]]++;
+
+    // set stage pointers
+    //stageColPtr_[0] = 0;
+    for (int i=0;i<nstag_;i++)
+        assert(stageColPtr_[i+1] == stageColPtr_[i] + nColInStage_[i]);
+
+    // place index into next open position in its stage
+    for (int i=0;i<ncol_;i++)
+    {
+        colEx2In_[i] = stageColPtr_[colStage_[i]];
+        colIn2Ex_[colEx2In_[i]] = i;
+        stageColPtr_[colStage_[i]]++;
+    }
+
+    //for (i=0;i<ncol_;i++){
+    //	printf("colEx2In = %d, colIn2Ex = %d for index %d\n",colEx2In_[i],colIn2Ex_[i],i);
+    //}
+
+    // reset stage pointers
+    stageColPtr_[0] = 0;
+    for (int i=0;i<nstag_;i++)
+        stageColPtr_[i+1] = stageColPtr_[i] + nColInStage_[i];
 }
 
 void SmiCoreData::increaseIndices( SmiNodeData* node_data, int col_amount, int row_amount )
