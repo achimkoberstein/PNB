@@ -65,6 +65,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
             CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);
+            //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() ){
 				osi->branchAndBound();
