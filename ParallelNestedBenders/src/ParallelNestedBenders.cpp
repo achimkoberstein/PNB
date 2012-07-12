@@ -503,7 +503,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(1);
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -2449,8 +2449,8 @@ namespace parallel_benders {
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
             if ( (*it)->to_use_ ) {
                 LOG_IF(INFO,checked_dual_solution[row] < 0) << "Problem at cut with row " << row << " has dual value " << checked_dual_solution[row] << " writing problem.";
-                if ( checked_dual_solution[row] < 0) 
-                    osi_solver->writeLp("murks");
+                //if ( checked_dual_solution[row] < 0) 
+                //    osi_solver->writeLp("murks");
                 assert( checked_dual_solution[row] >= 0 || CompareWithZero(checked_dual_solution[row]));
                 cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
                 row++;
@@ -2947,15 +2947,12 @@ namespace parallel_benders {
         if ( benders_node_pointer->unbounded_ ){
             // Remove last row
             int unbounded_row = osi_solver->getNumRows()-1;
-            osi_solver->writeLp("before_unbounded");
+            //osi_solver->writeLp("before_unbounded");
             osi_solver->deleteRows(1,&unbounded_row);
             SolveSolverInterface(osi_solver);
-            osi_solver->writeLp("after_unbounded");
+            //osi_solver->writeLp("after_unbounded");
             benders_node_pointer->unbounded_ = false;
             // Add this to all methods that resolve the problem in one way or another!
-            if ( seperate_first_stage_solver_ && current_stage_ == 0){
-                // Handle optimality cut and feasibility cut pointers!
-            }
         }
 
         delete benders_node_pointer->matrix_; benders_node_pointer->matrix_ = NULL;
