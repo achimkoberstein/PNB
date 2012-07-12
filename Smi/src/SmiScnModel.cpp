@@ -295,8 +295,8 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     nrow_=0;
     nels_=0;
     // initialize row-ordered matrix arrays
-    this->dels_ = new double[tempNels]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
-    this->indx_ = new int[tempNels];
+    this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+    this->indx_ = new int[tempNels+1];
     this->rstrt_ = new int[this->core_->getNumRows()+1];
     this->rstrt_[0] = 0;
 
@@ -1329,9 +1329,7 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     }
 
     if (snode->getRowLowerLength()) {
-        CoinPackedVector vrlo(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
-        // TODO: Test and adapt for the others, until then
-        //assert(false);
+        CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
         CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowLowerElements(),drlo_,row_beg,vrlo,combineRule,tnode->getProb());
     }
 
@@ -2285,16 +2283,15 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
  void SmiScnModel::moveBoundsIntoMatrix(){
      this->core_->moveBoundsIntoMatrix(smiTree_.wholeTree());
-
-
-     // Update the scenario tree!
-     //std::vector<SmiScnNode*>& tree( smiTree_.wholeTree());
-     //for (int i = 0; i < tree.size(); i++){
-     //    this->ncol_ += core_->getNumCols(tree[i]->getStage());
-     //    this->nrow_ += core_->getNumRows(tree[i]->getStage());
-     //    this->nels_ += core_->getNode(tree[i]->getStage())->getNumMatrixElements();
-     //}
-
+     // Update max numNels
+     for (int i = 0; i < core_->getNumStages();i++){
+         this->maxNelsPerScenInStage[i] = core_->getNode(i)->getNumMatrixElements()+
+             core_->getNode(i)->getColLowerLength() +
+             core_->getNode(i)->getColUpperLength() +
+             core_->getNode(i)->getObjectiveLength() +
+             core_->getNode(i)->getRowLowerLength() +
+             core_->getNode(i)->getRowUpperLength();
+     }
  }
 
  void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromStart )
