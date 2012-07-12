@@ -216,7 +216,7 @@ void Parameter::init()
     // Intra Cut Aggregation
     parameter_.put(PNB_CUT_CONSOLIDATION,false);
     // Intra cut aggregation strategy
-    parameter_.put(PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,PNB_INT_CUT_CONSOLIDATION_WITH_NEW_CUTS);
+    parameter_.put(PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
     parameter_.put(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
     parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
     // Start solution

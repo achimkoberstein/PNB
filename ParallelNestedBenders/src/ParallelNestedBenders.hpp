@@ -313,6 +313,7 @@ bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity,
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
+void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced);
 
 } // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__

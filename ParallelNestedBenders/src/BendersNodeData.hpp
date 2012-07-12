@@ -79,9 +79,6 @@ namespace parallel_benders{
 	const int PNB_INT_SECOND_ITERATION = 5;
     const int PNB_INT_FASTPASS_WITH_FASTBACK = 6;
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
-	// Intra cut aggregation strategies
-    const int PNB_INT_CUT_CONSOLIDATION_WITH_NEW_CUTS = 0;
-    const int PNB_INT_CUT_CONSOLIDATION_WITHOUT_NEW_CUTS = 1;
 
     // Dynamic Adapative Aggregation strategies
     const int PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION = 1;
