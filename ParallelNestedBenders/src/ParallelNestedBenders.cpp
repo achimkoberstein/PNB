@@ -65,6 +65,10 @@ namespace parallel_benders {
                 if ( !core_->getIntCols(i).empty() )
                     integer_problems_[i] = true;
             } //TODO: No integer
+
+            //store_primal_and_dual_ = false;
+            store_cut_information_ = false;
+
         }
         typedef std::map<int,std::vector< std::pair<int,double> > > non_staircase_row_map;
         non_staircase_row_map non_staircase_rows;
@@ -2037,9 +2041,6 @@ namespace parallel_benders {
         int added_cuts = 0;
         bool initialized_iterator = !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty();
         
-        if ( seperate_first_stage_solver_ && current_stage_ == 1){
-            benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ = benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();
-        }
 
         // Analyse thetas 
         if ( benders_tree_node_pointer->getDataPtr()->next_stage_approximation_ && !forward_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()){
@@ -2681,8 +2682,10 @@ namespace parallel_benders {
             std::vector<int> optimality_cuts_to_delete;
             int optimality_cut_start = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size()-new_feas_cuts;
             for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-                optimality_cuts_to_delete.push_back(optimality_cut_start+num_cuts);
-                num_cuts++;
+                if ( (*it)->to_use_ ){
+                    optimality_cuts_to_delete.push_back(optimality_cut_start+num_cuts);
+                    num_cuts++;
+                }
             }
             int number_of_rows_in_problem = osi_solver->getNumRows();
             //osi_solver->writeLp("current_problem");
@@ -2690,7 +2693,10 @@ namespace parallel_benders {
             int number_of_rows_without_opt_cuts = osi_solver->getNumRows();
             // Add all optimality cuts to solver!
             for (BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-                osi_solver->applyRowCuts(1,(*it)->cut_.get());
+                if ( (*it)->to_use_ ){
+                    assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
+                    osi_solver->applyRowCuts(1,(*it)->cut_.get());
+                }
             }
             CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_node_pointer->warm_start_);
             if ( warm_start_basis != NULL){
