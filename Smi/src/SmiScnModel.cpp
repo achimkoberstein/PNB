@@ -1318,27 +1318,27 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
     // Do it for the 5 arrays column lower, column upper, objective, row lower & row upper
     if (snode->getColLowerLength()) {
         CoinPackedVector vclo = CoinPackedVector(snode->getColLowerLength(), snode->getColLowerIndices(), snode->getColLowerElements(), false);
-        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getColLowerElements(),dclo_,col_beg,vclo,combineRule,tnode->getProb(),true);
+        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getColLowerElements(),dclo_,col_beg,vclo,combineRule,tnode->getProb());
     }
 
     if (snode->getColUpperLength()) {
         CoinPackedVector vcup = CoinPackedVector(snode->getColUpperLength(), snode->getColUpperIndices(), snode->getColUpperElements(), false);
-        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getColUpperElements(),dcup_,col_beg,vcup,combineRule,tnode->getProb(),true);
+        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getColUpperElements(),dcup_,col_beg,vcup,combineRule,tnode->getProb());
     }
 
     if (snode->getObjectiveLength()) {
         CoinPackedVector vobj = CoinPackedVector(snode->getObjectiveLength(), snode->getObjectiveIndices(), snode->getObjectiveElements(), false);
-        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getObjectiveElements(),dobj_,col_beg,vobj,combineRule,tnode->getProb(),true);
+        CopyStochasticDataToDetEQModel(core_->getNumCols(stage),core_->getNode(stage)->getObjectiveElements(),dobj_,col_beg,vobj,combineRule,tnode->getProb());
     }
 
     if (snode->getRowLowerLength()) {
         CoinPackedVector vrlo = CoinPackedVector(snode->getRowLowerLength(), snode->getRowLowerIndices(), snode->getRowLowerElements(), false);
-        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowLowerElements(),drlo_,row_beg,vrlo,combineRule,tnode->getProb(),true);
+        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowLowerElements(),drlo_,row_beg,vrlo,combineRule,tnode->getProb());
     }
 
     if (snode->getRowUpperLength()) {
         CoinPackedVector vrup = CoinPackedVector(snode->getRowUpperLength(), snode->getRowUpperIndices(), snode->getRowUpperElements(), false);
-        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowUpperElements(),drup_,row_beg,vrup,combineRule,tnode->getProb(),true);
+        CopyStochasticDataToDetEQModel(core_->getNumRows(stage),core_->getNode(stage)->getRowUpperElements(),drup_,row_beg,vrup,combineRule,tnode->getProb());
     }
 
     // And now for the matrix entries
@@ -2493,7 +2493,7 @@ void SmiScnModel::setSampling( bool do_sample)
     sampling_ = do_sample;
 }
 
-void SmiScnModel::CopyStochasticDataToDetEQModel( int size,const double* source_array,double* destination_array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule * combineRule,double prob, bool use_prob )
+void SmiScnModel::CopyStochasticDataToDetEQModel( int size,const double* source_array,double* destination_array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule * combineRule,double prob )
 {
     // We copy Stochastic Data to DetEq Model. Therefore we need the core data, present in source_array, multiply it with the probability and copy the cpv elements (stochastic node elements), multiplied with the probability to it. Finally we add this to the destination source_array. 
     // For size we need to copy the stuff that is present in source_array!
@@ -2502,14 +2502,14 @@ void SmiScnModel::CopyStochasticDataToDetEQModel( int size,const double* source_
     memcpy(temp,source_array,sizeof(double)*size);
     combineRule->Process(temp,offset,cpv);
     for (int i = 0; i < size; i++){
-        if ( use_prob && temp[i] > -this->getCore()->getInfinity() && temp[i] < this->getCore()->getInfinity())
+        if ( temp[i] > -this->getCore()->getInfinity() && temp[i] < this->getCore()->getInfinity())
             temp[i] *= prob;
         indices[i] = offset+i;
     }
     // Update the values with the cpv, this usually means replace (if add is used somewhere we need a good combineRule for it!
     for (int i = 0; i < cpv.getNumElements();i++){
         if ( cpv.getElements()[i] > -this->getCore()->getInfinity() && cpv.getElements()[i] < this->getCore()->getInfinity())
-            temp[cpv.getIndices()[i]-offset] = use_prob ? cpv.getElements()[i]*prob : cpv.getElements()[i];
+            temp[cpv.getIndices()[i]-offset] = cpv.getElements()[i]*prob;
         else
             assert(false); // This means we have a stochastic value of infinity. This is most likely not correct modeling. => Result: Expected value is not finite..
     }
