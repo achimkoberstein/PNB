@@ -662,10 +662,33 @@ namespace parallel_benders {
             SmiScnModel* ev_smi = smi_->createEVSmiModel();
             ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
             ev_smi->loadStoredDataInSolver();
+            // Set higher accuracy
+
+            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+            if ( cpx_ptr ){
+                // Get ENV and LP ptr
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                // Optimality tolerance
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-08);
+                // Feasibility tolerance
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPRHS,1e-08);
+
+            }
+            
             SolveSolverInterface(osi_solver_);
+            cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+            if ( cpx_ptr ){
+                // Get ENV and LP ptr
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                // Optimality tolerance
+                //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,zero_tolerance_/2.0);
+                // Feasibility tolerance
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPRHS,1e-06);
+
+            }
             //TODO Remove write out stuff here!
             //ev_smi->writeSmps("ev_problem",true);
-            //osi_solver_->writeLp("ev_problem");
+            osi_solver_->writeLp("ev_problem.lp");
             //osi_solver_->writeLp("ev_problem");
             if ( osi_solver_->isProvenOptimal() ){
                 double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
