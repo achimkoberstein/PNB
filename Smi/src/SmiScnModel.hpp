@@ -350,7 +350,7 @@ public:
     OsiSolverInterface* loadStoredDataInSolver();
 private:
 
-    void CopyStochasticDataToDetEQModel(int size,const double* source_array,double* destination_array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule* combineRule,double prob, bool use_prob);
+    void CopyStochasticDataToDetEQModel(int size,const double* source_array,double* destination_array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule* combineRule,double prob);
 
     CoinMessageHandler *handler_;
     SmiMessage *messages_;
