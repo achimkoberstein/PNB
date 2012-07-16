@@ -664,35 +664,21 @@ namespace parallel_benders {
             ev_smi->loadStoredDataInSolver();
             // Set higher accuracy
 
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-            if ( cpx_ptr ){
-                // Get ENV and LP ptr
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                // Optimality tolerance
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-08);
-                // Feasibility tolerance
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPRHS,1e-08);
-
-            }
+            //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+            //if ( cpx_ptr ){
+            //    // Get ENV and LP ptr
+            //CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+            //CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            //CPXwriteprob(env_ptr,lp_ptr,"ev_problem_solved","lp");
+            //}
             
             SolveSolverInterface(osi_solver_);
-            cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-            if ( cpx_ptr ){
-                // Get ENV and LP ptr
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                // Optimality tolerance
-                //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,zero_tolerance_/2.0);
-                // Feasibility tolerance
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPRHS,1e-06);
 
-            }
-            //TODO Remove write out stuff here!
-            //ev_smi->writeSmps("ev_problem",true);
-            osi_solver_->writeLp("ev_problem.lp");
-            //osi_solver_->writeLp("ev_problem");
             if ( osi_solver_->isProvenOptimal() ){
                 double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
                 memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
+                //StoreValuesFromSolverInArray(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
+                // Is done later at if (warm_up)
                 warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
 
                 //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
@@ -1437,6 +1423,14 @@ namespace parallel_benders {
                 }
                 else{
                     osi_solver->writeLp("master_infeasible");
+                    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+                    if ( cpx_ptr ){
+                        // Get ENV and LP ptr
+                        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                        CPXwriteprob(env_ptr,lp_ptr,"master_infeasible_cplex.lp","lp");
+
+                    }
                     LOG(ERROR) << "Your master problem is infeasible.";
                 }
 
@@ -2617,7 +2611,7 @@ namespace parallel_benders {
 
     bool ParallelNestedBenders::CompareWithZero( double value ) 
     {
-        return std::abs(value) < zero_tolerance_; // True, if zero
+        return std::abs(value) <= zero_tolerance_; // True, if zero
     }
 
     void ParallelNestedBenders::AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )

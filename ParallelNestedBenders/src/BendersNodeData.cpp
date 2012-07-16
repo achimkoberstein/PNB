@@ -203,7 +203,7 @@ void Parameter::init()
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,1); // Only applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0.
-    parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON,std::pow(10.0,-6)); 
+    parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON, 1e-06); 
     parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,false);
     parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,1);
     // Stage Aggregation
@@ -229,10 +229,10 @@ void Parameter::init()
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, false); // Do we want to use TrustRegion TODO: Implement this
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
-    parameter_.put(PNB_TOLERANCE_ZERO, std::pow(10.0,-6));
-	parameter_.put(PNB_TOLERANCE_INTEGER, std::pow(10.0,-6)); 
-    parameter_.put(PNB_EPSILON_ABSOLUTE, std::pow(10.0,-6));
-    parameter_.put(PNB_EPSILON_RELATIVE, std::pow(10.0,-6));
+    parameter_.put(PNB_TOLERANCE_ZERO, 1e-06);
+	parameter_.put(PNB_TOLERANCE_INTEGER,  1e-06); 
+    parameter_.put(PNB_EPSILON_ABSOLUTE,  1e-06);
+    parameter_.put(PNB_EPSILON_RELATIVE,  1e-06);
     // Solution management
     parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
     parameter_.put(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
