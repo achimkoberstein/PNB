@@ -70,7 +70,7 @@ namespace parallel_benders {
                     integer_problems_[i] = true;
             } 
 
-            store_primal_and_dual_ = false; // No dual values can be stored for an integer problem..
+            //store_primal_and_dual_ = false; // No dual values can be stored for an integer problem..
             store_cut_information_ = false; // Therefore no cut aggregation
 
         }
@@ -1009,8 +1009,8 @@ namespace parallel_benders {
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
                 // This ensures that we get back to the first stage when we finally reached the last stage!
-                enforce_stage_ = 0;
-                enforce_direction_ = true;
+                //enforce_stage_ = 0;
+                //enforce_direction_ = true;
                 if ( !compute_stage_bounds_ && temporary_upper_bound_ < upper_bound_ )
                     upper_bound_ = temporary_upper_bound_;
             }
@@ -1334,7 +1334,7 @@ namespace parallel_benders {
         //    if ( cpx_ptr ){
         //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
         //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-        //        stream << "_C";
+        //        stream << "_C.lp";
         //        //CPXsetintparam(env_ptr,)
         //        console_mutex_.lock();
         //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
@@ -2015,6 +2015,12 @@ namespace parallel_benders {
             // This is not yet implemented TOOD: we do not call this method, if we have infeasibly problems
             assert(false);
         }
+        
+        if ( benders_tree_node_pointer->getDataPtr()->col_solution_ == NULL){
+            assert(false);
+            // We do not add any cuts, we have no prior column solution. This is an error.
+        }
+
         // We specified the number of thetas in the stage_pointer (for now)
         int num_cuts = stage_data_[current_stage_-1]->num_thetas_;
         int node_num_cuts = benders_tree_node_pointer->getDataPtr()->num_thetas_;
@@ -2377,11 +2383,11 @@ namespace parallel_benders {
         // Copy solution to enable zero bound check
         double* checked_dual_solution = new double[number_rows];
         if ( use_cplex ){
-            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution_farkas,sizeof(double)*number_rows);
+            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution_farkas,number_rows);
             delete dual_solution_farkas;
         }
         else
-            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,sizeof(double)*number_rows);
+            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,number_rows);
 
         ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
 

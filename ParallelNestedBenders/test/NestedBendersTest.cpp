@@ -199,7 +199,7 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
                     
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
 
  /*                   benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
@@ -208,11 +208,11 @@ public:
 
                     //if ( aggregates[i] != 1 ){ // We do not want start solution for the single cut case? Why?
                     // TODO: Uncomment
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     //}
 
 
@@ -928,7 +928,7 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
+    EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
 //    EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
 //    EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
 //    EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
@@ -1093,14 +1093,14 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-    ::testing::GTEST_FLAG(filter) = "*Postponement*";
+    //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*bonds*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*NestedBenders*";
-    ////::testing::GTEST_FLAG(filter) = "*sslp*:";
+    ::testing::GTEST_FLAG(filter) = "*scdp*:";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
