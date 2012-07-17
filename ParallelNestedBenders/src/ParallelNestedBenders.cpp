@@ -33,14 +33,18 @@
 #include "SmiCoreCombineRule.hpp"
 #include "CoinTime.hpp"
 
-// Include files only necessary if we have cplex
-#define CPLEX_PRESENT
-#ifdef CPLEX_PRESENT
+// Files necessary for cplex
 #include "ilcplex/cplex.h"
 #include "ilcplex/cplexcheck.h"
 #include "check.c"
 #include "OsiCpxSolverInterface.hpp"
-#endif
+
+
+// Gurobi stuff
+#include "OsiGrbSolverInterface.hpp"
+extern "C" {
+#include "gurobi_c.h"
+}
 
 
 namespace parallel_benders {
@@ -56,7 +60,7 @@ namespace parallel_benders {
             bounds_in_matrix_ = false;
         }
         // Check for integrality right away
-        if ( core_->getIntegerLength() || core_->getBinaryLength()){ // Set boolean variable (For now)
+        if (( core_->getIntegerLength() || core_->getBinaryLength()) && !solve_relaxation_){ // Set boolean variable (For now)
             contains_integer_ = true;
             // Set stage wise integers
             // All binary are integer, but not all integer are binary
@@ -64,10 +68,10 @@ namespace parallel_benders {
             for (int i = 0; i < num_stages_;i++){
                 if ( !core_->getIntCols(i).empty() )
                     integer_problems_[i] = true;
-            } //TODO: No integer
+            } 
 
-            //store_primal_and_dual_ = false;
-            store_cut_information_ = false;
+            store_primal_and_dual_ = false; // No dual values can be stored for an integer problem..
+            store_cut_information_ = false; // Therefore no cut aggregation
 
         }
         typedef std::map<int,std::vector< std::pair<int,double> > > non_staircase_row_map;
@@ -265,7 +269,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0)
     {
 
     }
@@ -283,7 +287,7 @@ namespace parallel_benders {
         integer_problems_ = boost::dynamic_bitset<>(num_stages_);
         infeasible_problems_ =  boost::dynamic_bitset<>(num_scenarios_);
         timer_.Start(num_stages_);
-        // Initialize osiSolver
+        // Initialize osiSolver with cplex, if no solver is given
         if (smi_->getOsiSolverInterface() == NULL)
             osi_solver_ = new OsiCpxSolverInterface();
         else
@@ -424,7 +428,7 @@ namespace parallel_benders {
 
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = true;
+        only_one_feasibility_cut_ = false;
 
         // Thread related stuff
         num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -499,10 +503,14 @@ namespace parallel_benders {
         if ( trust_region_)
             store_primal_and_dual_ = true;
 
+        // Assign timer 
         build_problem_timer_ = 0;
         solve_problem_timer_ = 1;
         cut_generation_timer_ = 2;
-        // Detailed_timer 
+
+        // Solve LP relaxation instead IP problem?
+        solve_relaxation_ = param.get(PNB_RELAXATION,false);
+
 
         // Set options for solver!
         SetSolverOptions(osi_solver_);
@@ -1322,16 +1330,15 @@ namespace parallel_benders {
         //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    console_mutex_.lock();
-        //    osi_solver->writeLp(stream.str().c_str());
-        //    console_mutex_.unlock();
         //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         //    if ( cpx_ptr ){
         //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
         //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
         //        stream << "_C";
         //        //CPXsetintparam(env_ptr,)
+        //        console_mutex_.lock();
         //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+        //        console_mutex_.unlock();
         //    }
         //} // TODO: Debugging stuff
 
@@ -1546,15 +1553,15 @@ namespace parallel_benders {
         if ( !forward_ || store_primal_and_dual_ ){
             // Store Dual Solution ( only if we move backward ) ( or we need it anyway )
             if ( integer_problems_[current_stage_] ){
-                if ( store_primal_and_dual_ == true){
-                    // Compute dual information from solution we got!
-                    std::vector<double> dual(osi_solver->getNumRows());
-                    std::vector<double> reduced(osi_solver->getNumCols());
-                    ComputeDualSolutionForMipProblem(osi_solver,&dual[0],&reduced[0]);
-                    StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,&dual[0],osi_solver->getNumRows());
-                    if ( stage_data_[current_stage_]->non_zero_bounds_)
-                        StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
-                }
+                //if ( store_primal_and_dual_ == true){
+                //    // Compute dual information from solution we got!
+                //    std::vector<double> dual(osi_solver->getNumRows());
+                //    std::vector<double> reduced(osi_solver->getNumCols());
+                //    ComputeDualSolutionForMipProblem(osi_solver,&dual[0],&reduced[0]);
+                //    StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,&dual[0],osi_solver->getNumRows());
+                //    if ( stage_data_[current_stage_]->non_zero_bounds_)
+                //        StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
+                //}
 
             }
             else{ // In case of non-integer problems
@@ -2237,9 +2244,7 @@ namespace parallel_benders {
 
 
 
-#ifdef CPLEX_PRESENT
-        use_cplex = true; //TODO: change this
-        bool use_dual_farkas = true;
+        bool use_dual_farkas = false;
         if ( feas_cut_lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
             use_dual_farkas = false;
         else
@@ -2249,6 +2254,7 @@ namespace parallel_benders {
         // See for example https://www-304.ibm.com/support/docview.wss?uid=swg21400058
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         if ( cpx_ptr ){
+            use_cplex = true; 
             // Get ENV and LP ptr
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
@@ -2348,7 +2354,6 @@ namespace parallel_benders {
 
 
         }
-#endif // CPLEX_PRESENT
         bool cplex_licence_problem = true;
         OsiSolverInterface* dual_ray_problem = NULL;
         if ( !use_cplex){
@@ -2372,15 +2377,11 @@ namespace parallel_benders {
         // Copy solution to enable zero bound check
         double* checked_dual_solution = new double[number_rows];
         if ( use_cplex ){
-            memcpy(checked_dual_solution,dual_solution_farkas,sizeof(double)*number_rows);
+            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution_farkas,sizeof(double)*number_rows);
             delete dual_solution_farkas;
         }
         else
-            memcpy(checked_dual_solution,dual_solution,sizeof(double)*number_rows);
-
-        for ( int i = 0; i < number_rows; i++)
-            if ( CompareWithZero(checked_dual_solution[i]) )
-                checked_dual_solution[i] = 0;
+            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,sizeof(double)*number_rows);
 
         ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
 
@@ -2951,12 +2952,15 @@ namespace parallel_benders {
         if ( warm_up_ && current_stage_ == 0 ){
             if ( seperate_first_stage_solver_ ){ // We need to reset the bounds of the variables!
                 // We need to store warm start before that
-                CoinWarmStart* coin_warm_start = osi_solver->getWarmStart();
+                CoinWarmStart* coin_warm_start = NULL;
+                if ( !integer_problems_[current_stage_] ){
+                    coin_warm_start = osi_solver->getWarmStart();
+                }
                 for (int i = 0; i < stage_data_[0]->num_columns_; i++){
                     osi_solver->setColBounds(i,benders_node_pointer->column_lower_[i],benders_node_pointer->column_upper_[i]);
                 }
-                osi_solver->setWarmStart(coin_warm_start);
-                //osi_solver->writeLp("after_warmstart");
+                if ( !integer_problems_[current_stage_])
+                    osi_solver->setWarmStart(coin_warm_start);
                 SolveSolverInterface(osi_solver);
                 delete coin_warm_start;
 
@@ -4276,6 +4280,12 @@ namespace parallel_benders {
             // Set markowitz threshold high for better accuracy 
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
         }
+        // We need gurobi options, just in case..
+        //OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
+        //if ( grb_ptr){
+        //    GRBmodel* env_ptr = grb_ptr->getLpPtr();
+        //    GRBsetintattr(env_ptr,GRB_INT_PAR_THREADS,0);
+        //}
     }
 
     void ParallelNestedBenders::BuildAndSolveRegularizedProblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )

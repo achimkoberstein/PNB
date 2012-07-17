@@ -12,6 +12,7 @@
 
 #include "CoinTime.hpp"
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiGrbSolverInterface.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
 #include "ParallelNestedBenders.hpp"
 #include "SmiScnModel.hpp"
