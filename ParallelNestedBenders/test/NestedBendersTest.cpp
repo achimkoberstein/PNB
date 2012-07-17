@@ -125,7 +125,7 @@ public:
         //}
         
 
-        int num_repetitions = 2; 
+        int num_repetitions = 1; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -159,10 +159,10 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        aggregates.push_back(0);
         aggregates.push_back(1);
-        if ( num_aggregates_by_magic > 1)
-            aggregates.push_back(-1);
+        //aggregates.push_back(1);
+        //if ( num_aggregates_by_magic > 1)
+        //    aggregates.push_back(-1);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -176,6 +176,9 @@ public:
         //aggregates.push_back(10000);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
+
+        // REMOVE AGAIN!!!
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,true); // Solve LP relaxation instead of integer problem
 
         for (int cpu = 0; cpu < 1; cpu++){
             for (int j = 0; j < num_repetitions; j++){
@@ -191,18 +194,17 @@ public:
                         // Compute an aggregate number out of problem characteristics!
                         aggregates[i] = num_aggregates_by_magic;
                     }
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,cpu);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
                     
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
+ /*                   benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);*/
 
                     //if ( aggregates[i] != 1 ){ // We do not want start solution for the single cut case? Why?
                     // TODO: Uncomment
@@ -214,21 +216,21 @@ public:
                     //}
 
 
-                    // Solve problem without adding a newly consolidated cut
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                    
+                    //// Solve problem without adding a newly consolidated cut
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    //
 
-                    // Solve problems without cut consolidation
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    //// Solve problems without cut consolidation
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                  
                 }//end for: aggregates
             }//end for:repetition
@@ -970,6 +972,10 @@ TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
 //    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536-noint","scdp/SCDP-65536","scdp/SCDP-65536"), -5183755359, 10); 
 //
 //}
+TEST_F(NestedBendersTest,Postponement){// dakota model
+    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -5183755359, 10); 
+
+}
 
 //TEST_F(NestedBendersTest,FeasibilityCutTest){
 //    using namespace flopc;
@@ -1087,7 +1093,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-    ::testing::GTEST_FLAG(filter) = "*watson*";
+    ::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*bonds*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";

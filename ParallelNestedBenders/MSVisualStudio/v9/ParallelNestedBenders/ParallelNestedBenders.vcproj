@@ -212,7 +212,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration-x64.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>

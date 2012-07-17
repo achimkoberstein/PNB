@@ -1,0 +1,5 @@
+TIME          pTest   
+PERIODS
+    x1_1_0_0_1 facility_capacity_stage_0_1_1_1 STAGE_0
+    z_0_0_0_1 balancing2_0_1_1_1       STAGE_1
+ENDATA

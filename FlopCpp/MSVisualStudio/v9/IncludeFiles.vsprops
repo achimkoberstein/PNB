@@ -9,7 +9,7 @@
 		UseUnicodeResponseFiles="false"
 		AdditionalOptions="/WL"
 		AdditionalIncludeDirectories="../../../../Smi/src;../../../../Osi/src;../../../../FlopCpp/src;../../../../Cbc/src;../../../../Clp/src;../../../../Osi/src/OsiCbc;../../../../Osi/src/OsiGrb;../../../../Osi/src/OsiCpx;../../../../Osi/src/OsiClp;../../../../BuildTools/headers;../../../../CoinUtils/src;../../../../ThirdParty/gtest/include;../../../../ThirdParty/boost;../../../../ThirdParty/glog/src/windows"
-		RuntimeLibrary="1"
+		RuntimeLibrary="0"
 	/>
 	<Tool
 		Name="VCLinkerTool"

@@ -270,6 +270,7 @@ private:
 	// We can change this, if we want to.
 	bool seperate_first_stage_solver_;
 	bool seperate_stage_solver_;
+    bool solve_relaxation_;
 
     // Output parameters
     bool pretty_printing_;
