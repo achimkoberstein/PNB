@@ -942,6 +942,9 @@ namespace parallel_benders {
                             && std::abs(old_lower_upper_bounds_[current_stage_].second-stage_lower_upper_bounds_[current_stage_].second) < absolute_epsilon_  ){
                                 forward_ = false;
                         }
+                        if ( forward_ ){
+                            current_iteration_++; // Lets see the impact of this.
+                        }
                     }
                     else {
                         // We have to check if old_lower_bound and so are the same. if yes, we must go forward to reach something new, don't we?
@@ -1008,11 +1011,13 @@ namespace parallel_benders {
 
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
-                // This ensures that we get back to the first stage when we finally reached the last stage!
-                //enforce_stage_ = 0;
-                //enforce_direction_ = true;
+                // This ensures that we get back to the first stage when we finally reached the last stage! Important only for FastBackward protocols.
+                if ( sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD){
+                    enforce_stage_ = 0;
+                    enforce_direction_ = true;
+                }
                 if ( !compute_stage_bounds_ && temporary_upper_bound_ < upper_bound_ )
-                    upper_bound_ = temporary_upper_bound_;
+                    upper_bound_ = temporary_upper_bound_; // Update upper bound. When we compute stage bounds, we update upper bound below!
             }
 
             // Update stage wise upper/lower bounds, only if we did not had infeasible problems.
@@ -1022,6 +1027,15 @@ namespace parallel_benders {
                 // If we solved all problems without infeasibility, we update these values.
                 stage_lower_upper_bounds_[current_stage_].first = temporary_stage_lower_bound_;
                 stage_lower_upper_bounds_[current_stage_].second = temporary_stage_upper_bound_;
+                if ( current_stage_ == num_stages_-1 ){
+                    double sum_stage_solutions = 0;
+                    for (int i = 0; i < num_stages_; i++)
+                        sum_stage_solutions += stage_lower_upper_bounds_[i].second;
+                    if ( upper_bound_ > sum_stage_solutions)
+                        upper_bound_ = sum_stage_solutions;
+                }
+                
+
                 // Discrepancy: expected value of next stage with approximation for later stages - approximation of later stages at this stage.
                 if ( current_stage_ < num_stages_-1 && current_stage_ > 0  ){ 
                     // Discrepancy makes sense on the way forward, but only for values actually solved!
@@ -1063,22 +1077,11 @@ namespace parallel_benders {
                 }
             }
 
-            // Update upper bound if we solved all problems in this iteration once
-            // Lower bound is updated in the StoreData Method after solving first stage problem
-            // This does only work for methods, that do not reiterate and use the stage_bounds.. Other methods update the upper_bound_ 
-            // Has to be put here, because otherwise the stage_lower_upper_bounds array is not fully calculated!
-            if ( current_stage_ == num_stages_ -1 && infeasible_problems_.none() ){
-                if ( compute_stage_bounds_ ){
-                    double sum_stage_solutions = 0;
-                    for (int i = 0; i < num_stages_; i++)
-                        sum_stage_solutions += stage_lower_upper_bounds_[i].second;
-                    if ( upper_bound_ > sum_stage_solutions)
-                        upper_bound_ = sum_stage_solutions;
-                }
-                if ( regularization_ ){
-                    if ( regularized_solution_value_ >= infinity_ && upper_bound_ < infinity_ )
-                        regularized_solution_value_ = upper_bound_;
-                }
+            // Update regularized solution value, when upper bound is available! Only needed once.
+            if ( regularization_ && current_stage_ == num_stages_ -1 && infeasible_problems_.none() ){
+                if ( regularized_solution_value_ >= infinity_ && upper_bound_ < infinity_ )
+                    regularized_solution_value_ = upper_bound_;
+                
             }
 
 
@@ -3082,6 +3085,7 @@ namespace parallel_benders {
                 // First cut corresponds to the first row after the rows of the original problem!
                 // Find out if cut is active!
                 int cut_creation = (*it)->cut_creation_iteration_;
+                assert( cut_creation < current_iteration_); // Alls cuts are added before the current iteration (except for the FF-case, there we might need to change the iteration number?)
                 int aggregate = (*it)->aggregate_number_;
                 // Get active value via dual value
                 double active = benders_node_pointer->dual_solution_[current_cut];
