@@ -125,7 +125,7 @@ public:
         //}
         
 
-        int num_repetitions = 1; 
+        int num_repetitions = 2; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -159,10 +159,10 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
+        aggregates.push_back(0);
         aggregates.push_back(1);
-        //aggregates.push_back(1);
-        //if ( num_aggregates_by_magic > 1)
-        //    aggregates.push_back(-1);
+        if ( num_aggregates_by_magic > 1)
+            aggregates.push_back(-1);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -199,38 +199,127 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
                     
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
 
- /*                   benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);*/
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-                    //if ( aggregates[i] != 1 ){ // We do not want start solution for the single cut case? Why?
-                    // TODO: Uncomment
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    if ( aggregates[i] != 1 ){ // We do not want cut consolidation for the single cut case
+                       
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                    //}
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+
+
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    }
 
 
                     //// Solve problem without adding a newly consolidated cut
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-                    //
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-                    //// Solve problems without cut consolidation
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    
+
+                    // Solve problems without cut consolidation
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                  
                 }//end for: aggregates
             }//end for:repetition
@@ -713,8 +802,8 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 ////}
 //// Posts test set: http://users.iems.northwestern.edu/~jrbirge/html/dholmes/post.html
 TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts, INDEP
- //   EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
-	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"),18615.4 , 0.1);// Model probability problems 18615.932
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
@@ -744,30 +833,30 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //    EXPECT_NEAR(solveSMPS("posts/sg/sgpf5y6"), -6484.47, 0.1);// -6403.3 original result, but it is verified by MSLiP via Neos
 //}
 //
-TEST_F(NestedBendersTest, stormG2_POSTS) {
-    double solutionValue = 0;
-    double referenceValue = 0;
-    double relGap = 0;
-    solutionValue = solveSMPS("posts/storm/stormG2_8");
-    referenceValue = 15535235.730;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
-
-    solutionValue = solveSMPS("posts/storm/stormG2_27");
-    referenceValue = 15508982.306;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
-
-    solutionValue = solveSMPS("posts/storm/stormG2_125");
-    referenceValue = 15512091.185;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
-
-    solutionValue = solveSMPS("posts/storm/stormG2_1000");
-    referenceValue = 15802589.698;
-    relGap = abs(referenceValue-solutionValue)/solutionValue;
-    EXPECT_LE(relGap,0.000001);
-}
+//TEST_F(NestedBendersTest, stormG2_POSTS) {
+//    double solutionValue = 0;
+//    double referenceValue = 0;
+//    double relGap = 0;
+//    solutionValue = solveSMPS("posts/storm/stormG2_8");
+//    referenceValue = 15535235.730;
+//    relGap = abs(referenceValue-solutionValue)/solutionValue;
+//    EXPECT_LE(relGap,0.000001);
+//
+//    solutionValue = solveSMPS("posts/storm/stormG2_27");
+//    referenceValue = 15508982.306;
+//    relGap = abs(referenceValue-solutionValue)/solutionValue;
+//    EXPECT_LE(relGap,0.000001);
+//
+//    solutionValue = solveSMPS("posts/storm/stormG2_125");
+//    referenceValue = 15512091.185;
+//    relGap = abs(referenceValue-solutionValue)/solutionValue;
+//    EXPECT_LE(relGap,0.000001);
+//
+//    solutionValue = solveSMPS("posts/storm/stormG2_1000");
+//    referenceValue = 15802589.698;
+//    relGap = abs(referenceValue-solutionValue)/solutionValue;
+//    EXPECT_LE(relGap,0.000001);
+//}
 //
 //// Andrew Felt Test Set: http://www.uwsp.edu/math/afelt/slptestset.html
 TEST_F(NestedBendersTest, airlift_FELT){// Two-Stage
@@ -1099,8 +1188,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
-    //::testing::GTEST_FLAG(filter) = "*NestedBenders*";
-    ::testing::GTEST_FLAG(filter) = "*scdp*:";
+    ::testing::GTEST_FLAG(filter) = "*POSTS*";
+    //::testing::GTEST_FLAG(filter) = "*scdp*:";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
