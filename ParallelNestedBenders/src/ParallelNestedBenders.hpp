@@ -295,6 +295,9 @@ private:
     int optimality_cut_counter_;
     double intra_cut_aggregation_time_;
     double adaptive_cut_time_;
+    double current_solution_value_;
+    int solution_similiarity_counter_;
+    int max_similarity_iteration_;
 
    
 
