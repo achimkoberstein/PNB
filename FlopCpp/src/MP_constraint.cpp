@@ -205,6 +205,7 @@ void MP_constraint::generateNames(std::set<string> &nameSetStrict, std::set<stri
 }
 
 int MP_constraint::getOffsetedIndex(const int k){
+    // assert something, if k is too large?!
     if (M->getStochastic())
         return M->rowIndirection[offset+k];
     else

@@ -428,7 +428,7 @@ namespace parallel_benders {
 
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = false;
+        only_one_feasibility_cut_ = true;
 
         // Thread related stuff
         num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -901,8 +901,14 @@ namespace parallel_benders {
                 current_iteration_++;
                 minor_iteration_++;
             }
-            if ( current_stage_ == num_stages_-1)// We only have a major iteration, if we are at the last stage!
-                major_iteration_++;
+            if ( sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD){
+                if ( current_stage_ == 0)
+                    major_iteration_++;
+            }
+            else {
+                if ( current_stage_ == num_stages_-1)// We only have a major iteration, if we are at the last stage!? Depends on sequencing protocol? Full sweep is major iteration.
+                    major_iteration_++;
+            }
 
             // Change direction depending on last or first stage. This holds for all sequencing protocols.
             if ( current_stage_ == 0 ){
@@ -1269,6 +1275,7 @@ namespace parallel_benders {
         if ( pretty_printing_ )
             std::cout << std::endl;
         // Output the final values once again!
+        std::cout << "Algorithm finished, final values below." << std::endl;
         std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
         std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
         std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
@@ -1295,9 +1302,10 @@ namespace parallel_benders {
             upper_bound_ = -infinity_;
             LOG(INFO) << "Problem is infeasible.";
         }
-        LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to intra-aggregate cuts.";
+        LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
         LOG_IF(WARNING,current_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
+        LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
 
     }
 

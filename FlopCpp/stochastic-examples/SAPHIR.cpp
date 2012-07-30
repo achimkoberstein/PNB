@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
     for (int i = 6; i <= 11; i++) SMBC.insert(Shell, i);
     
     // Open Contracts
-    enum {numOC};
+    enum {numOC=0};
     MP_set OC(numOC);
     
     // Connections between Open Contracts and Nodes
@@ -813,6 +813,25 @@ int main(int argc, char* argv[]) {
         PMaxOpenConstact(ST,TOC),
         PMinOpenContractLimit(ST,OC,T),
         PMaxOpenContractLimit(ST,OC,T);
+
+    EMinBaseLoad1.setName("EMinBaseLoad1");
+    EMaxBaseLoad1.setName("EMaxBaseLoad1");
+    EMinBaseLoad2.setName("EMinBaseLoad2");
+    EMaxBaseLoad2.setName("EMaxBaseLoad2");
+    EMaxWinter.setName("EMaxWinter");
+    EMinSommer.setName("EMinSommer");
+    PMinBaseLoadLimit.setName("PMinBaseLoadLimit");
+    PMaxBaseLoadLimit.setName("PMaxBaseLoadLimit");
+    PMinBaseLoad.setName("PMinBaseLoad");
+    PMaxBaseLoad.setName("PMaxBaseLoad");
+    BASELOADYEAR1.setName("BASELOADYEAR1");
+    BASELOADQUATER.setName("BASELOADQUATER");
+    PUseNotMoreThanExistBaseLoad.setName("PUseNotMoreThanExistBaseLoad");
+    EMinOpenContract.setName("EMinOpenContract");
+    EMaxOpenContract.setName("EMaxOpenContract");
+    PMaxOpenConstact.setName("PMaxOpenContract");
+    PMinOpenContractLimit.setName("PMinOpenContractLimit");
+    PMaxOpenContractLimit.setName("PMaxOpenContractLimit");
     
     EMinBaseLoad1(MBC(BC,M)) = EMINMBC(MBC(BC,M)) * bc_use(BC) <= DELTAM(M) * pbcp(MBC(BC,M));  //OK
     EMaxBaseLoad1(MBC(BC,M)) = DELTAM(M) * pbcp(MBC(BC,M)) <= EMAXMBC(MBC(BC,M)) * bc_use(BC); //OK
@@ -826,21 +845,21 @@ int main(int argc, char* argv[]) {
     PMinBaseLoadLimit(MBC(BC,M)) = PMINBC(MBC(BC,M)) * bc_use(BC) <= pbcp(MBC(BC,M)); //OK
     PMaxBaseLoadLimit(MBC(BC,M)) = pbcp(MBC(BC,M)) <= PMAXBC(MBC(BC,M)) * bc_use(BC); //OK
     
-    PMinBaseLoad(ST+1,MBC(BC,M)) = pminbc(ST+1,BC) <= pbcp(MBC(BC,M));
-    PMaxBaseLoad(ST+1,MBC(BC,M)) = pbcp(MBC(BC,M)) <= pmaxbc(ST+1,BC);
+    PMinBaseLoad(ST+1,MBC(BC,M)) = pminbc(ST,BC) <= pbcp(MBC(BC,M));
+    PMaxBaseLoad(ST+1,MBC(BC,M)) = pbcp(MBC(BC,M)) <= pmaxbc(ST,BC);
     
     //BASELOADYEAR1(ST+1,BC).such_that(BCTYP(BC) < 1) = pmaxbc(ST+1,BC) <= pminbc(ST+1,BC); // "== 0" geht nicht, "== 1" jedoch schon...
     //BASELOADQUATER(MBC(BC,M)).such_that(M > 0 && BCTYP(BC) == 1 && MQ(M) == MQ(M-1)) = pbcp(MBC(BC,M)) == pbcp(MBC(BC,M-1));
 
-    PUseNotMoreThanExistBaseLoad(ST+1,MBC) = pbcu(ST+1,MBC) <= pbcp(MBC);
+    PUseNotMoreThanExistBaseLoad(ST+1,MBC) = pbcu(ST,MBC) <= pbcp(MBC);
     
     EMinOpenContract(ST+1,OC) = EMINOC(OC) * oc_use(OC) <= sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T)));
-    EMaxOpenContract(ST+1,OC) = sum(TOC(OC,T), DELTAT(T) * poc(ST+1,TOC(OC,T))) <= EMAXOC(OC) * oc_use(OC);
+    EMaxOpenContract(ST+1,OC) = sum(TOC(OC,T), DELTAT(T) * poc(ST,TOC(OC,T))) <= EMAXOC(OC) * oc_use(OC);
     
-    PMaxOpenConstact(ST+1,TOC(OC,T)) = poc(ST+1,TOC(OC,T)) <= pmaxoc(OC);
+    PMaxOpenConstact(ST+1,TOC(OC,T)) = poc(ST,TOC(OC,T)) <= pmaxoc(OC);
 
-    PMinOpenContractLimit(ST+1,TOC(OC,T)) = PMINOC(TOC) * oc_use(OC) <= poc(ST+1,TOC);
-    PMaxOpenContractLimit(ST+1,TOC(OC,T)) = poc(ST+1,TOC) <= PMAXOC(TOC) * oc_use(OC);
+    PMinOpenContractLimit(ST+1,TOC(OC,T)) = PMINOC(TOC) * oc_use(OC) <= poc(ST,TOC);
+    PMaxOpenContractLimit(ST+1,TOC(OC,T)) = poc(ST,TOC) <= PMAXOC(TOC) * oc_use(OC);
 
     //<--- Purchase
     
@@ -860,18 +879,18 @@ int main(int argc, char* argv[]) {
         PMaxExtConstant(ST,S,T);
     
     // !(S == Slack) - Slack oder SlackStorage??? SlackStorage, wie es in MOPS Studio steht, gibt es garnicht
-    EBeginngingStorage(ST+1,S).such_that(S != Slack) = es(ST+1,S,0) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0) - pext(ST+1,S,0)); //EBeginngingStorage(ST+1,S).such_that(!(S == Slack)) = es(ST+1,S,0) == emaxs(ST+1,S) + DELTAT(0) * (pinj(ST+1,S,0) - pext(ST+1,S,0));
-    EStorage(ST+1,S,T).such_that(T > 0) = es(ST+1,S,T) == es(ST+1,S,T-1) + DELTAT(T) * (pinj(ST+1,S,T) - pext(ST+1,S,T));
-    EEndStorage(ST+1,S).such_that(S != Slack) = es(ST+1,S,numT-1) >= emaxs(ST+1,S)  * STCOND; //EEndStorage(ST+1,S).such_that(!(S == Slack)) = es(ST+1,S,numT-1) >= emaxs(ST+1,S) * STCOND;
+    EBeginngingStorage(ST+1,S).such_that(S != Slack) = es(ST,S,0) == emaxs(ST,S) + DELTAT(0) * (pinj(ST,S,0) - pext(ST,S,0)); //EBeginngingStorage(ST,S).such_that(!(S == Slack)) = es(ST,S,0) == emaxs(ST,S) + DELTAT(0) * (pinj(ST,S,0) - pext(ST,S,0));
+    EStorage(ST+1,S,T).such_that(T > 0) = es(ST,S,T) == es(ST,S,T-1) + DELTAT(T) * (pinj(ST,S,T) - pext(ST,S,T));
+    EEndStorage(ST+1,S).such_that(S != Slack) = es(ST,S,numT-1) >= emaxs(ST,S)  * STCOND; //EEndStorage(ST,S).such_that(!(S == Slack)) = es(ST,S,numT-1) >= emaxs(ST,S) * STCOND;
     
-    EMinMaxStorage0(ST+1,S,T) =  es(ST+1,S,T) <= EMAXST(S,T);
-    EMinMaxStorage1(ST+1,S,T).such_that(T > 0) = es(ST+1,S,T) <= emaxs(ST+1,S);
-    EMinMaxStorage3(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) <= EMAXST(S,T) * s_use(S); 
-    EMinMaxStorage4(ST+1,S,T).such_that(S != Slack) = es(ST+1,S,T) >= EMINST(S,T) * s_use(S); 
-    PMaxInj(ST+1,S,T) = pinj(ST+1,S,T) <= pmaxinj(ST+1,S);
-    PMaxExt(ST+1,S,T) = pext(ST+1,S,T) <= pmaxext(ST+1,S);
-    PMaxInjConstant(ST+1,S,T) = pinj(ST+1,S,T) <= PMAXINJ(S,T);
-    PMaxExtConstant(ST+1,S,T) = pext(ST+1,S,T) <= PMAXEXT(S,T);    
+    EMinMaxStorage0(ST+1,S,T) =  es(ST,S,T) <= EMAXST(S,T);
+    EMinMaxStorage1(ST+1,S,T).such_that(T > 0) = es(ST,S,T) <= emaxs(ST,S);
+    EMinMaxStorage3(ST+1,S,T).such_that(S != Slack) = es(ST,S,T) <= EMAXST(S,T) * s_use(S); 
+    EMinMaxStorage4(ST+1,S,T).such_that(S != Slack) = es(ST,S,T) >= EMINST(S,T) * s_use(S); 
+    PMaxInj(ST+1,S,T) = pinj(ST,S,T) <= pmaxinj(ST,S);
+    PMaxExt(ST+1,S,T) = pext(ST,S,T) <= pmaxext(ST,S);
+    PMaxInjConstant(ST+1,S,T) = pinj(ST,S,T) <= PMAXINJ(S,T);
+    PMaxExtConstant(ST+1,S,T) = pext(ST,S,T) <= PMAXEXT(S,T);    
     
     //<--- Storage
     
@@ -882,16 +901,16 @@ int main(int argc, char* argv[]) {
         PMaxNetwork(ST,L,T),
         Flow(ST,N,T);
     
-    PMinNetwork(ST+1,L,T) = pminl(ST+1,L) <= pl(ST+1,L,T);
-    PMaxNetwork(ST+1,L,T) = pl(ST+1,L,T) <= pmaxl(ST+1,L);
+    PMinNetwork(ST+1,L,T) = pminl(ST,L) <= pl(ST,L,T);
+    PMaxNetwork(ST+1,L,T) = pl(ST,L,T) <= pmaxl(ST,L);
     
     Flow(ST+1,N,T) =
-           sum(M.such_that(TM(T,M)) * BC.such_that(NBC(BC,N) && MBC(BC,M)), pbcu(ST+1,MBC(BC,M))) 
-        +  sum(OC.such_that(NOC(OC,N) && TOC(OC,T)), poc(ST+1,TOC(OC,T)))
-        +  sum(S.such_that(NS(S,N)),  pext(ST+1,S,T) - pinj(ST+1,S,T))
-        +  sum(N2.such_that(L(N2,N)), pl(ST+1,L(N2,N),T)) 
-        - sum(N2.such_that(L(N,N2)), pl(ST+1,L(N,N2),T))
-        == sum(SC.such_that(NSC(SC,N)), LOAD(ST+1,SC,T));
+           sum(M.such_that(TM(T,M)) * BC.such_that(NBC(BC,N) && MBC(BC,M)), pbcu(ST,MBC(BC,M))) 
+        +  sum(OC.such_that(NOC(OC,N) && TOC(OC,T)), poc(ST,TOC(OC,T)))
+        +  sum(S.such_that(NS(S,N)),  pext(ST,S,T) - pinj(ST,S,T))
+        +  sum(N2.such_that(L(N2,N)), pl(ST,L(N2,N),T)) 
+        - sum(N2.such_that(L(N,N2)), pl(ST,L(N,N2),T))
+        == sum(SC.such_that(NSC(SC,N)), LOAD(ST,SC,T));
     
     //<--- Network
     
@@ -900,7 +919,7 @@ int main(int argc, char* argv[]) {
     MP_constraint
         Returns(ST,SC,T);
     
-    Returns(ST+1,SC,T) = revenues(ST+1,SC,T) == EPRICESC(SC,T) * DELTAT(T) * LOAD(ST+1,SC,T);
+    Returns(ST+1,SC,T) = revenues(ST,SC,T) == EPRICESC(SC,T) * DELTAT(T) * LOAD(ST,SC,T);
     
     //<--- Sale
     
@@ -943,49 +962,13 @@ int main(int argc, char* argv[]) {
     // Routines that write out the files need direction. standard for them is minimization..
     //saphir->writeLp("saphir_lp");
     //saphir->writeMps("saphir_mps","mps",1);
+    saphir.getSmi()->writeSmps("SaphirModel");
     //saphir.solve(MP_model::MINIMIZE);
 
     
-    cout << "Obective Value: " << saphir->getObjValue() << endl;
-    
-    //pbcp.display("pbcp");
-    //poc.display("poc");
-    //emaxs.display("emaxs");
-    //pmaxoc.display("pmaxoc");
-    //pmaxinj.display("pmaxinj");
-    //pmaxext.display("pmaxext");
-    //pminl.display("pminl");
-    //pmaxl.display("pmaxl");
-    //bc_use.display("bc_use");
-    //s_use.display("s_use");
-    //pbcu.display("pbcu");
-    ////revenues.display("revenues");
-    //es.display("es");
-    //pinj.display("pinj");
-    //pext.display("pext");
-    //pl.display("pl");
-
-    //gainVar.display("gain");
-    //netVar.display("net costs");
-    //storageVar.display("storage costs");
-    //gasVar.display("gas costs");
-
-    cout << "Status: " << saphir.getStatus() << endl;
- /*   saphir.getSmi()->writeSmps("saphirModelDebug");
-    SmiScnModel* readInModel = new SmiScnModel();
-    readInModel->setOsiSolverHandle( &OsiClpSolverInterface() );
-    readInModel->readSmps("saphirModelDebug");
-    OsiStochasticBendersTwoStageSolverInterface benders(readInModel->getOsiSolverInterface(),readInModel);*/
-    OsiStochasticBendersTwoStageSolverInterface benders2(saphir.Solver,saphir.getSmi());
 
 
-    benders2.initialSolve();
-    //benders2.initialSolve();
-    //SmiScnModel* readInModel2 = new SmiScnModel();
-    //readInModel2->setOsiSolverHandle( &OsiClpSolverInterface() );
-    //readInModel2->readSmps("saphirModelRelease");
-    //OsiStochasticBendersTwoStageSolverInterface benders3(readInModel2->getOsiSolverInterface(),readInModel2);
-    //benders3.initialSolve();
+
     
 
 #pragma endregion optimization
