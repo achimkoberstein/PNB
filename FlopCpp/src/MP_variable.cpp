@@ -320,6 +320,9 @@ int MP_variable::getOffsetedIndex(const int k){
 }
 
 string MP_variable::generateNamesSuffixFree(const int k) {
+    if ( k == -1 ){
+        return "_0";
+    }
     IndexKeeper ik = getIndices(k);
     std::stringstream ss;
     if (S1 != &MP_set::getEmpty()) {
