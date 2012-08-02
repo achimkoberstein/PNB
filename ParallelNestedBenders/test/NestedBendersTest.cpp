@@ -60,6 +60,15 @@ public:
         int num_stages = 2;
         int num_childs_first_stage = 1;
 
+        bool pltexp = false;
+        bool scdp = false;
+
+        //if ( core_name_string.compare("posts/pltexp") )
+        //    pltexp = true;
+
+        if ( core_name_string.find("scdp") != string::npos )
+            scdp = true;
+
         //// SAA TEST
         //// We set the correct folder here: All files are in Benders/instances
         //double time = CoinCpuTime();  
@@ -152,40 +161,42 @@ public:
 
             //std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET";
             // Open File!
-            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
-            if ( smi_model->getCore()->getNumStages() > 2)
-            {
-                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-            }
-            OsiSolverInterface* osi = new OsiCpxSolverInterface;
-            smi_model->setOsiSolverHandle(osi);
-            delete osi;
-            osi = smi_model->loadOsiSolverData();
-            det_cols = osi->getNumCols();
-            det_rows = osi->getNumRows();
-            det_nonzeroes = osi->getNumElements();
-            
-            // Compute DETEQ column, row and nonzeroes sizes..
-            std::ofstream file_out;
-            file_out.open("sizes.csv",ios::app);
-            file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-                << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
+            //int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
+            //int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
+            //int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            //if ( smi_model->getCore()->getNumStages() > 2)
+            //{
+            //    det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+            //}
+            //OsiSolverInterface* osi = new OsiCpxSolverInterface;
+            //smi_model->setOsiSolverHandle(osi);
+            //delete osi;
+            //osi = smi_model->loadOsiSolverData();
+            //det_cols = osi->getNumCols();
+            //det_rows = osi->getNumRows();
+            //det_nonzeroes = osi->getNumElements();
+            //
+            //// Compute DETEQ column, row and nonzeroes sizes..
+            //std::ofstream file_out;
+            //file_out.open("sizes.csv",ios::app);
+            //file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+            //    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
             // Now we need the data for DEQ
         }
         
 
         delete smi_model; // Get rid of the model, before we actually solve stuff
-        num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
+        //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.init();
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        aggregates.push_back(0);
-        aggregates.push_back(1);
+        //aggregates.push_back(0);
+        //aggregates.push_back(1);
         if ( num_aggregates_by_magic > 1)
             aggregates.push_back(-1);
+        else
+            aggregates.push_back(1);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -238,11 +249,12 @@ public:
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
-                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
+                        if ( !scdp)
+                            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                       
                         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
-                        
-                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        if ( !scdp)
+                            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
@@ -254,7 +266,7 @@ public:
 
 
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    /*    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 
                         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -272,12 +284,12 @@ public:
 
 
                         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));*/
                     }
 
 
                     //// Solve problem without adding a newly consolidated cut
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+                /*    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 
 
@@ -318,7 +330,7 @@ public:
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));*/
                     
 
                     // Solve problems without cut consolidation
@@ -329,11 +341,12 @@ public:
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    if ( !scdp)
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    if ( !scdp)
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
@@ -342,7 +355,7 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+         /*           benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
@@ -360,7 +373,7 @@ public:
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));*/
                  
                 }//end for: aggregates
             }//end for:repetition
@@ -852,20 +865,8 @@ TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 }
 //
-TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
-}
+// PLTEXP_POSTS belongs here
+
 //
 //// Alternative: bonds_FELT
 //TEST_F(NestedBendersTestMultiStage, sgpf_POSTS) { // Verified with original values
@@ -1068,6 +1069,21 @@ TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
     //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
 }
 
+TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_6"), -9.479354, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA2_16"), -9.663308, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_6"), -13.969368, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA3_16"), -14.267458, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_6"), -19.599417, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA4_16"), -18.849337, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
+}
+
 //TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
 //    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
 //}
@@ -1230,7 +1246,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    ::testing::GTEST_FLAG(filter) = "*scdp*:";
+    //::testing::GTEST_FLAG(filter) = "*NestedBendersTestMultiStage*";
+    ::testing::GTEST_FLAG(filter) = "*pltexp*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
