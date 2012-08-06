@@ -152,9 +152,18 @@ public:
 
             //std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET";
             // Open File!
-            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            int det_cols = smi_model->getCore()->getNumCols(0);
+            int det_rows = smi_model->getCore()->getNumRows(0);
+            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements();
+            int current_number_nodes = num_childs_first_stage;
+            for (int i = 1; i < num_stages; i++){
+                det_cols += current_number_nodes*smi_model->getCore()->getNumCols(i);
+                det_rows += current_number_nodes*smi_model->getCore()->getNumRows(i);
+                det_nonzeroes += current_number_nodes*smi_model->getCore()->getNode(i)->getNumMatrixElements();
+                current_number_nodes *= num_childs_first_stage;
+
+            }
+
             if ( smi_model->getCore()->getNumStages() > 2)
             {
                 det_cols = 0; det_rows = 0; det_nonzeroes = 0;
@@ -173,6 +182,8 @@ public:
             file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
                 << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
             // Now we need the data for DEQ
+            file_out.close();
+            LOG(INFO) << "printed to file";
         }
         
 
@@ -862,7 +873,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
+    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
 }
@@ -1230,7 +1241,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    ::testing::GTEST_FLAG(filter) = "*scdp*:";
+    ::testing::GTEST_FLAG(filter) = "*watson*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
