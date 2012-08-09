@@ -152,43 +152,42 @@ public:
 
             //std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET";
             // Open File!
-            int det_cols = smi_model->getCore()->getNumCols(0);
-            int det_rows = smi_model->getCore()->getNumRows(0);
-            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements();
-            int current_number_nodes = num_childs_first_stage;
-            for (int i = 1; i < num_stages; i++){
-                det_cols += current_number_nodes*smi_model->getCore()->getNumCols(i);
-                det_rows += current_number_nodes*smi_model->getCore()->getNumRows(i);
-                det_nonzeroes += current_number_nodes*smi_model->getCore()->getNode(i)->getNumMatrixElements();
-                current_number_nodes *= num_childs_first_stage;
+            //int det_cols = smi_model->getCore()->getNumCols(0);
+            //int det_rows = smi_model->getCore()->getNumRows(0);
+            //int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements();
+            //int current_number_nodes = num_childs_first_stage;
+            //for (int i = 1; i < num_stages; i++){
+            //    det_cols += current_number_nodes*smi_model->getCore()->getNumCols(i);
+            //    det_rows += current_number_nodes*smi_model->getCore()->getNumRows(i);
+            //    det_nonzeroes += current_number_nodes*smi_model->getCore()->getNode(i)->getNumMatrixElements();
+            //    current_number_nodes *= num_childs_first_stage;
 
-            }
+            //}
 
-            if ( smi_model->getCore()->getNumStages() > 2)
-            {
-                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-            }
-            OsiSolverInterface* osi = new OsiCpxSolverInterface;
-            smi_model->setOsiSolverHandle(osi);
-            delete osi;
-            osi = smi_model->loadOsiSolverData();
-            det_cols = osi->getNumCols();
-            det_rows = osi->getNumRows();
-            det_nonzeroes = osi->getNumElements();
-            
-            // Compute DETEQ column, row and nonzeroes sizes..
-            std::ofstream file_out;
-            file_out.open("sizes.csv",ios::app);
-            file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-                << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
-            // Now we need the data for DEQ
-            file_out.close();
-            LOG(INFO) << "printed to file";
+            //if ( smi_model->getCore()->getNumStages() > 2)
+            //{
+            //    det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+            //}
+            //OsiSolverInterface* osi = new OsiCpxSolverInterface;
+            //smi_model->setOsiSolverHandle(osi);
+            //delete osi;
+            //osi = smi_model->loadOsiSolverData();
+            //det_cols = osi->getNumCols();
+            //det_rows = osi->getNumRows();
+            //det_nonzeroes = osi->getNumElements();
+            //
+            //// Compute DETEQ column, row and nonzeroes sizes..
+            //std::ofstream file_out;
+            //file_out.open("sizes.csv",ios::app);
+            //file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+            //    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
+            //// Now we need the data for DEQ
+            //file_out.close();
+            //LOG(INFO) << "printed to file";
         }
         
 
         delete smi_model; // Get rid of the model, before we actually solve stuff
-        num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.init();
 
         // Solve with aggregation and removal of cuts!
@@ -1241,7 +1240,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    ::testing::GTEST_FLAG(filter) = "*watson*";
+    ::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
