@@ -5016,6 +5016,9 @@ namespace parallel_benders {
         // Solve
         //osi_solver->writeLp("ctriple.lp");
         osi_solver->initialSolve(); // Solve problem!
+        if ( !osi_solver->isProvenOptimal() ){
+            LOG(ERROR) << "C^3-SLP solve was not optimal.";
+        }
 
         // Store important variables (\lambda,\pi,\pi_0)
         //Lambda
@@ -5034,6 +5037,158 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::BuildAndSolveRHSProblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_poiner )
     {
+
+
+        // TODO: Describe RHS-problem!
+
+        //
+
+        CoinPackedMatrix problem_matrix;
+        int num_cols_first_stage = stage_data_[0]->num_columns_;
+        int num_rows_first_stage = stage_data_[0]->num_rows_;                                                 
+
+                                                     
+
+
+        CoinPackedMatrix* first_stage_matrix = core_->getNode(0)->generateCoinPackedWMatrix();
+        first_stage_matrix->transpose();
+        problem_matrix.copyOf(*first_stage_matrix);
+
+        CoinPackedMatrix a_matrix;
+        a_matrix.setDimensions(num_cols_first_stage,num_rows_first_stage);
+        a_matrix.rightAppendPackedMatrix(*first_stage_matrix);
+        delete first_stage_matrix;
+
+        //Append the extra cols to problem_matrix first
+        // Add the same cols at the right end of it.
+        std::vector<int> empty_start_array(num_rows_first_stage+1,0);        // Need an empty (so to say) start array
+        problem_matrix.appendCols(num_rows_first_stage,&empty_start_array[0],NULL,NULL);
+
+        // Append the transposed A matrix again!
+        problem_matrix.bottomAppendPackedMatrix(a_matrix);
+        // Now we should have the matrix with A^T too times added! (First variables are there tau_0, and tau_1
+        // Add rows for sigma_j(omega) >= \tau_h A_j + \tau0h \bar gamma_h(omega)
+        std::vector<int> indices;
+        std::vector<double> elements;
+        std::vector<int> starts;
+        starts.push_back(0);
+        for (int i = 0; i < num_cols_first_stage; i++){ // Add the sigma-variables
+            indices.push_back(i); elements.push_back(-1.0); 
+            indices.push_back(num_cols_first_stage+1); elements.push_back(-1.0);            
+            starts.push_back(2);
+        }
+
+        double gamma_0 = 0.0; // Add tau_00
+        for (int j = 0; j < num_cols_first_stage;j++){
+            indices.push_back(j); elements.push_back(gamma_0);
+        }
+        starts.push_back(starts.back()+num_cols_first_stage);
+
+        double gamma_1 = 0.0; // Add tau_01
+        for (int j = num_cols_first_stage; j < 2*num_cols_first_stage;j++){
+            indices.push_back(j); elements.push_back(gamma_1);
+        }
+        starts.push_back(starts.back()+num_cols_first_stage);
+        problem_matrix.appendCols(num_cols_first_stage+2,&starts[0],&indices[0],&elements[0]);
+        int sigma_index = num_rows_first_stage*2;
+        int tau_0_0_index = problem_matrix.getNumCols()-2;
+        int tau_0_1_index = problem_matrix.getNumCols()-1;
+        
+
+        // Now add rows for delta <= tau_h b+ \tau_0h \nu_h (2 more rows!
+        // Need two new rows and one new column! Add sigma_0 column also
+        empty_start_array.clear();
+        empty_start_array.push_back(0); empty_start_array.push_back(0); empty_start_array.push_back(0);
+        problem_matrix.appendCols(2,&empty_start_array[0],NULL,NULL);
+        int delta_index = problem_matrix.getNumCols()-2;
+        int sigma_0_index = problem_matrix.getNumCols()-1;
+
+        // Problem matrix needs only new rows, no new cols, put in row_ordered mode
+        problem_matrix.reverseOrdering();
+
+        // Prepare the sigma rows! (in row_ordered fashion)
+        indices.clear(); elements.clear(); starts.clear(); starts.push_back(0);
+        // Tau_0 row
+        double rhs_value = 0.0;
+        double bar_gamma = 0.0;
+        for (int i = 0; i < num_cols_first_stage; i++)
+            indices.push_back(i); elements.push_back(rhs_value);
+        indices.push_back(tau_0_0_index); elements.push_back(bar_gamma);
+        indices.push_back(delta_index); elements.push_back(-1.0);
+        starts.push_back(num_cols_first_stage+2);
+        // Tau_1 row
+        for (int i = 0; i < num_cols_first_stage; i++)
+            indices.push_back(i); elements.push_back(rhs_value);
+        indices.push_back(tau_0_1_index); elements.push_back(bar_gamma);
+        indices.push_back(delta_index); elements.push_back(-1.0);
+        starts.push_back(num_cols_first_stage+2);
+        
+        //// Add rows for \sigma_0 >= tau_0h: 2 rows
+        indices.push_back(tau_0_0_index); elements.push_back(1.0);
+        indices.push_back(sigma_0_index); elements.push_back(-1.0);
+        starts.push_back(starts.back()+2);
+        indices.push_back(tau_0_1_index); elements.push_back(1.0);
+        indices.push_back(sigma_0_index); elements.push_back(-1.0);
+        starts.push_back(starts.back()+2);
+        //
+        //// Add rows for \sum tau = 1
+        indices.push_back(tau_0_0_index); elements.push_back(1.0);
+        indices.push_back(tau_0_1_index); elements.push_back(1.0);
+        starts.push_back(starts.back()+2);
+        problem_matrix.appendRows(5,&starts[0],&indices[0],&elements[0]);
+
+        int total_cols = 4+num_rows_first_stage*2+num_cols_first_stage;
+        int total_rows = 5+num_cols_first_stage*2;
+        assert( problem_matrix.getNumCols() == total_cols);
+        assert( problem_matrix.getNumRows() == total_rows);
+        // Now we need objective function values, bounds and rhs
+        std::vector<double> bounds_lower(total_cols,-infinity_);
+        std::vector<double> bounds_upper(total_cols,infinity_);
+        for (int i = 0; i < 2*num_rows_first_stage; i++)
+            bounds_lower[i] = 0;
+        bounds_lower[tau_0_0_index] = 0;
+        bounds_lower[tau_0_1_index] = 0;
+        
+        std::vector<double> obj_coefs(total_cols,0.0);
+        obj_coefs[sigma_0_index] = -1.0;
+        obj_coefs[delta_index] = 1.0;
+        for (int i = sigma_index; i < sigma_index+num_cols_first_stage;i++)
+            obj_coefs[i] = - tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i-sigma_index];
+
+        std::vector<double> rhs_lower(total_rows,0.0);
+        std::vector<double> rhs_upper(total_rows,0.0);
+
+        for (int i = 0; i < 2*num_cols_first_stage; i++){// sigma rows
+            rhs_lower[i] = -infinity_;
+            rhs_upper[i] = 0;
+        }
+        // Other five rows:tau_0-delta, tau_1-delta, tau_0_1-sigma, tau_0_1-sigma, tau_0=1
+        int row_index = 2*num_cols_first_stage;
+        rhs_lower[row_index] = 0; rhs_upper[row_index] = infinity_; row_index++;
+        rhs_lower[row_index] = 0; rhs_upper[row_index] = infinity_; row_index++;
+        // tau-sigma
+        rhs_lower[row_index] = -infinity_; rhs_upper[row_index] = 0; row_index++;
+        rhs_lower[row_index] = -infinity_; rhs_upper[row_index] = 0; row_index++;
+        // tau=1
+        rhs_lower[row_index] = 1; rhs_upper[row_index] = 1; row_index++;
+        assert(row_index==total_rows);
+        
+        // Load problem in solver
+        OsiSolverInterface * osi_solver = GetSolverByThread();
+        osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coefs[0],&rhs_lower[0],&rhs_upper[0]);
+
+        // Solve
+        console_mutex_.lock();
+        osi_solver->writeLp("rhs.lp");
+        console_mutex_.unlock();
+        osi_solver->initialSolve(); // Solve problem!
+        if ( !osi_solver->isProvenOptimal() ){
+            LOG(ERROR) << "RHS-SLP solve was not optimal.";
+        }
+
+        
+
+
 
     }
 
