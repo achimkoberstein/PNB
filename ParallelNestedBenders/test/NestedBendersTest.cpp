@@ -227,7 +227,7 @@ public:
                         // Compute an aggregate number out of problem characteristics!
                         aggregates[i] = num_aggregates_by_magic;
                     }
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
