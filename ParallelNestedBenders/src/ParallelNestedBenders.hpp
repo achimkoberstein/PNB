@@ -108,6 +108,10 @@ private:
     int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
 
+    void AppendDSquareCutsToSubproblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void BuildAndSolveCTripleProblem();
+    void BuildAndSolveRHSProblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_poiner);
+
 
 
     // Problem data
@@ -193,6 +197,9 @@ private:
     bool regularized_initialized_cols_;
     int regularized_start_row_;
     int start_solution_;
+
+    // D^2 C^3
+    bool d_square_;
 
 
     Timer timer_;

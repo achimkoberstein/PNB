@@ -18,6 +18,7 @@
 #include <boost/thread.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/random_access_index.hpp>
+#include <boost/math/special_functions/round.hpp>
 
 #include <glog/logging.h>
 // Include all the other files
@@ -264,7 +265,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
@@ -531,7 +532,6 @@ namespace parallel_benders {
         // We can stop here, if we have integer variables on more than the second stage..
         if ( integer_problems_[0] ){ // In the first stage.
             LOG(INFO) << "Your problem contains first-stage integer variables.";
-            //return;
         }
         std::vector<int> new_columns(num_stages_,0);
         if ( non_staircase_problem_ ){
@@ -549,7 +549,13 @@ namespace parallel_benders {
         }
         for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
-            integer_problems_[i] = false; // Ensure we do solve the LP relaxation!
+            if ( solve_relaxation_ )
+                integer_problems_[i] = false; // Ensure we do solve the LP relaxation!
+            if ( num_stages_ == 2 && integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
+                d_square_ = true;
+                // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
+                integer_problems_[i] = false;
+             }
         }
 
 
@@ -1015,6 +1021,25 @@ namespace parallel_benders {
                 thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
             }
             thread_pool_.wait(0); // We wait until all threads are done
+
+            if ( d_square_ && current_stage_==1){
+                // Solve C^3-SLP
+                if ( stage_data_[current_stage_]->violated_index_ >= 0){
+                    BuildAndSolveCTripleProblem();
+                    int num_nodes = tree_nodes_by_stage_[current_stage_].size();
+                    for ( int i = 0; i < num_nodes; i++ ){
+                        // Schedule the tasks for this stage
+                        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveRHSProblem,this,tree_nodes_by_stage_[current_stage_][i]));
+                    }
+                    thread_pool_.wait(0); // We wait until all threads are done
+                }
+
+
+
+                // Clear non-integer scenario
+                stage_data_[current_stage_]->non_integer_scenarios.clear();
+                stage_data_[current_stage_]->violated_index_ = -1;
+            }
 
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
@@ -1536,6 +1561,25 @@ namespace parallel_benders {
         // We want to differentiate between column solution and theta variables 
         StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
 
+        if ( d_square_ && current_stage_ == 1){
+            StoreValuesFromSolverInArray(benders_node_pointer->solver_rhs_,osi_solver->getRightHandSide(),osi_solver->getNumRows());
+            // Store Column Solution multiplied by probability in the expected_y_values in stage_data!
+            // Check For Integrality
+            std::vector<int> binaries = core_->getBinaryCols(current_stage_);
+            for (int i = 0; i < binaries.size(); i++){
+                if ( !CompareForEquality(benders_node_pointer->col_solution_[binaries[i]],boost::math::round(benders_node_pointer->col_solution_[binaries[i]]),integer_tolerance_) ){
+                // Found non-integer that should be integer?
+                    // Mark as failing!
+                    misc_mutex_.lock();
+                    stage_data_[current_stage_]->non_integer_scenarios.push_back(benders_tree_node_pointer->scenario());
+                    if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO: Beware, magic number
+                        stage_data_[current_stage_]->violated_index_ = i;
+                    misc_mutex_.unlock();
+                    break; // We have a non-integer, we can break
+                }
+            }
+        }
+
         double solution_value = 0; // Compute the value of the c*x solution without all thetas!
         for (int i = 0; i < stage_data_[current_stage_]->num_columns_;i++){
             solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
@@ -1712,9 +1756,9 @@ namespace parallel_benders {
             benders_node_pointer->matrix_ = deterministic_node_pointer->generateCoinPackedWMatrix();
         }
 
-        // Do a quick matrix check, only if we do not reuse the solver..
+        // Do a quick matrix check, only if we do not reuse the solver. Necessary for problems that do not have a w_matrix!
         if ( !reuse_solver &&benders_node_pointer->matrix_->getMinorDim() == 0){
-            benders_node_pointer->matrix_->reverseOrdering(); // We have an empty matrix, it is col ordered
+            benders_node_pointer->matrix_->reverseOrdering(); // We have an empty matrix, it is col ordered, so we need to reverse that ordering!
             benders_node_pointer->matrix_->setDimensions(1,stage_pointer->num_columns_);
             // Insert at least empty entries for our columns
             for (int i = 0; i < stage_pointer->num_columns_; i++)
@@ -1764,25 +1808,28 @@ namespace parallel_benders {
             benders_node_pointer->objective_ = const_cast<double*> (core_->getDenseObjCoefficients(current_stage_));
 
         // Build RHS via row lower and row upper. We have to add T-matrix with previous stage solutions
-        benders_node_pointer->row_lower_ = new double[stage_pointer->num_rows_];
-        memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), stage_pointer->num_rows_*sizeof(double));
+        int num_rows = stage_pointer->num_rows_;
+        if ( d_square_ && current_stage_ == 1)
+            num_rows += stage_pointer->num_d_square_cuts_;
+        benders_node_pointer->row_lower_ = new double[num_rows];
+        memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
         if ( stage_pointer->stochastic_rhs_ ){
             for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
                 assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
-                assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < stage_pointer->num_rows_);
+                assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
                 benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
             }
         }
 
-        benders_node_pointer->row_upper_ = new double[stage_pointer->num_rows_];
-        memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
+        benders_node_pointer->row_upper_ = new double[num_rows];
+        memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
         if  ( stage_pointer->stochastic_rhs_){
             for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
                 benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
             }
         }
 
-        // Add solution from previous problem
+        // Add solution from previous problem, i.e. form right hand side of the problem
         if ( current_stage_ > 0 ){
             // Get solution from predecessor in tree
             double* column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
@@ -1855,6 +1902,25 @@ namespace parallel_benders {
             }
         }
 
+        // If we want to solve the problem without d_square_stuff (as MIP for example, we need another boolean here..)
+        if ( d_square_ && current_stage_ == 1 && !reuse_solver ){
+            if ( stage_pointer->d_square_matrix_ != NULL)
+                benders_node_pointer->matrix_->bottomAppendPackedMatrix(*stage_pointer->d_square_matrix_);
+        }
+        if ( d_square_ && current_stage_ == 1 && stage_pointer->num_d_square_cuts_ > 0 ){
+            // Correct RHS values
+            double* t_array = new double[stage_pointer->num_d_square_cuts_];
+            benders_node_pointer->d_square_cut_t_matrix_->times(benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_,t_array);
+            for (int i = stage_pointer->num_rows_; i < stage_pointer->d_square_matrix_->getNumRows(); i++){
+                benders_node_pointer->row_upper_[i] = infinity_;
+
+                double d_square_cut_rhs_value = benders_node_pointer->d_square_cut_rhs_->operator[](i-stage_pointer->num_rows_)+t_array[i-stage_pointer->num_rows_]; 
+                // Compute the T_matrix elements
+                benders_node_pointer->row_lower_[i] = d_square_cut_rhs_value;
+            }
+            delete [] t_array;
+        }
+
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
@@ -1886,6 +1952,10 @@ namespace parallel_benders {
 
             // Remove all cuts from previous solutions ( includes "Theta" Constraints )
             int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
+            if ( d_square_ && current_stage_ == 1)
+            {
+                cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_-stage_pointer->num_d_square_cuts_;
+            }
             if ( cuts_to_remove ){
                 std::vector<int> remove_indices;
                 remove_indices.reserve(cuts_to_remove);
@@ -4767,6 +4837,206 @@ namespace parallel_benders {
             CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_LP );
         }
     }
+
+    void ParallelNestedBenders::AppendDSquareCutsToSubproblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        // If the problem 
+
+    }
+
+    void ParallelNestedBenders::BuildAndSolveCTripleProblem(  )
+    {
+        assert(d_square_);
+        // TODO: Put problem description here for C^3-SLP
+        //
+        // 
+        //
+        //
+        // If we want to call this method, we need already a disjunctive indice and some expected value stuff!
+        // Create a new problem via matrix or cuts..
+        BendersStageData* stage_pointer = stage_data_[current_stage_];
+        SmiNodeData* deterministic_node_pointer = core_->getNode(current_stage_); // Deterministic node (there is one per stage)
+        int disjunctive_variable_index = stage_data_[current_stage_]->violated_index_;
+        if ( disjunctive_variable_index < 0 )
+            return; // We can skip the computation of the C^3 problem (no disjunction necessary)
+        int num_cols = stage_pointer->num_columns_;
+        int num_rows_w_matrix = stage_pointer->num_rows_;
+        int num_scenarios = tree_nodes_by_stage_[current_stage_].size();
+        int total_rows_w_k_matrix = num_rows_w_matrix+stage_pointer->num_d_square_cuts_;
+        assert( disjunctive_variable_index >= 0 && disjunctive_variable_index < num_cols);
+
+        // We need this matrix two times, and transposed. Transpose without reverseOrdering just swaps rowOrdered to colOrdered matrices!
+        CoinPackedMatrix* w_matrix = deterministic_node_pointer->generateCoinPackedWMatrix();
+        if ( stage_pointer->d_square_matrix_ != NULL)
+            w_matrix->bottomAppendPackedMatrix(*stage_pointer->d_square_matrix_);
+        w_matrix->transpose(); // From now on col_ordered.
+
+        CoinPackedMatrix problem_matrix; // This is the matrix we put in the solver.
+        problem_matrix.copyOf(*w_matrix); // Copy w_matrix!
+        // Add the same cols at the right end of it.
+        std::vector<int> empty_start_array(total_rows_w_k_matrix+1,0);        // Need an empty (so to say) start array
+        problem_matrix.appendCols(total_rows_w_k_matrix,&empty_start_array[0],NULL,NULL);
+
+        // Second copy of W_matrix
+        CoinPackedMatrix w_matrix_two;
+        w_matrix_two.setDimensions(w_matrix->getNumRows(),w_matrix->getNumCols()); // Set empty matrix to original w_matrix dimensions
+        w_matrix_two.rightAppendPackedMatrix(*w_matrix); // Right append matrix (i.e. new cols) => empty first half, w-matrix in second half
+        delete w_matrix; // Not longer needed.
+
+        // Append W-Matrix for the second time at the bottom, thereby generating new rows.
+        problem_matrix.bottomAppendPackedMatrix(w_matrix_two);
+
+        // Append the col for the disjunctive element lambda_0_2!
+        int col_index = disjunctive_variable_index;
+        double col_element = -1.0;
+        problem_matrix.appendCol(1,&col_index,&col_element); // Col_index = 2*total_rows_w_k_matrix
+
+        // Append the col for the disjunctive element lambda_1_2!
+        col_index = num_cols+disjunctive_variable_index;
+        col_element = 1.0;
+        problem_matrix.appendCol(1,&col_index,&col_element);// Col_index = 2*total_rows_w_k_matrix+1
+
+        // Append \pi colums to matrix, as well as \pi_0 (but we add the ones later), in a row ordered fashion
+        std::vector<int> indices;
+        std::vector<int> starts;
+        std::vector<double> elements;
+        starts.push_back(0);
+        for (int i = 0; i < num_cols; i++){
+            //indices.push_back(2*total_rows_w_k_matrix+2+i); // Row_ordered, we need to add the column_index
+            indices.push_back(i); // Col_ordered, we need to add the row_index
+            indices.push_back(num_cols+i);
+            elements.push_back(-1.0);
+            elements.push_back(-1.0);
+            starts.push_back(starts.back()+2);
+        }
+        for (int i = 0; i < num_scenarios;i++){
+            starts.push_back(starts.back());
+        }
+        problem_matrix.appendCols(num_cols+num_scenarios,&starts[0],&indices[0],&elements[0]);
+        problem_matrix.reverseOrdering(); // From column back to row ordering
+        
+
+        // Now we need to append the matrix for all scenarios and pi_0
+        // Start with the indices, stays the same for all scenarios!
+        std::vector<int> indices_vector_one(total_rows_w_k_matrix+1);//indices for lambda_0_1
+        std::vector<int> indices_vector_two(total_rows_w_k_matrix+2);//indices for lambda_1_1
+        for (int i = 0; i < total_rows_w_k_matrix; i++){
+            indices_vector_one[i] = i;
+            indices_vector_two[i] = total_rows_w_k_matrix+i;
+        }
+        indices_vector_one[total_rows_w_k_matrix] = 0;// Points to current scenario index
+        indices_vector_two[total_rows_w_k_matrix] = 2*total_rows_w_k_matrix+1; // We index lambda_1_2
+        indices_vector_two[total_rows_w_k_matrix+1] = 0; // points to current scenario index
+
+        int starting_scenario_index = 2*total_rows_w_k_matrix+2+num_cols;// |lambda+pi|
+
+        // Iterate over all the scenarios (cols for lambda_0_2)
+        double * temp_array = new double[total_rows_w_k_matrix+2];
+        for (int scenario_index = 0;  scenario_index < num_scenarios; scenario_index++){
+            indices_vector_one[total_rows_w_k_matrix] = starting_scenario_index+scenario_index;
+            memcpy(temp_array,tree_nodes_by_stage_[current_stage_][scenario_index]->getDataPtr()->solver_rhs_,total_rows_w_k_matrix*sizeof(double));
+            temp_array[total_rows_w_k_matrix] = -1.0;// pi_0_omega
+            problem_matrix.appendRow(total_rows_w_k_matrix+1,&indices_vector_one[0],temp_array);
+        }
+        // Iterate over all the scenarios. (cols for lambda_1_2)
+        for (int scenario_index = 0;  scenario_index < num_scenarios; scenario_index++){
+            indices_vector_two[total_rows_w_k_matrix+1] = starting_scenario_index+scenario_index;
+            memcpy(temp_array,tree_nodes_by_stage_[current_stage_][scenario_index]->getDataPtr()->solver_rhs_,total_rows_w_k_matrix*sizeof(double));
+            temp_array[total_rows_w_k_matrix] = 1.0; // upper rounding of disjunctive variable value leads to 1, for binary problems!
+            temp_array[total_rows_w_k_matrix+1] = -1.0;// pi_0_omega
+            problem_matrix.appendRow(total_rows_w_k_matrix+2,&indices_vector_two[0],temp_array);
+        }
+        delete [] temp_array;
+
+        // Now we have the problem matrix worked out. We need the RHS
+        assert(problem_matrix.getNumRows() == num_cols*2+num_scenarios*2);
+        assert(problem_matrix.getNumCols() == total_rows_w_k_matrix*2+2+num_cols+num_scenarios);
+        int total_cols = total_rows_w_k_matrix*2+2+num_cols+num_scenarios;
+        int total_rows = num_cols*2+2+num_scenarios*2;
+
+        int lambda_0_1_col_start = 0;
+        int lambda_1_1_col_start = total_rows_w_k_matrix;
+        int lambda_0_2_col_start = total_rows_w_k_matrix*2;
+        int lambda_1_2_col_start = total_rows_w_k_matrix*2+1;
+        int pi_col_start = lambda_1_2_col_start+1;
+        int pi_0_col_start = pi_col_start+num_cols;
+        int lambda_0_1_pi_row_start = 0;
+        int lambda_1_1_pi_row_start = num_cols;
+        int lambda_0_1_pi_0_row_start = lambda_1_1_pi_row_start+num_cols;
+        int lambda_1_1_pi_0_row_start = lambda_0_1_pi_0_row_start+num_scenarios;
+
+        // Variable Bounds
+        std::vector<double> bounds_lower(total_cols);
+        std::vector<double> bounds_upper(total_cols);
+        for (int i = lambda_0_1_col_start; i < pi_col_start; i++){
+            bounds_lower[i] = 0.0;
+            bounds_upper[i] = infinity_;
+        }
+        for (int i = pi_col_start; i < total_cols;i++){
+            bounds_lower[i] = -1.0;
+            bounds_upper[i] = 1.0;
+        }
+        
+        // Objective Function
+        std::vector<double> obj_coef(total_cols,0.0);
+        for (int i = pi_col_start; i < pi_0_col_start; i++)
+            obj_coef[i] = 0;
+        // Compute overall conditional probability!
+        double sum_prob = 0.0;
+        for (int i = 0; i < stage_pointer->non_integer_scenarios.size(); i++)
+            sum_prob += tree_nodes_by_stage_[current_stage_][stage_pointer->non_integer_scenarios[i]]->getDataPtr()->probability_;
+        assert(sum_prob <= 1+integer_tolerance_);
+
+        for (std::vector<int>::iterator it = stage_pointer->non_integer_scenarios.begin(); it != stage_pointer->non_integer_scenarios.end(); ++it){
+            double conditional_prob = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->probability_/sum_prob;
+            const double* col_solution = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->col_solution_;
+            for (int i = 0; i < num_cols; i++)
+                obj_coef[pi_col_start+i] += conditional_prob*col_solution[i];
+        }
+
+        for (int i = pi_0_col_start; i < total_cols;i++)
+            obj_coef[i] = tree_nodes_by_stage_[current_stage_][i-pi_0_col_start]->getDataPtr()->probability_;
+
+        // RHS values
+        std::vector<double> rhs_lower(total_rows);
+        std::vector<double> rhs_upper(total_rows);
+        for (int i = 0; i < 2*num_cols; i++){
+            rhs_lower[i] = -infinity_;
+            rhs_upper[i] = 0;
+        }
+        for(int i = 0; i < 2*num_scenarios;i++){
+            rhs_lower[i+lambda_0_1_pi_0_row_start] = 0;
+            rhs_upper[i+lambda_0_1_pi_0_row_start] = infinity_;
+        }
+
+        // Load problem in solver
+        OsiSolverInterface * osi_solver = GetSolverByThread();
+        osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coef[0],&rhs_lower[0],&rhs_upper[0]);
+
+        // Solve
+        //osi_solver->writeLp("ctriple.lp");
+        osi_solver->initialSolve(); // Solve problem!
+
+        // Store important variables (\lambda,\pi,\pi_0)
+        //Lambda
+        StoreValuesFromSolverInArray(stage_pointer->d_square_lambda_0_1_,osi_solver->getColSolution()+lambda_0_1_col_start,total_rows_w_k_matrix);
+        StoreValuesFromSolverInArray(stage_pointer->d_square_lambda_1_1_,osi_solver->getColSolution()+lambda_1_1_col_start,total_rows_w_k_matrix);
+        stage_pointer->d_square_lambda_0_2_ = osi_solver->getColSolution()[lambda_0_2_col_start];
+        stage_pointer->d_square_lambda_1_2_ = osi_solver->getColSolution()[lambda_1_2_col_start];
+        // Pi
+        StoreValuesFromSolverInArray(stage_pointer->d_square_pi_,osi_solver->getColSolution()+pi_col_start,num_cols);
+
+
+
+
+
+    }
+
+    void ParallelNestedBenders::BuildAndSolveRHSProblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_poiner )
+    {
+
+    }
+
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;

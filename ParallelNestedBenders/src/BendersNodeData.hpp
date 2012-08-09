@@ -132,6 +132,7 @@ namespace parallel_benders{
             return cut_stuff->cut_creation_iteration_ == number && cut_stuff->active_value < CutStuff::active_threshold_ && cut_stuff->not_active_iterations_ > CutStuff::strike_threshold_;
         }
     };
+
     
 
     bool is_active (const boost::shared_ptr<CutStuff>& value);
@@ -232,6 +233,11 @@ public:
 
     // In the non-staircase case
     std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;
+
+    // D^2C^3 Stuff
+    CoinPackedMatrix* d_square_cut_t_matrix_;
+    CoinPackedVector* d_square_cut_rhs_;
+    double* solver_rhs_;
 };
 
 // Methods that work on a BendersNodeData
@@ -272,6 +278,17 @@ struct BendersStageData {
 
     // Store if we changed aggregation level
     bool changed_aggregation_level_;
+
+    // D^2C^3 stuff
+    int num_d_square_cuts_;
+    CoinPackedMatrix* d_square_matrix_;
+    std::vector<int> non_integer_scenarios;
+    int violated_index_;
+    double* d_square_lambda_0_1_;
+    double* d_square_lambda_1_1_;
+    double d_square_lambda_0_2_;
+    double d_square_lambda_1_2_;
+    double* d_square_pi_;
 
 };
 
