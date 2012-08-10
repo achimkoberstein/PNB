@@ -4899,6 +4899,8 @@ namespace parallel_benders {
 
         // We need this matrix two times, and transposed. Transpose without reverseOrdering just swaps rowOrdered to colOrdered matrices!
         CoinPackedMatrix* w_matrix = deterministic_node_pointer->generateCoinPackedWMatrix();
+
+        // TODO: We must take care what kind of PI-elements we actually add to this problem, to assure convergence, see paper of Higle/Sen for that.
         if ( stage_pointer->d_square_matrix_ != NULL)
             w_matrix->bottomAppendPackedMatrix(*stage_pointer->d_square_matrix_);
         w_matrix->transpose(); // From now on col_ordered.
