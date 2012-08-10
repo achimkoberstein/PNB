@@ -5289,9 +5289,9 @@ namespace parallel_benders {
         osi_solver->setObjSense(-1);
 
         // Solve
-        console_mutex_.lock();
-        osi_solver->writeLp("rhs.lp");
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //osi_solver->writeLp("rhs.lp");
+        //console_mutex_.unlock();
 
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
