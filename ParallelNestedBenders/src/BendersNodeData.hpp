@@ -236,8 +236,9 @@ public:
 
     // D^2C^3 Stuff
     CoinPackedMatrix* d_square_cut_t_matrix_;
-    CoinPackedVector* d_square_cut_rhs_;
+    std::vector<double> d_square_cut_rhs_;
     double* solver_rhs_;
+    bool can_safely_reuse_;
 };
 
 // Methods that work on a BendersNodeData
@@ -289,6 +290,8 @@ struct BendersStageData {
     double d_square_lambda_0_2_;
     double d_square_lambda_1_2_;
     double* d_square_pi_;
+
+    
 
 };
 

@@ -1743,34 +1743,54 @@ CoinPackedMatrix* SmiNodeData::generateCoinPackedWMatrix() const
 
 CoinPackedMatrix* SmiNodeData::generateCoinPackedTMatrix() const
 {
-    double* rowElements = new double[getNumMatrixElements()];
-    int* rowIndices = new int[getNumMatrixElements()];
-    int* rowStrt = new int[nrow_+1];
-    memcpy(rowElements,dels_+mat_strt_,getNumMatrixElements()*sizeof(double));
-    memcpy(rowIndices,inds_+mat_strt_,getNumMatrixElements()*sizeof(int));
-    memcpy(rowStrt,strt_+mat_strt_,(nrow_+1)*sizeof(int));
-    // Now we have to go through all the elements and delete stuff we do not want
+    if ( !this->has_matrix_ ) // If we have no matrix, we return an empty matrix
+        return new CoinPackedMatrix();
+    
+    if ( this->getStage()-1 < 0) // No T-matrix in first stage!
+        return new CoinPackedMatrix();
+        
+    int colbeg_previous_stage_ = this->core_->getColStart(this->getStage()-1);
+    int previous_stg = this->getStage()-1;
+    // Do we have a number of entries? yes we have!
+    std::vector<double> elements;
+    std::vector<int> indices;
+    std::vector<int> start;
+    std::vector<int> length;
+    // Reserve array size (performance reasons)
+    int number_elements = strt_[getMatEnd()];
+    elements.reserve(number_elements);
+    indices.reserve(number_elements);
+    start.reserve(getMatEnd()+1);
+    length.reserve(getMatEnd());
+    start.push_back(0);
+
+    // Now we have to go through all the elements and add the W entries
     int nels = getNumMatrixElements();
-    int countTEntries = 0;
     int overallTEntries = 0;
-    int length = rowStrt[1]-rowStrt[0];
-    for (int i = 0; i < nrow_+1; i++){
-        for (int j = rowStrt[i]; j< rowStrt[i+1]-rowStrt[i]; j++){
-            if ( rowIndices[j] == stg_ ){ // W Column
-                rowIndices[overallTEntries] = rowIndices[j];
-                rowElements[overallTEntries] = rowElements[j];
-                countTEntries++;
+    int currentTEntries = 0;
+    int row = 0;
+
+    if ( this->getStage()-1 >= 0)
+        colbeg_previous_stage_ = this->core_->getColStart(this->getStage()-1);
+    for (row =getMatStart(); row < getMatEnd(); row++){ // Iterate over the rows
+        for (int column = strt_[row]; column < strt_[row+1]; column++){ // Iterate over all the columns in this row
+            if ( inds_[column] < colbeg_ ){ // T Column as columns are sorted by stage, and colbeg_ is begin of columns for this stage. We want columns of previous stage!
+                elements.push_back( dels_[column] );
+                indices.push_back( inds_[column]-colbeg_previous_stage_ ); // We count from 0 in this matrix, that means we use stage-wise indices instead of global indices
                 overallTEntries++;
+                currentTEntries++;
             }
-            rowStrt[i] = (i>0?rowStrt[i-1]+countTEntries:countTEntries);
-            countTEntries = 0;
         }
+        start.push_back(overallTEntries); // We count empty rows comes hell or high water..
+        length.push_back(currentTEntries);
+        currentTEntries = 0;
     }
-    CoinPackedMatrix* matrix =  new CoinPackedMatrix(false,rowStrt,rowIndices,rowElements,overallTEntries);
-    delete rowElements;
-    delete rowIndices;
-    delete rowStrt;
-    return matrix;
+    // Count number of different column entries?
+    assert(row == core_->getNumRows(stg_));
+    if ( overallTEntries ) 
+        return new CoinPackedMatrix(false, core_->getNumCols((previous_stg)),row,overallTEntries,&elements[0],&indices[0],&start[0],&length[0]);
+    else
+        return new CoinPackedMatrix();
     // TODO: Use assignMatrix to prevent unnecessary copying.
 }
 
