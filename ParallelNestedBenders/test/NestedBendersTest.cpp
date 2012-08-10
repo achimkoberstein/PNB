@@ -192,7 +192,7 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        aggregates.push_back(0);
+        //aggregates.push_back(0);
         aggregates.push_back(1);
         if ( num_aggregates_by_magic > 1)
             aggregates.push_back(-1);
