@@ -1022,19 +1022,43 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
+            bool can_update_upper_bound = true;
             if ( d_square_ && current_stage_==1){
                 // Solve C^3-SLP
                 if ( stage_data_[current_stage_]->violated_index_ >= 0){
+                    can_update_upper_bound = false;
                     BuildAndSolveCTripleProblem();
+                    // Clear non-integer scenarios
+                    stage_data_[current_stage_]->non_integer_scenarios.clear();
+                    stage_data_[current_stage_]->violated_index_ = -1;
+
                     int num_nodes = tree_nodes_by_stage_[current_stage_].size();
                     for ( int i = 0; i < num_nodes; i++ ){
                         // Schedule the tasks for this stage
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveRHSProblem,this,tree_nodes_by_stage_[current_stage_][i]));
                     }
                     thread_pool_.wait(0); // We wait until all threads are done
+                    stage_data_[current_stage_]->num_d_square_cuts_++; // We generated a D^2-C^3 cut
+                    stage_data_[current_stage_]->row_indices_.push_back(stage_data_[current_stage_]->row_indices_.back()+1); // We added a permanent cut (increase row indices)
+
+
+                    std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
+                    BOOST_FOREACH( id_solver_pair, osi_solver_map_ ){
+                        //id_solver_pair.second->reset(); // This method throws exception with Cplex
+                        id_solver_pair.second->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+                        // Workaround: Load empty problem. 
+                        assert(id_solver_pair.second->getNumCols() == 0);
+                    }
+                    // Resolve all the problems!
+                    for ( int i = 0; i < num_nodes; i++ ){
+                        // Schedule the tasks for this stage
+                        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
+                    }
+                    thread_pool_.wait(0); // We wait until all threads are done
+                    
+                    if ( stage_data_[current_stage_]->violated_index_ < 0)
+                        can_update_upper_bound = true;
                 }
-
-
 
                 // Clear non-integer scenario
                 stage_data_[current_stage_]->non_integer_scenarios.clear();
@@ -1048,7 +1072,7 @@ namespace parallel_benders {
                     enforce_stage_ = 0;
                     enforce_direction_ = true;
                 }
-                if ( !compute_stage_bounds_ && temporary_upper_bound_ < upper_bound_ ){
+                if ( !compute_stage_bounds_ && temporary_upper_bound_ < upper_bound_ && can_update_upper_bound){
                     upper_bound_ = temporary_upper_bound_; // Update upper bound. When we compute stage bounds, we update upper bound below!
                     solution_similiarity_counter_ = 0;
                 }
@@ -1067,7 +1091,7 @@ namespace parallel_benders {
                     for (int i = 0; i < num_stages_; i++)
                         sum_stage_solutions += stage_lower_upper_bounds_[i].second;
                     temporary_upper_bound_ = sum_stage_solutions;
-                    if ( upper_bound_ > sum_stage_solutions){
+                    if ( upper_bound_ > sum_stage_solutions && can_update_upper_bound){
                         upper_bound_ = sum_stage_solutions;
                         solution_similiarity_counter_ = 0;
                     }
@@ -1126,7 +1150,10 @@ namespace parallel_benders {
                 // Count how long it is equal!
                 if ( CompareForEquality(temporary_upper_bound_,current_solution_value_,relative_epsilon_) ){
                 // Increase counter
-                    solution_similiarity_counter_++;
+                    if ( !d_square_ )
+                        solution_similiarity_counter_++;
+                    else
+                        ;
                 }
                 else{
                     // Reset counter
@@ -1385,7 +1412,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -1561,21 +1588,23 @@ namespace parallel_benders {
         // We want to differentiate between column solution and theta variables 
         StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
 
-        if ( d_square_ && current_stage_ == 1){
+        if ( d_square_ ){
             StoreValuesFromSolverInArray(benders_node_pointer->solver_rhs_,osi_solver->getRightHandSide(),osi_solver->getNumRows());
             // Store Column Solution multiplied by probability in the expected_y_values in stage_data!
             // Check For Integrality
-            std::vector<int> binaries = core_->getBinaryCols(current_stage_);
-            for (int i = 0; i < binaries.size(); i++){
-                if ( !CompareForEquality(benders_node_pointer->col_solution_[binaries[i]],boost::math::round(benders_node_pointer->col_solution_[binaries[i]]),integer_tolerance_) ){
-                // Found non-integer that should be integer?
-                    // Mark as failing!
-                    misc_mutex_.lock();
-                    stage_data_[current_stage_]->non_integer_scenarios.push_back(benders_tree_node_pointer->scenario());
-                    if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO: Beware, magic number
-                        stage_data_[current_stage_]->violated_index_ = i;
-                    misc_mutex_.unlock();
-                    break; // We have a non-integer, we can break
+            if ( current_stage_ == 1){
+                std::vector<int> binaries = core_->getBinaryCols(current_stage_);
+                for (int i = 0; i < binaries.size(); i++){
+                    if ( !CompareForEquality(benders_node_pointer->col_solution_[binaries[i]],boost::math::round(benders_node_pointer->col_solution_[binaries[i]]),integer_tolerance_) ){
+                        // Found non-integer that should be integer?
+                        // Mark as failing!
+                        misc_mutex_.lock();
+                        stage_data_[current_stage_]->non_integer_scenarios.push_back(benders_tree_node_pointer->scenario());
+                        if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO: Beware, magic number
+                            stage_data_[current_stage_]->violated_index_ = i;
+                        misc_mutex_.unlock();
+                        break; // We have a non-integer, we can break
+                    }
                 }
             }
         }
@@ -1809,9 +1838,10 @@ namespace parallel_benders {
 
         // Build RHS via row lower and row upper. We have to add T-matrix with previous stage solutions
         int num_rows = stage_pointer->num_rows_;
+        int number_of_allocated_rows = num_rows;
         if ( d_square_ && current_stage_ == 1)
-            num_rows += stage_pointer->num_d_square_cuts_;
-        benders_node_pointer->row_lower_ = new double[num_rows];
+            number_of_allocated_rows += stage_pointer->num_d_square_cuts_;
+        benders_node_pointer->row_lower_ = new double[number_of_allocated_rows];
         memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
         if ( stage_pointer->stochastic_rhs_ ){
             for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
@@ -1821,7 +1851,7 @@ namespace parallel_benders {
             }
         }
 
-        benders_node_pointer->row_upper_ = new double[num_rows];
+        benders_node_pointer->row_upper_ = new double[number_of_allocated_rows];
         memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
         if  ( stage_pointer->stochastic_rhs_){
             for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
@@ -1910,11 +1940,13 @@ namespace parallel_benders {
         if ( d_square_ && current_stage_ == 1 && stage_pointer->num_d_square_cuts_ > 0 ){
             // Correct RHS values
             double* t_array = new double[stage_pointer->num_d_square_cuts_];
+            assert( benders_node_pointer->d_square_cut_t_matrix_ != NULL);
+            assert( benders_node_pointer->d_square_cut_t_matrix_->getNumRows() == stage_pointer->num_d_square_cuts_);
             benders_node_pointer->d_square_cut_t_matrix_->times(benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_,t_array);
-            for (int i = stage_pointer->num_rows_; i < stage_pointer->d_square_matrix_->getNumRows(); i++){
+            for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+stage_pointer->num_d_square_cuts_; i++){
                 benders_node_pointer->row_upper_[i] = infinity_;
 
-                double d_square_cut_rhs_value = benders_node_pointer->d_square_cut_rhs_->operator[](i-stage_pointer->num_rows_)+t_array[i-stage_pointer->num_rows_]; 
+                double d_square_cut_rhs_value = benders_node_pointer->d_square_cut_rhs_[i-stage_pointer->num_rows_]-t_array[i-stage_pointer->num_rows_]; 
                 // Compute the T_matrix elements
                 benders_node_pointer->row_lower_[i] = d_square_cut_rhs_value;
             }
@@ -1943,12 +1975,12 @@ namespace parallel_benders {
             }
             // Update Row Bounds (RHS) for the basic problem 
             std::vector<double> row_bounds;
-            row_bounds.reserve(stage_pointer->num_rows_*2);
-            for ( int i = 0; i < stage_pointer->num_rows_; i++ ){
+            row_bounds.reserve(number_of_allocated_rows*2);
+            for ( int i = 0; i < number_of_allocated_rows; i++ ){
                 row_bounds.push_back(benders_node_pointer->row_lower_[i]);
                 row_bounds.push_back(benders_node_pointer->row_upper_[i]);
             }
-            osi_solver->setRowSetBounds(&stage_pointer->row_indices_[0],&stage_pointer->row_indices_[stage_pointer->num_rows_],&row_bounds[0]);
+            osi_solver->setRowSetBounds(&stage_pointer->row_indices_[0],&stage_pointer->row_indices_[number_of_allocated_rows],&row_bounds[0]);
 
             // Remove all cuts from previous solutions ( includes "Theta" Constraints )
             int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
@@ -5015,6 +5047,7 @@ namespace parallel_benders {
 
         // Solve
         //osi_solver->writeLp("ctriple.lp");
+        osi_solver->setObjSense(-1); // Maximize
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
             LOG(ERROR) << "C^3-SLP solve was not optimal.";
@@ -5028,6 +5061,17 @@ namespace parallel_benders {
         stage_pointer->d_square_lambda_1_2_ = osi_solver->getColSolution()[lambda_1_2_col_start];
         // Pi
         StoreValuesFromSolverInArray(stage_pointer->d_square_pi_,osi_solver->getColSolution()+pi_col_start,num_cols);
+        if ( stage_pointer->d_square_matrix_ == NULL ){
+            stage_pointer->d_square_matrix_ = new CoinPackedMatrix();
+            stage_pointer->d_square_matrix_->reverseOrdering();
+            stage_pointer->d_square_matrix_->setDimensions(0,stage_pointer->num_columns_);
+        }
+        std::vector<int> indices_vector;
+        indices_vector.reserve(num_cols);
+        for (int i = 0; i < num_cols; i++)
+            indices_vector.push_back(i);
+
+        stage_pointer->d_square_matrix_->appendRow(num_cols,&indices_vector[0],stage_pointer->d_square_pi_);
 
 
 
@@ -5038,18 +5082,83 @@ namespace parallel_benders {
     void ParallelNestedBenders::BuildAndSolveRHSProblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_poiner )
     {
 
-
+        int num_cols_first_stage = stage_data_[0]->num_columns_;
+        int num_rows_first_stage = stage_data_[0]->num_rows_;  
         // TODO: Describe RHS-problem!
 
         //
 
+        // Compute \bar gamma_h (vector) and \nu_h (scalar)
+        double bar_nu_0 = 0;
+        double bar_nu_1 = 0;
+        std::vector<double> bar_gamma_0(num_cols_first_stage,0.0);
+        std::vector<double> bar_gamma_1(num_cols_first_stage,0.0);
+
+        const double * rhs_lower_subproblem = core_->getNode(current_stage_)->getRowLowerElements();
+        const double * rhs_upper_subproblem = core_->getNode(current_stage_)->getRowUpperElements();
+        for (int i = 0; i < stage_data_[current_stage_]->num_rows_; i++){
+            double rhs_value = 0.0;
+            if ( rhs_upper_subproblem[i] < infinity_) // Question is: Does this work this way? TODO
+                rhs_value = rhs_upper_subproblem[i];
+            if ( rhs_lower_subproblem[i] > -infinity_ ){
+                rhs_value = rhs_lower_subproblem[i];
+                assert(rhs_upper_subproblem[i]>= infinity_ || rhs_upper_subproblem[i] == rhs_value);
+            }
+            assert( !(rhs_upper_subproblem[i] >= infinity_ && rhs_lower_subproblem[i] <= -infinity_ ));
+            bar_nu_0 += rhs_value*stage_data_[current_stage_]->d_square_lambda_0_1_[i];
+            bar_nu_1 += rhs_value*stage_data_[current_stage_]->d_square_lambda_1_1_[i];
+        }
+        // \bar_nu
+        if ( !benders_tree_node_poiner->getDataPtr()->d_square_cut_rhs_.empty() ){
+            for (int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+stage_data_[current_stage_]->num_d_square_cuts_; i++){
+                bar_nu_0 += benders_tree_node_poiner->getDataPtr()->d_square_cut_rhs_[i-stage_data_[current_stage_]->num_rows_]*stage_data_[current_stage_]->d_square_lambda_0_1_[i];
+                bar_nu_1 += benders_tree_node_poiner->getDataPtr()->d_square_cut_rhs_[i-stage_data_[current_stage_]->num_rows_]*stage_data_[current_stage_]->d_square_lambda_1_1_[i];
+            }
+        }
+        bar_nu_1 += stage_data_[current_stage_]->d_square_lambda_1_2_;
+
+        // \bar_gamma
+        CoinPackedMatrix * t_matrix = core_->getNode(current_stage_)->generateCoinPackedTMatrix();
+        // Get Stochastic CoinPackedMatrix
+        CoinPackedMatrix * stochastic_t_matrix = benders_tree_node_poiner->getDataPtr()->smi_node_data_->generateCoinPackedTMatrix();
+        if ( stochastic_t_matrix->getNumRows() == 0 && stochastic_t_matrix->getNumCols() == 0 ){
+            delete stochastic_t_matrix;
+        }
+        else {
+            // Iterate over stochastic matrix and change entries in t-matrix
+            assert(false); // Need implementation
+        }
+        // Compute lambda_h_1^T \cdot T ( or T^T \cdot lambda_h_1 )
+        t_matrix->transpose();
+        t_matrix->times(stage_data_[current_stage_]->d_square_lambda_0_1_,&bar_gamma_0[0]);
+        t_matrix->times(stage_data_[current_stage_]->d_square_lambda_1_1_,&bar_gamma_1[0]);
+        // Now we need to add the d_square cut matrix, if we have one!
+        if ( benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_ != NULL){
+            std::vector<double> temp_gamma_0(num_cols_first_stage,0.0);
+            std::vector<double> temp_gamma_1(num_cols_first_stage,0.0);
+            benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_->transposeTimes(stage_data_[current_stage_]->d_square_lambda_0_1_+stage_data_[0]->num_columns_,&temp_gamma_0[0]);
+            benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_->transposeTimes(stage_data_[current_stage_]->d_square_lambda_1_1_+stage_data_[0]->num_columns_,&temp_gamma_1[0]);
+            // Add these values to bar_gamma_0 and bar_gamma_1
+            for (int i = 0; i < bar_gamma_0.size(); i++){
+                bar_gamma_0[i] += temp_gamma_0[i];
+                bar_gamma_1[i] += temp_gamma_1[i];
+            }
+        }
+
+        // Finished with bar_gamma and bar_nu generation
+        // Order of cols
+        // tau_0 = 0..num_rows-1
+        // tau_1 = num_rows..2*num_rows-1
+        // tau_0_0
+        // tau_0_1
+        // sigma 
+        // delta
+        // sigma_0
+
+        
+
         CoinPackedMatrix problem_matrix;
-        int num_cols_first_stage = stage_data_[0]->num_columns_;
-        int num_rows_first_stage = stage_data_[0]->num_rows_;                                                 
-
-                                                     
-
-
+                                               
         CoinPackedMatrix* first_stage_matrix = core_->getNode(0)->generateCoinPackedWMatrix();
         first_stage_matrix->transpose();
         problem_matrix.copyOf(*first_stage_matrix);
@@ -5074,29 +5183,29 @@ namespace parallel_benders {
         starts.push_back(0);
         for (int i = 0; i < num_cols_first_stage; i++){ // Add the sigma-variables
             indices.push_back(i); elements.push_back(-1.0); 
-            indices.push_back(num_cols_first_stage+1); elements.push_back(-1.0);            
-            starts.push_back(2);
+            indices.push_back(num_cols_first_stage+i); elements.push_back(-1.0);            
+            starts.push_back(starts.back()+2);
         }
 
-        double gamma_0 = 0.0; // Add tau_00
+        // Add tau_00
         for (int j = 0; j < num_cols_first_stage;j++){
-            indices.push_back(j); elements.push_back(gamma_0);
+            indices.push_back(j); elements.push_back(bar_gamma_0[j]);
         }
         starts.push_back(starts.back()+num_cols_first_stage);
 
-        double gamma_1 = 0.0; // Add tau_01
+        // Add tau_01
         for (int j = num_cols_first_stage; j < 2*num_cols_first_stage;j++){
-            indices.push_back(j); elements.push_back(gamma_1);
+            indices.push_back(j); elements.push_back(bar_gamma_1[j-num_cols_first_stage]);
         }
         starts.push_back(starts.back()+num_cols_first_stage);
         problem_matrix.appendCols(num_cols_first_stage+2,&starts[0],&indices[0],&elements[0]);
+
         int sigma_index = num_rows_first_stage*2;
         int tau_0_0_index = problem_matrix.getNumCols()-2;
         int tau_0_1_index = problem_matrix.getNumCols()-1;
         
 
-        // Now add rows for delta <= tau_h b+ \tau_0h \nu_h (2 more rows!
-        // Need two new rows and one new column! Add sigma_0 column also
+        // Add delta and sigma_0 variables
         empty_start_array.clear();
         empty_start_array.push_back(0); empty_start_array.push_back(0); empty_start_array.push_back(0);
         problem_matrix.appendCols(2,&empty_start_array[0],NULL,NULL);
@@ -5109,19 +5218,20 @@ namespace parallel_benders {
         // Prepare the sigma rows! (in row_ordered fashion)
         indices.clear(); elements.clear(); starts.clear(); starts.push_back(0);
         // Tau_0 row
-        double rhs_value = 0.0;
-        double bar_gamma = 0.0;
-        for (int i = 0; i < num_cols_first_stage; i++)
-            indices.push_back(i); elements.push_back(rhs_value);
-        indices.push_back(tau_0_0_index); elements.push_back(bar_gamma);
+        const double* rhs = tree_nodes_by_stage_[0][0]->getDataPtr()->solver_rhs_;
+        for (int i = 0; i < num_rows_first_stage; i++){
+            indices.push_back(i); elements.push_back(rhs[i]);
+        }
+        indices.push_back(tau_0_0_index); elements.push_back(bar_nu_0);
         indices.push_back(delta_index); elements.push_back(-1.0);
-        starts.push_back(num_cols_first_stage+2);
+        starts.push_back(starts.back()+num_rows_first_stage+2);
         // Tau_1 row
-        for (int i = 0; i < num_cols_first_stage; i++)
-            indices.push_back(i); elements.push_back(rhs_value);
-        indices.push_back(tau_0_1_index); elements.push_back(bar_gamma);
+        for (int i = num_rows_first_stage; i < 2*num_rows_first_stage; i++){
+            indices.push_back(i+num_rows_first_stage); elements.push_back(rhs[i-num_rows_first_stage]);
+        }
+        indices.push_back(tau_0_1_index); elements.push_back(bar_nu_1);
         indices.push_back(delta_index); elements.push_back(-1.0);
-        starts.push_back(num_cols_first_stage+2);
+        starts.push_back(starts.back()+num_rows_first_stage+2);
         
         //// Add rows for \sigma_0 >= tau_0h: 2 rows
         indices.push_back(tau_0_0_index); elements.push_back(1.0);
@@ -5176,20 +5286,44 @@ namespace parallel_benders {
         // Load problem in solver
         OsiSolverInterface * osi_solver = GetSolverByThread();
         osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coefs[0],&rhs_lower[0],&rhs_upper[0]);
+        osi_solver->setObjSense(-1);
 
         // Solve
         console_mutex_.lock();
         osi_solver->writeLp("rhs.lp");
         console_mutex_.unlock();
+
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
             LOG(ERROR) << "RHS-SLP solve was not optimal.";
         }
+        else {
+            // Store relevant values for D^2 Cut Generation
+            const double * solution = osi_solver->getColSolution();
+            double nu = solution[delta_index]/ solution[sigma_0_index];
+            std::vector<int> gamma_indices(num_cols_first_stage);
+            std::vector<double> gamma(num_cols_first_stage,0.0);
+            for (int i = 0; i < num_cols_first_stage; i++){
+                gamma[i] = solution[i+sigma_index]/solution[sigma_0_index];
+                gamma_indices[i] = i;
+            }
+            // Generate cut coefficients!
+            //double d_square_rhs = gamma;
+            //for (int i = 0; i < num_cols_first_stage; i++){
+            //    d_square_rhs -= gamma[i]*tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i];
+            //}
+            benders_tree_node_poiner->getDataPtr()->d_square_cut_rhs_.push_back(nu);
+            if ( stage_data_[current_stage_]->num_d_square_cuts_ == 0 ){
+                assert( benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_ == NULL);
+                benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_ = new CoinPackedMatrix();
+                benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_->reverseOrdering(); // Now row-ordered
+                benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_->setDimensions(0,num_cols_first_stage); // Now correct dimensions
+            }
+            benders_tree_node_poiner->getDataPtr()->d_square_cut_t_matrix_->appendRow(gamma.size(),&gamma_indices[0],&gamma[0]);
+            assert(benders_tree_node_poiner->getDataPtr()->d_square_cut_rhs_.size()-1 == stage_data_[current_stage_]->num_d_square_cuts_);
+        }
 
-        
-
-
-
+        // TODO: WarmStart-Handling
     }
 
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){

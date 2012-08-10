@@ -48,7 +48,7 @@ public:
 	double * getDenseRow(int i);
 
 	inline SmiCoreData * getCore() { return core_;}
-	inline int getStage() { return stg_;}
+	inline int getStage() const { return stg_;}
 
 	inline void setCoreCombineRule(SmiCoreCombineRule *r){combineRule_=r;}
 	inline SmiCoreCombineRule * getCoreCombineRule() { return combineRule_;}
