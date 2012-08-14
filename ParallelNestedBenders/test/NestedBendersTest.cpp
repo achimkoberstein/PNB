@@ -192,7 +192,7 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        //aggregates.push_back(0);
+        aggregates.push_back(0);
         aggregates.push_back(1);
         if ( num_aggregates_by_magic > 1)
             aggregates.push_back(-1);
@@ -230,6 +230,11 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                     
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
@@ -800,15 +805,16 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 }
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
+    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -365.517, 0.1);
 
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
+    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
 }
 //
 TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long to solve (due to 0 <= x <= 1 constraints not in matrix..)
@@ -1236,11 +1242,12 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*bonds*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
-    //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    ::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
+    //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
+        ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
