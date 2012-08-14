@@ -557,7 +557,7 @@ namespace parallel_benders {
                 // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
                 integer_problems_[i] = false;
                 // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-                d_square_translation_term_ = 86;
+                d_square_translation_term_ = 6000;
                 // 
                 d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
 
@@ -1647,7 +1647,7 @@ namespace parallel_benders {
                     misc_mutex_.lock();
                     stage_data_[current_stage_]->non_integer_scenarios.push_back(benders_tree_node_pointer->scenario());
                     if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO: Beware, magic number
-                        stage_data_[current_stage_]->violated_index_ = fractional_variables[index_for_fractional_max].first;
+                        stage_data_[current_stage_]->violated_index_ = fractional_variables[0].first; // should be index_for_fractional_max
                     misc_mutex_.unlock();
                 }
             }
@@ -5163,9 +5163,9 @@ namespace parallel_benders {
         osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coef[0],&rhs_lower[0],&rhs_upper[0]);
 
         // Solve
-        //std::stringstream string_stream;
-        //string_stream << "ctriple-" << current_iteration_ << ".lp";
-        //osi_solver->writeLp(string_stream.str().c_str());
+        std::stringstream string_stream;
+        string_stream << "ctriple-" << current_iteration_ << ".lp";
+        osi_solver->writeLp(string_stream.str().c_str());
         ////// Cplex specific cloning
         //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         //if ( cpx_ptr ){

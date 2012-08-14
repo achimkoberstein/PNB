@@ -202,6 +202,7 @@ private:
     bool d_square_;
     int d_square_translation_term_;
     int d_square_lower_bound_counter_;
+    std::vector<int> d_square_w_iteration_;
 
 
     Timer timer_;
