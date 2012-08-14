@@ -233,7 +233,7 @@ public:
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
                     solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
                     
@@ -805,7 +805,7 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 }
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
-    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -365.517, 0.1);
+    //EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -365.517, 0.1);
 
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
@@ -1246,8 +1246,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-        ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+    ::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
+        //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
