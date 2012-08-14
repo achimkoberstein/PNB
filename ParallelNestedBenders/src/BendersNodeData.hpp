@@ -290,6 +290,8 @@ struct BendersStageData {
     double d_square_lambda_0_2_;
     double d_square_lambda_1_2_;
     double* d_square_pi_;
+    std::vector<int> d_square_disjunctive_indices_;
+    bool solve_binary_subproblems_;
 
     
 

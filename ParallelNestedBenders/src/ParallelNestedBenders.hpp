@@ -200,6 +200,8 @@ private:
 
     // D^2 C^3
     bool d_square_;
+    int d_square_translation_term_;
+    int d_square_lower_bound_counter_;
 
 
     Timer timer_;
