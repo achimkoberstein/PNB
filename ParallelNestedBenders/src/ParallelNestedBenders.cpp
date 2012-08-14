@@ -2157,6 +2157,7 @@ namespace parallel_benders {
 
         if ( d_square_ && stage_pointer->num_d_square_cuts_ > 0){
             assert( row == stage_pointer->num_rows_);
+            cut_rhs += d_square_translation_term_;
             for ( int i = 0; i < stage_pointer->num_d_square_cuts_;i++)
                 cut_rhs += benders_node_pointer->d_square_cut_rhs_[i]*dual_solution[i+row];
         }
@@ -2380,7 +2381,7 @@ namespace parallel_benders {
 
             // Add cut
             boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
-            cut_pointer->setLb(cut_lower_bound+d_square_translation_term_);
+            cut_pointer->setLb(cut_lower_bound);
             cut_pointer->setUb(infinity_);
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
             boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
@@ -2802,7 +2803,7 @@ namespace parallel_benders {
         // Add cut coefficients for the d_square_case
         if ( d_square_ && stage_pointer->num_d_square_cuts_ > 0 ){
             std::vector<double> x_results(stage_data_[current_stage_-1]->num_columns_,0.0);
-            stage_pointer->d_square_matrix_->transposeTimes(dual_solution+stage_pointer->num_rows_,&x_results[0]);
+            benders_tree_node_pointer->getDataPtr()->d_square_cut_t_matrix_->transposeTimes(dual_solution+stage_pointer->num_rows_,&x_results[0]);
             for (int i = 0; i< stage_data_[current_stage_-1]->num_columns_;i++)
                 cut_coefficients_pointer->operator[](i) += x_results[i];
         }
@@ -4942,6 +4943,9 @@ namespace parallel_benders {
         //
         //
         // If we want to call this method, we need already a disjunctive indice and some expected value stuff!
+
+        bool conditional_expectation = false; // Otherwise full expectation is used
+        bool restricted_subproblem = false; // Otherwise we build full subproblem!
         // Create a new problem via matrix or cuts..
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         SmiNodeData* deterministic_node_pointer = core_->getNode(current_stage_); // Deterministic node (there is one per stage)
@@ -4963,7 +4967,7 @@ namespace parallel_benders {
         if ( stage_pointer->d_square_matrix_ != NULL){
             // I think we should store the disjunctive variables 
             for (int i = 0; i < stage_pointer->num_d_square_cuts_;i++){
-                if ( true || stage_pointer->d_square_disjunctive_indices_[i] < disjunctive_variable_index){ // TODO: Remove true!
+                if ( !restricted_subproblem || stage_pointer->d_square_disjunctive_indices_[i] < disjunctive_variable_index){ 
                     // Add this row to the w_matrix
                     w_matrix->appendRow(stage_pointer->d_square_matrix_->getVector(i));
                 }
@@ -4974,11 +4978,10 @@ namespace parallel_benders {
                     removed_rows++;
                 }
             }
-            //w_matrix->bottomAppendPackedMatrix(*stage_pointer->d_square_matrix_);
         }
         w_matrix->transpose(); // From now on col_ordered.
 
-        //total_rows_w_k_matrix -= removed_rows;
+        total_rows_w_k_matrix -= removed_rows;
 
         CoinPackedMatrix problem_matrix; // This is the matrix we put in the solver.
         problem_matrix.copyOf(*w_matrix); // Copy w_matrix!
@@ -5096,12 +5099,23 @@ namespace parallel_benders {
             sum_prob += tree_nodes_by_stage_[current_stage_][stage_pointer->non_integer_scenarios[i]]->getDataPtr()->probability_;
         assert(sum_prob <= 1+integer_tolerance_);
 
-        for (std::vector<int>::iterator it = stage_pointer->non_integer_scenarios.begin(); it != stage_pointer->non_integer_scenarios.end(); ++it){
-            double conditional_prob = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->probability_/sum_prob;
-            const double* col_solution = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->col_solution_;
-            assert( col_solution != NULL);
-            for (int i = 0; i < num_cols; i++)
-                obj_coef[pi_col_start+i] -= conditional_prob*col_solution[i];
+        // Iterate over non_integer_scenarios if we use conditional expectation, otherwise iterate over all scenarios!
+        if ( conditional_expectation ){
+            for (std::vector<int>::iterator it = stage_pointer->non_integer_scenarios.begin(); it != stage_pointer->non_integer_scenarios.end(); ++it){
+                double conditional_prob = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->probability_/sum_prob;
+                const double* col_solution = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->col_solution_;
+                assert( col_solution != NULL);
+                for (int i = 0; i < num_cols; i++)
+                    obj_coef[pi_col_start+i] -= conditional_prob*col_solution[i];
+            }
+        }
+        else {
+            for (int j = 0; j < tree_nodes_by_stage_[current_stage_].size(); j++){
+                const double* col_solution = tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->col_solution_;
+                assert( col_solution != NULL);
+                for (int i = 0; i < num_cols; i++)
+                    obj_coef[pi_col_start+i] -= tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->probability_*col_solution[i];
+            }
         }
 
         for (int i = pi_0_col_start; i < total_cols;i++)
@@ -5124,10 +5138,10 @@ namespace parallel_benders {
         osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coef[0],&rhs_lower[0],&rhs_upper[0]);
 
         // Solve
-        std::stringstream string_stream;
-        string_stream << "ctriple-" << current_iteration_ << ".lp";
-        osi_solver->writeLp(string_stream.str().c_str());
-        //// Cplex specific cloning
+        //std::stringstream string_stream;
+        //string_stream << "ctriple-" << current_iteration_ << ".lp";
+        //osi_solver->writeLp(string_stream.str().c_str());
+        ////// Cplex specific cloning
         //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         //if ( cpx_ptr ){
         //    // Get ENV and LP ptr
@@ -5143,6 +5157,7 @@ namespace parallel_benders {
         //    LOG(INFO) << "Done.";
         //}
         osi_solver->setObjSense(-1); // Maximize
+        //osi_solver->setHintParam(OsiDoDualInInitial,false);
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
             LOG(ERROR) << "C^3-SLP solve was not optimal.";
@@ -5222,6 +5237,8 @@ namespace parallel_benders {
             bar_nu_0 += rhs_value*stage_data_[current_stage_]->d_square_lambda_0_1_[i];
             bar_nu_1 += rhs_value*stage_data_[current_stage_]->d_square_lambda_1_1_[i];
         }
+        delete [] row_lower;
+        delete [] row_upper;
         // \bar_nu
         if ( !benders_tree_node_pointer->getDataPtr()->d_square_cut_rhs_.empty() ){
             for (int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+stage_data_[current_stage_]->num_d_square_cuts_; i++){
@@ -5403,11 +5420,11 @@ namespace parallel_benders {
         osi_solver->setObjSense(-1);
 
         // Solve
-        console_mutex_.lock();
-        std::stringstream file_name;
-        file_name << "rhs-" << benders_tree_node_pointer->scenario() << ".lp";
-        osi_solver->writeLp(file_name.str().c_str());
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //std::stringstream file_name;
+        //file_name << "rhs-" << benders_tree_node_pointer->scenario() << ".lp";
+        //osi_solver->writeLp(file_name.str().c_str());
+        //console_mutex_.unlock();
 
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
