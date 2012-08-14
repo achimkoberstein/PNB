@@ -268,7 +268,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
-        sequencing_protocol_(0),second_iteration_stage_(1),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
+        sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),
         warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
@@ -392,7 +392,7 @@ namespace parallel_benders {
 
         // Tree walking procedure
         sequencing_protocol_ = param.get(PNB_TREE_WALK_STRATEGY,0);
-        second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY_STAGE,1);
+        second_iteration_stage_ = param.get(PNB_TREE_WALK_STRATEGY_STAGE,0);
         assert( second_iteration_stage_ >= 0);
         if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION ){ // In this case we can either disable the second iteration OR set it to lowest possible level
             if ( second_iteration_stage_ == 0 || second_iteration_stage_ >= num_stages_-1){
@@ -798,8 +798,9 @@ namespace parallel_benders {
         double initial_time = 0;
         std::vector<double> initial_time_for_stage(num_stages_,0.0);
         int critical_stage = second_iteration_stage_; // The minimum critical stage, which is always viable is the second stage
-        if ( critical_stage > 0 )// If we have a critical stage that is not trivial, we say that we already have measured the time, i.e. do not set critical stage!
+        if ( critical_stage > 0 ){// If we have a critical stage that is not trivial, we say that we already have measured the time, i.e. do not set critical stage!
             time_not_measured = false;
+        }
         double percent_threshold = 0.1;
 
         // Variables for pretty printing
@@ -1146,21 +1147,24 @@ namespace parallel_benders {
                 
             }
 
-            if ( !infeasible_problem_ && infeasible_problems_.none() && current_stage_ == num_stages_-1){
-                // Count how long it is equal!
-                if ( CompareForEquality(temporary_upper_bound_,current_solution_value_,relative_epsilon_) ){
-                // Increase counter
+            if ( !infeasible_problem_ && infeasible_problems_.none() ){
+                // No similarity check for FF and epsilonFF ( has to be done in another way, if any)
+                if ( current_stage_ == num_stages_-1 && !(sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD)){
+                    // Count how long it is equal!
+                    if ( CompareForEquality(temporary_upper_bound_,current_solution_value_,relative_epsilon_) ){
+                        // Increase counter
                     if ( !d_square_ )
                         solution_similiarity_counter_++;
                     else
                         ;
+                    }
+                    else{
+                        // Reset counter
+                        solution_similiarity_counter_ = 0;
+                    }
+                    current_solution_value_ = temporary_upper_bound_;
                 }
-                else{
-                    // Reset counter
-                    solution_similiarity_counter_ = 0;
-                }
-                current_solution_value_ = temporary_upper_bound_;
-                // We need to break the while loop. It is done right at the top!
+                // We need to break the while loop. It is done right at the top, via max_similarity_solutions!
 
             }
 
