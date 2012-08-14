@@ -1098,18 +1098,21 @@ namespace parallel_benders {
                 
             }
 
-            if ( !infeasible_problem_ && infeasible_problems_.none() && current_stage_ == num_stages_-1){
-                // Count how long it is equal!
-                if ( CompareForEquality(temporary_upper_bound_,current_solution_value_,relative_epsilon_) ){
-                // Increase counter
-                    solution_similiarity_counter_++;
+            if ( !infeasible_problem_ && infeasible_problems_.none() ){
+                // No similarity check for FF and epsilonFF ( has to be done in another way, if any)
+                if ( current_stage_ == num_stages_-1 && !(sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD)){
+                    // Count how long it is equal!
+                    if ( CompareForEquality(temporary_upper_bound_,current_solution_value_,relative_epsilon_) ){
+                        // Increase counter
+                        solution_similiarity_counter_++;
+                    }
+                    else{
+                        // Reset counter
+                        solution_similiarity_counter_ = 0;
+                    }
+                    current_solution_value_ = temporary_upper_bound_;
                 }
-                else{
-                    // Reset counter
-                    solution_similiarity_counter_ = 0;
-                }
-                current_solution_value_ = temporary_upper_bound_;
-                // We need to break the while loop. It is done right at the top!
+                // We need to break the while loop. It is done right at the top, via max_similarity_solutions!
 
             }
 
