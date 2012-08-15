@@ -557,7 +557,7 @@ namespace parallel_benders {
                 // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
                 integer_problems_[i] = false;
                 // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-                d_square_translation_term_ = 6000;
+                d_square_translation_term_ = 86;
                 // 
                 d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
 
@@ -1647,7 +1647,7 @@ namespace parallel_benders {
                     misc_mutex_.lock();
                     stage_data_[current_stage_]->non_integer_scenarios.push_back(benders_tree_node_pointer->scenario());
                     if ( stage_data_[current_stage_]->violated_index_ < 0) //TODO: Beware, magic number
-                        stage_data_[current_stage_]->violated_index_ = fractional_variables[0].first; // should be index_for_fractional_max
+                        stage_data_[current_stage_]->violated_index_ = fractional_variables[index_for_fractional_max].first; // should be index_for_fractional_max
                     misc_mutex_.unlock();
                 }
             }
@@ -4947,10 +4947,10 @@ namespace parallel_benders {
         //
         // If we want to call this method, we need already a disjunctive indice and some expected value stuff!
 
-        bool conditional_expectation = true; // Otherwise full expectation is used
-        bool restricted_subproblem = true; // Otherwise we build full subproblem!
+        bool conditional_expectation = false; // Otherwise full expectation is used
+        bool restricted_subproblem = false; // Otherwise we build full subproblem!
         bool use_w_counter = false; // Otherwise, we use restricted subproblem procedure
-        assert( restricted_subproblem || use_w_counter );// together it is an xor..
+        //assert( restricted_subproblem || use_w_counter );// together it is an xor..
         assert( !(restricted_subproblem && use_w_counter));
         // Create a new problem via matrix or cuts..
         BendersStageData* stage_pointer = stage_data_[current_stage_];
@@ -4970,13 +4970,15 @@ namespace parallel_benders {
         // TODO: We must take care what kind of PI-elements we actually add to this problem, to assure convergence, see paper of Higle/Sen for that.
         int removed_rows = 0;
         LOG(INFO) << "DI : " << disjunctive_variable_index;
+        std::vector<int> active_lambda(stage_pointer->num_d_square_cuts_,0); // Can be a bitset!
         if ( stage_pointer->d_square_matrix_ != NULL){
             // I think we should store the disjunctive variables 
             for (int i = 0; i < stage_pointer->num_d_square_cuts_;i++){
-                if ( restricted_subproblem ){
+                if ( restricted_subproblem && !use_w_counter){
                     if ( stage_pointer->d_square_disjunctive_indices_[i] < disjunctive_variable_index ){ 
                         // Add this row to the w_matrix
                         w_matrix->appendRow(stage_pointer->d_square_matrix_->getVector(i));
+                        active_lambda[i] = 1;
                     }
                     else { // Else add an empty row
                         int int_temp = 0;
@@ -4985,7 +4987,7 @@ namespace parallel_benders {
                         removed_rows++;
                     }
                 }
-                if ( use_w_counter ){
+                if ( use_w_counter && !restricted_subproblem){
                     if ( i <= d_square_w_iteration_[disjunctive_variable_index] )
                         w_matrix->appendRow(stage_pointer->d_square_matrix_->getVector(i));
                     else {
@@ -4996,9 +4998,11 @@ namespace parallel_benders {
                         removed_rows++;
                     }
                 }
-                
+                if ( !use_w_counter && !restricted_subproblem ){
+                    w_matrix->appendRow(stage_pointer->d_square_matrix_->getVector(i));
+                    active_lambda[i] = 1;
+                }
             }
-
             if ( use_w_counter ){
                 for (int i = disjunctive_variable_index+1; i < num_cols; i++)
                     d_square_w_iteration_[i] = stage_pointer->num_d_square_cuts_+1;
@@ -5073,6 +5077,10 @@ namespace parallel_benders {
             indices_vector_one[total_rows_w_k_matrix] = starting_scenario_index+scenario_index;
             memcpy(temp_array,tree_nodes_by_stage_[current_stage_][scenario_index]->getDataPtr()->solver_rhs_,total_rows_w_k_matrix*sizeof(double));
             temp_array[total_rows_w_k_matrix] = -1.0;// pi_0_omega
+            //for (int i = 0; i < active_lambda.size();i++){
+            //    if ( active_lambda[i] < 1 )
+            //        temp_array[num_rows_w_matrix+i] = 0.0;
+            //}
             problem_matrix.appendRow(total_rows_w_k_matrix+1,&indices_vector_one[0],temp_array);
         }
         // Iterate over all the scenarios. (cols for lambda_1_2)
@@ -5081,6 +5089,10 @@ namespace parallel_benders {
             memcpy(temp_array,tree_nodes_by_stage_[current_stage_][scenario_index]->getDataPtr()->solver_rhs_,total_rows_w_k_matrix*sizeof(double));
             temp_array[total_rows_w_k_matrix] = 1.0; // upper rounding of disjunctive variable value leads to 1, for binary problems!
             temp_array[total_rows_w_k_matrix+1] = -1.0;// pi_0_omega
+            //for (int i = 0; i < active_lambda.size();i++){
+            //    if ( active_lambda[i] < 1 )
+            //        temp_array[num_rows_w_matrix+i] = 0.0;
+            //}
             problem_matrix.appendRow(total_rows_w_k_matrix+2,&indices_vector_two[0],temp_array);
         }
         delete [] temp_array;
@@ -5162,27 +5174,30 @@ namespace parallel_benders {
         OsiSolverInterface * osi_solver = GetSolverByThread();
         osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coef[0],&rhs_lower[0],&rhs_upper[0]);
 
-        // Solve
         std::stringstream string_stream;
         string_stream << "ctriple-" << current_iteration_ << ".lp";
-        osi_solver->writeLp(string_stream.str().c_str());
+
+        // Solve
         ////// Cplex specific cloning
-        //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-        //if ( cpx_ptr ){
-        //    // Get ENV and LP ptr
-        //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-        //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-        //    CPXwriteprob(env_ptr,lp_ptr,string_stream.str().c_str(),"lp");
-        //    CPXchgobjsen(env_ptr,lp_ptr,CPX_MAX);
-        //    CPXprimopt(env_ptr,lp_ptr);
-        //    double objective_value = 0;
-        //    CPXgetobjval(env_ptr,lp_ptr,&objective_value);
-        //    std::vector<double> objective_solution(total_cols,0.0);
-        //    CPXgetx(env_ptr,lp_ptr,&objective_solution[0],0,total_cols-1);
-        //    LOG(INFO) << "Done.";
-        //}
+        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        if ( cpx_ptr ){
+            // Get ENV and LP ptr
+            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+            CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            CPXwriteprob(env_ptr,lp_ptr,string_stream.str().c_str(),"lp");
+            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,0);
+            CPXchgobjsen(env_ptr,lp_ptr,CPX_MAX);
+            CPXprimopt(env_ptr,lp_ptr);
+            double objective_value = 0;
+            CPXgetobjval(env_ptr,lp_ptr,&objective_value);
+            std::vector<double> objective_solution(total_cols,0.0);
+            CPXgetx(env_ptr,lp_ptr,&objective_solution[0],0,total_cols-1);
+            LOG(INFO) << "Done.";
+        }
 
         osi_solver->setObjSense(-1); // Maximize
+        osi_solver->writeLp(string_stream.str().c_str());
+
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
             LOG(ERROR) << "C^3-SLP solve was not optimal.";
@@ -5445,11 +5460,11 @@ namespace parallel_benders {
         osi_solver->setObjSense(-1);
 
         // Solve
-        //console_mutex_.lock();
-        //std::stringstream file_name;
-        //file_name << "rhs-" << benders_tree_node_pointer->scenario() << ".lp";
-        //osi_solver->writeLp(file_name.str().c_str());
-        //console_mutex_.unlock();
+        console_mutex_.lock();
+        std::stringstream file_name;
+        file_name << "rhs-" << benders_tree_node_pointer->scenario() << ".lp";
+        osi_solver->writeLp(file_name.str().c_str());
+        console_mutex_.unlock();
 
         ////// Cplex specific cloning
         //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
