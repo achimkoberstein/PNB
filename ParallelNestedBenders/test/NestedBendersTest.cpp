@@ -190,12 +190,21 @@ public:
         delete smi_model; // Get rid of the model, before we actually solve stuff
         benders_parameter_.init();
 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
         //aggregates.push_back(0);
-        aggregates.push_back(1);
-        if ( num_aggregates_by_magic > 1)
-            aggregates.push_back(-1);
+        //aggregates.push_back(1);
+        //if ( num_aggregates_by_magic > 1)
+            //aggregates.push_back(-1);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -231,12 +240,6 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
-
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
-                    solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
-                    
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
 
@@ -805,7 +808,7 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 }
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
-    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -365.517, 0.1);
+    
 
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
@@ -818,7 +821,11 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, 
 }
 //
 TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long to solve (due to 0 <= x <= 1 constraints not in matrix..)
-    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);
+    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); // not solvable: lower bound does not converge to upper bound
+    //EXPECT_NEAR(solveSMPS("sslp_replications/sslp_5_50_50a"), -121.6, 0.1); // Problems reading in the file
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1); // Solvable
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
+    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
@@ -1246,8 +1253,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-    ::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+    ::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
+    //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)

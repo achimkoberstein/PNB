@@ -516,7 +516,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        //osi_solver_->messageHandler()->setLogLevel(1);
+        osi_solver_->messageHandler()->setLogLevel(1);
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -557,14 +557,12 @@ namespace parallel_benders {
                 // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
                 integer_problems_[i] = false;
                 // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-                d_square_translation_term_ = 86;
+                d_square_translation_term_ = 8000;
                 // 
                 d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
 
              }
         }
-
-
 
         // Stage Aggregation!
         if ( stage_aggregation_){
@@ -1047,6 +1045,7 @@ namespace parallel_benders {
             /************************************************************************/
             /* Solve the subproblems                                                */
             /************************************************************************/
+            int copy_of_temporary_upper_bound_ = temporary_upper_bound_;
             int num_nodes = tree_nodes_by_stage_[current_stage_].size();
             for ( int i = 0; i < num_nodes; i++ ){
                 // Schedule the tasks for this stage
@@ -1065,6 +1064,14 @@ namespace parallel_benders {
                     stage_data_[current_stage_]->non_integer_scenarios.clear();
                     stage_data_[current_stage_]->violated_index_ = -1;
 
+                    // Before we resolve the problems, we need to reset temporary bounds
+                    if ( compute_stage_bounds_ ){
+                    temporary_stage_lower_bound_ = 0.0;
+                    temporary_stage_upper_bound_ = 0.0;
+                    }
+                    else {
+                        temporary_upper_bound_ = copy_of_temporary_upper_bound_;
+                    }
                     int num_nodes = tree_nodes_by_stage_[current_stage_].size();
                     for ( int i = 0; i < num_nodes; i++ ){
                         // Schedule the tasks for this stage
@@ -1711,12 +1718,10 @@ namespace parallel_benders {
                     // Compute dual information from solution we got!
                     std::vector<double> dual(osi_solver->getNumRows());
                     std::vector<double> reduced(osi_solver->getNumCols());
-                    ComputeDualSolutionForMipProblem(osi_solver,&dual[0],&reduced[0]);
+                    ComputeDualSolutionForMipProblem(osi_solver,&dual[0],&reduced[0],benders_node_pointer->col_solution_);
                     StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,&dual[0],osi_solver->getNumRows());
-                    if ( stage_data_[current_stage_]->non_zero_bounds_)
-                        StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
+                    StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
                 }
-
             }
             else{ // In case of non-integer problems
                 StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
@@ -1730,10 +1735,10 @@ namespace parallel_benders {
                 }
             }
 
-            if ( stage_data_[current_stage_]->non_zero_bounds_ && benders_node_pointer->reduced_cost_ != NULL){
+            if ( (stage_data_[current_stage_]->non_zero_bounds_ || integer_problems_[current_stage_] ) && benders_node_pointer->reduced_cost_ != NULL){
                 const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
-                const double* variable_lower_bounds = osi_solver->getColLower();
-                const double* variable_upper_bounds = osi_solver->getColUpper();
+                const double* variable_lower_bounds = integer_problems_[current_stage_] ? benders_node_pointer->col_solution_ : osi_solver->getColLower();
+                const double* variable_upper_bounds = integer_problems_[current_stage_] ? benders_node_pointer->col_solution_ : osi_solver->getColUpper();
                 double computed_dual_value_for_variable_bounds = 0;
                 const double* column_solution = benders_node_pointer->col_solution_;
                 assert(column_solution!=NULL);
@@ -4463,7 +4468,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
     {
         // Silence solver 
-        osi_solver->messageHandler()->setLogLevel(0);
+        //osi_solver->messageHandler()->setLogLevel(0);
         osi_solver->setHintParam(OsiDoPresolveInInitial,true);
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
@@ -4947,8 +4952,8 @@ namespace parallel_benders {
         //
         // If we want to call this method, we need already a disjunctive indice and some expected value stuff!
 
-        bool conditional_expectation = false; // Otherwise full expectation is used
-        bool restricted_subproblem = false; // Otherwise we build full subproblem!
+        bool conditional_expectation = true; // Otherwise full expectation is used
+        bool restricted_subproblem = true; // Otherwise we build full subproblem!
         bool use_w_counter = false; // Otherwise, we use restricted subproblem procedure
         //assert( restricted_subproblem || use_w_counter );// together it is an xor..
         assert( !(restricted_subproblem && use_w_counter));
@@ -5077,10 +5082,10 @@ namespace parallel_benders {
             indices_vector_one[total_rows_w_k_matrix] = starting_scenario_index+scenario_index;
             memcpy(temp_array,tree_nodes_by_stage_[current_stage_][scenario_index]->getDataPtr()->solver_rhs_,total_rows_w_k_matrix*sizeof(double));
             temp_array[total_rows_w_k_matrix] = -1.0;// pi_0_omega
-            //for (int i = 0; i < active_lambda.size();i++){
-            //    if ( active_lambda[i] < 1 )
-            //        temp_array[num_rows_w_matrix+i] = 0.0;
-            //}
+            for (int i = 0; i < active_lambda.size();i++){
+                if ( active_lambda[i] < 1 )
+                    temp_array[num_rows_w_matrix+i] = 0.0;
+            }
             problem_matrix.appendRow(total_rows_w_k_matrix+1,&indices_vector_one[0],temp_array);
         }
         // Iterate over all the scenarios. (cols for lambda_1_2)
@@ -5089,10 +5094,10 @@ namespace parallel_benders {
             memcpy(temp_array,tree_nodes_by_stage_[current_stage_][scenario_index]->getDataPtr()->solver_rhs_,total_rows_w_k_matrix*sizeof(double));
             temp_array[total_rows_w_k_matrix] = 1.0; // upper rounding of disjunctive variable value leads to 1, for binary problems!
             temp_array[total_rows_w_k_matrix+1] = -1.0;// pi_0_omega
-            //for (int i = 0; i < active_lambda.size();i++){
-            //    if ( active_lambda[i] < 1 )
-            //        temp_array[num_rows_w_matrix+i] = 0.0;
-            //}
+            for (int i = 0; i < active_lambda.size();i++){
+                if ( active_lambda[i] < 1 )
+                    temp_array[num_rows_w_matrix+i] = 0.0;
+            }
             problem_matrix.appendRow(total_rows_w_k_matrix+2,&indices_vector_two[0],temp_array);
         }
         delete [] temp_array;
@@ -5178,25 +5183,25 @@ namespace parallel_benders {
         string_stream << "ctriple-" << current_iteration_ << ".lp";
 
         // Solve
-        ////// Cplex specific cloning
-        OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-        if ( cpx_ptr ){
-            // Get ENV and LP ptr
-            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-            CPXwriteprob(env_ptr,lp_ptr,string_stream.str().c_str(),"lp");
-            CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,0);
-            CPXchgobjsen(env_ptr,lp_ptr,CPX_MAX);
-            CPXprimopt(env_ptr,lp_ptr);
-            double objective_value = 0;
-            CPXgetobjval(env_ptr,lp_ptr,&objective_value);
-            std::vector<double> objective_solution(total_cols,0.0);
-            CPXgetx(env_ptr,lp_ptr,&objective_solution[0],0,total_cols-1);
-            LOG(INFO) << "Done.";
-        }
+        //////// Cplex specific cloning
+        //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        //if ( cpx_ptr ){
+        //    // Get ENV and LP ptr
+        //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+        //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //    CPXwriteprob(env_ptr,lp_ptr,string_stream.str().c_str(),"lp");
+        //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,0);
+        //    CPXchgobjsen(env_ptr,lp_ptr,CPX_MAX);
+        //    CPXprimopt(env_ptr,lp_ptr);
+        //    double objective_value = 0;
+        //    CPXgetobjval(env_ptr,lp_ptr,&objective_value);
+        //    std::vector<double> objective_solution(total_cols,0.0);
+        //    CPXgetx(env_ptr,lp_ptr,&objective_solution[0],0,total_cols-1);
+        //    LOG(INFO) << "Done.";
+        //}
 
         osi_solver->setObjSense(-1); // Maximize
-        osi_solver->writeLp(string_stream.str().c_str());
+        //osi_solver->writeLp(string_stream.str().c_str());
 
         osi_solver->initialSolve(); // Solve problem!
         if ( !osi_solver->isProvenOptimal() ){
@@ -5457,14 +5462,15 @@ namespace parallel_benders {
         // Load problem in solver
         OsiSolverInterface * osi_solver = GetSolverByThread();
         osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coefs[0],&rhs_lower[0],&rhs_upper[0]);
-        osi_solver->setObjSense(-1);
+        osi_solver->setObjSense(-1); // It is a maximization problem
+
 
         // Solve
-        console_mutex_.lock();
-        std::stringstream file_name;
-        file_name << "rhs-" << benders_tree_node_pointer->scenario() << ".lp";
-        osi_solver->writeLp(file_name.str().c_str());
-        console_mutex_.unlock();
+        //console_mutex_.lock();
+        //std::stringstream file_name;
+        //file_name << "rhs-" << benders_tree_node_pointer->scenario() << ".lp";
+        //osi_solver->writeLp(file_name.str().c_str());
+        //console_mutex_.unlock();
 
         ////// Cplex specific cloning
         //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -5603,27 +5609,57 @@ namespace parallel_benders {
         osi_solver->initialSolve();
     }
 
-    void ComputeDualSolutionForMipProblem( OsiSolverInterface* osi_solver, double* dual, double* reduced)
+    void ComputeDualSolutionForMipProblem( OsiSolverInterface* osi_solver, double* dual, double* reduced, double* col_solution)
     {
         // Cplex specific cloning
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         if ( cpx_ptr ){
             // Get ENV and LP ptr
+            
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            int num_cols = CPXgetnumcols(env_ptr,lp_ptr);
             double objective;
             CPXgetobjval(env_ptr,lp_ptr,&objective);
+            // Store and reset bounds to achieve a fixed lp problem
+            std::vector<double> lower_bound(num_cols);
+            std::vector<double> upper_bound(num_cols);
+            CPXgetlb(env_ptr,lp_ptr,&lower_bound[0],0,num_cols-1);
+            CPXgetub(env_ptr,lp_ptr,&upper_bound[0],0,num_cols-1);
+            std::vector<int> column_indices;
+            std::vector<char> column_bound_indicator;
+            column_indices.reserve(num_cols);
+            column_bound_indicator.reserve(num_cols);
+            for (int i = 0; i < num_cols;i++){
+                column_indices.push_back(i);
+                column_bound_indicator.push_back('B');
+            }
+            CPXchgbds(env_ptr,lp_ptr,num_cols,&column_indices[0],&column_bound_indicator[0],col_solution);
             //LOG(INFO) << "MIP: " << objective;
             CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_LP);
             CPXlpopt(env_ptr,lp_ptr);
             // Store dual solution and reduced cost!
             CPXgetpi(env_ptr,lp_ptr,dual,0,CPXgetnumrows(env_ptr,lp_ptr)-1);
-            CPXgetdj(env_ptr,lp_ptr,reduced,0,CPXgetnumcols(env_ptr,lp_ptr)-1);
-            CPXgetobjval(env_ptr,lp_ptr,&objective);
+            CPXgetdj(env_ptr,lp_ptr,reduced,0,num_cols-1);
+            //CPXgetobjval(env_ptr,lp_ptr,&objective);
             //LOG(INFO) << "LP: " << objective;
+            // Reset column bounds!
+            column_bound_indicator.clear();
+            column_bound_indicator.resize(2*num_cols);
+            column_indices.reserve(2*num_cols);
+            assert(column_indices.size() == num_cols);
+            for (int i = 0; i < num_cols;i++){
+                column_indices.push_back(i);
+                column_bound_indicator[i] = 'L';
+                column_bound_indicator[i+num_cols] = 'U';
+            }
+            lower_bound.reserve(2*num_cols);
+            lower_bound.insert(lower_bound.end(),upper_bound.begin(),upper_bound.end());
+            CPXchgbds(env_ptr,lp_ptr,num_cols,&column_indices[0],&column_bound_indicator[0],&lower_bound[0]);
+
             // Change back to MILP
-            //CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_MILP);
-            // Resolve MIP
+            CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_MILP); 
+            //// Resolve MIP
             //CPXmipopt(env_ptr,lp_ptr);
             //CPXgetobjval(env_ptr,lp_ptr,&objective);
             //LOG(INFO) << "MIP: " << objective;
