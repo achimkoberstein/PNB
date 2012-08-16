@@ -195,6 +195,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
