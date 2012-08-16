@@ -200,6 +200,9 @@ private:
 
     // D^2 C^3
     bool d_square_;
+    int d_square_translation_term_;
+    int d_square_lower_bound_counter_;
+    std::vector<int> d_square_w_iteration_;
 
 
     Timer timer_;
@@ -324,7 +327,7 @@ bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity,
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
-void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced);
+void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced,double* col_solution);
 
 } // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__
