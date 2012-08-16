@@ -516,7 +516,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(1);
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -1029,7 +1029,7 @@ namespace parallel_benders {
                 }
 
 
-                if ( d_square_lower_bound_counter_ > 1 ){
+                if ( d_square_lower_bound_counter_ > 0 ){
                     // No difference between lower and upper bound
                     // Solve MIP subproblems!
                     stage_data_[current_stage_]->solve_binary_subproblems_ = true;
@@ -1098,6 +1098,57 @@ namespace parallel_benders {
                     
                     if ( stage_data_[current_stage_]->violated_index_ < 0)
                         can_update_upper_bound = true;
+                }
+                if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){//|| stage_data_[current_stage_]->violated_index_ < 0 ) {
+                    // Now we need to add a cut to the master-problem, from LaporteLoveaux
+                    // We need finite lower bound for the second stage, this is supposed to be our translation amount (of course with a negative sign)
+                    // We need the current expected value of second stage problems, this is temporary_upper_bound
+                    // We need the first stage integer (binary) cols and the current first stage integer solution!
+                    
+                    double cut_rhs = 0;
+                    double lower_bound_for_second_stage = -d_square_translation_term_;
+                    double cut_coefficient_scalar = temporary_upper_bound_-lower_bound_for_second_stage;
+                    std::vector<int> integer_cols = core_->getIntCols(current_stage_-1);
+                    std::vector<double> cut_coefficients;
+                    cut_coefficients.reserve(integer_cols.size());
+                    // Get first stage solution and compute cut coefficients
+                    const double* col_solution = tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_;
+                    int count_binaries_valued_one = -1;
+                    // Laporte-Louveaux Paper 1993, we have - and + exchanged, because we move these values to the other side of >= compared with the paper
+                    for ( std::vector<int>::iterator it  = integer_cols.begin();it < integer_cols.end(); ++it){
+                        if ( CompareForEquality(col_solution[*it], 1,integer_tolerance_) ){
+                            cut_coefficients.push_back(-cut_coefficient_scalar);
+                            count_binaries_valued_one++;
+                        }
+                        else if ( CompareForEquality(col_solution[*it],0,integer_tolerance_) )
+                            cut_coefficients.push_back(+cut_coefficient_scalar);
+                    }
+                    // Compute RHS
+                    cut_rhs += lower_bound_for_second_stage;
+                    cut_rhs -= cut_coefficient_scalar*count_binaries_valued_one;
+                    if ( d_square_ )
+                        cut_rhs += d_square_translation_term_;
+                    
+                    // Get number of theta variables for first stage
+                    int num_thetas = tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->num_thetas_;
+                    for (int i = 0; i < num_thetas; i++){
+                        integer_cols.push_back(stage_data_[current_stage_-1]->num_columns_+i);
+                        cut_coefficients.push_back(1.0);
+                    }
+                    assert( integer_cols.size() == cut_coefficients.size());
+
+                    // Add cut
+                    boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
+                    cut_pointer->setLb(cut_rhs);
+                    cut_pointer->setUb(infinity_);
+                    cut_pointer->setRow(integer_cols.size(),&integer_cols[0],&cut_coefficients[0]);
+                    boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
+                    cut_stuff->aggregate_number_ = -1;
+                    cut_stuff->to_use_ = true;
+                    tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.push_back(cut_stuff);
+                    if ( seperate_first_stage_solver_ && current_stage_ == 1 && tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end())
+                        tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ = --tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end();
+
                 }
 
                 // Clear non-integer scenario
@@ -1452,7 +1503,7 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 1 && current_iteration_ > 350){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
             OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -2162,7 +2213,7 @@ namespace parallel_benders {
         }
         assert( row+not_used == for_bound);
 
-        if ( d_square_ && stage_pointer->num_d_square_cuts_ > 0){
+        if ( d_square_ ){
             assert( row == stage_pointer->num_rows_);
             cut_rhs += d_square_translation_term_;
             if ( !stage_data_[current_stage_]->solve_binary_subproblems_ )
@@ -2173,6 +2224,8 @@ namespace parallel_benders {
 
         // Append value for dual variable bounds
         cut_rhs += benders_node_pointer->dual_value_variable_bounds_;
+        // reset dual_value_variable_bounds value
+        benders_node_pointer->dual_value_variable_bounds_ = 0;
 
         // Multiply with probability
         cut_rhs *= prob;
@@ -2213,6 +2266,10 @@ namespace parallel_benders {
         if ( benders_tree_node_pointer->getDataPtr()->col_solution_ == NULL){
             assert(false);
             // We do not add any cuts, we have no prior column solution. This is an error.
+        }
+        if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){
+            // Return or better: call method that calls laporte-louveaux cut generation routine
+            return;
         }
 
         // We specified the number of thetas in the stage_pointer (for now)
@@ -4468,7 +4525,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
     {
         // Silence solver 
-        //osi_solver->messageHandler()->setLogLevel(0);
+        osi_solver->messageHandler()->setLogLevel(0);
         osi_solver->setHintParam(OsiDoPresolveInInitial,true);
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
@@ -5179,8 +5236,8 @@ namespace parallel_benders {
         OsiSolverInterface * osi_solver = GetSolverByThread();
         osi_solver->loadProblem(problem_matrix,&bounds_lower[0],&bounds_upper[0],&obj_coef[0],&rhs_lower[0],&rhs_upper[0]);
 
-        std::stringstream string_stream;
-        string_stream << "ctriple-" << current_iteration_ << ".lp";
+        //std::stringstream string_stream;
+        //string_stream << "ctriple-" << current_iteration_ << ".lp";
 
         // Solve
         //////// Cplex specific cloning
@@ -5615,49 +5672,13 @@ namespace parallel_benders {
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         if ( cpx_ptr ){
             // Get ENV and LP ptr
-            
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-            int num_cols = CPXgetnumcols(env_ptr,lp_ptr);
-            double objective;
-            CPXgetobjval(env_ptr,lp_ptr,&objective);
-            // Store and reset bounds to achieve a fixed lp problem
-            std::vector<double> lower_bound(num_cols);
-            std::vector<double> upper_bound(num_cols);
-            CPXgetlb(env_ptr,lp_ptr,&lower_bound[0],0,num_cols-1);
-            CPXgetub(env_ptr,lp_ptr,&upper_bound[0],0,num_cols-1);
-            std::vector<int> column_indices;
-            std::vector<char> column_bound_indicator;
-            column_indices.reserve(num_cols);
-            column_bound_indicator.reserve(num_cols);
-            for (int i = 0; i < num_cols;i++){
-                column_indices.push_back(i);
-                column_bound_indicator.push_back('B');
-            }
-            CPXchgbds(env_ptr,lp_ptr,num_cols,&column_indices[0],&column_bound_indicator[0],col_solution);
-            //LOG(INFO) << "MIP: " << objective;
-            CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_LP);
+            CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_FIXEDMILP); 
             CPXlpopt(env_ptr,lp_ptr);
             // Store dual solution and reduced cost!
             CPXgetpi(env_ptr,lp_ptr,dual,0,CPXgetnumrows(env_ptr,lp_ptr)-1);
-            CPXgetdj(env_ptr,lp_ptr,reduced,0,num_cols-1);
-            //CPXgetobjval(env_ptr,lp_ptr,&objective);
-            //LOG(INFO) << "LP: " << objective;
-            // Reset column bounds!
-            column_bound_indicator.clear();
-            column_bound_indicator.resize(2*num_cols);
-            column_indices.reserve(2*num_cols);
-            assert(column_indices.size() == num_cols);
-            for (int i = 0; i < num_cols;i++){
-                column_indices.push_back(i);
-                column_bound_indicator[i] = 'L';
-                column_bound_indicator[i+num_cols] = 'U';
-            }
-            lower_bound.reserve(2*num_cols);
-            lower_bound.insert(lower_bound.end(),upper_bound.begin(),upper_bound.end());
-            CPXchgbds(env_ptr,lp_ptr,num_cols,&column_indices[0],&column_bound_indicator[0],&lower_bound[0]);
-
-            // Change back to MILP
+            CPXgetdj(env_ptr,lp_ptr,reduced,0,CPXgetnumcols(env_ptr,lp_ptr)-1);
             CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_MILP); 
             //// Resolve MIP
             //CPXmipopt(env_ptr,lp_ptr);
