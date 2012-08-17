@@ -150,7 +150,7 @@ public:
         //}
         
 
-        int num_repetitions = 2; 
+        int num_repetitions = 1; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -229,9 +229,9 @@ public:
         //    aggregates.push_back(-1);
         //else
         //    aggregates.push_back(1);
-        aggregates.push_back(5);
-        aggregates.push_back(10);
-        aggregates.push_back(25);
+        //aggregates.push_back(5);
+        //aggregates.push_back(10);
+        //aggregates.push_back(25);
         aggregates.push_back(50);
         aggregates.push_back(100);
         aggregates.push_back(500);
@@ -267,36 +267,39 @@ public:
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
+                    for (int strike_threshold = 2; strike_threshold < 5; strike_threshold++){
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,strike_threshold);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-                    if ( aggregates[i] != 1 ){ // We do not want cut consolidation for the single cut case
+                        if ( aggregates[i] != 1 ){ // We do not want cut consolidation for the single cut case
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                            solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                            solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+                        }
+                    }
+
+                        ////// Solve problem without adding a newly consolidated cut
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                         //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                    }
-
-                    ////// Solve problem without adding a newly consolidated cut
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+                    // Solve problems without cut consolidation
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-                    // Solve problems without cut consolidation
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                     solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    
 
                }//end for: aggregates
             }//end for:repetition
