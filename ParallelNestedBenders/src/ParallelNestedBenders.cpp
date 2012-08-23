@@ -882,8 +882,8 @@ namespace parallel_benders {
 
                 //    // Before we resolve the problems, we need to reset temporary bounds
                     //if ( compute_stage_bounds_ ){
-                    //temporary_stage_lower_bound_ = 0.0;
-                    //temporary_stage_upper_bound_ = 0.0;
+                    // temporary_stage_lower_bound_ = 0.0;
+                    // temporary_stage_upper_bound_ = 0.0;
                     //}
                     //else {
                     //    temporary_upper_bound_ = copy_of_temporary_upper_bound_;
@@ -923,7 +923,8 @@ namespace parallel_benders {
                     
                     double cut_rhs = 0;
                     double lower_bound_for_second_stage = -d_square_translation_term_;
-                    double cut_coefficient_scalar = temporary_upper_bound_-lower_bound_for_second_stage;
+                    double current_expected_second_stage_value_function = compute_stage_bounds_ ? temporary_stage_upper_bound_ : temporary_upper_bound_-copy_of_temporary_upper_bound_;
+                    double cut_coefficient_scalar = current_expected_second_stage_value_function-lower_bound_for_second_stage;
                     std::vector<int> integer_cols = core_->getIntCols(current_stage_-1); // Assume they are sorted!
                     
                     if ( integer_cols.size() != stage_data_[current_stage_-1]->num_columns_ ){
@@ -982,6 +983,8 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.push_back(cut_stuff);
                     if ( seperate_first_stage_solver_ && current_stage_ == 1 && tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end())
                         tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ = --tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end();
+                    LOG(INFO) << "Current Expected value of second stage value function: " << current_expected_second_stage_value_function;
+                    LOG_IF(INFO,!compute_stage_bounds_) << "Temporary upper bound " << temporary_upper_bound_;
                 }
 
                 // Clear non-integer scenario
