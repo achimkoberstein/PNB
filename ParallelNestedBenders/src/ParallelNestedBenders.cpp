@@ -923,7 +923,7 @@ namespace parallel_benders {
                     
                     double cut_rhs = 0;
                     double lower_bound_for_second_stage = -d_square_translation_term_;
-                    double current_expected_second_stage_value_function = compute_stage_bounds_ ? temporary_stage_upper_bound_ : temporary_upper_bound_-copy_of_temporary_upper_bound_;
+                    double current_expected_second_stage_value_function = compute_stage_bounds_ ? temporary_stage_upper_bound_ : (temporary_upper_bound_-copy_of_temporary_upper_bound_);
                     double cut_coefficient_scalar = current_expected_second_stage_value_function-lower_bound_for_second_stage;
                     std::vector<int> integer_cols = core_->getIntCols(current_stage_-1); // Assume they are sorted!
                     
