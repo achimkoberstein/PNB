@@ -881,13 +881,13 @@ namespace parallel_benders {
                 //    stage_data_[current_stage_]->violated_index_ = -1;
 
                 //    // Before we resolve the problems, we need to reset temporary bounds
-                    if ( compute_stage_bounds_ ){
-                    temporary_stage_lower_bound_ = 0.0;
-                    temporary_stage_upper_bound_ = 0.0;
-                    }
-                    else {
-                        temporary_upper_bound_ = copy_of_temporary_upper_bound_;
-                    }
+                    //if ( compute_stage_bounds_ ){
+                    //temporary_stage_lower_bound_ = 0.0;
+                    //temporary_stage_upper_bound_ = 0.0;
+                    //}
+                    //else {
+                    //    temporary_upper_bound_ = copy_of_temporary_upper_bound_;
+                    //}
                 //    int num_nodes = tree_nodes_by_stage_[current_stage_].size();
                 //    for ( int i = 0; i < num_nodes; i++ ){
                 //        // Schedule the tasks for this stage
@@ -924,7 +924,23 @@ namespace parallel_benders {
                     double cut_rhs = 0;
                     double lower_bound_for_second_stage = -d_square_translation_term_;
                     double cut_coefficient_scalar = temporary_upper_bound_-lower_bound_for_second_stage;
-                    std::vector<int> integer_cols = core_->getIntCols(current_stage_-1);
+                    std::vector<int> integer_cols = core_->getIntCols(current_stage_-1); // Assume they are sorted!
+                    
+                    if ( integer_cols.size() != stage_data_[current_stage_-1]->num_columns_ ){
+                        // We also have non-binary ( i.e. continuous )variables in the first stage.
+                        // Compute obj value part of continuous variables
+                        double continuous_part = 0.0;
+                        const double * obj_coefficients = seperate_first_stage_solver_ ? osi_solver_->getObjCoefficients() : core_->getDenseObjCoefficients(current_stage_-1);
+                        for (int variable_index = 0; variable_index < stage_data_[current_stage_-1]->num_columns_; variable_index++){
+                            if ( std::find(integer_cols.begin(),integer_cols.end(),variable_index) != integer_cols.end() )
+                                continue;
+                            else {
+                                assert(tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_ != NULL);
+                                continuous_part += obj_coefficients[variable_index]*tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_[variable_index];
+                            }
+                        }
+                        cut_coefficient_scalar -= continuous_part;
+                    }
                     std::vector<double> cut_coefficients;
                     cut_coefficients.reserve(integer_cols.size());
                     // Get first stage solution and compute cut coefficients
@@ -1431,6 +1447,7 @@ namespace parallel_benders {
                     GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
                 }
                 else{
+                    // Introduce a debug switch asap for problem output.. 
                     osi_solver->writeLp("master_infeasible");
                     OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
                     if ( cpx_ptr ){
@@ -2411,11 +2428,16 @@ namespace parallel_benders {
             }//End If infeasible
             else {
                 // Print out the stat
+                console_mutex_.lock();
                 LOG(INFO) << "Solver returned with status code : " << cpx_stat << " instead infeasible, while solving the original problem again with primal or dual simplex during generation of feasibility cuts.";
+
                 use_cplex = false;
                 if ( cpx_stat == CPX_STAT_OPTIMAL ){
+                    CPXwriteprob(env_ptr,lp_ptr,"optimal_infeasible_problem.lp","lp");
+                    console_mutex_.unlock();
                     return;
                 }
+                console_mutex_.unlock();
             }
 
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals

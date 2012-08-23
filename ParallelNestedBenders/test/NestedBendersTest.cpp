@@ -225,11 +225,11 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
         benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         // Solve with aggregation and removal of cuts!
@@ -1188,8 +1188,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
     //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-    ::testing::GTEST_FLAG(filter) = "*ssch*";
-    //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
+    //::testing::GTEST_FLAG(filter) = "*ssch*";
+    ::testing::GTEST_FLAG(filter) = "*dcap*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
