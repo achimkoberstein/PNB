@@ -112,6 +112,8 @@ private:
     void BuildAndSolveCTripleProblem();
     void BuildAndSolveRHSProblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_poiner);
 
+    void HandleInitialSolutionProcedures();
+
 
 
     // Problem data
@@ -306,6 +308,8 @@ private:
     double intra_cut_aggregation_time_;
     double adaptive_cut_time_;
     double current_solution_value_;
+    double d_square_c_triple_timer_;
+    double d_square_c_rhs_timer_;
     int solution_similiarity_counter_;
     int max_similarity_iteration_;
 

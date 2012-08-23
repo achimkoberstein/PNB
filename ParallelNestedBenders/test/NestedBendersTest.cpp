@@ -150,7 +150,7 @@ public:
         //}
         
 
-        int num_repetitions = 2; 
+        int num_repetitions = 0; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -229,6 +229,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,true);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         // Solve with aggregation and removal of cuts!
@@ -734,7 +735,7 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
     EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 }
 
-TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
+TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
     
 
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
@@ -747,7 +748,7 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, 
     EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
 }
 //
-TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long to solve (due to 0 <= x <= 1 constraints not in matrix..)
+TEST_F(NestedBendersTest, sslp_SIPLIB) { // binary first, mixed-binary second stage
     EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); // not solvable: lower bound does not converge to upper bound
     //EXPECT_NEAR(solveSMPS("sslp_replications/sslp_5_50_50a"), -121.6, 0.1); // Problems reading in the file
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1); // Solvable
@@ -767,7 +768,7 @@ TEST_F(NestedBendersTest, sslp_SIPLIB) { // seems to be ok, but takes very long 
 
 TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer, two-stage
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
+ /*   EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 2559.297, 0.1);
@@ -777,11 +778,11 @@ TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer, two-stage
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);*/
 }
 
 TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage
-    EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 224434.32, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 1545, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/semi/semi3"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/semi/semi4"), 224564.3, 0.1);
 }
@@ -790,6 +791,9 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages, tw
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes10"), 224564.3, 0.1);
+}
+TEST_F(NestedBendersTest, ssch_OTHER) { // Contains Integer on both stages, two-stage
+    EXPECT_NEAR(solveSMPS("ssch/c2"), 224434.32, 0.1);
 }
 
 //// Posts test set: http://users.iems.northwestern.edu/~jrbirge/html/dholmes/post.html
@@ -1183,7 +1187,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
-    ::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
+    //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
+    ::testing::GTEST_FLAG(filter) = "*ssch*";
     //::testing::GTEST_FLAG(filter) = "*sslp_OTHER*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

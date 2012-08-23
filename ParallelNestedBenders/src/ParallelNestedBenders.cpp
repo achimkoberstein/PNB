@@ -61,7 +61,7 @@ namespace parallel_benders {
             bounds_in_matrix_ = false;
         }
         // Check for integrality right away
-        if (( core_->getIntegerLength() || core_->getBinaryLength()) && !solve_relaxation_){ // Set boolean variable (For now)
+        if (( core_->getIntegerLength() || core_->getBinaryLength()) ){ // Set boolean variable (For now)
             contains_integer_ = true;
             // Set stage wise integers
             // All binary are integer, but not all integer are binary
@@ -270,7 +270,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
     }
@@ -550,7 +550,9 @@ namespace parallel_benders {
         for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
             if ( solve_relaxation_ )
-                integer_problems_[i] = false; // Ensure we do solve the LP relaxation!
+                integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
+
+            // TODO: If we want D_square_ we have to remove the && false statement
             if ( num_stages_ == 2 && integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
                 d_square_ = true;
                 store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
@@ -558,12 +560,9 @@ namespace parallel_benders {
                 integer_problems_[i] = false;
                 // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
                 d_square_translation_term_ = 8000;
-                // 
                 d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
-
              }
         }
-
         // Stage Aggregation!
         if ( stage_aggregation_){
             //smi_->writeSmps("beforeStageAgg",true,false);
@@ -593,144 +592,8 @@ namespace parallel_benders {
         thread_pool_.wait(0); // We wait until all threads are done
         current_stage_ = 0;
 
-        // Check if method is applicable!
-        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION){
-            for (int stage = 1; stage < num_stages_; stage++){
-                if ( stage_data_[stage]->stochastic_matrix_w_ || stage_data_[stage]->stochastic_objective_ || stage_data_[stage]->stochastic_bounds_ )
-                {
-                    start_solution_ = PNB_INT_USE_EV_SOLUTION;
-                    LOG(INFO) << "Problem has stochastic coefficents not only in RHS and T-matrix, so we can not use EV-problem cuts.";
-                    break;
-                }
-            }
-        }
-
-        // Warm up period
-        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
-            //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
-            
-            SmiScnModel* ev_smi = smi_->createEVSmiModel();
-            ev_smi->writeSmps("ev_problem",true);
-            ParallelNestedBenders ev_pnb(ev_smi);
-            // Use standard parameter stuff..
-            Parameter param;
-            param.init();
-            param.parameter_.put(PNB_EPSILON_RELATIVE,0.1);
-            param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,1); // Single cut (only have one scenario anyway..)
-            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
-            param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION);
-            ev_pnb.parameter_ = param;
-            // Solve EV first with deteq, then use this as a start solution for EV problem
-            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            //ev_smi->loadOsiSolverData();
-            //osi_solver_->initialSolve();
-            //if ( osi_solver_->isProvenOptimal() ){
-            //    // Set parallel benders solution
-            //    ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
-            //}
-            ev_pnb.Init();
-            ev_pnb.Solve();
-            double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
-            memcpy(temp_ptr,ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,sizeof(double)*stage_data_[current_stage_]->num_columns_);
-            warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
-            // Copy cuts to this problem!
-            ev_smi->releaseCore();
-            ev_smi->releaseSolver();
-            // Reenable osi_solver
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-
-            // Copy the optimality cuts to this node
-            for (int i = 0; i < num_stages_-1;i++){
-                // copy cuts to all nodes // TODO for multi-stage
-                int num_thetas = stage_data_[i]->num_thetas_;
-                if ( tree_nodes_by_stage_[i][0]->numChildren() < num_thetas )
-                    num_thetas =  tree_nodes_by_stage_[i][0]->numChildren();
-                BendersNodeData::cut_container& cuts_to_add = ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->optimality_cuts_;
-                // We need to add the cuts for all j stuff
-                for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
-                    BendersNodeData::cut_container& insert_cuts_here = tree_nodes_by_stage_[i][j]->getDataPtr()->optimality_cuts_;
-                    insert_cuts_here.insert(insert_cuts_here.end(),cuts_to_add.begin(),cuts_to_add.end());
-                    tree_nodes_by_stage_[i][j]->getDataPtr()->last_iteration_start_optimality_ = insert_cuts_here.begin();
-                    tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_ = num_thetas;
-                    createRoundRobinAggregation(tree_nodes_by_stage_[i][j]->getDataPtr(),tree_nodes_by_stage_[i][j]->numChildren(),tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_,(int)std::ceil((double)tree_nodes_by_stage_[i][j]->numChildren()/tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_));
-                    // We have to transform the old optimality cuts to the new number of theta's we would like to have
-                    // We already called a function that gives us a new number of whatever it is we need.
-
-                    // Transform all old optimality cuts to new ones.
-                    // Set new values
-
-                    tree_nodes_by_stage_[i][j]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
-                    tree_nodes_by_stage_[i][j]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
-                }
-                for( BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end();++it){
-                    ExpandThetaVariablesInOptimalityCut((*it)->cut_.get(),stage_data_[i]->num_columns_,num_thetas,1);
-                    (*it)->aggregate_number_ = -1;
-                    (*it)->not_active_iterations_ = 0;
-                    (*it)->cut_creation_iteration_ = 0;
-                }
-                
-
-            }
-            delete ev_smi;
-        }
-        if ( warm_up_ && start_solution_ == PNB_INT_USE_SUPPLIED_SOLUTION && warm_up_solution_.get() == NULL){
-            LOG(WARNING) << "No startup solution supplied. Starting without initial solution.";
-            warm_up_ = false; start_solution_ = 0;
-        }
-        if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
-            SmiScnModel* ev_smi = smi_->createEVSmiModel();
-            ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
-            ev_smi->loadStoredDataInSolver();
-            // Set higher accuracy
-
-            //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
-            //if ( cpx_ptr ){
-            //    // Get ENV and LP ptr
-            //CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            //CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-            //CPXwriteprob(env_ptr,lp_ptr,"ev_problem_solved","lp");
-            //}
-            
-            SolveSolverInterface(osi_solver_);
-
-            if ( osi_solver_->isProvenOptimal() ){
-                double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
-                memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
-                //StoreValuesFromSolverInArray(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
-                // Is done later at if (warm_up)
-                warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
-
-                //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
-                LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
-            }
-            else {
-                warm_up_ = false;
-                start_solution_ = PNB_INT_NO_START_SOLUTION;
-            }
-            ev_smi->releaseSolver();
-            ev_smi->releaseCore();
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
-            delete ev_smi;
-           
-        }
-        if ( warm_up_ ){
-            for (int i = 0; i < stage_data_[0]->num_columns_;i++)
-                if ( CompareWithZero(warm_up_solution_[i]))
-                    warm_up_solution_[i] = 0;
-            if ( regularization_ ){
-                double * temp_array = new double[stage_data_[0]->num_columns_];
-                memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
-                regularized_solution_.reset(temp_array);
-            }
-
-            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
-                warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
-           
-        }
-        else
-            if ( regularization_ )
-                LOG(FATAL) << "No supplied start solution for regularization method. Please change your settings to allow an expected value solution for example.";
-
+        // Compute or Use initial solutions!
+        HandleInitialSolutionProcedures();
 
         if ( integer_problems_.any() ){
             //if ( warm_up_ ) {
@@ -740,57 +603,6 @@ namespace parallel_benders {
             //    start_solution_ = PNB_INT_NO_START_SOLUTION;
             //}
         }
-
-        // Solve WS-problem
-        bool ws_cut_ = false;
-        double ws_value = 0;
-        double ev_value = 0;
-        if ( ws_cut_ ){
-            ws_value = smi_->getWSValue(osi_solver_);
-            //std::pair<double,double*> ev_result = smi_->solveEV(osi_solver_);
-
-            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-            // Generate a WS-cut for first stage solution
-            BendersNodeData * node = tree_nodes_by_stage_[0][0]->getDataPtr();
-            // Get the first stage coefficients
-            const double* coefs = core_->getDenseObjCoefficients(0); // Get Dense Obj Coefficients of first stage
-            double * new_coefs = new double[stage_data_[0]->num_columns_+1];
-            memcpy(new_coefs,coefs,sizeof(double)*stage_data_[0]->num_columns_);
-            new_coefs[stage_data_[0]->num_columns_] = 1;
-            //// Calculate results
-            //double sum = 0;
-            //for (int i = 0; i < stage_data_[0]->num_columns_; i++ ){
-            //    sum += ev_result.second[i]*new_coefs[i];
-            //}
-            int * indices = new int[stage_data_[0]->num_columns_+1];
-            memcpy(indices,&stage_data_[0]->column_indices_[0],sizeof(int)*stage_data_[0]->num_columns_);
-            indices[stage_data_[0]->num_columns_] = stage_data_[0]->num_columns_;
-            boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
-            cut_pointer->setLb(ws_value);
-            cut_pointer->setUb(infinity_);
-            cut_pointer->setRow(stage_data_[0]->num_columns_+1,indices,new_coefs);
-            boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
-            node->optimality_cuts_.push_back(cut_stuff);
-            // Set aggregate to active: We have a cut for this aggregate
-            node->num_thetas_ = 1;
-            node->active_aggregates_ = boost::dynamic_bitset<>(1);
-            node->active_aggregates_[0] = true;
-            node->was_under_threshold_ = boost::dynamic_bitset<>(1);
-            node->was_under_threshold_[0] = false;
-            //node->cut_information_.CreateCut(current_iteration_);
-            // Care about the theta variable also..
-            int num_childs = tree_nodes_by_stage_[0][0]->numChildren();
-            int num_cuts = std::min(1,num_childs);
-            // Write that back to stage_data? No, as number of childs can differ between nodes.
-            // Num Subproblem per cuts
-            int num_subproblems_per_cut = (int) std::ceil( ((double)num_childs)/num_cuts );
-            createRoundRobinAggregation(node,num_childs,num_cuts,num_subproblems_per_cut);
-        }
-
-
-
-
-
 
         double old_gap = 0;
         double gap = 0;
@@ -1022,15 +834,13 @@ namespace parallel_benders {
 
             if ( d_square_ && current_stage_ == 1 && current_iteration_ > 1 ){
                 if ( old_lower_bound_ == lower_bound_ ){
+                    // One should compare real solutions here!
                     d_square_lower_bound_counter_++;
                 }
                 else {
                     d_square_lower_bound_counter_ = 0;
-
                 }
-
-
-                if ( d_square_lower_bound_counter_ > 0 ){
+                if ( d_square_lower_bound_counter_ > 1 ){
                     // No difference between lower and upper bound
                     // Solve MIP subproblems!
                     stage_data_[current_stage_]->solve_binary_subproblems_ = true;
@@ -1059,13 +869,13 @@ namespace parallel_benders {
                 // Solve C^3-SLP
                 if ( stage_data_[current_stage_]->violated_index_ >= 0){
                     can_update_upper_bound = false;
-                    BuildAndSolveCTripleProblem();
-                    // Clear non-integer scenarios
-                    stage_data_[current_stage_]->d_square_disjunctive_indices_.push_back(stage_data_[current_stage_]->violated_index_);
-                    stage_data_[current_stage_]->non_integer_scenarios.clear();
-                    stage_data_[current_stage_]->violated_index_ = -1;
+                //    BuildAndSolveCTripleProblem();
+                //    // Clear non-integer scenarios
+                //    stage_data_[current_stage_]->d_square_disjunctive_indices_.push_back(stage_data_[current_stage_]->violated_index_);
+                //    stage_data_[current_stage_]->non_integer_scenarios.clear();
+                //    stage_data_[current_stage_]->violated_index_ = -1;
 
-                    // Before we resolve the problems, we need to reset temporary bounds
+                //    // Before we resolve the problems, we need to reset temporary bounds
                     if ( compute_stage_bounds_ ){
                     temporary_stage_lower_bound_ = 0.0;
                     temporary_stage_upper_bound_ = 0.0;
@@ -1073,34 +883,34 @@ namespace parallel_benders {
                     else {
                         temporary_upper_bound_ = copy_of_temporary_upper_bound_;
                     }
-                    int num_nodes = tree_nodes_by_stage_[current_stage_].size();
-                    for ( int i = 0; i < num_nodes; i++ ){
-                        // Schedule the tasks for this stage
-                        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveRHSProblem,this,tree_nodes_by_stage_[current_stage_][i]));
-                    }
-                    thread_pool_.wait(0); // We wait until all threads are done
-                    stage_data_[current_stage_]->num_d_square_cuts_++; // We generated a D^2-C^3 cut
-                    stage_data_[current_stage_]->row_indices_.push_back(stage_data_[current_stage_]->row_indices_.back()+1); // We added a permanent cut (increase row indices)
+                //    int num_nodes = tree_nodes_by_stage_[current_stage_].size();
+                //    for ( int i = 0; i < num_nodes; i++ ){
+                //        // Schedule the tasks for this stage
+                //        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveRHSProblem,this,tree_nodes_by_stage_[current_stage_][i]));
+                //    }
+                //    thread_pool_.wait(0); // We wait until all threads are done
+                //    stage_data_[current_stage_]->num_d_square_cuts_++; // We generated a D^2-C^3 cut
+                //    stage_data_[current_stage_]->row_indices_.push_back(stage_data_[current_stage_]->row_indices_.back()+1); // We added a permanent cut (increase row indices)
 
 
-                    std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
-                    BOOST_FOREACH( id_solver_pair, osi_solver_map_ ){
-                        //id_solver_pair.second->reset(); // This method throws exception with Cplex
-                        id_solver_pair.second->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-                        // Workaround: Load empty problem. 
-                        assert(id_solver_pair.second->getNumCols() == 0);
-                    }
-                    // Resolve all the problems!
-                    for ( int i = 0; i < num_nodes; i++ ){
-                        // Schedule the tasks for this stage
-                        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
-                    }
-                    thread_pool_.wait(0); // We wait until all threads are done
-                    
+                //    std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
+                //    BOOST_FOREACH( id_solver_pair, osi_solver_map_ ){
+                //        //id_solver_pair.second->reset(); // This method throws exception with Cplex
+                //        id_solver_pair.second->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+                //        // Workaround: Load empty problem. 
+                //        assert(id_solver_pair.second->getNumCols() == 0);
+                //    }
+                //    // Resolve all the problems!
+                //    for ( int i = 0; i < num_nodes; i++ ){
+                //        // Schedule the tasks for this stage
+                //        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
+                //    }
+                //    thread_pool_.wait(0); // We wait until all threads are done
+                //    
                     if ( stage_data_[current_stage_]->violated_index_ < 0)
                         can_update_upper_bound = true;
                 }
-                if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){//|| stage_data_[current_stage_]->violated_index_ < 0 ) {
+                if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){//|| stage_data_[current_stage_]->violated_index_ < 0 ) { 
                     // Now we need to add a cut to the master-problem, from LaporteLoveaux
                     // We need finite lower bound for the second stage, this is supposed to be our translation amount (of course with a negative sign)
                     // We need the current expected value of second stage problems, this is temporary_upper_bound
@@ -1149,7 +959,6 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.push_back(cut_stuff);
                     if ( seperate_first_stage_solver_ && current_stage_ == 1 && tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ == tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end())
                         tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->last_iteration_start_optimality_ = --tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->optimality_cuts_.end();
-
                 }
 
                 // Clear non-integer scenario
@@ -1449,10 +1258,16 @@ namespace parallel_benders {
             upper_bound_ = -infinity_;
             LOG(INFO) << "Problem is infeasible.";
         }
+        if ( seperate_first_stage_solver_ ){
+            osi_solver_->writeLp("finalLP");
+        }
+
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
         LOG_IF(WARNING,current_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
         LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
+        LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
+        LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
 
     }
 
@@ -1507,20 +1322,20 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 1 && current_iteration_ > 350){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr ){
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-                stream << "_C.lp";
-                //CPXsetintparam(env_ptr,)
-                console_mutex_.lock();
-                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
-                console_mutex_.unlock();
-            }
-        } // TODO: Debugging stuff
+        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        //    if ( cpx_ptr ){
+        //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //        stream << "_C.lp";
+        //        //CPXsetintparam(env_ptr,)
+        //        console_mutex_.lock();
+        //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+        //        console_mutex_.unlock();
+        //    }
+        //} // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1801,7 +1616,7 @@ namespace parallel_benders {
                     // Look at variable value and their bounds
                     if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
 
-                        // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logial variables
+                        // We have to look at bounds and multiply with correct one. Reduced Costs = Dual logical variables
                         if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                             computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
                         else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
@@ -2163,6 +1978,7 @@ namespace parallel_benders {
         // Store results of the computation 
         std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
         const double* dual_solution = benders_node_pointer->dual_solution_;
+        assert( dual_solution != NULL );
         ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
 
         BOOST_FOREACH(double& value, cut_coefficients){
@@ -2273,6 +2089,7 @@ namespace parallel_benders {
         }
         if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){
             // Return or better: call method that calls laporte-louveaux cut generation routine
+            LOG(INFO) << "Not adding new benders style optimality cuts to problems at stage " << current_stage_-1 << " because we solved mip-subproblems.";
             return;
         }
 
@@ -4276,22 +4093,24 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SetWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){ // We add a warm_start if configured and first stage solver is not seperate!
-            if ( warm_start_scenarios_ ){
-                if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
-                    osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
-                else{
+        if ( !integer_problems_[current_stage_] ){
+            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){ // We add a warm_start if configured and first stage solver is not seperate!
+                if ( warm_start_scenarios_ ){
+                    if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
+                        osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+                    else{
+                        stage_warm_start_mutex_.lock(); 
+                        osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                        stage_warm_start_mutex_.unlock();
+                    }
+                }
+                else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
                     stage_warm_start_mutex_.lock(); 
                     osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
                     stage_warm_start_mutex_.unlock();
                 }
             }
-            else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
-                stage_warm_start_mutex_.lock(); 
-                osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
-                stage_warm_start_mutex_.unlock();
-            }
-        }
+        }//Integer problems. No Warm start for MIP problems, but we need to set an incumbent solution!
     }
 
     void ParallelNestedBenders::StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -5005,6 +4824,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::BuildAndSolveCTripleProblem(  )
     {
+        double start_time = CoinCpuTime();
         assert(d_square_);
         // TODO: Put problem description here for C^3-SLP
         //
@@ -5293,12 +5113,14 @@ namespace parallel_benders {
 
 
 
-
+        start_time = CoinCpuTime()-start_time;
+        d_square_c_triple_timer_ += start_time;
 
     }
 
     void ParallelNestedBenders::BuildAndSolveRHSProblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
+        double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
 
         int num_cols_first_stage = stage_data_[0]->num_columns_;
@@ -5555,7 +5377,9 @@ namespace parallel_benders {
         }
         else {
             // Store relevant values for D^2 Cut Generation
-            const double * solution = osi_solver->getColSolution();
+            double * temp_solution = NULL;
+            StoreValuesFromSolverInArray(temp_solution,osi_solver->getColSolution(),osi_solver->getNumCols());
+            const double * solution = temp_solution;
             double nu = solution[delta_index]/ solution[sigma_0_index];
             std::vector<int> gamma_indices(num_cols_first_stage);
             std::vector<double> gamma(num_cols_first_stage,0.0);
@@ -5577,11 +5401,145 @@ namespace parallel_benders {
             }
             benders_tree_node_pointer->getDataPtr()->d_square_cut_t_matrix_->appendRow(gamma.size(),&gamma_indices[0],&gamma[0]);
             assert(benders_tree_node_pointer->getDataPtr()->d_square_cut_rhs_.size()-1 == stage_data_[current_stage_]->num_d_square_cuts_);
+            delete [] temp_solution;
         }
 
         // TODO: WarmStart-Handling
+        start_time = CoinCpuTime()-start_time;
+        misc_mutex_.lock();
+        d_square_c_rhs_timer_ += start_time;
+        misc_mutex_.unlock();
     }
 
+    void ParallelNestedBenders::HandleInitialSolutionProcedures()
+    {
+        // Check if method is applicable!
+        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION){
+            for (int stage = 1; stage < num_stages_; stage++){
+                if ( stage_data_[stage]->stochastic_matrix_w_ || stage_data_[stage]->stochastic_objective_ || stage_data_[stage]->stochastic_bounds_ )
+                {
+                    start_solution_ = PNB_INT_USE_EV_SOLUTION;
+                    LOG(INFO) << "Problem has stochastic coefficents not only in RHS and T-matrix, so we can not use EV-problem cuts.";
+                    break;
+                }
+            }
+        }
+
+        // Warm up period
+        if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
+            //// Get an initial solution via expected value problem. Works for problems with RHS and T-matrix stochasticity
+
+            SmiScnModel* ev_smi = smi_->createEVSmiModel();
+            ev_smi->writeSmps("ev_problem",true);
+            ParallelNestedBenders ev_pnb(ev_smi);
+            // Use standard parameter stuff..
+            Parameter param;
+            param.init();
+            param.parameter_.put(PNB_EPSILON_RELATIVE,0.1);
+            param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,1); // Single cut (only have one scenario anyway..)
+            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
+            param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION);
+            ev_pnb.parameter_ = param;
+            // Solve EV first with deteq, then use this as a start solution for EV problem
+            //ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            //ev_smi->loadOsiSolverData();
+            //osi_solver_->initialSolve();
+            //if ( osi_solver_->isProvenOptimal() ){
+            //    // Set parallel benders solution
+            //    ev_pnb.setWarmUpSolution(osi_solver_->getColSolution());
+            //}
+            ev_pnb.Init();
+            ev_pnb.Solve();
+            double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
+            memcpy(temp_ptr,ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,sizeof(double)*stage_data_[current_stage_]->num_columns_);
+            warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
+            // Copy cuts to this problem!
+            ev_smi->releaseCore();
+            ev_smi->releaseSolver();
+            // Reenable osi_solver
+            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
+            // Copy the optimality cuts to this node
+            for (int i = 0; i < num_stages_-1;i++){
+                // copy cuts to all nodes // TODO for multi-stage
+                int num_thetas = stage_data_[i]->num_thetas_;
+                if ( tree_nodes_by_stage_[i][0]->numChildren() < num_thetas )
+                    num_thetas =  tree_nodes_by_stage_[i][0]->numChildren();
+                BendersNodeData::cut_container& cuts_to_add = ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->optimality_cuts_;
+                // We need to add the cuts for all j stuff
+                for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
+                    BendersNodeData::cut_container& insert_cuts_here = tree_nodes_by_stage_[i][j]->getDataPtr()->optimality_cuts_;
+                    insert_cuts_here.insert(insert_cuts_here.end(),cuts_to_add.begin(),cuts_to_add.end());
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->last_iteration_start_optimality_ = insert_cuts_here.begin();
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_ = num_thetas;
+                    createRoundRobinAggregation(tree_nodes_by_stage_[i][j]->getDataPtr(),tree_nodes_by_stage_[i][j]->numChildren(),tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_,(int)std::ceil((double)tree_nodes_by_stage_[i][j]->numChildren()/tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_));
+                    // We have to transform the old optimality cuts to the new number of theta's we would like to have
+                    // We already called a function that gives us a new number of whatever it is we need.
+
+                    // Transform all old optimality cuts to new ones.
+                    // Set new values
+
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
+                    tree_nodes_by_stage_[i][j]->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(tree_nodes_by_stage_[i][j]->getDataPtr()->num_thetas_); // Gets initialized with 0
+                }
+                for( BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end();++it){
+                    ExpandThetaVariablesInOptimalityCut((*it)->cut_.get(),stage_data_[i]->num_columns_,num_thetas,1);
+                    (*it)->aggregate_number_ = -1;
+                    (*it)->not_active_iterations_ = 0;
+                    (*it)->cut_creation_iteration_ = 0;
+                }
+
+
+            }
+            delete ev_smi;
+        }
+        if ( warm_up_ && start_solution_ == PNB_INT_USE_SUPPLIED_SOLUTION && warm_up_solution_.get() == NULL){
+            LOG(WARNING) << "No startup solution supplied. Starting without initial solution.";
+            warm_up_ = false; start_solution_ = 0;
+        }
+        if ( warm_up_ && start_solution_ == PNB_INT_USE_EV_SOLUTION ){
+            SmiScnModel* ev_smi = smi_->createEVSmiModel();
+            ev_smi->setOsiSolverHandleWithoutCloning(osi_solver_);
+            ev_smi->loadStoredDataInSolver();
+            SolveSolverInterface(osi_solver_);
+
+            if ( osi_solver_->isProvenOptimal() ){
+                double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
+                memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
+                //StoreValuesFromSolverInArray(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
+                // Is done later at if (warm_up)
+                warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
+                LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
+            }
+            else {
+                warm_up_ = false;
+                start_solution_ = PNB_INT_NO_START_SOLUTION;
+            }
+            ev_smi->releaseSolver();
+            ev_smi->releaseCore();
+            osi_solver_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL); // Reset osi_solver to get a clean first stage solver instance
+            delete ev_smi;
+
+        }
+        if ( warm_up_ ){
+            for (int i = 0; i < stage_data_[0]->num_columns_;i++)
+                if ( CompareWithZero(warm_up_solution_[i]))
+                    warm_up_solution_[i] = 0;
+            if ( regularization_ ){
+                double * temp_array = new double[stage_data_[0]->num_columns_];
+                memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
+                regularized_solution_.reset(temp_array);
+            }
+
+            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
+                warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
+
+        }
+        else
+            if ( regularization_ )
+                LOG(FATAL) << "No supplied start solution for regularization method. Please change your settings to allow an expected value solution for example.";
+
+    }
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
@@ -5685,9 +5643,9 @@ namespace parallel_benders {
             CPXgetdj(env_ptr,lp_ptr,reduced,0,CPXgetnumcols(env_ptr,lp_ptr)-1);
             CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_MILP); 
             //// Resolve MIP
-            //CPXmipopt(env_ptr,lp_ptr);
-            //CPXgetobjval(env_ptr,lp_ptr,&objective);
-            //LOG(INFO) << "MIP: " << objective;
+            // CPXmipopt(env_ptr,lp_ptr);
+            // CPXgetobjval(env_ptr,lp_ptr,&objective);
+            // LOG(INFO) << "MIP: " << objective;
             // TODO: Ask for status codes
         }
 
