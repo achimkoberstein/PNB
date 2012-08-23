@@ -229,7 +229,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,true);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         // Solve with aggregation and removal of cuts!
@@ -793,7 +793,7 @@ TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages, tw
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes10"), 224564.3, 0.1);
 }
 TEST_F(NestedBendersTest, ssch_OTHER) { // Contains Integer on both stages, two-stage
-    EXPECT_NEAR(solveSMPS("ssch/c2"), 224434.32, 0.1);
+    EXPECT_NEAR(solveSMPS("ssch/c3"), 224434.32, 0.1);
 }
 
 //// Posts test set: http://users.iems.northwestern.edu/~jrbirge/html/dholmes/post.html

@@ -547,6 +547,8 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
+        if ( integer_problems_[0] && solve_relaxation_ )
+            integer_problems_[0] = false;
         for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ".";
             if ( solve_relaxation_ ){
@@ -561,7 +563,7 @@ namespace parallel_benders {
                 // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
                 integer_problems_[i] = false;
                 // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-                d_square_translation_term_ = 8000;
+                d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
                 d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
                 LOG(INFO) << "Enabling D^2 algorithm.";
              }
@@ -936,6 +938,8 @@ namespace parallel_benders {
                         }
                         else if ( CompareForEquality(col_solution[*it],0,integer_tolerance_) )
                             cut_coefficients.push_back(+cut_coefficient_scalar);
+                        else
+                            LOG(INFO) << "Not at bound: " << col_solution[*it];
                     }
                     // Compute RHS
                     cut_rhs += lower_bound_for_second_stage;
@@ -2349,7 +2353,7 @@ namespace parallel_benders {
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
                 CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
             else
-                CPXdualopt(env_ptr,lp_ptr);// Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+                CPXdualopt(env_ptr,lp_ptr); // Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
 
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             double proof = 0;
@@ -2407,8 +2411,11 @@ namespace parallel_benders {
             }//End If infeasible
             else {
                 // Print out the stat
-                LOG(INFO) << "Solver returned with status code : " << cpx_stat << " while solving the original problem again with primal or dual simplex.";
+                LOG(INFO) << "Solver returned with status code : " << cpx_stat << " instead infeasible, while solving the original problem again with primal or dual simplex during generation of feasibility cuts.";
                 use_cplex = false;
+                if ( cpx_stat == CPX_STAT_OPTIMAL ){
+                    return;
+                }
             }
 
             if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
