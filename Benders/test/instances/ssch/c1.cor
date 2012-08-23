@@ -10966,43 +10966,7 @@ COLUMNS
     x2935     x0756               -1
     x2936     x0757               -1
     x2937     x0758               -1
-    SLACK     OBJ              1E+13   x0001                1
-    SLACK     x0002                1   x0003                1
-    SLACK     x0004                1   x0005                1
-    SLACK     x0006                1   x0007                1
-    SLACK     x0008                1   x0009                1
-    SLACK     x0010                1   x0011                1
-    SLACK     x0012                1   x0013                1
-    SLACK     x0014                1   x0015                1
-    SLACK     x0016                1   x0017                1
-    SLACK     x0018                1   x0019                1
-    SLACK     x0020                1   x0021                1
-    SLACK     x0022                1   x0023                1
-    SLACK     x0024                1   x0025                1
-    SLACK     x0026                1   x0027                1
-    SLACK     x0028                1   x0029                1
-    SLACK     x0030                1   x0031                1
-    SLACK     x0032                1   x0033                1
-    SLACK     x0034                1   x0035                1
-    SLACK     x0036                1   x0037                1
-    SLACK     x0038                1   x0039                1
-    SLACK     x0040                1   x0041                1
-    SLACK     x0042                1   x0043                1
-    SLACK     x0044                1   x0045                1
-    SLACK     x0046                1   x0047                1
-    SLACK     x0048                1   x0049                1
-    SLACK     x0050                1   x0051                1
-    SLACK     x0052                1   x0053                1
-    SLACK     x0054                1   x0055                1
-    SLACK     x0056                1   x0057                1
-    SLACK     x0058                1   x0059                1
-    SLACK     x0060                1   x0061                1
-    SLACK     x0062                1   x0063                1
-    SLACK     x0064                1   x0065                1
-    SLACK     x0066                1   x0067                1
-    SLACK     x0068                1   x0069                1
-    SLACK     x0070                1   x0071                1
-    SLACK     x0072                1   x0073                1
+    SLACK     OBJ              1E+13  
     SLACK     x0074                1   x0075                1
     SLACK     x0076                1   x0077                1
     SLACK     x0078                1   x0079                1
@@ -12661,43 +12625,7 @@ COLUMNS
     SLACK     x3384                1   x3385                1
     SLACK     x3386                1   x3387                1
     SLACK     x3388                1
-    SLACK2    OBJ              1E+13   x0001               -1
-    SLACK2    x0002               -1   x0003               -1
-    SLACK2    x0004               -1   x0005               -1
-    SLACK2    x0006               -1   x0007               -1
-    SLACK2    x0008               -1   x0009               -1
-    SLACK2    x0010               -1   x0011               -1
-    SLACK2    x0012               -1   x0013               -1
-    SLACK2    x0014               -1   x0015               -1
-    SLACK2    x0016               -1   x0017               -1
-    SLACK2    x0018               -1   x0019               -1
-    SLACK2    x0020               -1   x0021               -1
-    SLACK2    x0022               -1   x0023               -1
-    SLACK2    x0024               -1   x0025               -1
-    SLACK2    x0026               -1   x0027               -1
-    SLACK2    x0028               -1   x0029               -1
-    SLACK2    x0030               -1   x0031               -1
-    SLACK2    x0032               -1   x0033               -1
-    SLACK2    x0034               -1   x0035               -1
-    SLACK2    x0036               -1   x0037               -1
-    SLACK2    x0038               -1   x0039               -1
-    SLACK2    x0040               -1   x0041               -1
-    SLACK2    x0042               -1   x0043               -1
-    SLACK2    x0044               -1   x0045               -1
-    SLACK2    x0046               -1   x0047               -1
-    SLACK2    x0048               -1   x0049               -1
-    SLACK2    x0050               -1   x0051               -1
-    SLACK2    x0052               -1   x0053               -1
-    SLACK2    x0054               -1   x0055               -1
-    SLACK2    x0056               -1   x0057               -1
-    SLACK2    x0058               -1   x0059               -1
-    SLACK2    x0060               -1   x0061               -1
-    SLACK2    x0062               -1   x0063               -1
-    SLACK2    x0064               -1   x0065               -1
-    SLACK2    x0066               -1   x0067               -1
-    SLACK2    x0068               -1   x0069               -1
-    SLACK2    x0070               -1   x0071               -1
-    SLACK2    x0072               -1   x0073               -1
+    SLACK2    OBJ              1E+13  
     SLACK2    x0074               -1   x0075               -1
     SLACK2    x0076               -1   x0077               -1
     SLACK2    x0078               -1   x0079               -1
