@@ -548,9 +548,11 @@ namespace parallel_benders {
             LOG(INFO)<< "Done.";
         }
         for (int i = 1; i < num_stages_;i++){
-            LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ". We solve the LP relaxation for that stage.";
-            if ( solve_relaxation_ )
+            LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ".";
+            if ( solve_relaxation_ ){
                 integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
+                LOG(INFO) << "We solve the LP relaxation for that stage.";
+            }
 
             // TODO: If we want D_square_ we have to remove the && false statement
             if ( num_stages_ == 2 && integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
@@ -561,6 +563,7 @@ namespace parallel_benders {
                 // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
                 d_square_translation_term_ = 8000;
                 d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
+                LOG(INFO) << "Enabling D^2 algorithm.";
              }
         }
         // Stage Aggregation!
