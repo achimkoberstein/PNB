@@ -1,0 +1,5 @@
+TIME c1
+PERIODS	LP
+      Ix001   x0001    STAGE-1
+      Ix072   x0074    STAGE-2
+ENDATA
