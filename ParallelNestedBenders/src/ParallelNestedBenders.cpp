@@ -1768,6 +1768,9 @@ namespace parallel_benders {
 
         // If we have a fixed_solution we change the bounds to the fixed solution!
         if ( current_stage_ == 0 && fixed_first_stage_ ){
+            // Delete the old ones, otherwise: memory leak
+            delete [] benders_node_pointer->column_lower_;
+            delete [] benders_node_pointer->column_upper_;
             benders_node_pointer->column_upper_ = fixed_solution_.get();
             benders_node_pointer->column_lower_ = fixed_solution_.get();
         }
@@ -4224,6 +4227,10 @@ namespace parallel_benders {
         memcpy(first_stage_original_col_lower_.get(),smi_->getCore()->getDenseColLower(0),sizeof(double)*smi_->getCore()->getNumCols(0));
         memcpy(first_stage_original_col_upper_.get(),smi_->getCore()->getDenseColUpper(0),sizeof(double)*smi_->getCore()->getNumCols(0));
         memcpy(fixed_solution_.get(),solution,sizeof(double)*smi_->getCore()->getNumCols(0));
+        for (int i = 0; i< smi_->getCore()->getNumCols(0);i++){
+            if ( CompareWithZero(fixed_solution_[i]) )
+                fixed_solution_[i] = 0.0;
+        }
         fixed_first_stage_ = true;
 
     }
