@@ -46,6 +46,7 @@ public:
 
 private:
     parallel_benders::ParallelNestedBenders* nested_benders_;
+    OsiSolverInterface * osi_;
 
 };
 

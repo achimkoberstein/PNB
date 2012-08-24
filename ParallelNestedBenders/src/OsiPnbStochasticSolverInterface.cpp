@@ -44,20 +44,23 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1) == 0){
         parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
-        OsiSolverInterface* osi = nested_benders_->smi_->loadOsiSolverData();
+        if ( osi_ != NULL ){
+            delete osi_;
+        }
+        osi_ = nested_benders_->smi_->loadOsiSolverData();
         if ( nested_benders_->smi_->getNumScenarios() == 0){
             // We have no scenarios
             LOG(ERROR) << "No scenarios available.";
         }
         bool use_relaxation = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_RELAXATION,false);
         // Model statistics
-        std::cout << "Variables: " << osi->getNumCols() << " Rows: " << osi->getNumRows() << " Elements: " << osi->getNumElements() << " Integer: " << osi->getNumIntegers() << std::endl;
+        std::cout << "Variables: " << osi_->getNumCols() << " Rows: " << osi_->getNumRows() << " Elements: " << osi_->getNumElements() << " Integer: " << osi_->getNumIntegers() << std::endl;
         solution_time.Stop(1);
         solution_time.Start(0);
-        //osi->writeMps("deterministicEquivalent","mps",1);
+        //osi_->writeMps("deterministicEquivalent","mps",1);
         // Use Barrier method if we use cplex.. ugly code results
 #ifdef CPLEX_PRESENT
-        OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi);
+        OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_);
         if ( cpx_solver){
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
@@ -69,7 +72,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
-				osi->branchAndBound();
+				osi_->branchAndBound();
 			}
 			else {
                 //CPXdualopt(envPtr,lpPtr);
@@ -87,7 +90,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             // Get first stage solution
             // TODO: Move this to another place later..
             //int num_first_stage_cols = nested_benders_->smi_->getCore()->getNumCols(0);
-            //const double* col_solution = osi->getColSolution();
+            //const double* col_solution = osi_->getColSolution();
             //for ( int i = 0; i < num_first_stage_cols; i++ ){
             //    std::cout << "x" << i << " : " << col_solution[i] << std::endl;
             //}
@@ -96,10 +99,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         else{
 #endif
             if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
-                osi->branchAndBound();
+                osi_->branchAndBound();
             }
             else {
-                osi->initialSolve();
+                osi_->initialSolve();
             }
 
 #ifdef CPLEX_PRESENT
@@ -107,7 +110,9 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 #endif
         solution_time.Stop(0);
         // Set solution value
-        nested_benders_->upper_bound_ = osi->getObjValue();
+        nested_benders_->upper_bound_ = osi_->getObjValue();
+        // 
+
         // We have the time, but can not set it accordingly. not good!
         LOG(INFO) << "Solution: " << nested_benders_->upper_bound_;
         LOG(INFO) << "Solution Time: " << solution_time.GetTime(0) << "s";
@@ -120,7 +125,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 }
 
 OsiStochasticParallelNestedBendersSolverInterface::OsiStochasticParallelNestedBendersSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
-: OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL)
+: OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL),osi_(NULL)
 {
     if ( smi_model == NULL )
         assert(false);
@@ -179,9 +184,14 @@ SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
 
 const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage )
 {
-    assert( stage < nested_benders_->num_stages_);
-    assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-    return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->col_solution_;
+    if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,1) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
+        return osi_->getColSolution(); // TODO: We need to go to the correct numbers..
+    }
+    else {
+        assert( stage < nested_benders_->num_stages_);
+        assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
+        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->col_solution_;
+    }
 }
 
 const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageSolution()
@@ -196,9 +206,14 @@ const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageD
 
 const double * OsiStochasticParallelNestedBendersSolverInterface::getDualsByNodeAndStage( int node_number, int stage )
 {
-    assert( stage < nested_benders_->num_stages_);
-    assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-    return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->dual_solution_;
+    if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,1) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
+        return osi_->getRowPrice(); // TODO: We need to go to the correct numbers..
+    }
+    else {
+        assert( stage < nested_benders_->num_stages_);
+        assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
+        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->dual_solution_;
+    }
 }
 
 double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForScenario( int scenario )
