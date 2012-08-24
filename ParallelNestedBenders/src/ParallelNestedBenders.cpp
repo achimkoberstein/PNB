@@ -927,21 +927,21 @@ namespace parallel_benders {
                     double cut_coefficient_scalar = current_expected_second_stage_value_function-lower_bound_for_second_stage;
                     std::vector<int> integer_cols = core_->getIntCols(current_stage_-1); // Assume they are sorted!
                     
-                    if ( integer_cols.size() != stage_data_[current_stage_-1]->num_columns_ ){
-                        // We also have non-binary ( i.e. continuous )variables in the first stage.
-                        // Compute obj value part of continuous variables
-                        double continuous_part = 0.0;
-                        const double * obj_coefficients = seperate_first_stage_solver_ ? osi_solver_->getObjCoefficients() : core_->getDenseObjCoefficients(current_stage_-1);
-                        for (int variable_index = 0; variable_index < stage_data_[current_stage_-1]->num_columns_; variable_index++){
-                            if ( std::find(integer_cols.begin(),integer_cols.end(),variable_index) != integer_cols.end() )
-                                continue;
-                            else {
-                                assert(tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_ != NULL);
-                                continuous_part += obj_coefficients[variable_index]*tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_[variable_index];
-                            }
-                        }
-                        cut_coefficient_scalar -= continuous_part;
-                    }
+                    //if ( integer_cols.size() != stage_data_[current_stage_-1]->num_columns_ ){
+                    //    // We also have non-binary ( i.e. continuous )variables in the first stage.
+                    //    // Compute obj value part of continuous variables
+                    //    double continuous_part = 0.0;
+                    //    const double * obj_coefficients = seperate_first_stage_solver_ ? osi_solver_->getObjCoefficients() : core_->getDenseObjCoefficients(current_stage_-1);
+                    //    for (int variable_index = 0; variable_index < stage_data_[current_stage_-1]->num_columns_; variable_index++){
+                    //        if ( std::find(integer_cols.begin(),integer_cols.end(),variable_index) != integer_cols.end() )
+                    //            continue;
+                    //        else {
+                    //            assert(tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_ != NULL);
+                    //            continuous_part += obj_coefficients[variable_index]*tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_[variable_index];
+                    //        }
+                    //    }
+                    //    cut_coefficient_scalar -= continuous_part;
+                    //}
                     std::vector<double> cut_coefficients;
                     cut_coefficients.reserve(integer_cols.size());
                     // Get first stage solution and compute cut coefficients
