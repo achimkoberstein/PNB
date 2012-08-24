@@ -1274,13 +1274,14 @@ TEST_F(NestedBendersTest,sample_average_approximation){
     SmiScnModel smi;
     smi.setOsiSolverHandle(&osi_cpx);
     smi.setSampling(true);
-    int read_in = smi.readSmps("1postponement");
+    int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
     if ( read_in != 0 ){
         LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
     }
     SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
     parallel_benders::Parameter benders_parameter;
     benders_parameter.init();
+    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,0);
 
     int runs = 1;
     std::map< int, std::pair<int,int> > sample_map;
@@ -1308,7 +1309,7 @@ TEST_F(NestedBendersTest,sample_average_approximation){
         //logfile.close();
         double solver_time = CoinCpuTime();
         //benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
-        saa_solver.setParameters(benders_parameter_);
+        saa_solver.setParameters(benders_parameter);
         // These values do not change!
         saa_solver.setNumberBatches(10);
         saa_solver.setNumberBatchesUpperBound(50);
