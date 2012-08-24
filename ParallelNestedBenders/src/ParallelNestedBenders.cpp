@@ -1507,20 +1507,20 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 1 && current_iteration_ > 350){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr ){
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-                stream << "_C.lp";
-                //CPXsetintparam(env_ptr,)
-                console_mutex_.lock();
-                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
-                console_mutex_.unlock();
-            }
-        } // TODO: Debugging stuff
+        //if ( current_stage_ <= 1 && current_iteration_ > 350){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        //    if ( cpx_ptr ){
+        //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //        stream << "_C.lp";
+        //        //CPXsetintparam(env_ptr,)
+        //        console_mutex_.lock();
+        //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+        //        console_mutex_.unlock();
+        //    }
+        //} // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
