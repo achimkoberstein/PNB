@@ -1266,6 +1266,72 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //    //     testModel.solve(MP_model::MINIMIZE);
 //}
 
+TEST_F(NestedBendersTest,sample_average_approximation){
+    //// SAA TEST
+    //// We set the correct folder here: All files are in Benders/instances
+    double time = CoinCpuTime();  
+    OsiCpxSolverInterface osi_cpx;
+    SmiScnModel smi;
+    smi.setOsiSolverHandle(&osi_cpx);
+    smi.setSampling(true);
+    int read_in = smi.readSmps("1postponement");
+    if ( read_in != 0 ){
+        LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+    }
+    SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
+    parallel_benders::Parameter benders_parameter;
+    benders_parameter.init();
+
+    int runs = 1;
+    std::map< int, std::pair<int,int> > sample_map;
+    sample_map[0] = make_pair(20,1000);
+    //sample_map[1] = make_pair(2000,20000);
+    //sample_map[2] = make_pair(3000,20000);
+    //sample_map[3] = make_pair(5000,20000);
+    //sample_map[4] = make_pair(10000,20000);
+    fstream logfile;
+    for (int i = 0; i < runs; i++){
+        //std::vector<int> samples;
+        //samples.push_back(0);
+        //samples.push_back(sample_map[i].first);
+        //smi.sampleScenarioTree(samples,0,get_random_01_variates);
+        //std::string number_of_scen = boost::lexical_cast<std::string,int>(samples[1]);
+        //std::string name_string(core_name_string);
+        //size_t string_number = name_string.find_last_of("/");
+        //if ( string_number != std::string::npos){
+        //    name_string = name_string.substr(string_number+1,name_string.size());
+        //}
+        //name_string = name_string + "-" + number_of_scen;
+        //smi.writeSmps(name_string.c_str(),false,false);
+        //logfile.open("saa-log",fstream::out | fstream::app);
+        //logfile << core_name_string << std::endl;
+        //logfile.close();
+        double solver_time = CoinCpuTime();
+        //benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
+        saa_solver.setParameters(benders_parameter_);
+        // These values do not change!
+        saa_solver.setNumberBatches(10);
+        saa_solver.setNumberBatchesUpperBound(50);
+        // End values that not change
+        std::vector<int> sample_size(2,0);
+        sample_size[1] = sample_map[i].first;
+        saa_solver.setSampleSize(sample_size);
+        std::vector<int> sample_size_upper(2,0);
+        sample_size_upper[1] = sample_map[i].second;
+        saa_solver.setSampleSizeUpperBound(sample_size_upper);
+        double alpha = 0.95;
+        saa_solver.setConfidenceLevel(alpha);
+        saa_solver.initialSolve();
+        solver_time = CoinCpuTime()-solver_time; // Solver only time
+        
+        logfile.open("saa-log", fstream::out | fstream::app);
+        logfile << "Solution Time: " << solver_time << std::endl;
+        logfile << "--------------------------------------------";
+        logfile.close();
+        LOG(INFO) << "Solution Time: " << solver_time;
+    }
+}
+
 
 
 //TODO: Write Tests for right-hand-side with RV and constant term
@@ -1286,7 +1352,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
     //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
     //::testing::GTEST_FLAG(filter) = "*ssch*";
-    ::testing::GTEST_FLAG(filter) = "*dcap*";
+    ::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
