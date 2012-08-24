@@ -116,13 +116,9 @@ public:
             summed_prob += getEventProb(i);
             if ( value <= summed_prob )
                 return events_[i];
-            else {
-                assert( i == num_events-1);
-                return events_[i];
-            }
         }
-        assert(false);
-        return NULL;
+        assert(summed_prob < 1.0);
+        return events_[num_events-1]; // Value was larger than the sum, we had 
     }
     
 	inline const CoinPackedMatrix &getEventMatrix(int i)   {return events_[i]->getMatrix(); }

@@ -230,6 +230,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( 
 
 void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution )
 {
+    // Store a warm_up solution
+    // If cplex, we may need to think about it?
     nested_benders_->setWarmUpSolution(solution);
 }
 
@@ -261,6 +263,9 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_DUAL_NO);
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Store only first-stage primal solution
+
+    bool dont_use_benders = parameters_.parameter_.get(parallel_benders::PNB_BENDERS,1) != parallel_benders::PNB_INT_ALGORITHM_BENDERS;
+    int preferred_solution_algorithm = parameters_.parameter_.get(parallel_benders::PNB_BENDERS,1);
 
     double lower_bound_estimator = 0;
     double half_length_lower = 0;
@@ -333,12 +338,14 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             first_stage_solutions[i].reset(new double[num_first_stage_cols]);
             memcpy(first_stage_solutions[i].get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
         }
+        parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS); // Use Benders for evaluation of candidate solution!
         if ( mak_morton_wood ){
             // Evaluate candidate solution with the given sample set
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
-            osi_pnb_->fixFirstStageVariables(candidate_array.get());
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
             osi_pnb_->setParameters(parameters_);
+
+            osi_pnb_->fixFirstStageVariables(candidate_array.get());
             osi_pnb_->initialSolve();
             gap_estimates[i] = osi_pnb_->getObjValue() - objective_values[i];
          }
@@ -349,14 +356,17 @@ void SampleAverageApproximationSolverInterface::initialSolve()
                 // Evaluate candidate solution with the given sample set
                 smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
                 osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
-                osi_pnb_->fixFirstStageVariables(first_stage_solutions[i].get());
                 parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
                 osi_pnb_->setParameters(parameters_);
+
+                osi_pnb_->fixFirstStageVariables(first_stage_solutions[i].get());
                 osi_pnb_->initialSolve();
                 upper_bound_estimates_for_this_solution[current_batch] = osi_pnb_->getObjValue();
             }
             upper_bound_estimates[i] = std::accumulate(upper_bound_estimates_for_this_solution.begin(),upper_bound_estimates_for_this_solution.end(),0.0)/number_batches_upper_;
         }
+        if ( dont_use_benders )
+            parameters_.parameter_.put(parallel_benders::PNB_BENDERS,preferred_solution_algorithm);
     }
     // Now we have number_batches many different objective values
 
@@ -409,6 +419,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+            parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
             osi_pnb_->setParameters(parameters_);
 
             // Fix first stage solution
@@ -437,6 +448,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES,true);
+        parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
         osi_pnb_->setParameters(parameters_);
         // Fix first stage solution
         osi_pnb_->fixFirstStageVariables(candidate_array.get());
