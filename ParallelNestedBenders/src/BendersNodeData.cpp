@@ -33,13 +33,6 @@ matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower
 
 BendersNodeData::~BendersNodeData(void)
 {
-    //for (cut_container::iterator it = optimality_cuts_.begin(); it != optimality_cuts_.end(); ++it) {
-    //    delete *it; 
-    //}
-    //for (cut_container::iterator it = feasibility_cuts_.begin(); it != feasibility_cuts_.end(); ++it) {
-    //    delete *it; 
-    //}
-
     delete [] this->col_solution_;
 
     delete [] this->dual_solution_;
@@ -52,6 +45,8 @@ BendersNodeData::~BendersNodeData(void)
 
     for (int i = 0; i < variable_bounds_.size(); i++)
         delete variable_bounds_[i];
+
+    delete [] d_square_cut_t_matrix_;
 
 }
 
@@ -109,7 +104,7 @@ const CoinWarmStart* BendersNodeData::warm_start(void)
 
 void BendersNodeData::CleanUnusedMemory( bool direction )
 {
-    if ( direction ){ // We go forward, we do not need dual values. We recompute then, if needed
+    if ( direction ){ // We go forward, we do not need dual values. We recompute them, if needed
         delete [] dual_solution_;
         delete [] reduced_cost_;
         dual_solution_ = NULL;

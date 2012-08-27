@@ -1352,8 +1352,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
     //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-    //::testing::GTEST_FLAG(filter) = "*ssch*";
-    ::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
+    ::testing::GTEST_FLAG(filter) = "*ssch*";
+    //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
