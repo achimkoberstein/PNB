@@ -160,6 +160,7 @@ private:
     double upper_bound_;
     double temporary_upper_bound_;
     double old_lower_bound_;
+    std::vector<double> old_first_stage_solution_;
 
     int current_stage_;
     // Characteristic of problem
