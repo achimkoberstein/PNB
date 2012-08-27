@@ -1,0 +1,448 @@
+NAME           
+ROWS
+ N  OBJ     
+ G  c1      
+ G  c2      
+ G  c3      
+ G  c4      
+ G  c5      
+ G  c6      
+ E  c7      
+ E  c8      
+ E  c9      
+ E  c10     
+ E  c11     
+ E  c12     
+ E  c13     
+ E  c14     
+ E  c15     
+ E  c16     
+ E  c17     
+ E  c18     
+ E  c19     
+ E  c20     
+ E  c21     
+ E  c22     
+ E  c23     
+ E  c24     
+ E  c25     
+ E  c26     
+ E  c27     
+ E  c28     
+ E  c29     
+ E  c30     
+ E  c31     
+COLUMNS
+    MARK0000  'MARKER'                 'INTORG'
+    x_1       OBJ             750774   c1                  -1
+    x_1       c2                2000
+    x_2       OBJ             956095   c1                  -1
+    x_2       c3                2000
+    x_3       OBJ             914386   c1                  -1
+    x_3       c4                2000
+    x_4       OBJ             937886   c1                  -1
+    x_4       c5                2000
+    x_5       OBJ             767232   c1                  -1
+    x_5       c6                2000
+    y_1_1     OBJ             -88688   c2                -241
+    y_1_1     c7                   1
+    y_2_1     OBJ             -92796   c2                -222
+    y_2_1     c8                   1
+    y_3_1     OBJ             -78144   c2                -192
+    y_3_1     c9                   1
+    y_4_1     OBJ             -86100   c2                -210
+    y_4_1     c10                  1
+    y_5_1     OBJ             -89200   c2                -200
+    y_5_1     c11                  1
+    y_6_1     OBJ             -73278   c2                -207
+    y_6_1     c12                  1
+    y_7_1     OBJ             -79576   c2                -196
+    y_7_1     c13                  1
+    y_8_1     OBJ             -80183   c2                -181
+    y_8_1     c14                  1
+    y_9_1     OBJ             -91803   c2                -213
+    y_9_1     c15                  1
+    y_10_1    OBJ             -73185   c2                -205
+    y_10_1    c16                  1
+    y_11_1    OBJ             -94976   c2                -212
+    y_11_1    c17                  1
+    y_12_1    OBJ             -79785   c2                -197
+    y_12_1    c18                  1
+    y_13_1    OBJ             -90738   c2                -213
+    y_13_1    c19                  1
+    y_14_1    OBJ             -76825   c2                -175
+    y_14_1    c20                  1
+    y_15_1    OBJ             -87565   c2                -211
+    y_15_1    c21                  1
+    y_16_1    OBJ             -84480   c2                -192
+    y_16_1    c22                  1
+    y_17_1    OBJ             -86724   c2                -198
+    y_17_1    c23                  1
+    y_18_1    OBJ             -85500   c2                -225
+    y_18_1    c24                  1
+    y_19_1    OBJ             -67425   c2                -155
+    y_19_1    c25                  1
+    y_20_1    OBJ             -50895   c2                -145
+    y_20_1    c26                  1
+    y_21_1    OBJ             -93240   c2                -222
+    y_21_1    c27                  1
+    y_22_1    OBJ             -89670   c2                -210
+    y_22_1    c28                  1
+    y_23_1    OBJ             -75615   c2                -213
+    y_23_1    c29                  1
+    y_24_1    OBJ             -72468   c2                -183
+    y_24_1    c30                  1
+    y_25_1    OBJ             -89400   c2                -200
+    y_25_1    c31                  1
+    y_1_2     OBJ             -82064   c3                -223
+    y_1_2     c7                   1
+    y_2_2     OBJ             -92378   c3                -221
+    y_2_2     c8                   1
+    y_3_2     OBJ             -82621   c3                -203
+    y_3_2     c9                   1
+    y_4_2     OBJ             -81180   c3                -198
+    y_4_2     c10                  1
+    y_5_2     OBJ            -100350   c3                -225
+    y_5_2     c11                  1
+    y_6_2     OBJ             -82836   c3                -234
+    y_6_2     c12                  1
+    y_7_2     OBJ            -100688   c3                -248
+    y_7_2     c13                  1
+    y_8_2     OBJ             -84170   c3                -190
+    y_8_2     c14                  1
+    y_9_2     OBJ             -98268   c3                -228
+    y_9_2     c15                  1
+    y_10_2    OBJ             -80325   c3                -225
+    y_10_2    c16                  1
+    y_11_2    OBJ             -92288   c3                -206
+    y_11_2    c17                  1
+    y_12_2    OBJ             -79785   c3                -197
+    y_12_2    c18                  1
+    y_13_2    OBJ             -88182   c3                -207
+    y_13_2    c19                  1
+    y_14_2    OBJ             -89117   c3                -203
+    y_14_2    c20                  1
+    y_15_2    OBJ             -65155   c3                -157
+    y_15_2    c21                  1
+    y_16_2    OBJ             -91960   c3                -209
+    y_16_2    c22                  1
+    y_17_2    OBJ             -78402   c3                -179
+    y_17_2    c23                  1
+    y_18_2    OBJ             -60800   c3                -160
+    y_18_2    c24                  1
+    y_19_2    OBJ             -82650   c3                -190
+    y_19_2    c25                  1
+    y_20_2    OBJ             -81783   c3                -233
+    y_20_2    c26                  1
+    y_21_2    OBJ             -79800   c3                -190
+    y_21_2    c27                  1
+    y_22_2    OBJ             -69601   c3                -163
+    y_22_2    c28                  1
+    y_23_2    OBJ             -86620   c3                -244
+    y_23_2    c29                  1
+    y_24_2    OBJ             -80784   c3                -204
+    y_24_2    c30                  1
+    y_25_2    OBJ             -76437   c3                -171
+    y_25_2    c31                  1
+    y_1_3     OBJ             -63296   c4                -172
+    y_1_3     c7                   1
+    y_2_3     OBJ             -89870   c4                -215
+    y_2_3     c8                   1
+    y_3_3     OBJ             -78144   c4                -192
+    y_3_3     c9                   1
+    y_4_3     OBJ             -98400   c4                -240
+    y_4_3     c10                  1
+    y_5_3     OBJ             -91430   c4                -205
+    y_5_3     c11                  1
+    y_6_3     OBJ             -67968   c4                -192
+    y_6_3     c12                  1
+    y_7_3     OBJ             -52780   c4                -130
+    y_7_3     c13                  1
+    y_8_3     OBJ             -82398   c4                -186
+    y_8_3     c14                  1
+    y_9_3     OBJ             -91803   c4                -213
+    y_9_3     c15                  1
+    y_10_3    OBJ             -66402   c4                -186
+    y_10_3    c16                  1
+    y_11_3    OBJ             -58688   c4                -131
+    y_11_3    c17                  1
+    y_12_3    OBJ             -83835   c4                -207
+    y_12_3    c18                  1
+    y_13_3    OBJ             -90312   c4                -212
+    y_13_3    c19                  1
+    y_14_3    OBJ             -95263   c4                -217
+    y_14_3    c20                  1
+    y_15_3    OBJ             -68060   c4                -164
+    y_15_3    c21                  1
+    y_16_3    OBJ            -105160   c4                -239
+    y_16_3    c22                  1
+    y_17_3    OBJ             -87600   c4                -200
+    y_17_3    c23                  1
+    y_18_3    OBJ             -75620   c4                -199
+    y_18_3    c24                  1
+    y_19_3    OBJ             -86565   c4                -199
+    y_19_3    c25                  1
+    y_20_3    OBJ             -74061   c4                -211
+    y_20_3    c26                  1
+    y_21_3    OBJ             -79800   c4                -190
+    y_21_3    c27                  1
+    y_22_3    OBJ             -94367   c4                -221
+    y_22_3    c28                  1
+    y_23_3    OBJ             -55735   c4                -157
+    y_23_3    c29                  1
+    y_24_3    OBJ             -71280   c4                -180
+    y_24_3    c30                  1
+    y_25_3    OBJ            -106833   c4                -239
+    y_25_3    c31                  1
+    y_1_4     OBJ             -68080   c5                -185
+    y_1_4     c7                   1
+    y_2_4     OBJ             -82764   c5                -198
+    y_2_4     c8                   1
+    y_3_4     OBJ             -60643   c5                -149
+    y_3_4     c9                   1
+    y_4_4     OBJ             -87740   c5                -214
+    y_4_4     c10                  1
+    y_5_4     OBJ             -72252   c5                -162
+    y_5_4     c11                  1
+    y_6_4     OBJ             -63720   c5                -180
+    y_6_4     c12                  1
+    y_7_4     OBJ             -73486   c5                -181
+    y_7_4     c13                  1
+    y_8_4     OBJ             -88600   c5                -200
+    y_8_4     c14                  1
+    y_9_4     OBJ             -95251   c5                -221
+    y_9_4     c15                  1
+    y_10_4    OBJ             -67116   c5                -188
+    y_10_4    c16                  1
+    y_11_4    OBJ            -103040   c5                -230
+    y_11_4    c17                  1
+    y_12_4    OBJ             -83430   c5                -206
+    y_12_4    c18                  1
+    y_13_4    OBJ             -74550   c5                -175
+    y_13_4    c19                  1
+    y_14_4    OBJ             -83849   c5                -191
+    y_14_4    c20                  1
+    y_15_4    OBJ             -87980   c5                -212
+    y_15_4    c21                  1
+    y_16_4    OBJ             -87120   c5                -198
+    y_16_4    c22                  1
+    y_17_4    OBJ             -87162   c5                -199
+    y_17_4    c23                  1
+    y_18_4    OBJ             -80940   c5                -213
+    y_18_4    c24                  1
+    y_19_4    OBJ             -75255   c5                -173
+    y_19_4    c25                  1
+    y_20_4    OBJ             -80028   c5                -228
+    y_20_4    c26                  1
+    y_21_4    OBJ            -101220   c5                -241
+    y_21_4    c27                  1
+    y_22_4    OBJ             -81130   c5                -190
+    y_22_4    c28                  1
+    y_23_4    OBJ             -62480   c5                -176
+    y_23_4    c29                  1
+    y_24_4    OBJ             -64548   c5                -163
+    y_24_4    c30                  1
+    y_25_4    OBJ             -96552   c5                -216
+    y_25_4    c31                  1
+    y_1_5     OBJ             -67344   c6                -183
+    y_1_5     c7                   1
+    y_2_5     OBJ            -101992   c6                -244
+    y_2_5     c8                   1
+    y_3_5     OBJ             -84249   c6                -207
+    y_3_5     c9                   1
+    y_4_5     OBJ             -80770   c6                -197
+    y_4_5     c10                  1
+    y_5_5     OBJ             -87862   c6                -197
+    y_5_5     c11                  1
+    y_6_5     OBJ             -83544   c6                -236
+    y_6_5     c12                  1
+    y_7_5     OBJ             -90944   c6                -224
+    y_7_5     c13                  1
+    y_8_5     OBJ             -99232   c6                -224
+    y_8_5     c14                  1
+    y_9_5     OBJ             -78442   c6                -182
+    y_9_5     c15                  1
+    y_10_5    OBJ             -68187   c6                -191
+    y_10_5    c16                  1
+    y_11_5    OBJ             -90496   c6                -202
+    y_11_5    c17                  1
+    y_12_5    OBJ             -67230   c6                -166
+    y_12_5    c18                  1
+    y_13_5    OBJ             -80088   c6                -188
+    y_13_5    c19                  1
+    y_14_5    OBJ             -82971   c6                -189
+    y_14_5    c20                  1
+    y_15_5    OBJ             -85905   c6                -207
+    y_15_5    c21                  1
+    y_16_5    OBJ             -98560   c6                -224
+    y_16_5    c22                  1
+    y_17_5    OBJ             -83658   c6                -191
+    y_17_5    c23                  1
+    y_18_5    OBJ             -80180   c6                -211
+    y_18_5    c24                  1
+    y_19_5    OBJ             -97005   c6                -223
+    y_19_5    c25                  1
+    y_20_5    OBJ             -67041   c6                -191
+    y_20_5    c26                  1
+    y_21_5    OBJ             -75180   c6                -179
+    y_21_5    c27                  1
+    y_22_5    OBJ             -68747   c6                -161
+    y_22_5    c28                  1
+    y_23_5    OBJ             -84135   c6                -237
+    y_23_5    c29                  1
+    y_24_5    OBJ             -91872   c6                -232
+    y_24_5    c30                  1
+    y_25_5    OBJ             -80907   c6                -181
+    y_25_5    c31                  1
+    MARK0001  'MARKER'                 'INTEND'
+    y_1_0     OBJ            2000000   c2                   1
+    y_2_0     OBJ            2000000   c3                   1
+    y_3_0     OBJ            2000000   c4                   1
+    y_4_0     OBJ            2000000   c5                   1
+    y_5_0     OBJ            2000000   c6                   1
+RHS
+    RHS       c1                  -5   c7                   1
+    RHS       c8                   1   c9                   1
+    RHS       c10                  1   c11                  1
+    RHS       c12                  1   c13                  1
+    RHS       c14                  1   c15                  1
+    RHS       c16                  1   c17                  1
+    RHS       c18                  1   c19                  1
+    RHS       c20                  1   c21                  1
+    RHS       c22                  1   c23                  1
+    RHS       c24                  1   c25                  1
+    RHS       c26                  1   c27                  1
+    RHS       c28                  1   c29                  1
+    RHS       c30                  1   c31                  1
+BOUNDS
+ UP bnd       x_1                  1
+ UP bnd       x_2                  1
+ UP bnd       x_3                  1
+ UP bnd       x_4                  1
+ UP bnd       x_5                  1
+ UP bnd       y_1_1                1
+ UP bnd       y_2_1                1
+ UP bnd       y_3_1                1
+ UP bnd       y_4_1                1
+ UP bnd       y_5_1                1
+ UP bnd       y_6_1                1
+ UP bnd       y_7_1                1
+ UP bnd       y_8_1                1
+ UP bnd       y_9_1                1
+ UP bnd       y_10_1               1
+ UP bnd       y_11_1               1
+ UP bnd       y_12_1               1
+ UP bnd       y_13_1               1
+ UP bnd       y_14_1               1
+ UP bnd       y_15_1               1
+ UP bnd       y_16_1               1
+ UP bnd       y_17_1               1
+ UP bnd       y_18_1               1
+ UP bnd       y_19_1               1
+ UP bnd       y_20_1               1
+ UP bnd       y_21_1               1
+ UP bnd       y_22_1               1
+ UP bnd       y_23_1               1
+ UP bnd       y_24_1               1
+ UP bnd       y_25_1               1
+ UP bnd       y_1_2                1
+ UP bnd       y_2_2                1
+ UP bnd       y_3_2                1
+ UP bnd       y_4_2                1
+ UP bnd       y_5_2                1
+ UP bnd       y_6_2                1
+ UP bnd       y_7_2                1
+ UP bnd       y_8_2                1
+ UP bnd       y_9_2                1
+ UP bnd       y_10_2               1
+ UP bnd       y_11_2               1
+ UP bnd       y_12_2               1
+ UP bnd       y_13_2               1
+ UP bnd       y_14_2               1
+ UP bnd       y_15_2               1
+ UP bnd       y_16_2               1
+ UP bnd       y_17_2               1
+ UP bnd       y_18_2               1
+ UP bnd       y_19_2               1
+ UP bnd       y_20_2               1
+ UP bnd       y_21_2               1
+ UP bnd       y_22_2               1
+ UP bnd       y_23_2               1
+ UP bnd       y_24_2               1
+ UP bnd       y_25_2               1
+ UP bnd       y_1_3                1
+ UP bnd       y_2_3                1
+ UP bnd       y_3_3                1
+ UP bnd       y_4_3                1
+ UP bnd       y_5_3                1
+ UP bnd       y_6_3                1
+ UP bnd       y_7_3                1
+ UP bnd       y_8_3                1
+ UP bnd       y_9_3                1
+ UP bnd       y_10_3               1
+ UP bnd       y_11_3               1
+ UP bnd       y_12_3               1
+ UP bnd       y_13_3               1
+ UP bnd       y_14_3               1
+ UP bnd       y_15_3               1
+ UP bnd       y_16_3               1
+ UP bnd       y_17_3               1
+ UP bnd       y_18_3               1
+ UP bnd       y_19_3               1
+ UP bnd       y_20_3               1
+ UP bnd       y_21_3               1
+ UP bnd       y_22_3               1
+ UP bnd       y_23_3               1
+ UP bnd       y_24_3               1
+ UP bnd       y_25_3               1
+ UP bnd       y_1_4                1
+ UP bnd       y_2_4                1
+ UP bnd       y_3_4                1
+ UP bnd       y_4_4                1
+ UP bnd       y_5_4                1
+ UP bnd       y_6_4                1
+ UP bnd       y_7_4                1
+ UP bnd       y_8_4                1
+ UP bnd       y_9_4                1
+ UP bnd       y_10_4               1
+ UP bnd       y_11_4               1
+ UP bnd       y_12_4               1
+ UP bnd       y_13_4               1
+ UP bnd       y_14_4               1
+ UP bnd       y_15_4               1
+ UP bnd       y_16_4               1
+ UP bnd       y_17_4               1
+ UP bnd       y_18_4               1
+ UP bnd       y_19_4               1
+ UP bnd       y_20_4               1
+ UP bnd       y_21_4               1
+ UP bnd       y_22_4               1
+ UP bnd       y_23_4               1
+ UP bnd       y_24_4               1
+ UP bnd       y_25_4               1
+ UP bnd       y_1_5                1
+ UP bnd       y_2_5                1
+ UP bnd       y_3_5                1
+ UP bnd       y_4_5                1
+ UP bnd       y_5_5                1
+ UP bnd       y_6_5                1
+ UP bnd       y_7_5                1
+ UP bnd       y_8_5                1
+ UP bnd       y_9_5                1
+ UP bnd       y_10_5               1
+ UP bnd       y_11_5               1
+ UP bnd       y_12_5               1
+ UP bnd       y_13_5               1
+ UP bnd       y_14_5               1
+ UP bnd       y_15_5               1
+ UP bnd       y_16_5               1
+ UP bnd       y_17_5               1
+ UP bnd       y_18_5               1
+ UP bnd       y_19_5               1
+ UP bnd       y_20_5               1
+ UP bnd       y_21_5               1
+ UP bnd       y_22_5               1
+ UP bnd       y_23_5               1
+ UP bnd       y_24_5               1
+ UP bnd       y_25_5               1
+ENDATA

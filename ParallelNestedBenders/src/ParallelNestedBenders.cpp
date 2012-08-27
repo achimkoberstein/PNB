@@ -534,6 +534,7 @@ namespace parallel_benders {
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
         //osi_solver_->messageHandler()->setLogLevel(1);
+        // Use only one thread per cplex instance (except for the first sage
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
         timer_.Stop(num_stages_);
@@ -4472,7 +4473,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
     {
         // Silence solver 
-        //osi_solver->messageHandler()->setLogLevel(0);
+        osi_solver->messageHandler()->setLogLevel(0);
         osi_solver->setHintParam(OsiDoPresolveInInitial,true);
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
@@ -4489,6 +4490,9 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            // Use only one thread per cplex instance (except for the first sage solver)
+            if ( osi_solver != osi_solver_)
+                CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1);
             // Set markowitz threshold high for better accuracy 
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.9);
         }
