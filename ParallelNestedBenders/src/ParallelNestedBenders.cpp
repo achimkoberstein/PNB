@@ -258,7 +258,24 @@ namespace parallel_benders {
             benders_stage_ptr->non_zero_bounds_ = true;
         // In the non-staircase case we now have all the stuff we need.
 
-    }
+        if ( integer_problems_[stage] ){
+            // Initialize an array with the coltype of every variable
+            benders_stage_ptr->coltype_array_.resize(benders_stage_ptr->num_columns_,'C');
+            std::vector<int> int_cols(core_->getIntCols(stage));
+            std::vector<int>::iterator it = int_cols.begin();
+            for (int i = 0; i < benders_stage_ptr->num_columns_; i++){
+                if ( it != int_cols.end() && *it == i ){
+                    // Depends on upper / and or lower bounds, but at first we only solve binary problems..
+                    if ( core_->getDenseColUpper(stage)[i] == 1.0 && core_->getDenseColLower(stage)[i] == 0.0)
+                        benders_stage_ptr->coltype_array_[i] = 'B';
+                    else 
+                        benders_stage_ptr->coltype_array_[i] = 'I';
+                    ++it;
+                }
+            }
+            assert( it == int_cols.end());
+        }
+   }
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
@@ -1311,7 +1328,7 @@ namespace parallel_benders {
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
 
-        if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1))
+        if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1)) 
             BuildSubproblem(osi_solver, benders_tree_node_pointer);
         AppendColsToSubproblem(osi_solver,benders_tree_node_pointer);
         AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
@@ -1354,7 +1371,7 @@ namespace parallel_benders {
         //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         //    if ( cpx_ptr ){
         //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
         //        stream << "_C.lp";
         //        //CPXsetintparam(env_ptr,)
         //        console_mutex_.lock();
@@ -1456,7 +1473,7 @@ namespace parallel_benders {
                     if ( cpx_ptr ){
                         // Get ENV and LP ptr
                         CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                        CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                        CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                         CPXwriteprob(env_ptr,lp_ptr,"master_infeasible_cplex.lp","lp");
 
                     }
@@ -1470,10 +1487,12 @@ namespace parallel_benders {
                 if ( cpx_ptr ){
                     // Get ENV and LP ptr
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
-                    LOG(INFO) << "Cplex returned solution process with " << stat;
+                    
+                    LOG(INFO, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
                 }
+                StoreWarmStart(osi_solver,benders_tree_node_pointer);
 
             }
             // TODO Other possible cases
@@ -1954,6 +1973,12 @@ namespace parallel_benders {
             }
         }
 
+        // We need to set the integer indices, if we have not done so already!
+        if ( !reuse_solver ){
+            std::vector<int> integer_indices = core_->getIntCols(current_stage_);
+            osi_solver->setInteger(&integer_indices[0],integer_indices.size()); // Sets integer only, if we actually use osi_solver->branchAndBound() method!!
+        }
+
     }
 
     ParallelNestedBenders::~ParallelNestedBenders()
@@ -2365,7 +2390,7 @@ namespace parallel_benders {
             use_cplex = true; 
             // Get ENV and LP ptr
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
             int cpx_stat = 0;
 
             dual_solution_farkas = new double[number_rows];
@@ -2872,7 +2897,7 @@ namespace parallel_benders {
                     LOG(FATAL)<< "OsiSolverInstance is no cplex instance.";
                 // Get ENV and LP ptr
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);;
                 int num_columns = stage_data_[current_stage_]->num_columns_;
                 int num_theta = benders_tree_node_pointer->getDataPtr()->num_thetas_;
                 if ( num_theta == 0)
@@ -3817,7 +3842,7 @@ namespace parallel_benders {
                 if ( cpx_ptr ){
                     // Get ENV and LP ptr
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
                     LOG(INFO) << "Cplex returned solution process with " << stat;
                     //CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
@@ -3930,7 +3955,7 @@ namespace parallel_benders {
         if ( check_primal_degeneracy ){
             OsiCpxSolverInterface * osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
             CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-            CPXLPptr lp_ptr = osi_cpx->getLpPtr();
+            CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
             // Check for primal degeneracy : Do we have basic variables at their bounds ?
             int maximal_iterations = 10;
             // Store values for double array
@@ -4149,6 +4174,31 @@ namespace parallel_benders {
                 }
             }
         }//Integer problems. No Warm start for MIP problems, but we need to set an incumbent solution!
+        else {
+            // Set incumbent of last solution?
+            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){
+                if ( warm_start_scenarios_ ){
+
+                }
+                else if ( warm_start_stage_ ){
+                    
+                    // Get solution of first stage node?
+                    OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
+                    if ( osi_cpx != NULL ){
+                        CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+                        CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+
+                        stage_warm_start_mutex_.lock();
+                        if ( !stage_data_[current_stage_]->mip_solution_.empty()){
+                            int err = CPXcopymipstart(env_ptr,lp_ptr,stage_data_[current_stage_]->num_columns_,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0]);
+                            LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
+                        }
+                        stage_warm_start_mutex_.unlock();
+                    }
+                    
+                }
+            }
+        }
     }
 
     void ParallelNestedBenders::StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -4171,7 +4221,16 @@ namespace parallel_benders {
                 stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
                 stage_warm_start_mutex_.unlock();
             }
-            
+        }
+        else if ( warm_start_ && integer_problems_[current_stage_] && osi_solver->isProvenOptimal() ){
+            // Update current mip solution start!
+            stage_warm_start_mutex_.lock();
+            if ( stage_data_[current_stage_]->mip_solution_.empty() ){
+                // Copy mip solution into it 
+                stage_data_[current_stage_]->mip_solution_.resize(stage_data_[current_stage_]->num_columns_,0.0);
+            }
+            memcpy(&stage_data_[current_stage_]->mip_solution_[0],osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_*sizeof(double));
+            stage_warm_start_mutex_.unlock();
         }
         benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
     }
@@ -4390,7 +4449,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
     {
         // Silence solver 
-        osi_solver->messageHandler()->setLogLevel(0);
+        //osi_solver->messageHandler()->setLogLevel(0);
         osi_solver->setHintParam(OsiDoPresolveInInitial,true);
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
@@ -4487,7 +4546,7 @@ namespace parallel_benders {
                 LOG(FATAL)<< "OsiSolverInstance is no cplex instance.";
             // Get ENV and LP ptr
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 
             // Store warmstart
             if ( integer_problems_[current_stage_] == false )
@@ -4516,23 +4575,36 @@ namespace parallel_benders {
 
         // MIP Solving only at first stage..
         if ( integer_problems_[current_stage_] ){
-            // We need to set the integer indices.
-            std::vector<int> integer_indices = core_->getIntCols(current_stage_);
-            osi_solver->setInteger(&integer_indices[0],integer_indices.size());
+
+            
             if ( regularization_  ){
                 // We have a QP, so branchAndBound method throws an error..
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
-                    //CPXsetintparam(env_ptr,)
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                    CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
-                    LOG_IF(WARNING,code != 1) << "MIQP solved with status " << code;
+                    console_mutex_.lock();
+                    LOG_IF(WARNING,code != CPXMIP_OPTIMAL) << "MIQP solved with status " << code;
+                    console_mutex_.unlock();
                 }
             }
-            else
-                osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+            else{
+                //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                //if ( cpx_ptr ){
+                //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                //    CPXsetintparam(env_ptr,CPX_PARAM_MIPEMPHASIS,CPX_MIPEMPHASIS_BESTBOUND);
+                //    CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
+                //    CPXmipopt(env_ptr,lp_ptr);
+                //    int code = CPXgetstat(env_ptr,lp_ptr);
+                //    LOG_IF(WARNING,code != CPXMIP_OPTIMAL) << "MIP solved with status " << code;
+                //}
+                //else 
+                    osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+            }
         }
         else{
             if ( regularization_ && current_stage_ == 0){
@@ -4540,7 +4612,7 @@ namespace parallel_benders {
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     CPXqpopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     LOG_IF(WARNING,code != 1) << "Quadratic problem solved with status " << code;
@@ -4655,7 +4727,7 @@ namespace parallel_benders {
                     LOG(FATAL) << "OsiSolverInstance was not a cplex instance.";
                 // Get ENV and LP ptr
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+                CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                 int num_columns = stage_data_[current_stage_]->num_columns_;
                 regularized_initialized_cols_ = true;
                 assert(num_theta>0);
@@ -4750,7 +4822,7 @@ namespace parallel_benders {
         if ( cpx_ptr != NULL){
             // Get Environment and LP Pointer
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
             int cpx_stat = 0;
             double lambda_ = 0.5;
             // We need to set a quadratic objective, ||x-x'||^2, similar to the regularized decomposition
@@ -5111,7 +5183,7 @@ namespace parallel_benders {
         //if ( cpx_ptr ){
         //    // Get ENV and LP ptr
         //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-        //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
         //    CPXwriteprob(env_ptr,lp_ptr,string_stream.str().c_str(),"lp");
         //    CPXsetintparam(env_ptr,CPX_PARAM_NUMERICALEMPHASIS,0);
         //    CPXchgobjsen(env_ptr,lp_ptr,CPX_MAX);
@@ -5402,7 +5474,7 @@ namespace parallel_benders {
         //if ( cpx_ptr ){
         //    // Get ENV and LP ptr
         //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-        //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+        //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
         //    CPXwriteprob(env_ptr,lp_ptr,file_name.str().c_str(),"lp");
         //    //CPXchgobjsen(env_ptr,lp_ptr,CPX_MAX);
         //    CPXprimopt(env_ptr,lp_ptr);
@@ -5677,7 +5749,7 @@ namespace parallel_benders {
         if ( cpx_ptr ){
             // Get ENV and LP ptr
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXLPptr lp_ptr = cpx_ptr->getLpPtr();
+            CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
             CPXchgprobtype(env_ptr,lp_ptr,CPXPROB_FIXEDMILP); 
             CPXlpopt(env_ptr,lp_ptr);
             // Store dual solution and reduced cost!

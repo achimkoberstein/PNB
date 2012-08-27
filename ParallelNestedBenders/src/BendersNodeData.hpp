@@ -293,6 +293,10 @@ struct BendersStageData {
     std::vector<int> d_square_disjunctive_indices_;
     bool solve_binary_subproblems_;
 
+    // MIP warm start and mip handling
+    std::vector<double> mip_solution_;
+    std::vector<char> coltype_array_;
+
     
 
 };
