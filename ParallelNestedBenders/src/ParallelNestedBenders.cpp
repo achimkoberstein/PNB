@@ -856,8 +856,17 @@ namespace parallel_benders {
 
             if ( d_square_ && current_stage_ == 1 && current_iteration_ > 1 ){
                 if ( old_lower_bound_ == lower_bound_ ){
-                    // One should compare real solutions here!
-                    d_square_lower_bound_counter_++;
+                    // Compare real solutions here!
+                    bool not_the_same = true;
+                    for (int i = 0; i < old_first_stage_solution_.size(); i++){
+                        if ( !CompareForEquality(old_first_stage_solution_[i],i < stage_data_[0]->num_columns_ ? tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i] : tree_nodes_by_stage_[0][0]->getDataPtr()->next_stage_approximation_[i-stage_data_[0]->num_columns_],zero_tolerance_ )){
+                            d_square_lower_bound_counter_ = 0;
+                            not_the_same = false;
+                            break;
+                        }
+                    }
+                    if ( not_the_same )
+                        d_square_lower_bound_counter_++;
                 }
                 else {
                     d_square_lower_bound_counter_ = 0;
@@ -1508,7 +1517,26 @@ namespace parallel_benders {
         // Store Column Solution
         // We need to copy the solution, as we erase the osiSolverInterface
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        // Delete old values // Memory leak, as we do not delete them at cleanup?
+
+        // Copy theta variables
+        int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
+        if ( trust_region_ )
+            num_theta -= benders_node_pointer->num_trust_region_cols_; // We have to subtract the added trust_region variables!
+        assert(num_theta >= 0);
+
+        // Store values for next stage approximation and column solution 
+        // Store old_lower_bound solution too
+        if ( d_square_ && current_stage_ == 0 ){
+
+            old_first_stage_solution_.resize(stage_data_[current_stage_]->num_columns_+num_theta,0.0);
+
+            if ( benders_node_pointer->col_solution_ != NULL )
+                memcpy(&old_first_stage_solution_[0],benders_node_pointer->col_solution_,sizeof(double)*(stage_data_[current_stage_]->num_columns_));
+            if ( benders_node_pointer->next_stage_approximation_ != NULL)
+                memcpy(&old_first_stage_solution_[0]+stage_data_[current_stage_]->num_columns_,benders_node_pointer->next_stage_approximation_,sizeof(double)*(num_theta));
+        }
+
+        // Delete old values 
         delete [] benders_node_pointer->col_solution_;
         delete [] benders_node_pointer->dual_solution_;
         delete [] benders_node_pointer->reduced_cost_;
@@ -1518,13 +1546,6 @@ namespace parallel_benders {
         benders_node_pointer->dual_solution_ = NULL;
         benders_node_pointer->reduced_cost_ = NULL;
         benders_node_pointer->next_stage_approximation_ = NULL;
-
-
-        // Copy theta variables
-        int num_theta = osi_solver->getNumCols()-stage_data_[current_stage_]->num_columns_;
-        if ( trust_region_ )
-            num_theta -= benders_node_pointer->num_trust_region_cols_; // We have to subtract the added trust_region variables!
-        assert(num_theta >= 0);
 
         // Retrieve and store the theta variables
         if ( num_theta ){
@@ -1607,6 +1628,7 @@ namespace parallel_benders {
                         lower_bound_ -= d_square_translation_term_;
                 }
                 temporary_upper_bound_ = 0;
+
             }
             upper_bound_mutex_.lock();
             if ( compute_stage_bounds_ ){
@@ -4190,6 +4212,7 @@ namespace parallel_benders {
 
                         stage_warm_start_mutex_.lock();
                         if ( !stage_data_[current_stage_]->mip_solution_.empty()){
+                            //CPXaddmipstarts(env_ptr,lp_ptr,)
                             int err = CPXcopymipstart(env_ptr,lp_ptr,stage_data_[current_stage_]->num_columns_,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0]);
                             LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
                         }
