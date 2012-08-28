@@ -213,7 +213,7 @@ void Parameter::init()
     // Intra cut aggregation strategy
     parameter_.put(PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
     parameter_.put(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-    parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
+    parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.1);
     // Start solution
     parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution, 1 EV solution, 2 ? not yet implemented
 	// Parallel Parameters

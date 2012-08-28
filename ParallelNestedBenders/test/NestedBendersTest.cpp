@@ -223,10 +223,13 @@ public:
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.1);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
         benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
@@ -1352,7 +1355,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
     //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-    ::testing::GTEST_FLAG(filter) = "*ssch*";
+    ::testing::GTEST_FLAG(filter) = "*scenarios*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

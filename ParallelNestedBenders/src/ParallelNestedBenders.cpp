@@ -1997,7 +1997,7 @@ namespace parallel_benders {
         }
 
         // We need to set the integer indices, if we have not done so already!
-        if ( !reuse_solver ){
+        if ( !reuse_solver && integer_problems_[current_stage_] ){
             std::vector<int> integer_indices = core_->getIntCols(current_stage_);
             osi_solver->setInteger(&integer_indices[0],integer_indices.size()); // Sets integer only, if we actually use osi_solver->branchAndBound() method!!
         }
@@ -3291,11 +3291,11 @@ namespace parallel_benders {
                     BendersNodeData::cut_container::iterator cut_stuff_it = std::find_if(benders_node_pointer->optimality_cuts_.begin(), benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
                     if ( cut_stuff_it == benders_node_pointer->optimality_cuts_.end())
                         continue; // In this case we have an iteration where we did not added any optimality cuts
-                    if ( (*cut_stuff_it)->aggregate_number_ < 0 ){
+                    if ( (*cut_stuff_it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL ){
                         // Rethink this // TODO
                         continue; // We jump over cuts we already intra-aggregated
                     }
-                    assert( (*cut_stuff_it)->aggregate_number_ >= 0);
+                    assert( (*cut_stuff_it)->aggregate_number_ >= 0 || (*cut_stuff_it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL);
                     assert( (*cut_stuff_it)->active_value < CutStuff::active_threshold_);
 
                     boost::shared_ptr<CutStuff> cut_stuff(*cut_stuff_it);
@@ -3323,25 +3323,32 @@ namespace parallel_benders {
                     // Iterate over cuts of this iteration
                     for ( BendersNodeData::cut_container::iterator it = cut_stuff_it; it != benders_node_pointer->optimality_cuts_.end(); ++it){
                         // We must change the CoinPackedVector!
-                        if ( (*it)->cut_creation_iteration_ != i ){
-                            end_it = it;
-                            break;
+                        // Assume all cuts of this iteration are in chronological order!
+                        //if ( (*it)->cut_creation_iteration_ != i ){
+                        //    // Can enable this as shortcut, when we do not use hierarchical consolidation!
+                        //    end_it = it;
+                        //    break;
+                        //}
+                        if ( (*it)->cut_creation_iteration_ == i && (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL ){
+                            assert(false);
                         }
-                        if ( (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL || (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL){
-                            // That means
-                            end_it = it;
-                            break; // For now just quit!
+                        if ( (*it)->cut_creation_iteration_ == i && (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_PARTIAL ){
+                            //// That means
+                            //end_it = it;
+                            //break; // For now just quit!
                         }
-                        assert( (*it)->aggregate_number_ >= 0);
-                        if ( comparison_object(*it,i) ){
-                            for (int j = 0; j < (*it)->cut_->row().getNumElements(); j++ ){
-                                new_elements[(*it)->cut_->row().getIndices()[j]] += (*it)->cut_->row().getElements()[j];
-                            }
-                            rhs += (*it)->cut_->lb();
-                            number_cuts_in_this_iteration++;
-                            to_remove_from_optimality_cuts.push_back(it);
-                            if ( (*it)->to_use_ ){ // Only remove a cut from the solver, if it is in the solver, otherways we have a problem
-                                to_remove_from_solver.push_back((*it)->current_index_in_solver_-already_removed_cuts);
+                        //assert( (*it)->aggregate_number_ >= 0);
+                        if ( (*it)->cut_creation_iteration_ == i ){
+                            if ( comparison_object(*it,i) ){
+                                for (int j = 0; j < (*it)->cut_->row().getNumElements(); j++ ){
+                                    new_elements[(*it)->cut_->row().getIndices()[j]] += (*it)->cut_->row().getElements()[j];
+                                }
+                                rhs += (*it)->cut_->lb();
+                                number_cuts_in_this_iteration++;
+                                to_remove_from_optimality_cuts.push_back(it);
+                                if ( (*it)->to_use_ ){ // Only remove a cut from the solver, if it is in the solver, otherways we have a problem
+                                    to_remove_from_solver.push_back((*it)->current_index_in_solver_-already_removed_cuts);
+                                }
                             }
                         }
                     }
@@ -3366,6 +3373,7 @@ namespace parallel_benders {
                     }
 
                     cut_stuff->active_value = 1.0;
+                    cut_stuff->not_active_iterations_ = 0;
                     cut_stuff->to_use_ = true; // Because of this, we must at first sort out the cuts for the solver
                     cuts_to_add.push_back(cut_stuff);
                 } //End For
@@ -3547,43 +3555,6 @@ namespace parallel_benders {
             discrepancy_threshold = median; // We use the median normally here TODO
             if ( CompareWithZero(discrepancy_threshold ))
                 discrepancy_threshold = zero_tolerance_;
-
-            ////double average = std::accumulate(&benders_node_pointer->discrepancy_[0],&benders_node_pointer->discrepancy_[number_of_aggregates],0.0)/ number_of_aggregates;
-            //LOG(INFO) << "Minimum : " << benders_node_pointer->min_discrepancy_;
-            //LOG(INFO) << "Median  : " << median;
-            //LOG(INFO) << "Average : " << benders_node_pointer->average_discrepancy_;
-            //LOG(INFO) << "Maximum : " << benders_node_pointer->max_discrepancy_;
-            //benders_node_pointer->average_discrepancies_.push_back(benders_node_pointer->average_discrepancy_);
-            //benders_node_pointer->median_discrepancies_.push_back(median);
-            //LOG(INFO) << "Gap per Aggregate : " << benders_node_pointer->average_gap_per_aggregate_;
-
-            //// Compute average averages and average medians
-            //double average_averages = std::accumulate(benders_node_pointer->average_discrepancies_.begin(),benders_node_pointer->average_discrepancies_.end(),0.0)/benders_node_pointer->average_discrepancies_.size();
-            //double average_medians = std::accumulate(benders_node_pointer->median_discrepancies_.begin(),benders_node_pointer->median_discrepancies_.end(),0.0)/benders_node_pointer->median_discrepancies_.size();
-            //LOG(INFO) << "Average Averages : " << average_averages;
-            //LOG(INFO) << "Average Medians  : " << average_medians;
-
-            //if ( average_averages < benders_node_pointer->average_discrepancy_){
-            //    LOG(INFO) << "Not aggregating, because average discrepancy is already higher than on average.";
-            //    return;
-            //}
-            //if ( average_medians < median){
-            //    LOG(INFO) << "Not aggregating, because median discrepancy is already higher than on average.";
-            //    return;
-            //}
-            //if ( benders_node_pointer->discrepancy_lower_bound_ < benders_node_pointer->discrepancy_value_ ){
-            //    LOG(INFO) << "Not aggregating, because discrepancy was higher than the discrepancy lower bound!";
-            //    return;
-            //}
-            //if ( benders_node_pointer->average_lower_bound_ < benders_node_pointer->average_discrepancy_ ){
-            //    LOG(INFO) << "Not aggregating, because of average";
-            //    return;
-            //}
-            //if ( benders_node_pointer->average_gap_per_aggregate_lower_bound_ < benders_node_pointer->average_gap_per_aggregate_){
-            //    LOG(INFO) << "Not aggregating, because of average gap violation";
-            //    return;
-            //}
-
 
             // Other opportunities for a rule
             if ( all_into_one ){
