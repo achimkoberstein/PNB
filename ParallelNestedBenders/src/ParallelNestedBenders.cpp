@@ -888,7 +888,7 @@ namespace parallel_benders {
             /************************************************************************/
             /* Solve the subproblems                                                */
             /************************************************************************/
-            int copy_of_temporary_upper_bound_ = temporary_upper_bound_;
+            double copy_of_temporary_upper_bound_ = temporary_upper_bound_;
             int num_nodes = tree_nodes_by_stage_[current_stage_].size();
             for ( int i = 0; i < num_nodes; i++ ){
                 // Schedule the tasks for this stage
@@ -1022,7 +1022,7 @@ namespace parallel_benders {
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
                 // This ensures that we get back to the first stage when we finally reached the last stage! Important only for FastBackward protocols.
-                if ( sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD){
+                if ( sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD){
                     enforce_stage_ = 0;
                     enforce_direction_ = true;
                 }
@@ -1500,7 +1500,7 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
                     
-                    LOG(INFO, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+                    LOG_IF(INFO, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
                 }
                 StoreWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1870,7 +1870,7 @@ namespace parallel_benders {
                 for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
                     double value = 0;
                     if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
-                        stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;
+                        stochastic_element_in_row = (stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row]) ? true : false;
 
                     // We iterate over the row of the deterministic matrix
                     for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
@@ -2190,7 +2190,7 @@ namespace parallel_benders {
             // Set num_subproblems_per_cut if we did not set
             num_subproblems_per_cut = std::min(num_childs,benders_tree_node_pointer->getDataPtr()->num_scen_pro_cut_);
             // Compute number of cuts we need for this number of subproblems per cut
-            num_cuts = std::ceil(((double)num_childs)/num_subproblems_per_cut);
+            num_cuts = (int)(std::ceil(((double)num_childs)/num_subproblems_per_cut));
             assert(num_cuts >= 1);
         }
 
@@ -2542,7 +2542,7 @@ namespace parallel_benders {
         double* checked_dual_solution = new double[number_rows];
         if ( use_cplex ){
             StoreValuesFromSolverInArray(checked_dual_solution,dual_solution_farkas,number_rows);
-            delete dual_solution_farkas;
+            delete [] dual_solution_farkas;
         }
         else
             StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,number_rows);
@@ -2684,9 +2684,9 @@ namespace parallel_benders {
 
         // Delete the computed lower and upper bounds
         if ( node_pointer->getRowLowerLength())
-            delete row_lower;
+            delete [] row_lower;
         if ( node_pointer->getRowUpperLength())
-            delete row_upper;
+            delete [] row_upper;
 
         delete [] checked_dual_solution;
         delete [] dual_solution_primal_variable_bounds;
@@ -2736,7 +2736,7 @@ namespace parallel_benders {
         for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to be added to rlo or rup
             double value = 0;
             if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
-                stochastic_element_in_row = stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row] ? true : false;
+                stochastic_element_in_row = (stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row]) ? true : false;
 
             // We iterate over the row of the deterministic matrix
             for ( int column_index = deterministic_matrix.start_[row]; column_index < deterministic_matrix.start_[row+1];column_index++){
@@ -3323,9 +3323,9 @@ namespace parallel_benders {
                          // This many variables are needed
                         double * new_elements = new double[col_size]; // Ownership is taken later by CoinPackedVector new_row
                         int * new_indices = new int[col_size];// Owernship is taken later by CoinPackedVector new_row
-                        for (int j = 0; j < col_size; j++){
-                            new_elements[j] = 0.0;
-                            new_indices[j] = j;
+                        for (int k = 0; k < col_size; k++){
+                            new_elements[k] = 0.0;
+                            new_indices[k] = k;
                         }
                         new_elements_vector.push_back(new_elements);
                         new_indices_vector.push_back(new_indices);
