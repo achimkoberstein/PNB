@@ -1311,9 +1311,9 @@ namespace parallel_benders {
             upper_bound_ = -infinity_;
             LOG(INFO) << "Problem is infeasible.";
         }
-        if ( seperate_first_stage_solver_ ){
-            osi_solver_->writeLp("finalLP");
-        }
+        //if ( seperate_first_stage_solver_ ){
+        //    osi_solver_->writeLp("finalLP");
+        //}
 
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
@@ -1411,9 +1411,22 @@ namespace parallel_benders {
             // We need to check for errors in this case
             if ( osi_solver->isAbandoned() ){
                 //Problem
-                console_mutex_.lock();
-                LOG(FATAL) << "Solution process abandoned.";
-                console_mutex_.unlock();
+                OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver_);
+                if ( cpx_ptr ){
+                    // Get ENV and LP ptr
+                    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                    if ( CPXgetstat(env_ptr,lp_ptr) == 0 ){
+                        // Try a resolve
+                        CPXdualopt(env_ptr,lp_ptr);
+                    }
+                    if ( CPXgetstat(env_ptr,lp_ptr) == 0){
+                        console_mutex_.lock();
+                        LOG(FATAL) << "Solution process abandoned. Cplex returned with status code " << CPXgetstat(env_ptr,lp_ptr);
+                        CPXwriteprob(env_ptr,lp_ptr,"abandonedProblem","lp");
+                        console_mutex_.unlock();
+                    }
+                }
             }
             else if ( osi_solver->isProvenDualInfeasible() ){
                 // Primal problem is unbounded. => dual infeasible
@@ -3317,7 +3330,7 @@ namespace parallel_benders {
                     BendersNodeData::cut_container::iterator cut_it = cut_stuff_it;
                     // We need to create more cut_stuff elements here!
                     int count_cuts = 0;
-                    for (int count_cuts = 0; count_cuts < number_of_cuts_per_hierarchy_level[i]; count_cuts++){
+                    for ( count_cuts = 0; count_cuts < number_of_cuts_per_hierarchy_level[i]; count_cuts++){
                         cut_stuffs.push_back(boost::shared_ptr<CutStuff>(*cut_it));
                         // We need to create a new vector
                          // This many variables are needed
@@ -3331,22 +3344,23 @@ namespace parallel_benders {
                         new_indices_vector.push_back(new_indices);
                         rhs_vector.push_back(0.0);
 
-                        if ( count_cuts == number_of_cuts_per_hierarchy_level[i]-1){ // When we created all number_of_cuts_per_hierarchy_level many cuts, we can stop searching for another cut
-                            count_cuts++;
-                            break;
-                        }
+                        //if ( count_cuts == number_of_cuts_per_hierarchy_level[i]-1){ // When we created all number_of_cuts_per_hierarchy_level many cuts, we can stop searching for another cut
+                        //    count_cuts++;
+                        //    break;
+                        //}
                         ++cut_it;
                         cut_it = std::find_if(cut_it, benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
                         if ( cut_it == benders_node_pointer->optimality_cuts_.end() ) // If we do not have enough optimality cuts that fit the criteria, do not consolidate further!
                             break;
                     }
-                    if ( cut_it == benders_node_pointer->optimality_cuts_.end() ||  count_cuts < number_of_cuts_per_hierarchy_level[i] ){ // We could not aggregate any cuts together, so we go to the next iteration!
+                    if ( cut_it == benders_node_pointer->optimality_cuts_.end()){ // ||  count_cuts < number_of_cuts_per_hierarchy_level[i] ){ // We could not aggregate any cuts together, so we go to the next iteration!
                         for (int j = 0; j < count_cuts; j++){
                             delete [] new_elements_vector[j];
                             delete [] new_indices_vector[j];
                         }
                         continue; 
                     }
+                    assert( count_cuts == number_of_cuts_per_hierarchy_level[i]);
 
                     /******
                     // Compute the new cut coefficients and right hand side values
