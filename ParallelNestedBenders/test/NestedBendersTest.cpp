@@ -228,9 +228,9 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
         benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,0);
         benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
-
+ 
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
         benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -1046,14 +1046,14 @@ TEST_F(NestedBendersTestMultiStage,stocfor_FELT){// BLOCKS, values are within pl
 
 TEST_F(NestedBendersTest,scenarios_WRIGHT){
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
 }
 
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
