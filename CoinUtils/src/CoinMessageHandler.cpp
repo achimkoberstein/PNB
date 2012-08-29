@@ -87,7 +87,7 @@ CoinMessages::CoinMessages(int numberMessages)
 CoinMessages::~CoinMessages()
 {
   int i;
-  if (lengthMessages_<0) {
+  if (numberMessages_) {
     for (i=0;i<numberMessages_;i++) 
       delete message_[i];
   }
@@ -151,8 +151,9 @@ CoinMessages::operator=(const CoinMessages & rhs)
                 message_ = new CoinOneMessage * [numberMessages_];
                 int i;
                 for (i=0;i<numberMessages_;i++) 
-                    if (rhs.message_[i])
+                    if (rhs.message_[i]){
                         message_[i]=new CoinOneMessage(*(rhs.message_[i]));
+                    }
                     else
                         message_[i] = NULL;
             } else {
