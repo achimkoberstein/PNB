@@ -3316,13 +3316,13 @@ namespace parallel_benders {
                     int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_;
                     BendersNodeData::cut_container::iterator cut_it = cut_stuff_it;
                     // We need to create more cut_stuff elements here!
-                    for (int j = 0; j < number_of_cuts_per_hierarchy_level[i]; j++){
-
+                    int count_cuts = 0;
+                    for (int count_cuts = 0; count_cuts < number_of_cuts_per_hierarchy_level[i]; count_cuts++){
                         cut_stuffs.push_back(boost::shared_ptr<CutStuff>(*cut_it));
                         // We need to create a new vector
                          // This many variables are needed
                         double * new_elements = new double[col_size]; // Ownership is taken later by CoinPackedVector new_row
-                        int * new_indices = new int[col_size];// Owernship is taken later by CoinPackedVector new_row
+                        int * new_indices = new int[col_size];// Ownership is taken later by CoinPackedVector new_row
                         for (int k = 0; k < col_size; k++){
                             new_elements[k] = 0.0;
                             new_indices[k] = k;
@@ -3330,9 +3330,22 @@ namespace parallel_benders {
                         new_elements_vector.push_back(new_elements);
                         new_indices_vector.push_back(new_indices);
                         rhs_vector.push_back(0.0);
+
+                        if ( count_cuts == number_of_cuts_per_hierarchy_level[i]-1){ // When we created all number_of_cuts_per_hierarchy_level many cuts, we can stop searching for another cut
+                            count_cuts++;
+                            break;
+                        }
                         ++cut_it;
                         cut_it = std::find_if(cut_it, benders_node_pointer->optimality_cuts_.end(),std::bind2nd(CutStuffComparison(),i));
-                        assert( cut_it != benders_node_pointer->optimality_cuts_.end());
+                        if ( cut_it == benders_node_pointer->optimality_cuts_.end() ) // If we do not have enough optimality cuts that fit the criteria, do not consolidate further!
+                            break;
+                    }
+                    if ( cut_it == benders_node_pointer->optimality_cuts_.end() ||  count_cuts < number_of_cuts_per_hierarchy_level[i] ){ // We could not aggregate any cuts together, so we go to the next iteration!
+                        for (int j = 0; j < count_cuts; j++){
+                            delete [] new_elements_vector[j];
+                            delete [] new_indices_vector[j];
+                        }
+                        continue; 
                     }
 
                     /******
@@ -3346,15 +3359,6 @@ namespace parallel_benders {
 
                     // Iterate over cuts of this iteration
                     int cut_counter = 0;
-                    bool first_iterator_opt = to_remove_from_optimality_cuts.empty();
-                    bool first_iterator_sol = to_remove_from_solver.empty();
-                    std::list<BendersNodeData::cut_container::iterator>::iterator opt_it;
-                    std::vector<int>::iterator sol_it;
-                    if ( !first_iterator_opt )
-                        opt_it = --to_remove_from_optimality_cuts.end();
-
-                    if ( ! first_iterator_sol)
-                        sol_it = --to_remove_from_solver.end();
 
                     for ( BendersNodeData::cut_container::iterator it = cut_stuff_it; it != benders_node_pointer->optimality_cuts_.end(); ++it){
                         // We must change the CoinPackedVector!
@@ -3390,18 +3394,9 @@ namespace parallel_benders {
                         }
                         else if ( cut_counter == benders_node_pointer->num_thetas_)
                             break;
-                            
                     }
-                    if ( number_cuts_in_this_iteration <= number_of_cuts_per_hierarchy_level[i]){ // We could not aggregate any cuts together, so we go to the next iteration!
-                        // Be sure to NOT remove any cuts, because we do not add new ones!
-                        to_remove_from_optimality_cuts.erase((first_iterator_opt ?to_remove_from_optimality_cuts.begin():++opt_it),to_remove_from_optimality_cuts.end());
-                        to_remove_from_solver.erase(first_iterator_sol ?to_remove_from_solver.begin():++sol_it,to_remove_from_solver.end());
-                        for (int j = 0; j < number_of_cuts_per_hierarchy_level[i]; j++){
-                            delete [] new_elements_vector[j];
-                            delete [] new_indices_vector[j];
-                        }
-                        continue; 
-                    }
+                    assert( number_cuts_in_this_iteration > number_of_cuts_per_hierarchy_level[i]);
+
                     assert( to_remove_from_solver.empty() || to_remove_from_solver.back() < osi_solver->getNumRows());
 
 
