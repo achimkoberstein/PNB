@@ -80,7 +80,7 @@ CoinMessage::CoinMessage(Language language) :
     CoinOneMessage oneMessage(message->externalNumber,message->detail,
 		message->message);
     addMessage(message->internalNumber,oneMessage);
-    message ++;
+    message++;
   }
   // Put into compact form
   toCompact();
@@ -100,7 +100,7 @@ CoinMessage::CoinMessage(Language language) :
   if (message) {
     while (message->internalNumber!=COIN_DUMMY_END) {
       replaceMessage(message->internalNumber,message->message);
-      message ++;
+      message++;
     }
   }
 }
