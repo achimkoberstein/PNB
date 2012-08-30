@@ -3205,6 +3205,7 @@ namespace parallel_benders {
         // What do we need? The dual values. They are stored and thus checked against zero tolerance
         assert( benders_node_pointer->dual_solution_ != NULL);
         assert(store_cut_information_); // If we do not want to store cut information this method should not be called
+        CutStuffComparison comparison_object; // Compares number,active value and non-active-generations
 
  
 
@@ -3216,6 +3217,8 @@ namespace parallel_benders {
             std::vector< std::list< std::pair<int,double> > > active_aggregates_per_aggregate(benders_node_pointer->num_thetas_); // Stores information about cut from which iterations are active for an aggregate and how active they are
             std::vector< std::pair<int,double> > cuts_from_iteration(current_iteration_); // Stores information about how many cuts are active from a given iteration and how active they are
 
+            std::vector<int> cuts_in_iteration(current_iteration_,0);
+            std::vector<int> consolidatable_cuts_in_iteration(current_iteration_,0);
             // Initialize data structures
             for (int i = 0; i< current_iteration_; i++){
                 cuts_from_iteration[i].first = 0;
@@ -3279,6 +3282,9 @@ namespace parallel_benders {
                     (*it)->active_value = 0;
                     ++(*it)->not_active_iterations_;
                 }
+                cuts_in_iteration[cut_creation]++;
+                if ( comparison_object(*it,cut_creation) ) 
+                    consolidatable_cuts_in_iteration[cut_creation]++;
                 (*it)->current_index_in_solver_ = current_cut; // Update current_index_in_solver_ with actual index used in osi_solver
                 current_cut++;
             }
@@ -3302,12 +3308,17 @@ namespace parallel_benders {
                 std::list<boost::shared_ptr<CutStuff> > cuts_to_add;
                 std::list<BendersNodeData::cut_container::iterator> to_remove_from_optimality_cuts;
                 std::vector<int> to_remove_from_solver;
+                int max_minimal_cuts = 100;
                 // The active value for all cuts sums up to the number of aggregates. All cuts for each aggregate sum up to 1.
                 for (int i = 1; i < current_iteration_; i++){ // Iterate over all iterations
                     assert( cuts_from_iteration[i].second >= 0);
-                    number_of_cuts_per_hierarchy_level.push_back(benders_node_pointer->num_thetas_/4); // So we use one-fourth of the aggregates from now on, no more single-cuts?
+                    number_of_cuts_per_hierarchy_level.push_back(max(consolidatable_cuts_in_iteration[i]/4,max_minimal_cuts)); // So we use one-fourth of the aggregates from now on, no more single-cuts?
                     if ( cuts_from_iteration[i].second > intra_aggregate_threshold ) // We only proceed with the aggregation if the active level falls below the threshold
                         continue;
+                    if ( consolidatable_cuts_in_iteration[i] == max_minimal_cuts )// We do not need to consolidate single cuts!
+                        continue;
+                    
+
 
                     //LOG_IF(INFO,cuts_from_iteration[i].second > 0) << "Iteration " << i << " is still active with " << cuts_from_iteration[i].second << " for only " << cuts_from_iteration[i].first << " cuts";
                     // Let's put all the cuts of one iteration in one single cut!
@@ -3361,6 +3372,7 @@ namespace parallel_benders {
                         continue; 
                     }
                     assert( count_cuts == number_of_cuts_per_hierarchy_level[i]);
+                    LOG(INFO) << "Iteration " << i << " with now " << number_of_cuts_per_hierarchy_level[i] << " and before " << consolidatable_cuts_in_iteration[i];
 
                     /******
                     // Compute the new cut coefficients and right hand side values
@@ -3369,19 +3381,12 @@ namespace parallel_benders {
                     // Declarations of needed variables
                     BendersNodeData::cut_container::iterator end_it = benders_node_pointer->optimality_cuts_.end();
                     int number_cuts_in_this_iteration = 0;
-                    CutStuffComparison comparison_object; // Compares number,active value and non-active-generations
 
                     // Iterate over cuts of this iteration
                     int cut_counter = 0;
 
                     for ( BendersNodeData::cut_container::iterator it = cut_stuff_it; it != benders_node_pointer->optimality_cuts_.end(); ++it){
                         // We must change the CoinPackedVector!
-                        // Assume all cuts of this iteration are in chronological order!
-                        //if ( (*it)->cut_creation_iteration_ != i ){
-                        //    // Can enable this as shortcut, when we do not use hierarchical consolidation!
-                        //    end_it = it;
-                        //    break;
-                        //}
                         if ( (*it)->cut_creation_iteration_ == i && (*it)->aggregate_number_ == CutStuff::AGGREGATE_OVER_ALL ){
                             assert(false);
                         }
@@ -3392,6 +3397,11 @@ namespace parallel_benders {
                         }
                         //assert( (*it)->aggregate_number_ >= 0);
                         int cut_counter_modulo = cut_counter % number_of_cuts_per_hierarchy_level[i];
+                        cut_counter_modulo = cut_counter / number_of_cuts_per_hierarchy_level[i];
+                        if ( cut_counter_modulo >= number_of_cuts_per_hierarchy_level[i] ){
+                            cut_counter_modulo = number_of_cuts_per_hierarchy_level[i]-1;
+                            //assert(number_of_cuts_per_hierarchy_level[i] <= 1);
+                        }
                         if ( (*it)->cut_creation_iteration_ == i ){
                             if ( comparison_object(*it,i) ){ // See if this cut is aggregatable!
                                 for (int j = 0; j < (*it)->cut_->row().getNumElements(); j++ ){
@@ -3403,10 +3413,13 @@ namespace parallel_benders {
                                 if ( (*it)->to_use_ ){ // Only remove a cut from the solver, if it is in the solver, otherways we have a problem
                                     to_remove_from_solver.push_back((*it)->current_index_in_solver_);
                                 }
+                                cut_counter++;
                             }
-                            cut_counter++;
+                            
                         }
                         else if ( cut_counter == benders_node_pointer->num_thetas_)
+                            break;
+                        if ( cut_counter == consolidatable_cuts_in_iteration[i]) // Shortcut, because we can not find more than this number of cuts in the problem!
                             break;
                     }
                     assert( number_cuts_in_this_iteration > number_of_cuts_per_hierarchy_level[i]);
@@ -3421,7 +3434,7 @@ namespace parallel_benders {
                         OsiRowCut * new_single_cut = cut_stuffs[j]->cut_.get();
                         new_single_cut->setRow(new_row);
                         new_single_cut->setLb(rhs_vector[j]);
-                        if ( number_of_cuts_per_hierarchy_level[i] == 1 )
+                        if ( consolidatable_cuts_in_iteration[i] == cuts_in_iteration[i] && number_of_cuts_per_hierarchy_level[i] == 1)
                             cut_stuffs[j]->aggregate_number_ = CutStuff::AGGREGATE_OVER_ALL;  // Indicate that this cut spans over all aggregates we have (until now, but this can be redone)
                         else {
                             cut_stuffs[j]->aggregate_number_ = CutStuff::AGGREGATE_OVER_PARTIAL;

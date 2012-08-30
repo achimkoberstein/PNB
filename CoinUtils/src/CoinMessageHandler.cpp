@@ -87,10 +87,12 @@ CoinMessages::CoinMessages(int numberMessages)
 CoinMessages::~CoinMessages()
 {
   int i;
-  if (numberMessages_) {
-    for (i=0;i<numberMessages_;i++) 
-      delete message_[i];
+  if (lengthMessages_>0) {
+      fromCompact();
   }
+  for (i=0;i<numberMessages_;i++) 
+     delete message_[i];
+  
   delete [] message_;
 }
 /* The copy constructor */
