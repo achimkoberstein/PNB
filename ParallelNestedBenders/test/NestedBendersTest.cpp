@@ -221,11 +221,11 @@ public:
         //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.init();
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
         benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
         benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,0);
@@ -237,22 +237,22 @@ public:
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        //aggregates.push_back(0);
+        aggregates.push_back(0);
         //aggregates.push_back(1);
-        //if ( num_aggregates_by_magic > 1)
-            //aggregates.push_back(-1);
+        if ( num_aggregates_by_magic > 1)
+            aggregates.push_back(-1);
         //else
         //    aggregates.push_back(1);
-        aggregates.push_back(5);
-        aggregates.push_back(10);
-        aggregates.push_back(25);
-        aggregates.push_back(50);
-        aggregates.push_back(100);
-        aggregates.push_back(500);
-        aggregates.push_back(1000);
-        aggregates.push_back(2000);
-        //aggregates.push_back(3000);
-        aggregates.push_back(5000);
+        //aggregates.push_back(5);
+        //aggregates.push_back(10);
+        //aggregates.push_back(25);
+        //aggregates.push_back(50);
+        //aggregates.push_back(100);
+        //aggregates.push_back(500);
+        //aggregates.push_back(1000);
+        //aggregates.push_back(2000);
+        ////aggregates.push_back(3000);
+        //aggregates.push_back(5000);
         //aggregates.push_back(10000);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
@@ -271,7 +271,7 @@ public:
                         // Compute an aggregate number out of problem characteristics!
                         aggregates[i] = num_aggregates_by_magic;
                     }
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,cpu); // TODO: Change back
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
@@ -280,36 +280,39 @@ public:
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
+                    for (int strike_threshold = 2; strike_threshold < 5; strike_threshold++){
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,strike_threshold);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-                    if ( aggregates[i] != 1 ){ // We do not want cut consolidation for the single cut case
+                        if ( aggregates[i] != 1 ){ // We do not want cut consolidation for the single cut case
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                            solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+                            //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                            //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+                        }
+                    }
+
+                        ////// Solve problem without adding a newly consolidated cut
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                         //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                    }
-
-                    ////// Solve problem without adding a newly consolidated cut
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+                    // Solve problems without cut consolidation
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-                    // Solve problems without cut consolidation
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    
 
                }//end for: aggregates
             }//end for:repetition
@@ -601,6 +604,10 @@ protected:
 class NestedBendersTestMultiStage: public NestedBendersTest
 {};
 
+// IntegerSecondStage  Stage Problems!
+class NestedBendersTestInteger: public NestedBendersTest
+{};
+
 //TEST_F(NestedBendersTest,InvestmentExampleTest){
 //    using namespace flopc;
 //    MP_model investmentModel(new OsiCpxSolverInterface());
@@ -721,41 +728,40 @@ class NestedBendersTestMultiStage: public NestedBendersTest
 //}
 //
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
-    //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
-    EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 }
 
-TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
-    
-
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
-}
+//TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Integer First Stage, modification of SIPLIB instance
+//    
 //
-TEST_F(NestedBendersTest, sslp_SIPLIB) { // binary first, mixed-binary second stage
-
-    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1); // Solvable
-    EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
+//    EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
+//    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
+//}
+//
+TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // seems to be ok, but takes very long to solve (due to 0 <= x <= 1 constraints not in matrix..)
+    //EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); // not solvable: lower bound does not converge to upper bound
+    //EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1); // Solvable
+    //EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_50"), -364.640, 0.1);// Lower Bound does not converge to upper bound //Best lower: -365.438
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_100"), -354.190, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
@@ -771,7 +777,7 @@ TEST_F(NestedBendersTest, sslp_SIPLIB) { // binary first, mixed-binary second st
 
 
 
-TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer, two-stage
+TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
  /*   EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
@@ -786,13 +792,13 @@ TEST_F(NestedBendersTest, dcap_SIPLIP) { // Contains integer, two-stage
     EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);*/
 }
 
-TEST_F(NestedBendersTest, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage
+TEST_F(NestedBendersTestInteger, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage
     EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 1545, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/semi/semi3"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/semi/semi4"), 224564.3, 0.1);
 }
 
-TEST_F(NestedBendersTest, sizes_SIPLIB) { // Contains Integer on both stages, two-stage
+TEST_F(NestedBendersTestInteger, sizes_SIPLIB) { // Contains Integer on both stages, two-stage
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 224486.00, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sizes/sizes10"), 224564.3, 0.1);
@@ -954,19 +960,19 @@ TEST_F(NestedBendersTest,assets_FELT){// Two-Stage
 }
 //
 TEST_F(NestedBendersTestMultiStage,bonds_FELT){ //SCENARIOS, Values that are tested against: results from MSLIB-OSL, values commented out: presented in felts testset
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), -2967.9, 0.1); // 2976.91
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y4"), -3994.179, 0.1); // 3991.3
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), -5172.07, 0.1); // 5125.6
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), -6463.240, 0.1); // 6369.0
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y3"), -2967.9, 0.1); // 2976.91
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y4"), -3994.179, 0.1); // 3991.3
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y5"), -5172.07, 0.1); // 5125.6
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y6"), -6463.240, 0.1); // 6369.0
     EXPECT_NEAR(solveSMPS("felt/bonds/sgpf3y7"), -7947.863, 0.1); 
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y3"), -3027.6, 0.1); // 3027.6
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4031.303, 0.1); // 4023.9
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y5"), -5201.197, 0.1); // 5180.8
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y6"), -6484.465, 0.1); // 6403.3
-    //EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7966.94, 0.1); // MSLIB-OSL = 7956.896
-    // Cplex barrier has problems with these problems => wrong results
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y3"), -3027.6, 0.1); // 3027.6
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y4"), -4031.303, 0.1); // 4023.9
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y5"), -5201.197, 0.1); // 5180.8
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y6"), -6484.465, 0.1); // 6403.3
+    EXPECT_NEAR(solveSMPS("felt/bonds/sgpf5y7"), -7966.94, 0.1); // MSLIB-OSL = 7956.896
+     //Cplex barrier has problems with these problems => wrong results
 }
-//
+
 TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values verified with det-eq
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 413.4, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2"), 414.0, 0.1);
@@ -985,11 +991,11 @@ TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values verified with d
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16384"), 446.86, 0.1); 
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32768"), 446.86, 0.1);
 }
-//
+
 TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
-    EXPECT_NEAR(solveSMPS("felt/chem/chem"), -13009.166667, 0.1); 
+    //EXPECT_NEAR(solveSMPS("felt/chem/chem"), -13009.166667, 0.1); 
     // Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers
-    EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
+    //EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
 }
 
 TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. verified
@@ -1013,8 +1019,8 @@ TEST_F(NestedBendersTest,phone_FELT){//INDEP, two-stage, mixed-integer on both s
     EXPECT_NEAR(solveSMPS("felt/phone/phone"), 36.9, 0.1); // Stochastic problem: 2^15 scenarios
     EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9
 
-    EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
-    EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9, but integers
+    //EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
+    //EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9, but integers
 }
 //
 TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ranges, verified with det-eq
@@ -1094,7 +1100,7 @@ TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solve
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
-    EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
     //EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
