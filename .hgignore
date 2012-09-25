@@ -37,9 +37,13 @@ doc/
 boost/stage/
 boost_*
 build/
+debug/
+CMakeFiles/
 google-perftools-*
 MSVisualStudio/
 test/instances/OriginalFiles/
+test/instances/
+PurifyLogs/
 
 
 *.aux
