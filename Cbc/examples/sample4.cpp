@@ -1,11 +1,11 @@
+// $Id: sample4.cpp 1675 2011-06-19 17:23:14Z stefan $
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CbcConfig.h"
+
+#include "CoinPragma.hpp"
 
 #include <cassert>
 #include <iomanip>
@@ -18,9 +18,7 @@
 #include "CbcBranchActual.hpp"
 #include "CbcCompareUser.hpp"
 #include "CoinTime.hpp"
-#ifdef COIN_HAS_CLP
 #include "OsiClpSolverInterface.hpp"
-#endif
 
 //#############################################################################
 
@@ -42,11 +40,9 @@ int main (int argc, const char *argv[])
 
   // Define your favorite OsiSolver
   
-#ifdef COIN_HAS_CLP
   OsiClpSolverInterface solver1;
   //solver1.messageHandler()->setLogLevel(0);
   CbcModel model(solver1);
-#endif
   model.solver()->setHintParam(OsiDoReducePrint,true,OsiHintTry);
 
   // Read in ltw.mps

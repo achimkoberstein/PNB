@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Edwin 11/12/2009 carved from CbcBranchBase
+
 #ifndef CbcBranchingObject_H
 #define CbcBranchingObject_H
 
@@ -104,6 +110,10 @@ public:
     virtual void fix(OsiSolverInterface * ,
                      double * , double * ,
                      int ) const {}
+
+    /** Change (tighten) bounds in object to reflect bounds in solver.
+	Return true if now fixed */
+    virtual bool tighten(OsiSolverInterface * ) {return false;}
 
     /** Reset every information so that the branching object appears to point to
         the previous child. This method does not need to modify anything in any

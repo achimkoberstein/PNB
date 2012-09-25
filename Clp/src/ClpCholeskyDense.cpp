@@ -1,6 +1,10 @@
-/* $Id: ClpCholeskyDense.cpp 1525 2010-02-26 17:27:59Z mjs $ */
-/* Copyright (C) 2003, International Business Machines Corporation
-   and others.  All Rights Reserved. */
+/* $Id: ClpCholeskyDense.cpp 1753 2011-06-19 16:27:26Z stefan $ */
+/*
+  Copyright (C) 2003, International Business Machines Corporation
+  and others.  All Rights Reserved.
+
+  This code is licensed under the terms of the Eclipse Public License (EPL).
+*/
 #include "CoinPragma.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "ClpHelperFunctions.hpp"
@@ -381,7 +385,7 @@ ClpCholeskyDense::factorize(const CoinWorkDouble * diagonal, int * rowsDropped)
           largest = doubleParameters_[3];
           smallest = doubleParameters_[4];
           if (model_->messageHandler()->logLevel() > 1)
-               std::cout << "Cholesky - largest " << largest << " smallest " << smallest << std::endl;
+	    COIN_DETAIL_PRINT(std::cout << "Cholesky - largest " << largest << " smallest " << smallest << std::endl);
           choleskyCondition_ = largest / smallest;
           /* Should save adjustments in ..R_*/
           int n1 = 0, n2 = 0;
@@ -801,7 +805,7 @@ ClpCholeskyCfactorLeaf(ClpCholeskyDenseC * thisStruct, longDouble * a, int n,
 {
      double dropValue = thisStruct->doubleParameters_[0];
      int firstPositive = thisStruct->integerParameters_[0];
-     int rowOffset = diagonal - thisStruct->diagonal_;
+     int rowOffset = static_cast<int>(diagonal - thisStruct->diagonal_);
      int i, j, k;
      CoinWorkDouble t00, temp1;
      longDouble * aa;

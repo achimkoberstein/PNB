@@ -1,13 +1,12 @@
+// $Id: sample2.cpp 1675 2011-06-19 17:23:14Z stefan $
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include <cassert>
 #include <iomanip>
 
+#include "CoinPragma.hpp"
 
 // For Branch and bound
 #include "OsiSolverInterface.hpp"
@@ -72,12 +71,17 @@ int main (int argc, const char *argv[])
 
   // Read in model using argv[1]
   // and assert that it is a clean model
-  const char dirsep =  CoinFindDirSeparator();
+  std::string dirsep(1,CoinFindDirSeparator());
   std::string mpsFileName;
-  if (dirsep == '/')
-	  mpsFileName = "../../Data/Sample/p0033.mps";
-  else 
-	  mpsFileName = "..\\..\\..\\..\\Data\\Sample\\p0033.mps";
+# if defined(SAMPLEDIR)
+  mpsFileName = SAMPLEDIR ;
+  mpsFileName += dirsep+"p0033.mps";
+# else
+  if (argc < 2) {
+    fprintf(stderr, "Do not know where to find sample MPS files.\n");
+    exit(1);
+  }
+# endif
   if (argc>=2) mpsFileName = argv[1];
   int numMpsReadErrors = solver1.readMps(mpsFileName.c_str(),"");
   assert(numMpsReadErrors==0);

@@ -1,6 +1,7 @@
-/* $Id: ClpGubMatrix.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpGubMatrix.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 
 #include <cstdio>
@@ -3208,7 +3209,6 @@ ClpGubMatrix::useEffectiveRhs(ClpSimplex * model, bool cheapest)
                                    for (int i = 0; i <= numberInSet; i++) {
                                         double dj = cost[i] - dual;
                                         double improvement = 0.0;
-                                        double distance = 0.0;
                                         if (iphase || i < numberInSet)
                                              assert (solution[i] >= lower[i] && solution[i] <= upper[i]);
                                         if (dj > dualTolerance)
@@ -3220,10 +3220,8 @@ ClpGubMatrix::useEffectiveRhs(ClpSimplex * model, bool cheapest)
                                              chosen = i;
                                              if (dj < 0.0) {
                                                   way = 1;
-                                                  distance = upper[i] - solution[i];
                                              } else {
                                                   way = -1;
-                                                  distance = solution[i] - lower[i];
                                              }
                                         }
                                    }

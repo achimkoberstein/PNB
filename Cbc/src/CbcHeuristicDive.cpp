@@ -1,6 +1,8 @@
 /* $Id: CbcHeuristicDive.cpp 1240 2009-10-02 18:41:44Z forrest $ */
 // Copyright (C) 2008, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -194,6 +196,9 @@ int
 CbcHeuristicDive::solution(double & solutionValue,
                            double * betterSolution)
 {
+    int nodeCount = model_->getNodeCount();
+    if (feasibilityPumpOptions_>0 && (nodeCount % feasibilityPumpOptions_) != 0)
+        return 0;
 #ifdef DIVE_DEBUG
     std::cout << "solutionValue = " << solutionValue << std::endl;
 #endif
@@ -215,7 +220,6 @@ CbcHeuristicDive::solution(double & solutionValue,
     int nRoundFeasible = 0;
     int reasonToStop = 0;
 #endif
-
     double time1 = CoinCpuTime();
     int numberSimplexIterations = 0;
     int maxSimplexIterations = (model_->getNodeCount()) ? maxSimplexIterations_

@@ -1,7 +1,7 @@
-/* $Id: ClpNetworkBasis.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpNetworkBasis.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 /*
    Authors
 
@@ -14,7 +14,7 @@
 class ClpMatrixBase;
 class CoinIndexedVector;
 class ClpSimplex;
-#include "CoinFinite.hpp"
+#include "CoinTypes.hpp"
 #ifndef COIN_FAST_CODE
 #define COIN_FAST_CODE
 #endif

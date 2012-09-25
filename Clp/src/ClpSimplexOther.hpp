@@ -1,7 +1,7 @@
-/* $Id: ClpSimplexOther.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpSimplexOther.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 /*
    Authors
 
@@ -84,6 +84,11 @@ public:
                      const double * changeLowerBound, const double * changeUpperBound,
                      const double * changeLowerRhs, const double * changeUpperRhs,
                      const double * changeObjective);
+     /** Version of parametrics which reads from file
+	 See CbcClpParam.cpp for details of format
+	 Returns -2 if unable to open file */
+     int parametrics(const char * dataFile);
+
 private:
      /** Parametrics - inner loop
          This first attempt is when reportIncrement non zero and may
@@ -184,6 +189,18 @@ public:
      void afterCrunch(const ClpSimplex & small,
                       const int * whichRows, const int * whichColumns,
                       int nBound);
+     /** Returns gub version of model or NULL
+	 whichRows has to be numberRows
+	 whichColumns has to be numberRows+numberColumns */
+     ClpSimplex * gubVersion(int * whichRows, int * whichColumns,
+			     int neededGub,
+			     int factorizationFrequency=50);
+     /// Sets basis from original
+     void setGubBasis(ClpSimplex &original,const int * whichRows,
+		      const int * whichColumns);
+     /// Restores basis to original
+     void getGubBasis(ClpSimplex &original,const int * whichRows,
+		      const int * whichColumns) const;
      /// Quick try at cleaning up duals if postsolve gets wrong
      void cleanupAfterPostsolve();
      /** Tightens integer bounds - returns number tightened or -1 if infeasible

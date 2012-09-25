@@ -1,6 +1,7 @@
-/* $Id: ClpQuadraticObjective.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpQuadraticObjective.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -754,7 +755,7 @@ ClpQuadraticObjective::stepLength(ClpSimplex * model,
           if (delta < 0.0) {
                return maximumTheta;
           } else {
-               printf("odd linear direction %g\n", delta);
+	    COIN_DETAIL_PRINT(printf("odd linear direction %g\n", delta));
                return 0.0;
           }
      }

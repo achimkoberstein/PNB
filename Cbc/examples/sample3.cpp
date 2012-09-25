@@ -1,11 +1,11 @@
+// $Id: sample3.cpp 1675 2011-06-19 17:23:14Z stefan $
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CbcConfig.h"
+
+#include "CoinPragma.hpp"
 
 #include <assert.h>
 #include <iomanip>
@@ -19,12 +19,7 @@
 #include "CbcTreeLocal.hpp"
 #include "CbcCutGenerator.hpp"
 #include "CbcHeuristicLocal.hpp"
-#ifdef COIN_HAS_CLP
 #include "OsiClpSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_OSL
-#include "OsiOslSolverInterface.hpp"
-#endif
 
 // Cuts
 
@@ -67,7 +62,7 @@ bool option(int argc, const char *argv[],const char * check, int & value)
 {
   value=-123456;
   for (int i=1;i<argc;i++) {
-    if (char * x = strstr(argv[i],check)) {
+    if (const char * x = strstr(argv[i],check)) {
       // see if at beginning
       if (x==argv[i]||(x==argv[i]+1&&argv[i][0]=='-')) {
 	// see if =
@@ -91,15 +86,9 @@ int main (int argc, const char *argv[])
 
   // Define your favorite OsiSolver
   
-#ifdef COIN_HAS_CLP
   OsiClpSolverInterface solver1;
   //solver1.messageHandler()->setLogLevel(0);
   solver1.getModelPtr()->setDualBound(1.0e10);
-#endif
-#ifdef COIN_HAS_OSL
-  OsiOslSolverInterface solver1;
-  //solver1.messageHandler()->setLogLevel(0);
-#endif
 
   // Read in model using argv[1]
   // and assert that it is a clean model

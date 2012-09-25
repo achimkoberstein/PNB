@@ -1,6 +1,11 @@
-/* $Id: Cbc_ampl.h 1286 2009-11-09 23:33:07Z EdwinStraver $ */
-// Copyright (C) 2006, International Business Machines
-// Corporation and others.  All Rights Reserved.
+/* $Id: Cbc_ampl.h 1573 2011-01-05 01:12:36Z lou $ */
+/*
+  Copyright (C) 2006, International Business Machines Corporation and others.
+  All Rights Reserved.
+
+  This code is licensed under the terms of the Eclipse Public License (EPL).
+*/
+
 #ifndef AmplInterface_H
 #define AmplInterface_H
 typedef struct {

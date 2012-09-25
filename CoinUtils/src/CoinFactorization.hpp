@@ -1,6 +1,7 @@
-/* $Id: CoinFactorization.hpp 1277 2010-04-21 20:19:32Z forrest $ */
+/* $Id: CoinFactorization.hpp 1448 2011-06-19 15:34:41Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 /* 
    Authors
@@ -16,8 +17,10 @@
 #include <string>
 #include <cassert>
 #include <cstdio>
-#include "CoinFinite.hpp"
+#include <cmath>
+#include "CoinTypes.hpp"
 #include "CoinIndexedVector.hpp"
+
 class CoinPackedMatrix;
 /** This deals with Factorization and Updates
 

@@ -1,3 +1,8 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Edwin 11/9/2009-- carved out of CbcBranchActual
 
 #if defined(_MSC_VER)
@@ -467,7 +472,7 @@ CbcSOS::redoSequenceEtc(CbcModel * model, int numberColumns, const int * origina
         }
     }
     if (n2 < numberMembers_) {
-        //printf("** SOS number of members reduced from %d to %d!\n",numberMembers_,n2);
+      COIN_DETAIL_PRINT(printf("** SOS number of members reduced from %d to %d!\n",numberMembers_,n2));
         numberMembers_ = n2;
     }
 }

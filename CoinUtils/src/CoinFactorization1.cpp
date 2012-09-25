@@ -1,6 +1,8 @@
-/* $Id: CoinFactorization1.cpp 1277 2010-04-21 20:19:32Z forrest $ */
+/* $Id: CoinFactorization1.cpp 1448 2011-06-19 15:34:41Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -13,6 +15,7 @@
 #include "CoinIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "CoinPackedMatrix.hpp"
+#include "CoinFinite.hpp"
 #include <stdio.h>
 //:class CoinFactorization.  Deals with Factorization and Updates
 //  CoinFactorization.  Constructor

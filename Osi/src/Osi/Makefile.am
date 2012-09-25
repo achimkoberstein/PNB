@@ -1,6 +1,6 @@
 # Copyright (C) 2010 Lou Hafer
 # All Rights Reserved.
-# This file is distributed under the Common Public License.
+# This file is distributed under the Eclipse Public License.
 
 ## $Id$
 
@@ -13,10 +13,8 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.  We want it to be installed
-# in the 'lib/coin' directory
-
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsi.la
+# in $libdir
+lib_LTLIBRARIES = libOsi.la
 
 # List all source files for this library, including headers
 libOsi_la_SOURCES = \
@@ -42,11 +40,9 @@ libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 # Here list all include flags.
 AM_CPPFLAGS = $(COINUTILS_CFLAGS)
 
-# This line is necessary to allow VPATH compilation with MS compilers on
-# Cygwin.  This "cygpath" stuff is necessary to compile with native compilers
-# on Windows.
-
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation.
+# This "cygpath" stuff is necessary to compile with native compilers on Windows.
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)`
 
 ########################################################################
 #                Headers that need to be installed                     #
@@ -57,7 +53,6 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 includecoindir = $(includedir)/coin
 includecoin_HEADERS = \
-	../../inc/config_osi.h \
 	OsiAuxInfo.hpp \
 	OsiBranchingObject.hpp \
 	OsiChooseVariable.hpp \
@@ -72,21 +67,8 @@ includecoin_HEADERS = \
 	OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp
 
-#############################################################################
-# Create the Config.h file that always defines HAVE_CONFIG_H and install it #
-#############################################################################
-
-# You only need to adapt the following line
-ConfigHeader = OsiConfig.h
-
 install-exec-local:
-	echo "#ifndef HAVE_CONFIG_H" >bla
-	echo "#define HAVE_CONFIG_H" >>bla
-	echo "#endif" >> bla
-	cat $(srcdir)/$(ConfigHeader) >> bla
-	$(install_sh_DATA) bla $(DESTDIR)$(includecoindir)/$(ConfigHeader)
-	rm -f bla
+	$(install_sh_DATA) config_osi.h $(DESTDIR)$(includecoindir)/OsiConfig.h
 
 uninstall-local:
-	rm -f $(DESTDIR)$(includecoindir)/$(ConfigHeader)
-
+	rm -f $(DESTDIR)$(includecoindir)/OsiConfig.h

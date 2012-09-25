@@ -47,7 +47,7 @@
 				AdditionalIncludeDirectories="../../../../ParallelNestedBenders/src;../../../../Benders/src;../../../../ThirdParty/threadpool"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -65,7 +65,7 @@
 				AdditionalOptions="/fixed:no"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib"
-				GenerateManifest="false"
+				GenerateManifest="true"
 				GenerateDebugInformation="true"
 				TargetMachine="1"
 			/>
@@ -194,7 +194,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ParallelNestedBenders/src;../../../../ThirdParty/threadpool"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"

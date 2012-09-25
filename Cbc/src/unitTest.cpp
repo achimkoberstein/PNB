@@ -1,14 +1,12 @@
-/* $Id: unitTest.cpp 1286 2009-11-09 23:33:07Z EdwinStraver $ */
+/* $Id: unitTest.cpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Test individual classes or groups of classes
 
 #include "CbcConfig.h"
-
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+#include "CoinPragma.hpp"
 
 #include <cstdlib>
 #include <cassert>
@@ -17,6 +15,7 @@
 #include <cstdio>
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinFileIO.hpp"
 
 #ifdef COIN_HAS_CBC
 #include "OsiCbcSolverInterface.hpp"
@@ -59,14 +58,15 @@ void CbcMiplibTest (const std::vector<OsiCbcSolverInterface*> & vecEmptySiP,
         doTest = true;
         fclose(fp);
     }
-#ifdef COIN_USE_ZLIB
-    test1 += ".gz";
-    fp = fopen(test1.c_str(), "r");
-    if (fp) {
+    if (!doTest && CoinFileInput::haveGzipSupport())
+    {
+      test1 += ".gz";
+      fp = fopen(test1.c_str(), "r");
+      if (fp) {
         doTest = true;
         fclose(fp);
+      }
     }
-#endif
     if (!doTest)
         return;
     /*

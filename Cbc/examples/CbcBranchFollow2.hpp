@@ -1,5 +1,8 @@
+// $Id: CbcBranchFollow2.hpp 1574 2011-01-05 01:13:55Z lou $
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcBranchFollowOn2_H
 #define CbcBranchFollowOn2_H
 

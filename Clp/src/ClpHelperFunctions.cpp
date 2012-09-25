@@ -1,6 +1,7 @@
-/* $Id: ClpHelperFunctions.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpHelperFunctions.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 /*
     Note (JJF) I have added some operations on arrays even though they may
@@ -13,7 +14,8 @@
 #include <cstdlib>
 #include <cmath>
 #include "CoinHelperFunctions.hpp"
-#include "CoinFinite.hpp"
+#include "CoinTypes.hpp"
+
 double
 maximumAbsElement(const double * region, int size)
 {

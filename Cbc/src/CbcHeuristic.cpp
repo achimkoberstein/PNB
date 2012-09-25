@@ -1,6 +1,8 @@
-/* $Id: CbcHeuristic.cpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcHeuristic.cpp 1731 2011-09-25 08:22:05Z forrest $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -23,6 +25,7 @@
 #include "CbcHeuristicFPump.hpp"
 #include "CbcStrategy.hpp"
 #include "CglPreProcess.hpp"
+#include "CglGomory.hpp"
 #include "CglProbing.hpp"
 #include "OsiAuxInfo.hpp"
 #include "OsiPresolve.hpp"
@@ -42,7 +45,7 @@ CbcHeuristicNode::CbcHeuristicNode(const CbcHeuristicNode& rhs)
 void
 CbcHeuristicNodeList::gutsOfDelete()
 {
-    for (int i = nodes_.size() - 1; i >= 0; --i) {
+    for (int i = (static_cast<int>(nodes_.size())) - 1; i >= 0; --i) {
         delete nodes_[i];
     }
 }
@@ -699,7 +702,7 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
     char * reset = NULL;
     int returnCode = 1;
     int saveModelOptions = model_->specialOptions();
-    assert ((saveModelOptions&2048) == 0);
+    //assert ((saveModelOptions&2048) == 0);
     model_->setSpecialOptions(saveModelOptions | 2048);
     {
         int saveLogLevel = solver->messageHandler()->logLevel();
@@ -799,7 +802,7 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                                     solver->getNumRows(), solver->getNumCols(),
                                     afterRows, afterCols, nFix, afterRows2, afterCols2);
                         }
-                        model_->messageHandler()->message(CBC_GENERAL, model_->messages())
+                        model_->messageHandler()->message(CBC_FPUMP1, model_->messages())
                         << generalPrint
                         << CoinMessageEol;
                     } else {
@@ -829,10 +832,13 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
     solver->getHintParam(OsiDoReducePrint, takeHint, strength);
     solver->setHintParam(OsiDoReducePrint, true, OsiHintTry);
     solver->setHintParam(OsiDoPresolveInInitial, false, OsiHintTry);
-    solver->setDblParam(OsiDualObjectiveLimit, cutoff*solver->getObjSense());
+    double signedCutoff = cutoff*solver->getObjSense();
+    solver->setDblParam(OsiDualObjectiveLimit, signedCutoff);
     solver->initialSolve();
     if (solver->isProvenOptimal()) {
         CglPreProcess process;
+	if ((model_->moreSpecialOptions()&65536)!=0)
+	  process.setOptions(2+4+8); // no cuts
         /* Do not try and produce equality cliques and
            do up to 2 passes (normally) 5 if restart */
         int numberPasses = 2;
@@ -850,6 +856,9 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
         }
         if (logLevel <= 1)
             process.messageHandler()->setLogLevel(0);
+	if (!solver->defaultHandler()&&
+	    solver->messageHandler()->logLevel(0)!=-1000)
+	  process.passInMessageHandler(solver->messageHandler());
         OsiSolverInterface * solver2 = process.preProcessNonDefault(*solver, false,
                                        numberPasses);
         if (!solver2) {
@@ -895,9 +904,29 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                         model.setLogLevel(logLevel);
                     // No small fathoming
                     model.setFastNodeDepth(-1);
-                    model.setCutoff(cutoff);
+                    model.setCutoff(signedCutoff);
+		    // Don't do if original fraction > 1.0 and too large
+		    if (fractionSmall_>1.0) {
+		      /* 1.4 means -1 nodes if >.4
+			 2.4 means -1 nodes if >.5 and 0 otherwise
+			 3.4 means -1 nodes if >.6 and 0 or 5
+			 4.4 means -1 nodes if >.7 and 0, 5 or 10
+		      */
+		      double fraction = fractionSmall_-floor(fractionSmall_);
+		      if (ratio>fraction) {
+			int type = static_cast<int>(floor(fractionSmall_*0.1));
+			int over = static_cast<int>(ceil(ratio-fraction));
+			int maxNodes[]={-1,0,5,10};
+			if (type>over)
+			  numberNodes=maxNodes[type-over];
+			else
+			  numberNodes=-1;
+		      }
+		    }
                     model.setMaximumNodes(numberNodes);
                     model.solver()->setHintParam(OsiDoReducePrint, true, OsiHintTry);
+		    if ((saveModelOptions&2048) == 0)
+		      model.setMoreSpecialOptions(model_->moreSpecialOptions());
                     // Lightweight
                     CbcStrategyDefaultSubTree strategy(model_, 1, 5, 1, 0);
                     model.setStrategy(strategy);
@@ -912,20 +941,25 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                     // going for full search and copy across more stuff
                     model.gutsOfCopy(*model_, 2);
                     for (int i = 0; i < model.numberCutGenerators(); i++) {
-                        model.cutGenerator(i)->setTiming(true);
+		        CbcCutGenerator * generator = model.cutGenerator(i);
+			CglGomory * gomory = dynamic_cast<CglGomory *>
+			  (generator->generator());
+			if (gomory&&gomory->originalSolver()) 
+			  gomory->passInOriginalSolver(model.solver());
+                        generator->setTiming(true);
                         // Turn on if was turned on
                         int iOften = model_->cutGenerator(i)->howOften();
 #ifdef CLP_INVESTIGATE
                         printf("Gen %d often %d %d\n",
-                               i, model.cutGenerator(i)->howOften(),
+                               i, generator->howOften(),
                                iOften);
 #endif
                         if (iOften > 0)
-                            model.cutGenerator(i)->setHowOften(iOften % 1000000);
+                            generator->setHowOften(iOften % 1000000);
                         if (model_->cutGenerator(i)->howOftenInSub() == -200)
-                            model.cutGenerator(i)->setHowOften(-100);
+                            generator->setHowOften(-100);
                     }
-                    model.setCutoff(cutoff);
+                    model.setCutoff(signedCutoff);
                     // make sure can't do nested search! but allow heuristics
                     model.setSpecialOptions((model.specialOptions()&(~(512 + 2048))) | 1024);
                     bool takeHint;
@@ -977,7 +1011,10 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                     }
                     if (!gotPump) {
                         CbcHeuristicFPump heuristic4;
-                        heuristic4.setMaximumPasses(10);
+			// use any cutoff
+			heuristic4.setFakeCutoff(0.5*COIN_DBL_MAX);
+			if (fractionSmall_<=1.0) 
+			  heuristic4.setMaximumPasses(10);
                         int pumpTune = feasibilityPumpOptions_;
                         if (pumpTune > 0) {
                             /*
@@ -1095,12 +1132,16 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                         CbcSerendipity heuristic(model);
                         double value = solver3->getObjSense() * solver3->getObjValue();
                         heuristic.setInputSolution(solver3->getColSolution(), value);
-                        model.setCutoff(value + 1.0e-7*(1.0 + fabs(value)));
+                        value = value + 1.0e-7*(1.0 + fabs(value));
+			value *= solver3->getObjSense();
+                        model.setCutoff(value);
                         model.addHeuristic(&heuristic, "Previous solution", 0);
                         //printf("added seren\n");
                     } else {
                         double value = model_->getMinimizationObjValue();
-                        model.setCutoff(value + 1.0e-7*(1.0 + fabs(value)));
+                        value = value + 1.0e-7*(1.0 + fabs(value));
+			value *= solver3->getObjSense();
+                        model.setCutoff(value);
 #ifdef CLP_INVESTIGATE
                         printf("NOT added seren\n");
                         solver3->writeMps("bad_seren");
@@ -1125,7 +1166,24 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                         model.setFastNodeDepth(model.fastNodeDepth() - 1000000);
                     }
                     model.setWhenCuts(999998);
+#define ALWAYS_DUAL
+#ifdef ALWAYS_DUAL
+		    OsiSolverInterface * solver = model.solver();
+		    bool takeHint;
+		    OsiHintStrength strength;
+		    solver->getHintParam(OsiDoDualInResolve, takeHint, strength);
+		    solver->setHintParam(OsiDoDualInResolve, true, OsiHintDo);
+#endif
+		    model.passInEventHandler(model_->getEventHandler());
+		    // say model_ is sitting there
+		    int saveOptions = model_->specialOptions();
+		    model_->setSpecialOptions(saveOptions|1048576);
                     model.branchAndBound();
+		    model_->setSpecialOptions(saveOptions);
+#ifdef ALWAYS_DUAL
+		    solver = model.solver();
+		    solver->setHintParam(OsiDoDualInResolve, takeHint, strength);
+#endif
 #ifdef COIN_DEVELOP
                     printf("sub branch %d nodes, %d iterations - max %d\n",
                            model.getNodeCount(), model.getIterationCount(),
@@ -1180,7 +1238,7 @@ CbcHeuristic::smallBranchAndBound(OsiSolverInterface * solver, int numberNodes,
                     }
 #endif
                     process.postProcess(*model.solver());
-                    if (solver->isProvenOptimal() && solver->getObjValue() < cutoff) {
+                    if (solver->isProvenOptimal() && solver->getObjValue()*solver->getObjSense() < cutoff) {
                         // Solution now back in solver
                         int numberColumns = solver->getNumCols();
                         memcpy(newSolution, solver->getColSolution(),
@@ -1467,8 +1525,8 @@ CbcHeuristicNode::distance(const CbcHeuristicNode* node) const
     }
     dist += subsetWeight * (numObjects_ - i + node->numObjects_ - j);
     countSubsetWeight += (numObjects_ - i + node->numObjects_ - j);
-    printf("subset = %i, overlap = %i, disjoint = %i\n", countSubsetWeight,
-           countOverlapWeight, countDisjointWeight);
+    COIN_DETAIL_PRINT(printf("subset = %i, overlap = %i, disjoint = %i\n", countSubsetWeight,
+			     countOverlapWeight, countDisjointWeight));
     return dist;
 }
 

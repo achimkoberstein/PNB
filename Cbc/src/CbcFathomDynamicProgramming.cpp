@@ -1,6 +1,10 @@
-/* $Id: CbcFathomDynamicProgramming.cpp 1286 2009-11-09 23:33:07Z EdwinStraver $ */
+/*
+  $Id: CbcFathomDynamicProgramming.cpp 1675 2011-06-19 17:23:14Z stefan $
+*/
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -430,7 +434,7 @@ CbcFathomDynamicProgramming::checkPossible(int allowableSize)
     }
     delete [] rhs;
     if (allowableSize && size_ > allowableSize) {
-        printf("Too large - need %d entries x 8 bytes\n", size_);
+      COIN_DETAIL_PRINT(printf("Too large - need %d entries x 8 bytes\n", size_));
         return -1; // too big
     } else {
         return algorithm_;
@@ -479,7 +483,7 @@ CbcFathomDynamicProgramming::fathom(double * & betterSolution)
         double bestAtTarget = COIN_DBL_MAX;
         for (i = 0; i < numberColumns; i++) {
             if (size_ > 10000000 && (i % 100) == 0)
-                printf("column %d\n", i);
+	      COIN_DETAIL_PRINT(printf("column %d\n", i));
             double lowerValue = lower[i];
             assert (lowerValue == floor(lowerValue));
             double cost = direction * objective[i];

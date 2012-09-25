@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Edwin 11/12/2009 carved from CbcBranchBase
+
 #ifndef CbcObject_H
 #define CbcObject_H
 
@@ -128,11 +134,15 @@ public:
 #ifdef CBC_NEW_STYLE_BRANCH
     virtual CbcBranchingObject * createCbcBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) = 0;
 #else
-    virtual CbcBranchingObject * createCbcBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) {
-        return createBranch(solver, info, way);
+  virtual CbcBranchingObject * createCbcBranch(OsiSolverInterface *
+                                               /* solver */,
+                                               const OsiBranchingInformation *
+                                               /* info */, int /* way */) {
+        // return createBranch(solver, info, way);
+      return NULL;
     }
-    virtual CbcBranchingObject * createBranch(OsiSolverInterface * /*solver*/,
-            const OsiBranchingInformation * /*info*/, int /*way*/) {
+    virtual OsiBranchingObject * createBranch(OsiSolverInterface * /*solver*/,
+            const OsiBranchingInformation * /*info*/, int /*way*/) const {
         throw CoinError("Need code", "createBranch", "CbcBranchBase");
     }
 #endif

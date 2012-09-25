@@ -1,5 +1,7 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef OsiRowCut_H
 #define OsiRowCut_H
 
@@ -278,16 +280,6 @@ bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
 }
 
 #endif
-
-//#############################################################################
-/** A function that tests the methods in the OsiRowCut class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-void
-OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,    
-		  const std::string & mpsDir);
 
 /** Row Cut Class which refers back to row which created it.
     It may be useful to strengthen a row rather than add a cut.  To do this

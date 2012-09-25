@@ -1,6 +1,8 @@
-/* $Id: ClpMessage.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpMessage.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef ClpMessage_H
 #define ClpMessage_H
 
@@ -99,7 +101,15 @@ enum CLP_Message {
      CLP_COMPLICATED_MODEL,
      CLP_BAD_STRING_VALUES,
      CLP_CRUNCH_STATS,
+     CLP_PARAMETRICS_STATS, 
+     CLP_PARAMETRICS_STATS2,
      CLP_GENERAL,
+     CLP_GENERAL2,
+#ifndef NO_FATHOM_PRINT
+     CLP_FATHOM_STATUS,
+     CLP_FATHOM_SOLUTION,
+     CLP_FATHOM_FINISH,
+#endif
      CLP_DUMMY_END
 };
 

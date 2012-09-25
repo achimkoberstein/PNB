@@ -1,8 +1,8 @@
 # Copyright (C) 2006 International Business Machines.
 # All Rights Reserved.
-# This file is distributed under the Common Public License.
+# This file is distributed under the Eclipse Public License.
 
-## $Id: configure.ac 234 2009-06-24 13:56:22Z tkr $
+## $Id: configure.ac 1789 2012-06-07 13:02:12Z stefan $
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
@@ -12,13 +12,13 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([FlopCpp],[1.0stable],[flopcpp@list.coin-or.org])
+AC_INIT([Cbc],[2.7],[cbc@lists.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
 All Rights Reserved.
 This file is part of the open source package Coin which is distributed
-under the Common Public License.])
+under the Eclipse Public License.])
 
 AC_REVISION(0.9)
 
@@ -33,52 +33,37 @@ AC_CONFIG_SRCDIR(configure.ac)
 AC_PREFIX_DEFAULT([`pwd`])
 
 #############################################################################
-#     We only need automake to generate Makefiles for the distribution      #
+#  Do the tests necessary to configure compilers and initialise autotools   #
 #############################################################################
 
-# Initialize automake
-AC_COIN_INIT_AUTOMAKE
-
-#############################################################################
-#             Check which ThirdParty sources are available                  #
-#############################################################################
-
-AC_COIN_THIRDPARTY_SUBDIRS([ASL],[ThirdParty/ASL],[solvers/asl.h])
-#AC_COIN_THIRDPARTY_SUBDIRS([Boost],[ThirdParty/boost],[boost/shared_ptr.hpp])
-#AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
-## User has to give third party librarys
-AC_SUBST(BOOSTINCDIR)
-AC_SUBST(BOOSTLIB)
-BOOSTINCDIR=`cd $srcdir/ThirdParty/boost; pwd`
-BOOSTLIB=`cd $srcdir/ThirdParty/boost; pwd`
-AC_COIN_HAS_USER_LIBRARY([boost],[BOOST],[boost/shared_ptr.hpp])
-AC_SUBST(GTESTINCDIR)
-AC_SUBST(GTESTLIB)
-GTESTINCDIR=`cd $srcdir/ThirdParty/gtest/include; pwd`
-GTESTLIB=`pwd`/ThirdParty/gtest/lib
-AC_COIN_THIRDPARTY_SUBDIRS([gtest],[ThirdParty/gtest],[include/gtest/gtest.h])
-AC_SUBST(GLOGINCDIR)
-AC_SUBST(GLOGLIB)
-GLOGINCDIR=`cd $srcdir/ThirdParty/glog/src; pwd`
-GLOGLIB=`pwd`/ThirdParty/glog
-AC_COIN_THIRDPARTY_SUBDIRS([glog],[ThirdParty/glog],[src/googletest.h])
-AC_COIN_THIRDPARTY_SUBDIRS([pfunc],[ThirdParty/pfunc],[pfunc/pfunc.hpp])
-AC_SUBST(PFUNCINCDIR)
-AC_SUBST(PFUNCLIB)
-PFUNCINCDIR=`cd $srcdir/ThirdParty/pfunc/pfunc; pwd`
-PFUNCLIB=`pwd`/ThirdParty/pfunc
+AC_COIN_CREATE_LIBTOOL
 
 #############################################################################
 #                  Check which subprojects are there                        #
 #############################################################################
 
-AC_COIN_MAIN_SUBDIRS(CoinUtils)
-AC_COIN_MAIN_SUBDIRS(Clp)
-AC_COIN_MAIN_SUBDIRS(Osi)
-AC_COIN_MAIN_SUBDIRS(Cgl)
-AC_COIN_MAIN_SUBDIRS(Cbc)
-AC_COIN_MAIN_SUBDIRS(Smi)
-AC_COIN_MAIN_SUBDIRS(FlopCpp)
+AC_COIN_MAIN_PACKAGEDIR(ASL,    ThirdParty,[solvers/asl.h])
+AC_COIN_MAIN_PACKAGEDIR(Blas,   ThirdParty,[daxpy.f])
+AC_COIN_MAIN_PACKAGEDIR(Lapack, ThirdParty,[LAPACK/SRC/dlarf.f])
+AC_COIN_MAIN_PACKAGEDIR(Glpk,   ThirdParty,[glpk/include/glpk.h])
+AC_COIN_MAIN_PACKAGEDIR(Metis,  ThirdParty,[metis-4.0/Lib/balance.c])
+AC_COIN_MAIN_PACKAGEDIR(Mumps,  ThirdParty,[MUMPS/src/dmumps_part1.F])
+AC_COIN_MAIN_PACKAGEDIR(Sample, Data)
+AC_COIN_MAIN_PACKAGEDIR(Netlib, Data)
+AC_COIN_MAIN_PACKAGEDIR(miplib3,Data)
+AC_COIN_MAIN_PACKAGEDIR(CoinUtils)
+AC_COIN_MAIN_PACKAGEDIR(Osi)
+AC_COIN_MAIN_PACKAGEDIR(Clp)
+AC_COIN_MAIN_PACKAGEDIR(DyLP)
+AC_COIN_MAIN_PACKAGEDIR(Vol)
+AC_COIN_MAIN_PACKAGEDIR(Cgl)
+AC_COIN_MAIN_PACKAGEDIR(Cbc)
+
+#############################################################################
+#                  Check for doxygen                                        #
+#############################################################################
+
+AC_COIN_DOXYGEN(CoinUtils Osi Clp DyLP Cgl Vol)
 
 ##############################################################################
 #                   Finishing up by writing all the output                   #
@@ -87,6 +72,7 @@ AC_COIN_MAIN_SUBDIRS(FlopCpp)
 # Here list all the files that configure should create (except for the
 # configuration header file)
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([doxydoc/doxygen.conf])
 
 # Finally, we let configure write all the output...
 AC_COIN_FINALIZE

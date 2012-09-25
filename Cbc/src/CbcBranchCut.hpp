@@ -1,6 +1,8 @@
-/* $Id: CbcBranchCut.hpp 1389 2009-12-10 15:17:35Z caphillSNL $ */
+/* $Id: CbcBranchCut.hpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcBranchCut_H
 #define CbcBranchCut_H
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="libCbc"
 	ProjectGUID="{363BA154-FEC9-4E1E-BC23-93CEC58AB785}"
 	RootNamespace="libCbc"
@@ -46,17 +46,18 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\Osi;..\..\..\..\Cgl\src;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Clp\src;..\..\..\..\Clp\src\OsiClp"
+				PreprocessorDefinitions="CBC_BUILD;_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				CompileAs="0"
+				ShowIncludes="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -118,10 +119,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\Osi;..\..\..\..\Cgl\src;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Clp\src;..\..\..\..\Clp\src\OsiClp"
+				PreprocessorDefinitions="CBC_BUILD;NDEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -189,17 +190,18 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\Osi;..\..\..\..\Cgl\src;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Clp\src;..\..\..\..\Clp\src\OsiClp"
+				PreprocessorDefinitions="CBC_BUILD;_DEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
 				CompileAs="0"
+				ShowIncludes="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -262,10 +264,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\Cbc\src\;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src;..\..\..\..\Osi\src\Osi;..\..\..\..\Cgl\src;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglDuplicateRow;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src\CglRedSplit;..\..\..\..\Cgl\src\CglResidualCapacity;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Clp\src;..\..\..\..\Clp\src\OsiClp"
+				PreprocessorDefinitions="CBC_BUILD;NDEBUG;WIN32;_LIB;USE_CBCCONFIG;COIN_NO_CLP_MESSAGE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -427,52 +429,6 @@
 			<File
 				RelativePath="..\..\..\src\CbcBranchToFixLots.cpp"
 				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcCbcParam.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\..\src\CbcClique.cpp"
@@ -753,112 +709,12 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CbcGenCtlBlk.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\..\src\CbcGeneral.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\CbcGeneralDepth.cpp"
 				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcGenMessages.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcHeuristic.cpp"
@@ -1349,56 +1205,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CbcLinked.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcLinkedUtils.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcMessage.cpp"
 				>
 				<FileConfiguration
@@ -1615,22 +1421,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CbcSolver.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcSolverAnalyze.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcSolverExpandKnapsack.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcSolverHeuristics.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\CbcSOS.cpp"
 				>
 			</File>
@@ -1832,10 +1622,6 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\..\..\..\Cbc\src\Cbc_ampl.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcBranchActual.hpp"
 				>
 			</File>
@@ -1844,7 +1630,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Cbc\src\CbcBranchBase.hpp"
+				RelativePath="..\..\..\src\CbcBranchBase.hpp"
 				>
 			</File>
 			<File
@@ -1968,10 +1754,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CbcGenCtlBlk.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\CbcGeneral.hpp"
 				>
 			</File>
@@ -2048,10 +1830,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CbcLinked.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcMessage.hpp"
 				>
 			</File>
@@ -2104,18 +1882,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\CbcSolverAnalyze.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcSolverExpandKnapsack.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\CbcSolverHeuristics.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\CbcSOS.hpp"
 				>
 			</File>
@@ -2141,242 +1907,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Cbc\src\CbcTreeLocal.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglClique\CglClique.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglCutGenerator.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglFlowCover\CglFlowCover.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglGomory\CglGomory.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglKnapsackCover\CglKnapsackCover.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglLandP.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglMixedIntegerRounding\CglMixedIntegerRounding.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglMixedIntegerRounding2\CglMixedIntegerRounding2.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglOddHole\CglOddHole.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglPreProcess\CglPreProcess.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglProbing\CglProbing.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglResidualCapacity.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Cgl\src\CglTwomir\CglTwomir.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpConfig.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpFactorization.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpMatrixBase.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpModel.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpObjective.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpParameters.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpPresolve.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpSimplex.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpSimplexOther.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpSolve.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\Coin_C_defines.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDistance.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinError.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFinite.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFloatEqual.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinHelperFunctions.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinIndexedVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPragma.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinSort.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStart.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\BuildTools\headers\configall_system.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\BuildTools\headers\configall_system_msc.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiAuxInfo.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiClp\OsiClpSolverInterface.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiColCut.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCollections.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCut.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiCuts.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiPresolve.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiRowCut.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiRowCutDebugger.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverBranch.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverInterface.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Osi\src\OsiSolverParameters.hpp"
 				>
 			</File>
 		</Filter>

@@ -1,6 +1,7 @@
-/* $Id: ClpDualRowDantzig.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpDualRowDantzig.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 #include "ClpSimplex.hpp"
@@ -8,6 +9,9 @@
 #include "ClpFactorization.hpp"
 #include "CoinIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
+#ifndef CLP_DUAL_COLUMN_MULTIPLIER
+#define CLP_DUAL_COLUMN_MULTIPLIER 1.01
+#endif
 
 //#############################################################################
 // Constructors / Destructor / Assignment
@@ -58,22 +62,33 @@ ClpDualRowDantzig::pivotRow()
      assert(model_);
      int iRow;
      const int * pivotVariable = model_->pivotVariable();
-     double largest = model_->currentPrimalTolerance();
+     double tolerance = model_->currentPrimalTolerance();
      // we can't really trust infeasibilities if there is primal error
      if (model_->largestPrimalError() > 1.0e-8)
-          largest *= model_->largestPrimalError() / 1.0e-8;
+          tolerance *= model_->largestPrimalError() / 1.0e-8;
+     double largest = 0.0;
      int chosenRow = -1;
-     for (iRow = 0; iRow < model_->numberRows(); iRow++) {
-          int iPivot = pivotVariable[iRow];
-          double value = model_->solution(iPivot);
-          double lower = model_->lower(iPivot);
-          double upper = model_->upper(iPivot);
-          if (CoinMax(value - upper, lower - value) > largest) {
-               int iSequence = pivotVariable[iRow];
-               if (!model_->flagged(iSequence)) {
-                    chosenRow = iRow;
-                    largest = CoinMax(value - upper, lower - value);
-               }
+     int numberRows = model_->numberRows();
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
+     int numberColumns = model_->numberColumns();
+#endif
+     for (iRow = 0; iRow < numberRows; iRow++) {
+          int iSequence = pivotVariable[iRow];
+          double value = model_->solution(iSequence);
+          double lower = model_->lower(iSequence);
+          double upper = model_->upper(iSequence);
+	  double infeas = CoinMax(value - upper , lower - value);
+          if (infeas > tolerance) {
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
+	      if (iSequence < numberColumns)
+		infeas *= CLP_DUAL_COLUMN_MULTIPLIER;
+#endif
+	      if (infeas > largest) {
+		if (!model_->flagged(iSequence)) {
+		  chosenRow = iRow;
+		  largest = infeas;
+		}
+	      }
           }
      }
      return chosenRow;

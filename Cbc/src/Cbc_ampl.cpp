@@ -1,4 +1,4 @@
-/* $Id: Cbc_ampl.cpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: Cbc_ampl.cpp 1752 2011-10-31 23:34:55Z tkr $ */
 /****************************************************************
 Copyright (C) 1997-2000 Lucent Technologies
 Modifications for Coin -  Copyright (C) 2006, International Business Machines Corporation and others.
@@ -29,9 +29,10 @@ THIS SOFTWARE.
   Interface routines for AMPL.
 */
 
+#include "CbcConfig.h"
+
 #ifdef COIN_HAS_ASL
 
-#include "CbcConfig.h"
 #ifdef HAVE_UNISTD_H
 # include "unistd.h"
 #endif
@@ -143,7 +144,7 @@ static keyword keywds[] = { /* must be sorted */
 };
 static Option_Info Oinfo = {
     const_cast<char*>("cbc"),
-    const_cast<char*>("Cbc 1.04"),
+    const_cast<char*>("CBC trunk"),
     const_cast<char*>("cbc_options"),
     keywds,
     nkeywds,
@@ -470,7 +471,6 @@ readAmpl(ampl_info * info, int argc, char **argv, void ** coinModel)
         /* Column bounds*/
         columnLower = (double *) malloc(n_var * sizeof(double));
         columnUpper = (double *) malloc(n_var * sizeof(double));
-#define COIN_DBL_MAX DBL_MAX
         for (i = 0; i < n_var; i++) {
             columnLower[i] = LUv[2*i];
             if (columnLower[i] <= negInfinity)
@@ -933,7 +933,6 @@ CoinModel::gdb( int nonLinear, const char * fileName, const void * info)
         /* Column bounds*/
         columnLower = (double *) malloc(n_var * sizeof(double));
         columnUpper = (double *) malloc(n_var * sizeof(double));
-#define COIN_DBL_MAX DBL_MAX
         for (i = 0; i < n_var; i++) {
             columnLower[i] = LUv[2*i];
             if (columnLower[i] <= negInfinity)

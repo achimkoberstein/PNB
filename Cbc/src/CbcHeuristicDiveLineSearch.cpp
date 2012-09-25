@@ -1,6 +1,8 @@
 /* $Id: CbcHeuristicDiveLineSearch.cpp 1173 2009-06-04 09:44:10Z forrest $ */
 // Copyright (C) 2008, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -76,7 +78,7 @@ CbcHeuristicDiveLineSearch::selectVariableToBranch(OsiSolverInterface* solver,
 
     bestColumn = -1;
     bestRound = -1; // -1 rounds down, +1 rounds up
-    double bestRelDistance = DBL_MAX;
+    double bestRelDistance = COIN_DBL_MAX;
     bool allTriviallyRoundableSoFar = true;
     for (int i = 0; i < numberIntegers; i++) {
         int iColumn = integerVariable[i];
@@ -89,7 +91,7 @@ CbcHeuristicDiveLineSearch::selectVariableToBranch(OsiSolverInterface* solver,
 
                 if (allTriviallyRoundableSoFar && downLocks_[i] > 0 && upLocks_[i] > 0) {
                     allTriviallyRoundableSoFar = false;
-                    bestRelDistance = DBL_MAX;
+                    bestRelDistance = COIN_DBL_MAX;
                 }
 
                 double relDistance;
@@ -101,7 +103,7 @@ CbcHeuristicDiveLineSearch::selectVariableToBranch(OsiSolverInterface* solver,
                     relDistance = (1.0 - fraction) / (value - rootValue);
                 } else {
                     round = -1;
-                    relDistance = DBL_MAX;
+                    relDistance = COIN_DBL_MAX;
                 }
 
                 // if variable is not binary, penalize it

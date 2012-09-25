@@ -1,19 +1,24 @@
-/* $Id: decompose.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: decompose.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "ClpSimplex.hpp"
 #include "CoinMpsIO.hpp"
 #include <iomanip>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpSimplex  model;
      int status;
      // Keep names
      if (argc < 2) {
-          //status=model.readMps("/home/forrest/data/ken-18.mps.gz",true);
-          status = model.readMps("../../Data/Netlib/czprob.mps", true);
+#if defined(NETLIBDIR)
+          status = model.readMps(NETLIBDIR "/czprob.mps", true);
+#else
+          fprintf(stderr, "Do not know where to find netlib MPS files.\n");
+          return 1;
+#endif
      } else {
           status = model.readMps(argv[1], true);
      }
@@ -114,7 +119,7 @@ int main (int argc, const char *argv[])
                                         }
                                    }
                               } else {
-                                   assert (columnBlock[iColumn] == numberBlocks - 1);
+                                   assert(columnBlock[iColumn] == numberBlocks - 1);
                               }
                          }
                     }
@@ -295,7 +300,7 @@ int main (int argc, const char *argv[])
                assert(!iPass);
                dual = master.dualRowSolution();
                memset(master.dualRowSolution(),
-                      0, (numberMasterRows + numberBlocks)*sizeof(double));
+                      0, (numberMasterRows + numberBlocks) *sizeof(double));
           } else {
                abort();
           }
@@ -441,7 +446,7 @@ int main (int argc, const char *argv[])
           for (i = numberMasterColumns; i < numberColumnsGenerated; i++)
                if (whichBlock[i-numberMasterColumns] == iBlock)
                     sol[i] = solution[i];
-          memset(lower, 0, (numberMasterRows + numberBlocks)*sizeof(double));
+          memset(lower, 0, (numberMasterRows + numberBlocks) *sizeof(double));
           master.times(1.0, sol, lower);
           for (iRow = 0; iRow < numberMasterRows; iRow++) {
                double value = lower[iRow];

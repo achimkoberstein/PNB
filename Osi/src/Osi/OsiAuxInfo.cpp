@@ -1,17 +1,16 @@
 // Copyright (C) 2006, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #include <cassert>
 #include <cstdlib>
 #include <cmath>
 #include <cfloat>
 
+#include "CoinPragma.hpp"
+#include "CoinHelperFunctions.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiAuxInfo.hpp"
-#include "CoinHelperFunctions.hpp"
 
 // Default Constructor
 OsiAuxInfo::OsiAuxInfo(void * appData) 

@@ -1,21 +1,18 @@
+// $Id: sample1.cpp 1675 2011-06-19 17:23:14Z stefan $
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include <cassert>
 
 #include "CbcConfig.h"
+#include "CoinPragma.hpp"
 
 // For Branch and bound
 #include "OsiSolverInterface.hpp"
 #include "CbcModel.hpp"
 
-#ifdef COIN_HAS_CLP
 #include "OsiClpSolverInterface.hpp"
-#endif
 #include "ClpPresolve.hpp"
 #include "CbcCompareUser.hpp"
 #include "CglProbing.hpp"
@@ -81,9 +78,7 @@ int main (int argc, const char *argv[])
 
   // Define your favorite OsiSolver
   
-#ifdef COIN_HAS_CLP
   ClpSimplex simplex;
-#endif
   double time0 = cpuTime();
   double time1 = time0;
   double time2;

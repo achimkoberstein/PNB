@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="libClp"
 	ProjectGUID="{4F8F7D1C-3A9E-444D-8EE9-77F33FA05994}"
 	RootNamespace="libClp"
@@ -46,11 +46,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src"
+				PreprocessorDefinitions="CLP_BUILD;WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -118,10 +118,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src"
+				PreprocessorDefinitions="CLP_BUILD;WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -189,11 +189,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src"
+				PreprocessorDefinitions="CLP_BUILD;WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -262,10 +262,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				AdditionalIncludeDirectories="..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\inc;..\..\..\..\CoinUtils\src"
+				PreprocessorDefinitions="CLP_BUILD;WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
@@ -406,98 +406,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpCholeskyDense.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpCholeskyTaucs.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\..\..\Clp\src\ClpCholeskyUfl.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -1245,50 +1153,8 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Clp\src\ClpMain.cpp"
+				RelativePath="..\..\..\src\ClpLsqr.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpMatrixBase.cpp"
@@ -1661,6 +1527,14 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpPdco.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpPdcoBase.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpPlusMinusOneMatrix.cpp"
@@ -2358,10 +2232,6 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\..\..\..\Clp\src\CbcOrClpParam.hpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\..\Clp\src\Clp_C_Interface.h"
 				>
 			</File>
@@ -2371,6 +2241,18 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpCholeskyDense.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpCholeskyMumps.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpCholeskyUfl.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpCholeskyWssmp.hpp"
 				>
 			</File>
 			<File
@@ -2406,7 +2288,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\Clp\src\ClpDynamicExampleMatrix.hpp"
+				RelativePath="..\..\..\src\ClpDynamicExampleMatrix.hpp"
 				>
 			</File>
 			<File
@@ -2439,6 +2321,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpLinearObjective.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpLsqr.hpp"
 				>
 			</File>
 			<File
@@ -2479,6 +2365,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpParameters.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpPdco.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ClpPdcoBase.hpp"
 				>
 			</File>
 			<File
@@ -2531,182 +2425,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Clp\src\ClpSolve.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\Coin_C_defines.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinBuild.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDenseVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinDistance.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinError.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFactorization.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFileIO.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFinite.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinFloatEqual.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinHelperFunctions.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinIndexedVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessage.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMessageHandler.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModel.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinModelUseful.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinMpsIO.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPackedVectorBase.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPragma.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDoubleton.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDual.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveDupcol.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveEmpty.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveFixed.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveForcing.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveImpliedFree.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveIsolated.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveMatrix.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolvePsdebug.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSingleton.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveSubst.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTighten.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveTripleton.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveUseless.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinPresolveZeros.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinShallowPackedVector.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinSignal.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinSort.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinTime.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStart.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\CoinUtils\src\CoinWarmStartBasis.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\BuildTools\headers\configall_system.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\BuildTools\headers\configall_system_msc.h"
 				>
 			</File>
 			<File

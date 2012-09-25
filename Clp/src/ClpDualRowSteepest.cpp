@@ -1,6 +1,7 @@
-/* $Id: ClpDualRowSteepest.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpDualRowSteepest.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 #include "ClpSimplex.hpp"
@@ -234,10 +235,9 @@ ClpDualRowSteepest::pivotRow()
      double * lower = model_->lowerRegion();
      double * upper = model_->upperRegion();
      // do last pivot row one here
-     //#define COLUMN_BIAS 4.0
-     //#define FIXED_BIAS 10.0
+     //#define CLP_DUAL_FIXED_COLUMN_MULTIPLIER 10.0
      if (lastPivotRow >= 0 && lastPivotRow < model_->numberRows()) {
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
           int numberColumns = model_->numberColumns();
 #endif
           int iPivot = pivotVariable[lastPivotRow];
@@ -247,10 +247,9 @@ ClpDualRowSteepest::pivotRow()
           if (value > upper + tolerance) {
                value -= upper;
                value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                if (iPivot < numberColumns)
-                    value *= COLUMN_BIAS; // bias towards columns
-               k
+                    value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
                // store square in list
                if (infeas[lastPivotRow])
@@ -260,9 +259,9 @@ ClpDualRowSteepest::pivotRow()
           } else if (value < lower - tolerance) {
                value -= lower;
                value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                if (iPivot < numberColumns)
-                    value *= COLUMN_BIAS; // bias towards columns
+                    value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
                // store square in list
                if (infeas[lastPivotRow])
@@ -683,7 +682,7 @@ ClpDualRowSteepest::updatePrimalSolution(
      const double * COIN_RESTRICT costModel = model_->costRegion();
      const double * COIN_RESTRICT lowerModel = model_->lowerRegion();
      const double * COIN_RESTRICT upperModel = model_->upperRegion();
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
      int numberColumns = model_->numberColumns();
 #endif
      if (primalUpdate->packedMode()) {
@@ -702,13 +701,13 @@ ClpDualRowSteepest::updatePrimalSolution(
                if (value < lower - tolerance) {
                     value -= lower;
                     value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                     if (iPivot < numberColumns)
-                         value *= COLUMN_BIAS; // bias towards columns
+                         value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
-#ifdef FIXED_BIAS
+#ifdef CLP_DUAL_FIXED_COLUMN_MULTIPLIER
                     if (lower == upper)
-                         value *= FIXED_BIAS; // bias towards taking out fixed variables
+                         value *= CLP_DUAL_FIXED_COLUMN_MULTIPLIER; // bias towards taking out fixed variables
 #endif
                     // store square in list
                     if (infeas[iRow])
@@ -718,13 +717,13 @@ ClpDualRowSteepest::updatePrimalSolution(
                } else if (value > upper + tolerance) {
                     value -= upper;
                     value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                     if (iPivot < numberColumns)
-                         value *= COLUMN_BIAS; // bias towards columns
+                         value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
-#ifdef FIXED_BIAS
+#ifdef CLP_DUAL_FIXED_COLUMN_MULTIPLIER
                     if (lower == upper)
-                         value *= FIXED_BIAS; // bias towards taking out fixed variables
+                         value *= CLP_DUAL_FIXED_COLUMN_MULTIPLIER; // bias towards taking out fixed variables
 #endif
                     // store square in list
                     if (infeas[iRow])
@@ -752,13 +751,13 @@ ClpDualRowSteepest::updatePrimalSolution(
                if (value < lower - tolerance) {
                     value -= lower;
                     value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                     if (iPivot < numberColumns)
-                         value *= COLUMN_BIAS; // bias towards columns
+                         value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
-#ifdef FIXED_BIAS
+#ifdef CLP_DUAL_FIXED_COLUMN_MULTIPLIER
                     if (lower == upper)
-                         value *= FIXED_BIAS; // bias towards taking out fixed variables
+                         value *= CLP_DUAL_FIXED_COLUMN_MULTIPLIER; // bias towards taking out fixed variables
 #endif
                     // store square in list
                     if (infeas[iRow])
@@ -768,13 +767,13 @@ ClpDualRowSteepest::updatePrimalSolution(
                } else if (value > upper + tolerance) {
                     value -= upper;
                     value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                     if (iPivot < numberColumns)
-                         value *= COLUMN_BIAS; // bias towards columns
+                         value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
-#ifdef FIXED_BIAS
+#ifdef CLP_DUAL_FIXED_COLUMN_MULTIPLIER
                     if (lower == upper)
-                         value *= FIXED_BIAS; // bias towards taking out fixed variables
+                         value *= CLP_DUAL_FIXED_COLUMN_MULTIPLIER; // bias towards taking out fixed variables
 #endif
                     // store square in list
                     if (infeas[iRow])
@@ -977,26 +976,26 @@ ClpDualRowSteepest::saveWeights(ClpSimplex * model, int mode)
                if (value < lower - tolerance) {
                     value -= lower;
                     value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                     if (iPivot < numberColumns)
-                         value *= COLUMN_BIAS; // bias towards columns
+                         value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
-#ifdef FIXED_BIAS
+#ifdef CLP_DUAL_FIXED_COLUMN_MULTIPLIER
                     if (lower == upper)
-                         value *= FIXED_BIAS; // bias towards taking out fixed variables
+                         value *= CLP_DUAL_FIXED_COLUMN_MULTIPLIER; // bias towards taking out fixed variables
 #endif
                     // store square in list
                     infeasible_->quickAdd(iRow, value);
                } else if (value > upper + tolerance) {
                     value -= upper;
                     value *= value;
-#ifdef COLUMN_BIAS
+#ifdef CLP_DUAL_COLUMN_MULTIPLIER
                     if (iPivot < numberColumns)
-                         value *= COLUMN_BIAS; // bias towards columns
+                         value *= CLP_DUAL_COLUMN_MULTIPLIER; // bias towards columns
 #endif
-#ifdef FIXED_BIAS
+#ifdef CLP_DUAL_FIXED_COLUMN_MULTIPLIER
                     if (lower == upper)
-                         value *= FIXED_BIAS; // bias towards taking out fixed variables
+                         value *= CLP_DUAL_FIXED_COLUMN_MULTIPLIER; // bias towards taking out fixed variables
 #endif
                     // store square in list
                     infeasible_->quickAdd(iRow, value);

@@ -1,6 +1,7 @@
-/* $Id: ekk.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: ekk.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 /*  This can be used to compare OSL and Clp.  The interface functions
     below (in ekk_interface.cpp) were written so that calls to osl
@@ -48,7 +49,7 @@ extern "C" int ekk_preSolveClp(EKKModel * model, bool keepIntegers,
 #include <stdio.h>
 #include <stdarg.h>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      const char * name;
      // problem is actually scaled for osl, dynamically for clp (slows clp)
@@ -61,14 +62,19 @@ int main (int argc, const char *argv[])
      EKKModel * model;
      EKKContext * context;
 
-     if ( argc > 1 ) {
+     if (argc > 1) {
           name = argv[1];
      } else {
-          name = "../../Data/Sample/p0033.mps";
-     }
+#if defined(SAMPLEDIR)
+          name = (SAMPLEDIR "/p0033.mps";
+#else
+          fprintf(stderr, "Do not know where to find sample MPS files.\n");
+          exit(1);
+#endif
+             }
 
-     /* initialize OSL environment */
-     context = ekk_initializeContext();
+             /* initialize OSL environment */
+             context = ekk_initializeContext();
      model = ekk_newModel(context, "");
 
      int i;
@@ -142,7 +148,7 @@ int main (int argc, const char *argv[])
                ekk_primalSimplex(model, 3);
           }
           if (useosl == 2)
-               ekk_allSlackBasis(model); // otherwise it would be easy
+               ekk_allSlackBasis(model);    // otherwise it would be easy
      }
      if ((useosl & 2) == 0) {
           // CLP

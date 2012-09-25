@@ -1,6 +1,8 @@
-/* $Id: CbcCutGenerator.hpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcCutGenerator.hpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcCutGenerator_H
 #define CbcCutGenerator_H
 
@@ -164,6 +166,10 @@ public:
         return depthCutGeneratorInSub_;
     }
 
+    /// Get switches (for debug)
+    inline int switches() const {
+        return switches_;
+    }
     /// Get whether the cut generator should be called in the normal place
     inline bool normal() const {
         return (switches_&1) != 0;
@@ -316,6 +322,24 @@ public:
     inline void setWhetherToUse(bool yesNo) {
         switches_ &= ~1024;
         switches_ |= yesNo ? 1024 : 0;
+    }
+    /// Whether in must call again mode (or after others)
+    inline bool whetherInMustCallAgainMode() const {
+        return (switches_&2048) != 0;
+    }
+    /// Set whether in must call again mode (or after others)
+    inline void setWhetherInMustCallAgainMode(bool yesNo) {
+        switches_ &= ~2048;
+        switches_ |= yesNo ? 2048 : 0;
+    }
+    /// Whether to call at end
+    inline bool whetherCallAtEnd() const {
+        return (switches_&4096) != 0;
+    }
+    /// Set whether to call at end
+    inline void setWhetherCallAtEnd(bool yesNo) {
+        switches_ &= ~4096;
+        switches_ |= yesNo ? 4096 : 0;
     }
     /// Number of cuts generated at root
     inline int numberCutsAtRoot() const {

@@ -1,6 +1,10 @@
-/*! \legal
+/*
   Copyright (C) 2006, International Business Machines Corporation and others.
   All Rights Reserved.
+
+  This code is licensed under the terms of the Eclipse Public License (EPL).
+
+  $Id: CbcEventHandler.hpp 1675 2011-06-19 17:23:14Z stefan $
 */
 
 #ifndef CbcEventHandler_H
@@ -43,14 +47,13 @@
 */
 
 #include <map>
-#include <cstddef>
 
 /* May well already be declared, but can't hurt. */
 
 class CbcModel ;
 
 /*
-  cvs/svn: $Id: CbcEventHandler.hpp 1432 2010-02-07 19:33:53Z bjarni $
+  cvs/svn: $Id: CbcEventHandler.hpp 1675 2011-06-19 17:23:14Z stefan $
 */
 
 /*! \class CbcEventHandler
@@ -93,6 +96,8 @@ public:
         beforeSolution1,
         /*! A solution will be found unless user takes action (thorough check). */
         beforeSolution2,
+        /*! After failed heuristic. */
+        afterHeuristic,
         /*! End of search. */
         endSearch
     } ;
@@ -143,7 +148,7 @@ public:
 
     /*! \brief Default constructor. */
 
-    CbcEventHandler(CbcModel *model = NULL) ;
+    CbcEventHandler(CbcModel *model = 0 /* was NULL but 4.6 complains */) ;
 
     /*! \brief Copy constructor. */
 

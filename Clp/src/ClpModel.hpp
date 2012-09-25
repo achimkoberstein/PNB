@@ -1,6 +1,8 @@
-/* $Id: ClpModel.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpModel.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef ClpModel_H
 #define ClpModel_H
 
@@ -17,6 +19,7 @@
 #include "ClpPackedMatrix.hpp"
 #include "CoinMessageHandler.hpp"
 #include "CoinHelperFunctions.hpp"
+#include "CoinTypes.hpp"
 #include "CoinFinite.hpp"
 #include "ClpParameters.hpp"
 #include "ClpObjective.hpp"
@@ -749,6 +752,15 @@ public:
          Up to user to use delete [] on these arrays.  */
      double * infeasibilityRay() const;
      double * unboundedRay() const;
+     /// just test if infeasibility or unbounded Ray exists
+     inline bool rayExists() const {
+         return (ray_!=NULL);
+     }
+     /// just delete ray if exists
+     inline void deleteRay() {
+         delete [] ray_;
+         ray_=NULL;
+     }
      /// See if status (i.e. basis) array exists (partly for OsiClp)
      inline bool statusExists() const {
           return (status_ != NULL);

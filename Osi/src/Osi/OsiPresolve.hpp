@@ -1,5 +1,6 @@
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #ifndef OsiPresolve_H
 #define OsiPresolve_H
@@ -12,8 +13,8 @@ class CoinPresolveAction;
 /*! \class OsiPresolve
     \brief OSI interface to COIN problem simplification capabilities
 
-  COIN provides a number of classes which implement problem simplfication
-  algorithms (CoinPresolveAction, CoinPrePostSolveMatrix, and derived
+  COIN provides a number of classes which implement problem simplification
+  algorithms (CoinPresolveAction, CoinPrePostsolveMatrix, and derived
   classes). The model of operation is as follows:
   <ul>
     <li>

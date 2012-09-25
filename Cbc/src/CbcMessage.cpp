@@ -1,6 +1,8 @@
-/* $Id: CbcMessage.cpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcMessage.cpp 1790 2012-06-08 14:59:51Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -63,6 +65,10 @@ static Cbc_message us_english[] = {
     {CBC_ROOT_DETAIL, 46, 2, "Root node pass %d, %d rows, %d total tight cuts  -  objective %g"},
     {CBC_CUTOFF_WARNING1, 47, 1, "Cutoff set to %g - equivalent to best solution of %g"},
     {CBC_END_SOLUTION, 48, 2, "Final check on integer solution of %g found after %d iterations and %d nodes (%.2f seconds)"},
+#ifndef NO_FATHOM_PRINT
+    {CBC_FATHOM_CHANGE, 49, 1, "Complete fathoming at depth >= %d"},
+#endif
+    {CBC_MAXITERS, 50, 1, "Exiting on maximum number of iterations"},
     {CBC_NOINT, 3007, 1, "No integer variables - nothing to do"},
     {CBC_WARNING_STRONG, 3008, 1, "Strong branching is fixing too many variables, too expensively!"},
     {CBC_DUMMY_END, 999999, 0, ""}

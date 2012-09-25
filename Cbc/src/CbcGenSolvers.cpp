@@ -2,6 +2,11 @@
   Copyright (C) 2007, Lou Hafer, International Business Machines Corporation
   and others.  All Rights Reserved.
 
+  This code is licensed under the terms of the Eclipse Public License (EPL).
+
+  $Id$
+*/
+/*
   This file is part of cbc-generic.
 */
 
@@ -60,6 +65,13 @@
 # include "OsiMskSolverInterface.hpp"
 # ifndef CBC_DEFAULT_SOLVER
 #   define CBC_DEFAULT_SOLVER "msk"
+# endif
+#endif
+
+#ifdef COIN_HAS_SPX
+# include "OsiSpxSolverInterface.hpp"
+# ifndef CBC_DEFAULT_SOLVER
+#   define CBC_DEFAULT_SOLVER "spx"
 # endif
 #endif
 
@@ -134,6 +146,9 @@ OsiSolverInterface *setupSolvers ()
 # endif
 # ifdef COIN_HAS_MSK
     solvers["msk"] = new OsiMskSolverInterface  ;
+# endif
+# ifdef COIN_HAS_SPX
+    solvers["spx"] = new OsiSpxSolverInterface  ;
 # endif
     /*
       Set the standard default values in each solver.

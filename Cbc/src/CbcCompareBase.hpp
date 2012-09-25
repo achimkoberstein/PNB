@@ -1,6 +1,8 @@
-/* $Id: CbcCompareBase.hpp 1400 2009-12-11 14:14:06Z lou $ */
+/* $Id: CbcCompareBase.hpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcCompareBase_H
 #define CbcCompareBase_H
 
@@ -30,15 +32,31 @@ public:
         threaded_ = false;
     }
 
-    // This allows any method to change behavior as it is called
-    // after each solution
-    virtual void newSolution(CbcModel * ) {}
+    /*! \brief Reconsider behaviour after discovering a new solution.
+    
+      This allows any method to change its behaviour. It is called
+      after each solution.
 
-    // This Also allows any method to change behavior as it is called
-    // after each solution
-    virtual void newSolution(CbcModel * ,
+      The method should return true if changes are made which will
+      alter the evaluation criteria applied to a node. (So that in
+      cases where the search tree is sorted, it can be properly
+      rebuilt.)
+    */
+    virtual bool newSolution(CbcModel * ) { return (false) ; }
+
+    /*! \brief Reconsider behaviour after discovering a new solution.
+    
+      This allows any method to change its behaviour. It is called
+      after each solution.
+
+      The method should return true if changes are made which will
+      alter the evaluation criteria applied to a node. (So that in
+      cases where the search tree is sorted, it can be properly
+      rebuilt.)
+    */
+    virtual bool newSolution(CbcModel * ,
                              double ,
-                             int ) {}
+                             int ) { return (false) ; }
 
     // This allows any method to change behavior as it is called
     // after every 1000 nodes.

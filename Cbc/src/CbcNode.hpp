@@ -1,6 +1,8 @@
-/* $Id: CbcNode.hpp 1400 2009-12-11 14:14:06Z lou $ */
+/* $Id: CbcNode.hpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcNode_H
 #define CbcNode_H
 

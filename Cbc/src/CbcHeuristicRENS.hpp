@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2006, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // edwin 12/5/09 carved out of CbcHeuristicRINS
+
 #ifndef CbcHeuristicRENS_H
 #define CbcHeuristicRENS_H
 
@@ -46,10 +52,22 @@ public:
     virtual int solution(double & objectiveValue,
                          double * newSolution);
 
+    /// Set type
+    inline void setRensType(int value)
+    { rensType_ = value;}
+
 protected:
     // Data
     /// Number of tries
     int numberTries_;
+    /** Type
+        0 - fix at LB
+        1 - fix on dj
+        2 - fix at UB as well
+	3 - fix on 0.01*average dj
+	add 16 to allow two tries
+    */
+    int rensType_;
 };
 
 #endif

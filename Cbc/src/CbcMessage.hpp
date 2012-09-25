@@ -1,6 +1,8 @@
-/* $Id: CbcMessage.hpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcMessage.hpp 1790 2012-06-08 14:59:51Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcMessage_H
 #define CbcMessage_H
 
@@ -25,6 +27,7 @@ enum CBC_Message {
     CBC_MAXTIME,
     CBC_MAXSOLS,
     CBC_EVENT,
+    CBC_MAXITERS,
     CBC_SOLUTION,
     CBC_END_SOLUTION,
     CBC_SOLUTION2,
@@ -69,6 +72,9 @@ enum CBC_Message {
     CBC_RESTART,
     CBC_GENERAL,
     CBC_ROOT_DETAIL,
+#ifndef NO_FATHOM_PRINT
+    CBC_FATHOM_CHANGE,
+#endif
     CBC_DUMMY_END
 };
 

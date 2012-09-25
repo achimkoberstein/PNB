@@ -16,7 +16,7 @@
 
 # Copyright (C) 2006 International Business Machines and others.
 # All Rights Reserved.
-# This file is distributed under the Common Public License.
+# This file is distributed under the Eclipse Public License.
 
 # Author:  Lou Hafer	SFU	2010-11-20
 
@@ -52,7 +52,8 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
+CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
+	$(top_builddir)/src/Osi/config_osi.h
 CONFIG_CLEAN_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -60,10 +61,9 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libcoindir)" \
-	"$(DESTDIR)$(includecoindir)"
-libcoinLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(libcoin_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
+libLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsiCommonTests_la_LIBADD =
 am_libOsiCommonTests_la_OBJECTS = OsiColCutTest.lo OsiCutsTest.lo \
 	OsiRowCutDebuggerTest.lo OsiRowCutTest.lo OsiSimplexAPITest.lo \
@@ -96,7 +96,6 @@ CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ABSBUILDDIR = @ABSBUILDDIR@
 ACLOCAL = @ACLOCAL@
-ADDLIBS = @ADDLIBS@
 ADD_CFLAGS = @ADD_CFLAGS@
 ADD_CXXFLAGS = @ADD_CXXFLAGS@
 ALWAYS_FALSE_FALSE = @ALWAYS_FALSE_FALSE@
@@ -142,8 +141,8 @@ COIN_HAS_PKGCONFIG_FALSE = @COIN_HAS_PKGCONFIG_FALSE@
 COIN_HAS_PKGCONFIG_TRUE = @COIN_HAS_PKGCONFIG_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
-COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
-COIN_HAS_SPX_TRUE = @COIN_HAS_SPX_TRUE@
+COIN_HAS_SOPLEX_FALSE = @COIN_HAS_SOPLEX_FALSE@
+COIN_HAS_SOPLEX_TRUE = @COIN_HAS_SOPLEX_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
 COIN_HAS_XPR_TRUE = @COIN_HAS_XPR_TRUE@
 COIN_PKG_CONFIG_PATH = @COIN_PKG_CONFIG_PATH@
@@ -169,7 +168,6 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
-FADDLIBS = @FADDLIBS@
 FFLAGS = @FFLAGS@
 GLPK_CFLAGS = @GLPK_CFLAGS@
 GLPK_CFLAGS_INSTALLED = @GLPK_CFLAGS_INSTALLED@
@@ -210,7 +208,6 @@ NETLIB_DATA_INSTALLED = @NETLIB_DATA_INSTALLED@
 NETLIB_DEPENDENCIES = @NETLIB_DEPENDENCIES@
 NETLIB_LIBS = @NETLIB_LIBS@
 NETLIB_LIBS_INSTALLED = @NETLIB_LIBS_INSTALLED@
-NOLONGLONGCXXFLAGS = @NOLONGLONGCXXFLAGS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
@@ -228,6 +225,13 @@ OSILIB_LIBS = @OSILIB_LIBS@
 OSILIB_LIBS_INSTALLED = @OSILIB_LIBS_INSTALLED@
 OSILIB_PCLIBS = @OSILIB_PCLIBS@
 OSILIB_PCREQUIRES = @OSILIB_PCREQUIRES@
+OSISPXLIB_CFLAGS = @OSISPXLIB_CFLAGS@
+OSISPXLIB_CFLAGS_INSTALLED = @OSISPXLIB_CFLAGS_INSTALLED@
+OSISPXLIB_DEPENDENCIES = @OSISPXLIB_DEPENDENCIES@
+OSISPXLIB_LIBS = @OSISPXLIB_LIBS@
+OSISPXLIB_LIBS_INSTALLED = @OSISPXLIB_LIBS_INSTALLED@
+OSISPXLIB_PCLIBS = @OSISPXLIB_PCLIBS@
+OSISPXLIB_PCREQUIRES = @OSISPXLIB_PCREQUIRES@
 OSI_EXAMPLES_SOLVER_CFLAGS = @OSI_EXAMPLES_SOLVER_CFLAGS@
 OSI_EXAMPLES_SOLVER_LIBS = @OSI_EXAMPLES_SOLVER_LIBS@
 OSI_EXAMPLES_SOLVER_NAME = @OSI_EXAMPLES_SOLVER_NAME@
@@ -240,7 +244,6 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PCADDLIBS = @PCADDLIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RPATH_FLAGS = @RPATH_FLAGS@
@@ -253,8 +256,13 @@ SAMPLE_LIBS = @SAMPLE_LIBS@
 SAMPLE_LIBS_INSTALLED = @SAMPLE_LIBS_INSTALLED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SPXINCDIR = @SPXINCDIR@
-SPXLIB = @SPXLIB@
+SOPLEX_CFLAGS = @SOPLEX_CFLAGS@
+SOPLEX_CFLAGS_INSTALLED = @SOPLEX_CFLAGS_INSTALLED@
+SOPLEX_DATA = @SOPLEX_DATA@
+SOPLEX_DATA_INSTALLED = @SOPLEX_DATA_INSTALLED@
+SOPLEX_DEPENDENCIES = @SOPLEX_DEPENDENCIES@
+SOPLEX_LIBS = @SOPLEX_LIBS@
+SOPLEX_LIBS_INSTALLED = @SOPLEX_LIBS_INSTALLED@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VPATH_DISTCLEANFILES = @VPATH_DISTCLEANFILES@
@@ -328,12 +336,12 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.  We want it to be installed
-# in the 'lib/coin' directory
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsiCommonTests.la
+# in $libdir
+lib_LTLIBRARIES = libOsiCommonTests.la
 
 # List all source files for this library, including headers
-libOsiCommonTests_la_SOURCES = OsiCommonTests.hpp \
+libOsiCommonTests_la_SOURCES = \
+    OsiCommonTests.hpp \
 	OsiColCutTest.cpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \
@@ -349,13 +357,10 @@ libOsiCommonTests_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
-	-I`$(CYGPATH_W) $(srcdir)/../Osi`
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` $(COINUTILS_CFLAGS)
 
-
-# This line is necessary to allow VPATH compilation with MS compilers
-# on Cygwin
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 
 ########################################################################
 #                Headers that need to be installed                     #
@@ -397,35 +402,35 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-libcoinLTLIBRARIES: $(libcoin_LTLIBRARIES)
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(libcoindir)" || $(mkdir_p) "$(DESTDIR)$(libcoindir)"
-	@list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(libcoinLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libcoindir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(libcoinLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libcoindir)/$$f"; \
+	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-libcoinLTLIBRARIES:
+uninstall-libLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
+	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libcoindir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libcoindir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
 	done
 
-clean-libcoinLTLIBRARIES:
-	-test -z "$(libcoin_LTLIBRARIES)" || rm -f $(libcoin_LTLIBRARIES)
-	@list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
 libOsiCommonTests.la: $(libOsiCommonTests_la_OBJECTS) $(libOsiCommonTests_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(libcoindir) $(libOsiCommonTests_la_LDFLAGS) $(libOsiCommonTests_la_OBJECTS) $(libOsiCommonTests_la_LIBADD) $(LIBS)
+	$(CXXLINK) -rpath $(libdir) $(libOsiCommonTests_la_LDFLAGS) $(libOsiCommonTests_la_OBJECTS) $(libOsiCommonTests_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -569,7 +574,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libcoindir)" "$(DESTDIR)$(includecoindir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -598,7 +603,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libcoinLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -617,9 +622,9 @@ info: info-am
 
 info-am:
 
-install-data-am: install-includecoinHEADERS install-libcoinLTLIBRARIES
+install-data-am: install-includecoinHEADERS
 
-install-exec-am:
+install-exec-am: install-libLTLIBRARIES
 
 install-info: install-info-am
 
@@ -646,21 +651,21 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-includecoinHEADERS uninstall-info-am \
-	uninstall-libcoinLTLIBRARIES
+	uninstall-libLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libcoinLTLIBRARIES clean-libtool ctags distclean \
+	clean-libLTLIBRARIES clean-libtool ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
 	install-exec-am install-includecoinHEADERS install-info \
-	install-info-am install-libcoinLTLIBRARIES install-man \
+	install-info-am install-libLTLIBRARIES install-man \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-includecoinHEADERS uninstall-info-am \
-	uninstall-libcoinLTLIBRARIES
+	uninstall-libLTLIBRARIES
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

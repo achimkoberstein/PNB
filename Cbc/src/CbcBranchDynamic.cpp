@@ -1,6 +1,8 @@
-/* $Id: CbcBranchDynamic.cpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcBranchDynamic.cpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)

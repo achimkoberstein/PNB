@@ -1,6 +1,8 @@
 /* $Id: CbcThread.cpp 1261 2009-10-30 12:45:20Z forrest $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -1892,9 +1894,14 @@ CbcModel::setInfoInChild(int type, CbcThread * info)
         object_ = NULL;
     }
 }
+
+/// Indicates whether Cbc library has been compiled with multithreading support
+bool CbcModel::haveMultiThreadSupport() { return true; }
+
 #else
-// Dummy so file not empty
 // Default constructor
 CbcBaseModel::CbcBaseModel() {}
+
+bool CbcModel::haveMultiThreadSupport() { return false; }
 #endif
 

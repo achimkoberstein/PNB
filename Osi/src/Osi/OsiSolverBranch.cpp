@@ -1,5 +1,7 @@
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -8,12 +10,14 @@
 #include "CoinHelperFunctions.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+#include "OsiConfig.h"
+#include "CoinFinite.hpp"
+
 #include "OsiSolverInterface.hpp"
 #include "OsiSolverBranch.hpp"
 #include <cassert>
 #include <cmath>
 #include <cfloat>
-#include "CoinFinite.hpp"
 //#############################################################################
 // Constructors / Destructor / Assignment
 //#############################################################################
