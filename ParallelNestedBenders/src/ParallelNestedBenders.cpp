@@ -74,6 +74,7 @@ namespace parallel_benders {
             //store_primal_and_dual_ = false; // No dual values can be stored for an integer problem..
             store_cut_information_ = false; // Therefore no cut aggregation
 
+
         }
         typedef std::map<int,std::vector< std::pair<int,double> > > non_staircase_row_map;
         non_staircase_row_map non_staircase_rows;
