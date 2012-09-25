@@ -30,7 +30,7 @@ ExternalProject_Add(Clp
 	INSTALL_COMMAND ""
 )
 
-set(CPLEX_INCLUDE_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cplex/include)
+set(CPLEX_INCLUDE_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cplex/include/ilcplex)
 set(CPLEX_LIBRARY_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cplex/lib/x86_sles10_4.1/static_pic)
 ExternalProject_Add(Osi
 	DEPENDS CoinUtils;Cgl;Clp
