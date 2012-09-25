@@ -25,7 +25,7 @@
 #include "BendersNodeData.hpp"
 #include "ParallelNestedBenders.hpp"
 #include "OsiPnbStochasticSolverInterface.hpp"
-#include "OsiBenStochasticSolverInterface.hpp"
+//#include "OsiBenStochasticSolverInterface.hpp"
 
 
 class NestedBendersTest: public ::testing::Test {
@@ -223,13 +223,14 @@ public:
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,2);
         benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,0);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,10);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
  
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
         benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
@@ -453,12 +454,11 @@ protected:
 		}
 		else {
 			// We need to check if first line is still valid
-			ifstream log_file;
-			log_file.open(testbed_log_file_string_.c_str());
+			ifstream log_file(testbed_log_file_string_.c_str());
 			std::string line;
 			std::getline(log_file,line);
 			log_file.close();
-			if ( line.compare(parameter_name_string_) ){
+			if ( line != parameter_name_string_ ){
 				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
 			}
 
@@ -479,7 +479,7 @@ protected:
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
         // This can be done in a loop.
-        double time = CoinCpuTime();  
+        double cpuTime = CoinCpuTime();  
         SmiScnModel smi;
         OsiCpxSolverInterface osi_cpx;
         smi.setOsiSolverHandle(&osi_cpx);
@@ -494,8 +494,8 @@ protected:
         nested_benders.setParameters(benders_parameter_);
         nested_benders.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
-        time = CoinCpuTime()-time; // Overall WallClockTime;
-        LOG(INFO) << "Solution Time: " << time;
+        cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
+        LOG(INFO) << "Solution Time: " << cpuTime;
 
 
         int created_opt_cuts = nested_benders.getNumOptimalityCuts();
@@ -539,20 +539,19 @@ protected:
 
         }
         else {
-			ifstream check_log_file;
-			check_log_file.open(log_file_name.c_str());
+			ifstream check_log_file(log_file_name.c_str());
 			std::string line;
 			std::getline(check_log_file,line);
 			check_log_file.close();
-			
-			if ( line.compare(parameter_name_string_) ){
+
+			if ( line != parameter_name_string_ ){
 				// We need to write this string first, because somehow our parameter ordering/number of them changed. If we notice this, we want to warn the user?!
 				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
 			}
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
         }
         // Write solution line
-        s << stoch_name << "; " << time << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+        s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
         // Write num cuts
         s << created_opt_cuts << ";" << created_feas_cuts << ";";
 		// Write parameter values
@@ -577,9 +576,17 @@ protected:
         
 
         // Write date/time stamp of log file writing time
-        char sdate[9];
-        char stime[9];
-        s << _strdate(sdate) << "; " << _strtime(stime);
+//#ifdef _MSC_VER
+//        char sdate[9];
+//        char stime[9];
+//        s << _strdate(sdate) << "; " << _strtime(stime);
+//#else
+        time_t timeStamp = time(NULL);
+        tm * time = localtime(&timeStamp);
+        char buffer[256];
+        strftime(buffer, 256, "%m/%d/%y; %H:%M:%S", time);
+        s << buffer;
+//#endif
         s << std::endl;
 
 		// Write to log_file
@@ -716,9 +723,9 @@ class NestedBendersTestMultiStage: public NestedBendersTest
 //    EXPECT_NEAR(solveSMPS("other/Fina4"), -68401.8, 0.1);
 //}
 //
-//TEST_F(NestedBendersTest, gas_OTHER) { // ok
-//    EXPECT_NEAR(solveSMPS("other/GAS3"), 1558.17, 0.1);  
-//}
+TEST_F(NestedBendersTest, gas_OTHER) { // ok
+    EXPECT_NEAR(solveSMPS("other/GAS3"), 1558.17, 0.1);  
+}
 //
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
     //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
@@ -742,14 +749,14 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, m
     
 
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
+    //EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
 }
 //
 TEST_F(NestedBendersTest, sslp_SIPLIB) { // binary first, mixed-binary second stage
@@ -1355,7 +1362,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
     //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-    ::testing::GTEST_FLAG(filter) = "*scenarios*";
+    ::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER

@@ -55,9 +55,6 @@
 /* Define to 1 if the Osl package is available */
 #undef COIN_HAS_OSL
 
-/* Define to 1 if the pfunc package is available */
-#undef COIN_HAS_PFUNC
-
 /* Define to 1 if the Smi package is used */
 #undef COIN_HAS_SMI
 

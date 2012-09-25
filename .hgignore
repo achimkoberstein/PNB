@@ -35,6 +35,8 @@ share/
 doxydoc/
 doc/
 boost/stage/
+boost_*
+build/
 google-perftools-*
 MSVisualStudio/
 test/instances/OriginalFiles/

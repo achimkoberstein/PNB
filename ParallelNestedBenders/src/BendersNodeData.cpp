@@ -48,6 +48,8 @@ BendersNodeData::~BendersNodeData(void)
 
     delete [] d_square_cut_t_matrix_;
 
+    delete [] solver_rhs_;
+
 }
 
 void BendersNodeData::set_col_solution(const double* colSolution)

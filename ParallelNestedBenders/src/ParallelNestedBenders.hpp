@@ -31,13 +31,14 @@
 class OsiSolverInterface;
 class SmiCoreData;
 class SmiNodeData;
+class OsiStochasticParallelNestedBendersSolverInterface;
 
 
 namespace parallel_benders {
 
 
 class ParallelNestedBenders {
-    friend class OsiStochasticParallelNestedBendersSolverInterface;
+    friend class ::OsiStochasticParallelNestedBendersSolverInterface;
 
     typedef std::map<int,int> staircase_container; // Stores the maximal stage where the coefficient appears, and the coefficient as key
 
@@ -98,7 +99,6 @@ private:
     void StoreValuesFromSolverInArray(double*& destination_values,const double* source_values,int size);
     void findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut );
     void IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  );
-    void PrimalDegeneracyHandling(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
