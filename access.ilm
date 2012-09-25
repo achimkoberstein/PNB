@@ -1,0 +1,13 @@
+LICENSE university-paderborn
+LICENSE IBM ILOG Optimization Suite for Academic Initiative
+SERVER 3000 131.234.154.13 2864bb80 31301
+TOKEN CPLEX 11.000 NEVER 1EJSG084G25G 10 any , options: e m b q use=10 , server: GRADSCHOOL2 , license: 627510
+#TOKEN CPLEX 11.000 NEVER 0YXE13F6W46R 10 any , options: e m b q p=2 , server: GRADSCHOOL2 , license: 627510
+## Academic initiative stuff
+#LICENSE IBM ILOG Optimization Suite for Academic Initiative
+EVAL    CPLEX      12.000 01-Apr-2013 528M30REGCBA any , options: e m b q 
+EVAL    OPLStudio  6.000 01-Apr-2013 DEHSY2PMSBT0 any , options: ide 
+EVAL    CP-Optimizer 2.000 01-Apr-2013 9MFP83YPCUZ7 any 
+EVAL    Solver     6.000 01-Apr-2013 5YVW612M4JH2 any 
+EVAL    Scheduler  6.000 01-Apr-2013 6J20M3MPWFGS any 
+EVAL    Dispatcher 4.000 01-Apr-2013 4GNAW2608X45 any 

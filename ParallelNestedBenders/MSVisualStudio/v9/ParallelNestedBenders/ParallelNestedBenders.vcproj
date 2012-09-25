@@ -51,7 +51,7 @@
 				RuntimeLibrary="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				EnablePREfast="true"
+				EnablePREfast="false"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -287,10 +287,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\OsiBenStochasticSolverInterface.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\OsiPnbStochasticSolverInterface.cpp"
 				>
 			</File>
@@ -314,10 +310,6 @@
 			>
 			<File
 				RelativePath="..\..\..\src\BendersNodeData.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\OsiBenStochasticSolverInterface.hpp"
 				>
 			</File>
 			<File

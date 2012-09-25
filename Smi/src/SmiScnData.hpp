@@ -34,7 +34,7 @@ class SmiNodeData
 	//: public SmiLinearData
     
 {
-    friend SmiCoreData; // Find a better way..
+    friend class SmiCoreData; // Find a better way..
 public:
 	typedef map<int,CoinPackedVector *> SmiRowMap;
 	typedef map<int,double *> SmiDenseRowMap;

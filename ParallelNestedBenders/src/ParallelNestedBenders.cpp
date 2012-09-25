@@ -36,16 +36,16 @@
 
 // Files necessary for cplex
 #include "ilcplex/cplex.h"
-#include "ilcplex/cplexcheck.h"
-#include "check.c"
+//#include "ilcplex/cplexcheck.h"
+//#include "check.c"
 #include "OsiCpxSolverInterface.hpp"
 
 
 // Gurobi stuff
-#include "OsiGrbSolverInterface.hpp"
+/*#include "OsiGrbSolverInterface.hpp"
 extern "C" {
 #include "gurobi_c.h"
-}
+}*/
 
 
 namespace parallel_benders {
@@ -1375,14 +1375,14 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
         //    std::stringstream stream;
         //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
         //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         //    if ( cpx_ptr ){
         //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
         //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-        //        stream << "_C.lp";
+        //        //stream << "_C.lp";
         //        //CPXsetintparam(env_ptr,)
         //        console_mutex_.lock();
         //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
@@ -1579,13 +1579,22 @@ namespace parallel_benders {
         // We want to differentiate between column solution and theta variables 
         StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
 
+        // If we have integer variables, we might want to set these variables to pure integer values!
+        if ( integer_problems_[current_stage_] ){
+            // Get integer cols
+            std::vector<int> integer_cols = core_->getIntCols(current_stage_);
+            for (int i = 0; i < integer_cols.size();i++){
+                benders_node_pointer->col_solution_[integer_cols[i]] = boost::math::round(benders_node_pointer->col_solution_[integer_cols[i]]); 
+            }
+        }
+
         if ( d_square_ ){
             StoreValuesFromSolverInArray(benders_node_pointer->solver_rhs_,osi_solver->getRightHandSide(),osi_solver->getNumRows());
             // Store Column Solution multiplied by probability in the expected_y_values in stage_data!
             // Check For Integrality
             if ( current_stage_ == 1){
                 std::vector<int> binaries = core_->getIntCols(current_stage_);
-                std::vector<std::pair<int,double>> fractional_variables;
+                std::vector<std::pair<int,double> > fractional_variables;
                 int index_for_fractional_max = -1;
                 for (int i = 0; i < binaries.size(); i++){
                     if ( !CompareForEquality(benders_node_pointer->col_solution_[binaries[i]],boost::math::round(benders_node_pointer->col_solution_[binaries[i]]),integer_tolerance_) ){
@@ -2773,7 +2782,7 @@ namespace parallel_benders {
                 if ( stochastic_element_in_row && stochastic_column_index == stochastic_matrix.start_[row+1])
                     stochastic_element_in_row = false;
 
-                if ( deterministic_matrix.indices_[column_index] < current_stage_columns){
+                if ( deterministic_matrix.indices_[column_index] < current_stage_columns){ // Only these entries are entries of the T-matrix!
                     if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index]){ // Add stochastic element
                         cut_coefficients_pointer->operator[](deterministic_matrix.indices_[column_index]-column_start_previous_stage) += stochastic_matrix.elements_[stochastic_column_index]*dual_solution[row];
                         stochastic_column_index++;
@@ -3185,7 +3194,8 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut )
     {
-        throw std::exception("The method or operation is not implemented.");
+        assert(false);
+        //throw std::exception("The method or operation is not implemented.");
     }
 
     void ParallelNestedBenders::IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -3308,11 +3318,13 @@ namespace parallel_benders {
                 std::list<boost::shared_ptr<CutStuff> > cuts_to_add;
                 std::list<BendersNodeData::cut_container::iterator> to_remove_from_optimality_cuts;
                 std::vector<int> to_remove_from_solver;
-                int max_minimal_cuts = 100;
+                int reduce_by_ratio = 100;
+                int max_minimal_cuts = 1;
+
                 // The active value for all cuts sums up to the number of aggregates. All cuts for each aggregate sum up to 1.
                 for (int i = 1; i < current_iteration_; i++){ // Iterate over all iterations
                     assert( cuts_from_iteration[i].second >= 0);
-                    number_of_cuts_per_hierarchy_level.push_back(max(consolidatable_cuts_in_iteration[i]/4,max_minimal_cuts)); // So we use one-fourth of the aggregates from now on, no more single-cuts?
+                    number_of_cuts_per_hierarchy_level.push_back(max(consolidatable_cuts_in_iteration[i]/reduce_by_ratio,max_minimal_cuts)); // So we use one-fourth of the aggregates from now on, no more single-cuts?
                     if ( cuts_from_iteration[i].second > intra_aggregate_threshold ) // We only proceed with the aggregation if the active level falls below the threshold
                         continue;
                     if ( consolidatable_cuts_in_iteration[i] == max_minimal_cuts )// We do not need to consolidate single cuts!
@@ -4014,211 +4026,7 @@ namespace parallel_benders {
         first->setLb(first->lb()+second->lb());
     }
 
-    void ParallelNestedBenders::PrimalDegeneracyHandling(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer){
-        BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
-        bool check_primal_degeneracy = false;
-        double * reduced_cost = NULL;
-        if ( check_primal_degeneracy ){
-            OsiCpxSolverInterface * osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-            CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-            CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-            // Check for primal degeneracy : Do we have basic variables at their bounds ?
-            int maximal_iterations = 10;
-            // Store values for double array
-            int num_cols = osi_solver->getNumCols();
-            int num_rows = osi_solver->getNumRows();
-            std::vector<double> old_objective(num_cols);
-            memcpy(&old_objective[0],osi_solver->getObjCoefficients(),sizeof(double)*num_cols);
-
-            double * dual_solutions = new double[num_rows*(maximal_iterations+1)];
-            memcpy(dual_solutions,benders_node_pointer->dual_solution_,sizeof(double)*num_rows);
-            double * reduced_costs = new double[num_cols*(maximal_iterations+1)];
-            memcpy(reduced_costs,osi_solver->getReducedCost(),sizeof(double)*num_cols);
-            double * column_solutions = new double[num_cols*(maximal_iterations+1)];
-            memcpy(column_solutions,osi_solver->getColSolution(),sizeof(double)*num_cols);
-
-            // Look at basednorms
-            //int* cstat = new int[num_cols];
-            //int* rstat = new int[num_rows];
-            //double* dnorms = new double[num_rows];
-            //CPXgetbasednorms(env_ptr,lp_ptr,cstat,rstat,dnorms);
-            // // NO norms available
-
-            double * solution_array = new double[maximal_iterations*num_cols];
-            int solution_times = 0;
-            int multiple_solution_count = 0;
-            std::vector<int> indices(osi_solver->getNumRows(),0);
-            std::vector<OsiRowCut*> added_cuts;
-            bool use_pivoting = true;
-            bool use_multiple_solution_algorithm = false;
-            assert( use_pivoting ^ use_multiple_solution_algorithm );
-            for (int count = 0; count < maximal_iterations; count++){
-
-                const double * colum_lower = osi_solver->getColLower();
-                const double * colum_upper = osi_solver->getColUpper();
-                const double * obj_coefs = osi_solver->getObjCoefficients();
-                const double * column_solution1 = osi_solver->getColSolution();
-                if ( use_pivoting ){
-                    osi_solver->getBasics(&indices[0]);
-                    //Find out if we have a primal degenerate optimal solution
-                    std::vector<int> degenerate_variables;
-                    double * slack = new double[osi_solver->getNumRows()];
-                    //CPXgetslack(env_ptr, lp_ptr, slack, 0, CPXgetnumrows(env_ptr,lp_ptr)-1);
-                    for (int i = 0; i < osi_solver->getNumRows(); i++){
-                        if ( indices[i] >= 0 && indices[i] < num_cols ){ // We look at structual variables first
-                            if ( column_solution1[indices[i]] <= colum_lower[indices[i]]+zero_tolerance_ || column_solution1[indices[i]] >= colum_upper[indices[i]]-zero_tolerance_  )// Column is at one of its bounds
-                                if ( !(colum_lower[indices[i]] > -infinity_ && colum_upper[indices[i]] < infinity_ && obj_coefs[indices[i]]) )// Column is not two-side bounded and in the objective function, because if this is so, we can not push this variable in the basis without altering the solution value..
-                                    degenerate_variables.push_back(indices[i]);
-                        }
-                    }
-                    if ( degenerate_variables.size() ){
-                        int cpx_stat = 0;
-                        // Which one should I choose?
-                        int entering_index = rand() % degenerate_variables.size();// Random
-                        if ( degenerate_variables[entering_index] >= 0 && colum_lower[degenerate_variables[entering_index]] > -infinity_ && colum_upper[degenerate_variables[entering_index]] < infinity_ )
-                            cpx_stat = CPXpivot(env_ptr,lp_ptr,CPX_NO_VARIABLE,degenerate_variables[entering_index],CPX_BASIC);
-                        else
-                            cpx_stat = CPXpivot(env_ptr,lp_ptr,CPX_NO_VARIABLE,degenerate_variables[entering_index],CPX_AT_LOWER);
-                        if ( cpx_stat )
-                            cpx_stat = CPXpivot(env_ptr,lp_ptr,CPX_NO_VARIABLE,degenerate_variables[entering_index],CPX_BASIC);
-                        if ( cpx_stat )
-                            cpx_stat = CPXpivot(env_ptr,lp_ptr,CPX_NO_VARIABLE,degenerate_variables[entering_index],CPX_AT_UPPER);
-                        if ( cpx_stat == 0 ){
-                            solution_times++;
-                            memcpy(dual_solutions+num_rows*solution_times,osi_solver->getRowPrice(),sizeof(double)*osi_solver->getNumRows());
-                            memcpy(reduced_costs+num_cols*solution_times,osi_solver->getReducedCost(),sizeof(double)*osi_solver->getNumCols());
-                        }
-                    }
-                    else 
-                        break;
-                }
-
-                if ( use_multiple_solution_algorithm ){
-                    std::vector<double> obj_elements(num_cols,0);
-                    std::vector<int> variables_at_upper_bounds;
-                    std::vector<int> variables_at_lower_bounds; // We can get this info from cplex faster, i suppose
-                    for (int i = 0; i < num_cols; i++){
-                        if ( column_solution1[i] <= colum_lower[i]+zero_tolerance_ )
-                            variables_at_lower_bounds.push_back(i);
-                        if ( column_solution1[i] >= colum_upper[i]-zero_tolerance_ )
-                            variables_at_upper_bounds.push_back(i);
-                    }
-                    for (int i = 0; i < variables_at_lower_bounds.size(); i++)
-                        obj_elements[variables_at_lower_bounds[i]] = -1;
-                    for (int i = 0; i < variables_at_upper_bounds.size(); i++)
-                        obj_elements[variables_at_upper_bounds[i]] = 1;
-
-                    if ( multiple_solution_count == 0){
-                        std::vector<double> col_elements(num_cols);
-                        std::vector<int> col_indices(num_cols);
-                        const double * obj_elements_old = osi_solver->getObjCoefficients();
-                        for (int i = 0; i < num_cols; i++){
-                            col_indices[i] = i;
-                            col_elements[i] = obj_elements_old[i];
-                        }
-                        double obj_val = osi_solver->getObjValue();
-                        osi_solver->addRow(num_cols,&col_indices[0],&col_elements[0],obj_val,obj_val); // This invalidates the solution!
-                    }
-                    else
-                        osi_solver->applyRowCuts(1,added_cuts.back());
-                    multiple_solution_count++;
-                    solution_times++;
-                    osi_solver->setObjective(&obj_elements[0]);
-                    //std::stringstream lp_name;
-                    //lp_name << "fixinglp" << solution_times;
-                    //osi_solver->writeLp(lp_name.str().c_str());
-                    SolveSolverInterface(osi_solver);
-                    if ( osi_solver->isProvenOptimal() ){
-                        //if ( osi_solver->getObjValue() > 0){
-                        const double * column_solution2 = osi_solver->getColSolution();
-                        memcpy(column_solutions+num_cols*solution_times,osi_solver->getColSolution(),sizeof(double)*num_cols);
-                        // Now i may have another solution ( alternate optimal solution maybe ) but how do i get the duals from here?!
-                        // Set the upper/lower bounds correctly and solve with original objective function to get the duals
-                        std::cout << "ObjVal " << osi_solver->getObjValue();
-
-
-                        int overall_size = variables_at_upper_bounds.size()+variables_at_lower_bounds.size();
-                        double*  col_elements = new double[overall_size];
-                        int*  col_indices = new int[overall_size];
-                        for (int i = 0; i < variables_at_lower_bounds.size(); i++){
-                            col_indices[i] = variables_at_lower_bounds[i];
-                            col_elements[i] = -1;
-                        }
-                        for (int i = 0; i < variables_at_upper_bounds.size(); i++){
-                            col_indices[variables_at_lower_bounds.size()+i] = variables_at_upper_bounds[i];
-                            col_elements[variables_at_lower_bounds.size()+i] = 1;
-                        }
-                        OsiRowCut * row_cut = new OsiRowCut(0.1*osi_solver->getObjValue(),infinity_,overall_size,overall_size,col_indices,col_elements);
-                        added_cuts.push_back(row_cut);
-                        //}
-                    }  // Push back a cut for the current lp   added_cuts.back()->setLb(0.1*osi_solver->getObjValue());
-                    else
-                        assert(false);
-
-                }
-
-
-
-            }
-            // Count+1 gives the number of solutions or maximal_iteration, whatever is less
-            // Check if we relly solved the model some times
-            if ( solution_times && use_multiple_solution_algorithm ){
-                // Create a new solution ( convex combination ) and use this to get the dual values!
-                std::vector<int> remove_rows(solution_times,0);
-                for (int i = 0; i < solution_times; i++)
-                    remove_rows[i] = osi_solver->getNumRows()-i-1;
-                osi_solver->deleteRows(solution_times,&remove_rows[0]);
-                osi_solver->setObjective(&old_objective[0]);
-                //osi_solver->writeLp("afterall");
-                osi_solver->setWarmStart(benders_node_pointer->warm_start_);
-                // Set values for the column solution ( via variable bounds for example!)
-                double * final_column_solution = new double[num_cols];
-                for (int i = 0; i < num_cols; i++){
-                    final_column_solution[i] = 0;
-                    for (int j = 0; j < solution_times+1; j++)
-                        final_column_solution[i] += 1.0/(solution_times+1) * column_solutions[i+j*num_cols];
-                }
-                double* lower = new double[num_cols];
-                double* upper = new double[num_cols];
-                memcpy(lower,osi_solver->getColLower(),sizeof(double)*num_cols);
-                memcpy(upper,osi_solver->getColUpper(),sizeof(double)*num_cols);
-                osi_solver->setColLower(final_column_solution);
-                osi_solver->setColUpper(final_column_solution);
-                SolveSolverInterface(osi_solver);
-                const double * dual_again = osi_solver->getRowPrice();
-                memcpy(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),sizeof(double)*num_rows);
-                double obj_val = osi_solver->getObjValue();
-                // Load empty LP to prevent from reusing this solver!
-                osi_solver->setColLower(lower);
-                osi_solver->setColUpper(upper);
-                delete [] lower;
-                delete [] upper;
-            }
-            if ( use_pivoting ){
-                // Compute convex combination of solutions!
-                for (int i = 0; i < num_rows; i++){
-                    benders_node_pointer->dual_solution_[i] = 0;
-                    for (int j = 0; j < solution_times+1; j++)
-                        benders_node_pointer->dual_solution_[i] += 1.0/(solution_times+1) * dual_solutions[i+j*num_rows];
-                }
-                reduced_cost = new double[num_cols];
-                for (int i = 0; i < num_cols; i++){
-                    reduced_cost[i] = 0;
-                    for (int j = 0; j < solution_times+1; j++)
-                        reduced_cost[i] += 1.0/(solution_times+1) * reduced_costs[i+j*num_cols];
-                }
-                benders_node_pointer->reduced_cost_ = reduced_cost;
-                delete [] dual_solutions;
-                delete [] reduced_costs;
-                delete [] solution_array;
-                //std::cout << "Did "  << solution_times << " many pivots.\n";
-            }
-
-
-
-
-        }//End if primal_degeneracy..
-    }
+   
 
     void ParallelNestedBenders::SetWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
@@ -4517,7 +4325,7 @@ namespace parallel_benders {
     {
         // Silence solver 
         osi_solver->messageHandler()->setLogLevel(0);
-        osi_solver->setHintParam(OsiDoPresolveInInitial,true);
+        osi_solver->setHintParam(OsiDoPresolveInInitial,true); // FIXME: Set to true again after testing is done!
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX )
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
         else 
@@ -4645,8 +4453,7 @@ namespace parallel_benders {
 
         // MIP Solving only at first stage..
         if ( integer_problems_[current_stage_] ){
-
-            
+          
             if ( regularization_  ){
                 // We have a QP, so branchAndBound method throws an error..
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);

@@ -255,7 +255,7 @@ namespace flopc {
 
     */
   class MP_constraint : public RowMajor, private Named {
-      friend MP_model;
+      friend class MP_model;
     public: 
         /// construct the MP_constraint with appropriate sets for indexing.
         MP_constraint(

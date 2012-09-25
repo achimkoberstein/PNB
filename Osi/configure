@@ -20984,7 +20984,7 @@ echo "${ECHO_T}no" >&6
 # If argument 3 (file) is given, check for the file. Typically this will be a
 # header file, but that's not assumed.
 
-    if test -r $CPXINCDIR/cplex.h; then
+    if test -r $CPXINCDIR/ilcplex/cplex.h; then
 
   :
 else

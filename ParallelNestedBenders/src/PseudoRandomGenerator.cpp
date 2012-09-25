@@ -18,6 +18,7 @@ Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
 
 int get_random_number_from_system()
 {
+    
 #ifdef _MSC_VER
     //Windows
     errno_t err;
@@ -33,13 +34,14 @@ int get_random_number_from_system()
 #ifndef _MSC_VER
     //Copied from Good Practice RNG.pdf (google for it)
     int fn;
+    unsigned int seed;
     fn = open("/dev/urandom", O_RDONLY);
     if (fn == -1)
         exit(-1); /* Failed! */
     if (read(fn, &seed, 4) != 4)
         exit(-1); /* Failed! */
     close(fn);
-    return fn;
+    return seed;
     //Without random numbers this does not make much sense
 #endif
 }

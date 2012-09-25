@@ -43,6 +43,7 @@
 */
 
 #include <map>
+#include <cstddef>
 
 /* May well already be declared, but can't hurt. */
 
