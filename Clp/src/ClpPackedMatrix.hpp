@@ -1,12 +1,23 @@
-/* $Id: ClpPackedMatrix.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpPackedMatrix.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef ClpPackedMatrix_H
 #define ClpPackedMatrix_H
 
 #include "CoinPragma.hpp"
 
 #include "ClpMatrixBase.hpp"
+
+// Compilers can produce better code if they know about __restrict
+#ifndef COIN_RESTRICT
+#ifdef COIN_USE_RESTRICT
+#define COIN_RESTRICT __restrict
+#else
+#define COIN_RESTRICT
+#endif
+#endif
 
 /** This implements CoinPackedMatrix as derived from ClpMatrixBase.
 
@@ -417,6 +428,13 @@ private:
                                       const double scalar) const;
      /// Meat of transposeTimes by row n > 2 if packed - returns number nonzero
      int gutsOfTransposeTimesByRowGE3(const CoinIndexedVector * COIN_RESTRICT piVector,
+                                      int * COIN_RESTRICT index,
+                                      double * COIN_RESTRICT output,
+                                      double * COIN_RESTRICT array2,
+                                      const double tolerance,
+                                      const double scalar) const;
+     /// Meat of transposeTimes by row n > 2 if packed - returns number nonzero
+     int gutsOfTransposeTimesByRowGE3a(const CoinIndexedVector * COIN_RESTRICT piVector,
                                       int * COIN_RESTRICT index,
                                       double * COIN_RESTRICT output,
                                       int * COIN_RESTRICT lookup,

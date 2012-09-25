@@ -1,6 +1,6 @@
-FlopCpp README
-==============
+To install this package, please look at the INSTALL file.
+ 
+This package contains several subdirectories corresponding to COIN-OR
+projects (www.coin-or.org). The AUTHORS, LICENSE and README files in 
+each of the subdirectories give more information about these projects.
 
-For the FlopCp README file, please see the file FlopCpp/README. For the
-README files of other COIN-OR projects included in this distribution, please
-see the README files in their associated subdirectories.

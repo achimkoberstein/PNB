@@ -1,4 +1,4 @@
-/* $Id: hello.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: hello.cpp 1559 2010-06-05 19:42:36Z stefan $ */
 /* Copyright (C) 2004, International Business Machines Corporation
    and others.  All Rights Reserved.
 
@@ -16,7 +16,7 @@
 
 #include "ClpSimplex.hpp"
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpSimplex  model;
      int status;

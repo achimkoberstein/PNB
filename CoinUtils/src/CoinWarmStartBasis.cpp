@@ -1,6 +1,8 @@
-/* $Id: CoinWarmStartBasis.cpp 1291 2010-05-13 14:37:11Z forrest $ */
+/* $Id: CoinWarmStartBasis.cpp 1373 2011-01-03 23:57:44Z lou $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -374,8 +376,6 @@ void CoinWarmStartBasis::mergeBasis (const CoinWarmStartBasis *src,
     { int srcNdx = (*xferSpec).first ;
       int tgtNdx = (*xferSpec).second ;
       int runLen = (*xferSpec).third ;
-      // adjust in case Pierre has changed size
-      runLen=CoinMin(runLen,srcRows-srcNdx);
       assert(srcNdx >= 0 && srcNdx+runLen <= srcRows) ;
       assert(tgtNdx >= 0 && tgtNdx+runLen <= getNumArtificial()) ;
       for (int i = 0 ; i < runLen ; i++)

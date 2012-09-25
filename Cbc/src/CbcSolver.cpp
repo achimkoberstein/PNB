@@ -1,6 +1,7 @@
 /* $Id: CbcSolver.cpp 1240 2009-10-02 18:41:44Z forrest $ */
 // Copyright (C) 2007, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 /*! \file CbcSolver.cpp
     \brief Second level routines for the cbc stand-alone solver.
@@ -40,12 +41,30 @@
 #include "ClpPrimalColumnDantzig.hpp"
 
 #include "ClpPresolve.hpp"
+#ifndef COIN_HAS_CBC
+#define COIN_HAS_CBC
+#endif
 #include "CbcOrClpParam.hpp"
 #include "OsiRowCutDebugger.hpp"
 #include "OsiChooseVariable.hpp"
 #include "OsiAuxInfo.hpp"
 
 #include "CbcSolverHeuristics.hpp"
+#ifdef COIN_HAS_GLPK
+#include "glpk.h"
+extern glp_tran* cbc_glp_tran;
+extern glp_prob* cbc_glp_prob;
+#else
+#define GLP_UNDEF 1
+#define GLP_FEAS 2
+#define GLP_INFEAS 3
+#define GLP_NOFEAS 4
+#define GLP_OPT 5
+#endif
+
+#ifndef CBC_QUIET
+#define CBC_QUIET 0
+#endif
 
 //#define USER_HAS_FAKE_CLP
 //#define USER_HAS_FAKE_CBC
@@ -169,7 +188,11 @@ static int initialPumpTune = -1;
 #ifdef ZERO_HALF_CUTS
 #include "CglZeroHalf.hpp"
 #endif
-
+//#define CGL_WRITEMPS 
+#ifdef CGL_WRITEMPS
+extern double * debugSolution;
+extern int debugNumberColumns;
+#endif
 #include "CbcModel.hpp"
 #include "CbcHeuristic.hpp"
 #include "CbcHeuristicLocal.hpp"
@@ -778,6 +801,7 @@ extern "C" {
         if (currentBranchModel != NULL) {
             currentBranchModel->setMaximumNodes(0); // stop at next node
             currentBranchModel->setMaximumSeconds(0.0); // stop
+            currentBranchModel->sayEventHappened(); // say why stopped
         }
         return;
     }
@@ -1021,10 +1045,10 @@ int callCbc1(const char * input2, CbcModel & model,
              int callBack(CbcModel * currentSolver, int whereFrom))
 {
     char * input = CoinStrdup(input2);
-    int length = strlen(input);
+    size_t length = strlen(input);
     bool blank = input[0] == '0';
     int n = blank ? 0 : 1;
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
         if (blank) {
             // look for next non blank
             if (input[i] == ' ') {
@@ -1044,11 +1068,11 @@ int callCbc1(const char * input2, CbcModel & model,
     }
     char ** argv = new char * [n+2];
     argv[0] = CoinStrdup("cbc");
-    int i = 0;
+    size_t i = 0;
     while (input[i] == ' ')
         i++;
     for (int j = 0; j < n; j++) {
-        int saveI = i;
+        size_t saveI = i;
         for (; i < length; i++) {
             // look for next blank
             if (input[i] != ' ') {
@@ -1080,10 +1104,11 @@ int callCbc1(const char * input2, CbcModel & model,
 #define CBCMAXPARAMETERS 200
 static CbcOrClpParam parameters[CBCMAXPARAMETERS];
 static int numberParameters = 0 ;
+CglPreProcess * cbcPreProcessPointer=NULL;
 
 int CbcClpUnitTest (const CbcModel & saveModel,
-                    std::string& dirMiplib, int testSwitch,
-                    double * stuff);
+                    const std::string& dirMiplib, int testSwitch,
+                    const double * stuff);
 
 int CbcMain1 (int argc, const char *argv[],
               CbcModel  & model)
@@ -1109,6 +1134,12 @@ int CbcMain1 (int argc, const char *argv[],
     CbcOrClpParam * parameters_ = parameters;
     int numberParameters_ = numberParameters;
     CbcModel & model_ = model;
+#ifdef CBC_USE_INITIAL_TIME
+    if (model_.useElapsedTime())
+      model_.setDblParam(CbcModel::CbcStartSeconds, CoinGetTimeOfDay());
+    else
+      model_.setDblParam(CbcModel::CbcStartSeconds, CoinCpuTime());
+#endif
     CbcModel * babModel_ = NULL;
     int returnMode = 1;
     CbcOrClpRead_mode = 1;
@@ -1176,14 +1207,18 @@ int CbcMain1 (int argc, const char *argv[],
         }
     }
     double time0;
+    double time0Elapsed = CoinGetTimeOfDay();
     {
         double time1 = CoinCpuTime(), time2;
         time0 = time1;
+	double time1Elapsed = time0Elapsed;
         bool goodModel = (originalSolver->getNumCols()) ? true : false;
 
         // register signal handler
         //CoinSighandler_t saveSignal=signal(SIGINT,signal_handler);
+#if CBC_QUIET < 2
         signal(SIGINT, signal_handler);
+#endif
         // Set up all non-standard stuff
         int cutPass = -1234567;
         int cutPassInTree = -1234567;
@@ -1618,9 +1653,23 @@ int CbcMain1 (int argc, const char *argv[],
             probingAction = 8;
         }
         std::string field;
+#if CBC_QUIET == 0
         if (!noPrinting_) {
-            sprintf(generalPrint, "Coin Cbc and Clp Solver version %s, build %s",
-                    CBC_VERSION, __DATE__);
+	   sprintf(generalPrint,
+		   "Welcome to the CBC MILP Solver \n");
+	    if (strcmp(CBC_VERSION, "trunk")){
+	       sprintf(generalPrint + strlen(generalPrint),
+		       "Version: %s \n", CBC_VERSION);
+	    }else{
+	       sprintf(generalPrint + strlen(generalPrint),
+		       "Version: Trunk (unstable) \n");
+	    }
+	    sprintf(generalPrint + strlen(generalPrint),
+		    "Build Date: %s \n", __DATE__);
+#ifdef CBC_SVN_REV
+	    sprintf(generalPrint + strlen(generalPrint),
+		    "Revision Number: %d \n", CBC_SVN_REV);
+#endif
             generalMessageHandler->message(CLP_GENERAL, generalMessages)
             << generalPrint
             << CoinMessageEol;
@@ -1642,15 +1691,17 @@ int CbcMain1 (int argc, const char *argv[],
                 << CoinMessageEol;
             }
         }
+#endif
         while (1) {
             // next command
             field = CoinReadGetCommand(argc, argv);
             // Reset time
             time1 = CoinCpuTime();
+	    time1Elapsed = CoinGetTimeOfDay();
             // adjust field if has odd trailing characters
             char temp [200];
             strcpy(temp, field.c_str());
-            int length = strlen(temp);
+            int length = static_cast<int>(strlen(temp));
             for (int k = length - 1; k >= 0; k--) {
                 if (temp[k] < ' ')
                     length--;
@@ -1677,10 +1728,10 @@ int CbcMain1 (int argc, const char *argv[],
             }
 
             // see if ? at end
-            int numberQuery = 0;
+            size_t numberQuery = 0;
             if (field != "?" && field != "???") {
-                int length = field.length();
-                int i;
+                size_t length = field.length();
+                size_t i;
                 for (i = length - 1; i > 0; i--) {
                     if (field[i] == '?')
                         numberQuery++;
@@ -1712,6 +1763,12 @@ int CbcMain1 (int argc, const char *argv[],
                 int valid;
                 numberGoodCommands++;
                 if (type == CBC_PARAM_ACTION_BAB && goodModel) {
+#ifndef CBC_USE_INITIAL_TIME
+		  if (model_.useElapsedTime())
+		    model_.setDblParam(CbcModel::CbcStartSeconds, CoinGetTimeOfDay());
+		  else
+		    model_.setDblParam(CbcModel::CbcStartSeconds, CoinCpuTime());
+#endif
                     // check if any integers
 #ifndef CBC_OTHER_SOLVER
 #ifdef COIN_HAS_ASL
@@ -1999,7 +2056,23 @@ int CbcMain1 (int argc, const char *argv[],
                                      parameters_[iParam].type() == CBC_PARAM_INT_FPUMPITS)
                                 pumpChanged = true;
                             else if (parameters_[iParam].type() == CBC_PARAM_INT_EXPERIMENT) {
+  			        int addFlags=0;
+				if (value>=10) {
+				  addFlags = 1048576*(value/10);
+				  value = value % 10;
+				  parameters[whichParam(CBC_PARAM_INT_EXPERIMENT, numberParameters, parameters)].setIntValue(value);
+				}
                                 if (value >= 1) {
+				    int values[]={24003,280003,792003,24003,24003};
+				    if (value>=2&&value<=3) {
+				      // swap default diving
+				      int iParam = whichParam(CBC_PARAM_STR_DIVINGC, numberParameters_, parameters_);
+				      parameters_[iParam].setCurrentOption("off");
+				      iParam = whichParam(CBC_PARAM_STR_DIVINGP, numberParameters_, parameters_);
+				      parameters_[iParam].setCurrentOption("on");
+				    }
+				    int extra4 = values[value-1]+addFlags;
+                                    parameters[whichParam(CBC_PARAM_INT_EXTRA4, numberParameters, parameters)].setIntValue(extra4);
                                     if (!noPrinting_) {
                                         generalMessageHandler->message(CLP_GENERAL, generalMessages)
                                         << "switching on global root cuts for gomory and knapsack"
@@ -2008,7 +2081,8 @@ int CbcMain1 (int argc, const char *argv[],
                                         << "using OSL factorization"
                                         << CoinMessageEol;
                                         generalMessageHandler->message(CLP_GENERAL, generalMessages)
-                                        << "extra options - -rens on -extra4 24003 -passc 1000!"
+                                        << "extra options - -rens on -extra4 "
+					<<extra4<<" -passc 1000!"
                                         << CoinMessageEol;
                                     }
                                     parameters[whichParam(CBC_PARAM_STR_PROBINGCUTS, numberParameters, parameters)].setCurrentOption("forceOnStrong");
@@ -2022,7 +2096,6 @@ int CbcMain1 (int argc, const char *argv[],
                                     parameters_[whichParam(CBC_PARAM_INT_MAXHOTITS, numberParameters_, parameters_)].setIntValue(100);
                                     parameters[whichParam(CBC_PARAM_INT_CUTPASS, numberParameters, parameters)].setIntValue(1000);
                                     cutPass = 1000;
-                                    parameters[whichParam(CBC_PARAM_INT_EXTRA4, numberParameters, parameters)].setIntValue(24003);
                                     parameters[whichParam(CBC_PARAM_STR_RENS, numberParameters, parameters)].setCurrentOption("on");
                                 }
                             } else if (parameters_[iParam].type() == CBC_PARAM_INT_STRATEGY) {
@@ -2209,6 +2282,9 @@ int CbcMain1 (int argc, const char *argv[],
                             break;
                         case CLP_PARAM_STR_CROSSOVER:
                             crossover = action;
+                            break;
+                        case CLP_PARAM_STR_TIME_MODE:
+			    model_.setUseElapsedTime(action!=0);
                             break;
                         case CBC_PARAM_STR_SOS:
                             doSOS = action;
@@ -2642,7 +2718,30 @@ int CbcMain1 (int argc, const char *argv[],
                                 }
                                 model_.setProblemStatus(iStatus);
                                 model_.setSecondaryStatus(iStatus2);
-                                //assert (lpSolver==clpSolver->getModelPtr());
+				if ((iStatus == 2 || iStatus2 > 0) &&
+				    !noPrinting_) {
+				   std::string statusName[] = {"", "Stopped on ", "Run abandoned", "", "", "User ctrl-c"};
+				   std::string minor[] = {"Optimal solution found", "Linear relaxation infeasible", "Optimal solution found (within gap tolerance)", "node limit", "time limit", "user ctrl-c", "solution limit", "Linear relaxation unbounded", "Problem proven infeasible"};
+				   sprintf(generalPrint, "\nResult - %s%s\n\n", 
+					   statusName[iStatus].c_str(), 
+					   minor[iStatus2].c_str());
+				   sprintf(generalPrint + strlen(generalPrint),
+					   "Enumerated nodes:           0\n");
+				   sprintf(generalPrint + strlen(generalPrint), 
+					   "Total iterations:           0\n");
+#if CBC_QUIET == 0
+				   sprintf(generalPrint + strlen(generalPrint),
+					   "Time (CPU seconds):         %.2f\n", 
+					   CoinCpuTime() - time0);
+				   sprintf(generalPrint + strlen(generalPrint),
+					   "Time (Wallclock Seconds):   %.2f\n", 
+					   CoinGetTimeOfDay()-time0Elapsed);
+#endif
+				   generalMessageHandler->message(CLP_GENERAL, generalMessages)
+				      << generalPrint
+				      << CoinMessageEol;
+				}
+				//assert (lpSolver==clpSolver->getModelPtr());
                                 assert (clpSolver == model_.solver());
                                 clpSolver->setWarmStart(NULL);
                                 // and in babModel if exists
@@ -2872,7 +2971,7 @@ int CbcMain1 (int argc, const char *argv[],
                                 extra[1] = parameters_[whichParam(CBC_PARAM_INT_EXTRA1, numberParameters_, parameters_)].intValue();
                                 int exp1 = parameters_[whichParam(CBC_PARAM_INT_EXPERIMENT, numberParameters_,
                                                                   parameters_)].intValue();
-                                if (exp1 == 2 && extra[1] == -1)
+                                if (exp1 == 4 && extra[1] == -1)
                                     extra[1] = 999998;
                                 dextra[1] = parameters_[whichParam(CBC_PARAM_DBL_FAKEINCREMENT, numberParameters_, parameters_)].doubleValue();
                                 dextra[2] = parameters_[whichParam(CBC_PARAM_DBL_FAKECUTOFF, numberParameters_, parameters_)].doubleValue();
@@ -3429,6 +3528,7 @@ int CbcMain1 (int argc, const char *argv[],
                             // See if we want preprocessing
                             OsiSolverInterface * saveSolver = NULL;
                             CglPreProcess process;
+			    cbcPreProcessPointer = & process;
                             // Say integers in sync
                             bool integersOK = true;
                             delete babModel_;
@@ -3468,7 +3568,7 @@ int CbcMain1 (int argc, const char *argv[],
 #endif
                             time2 = CoinCpuTime();
                             totalTime += time2 - time1;
-                            time1 = time2;
+                            //time1 = time2;
                             double timeLeft = babModel_->getMaximumSeconds();
                             int numberOriginalColumns = babModel_->solver()->getNumCols();
                             if (preProcess == 7) {
@@ -3484,6 +3584,22 @@ int CbcMain1 (int argc, const char *argv[],
                                 }
 #endif
                             }
+                            if (preProcess && type == CBC_PARAM_ACTION_BAB) {
+			      // see whether to switch off preprocessing
+			      // only allow SOS and integer
+			      OsiObject ** objects = babModel_->objects();
+			      int numberObjects = babModel_->numberObjects();
+			      for (int iObj = 0; iObj < numberObjects; iObj++) {
+				CbcSOS * objSOS =
+				  dynamic_cast <CbcSOS *>(objects[iObj]) ;
+				CbcSimpleInteger * objSimpleInteger =
+				  dynamic_cast <CbcSimpleInteger *>(objects[iObj]) ;
+				if (!objSimpleInteger&&!objSOS) {
+				  preProcess=0;
+				  break;
+				}
+			      }
+			    }
                             if (type == CBC_PARAM_ACTION_BAB) {
                                 double limit;
                                 clpSolver->getDblParam(OsiDualObjectiveLimit, limit);
@@ -3553,7 +3669,8 @@ int CbcMain1 (int argc, const char *argv[],
                                     if ((babModel_->specialOptions()&65536) != 0)
                                         process.setOptions(1);
                                     // Add in generators
-                                    process.addCutGenerator(&generator1);
+				    if ((model_.moreSpecialOptions()&65536)==0)
+				      process.addCutGenerator(&generator1);
                                     int translate[] = {9999, 0, 0, -3, 2, 3, -2, 9999, 4, 5};
                                     process.passInMessageHandler(babModel_->messageHandler());
                                     //process.messageHandler()->setLogLevel(babModel_->logLevel());
@@ -3656,6 +3773,8 @@ int CbcMain1 (int argc, const char *argv[],
                                         if (savePerturbation == 50)
                                             osiclp->getModelPtr()->setPerturbation(52); // try less
 #endif
+					if ((model_.moreSpecialOptions()&65536)!=0)
+					  process.setOptions(2+4+8); // no cuts
                                         solver2 = process.preProcessNonDefault(*saveSolver, translate[preProcess], numberPasses,
                                                                                tunePreProcess);
                                         /*solver2->writeMps("after");
@@ -3756,7 +3875,7 @@ int CbcMain1 (int argc, const char *argv[],
                                 babModel_->assignSolver(solver2);
                                 babModel_->setOriginalColumns(process.originalColumns());
                                 babModel_->initialSolve();
-                                babModel_->setMaximumSeconds(timeLeft - (CoinCpuTime() - time1));
+                                babModel_->setMaximumSeconds(timeLeft - (CoinCpuTime() - time2));
                             }
                             // now tighten bounds
                             if (!miplib) {
@@ -3917,8 +4036,10 @@ int CbcMain1 (int argc, const char *argv[],
                                                            parameters_)].intValue();
                             int bothFlags = CoinMax(CoinMin(experimentFlag, 1), strategyFlag);
                             // add cut generators if wanted
-                            int switches[20];
-                            int accuracyFlag[20];
+                            int switches[30];
+                            int accuracyFlag[30];
+			    char doAtEnd[30];
+			    memset(doAtEnd,0,30);
                             int numberGenerators = 0;
                             int translate[] = { -100, -1, -99, -98, 1, -1098, -999, 1, 1, 1, -1};
                             if (probingAction) {
@@ -3993,9 +4114,50 @@ int CbcMain1 (int argc, const char *argv[],
                                         gomoryGen.setLimit(cutLength % 10000000);
                                     }
                                 }
-                                babModel_->addCutGenerator(&gomoryGen, translate[gomoryAction], "Gomory");
-                                accuracyFlag[numberGenerators] = 3;
-                                switches[numberGenerators++] = 0;
+                                int laGomory = parameters_[whichParam(CBC_PARAM_STR_LAGOMORYCUTS, numberParameters_, parameters_)].currentOptionAsInteger();
+				int gType = translate[gomoryAction];
+				if (!laGomory) {
+				  // Normal
+				  babModel_->addCutGenerator(&gomoryGen, translate[gomoryAction], "Gomory");
+				  accuracyFlag[numberGenerators] = 3;
+				  switches[numberGenerators++] = 0;
+				} else {
+				  laGomory--;
+				  int type = (laGomory % 3)+1;
+				  int when = laGomory/3;
+				  char atEnd = (when<2) ? 1 : 0;
+				  int gomoryTypeMajor = 0;
+				  if (when<3) {
+				    // normal as well
+				    babModel_->addCutGenerator(&gomoryGen, gType, "Gomory");
+				    accuracyFlag[numberGenerators] = 3;
+				    switches[numberGenerators++] = 0;
+				    if (when==2)
+				      gomoryTypeMajor=10;
+				  } else {
+				    when--; // so on
+				    gomoryTypeMajor=20;
+				  }
+				  if (!when)
+				    gType=-99; // root
+				  gomoryGen.passInOriginalSolver(babModel_->solver());
+				  if ((type&1) !=0) {
+				    // clean
+				    gomoryGen.setGomoryType(gomoryTypeMajor+1);
+				    babModel_->addCutGenerator(&gomoryGen, gType, "GomoryL1");
+				    accuracyFlag[numberGenerators] = 3;
+				    doAtEnd[numberGenerators]=atEnd;
+				    switches[numberGenerators++] = 0;
+				  }
+				  if ((type&2) !=0) {
+				    // simple
+				    gomoryGen.setGomoryType(gomoryTypeMajor+2);
+				    babModel_->addCutGenerator(&gomoryGen, gType, "GomoryL2");
+				    accuracyFlag[numberGenerators] = 3;
+				    doAtEnd[numberGenerators]=atEnd;
+				    switches[numberGenerators++] = 0;
+				  }
+				}
                             }
 #ifdef CLIQUE_ANALYSIS
                             if (miplib && !storedAmpl.sizeRowCuts()) {
@@ -4081,6 +4243,10 @@ int CbcMain1 (int argc, const char *argv[],
                                 //if (switches[iGenerator]==-2)
                                 //generator->setWhetherToUse(true);
                                 generator->setInaccuracy(accuracyFlag[iGenerator]);
+				if (doAtEnd[iGenerator]) {
+				  generator->setWhetherCallAtEnd(true);
+				  generator->setMustCallAgain(true);
+				}
                                 generator->setTiming(true);
                                 if (cutDepth >= 0)
                                     generator->setWhatDepth(cutDepth) ;
@@ -4229,7 +4395,7 @@ int CbcMain1 (int argc, const char *argv[],
                                     // try reduced model
                                     babModel_->setSpecialOptions(babModel_->specialOptions() | 512);
                                 }
-                                if (experimentFlag >= 3 || strategyFlag == 2) {
+                                if (experimentFlag >= 5 || strategyFlag == 2) {
                                     // try reduced model at root
                                     babModel_->setSpecialOptions(babModel_->specialOptions() | 32768);
                                 }
@@ -5278,13 +5444,24 @@ int CbcMain1 (int argc, const char *argv[],
                                 if (lpSolver->factorization()->goOslThreshold() > 1000) {
                                     // use osl in gomory (may not if CglGomory decides not to)
                                     int numberGenerators = babModel_->numberCutGenerators();
+				    int nGomory=0;
                                     for (int iGenerator = 0; iGenerator < numberGenerators;
                                             iGenerator++) {
                                         CbcCutGenerator * generator = babModel_->cutGenerator(iGenerator);
                                         CglGomory * gomory = dynamic_cast<CglGomory *>
                                                              (generator->generator());
-                                        if (gomory)
+                                        if (gomory) {
+					  if (nGomory<2) {
                                             gomory->useAlternativeFactorization();
+					  } else if (gomory->originalSolver()) {
+					    OsiClpSolverInterface * clpSolver = dynamic_cast<OsiClpSolverInterface *>(gomory->originalSolver());
+					    if (clpSolver) {
+					      ClpSimplex * simplex = clpSolver->getModelPtr();
+					      simplex->factorization()->setGoOslThreshold(0);
+					    }
+					  }
+					    nGomory++;
+					}
                                     }
                                 }
 #endif
@@ -5344,7 +5521,7 @@ int CbcMain1 (int argc, const char *argv[],
                                     compare.setBreadthDepth(hOp1 % 10);
                                     babModel_->setNodeComparison(compare);
                                 }
-#if defined(CBC_OTHER_SOLVER)||defined(COIN_HAS_CPX)
+#if CBC_OTHER_SOLVER==1
                                 if (dynamic_cast<OsiCpxSolverInterface *> (babModel_->solver()))
                                     babModel_->solver()->messageHandler()->setLogLevel(0);
 #endif
@@ -5359,7 +5536,7 @@ int CbcMain1 (int argc, const char *argv[],
                                     if (babModel_->fastNodeDepth() == -1)
                                         babModel_->setFastNodeDepth(-2); // Use Cplex at root
                                 }
-                                if (experimentFlag >= 2) {
+                                if (experimentFlag >= 5) {
                                     CbcModel donor(*babModel_);
                                     int options = babModel_->specialOptions();
                                     donor.setSpecialOptions(options | 262144);
@@ -5436,8 +5613,8 @@ int CbcMain1 (int argc, const char *argv[],
                                     }
                                 }
 #endif
-                                void printHistory(const char * file);
-                                printHistory("branch.log");
+                                void printHistory(const char * file/*,CbcModel * model*/);
+                                printHistory("branch.log"/*,babModel_*/);
 #endif
                                 returnCode = callBack(babModel_, 4);
                                 if (returnCode) {
@@ -5802,6 +5979,9 @@ int CbcMain1 (int argc, const char *argv[],
 #ifdef COIN_DEVELOP
                                         saveSolver->writeMps("inf2");
 #endif
+					OsiClpSolverInterface * osiclp = dynamic_cast< OsiClpSolverInterface*> (saveSolver);
+					if (osiclp)
+					  osiclp->getModelPtr()->checkUnscaledSolution();
                                     }
                                     assert (saveSolver->isProvenOptimal());
 #ifndef CBC_OTHER_SOLVER
@@ -5822,6 +6002,9 @@ int CbcMain1 (int argc, const char *argv[],
                                         originalSolver->setBasis(*basis);
                                         delete basis;
                                         originalSolver->initialSolve();
+					OsiClpSolverInterface * osiclp = dynamic_cast< OsiClpSolverInterface*> (originalSolver);
+					if (osiclp)
+					  osiclp->getModelPtr()->checkUnscaledSolution();
                                     }
                                     assert (originalSolver->isProvenOptimal());
 #endif
@@ -5866,6 +6049,9 @@ int CbcMain1 (int argc, const char *argv[],
                                         originalSolver->setBasis(*basis);
                                         delete basis;
                                         originalSolver->initialSolve();
+					OsiClpSolverInterface * osiclp = dynamic_cast< OsiClpSolverInterface*> (originalSolver);
+					if (osiclp)
+					  osiclp->getModelPtr()->checkUnscaledSolution();
 #ifdef CLP_INVESTIGATE
                                         if (!originalSolver->isProvenOptimal()) {
                                             if (saveSolver) {
@@ -5892,6 +6078,7 @@ int CbcMain1 (int argc, const char *argv[],
                                 // Put solution now back in saveSolver
                                 saveSolver->setColSolution(model_.bestSolution());
                                 babModel_->assignSolver(saveSolver);
+				saveSolver=NULL;
                                 babModel_->setMinimizationObjValue(model_.getMinimizationObjValue());
                                 memcpy(bestSolution, babModel_->solver()->getColSolution(), n*sizeof(double));
 #ifndef CBC_OTHER_SOLVER
@@ -5954,15 +6141,16 @@ int CbcMain1 (int argc, const char *argv[],
                                     model_.solver()->setColSolution(bestSolution);
                                 }
 #endif
+				delete saveSolver;
                                 delete [] bestSolution;
-                                std::string statusName[] = {"Finished", "Stopped on ", "Difficulties",
-                                                            "", "", "User ctrl-c"
-                                                           };
-                                std::string minor[] = {"", "", "gap", "nodes", "time", "", "solutions", "user ctrl-c", "proven-infeasible"};
+				std::string statusName[] = {"", "Stopped on ", "Run abandoned", "", "", "User ctrl-c"};
+				std::string minor[] = {"Optimal solution found", "Linear relaxation infeasible", "Optimal solution found (within gap tolerance)", "node limit", "time limit", "user ctrl-c", "solution limit", "Linear relaxation unbounded", "Problem proven infeasible"};
                                 int iStat = babModel_->status();
                                 int iStat2 = babModel_->secondaryStatus();
                                 if (!iStat && !iStat2 && !bestSolution)
                                     iStat2 = 8;
+                                if (!iStat && iStat2==1 && bestSolution)
+				  iStat2 = 0; // solution and search completed
                                 statistics_seconds = time2 - time1;
                                 statistics_sys_seconds = CoinSysTime();
                                 statistics_elapsed_seconds = CoinWallclockTime();
@@ -5973,13 +6161,47 @@ int CbcMain1 (int argc, const char *argv[],
                                 statistics_iterations = babModel_->getIterationCount();;
                                 statistics_result = statusName[iStat];;
                                 if (!noPrinting_) {
-                                    sprintf(generalPrint, "Result - %s%s objective %.16g after %d nodes and %d iterations - took %.2f seconds (total time %.2f)",
-                                            statusName[iStat].c_str(), minor[iStat2].c_str(),
-                                            babModel_->getObjValue(), babModel_->getNodeCount(),
-                                            babModel_->getIterationCount(), time2 - time1, time2 - time0);
-                                    generalMessageHandler->message(CLP_GENERAL, generalMessages)
-                                    << generalPrint
-                                    << CoinMessageEol;
+				    sprintf(generalPrint, "\nResult - %s%s\n", 
+					    statusName[iStat].c_str(), 
+					    minor[iStat2].c_str());
+				    generalMessageHandler->message(CLP_GENERAL, generalMessages)
+				       << generalPrint
+				       << CoinMessageEol;
+				    if (babModel_->bestSolution()){
+				      sprintf(generalPrint, 
+					      "Objective value:                %.8f\n", 
+					      babModel_->getObjValue());
+				    }else{
+				      sprintf(generalPrint,
+					      "No feasible solution found\n");
+				    }
+				    if (iStat2 >= 2 && iStat2 <=6){
+				       sprintf(generalPrint + strlen(generalPrint), 
+					       "Lower bound:                    %.3f\n", 
+					       babModel_->getBestPossibleObjValue());
+				       if (babModel_->bestSolution()){
+					  sprintf(generalPrint + strlen(generalPrint), 
+						  "Gap:                            %.2f\n", 
+						  (babModel_->getObjValue()-babModel_->getBestPossibleObjValue())/babModel_->getBestPossibleObjValue());
+				       }
+				    }
+				    sprintf(generalPrint + strlen(generalPrint), 
+					    "Enumerated nodes:               %d\n", 
+					    babModel_->getNodeCount());
+				    sprintf(generalPrint + strlen(generalPrint), 
+					    "Total iterations:               %d\n", 
+					    babModel_->getIterationCount());
+#if CBC_QUIET == 0
+				    sprintf(generalPrint + strlen(generalPrint), 
+					    "Time (CPU seconds):             %.2f\n",
+					    CoinCpuTime() - time1);
+				    sprintf(generalPrint + strlen(generalPrint),
+					    "Time (Wallclock seconds):       %.2f\n", 
+					    CoinGetTimeOfDay() - time1Elapsed);
+#endif
+				    generalMessageHandler->message(CLP_GENERAL, generalMessages)
+				       << generalPrint
+				       << CoinMessageEol;
                                 }
                                 int returnCode = callBack(babModel_, 5);
                                 if (returnCode) {
@@ -5989,6 +6211,78 @@ int CbcMain1 (int argc, const char *argv[],
                                     babModel_ = NULL;
                                     return returnCode;
                                 }
+#ifdef COIN_HAS_ASL
+				if (statusUserFunction_[0]) {
+				   clpSolver = dynamic_cast< OsiClpSolverInterface*> (babModel_->solver());
+				   lpSolver = clpSolver->getModelPtr();
+				   double value = babModel_->getObjValue()*lpSolver->getObjSense();
+				   char buf[300];
+				   int pos=0;
+				   if (iStat==0) {
+				      if (babModel_->getObjValue()<1.0e40) {
+					 pos += sprintf(buf+pos,"optimal," );
+				      } else {
+					 // infeasible
+					 iStat=1;
+					 pos += sprintf(buf+pos,"infeasible,");
+				      }
+				   } else if (iStat==1) {
+				      if (iStat2!=6)
+					 iStat=3;
+				      else
+					 iStat=4;
+				      pos += sprintf(buf+pos,"stopped on %s,",minor[iStat2].c_str());
+				   } else if (iStat==2) {
+				      iStat = 7;
+				      pos += sprintf(buf+pos,"stopped on difficulties,");
+				   } else if (iStat==5) {
+				      iStat = 3;
+				      pos += sprintf(buf+pos,"stopped on ctrl-c,");
+				   } else {
+				      pos += sprintf(buf+pos,"status unknown,");
+				      iStat=6;
+				   }
+				   info.problemStatus=iStat;
+				   info.objValue = value;
+				   if (babModel_->getObjValue()<1.0e40) {
+				      int precision = ampl_obj_prec();
+				      if (precision>0)
+					 pos += sprintf(buf+pos," objective %.*g",precision,
+							value);
+				      else
+					 pos += sprintf(buf+pos," objective %g",value);
+				   }
+				   sprintf(buf+pos,"\n%d nodes, %d iterations, %g seconds",
+					   babModel_->getNodeCount(),
+					   babModel_->getIterationCount(),
+					   totalTime);
+				   if (bestSolution) {
+				      free(info.primalSolution);
+				      if (!numberKnapsack) {
+					 info.primalSolution = (double *) malloc(n*sizeof(double));
+					 CoinCopyN(lpSolver->primalColumnSolution(),n,info.primalSolution);
+					 int numberRows = lpSolver->numberRows();
+					 free(info.dualSolution);
+					 info.dualSolution = (double *) malloc(numberRows*sizeof(double));
+					 CoinCopyN(lpSolver->dualRowSolution(),numberRows,info.dualSolution);
+				      } else {
+					 // expanded knapsack
+					 info.dualSolution=NULL;
+					 int numberColumns = saveCoinModel.numberColumns();
+					 info.primalSolution = (double *) malloc(numberColumns*sizeof(double));
+					 // Fills in original solution (coinModel length)
+					 afterKnapsack(saveTightenedModel,  whichColumn,  knapsackStart,
+					 	       knapsackRow,  numberKnapsack,
+					 	       lpSolver->primalColumnSolution(), info.primalSolution,1);
+				      }
+				   } else {
+				      info.primalSolution=NULL;
+				      info.dualSolution=NULL;
+				   }
+				   // put buffer into info
+				   strcpy(info.buffer,buf);
+				}
+#endif
                             } else {
                                 std::cout << "Model strengthened - now has " << clpSolver->getNumRows()
                                           << " rows" << std::endl;
@@ -6068,7 +6362,7 @@ int CbcMain1 (int argc, const char *argv[],
                             // See if .lp
                             {
                                 const char * c_name = field.c_str();
-                                int length = strlen(c_name);
+                                size_t length = strlen(c_name);
                                 if (length > 3 && !strncmp(c_name + length - 3, ".lp", 3))
                                     gmpl = -1; // .lp
                             }
@@ -6085,6 +6379,17 @@ int CbcMain1 (int argc, const char *argv[],
                             }
                             if (absolutePath) {
                                 fileName = field;
+				size_t length = field.size();
+				size_t percent = field.find('%');
+				if (percent < length && percent > 0) {
+				  gmpl = 1;
+				  fileName = field.substr(0, percent);
+				  gmplData = field.substr(percent + 1);
+				  if (percent < length - 1)
+				    gmpl = 2; // two files
+				  printf("GMPL model file %s and data file %s\n",
+					 fileName.c_str(), gmplData.c_str());
+				}
                             } else if (field[0] == '~') {
                                 char * environVar = getenv("HOME");
                                 if (environVar) {
@@ -6097,8 +6402,8 @@ int CbcMain1 (int argc, const char *argv[],
                             } else {
                                 fileName = directory + field;
                                 // See if gmpl (model & data) - or even lp file
-                                int length = field.size();
-                                int percent = field.find('%');
+                                size_t length = field.size();
+                                size_t percent = field.find('%');
                                 if (percent<length && percent>0) {
                                     gmpl = 1;
                                     fileName = directory + field.substr(0, percent);
@@ -6140,14 +6445,18 @@ int CbcMain1 (int argc, const char *argv[],
                                                             (gmpl == 2) ? gmplData.c_str() : NULL,
                                                             keepImportNames != 0);
                             } else {
+#ifdef KILL_ZERO_READLP
+                                status = lpSolver->readLp(fileName.c_str(), lpSolver->getSmallElementValue());
+#else
                                 status = lpSolver->readLp(fileName.c_str(), 1.0e-12);
+#endif
                             }
 #else
                             status = clpSolver->readMps(fileName.c_str(), "");
 #endif
                             if (!status || (status > 0 && allowImportErrors)) {
 #ifndef CBC_OTHER_SOLVER
-                                if (keepImportNames && gmpl <= 0) {
+                                if (keepImportNames) {
                                     lengthName = lpSolver->lengthNames();
                                     rowNames = *(lpSolver->rowNames());
                                     columnNames = *(lpSolver->columnNames());
@@ -6823,7 +7132,7 @@ int CbcMain1 (int argc, const char *argv[],
                                 // can open - lets go for it
                                 int numRows;
                                 double obj;
-                                int nRead;
+                                size_t nRead;
                                 nRead = fread(&numRows, sizeof(int), 1, fp);
                                 if (nRead != 1)
                                     throw("Error in fread");
@@ -6835,15 +7144,19 @@ int CbcMain1 (int argc, const char *argv[],
                                     throw("Error in fread");
                                 debugValues = new double[numberDebugValues+numRows];
                                 nRead = fread(debugValues, sizeof(double), numRows, fp);
-                                if (nRead != numRows)
+                                if (nRead != static_cast<size_t>(numRows))
                                     throw("Error in fread");
                                 nRead = fread(debugValues, sizeof(double), numRows, fp);
-                                if (nRead != numRows)
+                                if (nRead != static_cast<size_t>(numRows))
                                     throw("Error in fread");
                                 nRead = fread(debugValues, sizeof(double), numberDebugValues, fp);
-                                if (nRead != numberDebugValues)
+                                if (nRead != static_cast<size_t>(numberDebugValues))
                                     throw("Error in fread");
                                 printf("%d doubles read into debugValues\n", numberDebugValues);
+#ifdef CGL_WRITEMPS
+				debugSolution = debugValues;
+				debugNumberColumns = numberDebugValues;
+#endif
                                 if (numberDebugValues < 200) {
                                     for (int i = 0; i < numberDebugValues; i++) {
                                         if (clpSolver->isInteger(i) && debugValues[i])
@@ -7081,8 +7394,8 @@ int CbcMain1 (int argc, const char *argv[],
                     case CLP_PARAM_ACTION_DIRECTORY: {
                         std::string name = CoinReadGetString(argc, argv);
                         if (name != "EOL") {
-                            int length = name.length();
-                            if (name[length-1] == dirsep) {
+                            size_t length = name.length();
+                            if (length > 0 && name[length-1] == dirsep) {
                                 directory = name;
                             } else {
                                 directory = name + dirsep;
@@ -7096,8 +7409,8 @@ int CbcMain1 (int argc, const char *argv[],
                     case CLP_PARAM_ACTION_DIRSAMPLE: {
                         std::string name = CoinReadGetString(argc, argv);
                         if (name != "EOL") {
-                            int length = name.length();
-                            if (name[length-1] == dirsep) {
+                            size_t length = name.length();
+                            if (length > 0 && name[length-1] == dirsep) {
                                 dirSample = name;
                             } else {
                                 dirSample = name + dirsep;
@@ -7111,8 +7424,8 @@ int CbcMain1 (int argc, const char *argv[],
                     case CLP_PARAM_ACTION_DIRNETLIB: {
                         std::string name = CoinReadGetString(argc, argv);
                         if (name != "EOL") {
-                            int length = name.length();
-                            if (name[length-1] == dirsep) {
+                            size_t length = name.length();
+                            if (length > 0 && name[length-1] == dirsep) {
                                 dirNetlib = name;
                             } else {
                                 dirNetlib = name + dirsep;
@@ -7126,8 +7439,8 @@ int CbcMain1 (int argc, const char *argv[],
                     case CBC_PARAM_ACTION_DIRMIPLIB: {
                         std::string name = CoinReadGetString(argc, argv);
                         if (name != "EOL") {
-                            int length = name.length();
-                            if (name[length-1] == dirsep) {
+                            size_t length = name.length();
+                            if (length > 0 && name[length-1] == dirsep) {
                                 dirMiplib = name;
                             } else {
                                 dirMiplib = name + dirsep;
@@ -7305,7 +7618,7 @@ int CbcMain1 (int argc, const char *argv[],
 #endif
                         break;
                     case CLP_PARAM_ACTION_HELP:
-                        std::cout << "Coin Solver version " << CBC_VERSION
+                        std::cout << "Cbc version " << CBC_VERSION
                                   << ", build " << __DATE__ << std::endl;
                         std::cout << "Non default values:-" << std::endl;
                         std::cout << "Perturbation " << lpSolver->perturbation() << " (default 100)"
@@ -7402,9 +7715,15 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                     }
                     break;
                     case CLP_PARAM_ACTION_SOLUTION:
+                    case CLP_PARAM_ACTION_GMPL_SOLUTION:
                         if (goodModel) {
                             // get next field
                             field = CoinReadGetString(argc, argv);
+			    bool append = false;
+			    if (field == "append$") {
+			      field = "$";
+			      append = true;
+			    }
                             if (field == "$") {
                                 field = parameters_[iParam].stringValue();
                             } else if (field == "EOL") {
@@ -7447,19 +7766,138 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                 } else {
                                     fileName = directory + field;
                                 }
-                                fp = fopen(fileName.c_str(), "w");
+				if (!append)
+				  fp = fopen(fileName.c_str(), "w");
+				else
+				  fp = fopen(fileName.c_str(), "a");
                             }
                             if (fp) {
 #ifndef CBC_OTHER_SOLVER
-                                if (printMode != 5) {
+			      // See if Glpk 
+			      if (type == CLP_PARAM_ACTION_GMPL_SOLUTION) {
+				int numberRows = lpSolver->getNumRows();
+				int numberColumns = lpSolver->getNumCols();
+				int numberGlpkRows=numberRows+1;
+#ifdef COIN_HAS_GLPK
+				if (cbc_glp_prob) {
+				  // from gmpl
+				  numberGlpkRows=glp_get_num_rows(cbc_glp_prob);
+				  if (numberGlpkRows!=numberRows)
+				    printf("Mismatch - cbc %d rows, glpk %d\n",
+					   numberRows,numberGlpkRows);
+				}
+#endif
+				fprintf(fp,"%d %d\n",numberGlpkRows,
+					numberColumns);
+				int iStat = lpSolver->status();
+				int iStat2 = GLP_UNDEF;
+				bool integerProblem = false;
+				if (integerStatus >= 0){
+				  iStat = integerStatus;
+				  integerProblem = true;
+				}
+				if (iStat == 0) {
+				  // optimal
+				  if (integerProblem)
+				    iStat2 = GLP_OPT;
+				  else
+				    iStat2 = GLP_FEAS;
+				} else if (iStat == 1) {
+				  // infeasible
+				  iStat2 = GLP_NOFEAS;
+				} else if (iStat == 2) {
+				  // unbounded
+				  // leave as 1
+				} else if (iStat >= 3 && iStat <= 5) {
+				  if (babModel_ && !babModel_->bestSolution())
+				    iStat2 = GLP_NOFEAS;
+				  else
+				    iStat2 = GLP_FEAS;
+				} else if (iStat == 6) {
+				  // bab infeasible
+				  iStat2 = GLP_NOFEAS;
+				}
+				lpSolver->computeObjectiveValue(false);
+				double objValue = clpSolver->getObjValue(); 
+				if (integerProblem)
+				  fprintf(fp,"%d %g\n",iStat2,objValue);
+				else
+				  fprintf(fp,"%d 2 %g\n",iStat2,objValue);
+				if (numberGlpkRows > numberRows) {
+				  // objective as row
+				  if (integerProblem) {
+				    fprintf(fp,"%g\n",objValue);
+				  } else {
+				    fprintf(fp,"4 %g 1.0\n",objValue);
+				  }
+				}
+				int lookup[6]=
+				  {4,1,3,2,4,5};
+				const double * primalRowSolution =
+				  lpSolver->primalRowSolution();
+				const double * dualRowSolution =
+				  lpSolver->dualRowSolution();
+				for (int i=0;i<numberRows;i++) {
+				  if (integerProblem) {
+				    fprintf(fp,"%g\n",primalRowSolution[i]);
+				  } else {
+				    fprintf(fp,"%d %g %g\n",lookup[lpSolver->getRowStatus(i)],
+								   primalRowSolution[i],dualRowSolution[i]);
+				  }
+				}
+				const double * primalColumnSolution =
+				  lpSolver->primalColumnSolution();
+				const double * dualColumnSolution =
+				  lpSolver->dualColumnSolution();
+				for (int i=0;i<numberColumns;i++) {
+				  if (integerProblem) {
+				    fprintf(fp,"%g\n",primalColumnSolution[i]);
+				  } else {
+				    fprintf(fp,"%d %g %g\n",lookup[lpSolver->getColumnStatus(i)],
+								   primalColumnSolution[i],dualColumnSolution[i]);
+				  }
+				}
+				fclose(fp);
+#ifdef COIN_HAS_GLPK
+				if (cbc_glp_prob) {
+				  if (integerProblem) {
+				    glp_read_mip(cbc_glp_prob,fileName.c_str());
+				    glp_mpl_postsolve(cbc_glp_tran,
+						      cbc_glp_prob,
+						      GLP_MIP);
+				  } else {
+				    glp_read_sol(cbc_glp_prob,fileName.c_str());
+				    glp_mpl_postsolve(cbc_glp_tran,
+						      cbc_glp_prob,
+						      GLP_SOL);
+				  }
+				  // free up as much as possible
+				  glp_free(cbc_glp_prob);
+				  glp_mpl_free_wksp(cbc_glp_tran);
+				  cbc_glp_prob = NULL;
+				  cbc_glp_tran = NULL;
+				  //gmp_free_mem();
+				  /* check that no memory blocks are still allocated */
+				  glp_free_env();
+				}
+#endif
+				break;
+			      }
+                                if (printMode < 5) {
                                     // Write solution header (suggested by Luigi Poderico)
                                     lpSolver->computeObjectiveValue(false);
-                                    double objValue = lpSolver->getObjValue() * lpSolver->getObjSense();
+                                    double objValue = lpSolver->getObjValue();
                                     int iStat = lpSolver->status();
-                                    if (integerStatus >= 0)
+				    int iStat2 = -1;
+                                    if (integerStatus >= 0){
                                         iStat = integerStatus;
+					iStat2 = babModel_->secondaryStatus();
+				    }
                                     if (iStat == 0) {
                                         fprintf(fp, "Optimal" );
+					if (iStat2 == 2){
+					   fprintf(fp, " (within gap tolerance)" );
+					}
                                     } else if (iStat == 1) {
                                         // infeasible
                                         fprintf(fp, "Infeasible" );
@@ -7467,21 +7905,26 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                         // unbounded
                                         fprintf(fp, "Unbounded" );
                                     } else if (iStat >= 3 && iStat <= 5) {
-                                        if (iStat == 3)
-                                            fprintf(fp, "Stopped on iterations or time" );
-                                        else if (iStat == 4)
-                                            fprintf(fp, "Stopped on difficulties" );
-                                        else
-                                            fprintf(fp, "Stopped on ctrl-c" );
+				        if (iStat == 3) {
+					    if (iStat2 == 4){
+					        fprintf(fp, "Stopped on time" );
+					    }else{
+					        fprintf(fp, "Stopped on iterations" );
+					    }
+					} else if (iStat == 4){
+					    fprintf(fp, "Stopped on difficulties" );
+					} else {
+					    fprintf(fp, "Stopped on ctrl-c" );
+					}
                                         if (babModel_ && !babModel_->bestSolution())
                                             fprintf(fp, " (no integer solution - continuous used)");
                                     } else if (iStat == 6) {
-                                        // bab infeasible
-                                        fprintf(fp, "Integer infeasible" );
+				         // bab infeasible
+				         fprintf(fp, "Integer infeasible" );
                                     } else {
-                                        fprintf(fp, "Status unknown" );
+				         fprintf(fp, "Status unknown" );
                                     }
-                                    fprintf(fp, " - objective value %15.8g\n", objValue);
+                                    fprintf(fp, " - objective value %.8f\n", objValue);
                                 }
 #endif
                                 // make fancy later on
@@ -7494,7 +7937,7 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                 const double * rowUpper = clpSolver->getRowUpper();
                                 double primalTolerance ;
                                 clpSolver->getDblParam(OsiPrimalTolerance, primalTolerance);
-                                int lengthPrint = CoinMax(lengthName, 8);
+                                size_t lengthPrint = static_cast<size_t>(CoinMax(lengthName, 8));
                                 bool doMask = (printMask != "" && lengthName);
                                 int * maskStarts = NULL;
                                 int maxMasks = 0;
@@ -7503,8 +7946,8 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                     int nAst = 0;
                                     const char * pMask2 = printMask.c_str();
                                     char pMask[100];
-                                    int iChar;
-                                    int lengthMask = strlen(pMask2);
+                                    size_t iChar;
+                                    size_t lengthMask = strlen(pMask2);
                                     assert (lengthMask < 100);
                                     if (*pMask2 == '"') {
                                         if (pMask2[lengthMask-1] != '"') {
@@ -7525,7 +7968,7 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                     } else {
                                         strcpy(pMask, pMask2);
                                     }
-                                    if (lengthMask > lengthName) {
+                                    if (lengthMask > static_cast<size_t>(lengthName)) {
                                         printf("mask %s too long - skipping\n", pMask);
                                         break;
                                     }
@@ -7553,12 +7996,12 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                             char * oldMask = masks[iEntry];
                                             char * ast = strchr(oldMask, '*');
                                             assert (ast);
-                                            int length = strlen(oldMask) - 1;
-                                            int nBefore = ast - oldMask;
-                                            int nAfter = length - nBefore;
+                                            size_t length = strlen(oldMask) - 1;
+                                            size_t nBefore = ast - oldMask;
+                                            size_t nAfter = length - nBefore;
                                             // and add null
                                             nAfter++;
-                                            for (int i = 0; i <= lengthName - length; i++) {
+                                            for (int i = 0; i <= lengthName - static_cast<int>(length); i++) {
                                                 char * maskOut = newMasks[nEntries];
                                                 memcpy(maskOut, oldMask, nBefore);
                                                 for (int k = 0; k < i; k++)
@@ -7576,11 +8019,11 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                     int * sort = new int[nEntries];
                                     for (i = 0; i < nEntries; i++) {
                                         char * maskThis = masks[i];
-                                        int length = strlen(maskThis);
-                                        while (maskThis[length-1] == ' ')
+                                        size_t length = strlen(maskThis);
+                                        while (length > 0 && maskThis[length-1] == ' ')
                                             length--;
                                         maskThis[length] = '\0';
-                                        sort[i] = length;
+                                        sort[i] = static_cast<int>(length);
                                     }
                                     CoinSort_2(sort, sort + nEntries, masks);
                                     int lastLength = -1;
@@ -7595,6 +8038,146 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                         delete [] newMasks[i];
                                     delete [] newMasks;
                                 }
+				if (printMode > 5) {
+				  ClpSimplex * solver = clpSolver->getModelPtr();
+				  int numberColumns = solver->numberColumns();
+				  // column length unless rhs ranging
+				  int number = numberColumns;
+				  switch (printMode) {
+				    // bound ranging
+				  case 6:
+				    fprintf(fp,"Bound ranging");
+				    break;
+				    // rhs ranging
+				  case 7:
+				    fprintf(fp,"Rhs ranging");
+				    number = numberRows;
+				    break;
+				    // objective ranging
+				  case 8:
+				    fprintf(fp,"Objective ranging");
+				    break;
+				  }
+				  if (lengthName)
+				    fprintf(fp,",name");
+				  fprintf(fp,",increase,variable,decrease,variable\n");
+				  int * which = new int [ number];
+				  if (printMode != 7) {
+				    if (!doMask) {
+				      for (int i = 0; i < number;i ++)
+					which[i]=i;
+				    } else {
+				      int n = 0;
+				      for (int i = 0; i < number;i ++) {
+					if (maskMatches(maskStarts,masks,columnNames[i]))
+					  which[n++]=i;
+				      }
+				      if (n) {
+					number=n;
+				      } else {
+					printf("No names match - doing all\n");
+					for (int i = 0; i < number;i ++)
+					  which[i]=i;
+				      }
+				    }
+				  } else {
+				    if (!doMask) {
+				    for (int i = 0; i < number;i ++)
+				      which[i]=i+numberColumns;
+				    } else {
+				      int n = 0;
+				      for (int i = 0; i < number;i ++) {
+					if (maskMatches(maskStarts,masks,rowNames[i]))
+					  which[n++]=i+numberColumns;
+				      }
+				      if (n) {
+					number=n;
+				      } else {
+					printf("No names match - doing all\n");
+					for (int i = 0; i < number;i ++)
+					  which[i]=i+numberColumns;
+				      }
+				    }
+				  }
+				  double * valueIncrease = new double [ number];
+				  int * sequenceIncrease = new int [ number];
+				  double * valueDecrease = new double [ number];
+				  int * sequenceDecrease = new int [ number];
+				  switch (printMode) {
+				    // bound or rhs ranging
+				  case 6:
+				  case 7:
+				    solver->primalRanging(numberRows,
+								 which, valueIncrease, sequenceIncrease,
+								 valueDecrease, sequenceDecrease);
+				    break;
+				    // objective ranging
+				  case 8:
+				    solver->dualRanging(number,
+							       which, valueIncrease, sequenceIncrease,
+							       valueDecrease, sequenceDecrease);
+				    break;
+				  }
+				  for (int i = 0; i < number; i++) {
+				    int iWhich = which[i];
+				    fprintf(fp, "%d,", (iWhich<numberColumns) ? iWhich : iWhich-numberColumns);
+				    if (lengthName) {
+				      const char * name = (printMode==7) ? rowNames[iWhich-numberColumns].c_str() : columnNames[iWhich].c_str();
+				      fprintf(fp,"%s,",name);
+				    }
+				    if (valueIncrease[i]<1.0e30) {
+				      fprintf(fp, "%.10g,", valueIncrease[i]);
+				      int outSequence = sequenceIncrease[i];
+				      if (outSequence<numberColumns) {
+					if (lengthName)
+					  fprintf(fp,"%s,",columnNames[outSequence].c_str());
+					else
+					  fprintf(fp,"C%7.7d,",outSequence);
+				      } else {
+					outSequence -= numberColumns;
+					if (lengthName)
+					  fprintf(fp,"%s,",rowNames[outSequence].c_str());
+					else
+					  fprintf(fp,"R%7.7d,",outSequence);
+				      }
+				    } else {
+				      fprintf(fp,"1.0e100,,");
+				    }
+				    if (valueDecrease[i]<1.0e30) {
+				      fprintf(fp, "%.10g,", valueDecrease[i]);
+				      int outSequence = sequenceDecrease[i];
+				      if (outSequence<numberColumns) {
+					if (lengthName)
+					  fprintf(fp,"%s",columnNames[outSequence].c_str());
+					else
+					  fprintf(fp,"C%7.7d",outSequence);
+				      } else {
+					outSequence -= numberColumns;
+					if (lengthName)
+					  fprintf(fp,"%s",rowNames[outSequence].c_str());
+					else
+					  fprintf(fp,"R%7.7d",outSequence);
+				      }
+				    } else {
+				      fprintf(fp,"1.0e100,");
+				    }
+				    fprintf(fp,"\n");
+				  }
+				  if (fp != stdout)
+				    fclose(fp);
+				  delete [] which;
+				  delete [] valueIncrease;
+				  delete [] sequenceIncrease;
+				  delete [] valueDecrease;
+				  delete [] sequenceDecrease;
+				  if (masks) {
+				    delete [] maskStarts;
+				    for (int i = 0; i < maxMasks; i++)
+				      delete [] masks[i];
+				    delete [] masks;
+				  }
+				  break;
+				}
                                 if (printMode > 2 && printMode < 5) {
                                     for (iRow = 0; iRow < numberRows; iRow++) {
                                         int type = printMode - 3;
@@ -7613,8 +8196,8 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                             fprintf(fp, "%7d ", iRow);
                                             if (lengthName) {
                                                 const char * name = rowNames[iRow].c_str();
-                                                int n = strlen(name);
-                                                int i;
+                                                size_t n = strlen(name);
+                                                size_t i;
                                                 for (i = 0; i < n; i++)
                                                     fprintf(fp, "%c", name[i]);
                                                 for (; i < lengthPrint; i++)
@@ -7664,8 +8247,8 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                                 fprintf(fp, "%7d ", iColumn);
                                                 if (lengthName) {
                                                     const char * name = columnNames[iColumn].c_str();
-                                                    int n = strlen(name);
-                                                    int i;
+                                                    size_t n = strlen(name);
+                                                    size_t i;
                                                     for (i = 0; i < n; i++)
                                                         fprintf(fp, "%c", name[i]);
                                                     for (; i < lengthPrint; i++)
@@ -7686,9 +8269,9 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                                                 }
                                                 sprintf(temp + strlen(temp), ", %15.8g",
                                                         primalColumnSolution[iColumn]);
-                                                int n = strlen(temp);
-                                                int k = 0;
-                                                for (int i = 0; i < n + 1; i++) {
+                                                size_t n = strlen(temp);
+                                                size_t k = 0;
+                                                for (size_t i = 0; i < n + 1; i++) {
                                                     if (temp[i] != ' ')
                                                         temp[k++] = temp[i];
                                                 }
@@ -7798,6 +8381,42 @@ clp watson.mps -\nscaling off\nprimalsimplex"
                     case CLP_PARAM_ACTION_ENVIRONMENT:
                         CbcOrClpEnvironmentIndex = 0;
                         break;
+                    case CLP_PARAM_ACTION_PARAMETRICS:
+                          if (goodModel) {
+                               // get next field
+                               field = CoinReadGetString(argc, argv);
+                               if (field == "$") {
+                                    field = parameters[iParam].stringValue();
+                               } else if (field == "EOL") {
+                                    parameters[iParam].printString();
+                                    break;
+                               } else {
+                                    parameters[iParam].setStringValue(field);
+                               }
+                               std::string fileName;
+                               //bool canOpen = false;
+                               if (field[0] == '/' || field[0] == '\\') {
+                                    fileName = field;
+                               } else if (field[0] == '~') {
+                                    char * environVar = getenv("HOME");
+                                    if (environVar) {
+                                         std::string home(environVar);
+                                         field = field.erase(0, 1);
+                                         fileName = home + field;
+                                    } else {
+                                         fileName = field;
+                                    }
+                               } else {
+                                    fileName = directory + field;
+                               }
+			       static_cast<ClpSimplexOther *> (lpSolver)->parametrics(fileName.c_str());
+			       time2 = CoinCpuTime();
+			       totalTime += time2 - time1;
+			       time1 = time2;
+                          } else {
+                               std::cout << "** Current model not valid" << std::endl;
+                          }
+                          break;
                     default:
                         abort();
                     }
@@ -7833,6 +8452,25 @@ clp watson.mps -\nscaling off\nprimalsimplex"
             }
         }
     }
+#if CBC_QUIET == 0
+    sprintf(generalPrint ,
+	    "Total time (CPU seconds):       %.2f   (Wallclock seconds):       %.2f\n", 
+	    CoinCpuTime() - time0,
+	    CoinGetTimeOfDay() - time0Elapsed);
+    generalMessageHandler->message(CLP_GENERAL, generalMessages)
+      << generalPrint
+      << CoinMessageEol;
+#endif
+#ifdef COIN_HAS_GLPK
+    if (cbc_glp_prob) {
+      // free up as much as possible
+      glp_free(cbc_glp_prob);
+      glp_mpl_free_wksp(cbc_glp_tran);
+      glp_free_env(); 
+      cbc_glp_prob = NULL;
+      cbc_glp_tran = NULL;
+    }
+#endif
     delete [] statistics_number_cuts;
     delete [] statistics_name_generators;
     // By now all memory should be freed
@@ -7868,10 +8506,10 @@ clp watson.mps -\nscaling off\nprimalsimplex"
 #endif
     babModel_ = NULL;
     model_.solver()->setWarmStart(NULL);
-    sprintf(generalPrint, "Total time %.2f", CoinCpuTime() - time0);
-    generalMessageHandler->message(CLP_GENERAL, generalMessages)
-    << generalPrint
-    << CoinMessageEol;
+    //sprintf(generalPrint, "Total time %.2f", CoinCpuTime() - time0);
+    //generalMessageHandler->message(CLP_GENERAL, generalMessages)
+    //<< generalPrint
+    //<< CoinMessageEol;
     return 0;
 }
 
@@ -8346,12 +8984,12 @@ static bool maskMatches(const int * starts, char ** masks,
 {
     // back to char as I am old fashioned
     const char * checkC = check.c_str();
-    int length = strlen(checkC);
-    while (checkC[length-1] == ' ')
+    size_t length = strlen(checkC);
+    while (length > 0 && checkC[length-1] == ' ')
         length--;
     for (int i = starts[length]; i < starts[length+1]; i++) {
         char * thisMask = masks[i];
-        int k;
+        size_t k;
         for ( k = 0; k < length; k++) {
             if (thisMask[k] != '?' && thisMask[k] != checkC[k])
                 break;
@@ -8589,5 +9227,3 @@ static void generateCode(CbcModel * /*model*/, const char * fileName, int type, 
   Improvements to feaspump
   Source code changes so up to 2.0
 */
-
-

@@ -1,7 +1,7 @@
-/* $Id: ClpSimplex.hpp 1551 2010-05-24 23:34:44Z mjs $ */
+/* $Id: ClpSimplex.hpp 1870 2012-07-22 16:13:48Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 /*
    Authors
 
@@ -610,6 +610,8 @@ public:
      /** Just check solution (for internal use) - sets sum of
          infeasibilities etc. */
      void checkSolutionInternal();
+     /// Check unscaled primal solution but allow for rounding error
+     void checkUnscaledSolution();
      /// Useful row length arrays (0,1,2,3,4,5)
      inline CoinIndexedVector * rowArray(int index) const {
           return rowArray_[index];
@@ -1070,6 +1072,10 @@ public:
          128 bit - no objective, 0-1 and in B&B
          256 bit - in primal from dual or vice versa
          512 bit - alternative use of solveType_
+         1024 bit - don't do row copy of factorization
+	 2048 bit - perturb in complete fathoming
+	 4096 bit - try more for complete fathoming
+	 8192 bit - don't even think of using primal if user asks for dual (and vv)
      */
      inline int moreSpecialOptions() const {
           return moreSpecialOptions_;
@@ -1085,6 +1091,10 @@ public:
          128 bit - no objective, 0-1 and in B&B
          256 bit - in primal from dual or vice versa
          512 bit - alternative use of solveType_
+         1024 bit - don't do row copy of factorization
+	 2048 bit - perturb in complete fathoming
+	 4096 bit - try more for complete fathoming
+	 8192 bit - don't even think of using primal if user asks for dual (and vv)
      */
      inline void setMoreSpecialOptions(int value) {
           moreSpecialOptions_ = value;

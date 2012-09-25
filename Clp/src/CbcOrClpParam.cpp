@@ -1,11 +1,9 @@
-/* $Id: CbcOrClpParam.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: CbcOrClpParam.cpp 1864 2012-06-28 10:27:20Z forrest $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
+#include "CoinPragma.hpp"
 #include "CbcOrClpParam.hpp"
 
 #include <string>
@@ -39,7 +37,7 @@ static char coin_prompt[] = "Clp:";
 #define CBC_THREAD
 #endif
 #endif
-#if WSSMP_BARRIER>=2
+#if defined(COIN_HAS_WSMP) && ! defined(USE_EKKWSSMP)
 #ifndef CBC_THREAD
 #define CBC_THREAD
 #endif
@@ -237,12 +235,12 @@ void
 CbcOrClpParam::gutsOfConstructor()
 {
      std::string::size_type  shriekPos = name_.find('!');
-     lengthName_ = name_.length();
+     lengthName_ = static_cast<unsigned int>(name_.length());
      if ( shriekPos == std::string::npos ) {
           //does not contain '!'
           lengthMatch_ = lengthName_;
      } else {
-          lengthMatch_ = shriekPos;
+          lengthMatch_ = static_cast<unsigned int>(shriekPos);
           name_ = name_.substr(0, shriekPos) + name_.substr(shriekPos + 1);
           lengthName_--;
      }
@@ -299,7 +297,7 @@ CbcOrClpParam::matchName (  ) const
 int
 CbcOrClpParam::parameterOption ( std::string check ) const
 {
-     int numberItems = definedKeyWords_.size();
+     int numberItems = static_cast<int>(definedKeyWords_.size());
      if (!numberItems) {
           return -1;
      } else {
@@ -308,8 +306,8 @@ CbcOrClpParam::parameterOption ( std::string check ) const
           for (it = 0; it < definedKeyWords_.size(); it++) {
                std::string thisOne = definedKeyWords_[it];
                std::string::size_type  shriekPos = thisOne.find('!');
-               unsigned int length1 = thisOne.length();
-               unsigned int length2 = length1;
+               size_t length1 = thisOne.length();
+               size_t length2 = length1;
                if ( shriekPos != std::string::npos ) {
                     //contains '!'
                     length2 = shriekPos;
@@ -378,7 +376,7 @@ CbcOrClpParam::printString() const
 }
 void CoinReadPrintit(const char * input)
 {
-     int length = strlen(input);
+     int length = static_cast<int>(strlen(input));
      char temp[101];
      int i;
      int n = 0;
@@ -491,6 +489,9 @@ CbcOrClpParam::setDoubleParameterWithMessage ( ClpSimplex * model, double value 
           case CLP_PARAM_DBL_PRIMALTOLERANCE:
                model->setPrimalTolerance(value);
                break;
+          case CLP_PARAM_DBL_ZEROTOLERANCE:
+               model->setSmallElementValue(value);
+               break;
           case CLP_PARAM_DBL_DUALBOUND:
                model->setDualBound(value);
                break;
@@ -530,6 +531,9 @@ CbcOrClpParam::doubleParameter (ClpSimplex * model) const
           value = model->primalTolerance();
           break;
 #endif
+     case CLP_PARAM_DBL_ZEROTOLERANCE:
+          value = model->getSmallElementValue();
+          break;
      case CLP_PARAM_DBL_DUALBOUND:
           value = model->dualBound();
           break;
@@ -864,6 +868,10 @@ CbcOrClpParam::setIntParameterWithMessage ( CbcModel & model, int value , int & 
                oldValue = model.getIntParam(CbcModel::CbcMaxNumSol);
                model.setIntParam(CbcModel::CbcMaxNumSol, value);
                break;
+          case CBC_PARAM_INT_MAXSAVEDSOLS:
+               oldValue = model.maximumSavedSolutions();
+               model.setMaximumSavedSolutions(value);
+               break;
           case CBC_PARAM_INT_STRONGBRANCHING:
                oldValue = model.numberStrong();
                model.setNumberStrong(value);
@@ -918,6 +926,9 @@ CbcOrClpParam::intParameter (CbcModel &model) const
      case CBC_PARAM_INT_MAXSOLS:
           value = model.getIntParam(CbcModel::CbcMaxNumSol);
           break;
+     case CBC_PARAM_INT_MAXSAVEDSOLS:
+          value = model.maximumSavedSolutions();
+	  break;
      case CBC_PARAM_INT_STRONGBRANCHING:
           value = model.numberStrong();
           break;
@@ -1011,17 +1022,17 @@ static char line[1000];
 static char * where = NULL;
 extern int CbcOrClpRead_mode;
 int CbcOrClpEnvironmentIndex = -1;
-static int fillEnv()
+static size_t fillEnv()
 {
 #if defined(_MSC_VER) || defined(__MSVCRT__)
      return 0;
 #else
      // Don't think it will work on Windows
      char * environ = getenv("CBC_CLP_ENVIRONMENT");
-     int length = 0;
+     size_t length = 0;
      if (environ) {
           length = strlen(environ);
-          if (CbcOrClpEnvironmentIndex < length) {
+          if (CbcOrClpEnvironmentIndex < static_cast<int>(length)) {
                // find next non blank
                char * whereEnv = environ + CbcOrClpEnvironmentIndex;
                // munch white space
@@ -1038,7 +1049,7 @@ static int fillEnv()
                     assert (put - line < 1000);
                     whereEnv++;
                }
-               CbcOrClpEnvironmentIndex = whereEnv - environ;
+               CbcOrClpEnvironmentIndex = static_cast<int>(whereEnv - environ);
                *put = '\0';
                length = strlen(line);
           } else {
@@ -1227,7 +1238,7 @@ CoinReadGetIntField(int argc, const char *argv[], int * valid)
           field = afterEquals;
           afterEquals = "";
      }
-     int value = 0;
+     long int value = 0;
      //std::cout<<field<<std::endl;
      if (field != "EOL") {
           const char * start = field.c_str();
@@ -1243,7 +1254,7 @@ CoinReadGetIntField(int argc, const char *argv[], int * valid)
      } else {
           *valid = 2;
      }
-     return value;
+     return static_cast<int>(value);
 }
 double
 CoinReadGetDoubleField(int argc, const char *argv[], int * valid)
@@ -1427,14 +1438,14 @@ have more rounds of cuts - see passC!uts and passT!ree."
                         "native", CLP_PARAM_STR_CHOLESKY, 7);
      parameters[numberParameters-1].append("dense");
      //#ifdef FOREIGN_BARRIER
-#ifdef WSSMP_BARRIER
+#ifdef COIN_HAS_WSMP
      parameters[numberParameters-1].append("fudge!Long");
      parameters[numberParameters-1].append("wssmp");
 #else
      parameters[numberParameters-1].append("fudge!Long_dummy");
      parameters[numberParameters-1].append("wssmp_dummy");
 #endif
-#ifdef UFL_BARRIER
+#if defined(COIN_HAS_AMD) || defined(COIN_HAS_CHOLMOD) || defined(COIN_HAS_GLPK)
      parameters[numberParameters-1].append("Uni!versityOfFlorida");
 #else
      parameters[numberParameters-1].append("Uni!versityOfFlorida_dummy");
@@ -1444,7 +1455,7 @@ have more rounds of cuts - see passC!uts and passT!ree."
 #else
      parameters[numberParameters-1].append("Taucs_dummy");
 #endif
-#ifdef MUMPS_BARRIER
+#ifdef COIN_HAS_MUMPS
      parameters[numberParameters-1].append("Mumps");
 #else
      parameters[numberParameters-1].append("Mumps_dummy");
@@ -1545,7 +1556,7 @@ Cbc/examples/driver4.cpp."
                         "off", CLP_PARAM_STR_CRASH);
      parameters[numberParameters-1].append("on");
      parameters[numberParameters-1].append("so!low_halim");
-     parameters[numberParameters-1].append("ha!lim_solow(JJF mods)");
+     parameters[numberParameters-1].append("lots");
      //  parameters[numberParameters-1].append("4");
      //  parameters[numberParameters-1].append("5");
      parameters[numberParameters-1].setLonghelp
@@ -1831,7 +1842,7 @@ gap between bounds exceeds this value",
      );
      parameters[numberParameters++] =
           CbcOrClpParam("dualize", "Solves dual reformulation",
-                        0, 3, CLP_PARAM_INT_DUALIZE, 1);
+                        0, 4, CLP_PARAM_INT_DUALIZE, 1);
      parameters[numberParameters-1].setLonghelp
      (
           "Don't even think about it."
@@ -2046,6 +2057,16 @@ of branch and bound are done on reduced problem.  Small problem has to be less t
      parameters[numberParameters-1].append("gammastrong");
      parameters[numberParameters-1].append("deltastrong");
 #endif
+     parameters[numberParameters++] =
+          CbcOrClpParam("gsolu!tion", "Puts glpk solution to file",
+                        CLP_PARAM_ACTION_GMPL_SOLUTION);
+     parameters[numberParameters-1].setLonghelp
+     (
+          "Will write a glpk solution file to the given file name.  It will use the default\
+ directory given by 'directory'.  A name of '$' will use the previous value for the name.  This\
+ is initialized to 'stdout' (this defaults to ordinary solution if stdout). \
+If problem created from gmpl model - will do any reports."
+     );
 #ifdef COIN_HAS_CBC
      parameters[numberParameters++] =
           CbcOrClpParam("gomory!Cuts", "Whether to use Gomory cuts",
@@ -2206,6 +2227,33 @@ This needs to be set before the import of model - so -keepnames off -import xxxx
 See branchAndCut for information on options."
      );
      parameters[numberParameters++] =
+          CbcOrClpParam("lagomory!Cuts", "Whether to use Lagrangean Gomory cuts",
+                        "off", CBC_PARAM_STR_LAGOMORYCUTS);
+     parameters[numberParameters-1].append("endonlyroot");
+     parameters[numberParameters-1].append("endcleanroot");
+     parameters[numberParameters-1].append("endbothroot");
+     parameters[numberParameters-1].append("endonly");
+     parameters[numberParameters-1].append("endclean");
+     parameters[numberParameters-1].append("endboth");
+     parameters[numberParameters-1].append("onlyaswell");
+     parameters[numberParameters-1].append("cleanaswell");
+     parameters[numberParameters-1].append("bothaswell");
+     parameters[numberParameters-1].append("onlyinstead");
+     parameters[numberParameters-1].append("cleaninstead");
+     parameters[numberParameters-1].append("bothinstead");
+     parameters[numberParameters-1].setLonghelp
+     (
+          "This is a gross simplification of 'A Relax-and-Cut Framework for Gomory's Mixed-Integer Cuts' \
+by Matteo Fischetti & Domenico Salvagnin.  This simplification \
+just uses original constraints while modifying objective using other cuts. \
+So you don't use messy constraints generated by Gomory etc. \
+A variant is to allow non messy cuts e.g. clique cuts. \
+So 'only' does this while clean also allows integral valued cuts.  \
+'End' is recommended which waits until other cuts have finished and then \
+does a few passes. \
+The length options for gomory cuts are used."
+     );
+     parameters[numberParameters++] =
           CbcOrClpParam("lift!AndProjectCuts", "Whether to use Lift and Project cuts",
                         "off", CBC_PARAM_STR_LANDPCUTS);
      parameters[numberParameters-1].append("on");
@@ -2284,7 +2332,14 @@ stopping",
 but then the results may not be repeatable."
      );
      parameters[numberParameters++] =
-          CbcOrClpParam("maxS!olutions", "Maximum number of solutions to get",
+          CbcOrClpParam("maxSaved!Solutions", "Maximum number of solutions to save",
+                        0, 2147483647, CBC_PARAM_INT_MAXSAVEDSOLS);
+     parameters[numberParameters-1].setLonghelp
+     (
+          "Number of solutions to save."
+     );
+     parameters[numberParameters++] =
+          CbcOrClpParam("maxSo!lutions", "Maximum number of solutions to get",
                         1, 2147483647, CBC_PARAM_INT_MAXSOLS);
      parameters[numberParameters-1].setLonghelp
      (
@@ -2334,6 +2389,46 @@ but this program turns this off to make it look more friendly.  It can be useful
  you intend to override the behavior of a particular message.  This only affects Clp not Cbc."
      );
 #ifdef COIN_HAS_CBC
+      parameters[numberParameters++] =
+          CbcOrClpParam("mips!tart", "reads an initial feasible solution from file",
+                        CBC_PARAM_ACTION_MIPSTART);
+     parameters[numberParameters-1].setLonghelp
+     ("\
+The MIPStart allows one to enter an initial integer feasible solution \
+to CBC. Values of the main decision variables which are active (have \
+non-zero values) in this solution are specified in a text  file. The \
+text file format used is the same of the solutions saved by CBC, but \
+not all fields are required to be filled. First line may contain the \
+solution status and will be ignored, remaning lines contain column \
+indexes, names and values as in this example:\n\
+\n\
+Stopped on iterations - objective value 57597.00000000\n\
+      0  x(1,1,2,2)               1 \n\
+      1  x(3,1,3,2)               1 \n\
+      5  v(5,1)                   2 \n\
+      33 x(8,1,5,2)               1 \n\
+      ...\n\
+\n\
+Column indexes are also ignored since pre-processing can change them. \
+There is no need to include values for continuous or integer auxiliary \
+variables, since they can be computed based on main decision variables. \
+Starting CBC with an integer feasible solution can dramatically improve \
+its performance: several MIP heuristics (e.g. RINS) rely on having at \
+least one feasible solution available and can start immediately if the \
+user provides one. Feasibility Pump (FP) is a heuristic which tries to \
+overcome the problem of taking too long to find feasible solution (or \
+not finding at all), but it not always suceeds. If you provide one \
+starting solution you will probably save some time by disabling FP. \
+\n\n\
+Knowledge specific to your problem can be considered to write an \
+external module to quickly produce an initial feasible solution - some \
+alternatives are the implementation of simple greedy heuristics or the \
+solution (by CBC for example) of a simpler model created just to find \
+a feasible solution. \
+\n\n\
+Question and suggestions regarding MIPStart can be directed to\n\
+haroldo.santos@gmail.com.\
+");
      parameters[numberParameters++] =
           CbcOrClpParam("moreT!une", "Yet more dubious ideas for feasibility pump",
                         0, 100000000, CBC_PARAM_INT_FPUMPTUNE2, 0);
@@ -2418,6 +2513,17 @@ specialized network code."
      );
 #ifdef COIN_HAS_CBC
      parameters[numberParameters++] =
+          CbcOrClpParam("nextB!estSolution", "Prints next best saved solution to file",
+                        CLP_PARAM_ACTION_NEXTBESTSOLUTION);
+     parameters[numberParameters-1].setLonghelp
+     (
+          "To write best solution, just use solution.  This prints next best (if exists) \
+ and then deletes it. \
+ This will write a primitive solution file to the given file name.  It will use the default\
+ directory given by 'directory'.  A name of '$' will use the previous value for the name.  This\
+ is initialized to 'stdout'.  The amount of output can be varied using printi!ngOptions or printMask."
+     );
+     parameters[numberParameters++] =
           CbcOrClpParam("node!Strategy", "What strategy to use to select nodes",
                         "hybrid", CBC_PARAM_STR_NODESTRATEGY);
      parameters[numberParameters-1].append("fewest");
@@ -2469,6 +2575,33 @@ This is a first try and will hopefully become more sophisticated."
  gives greater precision, while 5,6 give IEEE values.  When used for exporting a basis 1 does not save \
 values, 2 saves values, 3 with greater accuracy and 4 in IEEE."
      );
+#ifdef COIN_HAS_CLP
+     parameters[numberParameters++] =
+          CbcOrClpParam("para!metrics", "Import data from file and do parametrics",
+                        CLP_PARAM_ACTION_PARAMETRICS, 3);
+     parameters[numberParameters-1].setLonghelp
+     (
+          "This will read a file with parametric data from the given file name \
+and then do parametrics.  It will use the default\
+ directory given by 'directory'.  A name of '$' will use the previous value for the name.  This\
+ is initialized to '', i.e. it must be set.  This can not read from compressed files. \
+File is in modified csv format - a line ROWS will be followed by rows data \
+while a line COLUMNS will be followed by column data.  The last line \
+should be ENDATA. The ROWS line must exist and is in the format \
+ROWS, inital theta, final theta, interval theta, n where n is 0 to get \
+CLPI0062 message at interval or at each change of theta \
+and 1 to get CLPI0063 message at each iteration.  If interval theta is 0.0 \
+or >= final theta then no interval reporting.  n may be missed out when it is \
+taken as 0.  If there is Row data then \
+there is a headings line with allowed headings - name, number, \
+lower(rhs change), upper(rhs change), rhs(change).  Either the lower and upper \
+fields should be given or the rhs field. \
+The optional COLUMNS line is followed by a headings line with allowed \
+headings - name, number, objective(change), lower(change), upper(change). \
+ Exactly one of name and number must be given for either section and \
+missing ones have value 0.0."
+     );
+#endif
 #ifdef COIN_HAS_CBC
      parameters[numberParameters++] =
           CbcOrClpParam("passC!uts", "Number of cut passes at root node",
@@ -2684,6 +2817,9 @@ costs this much to be infeasible",
      parameters[numberParameters-1].append("rows");
      parameters[numberParameters-1].append("all");
      parameters[numberParameters-1].append("csv");
+     parameters[numberParameters-1].append("bound!ranging");
+     parameters[numberParameters-1].append("rhs!ranging");
+     parameters[numberParameters-1].append("objective!ranging");
      parameters[numberParameters-1].setLonghelp
      (
           "This changes the amount and format of printing a solution:\nnormal - nonzero column variables \n\
@@ -2879,6 +3015,8 @@ See branchAndCut for information on options."
      parameters[numberParameters-1].append("200");
      parameters[numberParameters-1].append("1000");
      parameters[numberParameters-1].append("10000");
+     parameters[numberParameters-1].append("dj");
+     parameters[numberParameters-1].append("djbefore");
      parameters[numberParameters-1].setLonghelp
      (
           "This switches on Relaxation enforced neighborhood Search. \
@@ -3156,10 +3294,19 @@ activity at continuous solution",
           CbcOrClpParam("tightLP", "Poor person's preSolve for now",
                         CLP_PARAM_ACTION_TIGHTEN, 7, 0);
 #endif
+     parameters[numberParameters++] =
+          CbcOrClpParam("timeM!ode", "Whether to use CPU or elapsed time",
+                        "cpu", CLP_PARAM_STR_TIME_MODE);
+     parameters[numberParameters-1].append("elapsed");
+     parameters[numberParameters-1].setLonghelp
+     (
+          "cpu uses CPU time for stopping, while elapsed uses elapsed time. \
+(On Windows, elapsed time is always used)."
+     );
 #ifdef COIN_HAS_CBC
      parameters[numberParameters++] =
           CbcOrClpParam("trust!PseudoCosts", "Number of branches before we trust pseudocosts",
-                        -3, 2000000, CBC_PARAM_INT_NUMBERBEFORE);
+                        -3, 2000000000, CBC_PARAM_INT_NUMBERBEFORE);
      parameters[numberParameters-1].setLonghelp
      (
           "Using strong branching computes pseudo-costs.  After this many times for a variable we just \
@@ -3174,7 +3321,7 @@ trust the pseudo costs and do not do any more strong branching."
      (
           "For making equality cliques this is minimumsize.  Also for adding \
 integer slacks.  May be used for more later \
-If <1000 that is what it does.  If <1000000 - numberPasses is (value/1000)-1 and tune is tune %1000. \
+If <10000 that is what it does.  If <1000000 - numberPasses is (value/10000)-1 and tune is tune %10000. \
 If >= 1000000! - numberPasses is (value/1000000)-1 and tune is tune %1000000.  In this case if tune is now still >=10000 \
 numberPassesPerInnerLoop is changed from 10 to (tune-10000)-1 and tune becomes tune % 10000!!!!! - happy? - \
 so to keep normal limit on cliques of 5, do 3 major passes (include presolves) but only doing one tightening pass per major pass - \
@@ -3274,6 +3421,16 @@ See branchAndCut for information on options."
      );
 #endif
 #endif
+     parameters[numberParameters++] =
+          CbcOrClpParam("zeroT!olerance", "Kill all coefficients \
+whose absolute value is less than this value",
+                        1.0e-100, 1.0e-5, CLP_PARAM_DBL_ZEROTOLERANCE);
+     parameters[numberParameters-1].setLonghelp
+     (
+          "This applies to reading mps files (and also lp files \
+if KILL_ZERO_READLP defined)"
+     );
+     parameters[numberParameters-1].setDoubleValue(1.0e-20);
      assert(numberParameters < CBCMAXPARAMETERS);
 }
 // Given a parameter type - returns its number in list
@@ -3302,7 +3459,7 @@ void restoreSolution(ClpSimplex * lpSolver, std::string fileName, int mode)
           int numberRowsFile;
           int numberColumnsFile;
           double objectiveValue;
-          int nRead;
+          size_t nRead;
           nRead = fread(&numberRowsFile, sizeof(int), 1, fp);
           if (nRead != 1)
                throw("Error in fread");
@@ -3335,38 +3492,38 @@ void restoreSolution(ClpSimplex * lpSolver, std::string fileName, int mode)
                lpSolver->setObjectiveValue(objectiveValue);
                if (numberRows == numberRowsFile && numberColumns == numberColumnsFile) {
                     nRead = fread(primalRowSolution, sizeof(double), numberRows, fp);
-                    if (nRead != numberRows)
+                    if (nRead != static_cast<size_t>(numberRows))
                          throw("Error in fread");
                     nRead = fread(dualRowSolution, sizeof(double), numberRows, fp);
-                    if (nRead != numberRows)
+                    if (nRead != static_cast<size_t>(numberRows))
                          throw("Error in fread");
                     nRead = fread(primalColumnSolution, sizeof(double), numberColumns, fp);
-                    if (nRead != numberColumns)
+                    if (nRead != static_cast<size_t>(numberColumns))
                          throw("Error in fread");
                     nRead = fread(dualColumnSolution, sizeof(double), numberColumns, fp);
-                    if (nRead != numberColumns)
+                    if (nRead != static_cast<size_t>(numberColumns))
                          throw("Error in fread");
                } else {
                     std::cout << "Mismatch on rows and/or columns - truncating" << std::endl;
                     double * temp = new double [CoinMax(numberRowsFile, numberColumnsFile)];
                     nRead = fread(temp, sizeof(double), numberRowsFile, fp);
-                    if (nRead != numberRowsFile)
+                    if (nRead != static_cast<size_t>(numberRowsFile))
                          throw("Error in fread");
                     CoinMemcpyN(temp, numberRows, primalRowSolution);
                     nRead = fread(temp, sizeof(double), numberRowsFile, fp);
-                    if (nRead != numberRowsFile)
+                    if (nRead != static_cast<size_t>(numberRowsFile))
                          throw("Error in fread");
                     CoinMemcpyN(temp, numberRows, dualRowSolution);
                     nRead = fread(temp, sizeof(double), numberColumnsFile, fp);
-                    if (nRead != numberColumnsFile)
+                    if (nRead != static_cast<size_t>(numberColumnsFile))
                          throw("Error in fread");
                     CoinMemcpyN(temp, numberColumns, primalColumnSolution);
                     nRead = fread(temp, sizeof(double), numberColumnsFile, fp);
-                    if (nRead != numberColumnsFile)
+                    if (nRead != static_cast<size_t>(numberColumnsFile))
                          throw("Error in fread");
                     CoinMemcpyN(temp, numberColumns, dualColumnSolution);
                     delete [] temp;
-               }
+			   }
                if (mode == 3) {
                     int i;
                     for (i = 0; i < numberRows; i++) {
@@ -3424,7 +3581,7 @@ void saveSolution(const ClpSimplex * lpSolver, std::string fileName)
           int numberRows = lpSolver->numberRows();
           int numberColumns = lpSolver->numberColumns();
           double objectiveValue = lpSolver->objectiveValue();
-          int nWrite;
+          size_t nWrite;
           nWrite = fwrite(&numberRows, sizeof(int), 1, fp);
           if (nWrite != 1)
                throw("Error in fwrite");
@@ -3437,18 +3594,18 @@ void saveSolution(const ClpSimplex * lpSolver, std::string fileName)
           double * dualRowSolution = lpSolver->dualRowSolution();
           double * primalRowSolution = lpSolver->primalRowSolution();
           nWrite = fwrite(primalRowSolution, sizeof(double), numberRows, fp);
-          if (nWrite != numberRows)
+          if (nWrite != static_cast<size_t>(numberRows))
                throw("Error in fwrite");
           nWrite = fwrite(dualRowSolution, sizeof(double), numberRows, fp);
-          if (nWrite != numberRows)
+          if (nWrite != static_cast<size_t>(numberRows))
                throw("Error in fwrite");
           double * dualColumnSolution = lpSolver->dualColumnSolution();
           double * primalColumnSolution = lpSolver->primalColumnSolution();
           nWrite = fwrite(primalColumnSolution, sizeof(double), numberColumns, fp);
-          if (nWrite != numberColumns)
+          if (nWrite != static_cast<size_t>(numberColumns))
                throw("Error in fwrite");
           nWrite = fwrite(dualColumnSolution, sizeof(double), numberColumns, fp);
-          if (nWrite != numberColumns)
+          if (nWrite != static_cast<size_t>(numberColumns))
                throw("Error in fwrite");
           fclose(fp);
      } else {

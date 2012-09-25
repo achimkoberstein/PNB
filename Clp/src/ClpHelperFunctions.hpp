@@ -1,8 +1,21 @@
-/* $Id: ClpHelperFunctions.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpHelperFunctions.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef ClpHelperFunctions_H
 #define ClpHelperFunctions_H
+
+#include "ClpConfig.h"
+#ifdef HAVE_CMATH
+# include <cmath>
+#else
+# ifdef HAVE_MATH_H
+#  include <math.h>
+# else
+#  error "don't have header file for math"
+# endif
+#endif
 
 /**
     Note (JJF) I have added some operations on arrays even though they may

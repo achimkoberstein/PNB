@@ -1,6 +1,8 @@
-/* $Id: CbcFathom.hpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcFathom.hpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcFathom_H
 #define CbcFathom_H
 #include "CbcConfig.h"

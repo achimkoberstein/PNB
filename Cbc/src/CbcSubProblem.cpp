@@ -1,14 +1,17 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Edwin 11/10/2009-- carved out of CbcBranchActual
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+
 #include <cassert>
 #include <cstdlib>
 #include <cmath>
 #include <cfloat>
 //#define CBC_DEBUG
 
+#include "CoinPragma.hpp"
 #include "CoinTypes.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiSolverBranch.hpp"
@@ -165,7 +168,9 @@ CbcSubProblem::apply(OsiSolverInterface * solver, int what) const
 {
     int i;
     if ((what&1) != 0) {
+#ifndef NDEBUG
         int nSame = 0;
+#endif
         for (i = 0; i < numberChangedBounds_; i++) {
             int variable = variables_[i];
             int k = variable & 0x3fffffff;
@@ -212,12 +217,16 @@ CbcSubProblem::apply(OsiSolverInterface * solver, int what) const
                 solver->setColUpper(k, newBounds_[i]);
             }
         }
+#ifndef NDEBUG
+#ifdef CBC_PRINT2
         if (nSame && (nSame < numberChangedBounds_ || (what&3) != 3))
             printf("%d changes out of %d redundant %d\n",
                    nSame, numberChangedBounds_, what);
         else if (numberChangedBounds_ && what == 7 && !nSame)
             printf("%d good changes %d\n",
                    numberChangedBounds_, what);
+#endif
+#endif
     }
 #ifdef JJF_ZERO
     if ((what&2) != 0) {

@@ -1,6 +1,8 @@
-/* $Id: CbcStrategy.cpp 1393 2009-12-11 00:29:38Z lou $ */
+/* $Id: CbcStrategy.cpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -39,6 +41,7 @@
 
 #include "CbcHeuristic.hpp"
 #include "CbcHeuristicLocal.hpp"
+#include "CbcHeuristicRINS.hpp"
 
 // Default Constructor
 CbcStrategy::CbcStrategy()
@@ -132,22 +135,34 @@ CbcStrategyDefault::CbcStrategyDefault(const CbcStrategyDefault & rhs)
     setNested(rhs.getNested());
 }
 
-// Setup cut generators
+/*
+  Set up cut generators. Will instantiate Probing, Gomory, Knapsack, Clique,
+  FlowCover, and MIR2 generators. Probing should be the first in the vector
+  of generators as it tightens bounds on continuous variables.
+
+  Cut generators already installed will dominate cut generators instantiated
+  here.
+
+  There's a classic magic number overloaded parameter example here. The
+  variable genFlags below is interpreted as single-bit flags to control
+  whether a cut generator will be instantiated: Probing:1, Gomory:2,
+  Knapsack:4, Clique:8, FlowCover:16, MIR2:32. Normally it's hardcoded to 63.
+  If CBC_GENERATE_TEST is defined, and the model's node limit is set between
+  190000 and 190064, genFlags is loaded with the low-order bits.
+*/
 void
 CbcStrategyDefault::setupCutGenerators(CbcModel & model)
 {
     if (cutsOnlyAtRoot_ < 0)
         return; // no cuts wanted
-    // Set up some cut generators and defaults
-    // Probing first as gets tight bounds on continuous
-    // See flags for Probing, Gomory, Knapsack, Clique, FlowCover, MixedIntegerRounding2 below (BK: lou removed this comment, why??)
+
+    // Magic number overloaded parameter -- see comment at head.
     int genFlags = 63;
-    //#define CBC_GENERATE_TEST
-#ifdef CBC_GENERATE_TEST
+#   ifdef CBC_GENERATE_TEST
     int nNodes = model.getMaximumNodes();
     if (nNodes >= 190000 && nNodes < 190064)
         genFlags = nNodes - 190000;
-#endif
+#   endif
 
     CglProbing generator1;
     generator1.setUsingObjective(true);
@@ -181,7 +196,9 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     CglMixedIntegerRounding2 mixedGen;
     CglFlowCover flowGen;
 
-    // Add in generators
+    /*
+      Add in generators. Do not override generators already installed.
+    */
     int setting = cutsOnlyAtRoot_ ? -99 : -1;
     int numberGenerators = model.numberCutGenerators();
     int iGenerator;
@@ -198,6 +215,7 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     if (!found && (genFlags&1) != 0)
         model.addCutGenerator(&generator1, setting, "Probing");
     found = false;
+
     for (iGenerator = 0; iGenerator < numberGenerators; iGenerator++) {
         CglCutGenerator * generator = model.cutGenerator(iGenerator)->generator();
         CglGomory * cgl = dynamic_cast<CglGomory *>(generator);
@@ -208,6 +226,7 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     }
     if (!found && (genFlags&2) != 0)
         model.addCutGenerator(&generator2, setting, "Gomory");
+
     found = false;
     for (iGenerator = 0; iGenerator < numberGenerators; iGenerator++) {
         CglCutGenerator * generator = model.cutGenerator(iGenerator)->generator();
@@ -220,6 +239,7 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     if (!found && (genFlags&4) != 0)
         model.addCutGenerator(&generator3, setting, "Knapsack");
     //model.addCutGenerator(&generator4,setting,"OddHole");
+
     found = false;
     for (iGenerator = 0; iGenerator < numberGenerators; iGenerator++) {
         CglCutGenerator * generator = model.cutGenerator(iGenerator)->generator();
@@ -231,6 +251,7 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     }
     if (!found && (genFlags&8) != 0)
         model.addCutGenerator(&generator5, setting, "Clique");
+
     found = false;
     for (iGenerator = 0; iGenerator < numberGenerators; iGenerator++) {
         CglCutGenerator * generator = model.cutGenerator(iGenerator)->generator();
@@ -242,6 +263,7 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     }
     if (!found && (genFlags&16) != 0)
         model.addCutGenerator(&flowGen, setting, "FlowCover");
+
     found = false;
     for (iGenerator = 0; iGenerator < numberGenerators; iGenerator++) {
         CglCutGenerator * generator = model.cutGenerator(iGenerator)->generator();
@@ -253,12 +275,15 @@ CbcStrategyDefault::setupCutGenerators(CbcModel & model)
     }
     if (!found && (genFlags&32) != 0)
         model.addCutGenerator(&mixedGen, setting, "MixedIntegerRounding2");
+
     // Say we want timings
     int newNumberGenerators = model.numberCutGenerators();
     for (iGenerator = numberGenerators; iGenerator < newNumberGenerators; iGenerator++) {
         CbcCutGenerator * generator = model.cutGenerator(iGenerator);
         generator->setTiming(true);
     }
+
+    // Caution! Undocumented magic numbers.
     int currentPasses = model.getMaximumCutPassesAtRoot();
     if (currentPasses >= 0) {
         if (model.getNumCols() < 5000)
@@ -395,8 +420,8 @@ CbcStrategyDefault::setupOther(CbcModel & model)
                 }
             }
             if (!numberNon && numberClose) {
-                printf("Tidying %d multiples of 0.01, %d close\n",
-                       numberInt, numberClose);
+                COIN_DETAIL_PRINT(printf("Tidying %d multiples of 0.01, %d close\n",
+					 numberInt, numberClose));
                 for (iColumn = 0; iColumn < numberColumns; iColumn++) {
                     for (int j = columnStart[iColumn];
                             j < columnStart[iColumn] + columnLength[iColumn]; j++) {
@@ -614,6 +639,7 @@ CbcStrategyDefault::setupOther(CbcModel & model)
     model.setNumberStrong(numberStrong_);
     model.setNumberBeforeTrust(numberBeforeTrust_);
 }
+
 // Create C++ lines to get to current state
 void
 CbcStrategyDefault::generateCpp( FILE * fp)
@@ -899,6 +925,40 @@ CbcStrategyDefaultSubTree::setupHeuristics(CbcModel & model)
     }
     if (!found)
         model.addHeuristic(&heuristic1);
+    if ((model.moreSpecialOptions()&32768)!=0) {
+      // Allow join solutions
+      CbcHeuristicLocal heuristic2(model);
+      heuristic2.setHeuristicName("join solutions");
+      //sheuristic2.setSearchType(1);
+      found = false;
+      for (iHeuristic = 0; iHeuristic < numberHeuristics; iHeuristic++) {
+        CbcHeuristic * heuristic = model.heuristic(iHeuristic);
+        CbcHeuristicLocal * cgl = dynamic_cast<CbcHeuristicLocal *>(heuristic);
+        if (cgl) {
+	  found = true;
+	  break;
+        }
+      }
+      if (!found)
+        model.addHeuristic(&heuristic2);
+      // Allow RINS
+      CbcHeuristicRINS heuristic5(model);
+      heuristic5.setHeuristicName("RINS");
+      heuristic5.setFractionSmall(0.5);
+      heuristic5.setDecayFactor(5.0);
+      //heuristic5.setSearchType(1);
+      found = false;
+      for (iHeuristic = 0; iHeuristic < numberHeuristics; iHeuristic++) {
+        CbcHeuristic * heuristic = model.heuristic(iHeuristic);
+        CbcHeuristicLocal * cgl = dynamic_cast<CbcHeuristicLocal *>(heuristic);
+        if (cgl) {
+	  found = true;
+	  break;
+        }
+      }
+      if (!found)
+        model.addHeuristic(&heuristic5);
+    }
 }
 // Do printing stuff
 void

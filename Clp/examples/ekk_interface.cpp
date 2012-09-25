@@ -1,4 +1,8 @@
-/* $Id: ekk_interface.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: ekk_interface.cpp 1662 2011-01-04 17:52:40Z lou $ */
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #include <cassert>
 
 #include "ClpSimplexPrimal.hpp"
@@ -167,11 +171,11 @@ static int solve(EKKModel * model, int  startup, int algorithm,
      double * rowDual = (double *) ekk_rowduals(model);
      int numberRows = ekk_getInumrows(model);
      int numberColumns = ekk_getInumcols(model);
-     int * rowStatus =  (int *) ekk_rowstat(model);
+     int * rowStatus = (int *) ekk_rowstat(model);
      double * rowSolution = (double *) ekk_rowacts(model);
      int i;
      int * columnStatus = (int *) ekk_colstat(model);
-     double * columnSolution =  (double *) ekk_colsol(model);
+     double * columnSolution = (double *) ekk_colsol(model);
      memcpy(rowSolution, clp->primalRowSolution(), numberRows * sizeof(double));
      memcpy(rowDual, clp->dualRowSolution(), numberRows * sizeof(double));
      for (i = 0; i < numberRows; i++) {
@@ -199,7 +203,7 @@ static int solve(EKKModel * model, int  startup, int algorithm,
      ekk_setRsumpinf(model, clp->sumPrimalInfeasibilities());
      ekk_setRsumdinf(model, clp->sumDualInfeasibilities());
      delete clp;
-     if (compressInfo )
+     if (compressInfo)
           ekk_decompressModel(model, compressInfo);
 
      if (scaled)

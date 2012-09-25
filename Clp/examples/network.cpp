@@ -1,6 +1,7 @@
-/* $Id: network.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: network.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 
 // The point of this example is to show how to create a model without
@@ -17,13 +18,13 @@
 #include <assert.h>
 #include <cmath>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      int numberColumns;
      int numberRows;
 
      FILE * fp;
-     if ( argc > 1 ) {
+     if (argc > 1) {
           fp = fopen(argv[1], "r");
           if (!fp) {
                fprintf(stderr, "Unable to open file %s\n", argv[1]);
@@ -40,7 +41,7 @@ int main (int argc, const char *argv[])
      char temp[100];
      // read and skip
      fscanf(fp, "%s", temp);
-     assert (!strcmp(temp, "BEGIN"));
+     assert(!strcmp(temp, "BEGIN"));
      fscanf(fp, "%*s %*s %d %d %*s %*s %d %*s", &problem, &numberRows,
             &numberColumns);
      // scan down to SUPPLY

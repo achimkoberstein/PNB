@@ -1,5 +1,8 @@
+// $Id$
 // Copyright (C) 2007, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -7,7 +10,6 @@
 
 #include <cassert>
 #include <iomanip> 
-
 
 #include "CbcModel.hpp"
 #include "OsiClpSolverInterface.hpp"
@@ -41,7 +43,15 @@ int main (int argc, const char *argv[])
 #endif
   // Read in model using argv[1]
   // and assert that it is a clean model
-  std::string mpsFileName = "../../Data/Sample/p0033.mps";
+  std::string mpsFileName;
+#if defined(SAMPLEDIR)
+  mpsFileName = SAMPLEDIR "/p0033.mps";
+#else
+  if (argc < 2) {
+    fprintf(stderr, "Do not know where to find sample MPS files.\n");
+    exit(1);
+  }
+#endif
   if (argc>=2) mpsFileName = argv[1];
   int numMpsReadErrors = solver1.readMps(mpsFileName.c_str(),"");
   assert(numMpsReadErrors==0);

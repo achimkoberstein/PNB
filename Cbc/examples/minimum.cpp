@@ -1,5 +1,7 @@
+// $Id: minimum.cpp 1574 2011-01-05 01:13:55Z lou $
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CbcModel.hpp"
 
@@ -11,8 +13,13 @@ int main (int argc, const char *argv[])
   OsiClpSolverInterface solver1;
   // Read in example model
   // and assert that it is a clean model
-  int numMpsReadErrors = solver1.readMps("../../Data/Sample/p0033.mps","");
+#if defined(SAMPLEDIR)
+  int numMpsReadErrors = solver1.readMps(SAMPLEDIR "/p0033.mps","");
   assert(numMpsReadErrors==0);
+#else
+  fprintf(stderr, "Do not know where to find sample MPS files.\n");
+  exit(1);
+#endif
 
   // Pass data and solver to CbcModel 
   CbcModel model(solver1);

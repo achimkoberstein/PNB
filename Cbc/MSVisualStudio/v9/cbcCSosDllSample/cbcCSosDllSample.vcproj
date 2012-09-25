@@ -12,14 +12,17 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -42,7 +45,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiCbc;..\..\..\..\Osi\src;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers;..\..\..\..\Cbc\src"
-				PreprocessorDefinitions="WIN32;_NDEBUG;_CONSOLE;CBCCINTERFACEDLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_NDEBUG;COIN_FAST_CODE;CLP_FAST_CODE;COIN_NO_TEST_DUPLICATE;_CONSOLE;CBCCINTERFACEDLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;SAMPLEDIR=\&quot;..\\..\\..\\..\\Data\\Sample\\\\\&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -64,9 +67,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(InputDir)..\cbcCInterfaceDll\debug\cbcCInterfaceDll.lib"
+				LinkLibraryDependencies="false"
+				AdditionalDependencies="cbcCInterfaceDll.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(SolutionDir)cbcCInterfaceDll\Debug"
+				AdditionalLibraryDirectories="$(OutDir)"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
@@ -100,8 +104,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -124,7 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiCbc;..\..\..\..\Osi\src;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers;..\..\..\..\Cbc\src"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;CBCCINTERFACEDLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_NDEBUG;COIN_FAST_CODE;CLP_FAST_CODE;COIN_NO_TEST_DUPLICATE;_CONSOLE;CBCCINTERFACEDLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;SAMPLEDIR=\&quot;..\\..\\..\\..\\Data\\Sample\\\\\&quot;"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -144,9 +148,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="$(InputDir)..\cbcCInterfaceDll\release\cbcCInterfaceDll.lib"
+				LinkLibraryDependencies="false"
+				AdditionalDependencies="cbcCInterfaceDll.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)cbcCInterfaceDll\Release"
+				AdditionalLibraryDirectories="$(OutDir)"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
@@ -157,6 +162,174 @@
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiCbc;..\..\..\..\Osi\src;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers;..\..\..\..\Cbc\src"
+				PreprocessorDefinitions="WIN32;NDEBUG;_NDEBUG;COIN_FAST_CODE;CLP_FAST_CODE;COIN_NO_TEST_DUPLICATE;_CONSOLE;CBCCINTERFACEDLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;SAMPLEDIR=\&quot;..\\..\\..\\..\\Data\\Sample\\\\\&quot;"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				CallingConvention="0"
+				CompileAs="0"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
+				AdditionalDependencies="cbcCInterfaceDll.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="$(OutDir)"
+				DelayLoadDLLs=""
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				MapExports="true"
+				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiCbc;..\..\..\..\Osi\src;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglMixedIntegerRounding2;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglPreProcess;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\Cgl\src;..\..\..\..\Clp\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers;..\..\..\..\Cbc\src"
+				PreprocessorDefinitions="WIN32;NDEBUG;_NDEBUG;COIN_FAST_CODE;CLP_FAST_CODE;COIN_NO_TEST_DUPLICATE;_CONSOLE;CBCCINTERFACEDLL_EXPORTS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;SAMPLEDIR=\&quot;..\\..\\..\\..\\Data\\Sample\\\\\&quot;"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+				CallingConvention="0"
+				CompileAs="0"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
+				AdditionalDependencies="cbcCInterfaceDll.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(OutDir)"
+				DelayLoadDLLs=""
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				MapExports="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

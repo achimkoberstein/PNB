@@ -1,6 +1,7 @@
-/* $Id: CoinFactorization4.cpp 1239 2009-12-10 16:16:11Z ladanyi $ */
+/* $Id: CoinFactorization4.cpp 1535 2012-06-14 07:15:54Z forrest $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
@@ -1436,8 +1437,14 @@ CoinFactorization::updateColumnTransposeL ( CoinIndexedVector * regionSparse ) c
       if (goSparse>0||!numberL_)
 	regionSparse->scan(lastSparse,numberRows_,zeroTolerance_);
     } 
-    if (!numberL_)
+    if (!numberL_) {
+      // could be odd combination of sparse/dense
+      if (number>numberRows_) {
+	regionSparse->setNumElements(0);
+	regionSparse->scan(0,numberRows_,zeroTolerance_);
+      }
       return;
+    }
   } 
 #endif
   switch (goSparse) {

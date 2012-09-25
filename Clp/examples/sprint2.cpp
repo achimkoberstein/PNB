@@ -1,13 +1,14 @@
-/* $Id: sprint2.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: sprint2.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "ClpSimplex.hpp"
 #include "ClpPresolve.hpp"
 #include "CoinSort.hpp"
 #include <iomanip>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpSimplex  model;
      int status;
@@ -37,7 +38,9 @@ int main (int argc, const char *argv[])
      memcpy(saveLower, columnLower, numberColumns * sizeof(double));
      double * saveUpper = new double [numberColumns];
      memcpy(saveUpper, columnUpper, numberColumns * sizeof(double));
+     double * solution = model.primalColumnSolution();
      // Fix in some magical way so remaining problem is easy
+#if 0
      // This is from a real-world problem
      for (int iColumn = 0; iColumn < numberColumns; iColumn++) {
           char firstCharacter = model.columnName(iColumn)[0];
@@ -46,7 +49,20 @@ int main (int argc, const char *argv[])
                columnUpper[iColumn] = columnLower[iColumn];
           }
      }
-     double * solution = model.primalColumnSolution();
+#else
+     double * obj = model.objective();
+     double * saveObj = new double [numberColumns];
+     memcpy(saveObj, obj, numberColumns * sizeof(double));
+     memset(obj, 0, numberColumns * sizeof(double));
+     model.dual();
+     memcpy(obj, saveObj, numberColumns * sizeof(double));
+     delete [] saveObj;
+     for (int iColumn = 0; iColumn < numberColumns; iColumn++) {
+         if (solution[iColumn]<columnLower[iColumn]+1.0e-8) {
+	     columnUpper[iColumn] = columnLower[iColumn];
+       }
+     }
+#endif
 
      // Just do this number of passes
      int maxPass = 100;
@@ -83,7 +99,7 @@ int main (int argc, const char *argv[])
           // adjust smallNumberColumns if necessary
           if (iPass) {
                double ratio = ((double) smallNumberRows) / ((double) model2->numberRows());
-               smallNumberColumns = (int) (smallNumberColumns * ratio);
+               smallNumberColumns = (int)(smallNumberColumns * ratio);
           }
           delete model2;
           /* After this postsolve model should be optimal.
@@ -106,8 +122,9 @@ int main (int argc, const char *argv[])
           } else {
                lastObjective = model.objectiveValue();
                // now massage weight so all basic in plus good djs
+	       const double * djs = model.dualColumnSolution();
                for (int iColumn = 0; iColumn < numberColumns; iColumn++) {
-                    double dj = weight[iColumn];
+                    double dj = djs[iColumn];
                     double value = solution[iColumn];
                     if (model.getStatus(iColumn) == ClpSimplex::basic)
                          dj = -1.0e50;

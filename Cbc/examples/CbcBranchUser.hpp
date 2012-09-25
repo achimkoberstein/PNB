@@ -1,5 +1,8 @@
+// $Id: CbcBranchUser.hpp 1574 2011-01-05 01:13:55Z lou $
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcBranchUser_H
 #define CbcBranchUser_H
 

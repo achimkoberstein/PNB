@@ -1,11 +1,17 @@
-/* $Id: ClpSolve.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpSolve.cpp 1793 2011-09-10 07:35:23Z forrest $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 // This file has higher level solve functions
 
-#include "ClpConfig.h"
 #include "CoinPragma.hpp"
+#include "ClpConfig.h"
+
+// check already here if COIN_HAS_GLPK is defined, since we do not want to get confused by a COIN_HAS_GLPK in config_coinutils.h
+#if defined(COIN_HAS_AMD) || defined(COIN_HAS_CHOLMOD) || defined(COIN_HAS_GLPK)
+#define UFL_BARRIER
+#endif
 
 #include <math.h>
 
@@ -24,6 +30,7 @@
 #include "ClpPlusMinusOneMatrix.hpp"
 #include "ClpNetworkMatrix.hpp"
 #endif
+#include "ClpEventHandler.hpp"
 #include "ClpLinearObjective.hpp"
 #include "ClpSolve.hpp"
 #include "ClpPackedMatrix.hpp"
@@ -33,19 +40,15 @@
 #include "ClpPresolve.hpp"
 #ifndef SLIM_CLP
 #include "Idiot.hpp"
-#ifdef WSSMP_BARRIER
+#ifdef COIN_HAS_WSMP
 #include "ClpCholeskyWssmp.hpp"
 #include "ClpCholeskyWssmpKKT.hpp"
 #endif
-#ifdef UFL_BARRIER
 #include "ClpCholeskyUfl.hpp"
-#endif
 #ifdef TAUCS_BARRIER
 #include "ClpCholeskyTaucs.hpp"
 #endif
-#ifdef MUMPS_BARRIER
 #include "ClpCholeskyMumps.hpp"
-#endif
 #ifdef COIN_HAS_VOL
 #include "VolVolume.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -419,21 +422,22 @@ ClpSimplex::initialSolve(ClpSolve & options)
      // If no status array - set up basis
      if (!status_)
           allSlackBasis();
-     ClpPresolve pinfo;
-     pinfo.setSubstitution(options.substitution());
+     ClpPresolve * pinfo = new ClpPresolve();
+     pinfo->setSubstitution(options.substitution());
      int presolveOptions = options.presolveActions();
      bool presolveToFile = (presolveOptions & 0x40000000) != 0;
      presolveOptions &= ~0x40000000;
      if ((presolveOptions & 0xffff) != 0)
-          pinfo.setPresolveActions(presolveOptions);
+          pinfo->setPresolveActions(presolveOptions);
      // switch off singletons to slacks
-     //pinfo.setDoSingletonColumn(false); // done by bits
+     //pinfo->setDoSingletonColumn(false); // done by bits
      int printOptions = options.getSpecialOption(5);
      if ((printOptions & 1) != 0)
-          pinfo.statistics();
+          pinfo->statistics();
      double timePresolve = 0.0;
      double timeIdiot = 0.0;
      double timeCore = 0.0;
+     eventHandler()->event(ClpEventHandler::presolveStart);
      int savePerturbation = perturbation_;
      int saveScaling = scalingFlag_;
 #ifndef SLIM_CLP
@@ -460,20 +464,20 @@ ClpSimplex::initialSolve(ClpSolve & options)
                presolve = ClpSolve::presolveOn;
                costedSlacks = true;
                // switch on singletons to slacks
-               pinfo.setDoSingletonColumn(true);
+               pinfo->setDoSingletonColumn(true);
                // gub stuff for testing
-               //pinfo.setDoGubrow(true);
+               //pinfo->setDoGubrow(true);
           }
 #ifndef CLP_NO_STD
           if (presolveToFile) {
                // PreSolve to file - not fully tested
                printf("Presolving to file - presolve.save\n");
-               pinfo.presolvedModelToFile(*this, "presolve.save", dblParam_[ClpPresolveTolerance],
+               pinfo->presolvedModelToFile(*this, "presolve.save", dblParam_[ClpPresolveTolerance],
                                           false, numberPasses);
                model2 = this;
           } else {
 #endif
-               model2 = pinfo.presolvedModel(*this, dblParam_[ClpPresolveTolerance],
+               model2 = pinfo->presolvedModel(*this, dblParam_[ClpPresolveTolerance],
                                              false, numberPasses, true, costedSlacks);
 #ifndef CLP_NO_STD
           }
@@ -488,12 +492,29 @@ ClpSimplex::initialSolve(ClpSolve & options)
                handler_->message(CLP_INFEASIBLE, messages_)
                          << CoinMessageEol;
                model2 = this;
-               problemStatus_ = 1; // may be unbounded but who cares
+	       eventHandler()->event(ClpEventHandler::presolveInfeasible);
+               problemStatus_ = pinfo->presolveStatus(); 
                if (options.infeasibleReturn() || (moreSpecialOptions_ & 1) != 0) {
+		 delete pinfo;
                     return -1;
                }
                presolve = ClpSolve::presolveOff;
+	  } else {
+	      model2->eventHandler()->setSimplex(model2);
+	      int rcode=model2->eventHandler()->event(ClpEventHandler::presolveSize);
+	      // see if too big or small
+	      if (rcode==2) {
+		  delete model2;
+		 delete pinfo;
+		  return -2;
+	      } else if (rcode==3) {
+		  delete model2;
+		 delete pinfo;
+		  return -3;
+	      }
           }
+	  model2->setMoreSpecialOptions(model2->moreSpecialOptions()&(~1024));
+	  model2->eventHandler()->setSimplex(model2);
           // We may be better off using original (but if dual leave because of bounds)
           if (presolve != ClpSolve::presolveOff &&
                     numberRows_ < 1.01 * model2->numberRows_ && numberColumns_ < 1.01 * model2->numberColumns_
@@ -515,6 +536,7 @@ ClpSimplex::initialSolve(ClpSolve & options)
      int doSprint = 0;
      int doSlp = 0;
      int primalStartup = 1;
+     model2->eventHandler()->event(ClpEventHandler::presolveBeforeSolve);
      bool tryItSave = false;
      // switch to primal from automatic if just one cost entry
      if (method == ClpSolve::automatic && model2->numberColumns() > 5000 &&
@@ -715,6 +737,8 @@ ClpSimplex::initialSolve(ClpSolve & options)
           if (clpMatrix) {
                ClpPlusMinusOneMatrix * newMatrix = new ClpPlusMinusOneMatrix(*(clpMatrix->matrix()));
                if (newMatrix->getIndices()) {
+                  // CHECKME This test of specialOptions and the one above
+                  // don't seem compatible.
                     if ((specialOptions_ & 1024) == 0) {
                          model2->replaceMatrix(newMatrix);
                     } else {
@@ -803,6 +827,7 @@ ClpSimplex::initialSolve(ClpSolve & options)
                                    break;
                               }
                          }
+                         // CHECKME This next bit can't be right...
                          if (value2 > value1) {
                               numberNotE++;
                               if (value2 > 1.0e31 || value1 < -1.0e31)
@@ -1934,7 +1959,7 @@ ClpSimplex::initialSolve(ClpSolve & options)
                     barrier.setCholesky(cholesky);
                }
                break;
-#ifdef WSSMP_BARRIER
+#ifdef COIN_HAS_WSMP
           case 2: {
                ClpCholeskyWssmp * cholesky = new ClpCholeskyWssmp(CoinMax(100, model2->numberRows() / 10));
                barrier.setCholesky(cholesky);
@@ -1971,7 +1996,7 @@ ClpSimplex::initialSolve(ClpSolve & options)
           }
           break;
 #endif
-#ifdef MUMPS_BARRIER
+#ifdef COIN_HAS_MUMPS
           case 6: {
                ClpCholeskyMumps * cholesky = new ClpCholeskyMumps();
                barrier.setCholesky(cholesky);
@@ -2452,7 +2477,10 @@ ClpSimplex::initialSolve(ClpSolve & options)
                setLogLevel(CoinMin(1, saveLevel));
           else
                setLogLevel(CoinMin(0, saveLevel));
-          pinfo.postsolve(true);
+          pinfo->postsolve(true);
+	  numberIterations_ = 0;
+	  delete pinfo;
+	  pinfo = NULL;
           factorization_->areaFactor(model2->factorization()->adjustedAreaFactor());
           time2 = CoinCpuTime();
           timePresolve += time2 - timeX;
@@ -2466,7 +2494,11 @@ ClpSimplex::initialSolve(ClpSolve & options)
                currentModel = this;
           // checkSolution(); already done by postSolve
           setLogLevel(saveLevel);
-          if (finalStatus != 3 && (finalStatus || status() == -1)) {
+	  int oldStatus=problemStatus_;
+	  setProblemStatus(finalStatus);
+	  setSecondaryStatus(finalSecondaryStatus);
+	  int rcode=eventHandler()->event(ClpEventHandler::presolveAfterFirstSolve);
+          if (finalStatus != 3 && rcode < 0 && (finalStatus || oldStatus == -1)) {
                int savePerturbation = perturbation();
                if (!finalStatus || (moreSpecialOptions_ & 2) == 0) {
                     if (finalStatus == 2) {
@@ -2495,7 +2527,9 @@ ClpSimplex::initialSolve(ClpSolve & options)
                          << "Cleanup" << time2 - timeX << time2 - time1
                          << CoinMessageEol;
                timeX = time2;
-          } else {
+          } else if (rcode >= 0) {
+	      primal(1);
+	  } else {
                secondaryStatus_ = finalSecondaryStatus;
           }
      } else if (model2 != this) {
@@ -2523,6 +2557,7 @@ ClpSimplex::initialSolve(ClpSolve & options)
                                     "Errors", "User stopped"
                                    };
      assert (finalStatus >= -1 && finalStatus <= 5);
+     numberIterations_ = numberIterations;
      handler_->message(CLP_TIMING, messages_)
                << statusMessage[finalStatus+1] << objectiveValue() << numberIterations << time2 - time1;
      handler_->printing(presolve == ClpSolve::presolveOn)
@@ -2553,6 +2588,8 @@ ClpSimplex::initialSolve(ClpSolve & options)
           objective_ = savedObjective;
           finalStatus = status();
      }
+     eventHandler()->event(ClpEventHandler::presolveEnd);
+     delete pinfo;
      return finalStatus;
 }
 // General solve
@@ -2572,7 +2609,7 @@ ClpSimplex::initialDualSolve()
      options.setSolveType(ClpSolve::useDual);
      return initialSolve(options);
 }
-// General dual solve
+// General primal solve
 int
 ClpSimplex::initialPrimalSolve()
 {
@@ -2677,7 +2714,7 @@ ClpSolve::operator=(const ClpSolve & rhs)
 ClpSolve::~ClpSolve (  )
 {
 }
-// See header file for deatils
+// See header file for details
 void
 ClpSolve::setSpecialOption(int which, int value, int extraInfo)
 {
@@ -2990,7 +3027,7 @@ ClpSimplexProgress::looping()
      // skip if just last time as may be checking something
      if (matched == (1 << (CLP_PROGRESS - 1)))
           numberMatched = 0;
-     if (numberMatched) {
+     if (numberMatched && model_->clpMatrix()->type() < 15) {
           model_->messageHandler()->message(CLP_POSSIBLELOOP, model_->messages())
                     << numberMatched
                     << matched

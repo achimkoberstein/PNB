@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Edwin 11/10/2009-- carved out of CbcBranchActual
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -428,7 +434,7 @@ CbcBranchDefaultDecision::bestBranch (CbcBranchingObject ** objects, int numberO
                 bestWay = bestObject->object()->preferredWay();
             bestObject->way(bestWay);
         } else {
-            printf("debug\n");
+	  COIN_DETAIL_PRINT(printf("debug\n"));
         }
     }
     return whichObject;

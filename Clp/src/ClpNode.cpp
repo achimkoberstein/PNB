@@ -1,6 +1,7 @@
-/* $Id: ClpNode.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpNode.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2008, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 #include "ClpSimplex.hpp"
@@ -265,6 +266,9 @@ ClpNode::gutsOfConstructor (ClpSimplex * model, const ClpNodeStuff * stuff,
 #ifdef WEIGHT_PRODUCT
      double smallChange = stuff->smallChange_;
 #endif
+#ifndef INFEAS_MULTIPLIER 
+#define INFEAS_MULTIPLIER 1.0
+#endif
      for (iColumn = 0; iColumn < numberColumns; iColumn++) {
           if (integerType[iColumn]) {
                double value = solution[iColumn];
@@ -308,14 +312,14 @@ ClpNode::gutsOfConstructor (ClpSimplex * model, const ClpNodeStuff * stuff,
                     double upValue2 = (upPseudo[iInteger] / (1.0 + nUp));
                     // Extra for infeasible branches
                     if (nUp) {
-                         double ratio = 1.0 + static_cast<double>(numberUpInfeasible[iInteger]) /
+                         double ratio = 1.0 + INFEAS_MULTIPLIER*static_cast<double>(numberUpInfeasible[iInteger]) /
                                         static_cast<double>(nUp);
                          upValue2 *= ratio;
                     }
                     int nDown = numberDown[iInteger];
                     double downValue2 = (downPseudo[iInteger] / (1.0 + nDown));
                     if (nDown) {
-                         double ratio = 1.0 + static_cast<double>(numberDownInfeasible[iInteger]) /
+                         double ratio = 1.0 + INFEAS_MULTIPLIER*static_cast<double>(numberDownInfeasible[iInteger]) /
                                         static_cast<double>(nDown);
                          downValue2 *= ratio;
                     }
@@ -352,14 +356,14 @@ ClpNode::gutsOfConstructor (ClpSimplex * model, const ClpNodeStuff * stuff,
                     double upValue = (ceil(value) - value) * (upPseudo[iInteger] /
                                      (1.0 + nUp));
                     if (nUp) {
-                         double ratio = 1.0 + static_cast<double>(numberUpInfeasible[iInteger]) /
+                         double ratio = 1.0 + INFEAS_MULTIPLIER*static_cast<double>(numberUpInfeasible[iInteger]) /
                                         static_cast<double>(nUp);
                          upValue *= ratio;
                     }
                     double downValue = (value - floor(value)) * (downPseudo[iInteger] /
                                        (1.0 + nDown));
                     if (nDown) {
-                         double ratio = 1.0 + static_cast<double>(numberDownInfeasible[iInteger]) /
+                         double ratio = 1.0 + INFEAS_MULTIPLIER*static_cast<double>(numberDownInfeasible[iInteger]) /
                                         static_cast<double>(nDown);
                          downValue *= ratio;
                     }
@@ -709,6 +713,9 @@ ClpNodeStuff::ClpNodeStuff () :
      large_(NULL),
      whichRow_(NULL),
      whichColumn_(NULL),
+#ifndef NO_FATHOM_PRINT
+     handler_(NULL),
+#endif
      nBound_(0),
      saveOptions_(0),
      solverOptions_(0),
@@ -720,6 +727,10 @@ ClpNodeStuff::ClpNodeStuff () :
      numberNodesExplored_(0),
      numberIterations_(0),
      presolveType_(0)
+#ifndef NO_FATHOM_PRINT
+     ,startingDepth_(-1),
+     nodeCalled_(-1)
+#endif
 {
 
 }
@@ -743,6 +754,9 @@ ClpNodeStuff::ClpNodeStuff (const ClpNodeStuff & rhs)
        large_(NULL),
        whichRow_(NULL),
        whichColumn_(NULL),
+#ifndef NO_FATHOM_PRINT
+       handler_(rhs.handler_),
+#endif
        nBound_(0),
        saveOptions_(rhs.saveOptions_),
        solverOptions_(rhs.solverOptions_),
@@ -754,6 +768,10 @@ ClpNodeStuff::ClpNodeStuff (const ClpNodeStuff & rhs)
        numberNodesExplored_(rhs.numberNodesExplored_),
        numberIterations_(rhs.numberIterations_),
        presolveType_(rhs.presolveType_)
+#ifndef NO_FATHOM_PRINT
+     ,startingDepth_(rhs.startingDepth_),
+       nodeCalled_(rhs.nodeCalled_)
+#endif
 {
 }
 //----------------------------------------------------------------
@@ -796,6 +814,11 @@ ClpNodeStuff::operator=(const ClpNodeStuff& rhs)
           numberNodesExplored_ = rhs.numberNodesExplored_;
           numberIterations_ = rhs.numberIterations_;
           presolveType_ = rhs.presolveType_;
+#ifndef NO_FATHOM_PRINT
+	  handler_ = rhs.handler_;
+	  startingDepth_ = rhs.startingDepth_;
+	  nodeCalled_ = rhs.nodeCalled_;
+#endif
      }
      return *this;
 }
@@ -1159,10 +1182,13 @@ ClpHashValue::addValue(double value)
      return numberHash_ - 1;
 }
 
-int
-ClpHashValue::hash ( double value) const
-{
-     static int mmult[] = {
+namespace {
+  /*
+    Originally a local static variable in ClpHashValue::hash.
+	Local static variables are a problem when building DLLs on Windows, but
+	file-local constants seem to be ok.  -- lh, 101016 --
+  */
+  const int mmult_for_hash[] = {
           262139, 259459, 256889, 254291, 251701, 249133, 246709, 244247,
           241667, 239179, 236609, 233983, 231289, 228859, 226357, 223829,
           221281, 218849, 216319, 213721, 211093, 208673, 206263, 203773,
@@ -1174,6 +1200,11 @@ ClpHashValue::hash ( double value) const
           103387, 101021, 98639, 96179, 93911, 91583, 89317, 86939, 84521,
           82183, 79939, 77587, 75307, 72959, 70793, 68447, 66103
      };
+}
+int
+ClpHashValue::hash ( double value) const
+{
+     
      union {
           double d;
           char c[8];
@@ -1185,7 +1216,7 @@ ClpHashValue::hash ( double value) const
 
      for ( j = 0; j < 8; ++j ) {
           int ichar = v1.c[j];
-          n += mmult[j] * ichar;
+          n += mmult_for_hash[j] * ichar;
      }
      return ( abs ( n ) % maxHash_ );	/* integer abs */
 }

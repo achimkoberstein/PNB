@@ -1,6 +1,7 @@
-/* $Id: ClpMessage.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpMessage.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 #include "ClpMessage.hpp"
@@ -99,7 +100,15 @@ static Clp_message clp_us_english[] = {
      {CLP_COMPLICATED_MODEL, 3004, 1, "Can not use addRows or addColumns on CoinModel as mixed, %d rows, %d columns"},
      {CLP_BAD_STRING_VALUES, 3005, 1, "%d string elements had no values associated with them"},
      {CLP_CRUNCH_STATS, 61, 2, "Crunch %d (%d) rows, %d (%d) columns and %d (%d) elements"},
+     {CLP_PARAMETRICS_STATS, 62, 1, "Theta %g - objective %g"},
+     {CLP_PARAMETRICS_STATS2, 63, 2, "Theta %g - objective %g, %s in, %s out"},
+#ifndef NO_FATHOM_PRINT
+     {CLP_FATHOM_STATUS, 63, 2, "Fathoming node %d - %d nodes (%d iterations) - current depth %d"},
+     {CLP_FATHOM_SOLUTION, 64, 1, "Fathoming node %d - solution of %g after %d nodes at depth %d"},
+     {CLP_FATHOM_FINISH, 65, 1, "Fathoming node %d (depth %d) took %d nodes (%d iterations) - maximum depth %d"},
+#endif
      {CLP_GENERAL, 1000, 1, "%s"},
+     {CLP_GENERAL2, 1001, 2, "%s"},
      {CLP_DUMMY_END, 999999, 0, ""}
 };
 static Clp_message uk_english[] = {

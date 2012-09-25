@@ -1,5 +1,7 @@
 // Copyright (C) 2006, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef OsiBranchingObject_H
 #define OsiBranchingObject_H
 
@@ -8,6 +10,7 @@
 #include <vector>
 
 #include "CoinError.hpp"
+#include "CoinTypes.hpp"
 
 class OsiSolverInterface;
 class OsiSolverBranch;

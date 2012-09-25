@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 //Edwin 11/25/09 carved out of CbcCompareActual
+
 #ifndef CbcCompareDefault_H
 #define CbcCompareDefault_H
 
@@ -48,7 +54,7 @@ public:
     using CbcCompareBase::newSolution ;
     /// This allows method to change behavior as it is called
     /// after each solution
-    virtual void newSolution(CbcModel * model,
+    virtual bool newSolution(CbcModel * model,
                              double objectiveAtContinuous,
                              int numberInfeasibilitiesAtContinuous) ;
     /// This allows method to change behavior
@@ -106,6 +112,8 @@ protected:
     int startNodeNumber_;
     /// Node number when dive started
     int afterNodeNumber_;
+    /// Indicates doing setup for diving
+    bool setupForDiving_ ;
 };
 
 #endif //CbcCompareDefault_H

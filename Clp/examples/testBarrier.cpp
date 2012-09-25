@@ -1,18 +1,29 @@
-/* $Id: testBarrier.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: testBarrier.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
+// @TODO the ifdef WSSMP_BARRIER currently does not work - the define is never set
+// best would be if one could tell ClpModel to use the wssmp factorization code, if available, without having to check for some define
 
 #include "ClpInterior.hpp"
 #include "ClpSimplex.hpp"
+#ifdef WSSMP_BARRIER
 #include "ClpCholeskyWssmp.hpp"
+#endif
 #include "ClpCholeskyDense.hpp"
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpInterior  model;
      int status;
-     if (argc < 2)
-          status = model.readMps("../../Data/Sample/p0033.mps");
-     else
+     if (argc < 2) {
+#if defined(SAMPLEDIR)
+          status = model.readMps(SAMPLEDIR "/p0033.mps", true);
+#else
+          fprintf(stderr, "Do not know where to find sample MPS files.\n");
+          exit(1);
+#endif
+     } else
           status = model.readMps(argv[1]);
      if (status) {
           printf("errors on input\n");

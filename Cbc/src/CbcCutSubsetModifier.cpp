@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2003, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 //Edwin 11/25/09 carved out of CbcCutGenerator
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -87,6 +93,7 @@ CbcCutSubsetModifier::modify(const OsiSolverInterface * /*solver*/,
             break;
         }
     }
+#ifdef COIN_DETAIL
     if (!returnCode) {
         const double * element = cut.row().getElements();
         printf("%g <= ", cut.lb());
@@ -95,6 +102,7 @@ CbcCutSubsetModifier::modify(const OsiSolverInterface * /*solver*/,
         }
         printf("<= %g\n", cut.ub());
     }
+#endif
     //return 3;
     return returnCode;
 }

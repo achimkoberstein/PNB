@@ -1,6 +1,8 @@
 /* $Id$ */
 // Copyright (C) 2007, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 
 /*! \file CbcSolverHeuristics.cpp
     \brief Second level routines for the cbc stand-alone solver.
@@ -107,7 +109,9 @@ fixVubs(CbcModel & model, int skipZero2,
     double fractionFixed = dextra[4];
     double fixAbove = dextra[2];
     double fixAboveValue = (dextra[5] > 0.0) ? dextra[5] : 1.0;
+#ifdef COIN_DETAIL
     double time1 = CoinCpuTime();
+#endif
     int leaveIntFree = extra[1];
     OsiSolverInterface * originalSolver = model.solver();
     OsiClpSolverInterface * originalClpSolver = dynamic_cast< OsiClpSolverInterface*> (originalSolver);
@@ -122,9 +126,11 @@ fixVubs(CbcModel & model, int skipZero2,
         double * saveUB = NULL;
         int numberColumns = originalLpSolver->numberColumns();
         if (fixAbove > 0.0) {
+#ifdef COIN_DETAIL
             double time1 = CoinCpuTime();
+#endif
             originalClpSolver->initialSolve();
-            printf("first solve took %g seconds\n", CoinCpuTime() - time1);
+            COIN_DETAIL_PRINT(printf("first solve took %g seconds\n", CoinCpuTime() - time1));
             double * columnLower = originalLpSolver->columnLower() ;
             double * columnUpper = originalLpSolver->columnUpper() ;
             const double * solution = originalLpSolver->primalColumnSolution();
@@ -151,7 +157,7 @@ fixVubs(CbcModel & model, int skipZero2,
                     }
                 }
             }
-            printf("%d artificials fixed, %d left as in solution\n", nFix, nArt);
+            COIN_DETAIL_PRINT(printf("%d artificials fixed, %d left as in solution\n", nFix, nArt));
             lpSolver = pinfo.presolvedModel(*originalLpSolver, 1.0e-8, true, 10);
             if (!lpSolver || doAction == 2) {
                 // take off fixing in original
@@ -580,8 +586,9 @@ fixVubs(CbcModel & model, int skipZero2,
                     }
                 }
             }
+#ifdef COIN_DETAIL
             if (numberLayered) {
-                printf("%d (%d integer) at priority %d\n", numberLayered, numberInteger, 1 + (jLayer / 100));
+	        printf("%d (%d integer) at priority %d\n", numberLayered, numberInteger, 1 + (jLayer / 100));
                 char buffer[50];
                 for (int i = 1; i < nCheck; i++) {
                     if (countsI[i] || countsC[i]) {
@@ -595,6 +602,7 @@ fixVubs(CbcModel & model, int skipZero2,
                     }
                 }
             }
+#endif
         }
     }
     delete [] counts;
@@ -743,7 +751,7 @@ fixVubs(CbcModel & model, int skipZero2,
                     nTotalFixed += nFixed;
                     jLayer += 100;
                 }
-                printf("This fixes %d variables in lower priorities\n", nTotalFixed);
+                COIN_DETAIL_PRINT(printf("This fixes %d variables in lower priorities\n", nTotalFixed));
                 break;
             }
             for ( iColumn = 0; iColumn < numberColumns; iColumn++) {
@@ -792,11 +800,11 @@ fixVubs(CbcModel & model, int skipZero2,
                 }
             }
             if (toZero || toOne)
-                printf("%d at 0 fixed and %d at one fixed\n", toZero, toOne);
-            printf("%d variables free, %d fixed to 0, %d to 1 - smallest %g, largest %g\n",
-                   numberFree, atZero, atOne, smallest, largest);
+	      COIN_DETAIL_PRINT(printf("%d at 0 fixed and %d at one fixed\n", toZero, toOne));
+            COIN_DETAIL_PRINT(printf("%d variables free, %d fixed to 0, %d to 1 - smallest %g, largest %g\n",
+				     numberFree, atZero, atOne, smallest, largest));
             if (numberGreater && !iPass)
-                printf("%d variables have value > 1.0\n", numberGreater);
+	      COIN_DETAIL_PRINT(printf("%d variables have value > 1.0\n", numberGreater));
             //skipZero2=0; // leave 0 fixing
             int jLayer = 0;
             int nFixed = -1;
@@ -827,7 +835,7 @@ fixVubs(CbcModel & model, int skipZero2,
                 nTotalFixed += nFixed;
                 jLayer += 100;
             }
-            printf("This fixes %d variables in lower priorities\n", nTotalFixed);
+            COIN_DETAIL_PRINT(printf("This fixes %d variables in lower priorities\n", nTotalFixed));
             if (iLargest < 0 || numberFree <= leaveIntFree)
                 break;
             double movement;
@@ -865,8 +873,8 @@ fixVubs(CbcModel & model, int skipZero2,
             lpSolver->setDualObjectiveLimit(saveObj + maxCostUp);
             crunchIt(lpSolver);
             double moveObj = lpSolver->objectiveValue() - saveObj;
-            printf("movement %s was %g costing %g\n",
-                   (way == -1) ? "down" : "up", movement, moveObj);
+            COIN_DETAIL_PRINT(printf("movement %s was %g costing %g\n",
+				     (way == -1) ? "down" : "up", movement, moveObj));
             if (way == -1 && (moveObj >= maxCostUp || lpSolver->status())) {
                 // go up
                 columnLower = models[kPass].columnLower();
@@ -894,7 +902,7 @@ fixVubs(CbcModel & model, int skipZero2,
             models[kPass] = *lpSolver;
         }
         lpSolver->dual();
-        printf("Fixing took %g seconds\n", CoinCpuTime() - time1);
+        COIN_DETAIL_PRINT(printf("Fixing took %g seconds\n", CoinCpuTime() - time1));
         columnLower = lpSolver->columnLower();
         columnUpper = lpSolver->columnUpper();
         fullSolution = lpSolver->primalColumnSolution();
@@ -1006,7 +1014,7 @@ fixVubs(CbcModel & model, int skipZero2,
                     nFixed1++;
                 }
             }
-            printf("%d fixed %d orig 0 %d 1\n", nFixed, nFixed0, nFixed1);
+            COIN_DETAIL_PRINT(printf("%d fixed %d orig 0 %d 1\n", nFixed, nFixed0, nFixed1));
             int jLayer = 0;
             nFixed = -1;
             int nTotalFixed = 0;
@@ -1046,15 +1054,15 @@ fixVubs(CbcModel & model, int skipZero2,
                     nFixed++;
                 }
             }
-            printf("This fixes %d variables in lower priorities - total %d (%d integer) - all target %d, int target %d\n",
-                   nTotalFixed, nFixed, nFixedI, static_cast<int>(fractionFixed*numberColumns), static_cast<int> (fractionIntFixed*numberInteger));
+            COIN_DETAIL_PRINT(printf("This fixes %d variables in lower priorities - total %d (%d integer) - all target %d, int target %d\n",
+				     nTotalFixed, nFixed, nFixedI, static_cast<int>(fractionFixed*numberColumns), static_cast<int> (fractionIntFixed*numberInteger)));
             int nBad = 0;
             int nRelax = 0;
             for ( iColumn = 0; iColumn < numberColumns; iColumn++) {
                 if (lo[iColumn] < columnLower[iColumn] ||
                         up[iColumn] > columnUpper[iColumn]) {
-                    printf("bad %d old %g %g, new %g %g\n", iColumn, lo[iColumn], up[iColumn],
-                           columnLower[iColumn], columnUpper[iColumn]);
+                    COIN_DETAIL_PRINT(printf("bad %d old %g %g, new %g %g\n", iColumn, lo[iColumn], up[iColumn],
+					     columnLower[iColumn], columnUpper[iColumn]));
                     nBad++;
                 }
                 if (lo[iColumn] > columnLower[iColumn] ||
@@ -1062,7 +1070,7 @@ fixVubs(CbcModel & model, int skipZero2,
                     nRelax++;
                 }
             }
-            printf("%d relaxed\n", nRelax);
+            COIN_DETAIL_PRINT(printf("%d relaxed\n", nRelax));
             if (iRelax > 20 && nRelax == chunk)
                 nRelax = 0;
             if (iRelax > 50)
@@ -1125,7 +1133,7 @@ fixVubs(CbcModel & model, int skipZero2,
         if (columnLower[iColumn] == columnUpper[iColumn])
             doAction++;
     }
-    printf("%d fixed by vub preprocessing\n", doAction);
+    COIN_DETAIL_PRINT(printf("%d fixed by vub preprocessing\n", doAction));
     if (originalColumns) {
         originalLpSolver->initialSolve();
     }
@@ -1352,6 +1360,26 @@ int doHeuristics(CbcModel * model, int type, CbcOrClpParam* parameters_,
         model->addHeuristic(&heuristic3);
         model->addHeuristic(&heuristic3a);
         anyToDo = true;
+    }
+    if ((useRENS==7 && kType==1) || (useRENS==8 && kType==2)) {
+        useRENS=1+2*(useRENS-7);
+        CbcHeuristicRENS heuristic6a(*model);
+        heuristic6a.setHeuristicName("RENSdj");
+        heuristic6a.setFractionSmall(0.6/*3.4*/);
+        heuristic6a.setFeasibilityPumpOptions(3);
+        heuristic6a.setNumberNodes(10);
+	heuristic6a.setWhereFrom(4*256+4*1);
+	heuristic6a.setWhen(2);
+	heuristic6a.setRensType(1+16);
+        model->addHeuristic(&heuristic6a) ;
+        heuristic6a.setHeuristicName("RENSub");
+        heuristic6a.setFractionSmall(0.4);
+        heuristic6a.setFeasibilityPumpOptions(1008003);
+        heuristic6a.setNumberNodes(50);
+	heuristic6a.setWhereFrom(4*256+4*1);
+	heuristic6a.setWhen(2);
+	heuristic6a.setRensType(2+16);
+        model->addHeuristic(&heuristic6a) ;
     }
     if (useRENS >= kType && useRENS <= kType + 1) {
 #ifndef JJF_ONE

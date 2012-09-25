@@ -1,6 +1,10 @@
-/* $Id: Cbc_C_Interface.h 1286 2009-11-09 23:33:07Z EdwinStraver $ */
-/* Copyright (C) 2004 International Business Machines
-   Corporation and others.  All Rights Reserved.*/
+/* $Id: Cbc_C_Interface.h 1675 2011-06-19 17:23:14Z stefan $ */
+/*
+  Copyright (C) 2004 International Business Machines Corporation and others.
+  All Rights Reserved.
+
+  This code is licensed under the terms of the Eclipse Public License (EPL).
+*/
 #ifndef CbcModelC_H
 #define CbcModelC_H
 
@@ -170,7 +174,10 @@ extern "C" {
     COINLIBAPI void COINLINKAGE
     Cbc_problemName(Cbc_Model * model, int maxNumberCharacters, char * array)
     ;
-    /** Sets problem name.  Must have \0 at end.  */
+    /** Sets problem name.
+    
+      \p array must be a null-terminated string.
+    */
     COINLIBAPI int COINLINKAGE
     Cbc_setProblemName(Cbc_Model * model, int maxNumberCharacters, char * array)
     ;

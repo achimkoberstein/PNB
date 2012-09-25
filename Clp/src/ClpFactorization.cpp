@@ -1,6 +1,8 @@
-/* $Id: ClpFactorization.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpFactorization.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #include "CoinPragma.hpp"
 #include "ClpFactorization.hpp"
 #ifndef SLIM_CLP
@@ -1166,6 +1168,9 @@ ClpFactorization::ClpFactorization (const ClpFactorization & rhs,
      goDenseThreshold_ = rhs.goDenseThreshold_;
      goSmallThreshold_ = rhs.goSmallThreshold_;
      int goDense = 0;
+#ifdef CLP_REUSE_ETAS
+     model_=rhs.model_;
+#endif
      if (denseIfSmaller > 0 && denseIfSmaller <= goDenseThreshold_) {
           CoinDenseFactorization * denseR =
                dynamic_cast<CoinDenseFactorization *>(rhs.coinFactorizationB_);
@@ -1291,6 +1296,9 @@ ClpFactorization::operator=(const ClpFactorization& rhs)
                networkBasis_ = NULL;
 #endif
           forceB_ = rhs.forceB_;
+#ifdef CLP_REUSE_ETAS
+	  model_=rhs.model_;
+#endif
           goOslThreshold_ = rhs.goOslThreshold_;
           goDenseThreshold_ = rhs.goDenseThreshold_;
           goSmallThreshold_ = rhs.goSmallThreshold_;
@@ -1390,12 +1398,18 @@ ClpFactorization::forceOtherFactorization(int which)
           }
      } else if (!coinFactorizationA_) {
           coinFactorizationA_ = new CoinFactorization();
+	  goOslThreshold_ = -1;
+	  goDenseThreshold_ = -1;
+	  goSmallThreshold_ = -1;
      }
 }
 int
 ClpFactorization::factorize ( ClpSimplex * model,
                               int solveType, bool valuesPass)
 {
+#ifdef CLP_REUSE_ETAS
+     model_= model;
+#endif
      //if ((model->specialOptions()&16384))
      //printf("factor at %d iterations\n",model->numberIterations());
      ClpMatrixBase * matrix = model->clpMatrix();
@@ -2276,8 +2290,14 @@ ClpFactorization::replaceColumn ( const ClpSimplex * model,
                                  acceptablePivot);
                } else {
                     bool tab = coinFactorizationB_->wantsTableauColumn();
-                    int numberIterations = model->numberIterations();
-                    coinFactorizationB_->setUsefulInformation(&numberIterations, 1);
+#ifdef CLP_REUSE_ETAS
+		    int tempInfo[2];
+		    tempInfo[1] = model_->sequenceOut();
+#else
+		    int tempInfo[1];
+#endif
+		    tempInfo[0] = model->numberIterations();
+		    coinFactorizationB_->setUsefulInformation(tempInfo, 1);
                     returnCode =
                          coinFactorizationB_->replaceColumn(tab ? tableauColumn : regionSparse,
                                                             pivotRow,
@@ -2363,7 +2383,13 @@ ClpFactorization::updateColumnFT ( CoinIndexedVector * regionSparse,
                             regionSparse2);
                coinFactorizationA_->setCollectStatistics(false);
           } else {
-               returnCode = coinFactorizationB_->updateColumnFT(regionSparse,
+#ifdef CLP_REUSE_ETAS
+              int tempInfo[2];
+	      tempInfo[0] = model_->numberIterations();
+	      tempInfo[1] = model_->sequenceIn();
+	      coinFactorizationB_->setUsefulInformation(tempInfo, 2);
+#endif
+	      returnCode = coinFactorizationB_->updateColumnFT(regionSparse,
                             regionSparse2);
           }
 #ifdef CLP_FACTORIZATION_INSTRUMENT
@@ -2555,10 +2581,18 @@ ClpFactorization::updateTwoColumnsFT ( CoinIndexedVector * regionSparse1,
                                                           noPermuteRegion3);
                }
 #else
-returnCode = coinFactorizationB_->updateTwoColumnsFT(regionSparse1,
-             regionSparse2,
-             regionSparse3,
-             noPermuteRegion3);
+#ifdef CLP_REUSE_ETAS
+		    int tempInfo[2];
+		    tempInfo[0] = model_->numberIterations();
+		    tempInfo[1] = model_->sequenceIn();
+		    coinFactorizationB_->setUsefulInformation(tempInfo, 3);
+#endif
+		    returnCode = 
+		      coinFactorizationB_->updateTwoColumnsFT(
+							      regionSparse1,
+							      regionSparse2,
+							      regionSparse3,
+							      noPermuteRegion3);
 #endif
           }
 #ifdef CLP_FACTORIZATION_INSTRUMENT
@@ -2788,10 +2822,14 @@ void
 ClpFactorization::saferTolerances (  double zeroValue,
                                      double pivotValue)
 {
+     double newValue;
      // better to have small tolerance even if slower
+     if (zeroValue > 0.0)
+          newValue = zeroValue;
+     else
+          newValue = -zeroTolerance() * zeroValue;
      zeroTolerance(CoinMin(zeroTolerance(), zeroValue));
      // better to have large tolerance even if slower
-     double newValue;
      if (pivotValue > 0.0)
           newValue = pivotValue;
      else

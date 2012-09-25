@@ -1,7 +1,7 @@
-/* $Id: addBits.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: addBits.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 /*
   This is a simple example to create a model using CoinModel.
@@ -31,12 +31,20 @@
 #include <iomanip>
 #include <cassert>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      // Empty model
      ClpSimplex  model;
-     std::string mpsFileName = "../../Data/Netlib/25fv47.mps";
+     std::string mpsFileName;
      if (argc >= 2) mpsFileName = argv[1];
+     else {
+#if defined(NETLIBDIR)
+          mpsFileName = NETLIBDIR "/25fv47.mps";
+#else
+          fprintf(stderr, "Do not know where to find netlib MPS files.\n");
+          exit(1);
+#endif
+     }
      int status = model.readMps(mpsFileName.c_str(), true);
 
      if (status) {
@@ -159,14 +167,14 @@ int main (int argc, const char *argv[])
           build.setLogLevel(1);
      int numberErrors = model2.loadProblem(build);
      // should fail as we never set multiplier
-     assert (numberErrors);
+     assert(numberErrors);
      time3 = CoinCpuTime() - time2;
      // subtract out unsuccessful times
      time1 += time3;
      time2 += time3;
      build.associateElement("multiplier", 0.0);
      numberErrors = model2.loadProblem(build);
-     assert (!numberErrors);
+     assert(!numberErrors);
      time3 = CoinCpuTime();
      printf("Time for build using CoinModel is %g (%g for successful loadproblem)\n", time3 - time1,
             time3 - time2);
@@ -175,7 +183,7 @@ int main (int argc, const char *argv[])
      for (double multiplier = 0.0; multiplier < 2.0; multiplier += 0.1) {
           build.associateElement("multiplier", multiplier);
           numberErrors = model2.loadProblem(build, true);
-          assert (!numberErrors);
+          assert(!numberErrors);
           model2.dual();
      }
 

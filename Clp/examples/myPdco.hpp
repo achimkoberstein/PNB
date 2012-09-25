@@ -1,6 +1,8 @@
-/* $Id: myPdco.hpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: myPdco.hpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef myPdco_H
 #define myPdco_H
 

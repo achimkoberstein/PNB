@@ -1,6 +1,7 @@
-/* $Id: CbcParam.hpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcParam.hpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #ifndef CbcParam_H
 #define CbcParam_H

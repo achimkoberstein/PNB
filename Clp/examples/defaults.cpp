@@ -1,20 +1,26 @@
-/* $Id: defaults.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: defaults.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "ClpSimplex.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include <iomanip>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpSimplex  model;
      int status;
      // Keep names
-     if (argc < 2)
-          status = model.readMps("../../Data/Sample/p0033.mps", true);
-     else
+     if (argc < 2) {
+#if defined(SAMPLEDIR)
+          status = model.readMps(SAMPLEDIR "/p0033.mps", true);
+#else
+          fprintf(stderr, "Do not know where to find sample MPS files.\n");
+          exit(1);
+#endif
+     } else
           status = model.readMps(argv[1], true);
      /*
        This driver is similar to minimum.cpp, but it
@@ -69,7 +75,7 @@ int main (int argc, const char *argv[])
      model.getDblParam(ClpPrimalTolerance, value);
      model.setPrimalTolerance(value);
 
-     model.setDualTolerance( model.dualTolerance()) ;
+     model.setDualTolerance(model.dualTolerance()) ;
 
      // Other Param stuff
 
@@ -213,30 +219,30 @@ int main (int argc, const char *argv[])
           std::cout << std::setw(6) << iRow << " " << std::setw(8) << (*rowNames)[iRow];
           value = rowPrimal[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = rowDual[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = rowLower[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = rowUpper[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           if (rowObjective) {
                value = rowObjective[iRow];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           }
           std::cout << std::endl;
      }
@@ -274,35 +280,35 @@ int main (int argc, const char *argv[])
           std::cout << std::setw(6) << iColumn << " " << std::setw(8) << (*columnNames)[iColumn];
           value = columnPrimal[iColumn];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = columnDual[iColumn];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = columnLower[iColumn];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = columnUpper[iColumn];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = columnObjective[iColumn];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
 
           std::cout << std::endl;
      }
      std::cout << "--------------------------------------" << std::endl;
 
-     std::cout << resetiosflags(std::ios::fixed | std::ios::showpoint | std::ios::scientific);
+     std::cout << std::resetiosflags(std::ios::fixed | std::ios::showpoint | std::ios::scientific);
 
      // Now matrix
      CoinPackedMatrix * matrix = model2.matrix();

@@ -1,6 +1,7 @@
-/* $Id: ClpPresolve.hpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpPresolve.hpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #ifndef ClpPresolve_H
 #define ClpPresolve_H
@@ -45,12 +46,13 @@ public:
                                  bool doRowObjective = false);
 #ifndef CLP_NO_STD
      /** This version saves data in a file.  The passed in model
-         is updated to be presolved model.  names are always dropped.
+         is updated to be presolved model.  
          Returns non-zero if infeasible*/
      int presolvedModelToFile(ClpSimplex &si, std::string fileName,
                               double feasibilityTolerance = 0.0,
                               bool keepIntegers = true,
                               int numberPasses = 5,
+			      bool dropNames = false,
                               bool doRowObjective = false);
 #endif
      /** Return pointer to presolved model,
@@ -178,6 +180,8 @@ public:
      inline void statistics() {
           presolveActions_ |= 0x80000000;
      }
+     /// Return presolve status (0,1,2)
+     int presolveStatus() const;
 
      /**@name postsolve - postsolve the problem.  If the problem
        has not been solved to optimality, there are no guarantees.

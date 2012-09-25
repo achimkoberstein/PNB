@@ -1,7 +1,7 @@
+// $Id: Clp_C_Interface.cpp 1753 2011-06-19 16:27:26Z stefan $
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
-
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 
 #include "CoinPragma.hpp"
@@ -441,7 +441,8 @@ COINLIBAPI void COINLINKAGE
 Clp_problemName(Clp_Simplex * model, int maxNumberCharacters, char * array)
 {
      std::string name = model->model_->problemName();
-     maxNumberCharacters = CoinMin(maxNumberCharacters, (int)strlen(name.c_str()));
+     maxNumberCharacters = CoinMin(maxNumberCharacters,
+     				   ((int) strlen(name.c_str()))+1) ;
      strncpy(array, name.c_str(), maxNumberCharacters - 1);
      array[maxNumberCharacters-1] = '\0';
 }

@@ -1,6 +1,8 @@
-/* $Id: CbcBranchBase.cpp 1286 2009-11-09 23:33:07Z EdwinStraver $ */
+/* $Id: CbcBranchBase.cpp 1573 2011-01-05 01:12:36Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)

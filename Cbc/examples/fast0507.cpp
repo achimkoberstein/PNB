@@ -1,5 +1,8 @@
+// $Id: fast0507.cpp 1574 2011-01-05 01:13:55Z lou $
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -15,6 +18,7 @@
 #include "CbcBranchActual.hpp"
 #include "CbcBranchUser.hpp"
 #include "CbcBranchCut.hpp"
+#include "CbcBranchToFixLots.hpp"
 #include "CbcCompareUser.hpp"
 #include "CbcCutGenerator.hpp"
 #include "CbcHeuristicGreedy.hpp"
@@ -69,7 +73,7 @@ int main (int argc, const char *argv[])
 
   // Read in model using argv[1]
   // and assert that it is a clean model
-  std::string mpsFileName = "../../Data/Sample/p0033.mps";
+  std::string mpsFileName;
   if (argc>=2) mpsFileName = argv[1];
   int numMpsReadErrors = solver1.readMps(mpsFileName.c_str(),"");
   assert(numMpsReadErrors==0);

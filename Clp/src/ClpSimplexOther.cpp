@@ -1,6 +1,7 @@
-/* $Id: ClpSimplexOther.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpSimplexOther.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 
@@ -14,16 +15,18 @@
 #include "ClpHelperFunctions.hpp"
 #include "ClpFactorization.hpp"
 #include "ClpDualRowDantzig.hpp"
+#include "ClpDynamicMatrix.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinIndexedVector.hpp"
 #include "CoinBuild.hpp"
 #include "CoinMpsIO.hpp"
+#include "CoinFloatEqual.hpp"
 #include "ClpMessage.hpp"
 #include <cfloat>
 #include <cassert>
 #include <string>
 #include <stdio.h>
-#include <iostream>
+#include <iostream> 
 /* Dual ranging.
    This computes increase/decrease in cost for each given variable and corresponding
    sequence numbers which would change basis.  Sequence numbers are 0..numberColumns
@@ -116,7 +119,7 @@ void ClpSimplexOther::dualRanging(int numberCheck, const int * which,
                          scale2 += arrayX[j] * arrayX[j];
                     }
                     scale2 = 1.0 / sqrt(scale2);
-                    valueIncrease[i] = scale2;
+                    //valueIncrease[i] = scale2;
                     if (sequenceIncrease >= 0) {
                          double djValue = dj_[sequenceIncrease];
                          if (fabs(djValue) > 10.0 * dualTolerance_) {
@@ -1307,6 +1310,8 @@ ClpSimplexOther::crunch(double * rhs, int * whichRow, int * whichColumn,
      }
      ClpSimplex * small = NULL;
      if (!returnCode) {
+       //printf("CRUNCH from (%d,%d) to (%d,%d)\n",
+       //     numberRows_,numberColumns_,numberRows2,numberColumns2);
           small = new ClpSimplex(this, numberRows2, whichRow,
                                  numberColumns2, whichColumn, true, false);
 #if 0
@@ -1953,7 +1958,14 @@ ClpSimplexOther::parametrics(double startingTheta, double & endingTheta, double 
                     // bad ranges or initial
                     returnCode = -1;
                }
-               endingTheta = CoinMin(endingTheta, maxTheta);
+	       if (maxTheta < endingTheta) {
+		 char line[100];
+		 sprintf(line,"Crossover considerations reduce ending  theta from %g to %g\n", 
+			 endingTheta,maxTheta);
+		 handler_->message(CLP_GENERAL,messages_)
+		   << line << CoinMessageEol;
+		 endingTheta = maxTheta;
+	       }
                if (endingTheta < startingTheta) {
                     // bad initial
                     returnCode = -2;
@@ -1971,10 +1983,10 @@ ClpSimplexOther::parametrics(double startingTheta, double & endingTheta, double 
                reinterpret_cast<ClpSimplexDual *> (this)->gutsOfDual(0, saveDuals, -1, data);
                assert (!problemStatus_);
                // Now do parametrics
-               printf("at starting theta of %g objective value is %g\n", startingTheta,
-                      objectiveValue());
+	       handler_->message(CLP_PARAMETRICS_STATS, messages_)
+		 << startingTheta << objectiveValue() << CoinMessageEol;
                while (!returnCode) {
-                    assert (reportIncrement);
+		    //assert (reportIncrement);
                     returnCode = parametricsLoop(startingTheta, endingTheta, reportIncrement,
                                                  chgLower, chgUpper, chgObjective, data,
                                                  canTryQuick);
@@ -1987,13 +1999,20 @@ ClpSimplexOther::parametrics(double startingTheta, double & endingTheta, double 
                          //upper_[i] += change*chgUpper[i];
                          //cost_[i] += change*chgObjective[i];
                          //}
-                         printf("at theta of %g objective value is %g\n", startingTheta,
-                                objectiveValue());
+			 handler_->message(CLP_PARAMETRICS_STATS, messages_)
+			   << startingTheta << objectiveValue() << CoinMessageEol;
                          if (startingTheta >= endingTheta)
                               break;
                     } else if (returnCode == -1) {
                          // trouble - do external solve
                          needToDoSomething = true;
+		    } else if (problemStatus_==1) {
+		      // can't move any further
+		      if (!canTryQuick) {
+			handler_->message(CLP_PARAMETRICS_STATS, messages_)
+			  << endingTheta << objectiveValue() << CoinMessageEol;
+			problemStatus_=0;
+		      }
                     } else {
                          abort();
                     }
@@ -2042,7 +2061,10 @@ ClpSimplexOther::parametrics(double startingTheta, double & endingTheta, double 
                     }
                     copyModel.dual();
                     if (copyModel.problemStatus()) {
-                         printf("Can not get to theta of %g\n", startingTheta);
+		      char line[100];
+		      sprintf(line,"Can not get to theta of %g\n", startingTheta);
+		      handler_->message(CLP_GENERAL,messages_)
+			<< line << CoinMessageEol;
                          canTryQuick = false; // do slowly to get exact amount
                          // back to last known good
                          if (cleanedUp == 1)
@@ -2064,7 +2086,569 @@ ClpSimplexOther::parametrics(double startingTheta, double & endingTheta, double 
           delete [] chgObjective;
      }
      perturbation_ = savePerturbation;
+     char line[100];
+     sprintf(line,"Ending theta %g\n", endingTheta);
+     handler_->message(CLP_GENERAL,messages_)
+       << line << CoinMessageEol;
      return problemStatus_;
+}
+/* Version of parametrics which reads from file
+   See CbcClpParam.cpp for details of format
+   Returns -2 if unable to open file */
+int 
+ClpSimplexOther::parametrics(const char * dataFile)
+{
+  int returnCode=-2;
+  FILE *fp = fopen(dataFile, "r");
+  char line[200];
+  if (!fp) {
+    handler_->message(CLP_UNABLE_OPEN, messages_)
+      << dataFile << CoinMessageEol;
+    return -2;
+  }
+
+  if (!fgets(line, 200, fp)) {
+    sprintf(line,"Empty parametrics file %s?",dataFile);
+    handler_->message(CLP_GENERAL,messages_)
+      << line << CoinMessageEol;
+    fclose(fp);
+    return -2;
+  }
+  char * pos = line;
+  char * put = line;
+  while (*pos >= ' ' && *pos != '\n') {
+    if (*pos != ' ' && *pos != '\t') {
+      *put = static_cast<char>(tolower(*pos));
+      put++;
+    }
+    pos++;
+  }
+  *put = '\0';
+  pos = line;
+  double startTheta=0.0;
+  double endTheta=0.0;
+  double intervalTheta=COIN_DBL_MAX;
+  int detail=0;
+  bool good = true;
+  while (good) {
+    good=false;
+    // check ROWS
+    char * comma = strchr(pos, ',');
+    if (!comma)
+      break;
+    *comma = '\0';
+    if (strcmp(pos,"rows"))
+      break;
+    *comma = ',';
+    pos = comma+1;
+    // check lower theta
+    comma = strchr(pos, ',');
+    if (!comma)
+      break;
+    *comma = '\0';
+    startTheta = atof(pos);
+    *comma = ',';
+    pos = comma+1;
+    // check upper theta
+    comma = strchr(pos, ',');
+    good=true;
+    if (comma)
+      *comma = '\0';
+    endTheta = atof(pos);
+    if (comma) {
+      *comma = ',';
+      pos = comma+1;
+      comma = strchr(pos, ',');
+      if (comma)
+	*comma = '\0';
+      intervalTheta = atof(pos);
+      if (comma) {
+	*comma = ',';
+	pos = comma+1;
+	comma = strchr(pos, ',');
+	if (comma)
+	  *comma = '\0';
+	detail = atoi(pos);
+	if (comma) 
+	*comma = ',';
+      }
+    }
+    break;
+  }
+  if (good) {
+    if (startTheta<0.0||
+	startTheta>endTheta||
+	intervalTheta<0.0)
+      good=false;
+    if (detail<0||detail>1)
+      good=false;
+  }
+  if (intervalTheta>=endTheta)
+    intervalTheta=0.0;
+  if (!good) {
+    sprintf(line,"Odd first line %s on file %s?",line,dataFile);
+    handler_->message(CLP_GENERAL,messages_)
+      << line << CoinMessageEol;
+    fclose(fp);
+    return -2;
+  }
+  if (!fgets(line, 200, fp)) {
+    sprintf(line,"Not enough records on parametrics file %s?",dataFile);
+    handler_->message(CLP_GENERAL,messages_)
+      << line << CoinMessageEol;
+    fclose(fp);
+    return -2;
+  }
+  double * lowerRowMove = NULL;
+  double * upperRowMove = NULL;
+  double * lowerColumnMove = NULL;
+  double * upperColumnMove = NULL;
+  double * objectiveMove = NULL;
+  char saveLine[200];
+  saveLine[0]='\0';
+  std::string headingsRow[] = {"name", "number", "lower", "upper", "rhs"};
+  int gotRow[] = { -1, -1, -1, -1, -1};
+  int orderRow[5];
+  assert(sizeof(gotRow) == sizeof(orderRow));
+  int nAcross = 0;
+  pos = line;
+  put = line;
+  while (*pos >= ' ' && *pos != '\n') {
+    if (*pos != ' ' && *pos != '\t') {
+      *put = static_cast<char>(tolower(*pos));
+      put++;
+    }
+    pos++;
+  }
+  *put = '\0';
+  pos = line;
+  int i;
+  good = true;
+  if (strncmp(line,"column",6)) {
+    while (pos) {
+      char * comma = strchr(pos, ',');
+      if (comma)
+	*comma = '\0';
+      for (i = 0; i < static_cast<int> (sizeof(gotRow) / sizeof(int)); i++) {
+	if (headingsRow[i] == pos) {
+	  if (gotRow[i] < 0) {
+	    orderRow[nAcross] = i;
+	    gotRow[i] = nAcross++;
+	  } else {
+	    // duplicate
+	    good = false;
+	  }
+	  break;
+	}
+      }
+      if (i == static_cast<int> (sizeof(gotRow) / sizeof(int)))
+	good = false;
+      if (comma) {
+	*comma = ',';
+	pos = comma + 1;
+      } else {
+	break;
+      }
+    }
+    if (gotRow[0] < 0 && gotRow[1] < 0)
+      good = false;
+    if (gotRow[0] >= 0 && gotRow[1] >= 0)
+      good = false;
+    if (gotRow[0] >= 0 && !lengthNames())
+      good = false;
+    if (gotRow[4]<0) {
+      if (gotRow[2] < 0 && gotRow[3] >= 0)
+	good = false;
+      else if (gotRow[3] < 0 && gotRow[2] >= 0)
+	good = false;
+    } else if (gotRow[2]>=0||gotRow[3]>=0) {
+      good = false;
+    }
+    if (good) {
+      char ** rowNames = new char * [numberRows_];
+      int iRow;
+      for (iRow = 0; iRow < numberRows_; iRow++) {
+	rowNames[iRow] =
+	  CoinStrdup(rowName(iRow).c_str());
+      }
+      lowerRowMove = new double [numberRows_];
+      memset(lowerRowMove,0,numberRows_*sizeof(double));
+      upperRowMove = new double [numberRows_];
+      memset(upperRowMove,0,numberRows_*sizeof(double));
+      int nLine = 0;
+      int nBadLine = 0;
+      int nBadName = 0;
+      bool goodLine=false;
+      while (fgets(line, 200, fp)) {
+	goodLine=true;
+	if (!strncmp(line, "ENDATA", 6)||
+	    !strncmp(line, "COLUMN",6))
+	  break;
+	goodLine=false;
+	nLine++;
+	iRow = -1;
+	double upper = 0.0;
+	double lower = 0.0;
+	char * pos = line;
+	char * put = line;
+	while (*pos >= ' ' && *pos != '\n') {
+	  if (*pos != ' ' && *pos != '\t') {
+	    *put = *pos;
+	    put++;
+	  }
+	  pos++;
+	}
+	*put = '\0';
+	pos = line;
+	for (int i = 0; i < nAcross; i++) {
+	  char * comma = strchr(pos, ',');
+	  if (comma) {
+	    *comma = '\0';
+	  } else if (i < nAcross - 1) {
+	    nBadLine++;
+	    break;
+	  }
+	  switch (orderRow[i]) {
+	    // name
+	  case 0:
+	    // For large problems this could be slow
+	    for (iRow = 0; iRow < numberRows_; iRow++) {
+	      if (!strcmp(rowNames[iRow], pos))
+		break;
+	    }
+	    if (iRow == numberRows_)
+	      iRow = -1;
+	    break;
+	    // number
+	  case 1:
+	    iRow = atoi(pos);
+	    if (iRow < 0 || iRow >= numberRows_)
+	      iRow = -1;
+	    break;
+	    // lower
+	  case 2:
+	    upper = atof(pos);
+	    break;
+	    // upper
+	  case 3:
+	    lower = atof(pos);
+	    break;
+	    // rhs
+	  case 4:
+	    lower = atof(pos);
+	    upper = lower;
+	    break;
+	  }
+	  if (comma) {
+	    *comma = ',';
+	    pos = comma + 1;
+	  }
+	}
+	if (iRow >= 0) {
+	  if (rowLower_[iRow]>-1.0e20)
+	    lowerRowMove[iRow] = lower;
+	  else
+	    lowerRowMove[iRow]=0.0;
+	  if (rowUpper_[iRow]<1.0e20)
+	    upperRowMove[iRow] = upper;
+	  else
+	    upperRowMove[iRow] = lower;
+	} else {
+	  nBadName++;
+	  if(saveLine[0]=='\0')
+	    strcpy(saveLine,line);
+	}
+      }
+      sprintf(line,"%d Row fields and %d records", nAcross, nLine);
+      handler_->message(CLP_GENERAL,messages_)
+	<< line << CoinMessageEol;
+      if (nBadName) {
+	sprintf(line," ** %d records did not match on name/sequence, first bad %s", nBadName,saveLine);
+	handler_->message(CLP_GENERAL,messages_)
+	  << line << CoinMessageEol;
+	returnCode=-1;
+	good=false;
+      }
+      for (iRow = 0; iRow < numberRows_; iRow++) {
+	free(rowNames[iRow]);
+      }
+      delete [] rowNames;
+    } else {
+      sprintf(line,"Duplicate or unknown keyword - or name/number fields wrong");
+      handler_->message(CLP_GENERAL,messages_)
+	<< line << CoinMessageEol;
+      returnCode=-1;
+      good=false;
+    }
+  }
+  if (good&&(!strncmp(line, "COLUMN",6)||!strncmp(line, "column",6))) {
+    if (!fgets(line, 200, fp)) {
+      sprintf(line,"Not enough records on parametrics file %s after COLUMNS?",dataFile);
+      handler_->message(CLP_GENERAL,messages_)
+	<< line << CoinMessageEol;
+      fclose(fp);
+      return -2;
+    }
+    std::string headingsColumn[] = {"name", "number", "lower", "upper", "objective"};
+    saveLine[0]='\0';
+    int gotColumn[] = { -1, -1, -1, -1, -1};
+    int orderColumn[5];
+    assert(sizeof(gotColumn) == sizeof(orderColumn));
+    nAcross = 0;
+    pos = line;
+    put = line;
+    while (*pos >= ' ' && *pos != '\n') {
+      if (*pos != ' ' && *pos != '\t') {
+	*put = static_cast<char>(tolower(*pos));
+	put++;
+      }
+      pos++;
+    }
+    *put = '\0';
+    pos = line;
+    int i;
+    if (strncmp(line,"endata",6)&&good) {
+      while (pos) {
+	char * comma = strchr(pos, ',');
+	if (comma)
+	  *comma = '\0';
+	for (i = 0; i < static_cast<int> (sizeof(gotColumn) / sizeof(int)); i++) {
+	  if (headingsColumn[i] == pos) {
+	    if (gotColumn[i] < 0) {
+	      orderColumn[nAcross] = i;
+	      gotColumn[i] = nAcross++;
+	    } else {
+	      // duplicate
+	      good = false;
+	    }
+	    break;
+	  }
+	}
+	if (i == static_cast<int> (sizeof(gotColumn) / sizeof(int)))
+	  good = false;
+	if (comma) {
+	  *comma = ',';
+	  pos = comma + 1;
+	} else {
+	  break;
+	}
+      }
+      if (gotColumn[0] < 0 && gotColumn[1] < 0)
+	good = false;
+      if (gotColumn[0] >= 0 && gotColumn[1] >= 0)
+	good = false;
+      if (gotColumn[0] >= 0 && !lengthNames())
+	good = false;
+      if (good) {
+	char ** columnNames = new char * [numberColumns_];
+	int iColumn;
+	for (iColumn = 0; iColumn < numberColumns_; iColumn++) {
+	  columnNames[iColumn] =
+	    CoinStrdup(columnName(iColumn).c_str());
+	}
+	lowerColumnMove = reinterpret_cast<double *> (malloc(numberColumns_ * sizeof(double)));
+	memset(lowerColumnMove,0,numberColumns_*sizeof(double));
+	upperColumnMove = reinterpret_cast<double *> (malloc(numberColumns_ * sizeof(double)));
+	memset(upperColumnMove,0,numberColumns_*sizeof(double));
+	objectiveMove = reinterpret_cast<double *> (malloc(numberColumns_ * sizeof(double)));
+	memset(objectiveMove,0,numberColumns_*sizeof(double));
+	int nLine = 0;
+	int nBadLine = 0;
+	int nBadName = 0;
+	bool goodLine=false;
+	while (fgets(line, 200, fp)) {
+	  goodLine=true;
+	  if (!strncmp(line, "ENDATA", 6))
+	    break;
+	  goodLine=false;
+	  nLine++;
+	  iColumn = -1;
+	  double upper = 0.0;
+	  double lower = 0.0;
+	  double obj =0.0;
+	  char * pos = line;
+	  char * put = line;
+	  while (*pos >= ' ' && *pos != '\n') {
+	    if (*pos != ' ' && *pos != '\t') {
+	      *put = *pos;
+	      put++;
+	    }
+	    pos++;
+	  }
+	  *put = '\0';
+	  pos = line;
+	  for (int i = 0; i < nAcross; i++) {
+	    char * comma = strchr(pos, ',');
+	    if (comma) {
+	      *comma = '\0';
+	    } else if (i < nAcross - 1) {
+	      nBadLine++;
+	      break;
+	    }
+	    switch (orderColumn[i]) {
+	      // name
+	    case 0:
+	      // For large problems this could be slow
+	      for (iColumn = 0; iColumn < numberColumns_; iColumn++) {
+		if (!strcmp(columnNames[iColumn], pos))
+		  break;
+	      }
+	      if (iColumn == numberColumns_)
+		iColumn = -1;
+	      break;
+	      // number
+	    case 1:
+	      iColumn = atoi(pos);
+	      if (iColumn < 0 || iColumn >= numberColumns_)
+		iColumn = -1;
+	      break;
+	      // lower
+	    case 2:
+	      upper = atof(pos);
+	      break;
+	      // upper
+	    case 3:
+	      lower = atof(pos);
+	      break;
+	      // objective
+	    case 4:
+	      obj = atof(pos);
+	      upper = lower;
+	      break;
+	    }
+	    if (comma) {
+	      *comma = ',';
+	      pos = comma + 1;
+	    }
+	  }
+	  if (iColumn >= 0) {
+	    if (columnLower_[iColumn]>-1.0e20)
+	      lowerColumnMove[iColumn] = lower;
+	    else
+	      lowerColumnMove[iColumn]=0.0;
+	    if (columnUpper_[iColumn]<1.0e20)
+	      upperColumnMove[iColumn] = upper;
+	    else
+	      upperColumnMove[iColumn] = lower;
+	    objectiveMove[iColumn] = obj;
+	  } else {
+	    nBadName++;
+	    if(saveLine[0]=='\0')
+	      strcpy(saveLine,line);
+	  }
+	}
+	sprintf(line,"%d Column fields and %d records", nAcross, nLine);
+	handler_->message(CLP_GENERAL,messages_)
+	  << line << CoinMessageEol;
+	if (nBadName) {
+	  sprintf(line," ** %d records did not match on name/sequence, first bad %s", nBadName,saveLine);
+	  handler_->message(CLP_GENERAL,messages_)
+	    << line << CoinMessageEol;
+	  returnCode=-1;
+	  good=false;
+	}
+	for (iColumn = 0; iColumn < numberColumns_; iColumn++) {
+	  free(columnNames[iColumn]);
+	}
+	delete [] columnNames;
+      } else {
+	sprintf(line,"Duplicate or unknown keyword - or name/number fields wrong");
+	handler_->message(CLP_GENERAL,messages_)
+	  << line << CoinMessageEol;
+	returnCode=-1;
+	good=false;
+      }
+    }
+  }
+  returnCode=-1;
+  if (good) {
+    // clean arrays
+    if (lowerRowMove) {
+      bool empty=true;
+      for (int i=0;i<numberRows_;i++) {
+	if (lowerRowMove[i]) {
+	  empty=false;
+	break;
+	}
+      }
+      if (empty) {
+	delete [] lowerRowMove;
+	lowerRowMove=NULL;
+      }
+    }
+    if (upperRowMove) {
+      bool empty=true;
+      for (int i=0;i<numberRows_;i++) {
+	if (upperRowMove[i]) {
+	  empty=false;
+	break;
+	}
+      }
+      if (empty) {
+	delete [] upperRowMove;
+	upperRowMove=NULL;
+      }
+    }
+    if (lowerColumnMove) {
+      bool empty=true;
+      for (int i=0;i<numberColumns_;i++) {
+	if (lowerColumnMove[i]) {
+	  empty=false;
+	break;
+	}
+      }
+      if (empty) {
+	delete [] lowerColumnMove;
+	lowerColumnMove=NULL;
+      }
+    }
+    if (upperColumnMove) {
+      bool empty=true;
+      for (int i=0;i<numberColumns_;i++) {
+	if (upperColumnMove[i]) {
+	  empty=false;
+	break;
+	}
+      }
+      if (empty) {
+	delete [] upperColumnMove;
+	upperColumnMove=NULL;
+      }
+    }
+    if (objectiveMove) {
+      bool empty=true;
+      for (int i=0;i<numberColumns_;i++) {
+	if (objectiveMove[i]) {
+	  empty=false;
+	break;
+	}
+      }
+      if (empty) {
+	delete [] objectiveMove;
+	objectiveMove=NULL;
+      }
+    }
+    int saveScaling = scalingFlag_;
+    scalingFlag_ = 0;
+    int saveLogLevel = handler_->logLevel();
+    if (detail>0&&!intervalTheta)
+      handler_->setLogLevel(3);
+    else
+      handler_->setLogLevel(1);
+    returnCode = parametrics(startTheta,endTheta,intervalTheta,
+			     lowerColumnMove,upperColumnMove,
+			     lowerRowMove,upperRowMove,
+			     objectiveMove);
+    scalingFlag_ = saveScaling;
+    handler_->setLogLevel(saveLogLevel);
+  }
+  delete [] lowerRowMove;
+  delete [] upperRowMove;
+  delete [] lowerColumnMove;
+  delete [] upperColumnMove;
+  delete [] objectiveMove;
+  fclose(fp);
+  return returnCode;
 }
 int
 ClpSimplexOther::parametricsLoop(double startingTheta, double & endingTheta, double reportIncrement,
@@ -2144,7 +2728,8 @@ ClpSimplexOther::parametricsLoop(double startingTheta, double & endingTheta, dou
           }
 
           // exit if victory declared
-          if (problemStatus_ >= 0)
+          if (problemStatus_ >= 0 && 
+	      (canTryQuick || startingTheta>=endingTheta-1.0e-7) )
                break;
 
           // test for maximum iterations
@@ -2162,6 +2747,7 @@ ClpSimplexOther::parametricsLoop(double startingTheta, double & endingTheta, dou
                }
           }
           // Do iterations
+	  problemStatus_=-1;
           if (canTryQuick) {
                double * saveDuals = NULL;
                reinterpret_cast<ClpSimplexDual *> (this)->whileIterating(saveDuals, 0);
@@ -2169,6 +2755,7 @@ ClpSimplexOther::parametricsLoop(double startingTheta, double & endingTheta, dou
                whileIterating(startingTheta,  endingTheta, reportIncrement,
                               changeLower, changeUpper,
                               changeObjective);
+	       startingTheta = endingTheta;
           }
      }
      if (!problemStatus_) {
@@ -2302,6 +2889,7 @@ ClpSimplexOther::statusOfProblemInParametrics(int type, ClpDataSave & saveData)
    +0 looks optimal (might be unbounded - but we will investigate)
    +1 looks infeasible
    +3 max iterations
+   +4 accuracy problems
 */
 int
 ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, double /*reportIncrement*/,
@@ -2326,10 +2914,11 @@ ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, doub
      // status -3 to go to top without an invert
      int returnCode = -1;
      double saveSumDual = sumDualInfeasibilities_; // so we know to be careful
+     double lastTheta = startingTheta;
      double useTheta = startingTheta;
-     double * primalChange = new double[numberRows_];
-     double * dualChange = new double[numberColumns_];
      int numberTotal = numberColumns_ + numberRows_;
+     double * primalChange = new double[numberTotal];
+     double * dualChange = new double[numberTotal];
      int iSequence;
      // See if bounds
      int type = 0;
@@ -2348,16 +2937,42 @@ ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, doub
      }
      assert (type);
      while (problemStatus_ == -1) {
-          double increaseTheta = CoinMin(endingTheta - useTheta, 1.0e50);
+          double increaseTheta = CoinMin(endingTheta - lastTheta, 1.0e50);
 
           // Get theta for bounds - we know can't crossover
           int pivotType = nextTheta(type, increaseTheta, primalChange, dualChange,
                                     changeLower, changeUpper, changeObjective);
-          if (pivotType)
-               abort();
+	  useTheta += theta_;
+	  double change = useTheta - lastTheta;
+	  for (int i = 0; i < numberTotal; i++) {
+	    lower_[i] += change * changeLower[i];
+	    upper_[i] += change * changeUpper[i];
+	    switch(getStatus(i)) {
+	      
+	    case basic:
+	    case isFree:
+	    case superBasic:
+	      break;
+	    case isFixed:
+	    case atUpperBound:
+	      solution_[i] = upper_[i];
+	      break;
+	    case atLowerBound:
+	      solution_[i] = lower_[i];
+	      break;
+	    }
+	    cost_[i] += change * changeObjective[i];
+	    assert (solution_[i]>lower_[i]-1.0e-5&&
+		    solution_[i]<upper_[i]+1.0e-5);
+	  }
+	  sequenceIn_=-1;
+          if (pivotType) {
+	      problemStatus_ = -2;
+	      endingTheta = useTheta;
+	      return 4;
+	  }
           // choose row to go out
-          // dualRow will go to virtual row pivot choice algorithm
-          reinterpret_cast<ClpSimplexDual *> ( this)->dualRow(-1);
+          //reinterpret_cast<ClpSimplexDual *> ( this)->dualRow(-1);
           if (pivotRow_ >= 0) {
                // we found a pivot row
                if (handler_->detail(CLP_SIMPLEX_PIVOTROW, messages_) < 100) {
@@ -2577,7 +3192,7 @@ ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, doub
                     dualOut_ *= -directionOut_;
                     //setStatus(sequenceIn_,basic);
                     dj_[sequenceIn_] = 0.0;
-                    double oldValue = valueIn_;
+                    //double oldValue = valueIn_;
                     if (directionIn_ == -1) {
                          // as if from upper bound
                          valueIn_ = upperIn_ + dualOut_;
@@ -2585,7 +3200,10 @@ ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, doub
                          // as if from lower bound
                          valueIn_ = lowerIn_ + dualOut_;
                     }
-                    objectiveChange += cost_[sequenceIn_] * (valueIn_ - oldValue);
+		    objectiveChange = 0.0;
+		    for (int i=0;i<numberTotal;i++)
+		      objectiveChange += solution_[i]*cost_[i];
+                    objectiveChange -= objectiveValue_;
                     // outgoing
                     // set dj to zero unless values pass
                     if (directionOut_ > 0) {
@@ -2597,6 +3215,43 @@ ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, doub
                     }
                     solution_[sequenceOut_] = valueOut_;
                     int whatNext = housekeeping(objectiveChange);
+		    {
+		      char in[200],out[200];
+		      int iSequence=sequenceIn_;
+		      if (iSequence<numberColumns_) {
+			if (lengthNames_) 
+			  strcpy(in,columnNames_[iSequence].c_str());
+			 else 
+			  sprintf(in,"C%7.7d",iSequence);
+		      } else {
+			iSequence -= numberColumns_;
+			if (lengthNames_) 
+			  strcpy(in,rowNames_[iSequence].c_str());
+			 else 
+			  sprintf(in,"R%7.7d",iSequence);
+		      }
+		      iSequence=sequenceOut_;
+		      if (iSequence<numberColumns_) {
+			if (lengthNames_) 
+			  strcpy(out,columnNames_[iSequence].c_str());
+			 else 
+			  sprintf(out,"C%7.7d",iSequence);
+		      } else {
+			iSequence -= numberColumns_;
+			if (lengthNames_) 
+			  strcpy(out,rowNames_[iSequence].c_str());
+			 else 
+			  sprintf(out,"R%7.7d",iSequence);
+		      }
+		      handler_->message(CLP_PARAMETRICS_STATS2, messages_)
+			<< useTheta << objectiveValue() 
+			<< in << out << CoinMessageEol;
+		    }
+		    if (useTheta>lastTheta+1.0e-9) {
+		      handler_->message(CLP_PARAMETRICS_STATS, messages_)
+			<< useTheta << objectiveValue() << CoinMessageEol;
+		      lastTheta = useTheta;
+		    }
                     // and set bounds correctly
                     reinterpret_cast<ClpSimplexDual *> ( this)->originalBound(sequenceIn_);
                     reinterpret_cast<ClpSimplexDual *> ( this)->changeBound(sequenceOut_);
@@ -2797,6 +3452,7 @@ ClpSimplexOther::whileIterating(double startingTheta, double & endingTheta, doub
      }
      delete [] primalChange;
      delete [] dualChange;
+     endingTheta = lastTheta;
      return returnCode;
 }
 // Computes next theta and says if objective or bounds (0= bounds, 1 objective, -1 none)
@@ -2831,23 +3487,25 @@ ClpSimplexOther::nextTheta(int type, double maxTheta, double * primalChange, dou
           }
           // use array
           double * array = rowArray_[1]->denseVector();
+	  // put slacks in
+	  for (int i=0;i<numberRows_;i++)
+	    array[i] = - primalChange[i+numberColumns_];
           times(1.0, primalChange, array);
           int * index = rowArray_[1]->getIndices();
           int number = 0;
+          pivotRow_ = -1;
           for (iRow = 0; iRow < numberRows_; iRow++) {
                double value = array[iRow];
                if (value) {
-                    array[iRow] = value;
                     index[number++] = iRow;
                }
           }
           // ftran it
           rowArray_[1]->setNumElements(number);
           factorization_->updateColumn(rowArray_[0], rowArray_[1]);
-          number = rowArray_[1]->getNumElements();
-          pivotRow_ = -1;
-          for (iRow = 0; iRow < number; iRow++) {
-               int iPivot = index[iRow];
+          //number = rowArray_[1]->getNumElements();
+          for (int iPivot = 0; iPivot < numberRows_; iPivot++) {
+	    //int iPivot = index[iRow];
                iSequence = pivotVariable_[iPivot];
                // solution value will be sol - theta*alpha
                // bounds will be bounds + change *theta
@@ -2860,20 +3518,20 @@ ClpSimplexOther::nextTheta(int type, double maxTheta, double * primalChange, dou
                double thetaCoefficient;
                double hitsLower = COIN_DBL_MAX;
                thetaCoefficient = changeLower[iSequence] + alpha;
-               if (fabs(thetaCoefficient) > 1.0e-8)
-                    hitsLower = (currentSolution - currentLower) / thetaCoefficient;
-               if (hitsLower < 0.0) {
+               if (thetaCoefficient > 1.0e-8)
+		 hitsLower = (currentSolution - currentLower) / thetaCoefficient;
+               //if (hitsLower < 0.0) {
                     // does not hit - but should we check further
-                    hitsLower = COIN_DBL_MAX;
-               }
+	       //   hitsLower = COIN_DBL_MAX;
+               //}
                double hitsUpper = COIN_DBL_MAX;
                thetaCoefficient = changeUpper[iSequence] + alpha;
-               if (fabs(thetaCoefficient) > 1.0e-8)
+               if (thetaCoefficient < -1.0e-8)
                     hitsUpper = (currentSolution - currentUpper) / thetaCoefficient;
-               if (hitsUpper < 0.0) {
+               //if (hitsUpper < 0.0) {
                     // does not hit - but should we check further
-                    hitsUpper = COIN_DBL_MAX;
-               }
+	       //   hitsUpper = COIN_DBL_MAX;
+               //}
                if (CoinMin(hitsLower, hitsUpper) < theta_) {
                     theta_ = CoinMin(hitsLower, hitsUpper);
                     toLower = hitsLower < hitsUpper;
@@ -2884,15 +3542,27 @@ ClpSimplexOther::nextTheta(int type, double maxTheta, double * primalChange, dou
      if ((type & 2) != 0) {
           abort();
      }
+     theta_ = CoinMax(theta_,0.0);
+     // update solution
+     double * array = rowArray_[1]->denseVector();
+     int * index = rowArray_[1]->getIndices();
+     int number = rowArray_[1]->getNumElements();
+     for (int iRow = 0; iRow < number; iRow++) {
+       int iPivot = index[iRow];
+       iSequence = pivotVariable_[iPivot];
+       // solution value will be sol - theta*alpha
+       double alpha = array[iPivot];
+       solution_[iSequence] -= theta_ * alpha;
+     }
      if (pivotRow_ >= 0) {
           sequenceOut_ = pivotVariable_[pivotRow_];
           valueOut_ = solution_[sequenceOut_];
-          lowerOut_ = lower_[sequenceOut_];
-          upperOut_ = upper_[sequenceOut_];
+          lowerOut_ = lower_[sequenceOut_]+theta_*changeLower[sequenceOut_];
+          upperOut_ = upper_[sequenceOut_]+theta_*changeUpper[sequenceOut_];
           if (!toLower) {
                directionOut_ = -1;
                dualOut_ = valueOut_ - upperOut_;
-          } else if (valueOut_ < lowerOut_) {
+          } else {
                directionOut_ = 1;
                dualOut_ = lowerOut_ - valueOut_;
           }
@@ -3398,4 +4068,940 @@ ClpSimplexOther::cleanupAfterPostsolve()
      memcpy(reducedCost_, this->objective(), numberColumns_ * sizeof(double));
      matrix_->transposeTimes(-1.0, dual_, reducedCost_);
      checkSolutionInternal();
+}
+// Returns gub version of model or NULL
+ClpSimplex * 
+ClpSimplexOther::gubVersion(int * whichRows, int * whichColumns,
+			    int neededGub,
+			    int factorizationFrequency)
+{
+  // find gub
+  int numberRows = this->numberRows();
+  int numberColumns = this->numberColumns();
+  int iRow, iColumn;
+  int * columnIsGub = new int [numberColumns];
+  const double * columnLower = this->columnLower();
+  const double * columnUpper = this->columnUpper();
+  int numberFixed=0;
+  for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+    if (columnUpper[iColumn] == columnLower[iColumn]) {
+      columnIsGub[iColumn]=-2;
+      numberFixed++;
+    } else if (columnLower[iColumn]>=0) {
+      columnIsGub[iColumn]=-1;
+    } else {
+      columnIsGub[iColumn]=-3;
+    }
+  }
+  CoinPackedMatrix * matrix = this->matrix();
+  // get row copy
+  CoinPackedMatrix rowCopy = *matrix;
+  rowCopy.reverseOrdering();
+  const int * column = rowCopy.getIndices();
+  const int * rowLength = rowCopy.getVectorLengths();
+  const CoinBigIndex * rowStart = rowCopy.getVectorStarts();
+  const double * element = rowCopy.getElements();
+  int numberNonGub = 0;
+  int numberEmpty = numberRows;
+  int * rowIsGub = new int [numberRows];
+  int smallestGubRow=-1;
+  int count=numberColumns+1;
+  double * rowLower = this->rowLower();
+  double * rowUpper = this->rowUpper();
+  // make sure we can get rid of upper bounds
+  double * fixedRow = new double [numberRows];
+  for (iRow = 0 ; iRow < numberRows ; iRow++) {
+    double sumFixed=0.0;
+    for (int j = rowStart[iRow]; j < rowStart[iRow] + rowLength[iRow]; j++) {
+      int iColumn = column[j];
+      double value = columnLower[iColumn];
+      if (value) 
+	sumFixed += element[j] * value;
+    }
+    fixedRow[iRow]=rowUpper[iRow]-sumFixed;
+  }
+  for (iRow = numberRows - 1; iRow >= 0; iRow--) {
+    bool gubRow = true;
+    int numberInRow=0;
+    double sumFixed=0.0;
+    double gap = fixedRow[iRow]-1.0e-12;
+    for (int j = rowStart[iRow]; j < rowStart[iRow] + rowLength[iRow]; j++) {
+      int iColumn = column[j];
+      if (columnIsGub[iColumn]!=-2) {
+	if (element[j] != 1.0||columnIsGub[iColumn]==-3||
+	    columnUpper[iColumn]-columnLower[iColumn]<gap) {
+	  gubRow = false;
+	  break;
+	} else {
+	  numberInRow++;
+	  if (columnIsGub[iColumn] >= 0) {
+	    gubRow = false;
+	    break;
+	  }
+	}
+      } else {
+	sumFixed += columnLower[iColumn]*element[j];
+      }
+    }
+    if (!gubRow) {
+      whichRows[numberNonGub++] = iRow;
+      rowIsGub[iRow] = -1;
+    } else if (numberInRow) {
+      if (numberInRow<count) {
+	count = numberInRow;
+	smallestGubRow=iRow;
+      }
+      for (int j = rowStart[iRow]; j < rowStart[iRow] + rowLength[iRow]; j++) {
+	int iColumn = column[j];
+	if (columnIsGub[iColumn]!=-2) 
+	  columnIsGub[iColumn] = iRow;
+      }
+      rowIsGub[iRow] = 0;
+    } else {
+      // empty row!
+      whichRows[--numberEmpty] = iRow;
+      rowIsGub[iRow] = -2;
+      if (sumFixed>rowUpper[iRow]+1.0e-4||
+	  sumFixed<rowLower[iRow]-1.0e-4) {
+	fprintf(stderr,"******** No infeasible empty rows - please!\n");
+	abort();
+      }
+    }
+  }
+  delete [] fixedRow;
+  char message[100];
+  int numberGub = numberEmpty - numberNonGub;
+  if (numberGub >= neededGub) { 
+    sprintf(message,"%d gub rows", numberGub);
+    handler_->message(CLP_GENERAL2, messages_)
+      << message << CoinMessageEol;
+    int numberNormal = 0;
+    for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+      if (columnIsGub[iColumn] < 0  && columnIsGub[iColumn] !=-2) {
+	whichColumns[numberNormal++] = iColumn;
+      }
+    }
+    if (!numberNormal) {
+      sprintf(message,"Putting back one gub row to make non-empty");
+      handler_->message(CLP_GENERAL2, messages_)
+	<< message << CoinMessageEol;
+      rowIsGub[smallestGubRow]=-1;
+      whichRows[numberNonGub++] = smallestGubRow;
+      for (int j = rowStart[smallestGubRow]; 
+	   j < rowStart[smallestGubRow] + rowLength[smallestGubRow]; j++) {
+	int iColumn = column[j];
+	if (columnIsGub[iColumn]>=0) {
+	  columnIsGub[iColumn]=-4;
+	  whichColumns[numberNormal++] = iColumn;
+	}
+      }
+    }
+    std::sort(whichRows,whichRows+numberNonGub);
+    std::sort(whichColumns,whichColumns+numberNormal);
+    double * lower = CoinCopyOfArray(this->rowLower(),numberRows);
+    double * upper = CoinCopyOfArray(this->rowUpper(),numberRows);
+    // leave empty rows at end
+    numberEmpty = numberRows-numberEmpty;
+    const int * row = matrix->getIndices();
+    const int * columnLength = matrix->getVectorLengths();
+    const CoinBigIndex * columnStart = matrix->getVectorStarts();
+    const double * elementByColumn = matrix->getElements();
+    // Fixed at end
+    int put2 = numberColumns-numberFixed;
+    for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+      if (columnIsGub[iColumn] ==-2) {
+	whichColumns[put2++] = iColumn;
+	double value = columnLower[iColumn];
+	for (int j = columnStart[iColumn]; 
+	     j < columnStart[iColumn] + columnLength[iColumn]; j++) {
+	  int iRow = row[j];
+	  if (lower[iRow]>-1.0e20)
+	    lower[iRow] -= value*element[j];
+	  if (upper[iRow]<1.0e20)
+	    upper[iRow] -= value*element[j];
+	}
+      }
+    }
+    int put = numberNormal;
+    ClpSimplex * model2 =
+      new ClpSimplex(this, numberNonGub, whichRows , numberNormal, whichColumns);
+    // scale
+    double * scaleArray = new double [numberRows];
+    for (int i=0;i<numberRows;i++) {
+      scaleArray[i]=1.0;
+      if (rowIsGub[i]==-1) {
+	double largest = 1.0e-30;
+	double smallest = 1.0e30;
+	for (int j = rowStart[i]; j < rowStart[i] + rowLength[i]; j++) {
+	  int iColumn = column[j];
+	  if (columnIsGub[iColumn]!=-2) {
+	    double value =fabs(element[j]);
+	    largest = CoinMax(value,largest);
+	    smallest = CoinMin(value,smallest);
+	  }
+	}
+	double scale = CoinMax(0.001,1.0/sqrt(largest*smallest));
+	scaleArray[i]=scale;
+	if (lower[i]>-1.0e30)
+	  lower[i] *= scale;
+	if (upper[i]<1.0e30)
+	  upper[i] *= scale;
+      }
+    }
+    // scale partial matrix
+    {
+      CoinPackedMatrix * matrix = model2->matrix();
+      const int * row = matrix->getIndices();
+      const int * columnLength = matrix->getVectorLengths();
+      const CoinBigIndex * columnStart = matrix->getVectorStarts();
+      double * element = matrix->getMutableElements();
+      for (int i=0;i<numberNormal;i++) {
+	for (int j = columnStart[i]; 
+	     j < columnStart[i] + columnLength[i]; j++) {
+	  int iRow = row[j];
+	  iRow = whichRows[iRow];
+	  double scaleBy = scaleArray[iRow];
+	  element[j] *= scaleBy;
+	}
+      }
+    }
+    // adjust rhs
+    double * rowLower = model2->rowLower();
+    double * rowUpper = model2->rowUpper();
+    for (int i=0;i<numberNonGub;i++) {
+      int iRow = whichRows[i];
+      rowLower[i] = lower[iRow];
+      rowUpper[i] = upper[iRow];
+    }
+    int numberGubColumns = numberColumns - put - numberFixed;
+    CoinBigIndex numberElements=0;
+    int * temp1 = new int [numberRows+1];
+    // get counts
+    memset(temp1,0,numberRows*sizeof(int));
+    for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+      int iGub = columnIsGub[iColumn];
+      if (iGub>=0) {
+	numberElements += columnLength[iColumn]-1;
+	temp1[iGub]++;
+      }
+    }
+    /* Optional but means can eventually simplify coding
+       could even add in fixed slacks to deal with
+       singularities - but should not be necessary */
+    int numberSlacks=0;
+    for (int i = 0; i < numberRows; i++) {
+      if (rowIsGub[i]>=0) {
+	if (lower[i]<upper[i]) {
+	  numberSlacks++;
+	  temp1[i]++;
+	}
+      }
+    }
+    int * gubStart = new int [numberGub+1];
+    numberGub=0;
+    gubStart[0]=0;
+    for (int i = 0; i < numberRows; i++) {
+      if (rowIsGub[i]>=0) {
+	rowIsGub[i]=numberGub;
+	gubStart[numberGub+1]=gubStart[numberGub]+temp1[i];
+	temp1[numberGub]=0;
+	lower[numberGub]=lower[i];
+	upper[numberGub]=upper[i];
+	whichRows[numberNonGub+numberGub]=i;
+	numberGub++;
+      }
+    }
+    int numberGubColumnsPlus = numberGubColumns + numberSlacks;
+    double * lowerColumn2 = new double [numberGubColumnsPlus];
+    CoinFillN(lowerColumn2, numberGubColumnsPlus, 0.0);
+    double * upperColumn2 = new double [numberGubColumnsPlus];
+    CoinFillN(upperColumn2, numberGubColumnsPlus, COIN_DBL_MAX);
+    int * start2 = new int[numberGubColumnsPlus+1];
+    int * row2 = new int[numberElements];
+    double * element2 = new double[numberElements];
+    double * cost2 = new double [numberGubColumnsPlus];
+    CoinFillN(cost2, numberGubColumnsPlus, 0.0);
+    const double * cost = this->objective();
+    put = numberNormal;
+    for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+      int iGub = columnIsGub[iColumn];
+      if (iGub>=0) {
+	// TEMP
+	//this->setColUpper(iColumn,COIN_DBL_MAX);
+	iGub = rowIsGub[iGub];
+	assert (iGub>=0);
+	int kPut = put+gubStart[iGub]+temp1[iGub];
+	temp1[iGub]++;
+	whichColumns[kPut]=iColumn;
+      }
+    }
+    for (int i = 0; i < numberRows; i++) {
+      if (rowIsGub[i]>=0) {
+	int iGub = rowIsGub[i];
+	if (lower[iGub]<upper[iGub]) {
+	  int kPut = put+gubStart[iGub]+temp1[iGub];
+	  temp1[iGub]++;
+	  whichColumns[kPut]=iGub+numberColumns;
+	}
+      }
+    }
+    //this->primal(1); // TEMP
+    // redo rowIsGub to give lookup
+    for (int i=0;i<numberRows;i++)
+      rowIsGub[i]=-1;
+    for (int i=0;i<numberNonGub;i++) 
+      rowIsGub[whichRows[i]]=i;
+    start2[0]=0;
+    numberElements = 0;
+    for (int i=0;i<numberGubColumnsPlus;i++) {
+      int iColumn = whichColumns[put++];
+      if (iColumn<numberColumns) {
+	cost2[i] = cost[iColumn];
+	lowerColumn2[i] = columnLower[iColumn];
+	upperColumn2[i] = columnUpper[iColumn];
+	upperColumn2[i] = COIN_DBL_MAX; 
+	for (int j = columnStart[iColumn]; j < columnStart[iColumn] + columnLength[iColumn]; j++) {
+	  int iRow = row[j];
+	  double scaleBy = scaleArray[iRow];
+	  iRow = rowIsGub[iRow];
+	  if (iRow >= 0) {
+	    row2[numberElements] = iRow;
+	    element2[numberElements++] = elementByColumn[j]*scaleBy;
+	  }
+	}
+      } else {
+	// slack
+	int iGub = iColumn-numberColumns;
+	double slack = upper[iGub]-lower[iGub];
+	assert (upper[iGub]<1.0e20);
+	lower[iGub]=upper[iGub];
+	cost2[i] = 0;
+	lowerColumn2[i] = 0;
+	upperColumn2[i] = slack;
+	upperColumn2[i] = COIN_DBL_MAX;
+      }
+      start2[i+1] = numberElements;
+    }
+    // clean up bounds on variables
+    for (int iSet=0;iSet<numberGub;iSet++) {
+      double lowerValue=0.0;
+      for (int i=gubStart[iSet];i<gubStart[iSet+1];i++) {
+	lowerValue += lowerColumn2[i];
+      }
+      assert (lowerValue<upper[iSet]+1.0e-6);
+      double gap = CoinMax(0.0,upper[iSet]-lowerValue);
+      for (int i=gubStart[iSet];i<gubStart[iSet+1];i++) {
+	if (upperColumn2[i]<1.0e30) {
+	  upperColumn2[i] = CoinMin(upperColumn2[i],
+				    lowerColumn2[i]+gap);
+	}
+      }
+    }
+    sprintf(message,"** Before adding matrix there are %d rows and %d columns",
+	   model2->numberRows(), model2->numberColumns());
+    handler_->message(CLP_GENERAL2, messages_)
+      << message << CoinMessageEol;
+    delete [] scaleArray;
+    delete [] temp1;
+    model2->setFactorizationFrequency(factorizationFrequency);
+    ClpDynamicMatrix * newMatrix = 
+      new ClpDynamicMatrix(model2, numberGub,
+				  numberGubColumnsPlus, gubStart,
+				  lower, upper,
+				  start2, row2, element2, cost2,
+				  lowerColumn2, upperColumn2);
+    delete [] gubStart;
+    delete [] lowerColumn2;
+    delete [] upperColumn2;
+    delete [] start2;
+    delete [] row2;
+    delete [] element2;
+    delete [] cost2;
+    delete [] lower;
+    delete [] upper;
+    model2->replaceMatrix(newMatrix,true);
+#ifdef EVERY_ITERATION
+    {
+      ClpDynamicMatrix * gubMatrix =
+	dynamic_cast< ClpDynamicMatrix*>(model2->clpMatrix());
+      assert(gubMatrix);
+      gubMatrix->writeMps("gub.mps");
+    }
+#endif
+    delete [] columnIsGub;
+    delete [] rowIsGub;
+    newMatrix->switchOffCheck();
+#ifdef EVERY_ITERATION
+    newMatrix->setRefreshFrequency(1/*000*/);
+#else
+    newMatrix->setRefreshFrequency(1000);
+#endif
+    sprintf(message,
+	    "** While after adding matrix there are %d rows and %d columns",
+	    model2->numberRows(), model2->numberColumns());
+    handler_->message(CLP_GENERAL2, messages_)
+      << message << CoinMessageEol;
+    model2->setSpecialOptions(4);    // exactly to bound
+    // Scaling off (done by hand)
+    model2->scaling(0);
+    return model2;
+  } else {
+    delete [] columnIsGub;
+    delete [] rowIsGub;
+    return NULL;
+  }
+}
+// Sets basis from original
+void 
+ClpSimplexOther::setGubBasis(ClpSimplex &original,const int * whichRows,
+			     const int * whichColumns)
+{
+  ClpDynamicMatrix * gubMatrix =
+    dynamic_cast< ClpDynamicMatrix*>(clpMatrix());
+  assert(gubMatrix);
+  int numberGubColumns = gubMatrix->numberGubColumns();
+  int numberNormal = gubMatrix->firstDynamic();
+  //int lastOdd = gubMatrix->firstAvailable();
+  //int numberTotalColumns = numberNormal + numberGubColumns;
+  //assert (numberTotalColumns==numberColumns+numberSlacks);
+  int numberRows = original.numberRows();
+  int numberColumns = original.numberColumns();
+  int * columnIsGub = new int [numberColumns];
+  int numberNonGub = gubMatrix->numberStaticRows();
+  //assert (firstOdd==numberNormal);
+  double * solution = primalColumnSolution();
+  double * originalSolution = original.primalColumnSolution();
+  const double * upperSet = gubMatrix->upperSet();
+  // Column copy of GUB part
+  int numberSets = gubMatrix->numberSets();
+  const int * startSet = gubMatrix->startSets();
+  const CoinBigIndex * columnStart = gubMatrix->startColumn();
+  const double * columnLower = gubMatrix->columnLower();
+#ifdef TRY_IMPROVE
+  const double * columnUpper = gubMatrix->columnUpper();
+  const double * lowerSet = gubMatrix->lowerSet();
+  const double * element = gubMatrix->element();
+  const int * row = gubMatrix->row();
+  bool allPositive=true;
+  double * rowActivity = new double[numberNonGub];
+  memset(rowActivity, 0, numberNonGub*sizeof(double));
+  {
+    // Non gub contribution
+    const double * element = matrix_->getElements();
+    const int * row = matrix_->getIndices();
+    const CoinBigIndex * columnStart = matrix_->getVectorStarts();
+    const int * columnLength = matrix_->getVectorLengths();
+    for (int i=0;i<numberNormal;i++) {
+      int iColumn = whichColumns[i];
+      double value = originalSolution[iColumn];
+      if (value) {
+	for (CoinBigIndex j = columnStart[i];
+	     j < columnStart[i] + columnLength[i]; j++) {
+	  int iRow = row[j];
+	  rowActivity[iRow] += value*element[j];
+	}
+      }
+    }
+  }
+  double * newSolution = new double [numberGubColumns];
+  int * slacks = new int [numberSets];
+  for (int i=0;i<numberSets;i++) {
+    double sum=0.0;
+    int iSlack=-1;
+    for (int j=startSet[i];j<startSet[i+1];j++) {
+      gubMatrix->setDynamicStatus(j,ClpDynamicMatrix::atLowerBound);
+      int iColumn = whichColumns[j+numberNormal];
+      if (iColumn<numberColumns) {
+	columnIsGub[iColumn] = whichRows[numberNonGub+i];
+	double value = originalSolution[iColumn];
+	sum += value;
+	newSolution[j]=value;
+	for (CoinBigIndex k = columnStart[j]; k < columnStart[j+1] ; k++) {
+	  int iRow = row[k];
+	  rowActivity[iRow] += value*element[k];
+	  if (element[k] < 0.0)
+	    allPositive=false;
+	}
+	if (columnStart[j]==columnStart[j+1])
+	  iSlack=j;
+      } else {
+	newSolution[j]=0.0;
+	iSlack=j;
+	allPositive=false; // for now
+      }
+    }
+    slacks[i]=iSlack;
+    if (sum>upperSet[i]+1.0e-8) {
+      double gap = sum-upperSet[i];
+      if (iSlack>=0) {
+	double value=newSolution[iSlack];
+	if (value>0.0) {
+	  double down = CoinMin(gap,value);
+	  gap -= down;
+	  sum -= down;
+	  newSolution[iSlack] = value-down;
+	}
+      }
+      if (gap>1.0e-8) {
+	for (int j=startSet[i];j<startSet[i+1];j++) {
+	  int iColumn = whichColumns[j+numberNormal];
+	  if (newSolution[j]>0.0&&iColumn<numberColumns) {
+	    double value = newSolution[j];
+	    double down = CoinMin(gap,value);
+	    gap -= down;
+	    sum -= down;
+	    newSolution[iSlack] = value-down;
+	    for (CoinBigIndex k = columnStart[j]; k < columnStart[j+1] ; k++) {
+	      int iRow = row[k];
+	      rowActivity[iRow] -= down*element[k];
+	    }
+	  }
+	}
+      }
+      assert (gap<1.0e-8);
+    } else if (sum<lowerSet[i]-1.0e-8) {
+      double gap = lowerSet[i]-sum;
+      if (iSlack>=0) {
+	double value=newSolution[iSlack];
+	if (value<columnUpper[iSlack]) {
+	  double up = CoinMin(gap,columnUpper[iSlack]-value);
+	  gap -= up;
+	  sum += up;
+	  newSolution[iSlack] = value+up;
+	}
+      }
+      if (gap>1.0e-8) {
+	for (int j=startSet[i];j<startSet[i+1];j++) {
+	  int iColumn = whichColumns[j+numberNormal];
+	  if (newSolution[j]<columnUpper[j]&&iColumn<numberColumns) {
+	    double value = newSolution[j];
+	    double up = CoinMin(gap,columnUpper[j]-value);
+	    gap -= up;
+	    sum += up;
+	    newSolution[iSlack] = value+up;
+	    for (CoinBigIndex k = columnStart[j]; k < columnStart[j+1] ; k++) {
+	      int iRow = row[k];
+	      rowActivity[iRow] += up*element[k];
+	    }
+	  }
+	}
+      }
+      assert (gap<1.0e-8);
+    } 
+    if (fabs(sum-upperSet[i])>1.0e-7)
+      printf("Sum for set %d is %g - lower %g, upper %g\n",i,
+	     sum,lowerSet[i],upperSet[i]);
+  }
+  if (allPositive) {
+    // See if we can improve solution
+    // first reduce if over
+    double * gaps = new double [numberNonGub];
+    double direction = optimizationDirection_; 
+    const double * cost = gubMatrix->cost();
+    bool over=false;
+    for (int i=0;i<numberNonGub;i++) {
+      double activity = rowActivity[i];
+      gaps[i]=0.0;
+      if (activity>rowUpper_[i]+1.0e-6) {
+	gaps[i]=activity-rowUpper_[i];
+	over=true;
+      }
+    }
+    double * weights = new double [numberGubColumns];
+    int * which = new int [numberGubColumns];
+    int * whichSet = new int [numberGubColumns];
+    if (over) {
+      int n=0;
+      for (int i=0;i<numberSets;i++) {
+	int iSlack = slacks[i];
+	if (iSlack<0||newSolution[iSlack]>upperSet[i]-1.0e-8)
+	  continue;
+	double slackCost = cost[iSlack]*direction;
+	for (int j=startSet[i];j<startSet[i+1];j++) {
+	  whichSet[j]=i;
+	  double value = newSolution[j];
+	  double thisCost = cost[j]*direction;
+	  if (value>columnLower[j]&&j!=iSlack) {
+	    if(thisCost<slackCost) {
+	      double sum = 1.0e-30;
+	      for (CoinBigIndex k = columnStart[j]; 
+		   k < columnStart[j+1] ; k++) {
+		int iRow = row[k];
+		sum += gaps[iRow]*element[k];
+	      }
+	      which[n]=j;
+	      // big drop and small difference in cost better
+	      weights[n++]=(slackCost-thisCost)/sum;
+	    } else {
+	      // slack better anyway
+	      double move = value-columnLower[j];
+	      newSolution[iSlack]=CoinMin(upperSet[i],
+					  newSolution[iSlack]+move);
+	      newSolution[j]=columnLower[j];
+	      for (CoinBigIndex k = columnStart[j]; 
+		   k < columnStart[j+1] ; k++) {
+		int iRow = row[k];
+		rowActivity[iRow] -= move*element[k];
+	      }
+	    }
+	  }
+	}
+      }
+      // sort
+      CoinSort_2(weights,weights+n,which);
+      for (int i=0;i<n;i++) {
+	int j= which[i];
+	int iSet = whichSet[j];
+	int iSlack = slacks[iSet];
+	assert (iSlack>=0);
+	double move = 0.0;
+	for (CoinBigIndex k = columnStart[j]; 
+	     k < columnStart[j+1] ; k++) {
+	  int iRow = row[k];
+	  if(rowActivity[iRow]-rowUpper_[iRow]>move*element[k]) {
+	    move = (rowActivity[iRow]-rowUpper_[iRow])/element[k];
+	  }
+	}
+	move=CoinMin(move,newSolution[j]-columnLower[j]);
+	if (move) {
+	  newSolution[j] -= move;
+	  newSolution[iSlack] += move;
+	  for (CoinBigIndex k = columnStart[j]; 
+	       k < columnStart[j+1] ; k++) {
+	    int iRow = row[k];
+	    rowActivity[iRow] -= move*element[k];
+	  }
+	}
+      }
+    }
+    delete [] whichSet;
+    delete [] which;
+    delete [] weights;
+    delete [] gaps;
+    // redo original status!
+    for (int i=0;i<numberSets;i++) {
+      int numberBasic=0;
+      int numberNewBasic=0;
+      int j1=-1;
+      int j2=-1;
+      for (int j=startSet[i];j<startSet[i+1];j++) {
+	if (newSolution[j]>columnLower[j]) {
+	  numberNewBasic++;
+	  j2=j;
+	}
+	int iOrig = whichColumns[j+numberNormal];
+	if (iOrig<numberColumns) {
+	  if (original.getColumnStatus(iOrig)!=ClpSimplex::atLowerBound) {
+	    numberBasic++;
+	    j1=j;
+	  }
+	} else {
+	  int iSet = iOrig - numberColumns;
+	  int iRow = whichRows[iSet+numberNonGub];
+	  if (original.getRowStatus(iRow)==ClpSimplex::basic) {
+	    numberBasic++;
+	    j1=j;
+	    abort();
+	  }
+	}
+      }
+      if (numberBasic==1&&numberNewBasic==1&&
+	  j1!=j2) {
+	int iOrig1=whichColumns[j1+numberNormal];
+	int iOrig2=whichColumns[j2+numberNormal];
+	ClpSimplex::Status status1 = original.getColumnStatus(iOrig1);
+	ClpSimplex::Status status2 = original.getColumnStatus(iOrig2);
+	originalSolution[iOrig1] = newSolution[j1];
+	originalSolution[iOrig2] = newSolution[j2];
+	original.setColumnStatus(iOrig1,status2);
+	original.setColumnStatus(iOrig2,status1);
+      }
+    }
+  }
+  delete [] newSolution;
+  delete [] slacks;
+  delete [] rowActivity;
+#else
+  for (int i=0;i<numberSets;i++) {
+    for (int j=startSet[i];j<startSet[i+1];j++) {
+      gubMatrix->setDynamicStatus(j,ClpDynamicMatrix::atLowerBound);
+      int iColumn = whichColumns[j+numberNormal];
+      if (iColumn<numberColumns) {
+	columnIsGub[iColumn] = whichRows[numberNonGub+i];
+      }
+    }
+  }
+#endif
+  int * numberKey = new int [numberRows];
+  memset(numberKey,0,numberRows*sizeof(int));
+  for (int i=0;i<numberGubColumns;i++) {
+    int iOrig = whichColumns[i+numberNormal];
+    if (iOrig<numberColumns) {
+      if (original.getColumnStatus(iOrig)==ClpSimplex::basic) {
+	int iRow = columnIsGub[iOrig];
+	assert (iRow>=0);
+	numberKey[iRow]++;
+      }
+    } else {
+      // Set slack
+      int iSet = iOrig - numberColumns;
+      int iRow = whichRows[iSet+numberNonGub];
+      if (original.getRowStatus(iRow)==ClpSimplex::basic) 
+	numberKey[iRow]++;
+    }
+  }
+  /* Before going into cleanMatrix we need
+     gub status set (inSmall just means basic and active)
+     row status set
+  */
+  for (int i = 0; i < numberSets; i++) {
+    gubMatrix->setStatus(i,ClpSimplex::isFixed);
+  }
+  for (int i = 0; i < numberGubColumns; i++) {
+    int iOrig = whichColumns[i+numberNormal];
+    if (iOrig<numberColumns) {
+      ClpSimplex::Status status = original.getColumnStatus(iOrig);
+      if (status==ClpSimplex::atUpperBound) {
+	gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::atUpperBound);
+      } else if (status==ClpSimplex::atLowerBound) {
+	gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::atLowerBound);
+      } else if (status==ClpSimplex::basic) {
+	int iRow = columnIsGub[iOrig];
+	assert (iRow>=0);
+	assert(numberKey[iRow]);
+	if (numberKey[iRow]==1)
+	  gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::soloKey);
+	else
+	  gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::inSmall);
+      }
+    } else {
+      // slack
+      int iSet = iOrig - numberColumns;
+      int iRow = whichRows[iSet+numberNonGub];
+      if (original.getRowStatus(iRow)==ClpSimplex::basic
+#ifdef TRY_IMPROVE
+	  ||newSolution[i]>columnLower[i]+1.0e-8
+#endif
+	  ) {
+	assert(numberKey[iRow]);
+	if (numberKey[iRow]==1)
+	  gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::soloKey);
+	else
+	  gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::inSmall);
+      } else {
+	gubMatrix->setDynamicStatus(i,ClpDynamicMatrix::atLowerBound);
+      }
+    }
+  }
+  // deal with sets without key
+  for (int i = 0; i < numberSets; i++) {
+    int iRow = whichRows[numberNonGub+i];
+    if (!numberKey[iRow]) {
+      double upper = upperSet[i]-1.0e-7;
+      if (original.getRowStatus(iRow)==ClpSimplex::basic) 
+	gubMatrix->setStatus(i,ClpSimplex::basic);
+      // If not at lb make key otherwise one with smallest number els
+      double largest=0.0;
+      int fewest=numberRows+1;
+      int chosen=-1;
+      for (int j=startSet[i];j<startSet[i+1];j++) {
+	int length=columnStart[j+1]-columnStart[j];
+	int iOrig = whichColumns[j+numberNormal];
+	double value;
+	if (iOrig<numberColumns) {
+#ifdef TRY_IMPROVE
+	  value=newSolution[j]-columnLower[j];
+#else
+	  value = originalSolution[iOrig]-columnLower[j];
+#endif
+	  if (value>upper)
+	    gubMatrix->setStatus(i,ClpSimplex::atLowerBound);
+	} else {
+	  // slack - take value as 0.0 as will win on length
+	  value=0.0;
+	}
+	if (value>largest+1.0e-8) {
+	  largest=value;
+	  fewest=length;
+	  chosen=j;
+	} else if (fabs(value-largest)<=1.0e-8&&length<fewest) {
+	  largest=value;
+	  fewest=length;
+	  chosen=j;
+	}
+      }
+      assert(chosen>=0);
+      if (gubMatrix->getStatus(i)!=ClpSimplex::basic) {
+	// set as key
+	for (int j=startSet[i];j<startSet[i+1];j++) {
+	  if (j!=chosen)
+	    gubMatrix->setDynamicStatus(j,ClpDynamicMatrix::atLowerBound);
+	  else
+	    gubMatrix->setDynamicStatus(j,ClpDynamicMatrix::soloKey);
+	}
+      }
+    }
+  }
+  for (int i = 0; i < numberNormal; i++) {
+    int iOrig = whichColumns[i];
+    setColumnStatus(i,original.getColumnStatus(iOrig));
+    solution[i]=originalSolution[iOrig];
+  }
+  for (int i = 0; i < numberNonGub; i++) {
+    int iOrig = whichRows[i];
+    setRowStatus(i,original.getRowStatus(iOrig));
+  }
+  // Fill in current matrix
+  gubMatrix->initialProblem();
+  delete [] numberKey;
+  delete [] columnIsGub;
+}
+// Restores basis to original
+void 
+ClpSimplexOther::getGubBasis(ClpSimplex &original,const int * whichRows,
+			     const int * whichColumns) const
+{
+  ClpDynamicMatrix * gubMatrix =
+    dynamic_cast< ClpDynamicMatrix*>(clpMatrix());
+  assert(gubMatrix);
+  int numberGubColumns = gubMatrix->numberGubColumns();
+  int numberNormal = gubMatrix->firstDynamic();
+  //int lastOdd = gubMatrix->firstAvailable();
+  //int numberRows = original.numberRows();
+  int numberColumns = original.numberColumns();
+  int numberNonGub = gubMatrix->numberStaticRows();
+  //assert (firstOdd==numberNormal);
+  double * solution = primalColumnSolution();
+  double * originalSolution = original.primalColumnSolution();
+  int numberSets = gubMatrix->numberSets();
+  const double * cost = original.objective();
+  int lastOdd = gubMatrix->firstAvailable();
+  //assert (numberTotalColumns==numberColumns+numberSlacks);
+  int numberRows = original.numberRows();
+  //int numberStaticRows = gubMatrix->numberStaticRows();
+  const int * startSet = gubMatrix->startSets();
+  unsigned char * status = original.statusArray();
+  unsigned char * rowStatus = status+numberColumns;
+  //assert (firstOdd==numberNormal);
+  for (int i=0;i<numberSets;i++) {
+    int iRow = whichRows[i+numberNonGub];
+    original.setRowStatus(iRow,ClpSimplex::atLowerBound);
+  }
+  const int * id = gubMatrix->id();
+  const double * columnLower = gubMatrix->columnLower();
+  const double * columnUpper = gubMatrix->columnUpper();
+  for (int i = 0; i < numberGubColumns; i++) {
+    int iOrig = whichColumns[i+numberNormal];
+    if (iOrig<numberColumns) {
+      if (gubMatrix->getDynamicStatus(i) == ClpDynamicMatrix::atUpperBound) {
+	originalSolution[iOrig] = columnUpper[i];
+	status[iOrig] = 2;
+      } else if (gubMatrix->getDynamicStatus(i) == ClpDynamicMatrix::atLowerBound && columnLower) {
+	originalSolution[iOrig] = columnLower[i];
+	status[iOrig] = 3;
+      } else if (gubMatrix->getDynamicStatus(i) == ClpDynamicMatrix::soloKey) {
+	int iSet = gubMatrix->whichSet(i);
+	originalSolution[iOrig] = gubMatrix->keyValue(iSet);
+	status[iOrig] = 1;
+      } else {
+	originalSolution[iOrig] = 0.0;
+	status[iOrig] = 4;
+      }
+    } else {
+      // slack
+      int iSet = iOrig - numberColumns;
+      int iRow = whichRows[iSet+numberNonGub];
+      if (gubMatrix->getDynamicStatus(i) == ClpDynamicMatrix::atUpperBound) {
+	original.setRowStatus(iRow,ClpSimplex::atLowerBound);
+      } else if (gubMatrix->getDynamicStatus(i) == ClpDynamicMatrix::atLowerBound) {
+	original.setRowStatus(iRow,ClpSimplex::atUpperBound);
+      } else if (gubMatrix->getDynamicStatus(i) == ClpDynamicMatrix::soloKey) {
+	original.setRowStatus(iRow,ClpSimplex::basic);
+      }
+    }
+  }
+  for (int i = 0; i < numberNormal; i++) {
+    int iOrig = whichColumns[i];
+    ClpSimplex::Status thisStatus = getStatus(i);
+    if (thisStatus == ClpSimplex::basic)
+      status[iOrig] = 1;
+    else if (thisStatus == ClpSimplex::atLowerBound)
+      status[iOrig] = 3;
+    else if (thisStatus == ClpSimplex::atUpperBound)
+      status[iOrig] = 2;
+    else if (thisStatus == ClpSimplex::isFixed)
+      status[iOrig] = 5;
+    else
+      abort();
+    originalSolution[iOrig] = solution[i];
+  }
+  for (int i = numberNormal; i < lastOdd; i++) {
+    int iOrig = whichColumns[id[i-numberNormal] + numberNormal];
+    if (iOrig<numberColumns) {
+      ClpSimplex::Status thisStatus = getStatus(i);
+      if (thisStatus == ClpSimplex::basic)
+	status[iOrig] = 1;
+      else if (thisStatus == ClpSimplex::atLowerBound)
+	status[iOrig] = 3;
+      else if (thisStatus == ClpSimplex::atUpperBound)
+	status[iOrig] = 2;
+      else if (thisStatus == ClpSimplex::isFixed)
+	status[iOrig] = 5;
+      else
+	abort();
+      originalSolution[iOrig] = solution[i];
+    } else {
+      // slack (basic probably)
+      int iSet = iOrig - numberColumns;
+      int iRow = whichRows[iSet+numberNonGub];
+      ClpSimplex::Status thisStatus = getStatus(i);
+      if (thisStatus == ClpSimplex::atLowerBound)
+	thisStatus = ClpSimplex::atUpperBound;
+      else if (thisStatus == ClpSimplex::atUpperBound)
+	thisStatus = ClpSimplex::atLowerBound;
+      original.setRowStatus(iRow,thisStatus);
+    }
+  }
+  for (int i = 0; i < numberNonGub; i++) {
+    int iOrig = whichRows[i];
+    ClpSimplex::Status thisStatus = getRowStatus(i);
+    if (thisStatus == ClpSimplex::basic)
+      rowStatus[iOrig] = 1;
+    else if (thisStatus == ClpSimplex::atLowerBound)
+      rowStatus[iOrig] = 3;
+    else if (thisStatus == ClpSimplex::atUpperBound)
+      rowStatus[iOrig] = 2;
+    else if (thisStatus == ClpSimplex::isFixed)
+      rowStatus[iOrig] = 5;
+    else
+      abort();
+  }
+  int * numberKey = new int [numberRows];
+  memset(numberKey,0,numberRows*sizeof(int));
+  for (int i=0;i<numberSets;i++) {
+    int iRow = whichRows[i+numberNonGub];
+    for (int j=startSet[i];j<startSet[i+1];j++) {
+      int iOrig = whichColumns[j+numberNormal];
+      if (iOrig<numberColumns) {
+	if (original.getColumnStatus(iOrig)==ClpSimplex::basic) {
+	  numberKey[iRow]++;
+	}
+      } else {
+	// slack
+	if (original.getRowStatus(iRow)==ClpSimplex::basic) 
+	  numberKey[iRow]++;
+      }
+    }
+  }
+  for (int i=0;i<numberSets;i++) {
+    int iRow = whichRows[i+numberNonGub];
+    if (!numberKey[iRow]) {
+      original.setRowStatus(iRow,ClpSimplex::basic);
+    }
+  }
+  delete [] numberKey;
+  double objValue = 0.0;
+  for (int i = 0; i < numberColumns; i++)
+    objValue += cost[i] * originalSolution[i];
+  //printf("objective value is %g\n", objValue);
 }

@@ -1,7 +1,7 @@
-/* $Id: ClpDynamicExampleMatrix.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpDynamicExampleMatrix.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2004, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include <cstdio>
 
@@ -654,7 +654,7 @@ ClpDynamicExampleMatrix::createVariable(ClpSimplex * model, int & bestSequence)
                setDynamicStatusGen(bestSequence2, inSmall);
           }
      }
-     ClpDynamicMatrix::createVariable(model, bestSequence);
+     ClpDynamicMatrix::createVariable(model, bestSequence/*, bestSequence2*/);
      // clear for next iteration
      savedBestSequence_ = -1;
 }

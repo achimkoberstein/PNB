@@ -1,5 +1,7 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef OsiColCut_H
 #define OsiColCut_H
 
@@ -318,15 +320,5 @@ bool OsiColCut::infeasible(const OsiSolverInterface &im) const
   
   return false;
 }
-
-//#############################################################################
-/** A function that tests the methods in the OsiColCut class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-void
-OsiColCutUnitTest(const OsiSolverInterface * baseSiP, 
-		  const std::string & mpsDir);
 
 #endif

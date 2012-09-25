@@ -1,6 +1,7 @@
-/* $Id: driver2.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: driver2.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "ClpSimplex.hpp"
 #include "ClpPresolve.hpp"
@@ -54,7 +55,7 @@ public:
      /** The copy constructor from an CoinSimplexMessageHandler. */
      MyMessageHandler(const CoinMessageHandler&);
 
-     MyMessageHandler& operator=(const MyMessageHandler&);
+     MyMessageHandler& operator= (const MyMessageHandler&);
      /// Clone
      virtual CoinMessageHandler * clone() const ;
      //@}
@@ -77,7 +78,7 @@ protected:
 //-------------------------------------------------------------------
 // Default Constructor
 //-------------------------------------------------------------------
-MyMessageHandler::MyMessageHandler ()
+MyMessageHandler::MyMessageHandler()
      : CoinMessageHandler(),
        model_(NULL)
 {
@@ -86,13 +87,13 @@ MyMessageHandler::MyMessageHandler ()
 //-------------------------------------------------------------------
 // Copy constructor
 //-------------------------------------------------------------------
-MyMessageHandler::MyMessageHandler (const MyMessageHandler & rhs)
+MyMessageHandler::MyMessageHandler(const MyMessageHandler & rhs)
      : CoinMessageHandler(rhs),
        model_(rhs.model_)
 {
 }
 
-MyMessageHandler::MyMessageHandler (const CoinMessageHandler & rhs)
+MyMessageHandler::MyMessageHandler(const CoinMessageHandler & rhs)
      : CoinMessageHandler(),
        model_(NULL)
 {
@@ -109,7 +110,7 @@ MyMessageHandler::MyMessageHandler(ClpSimplex * model,
 //-------------------------------------------------------------------
 // Destructor
 //-------------------------------------------------------------------
-MyMessageHandler::~MyMessageHandler ()
+MyMessageHandler::~MyMessageHandler()
 {
 }
 
@@ -117,10 +118,10 @@ MyMessageHandler::~MyMessageHandler ()
 // Assignment operator
 //-------------------------------------------------------------------
 MyMessageHandler &
-MyMessageHandler::operator=(const MyMessageHandler& rhs)
+MyMessageHandler::operator= (const MyMessageHandler & rhs)
 {
      if (this != &rhs) {
-          CoinMessageHandler::operator=(rhs);
+          CoinMessageHandler::operator= (rhs);
           model_ = rhs.model_;
      }
      return *this;
@@ -173,7 +174,7 @@ MyMessageHandler::setModel(ClpSimplex * model)
      model_ = model;
 }
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpSimplex  model;
      // Message handler
@@ -182,9 +183,14 @@ int main (int argc, const char *argv[])
      model.passInMessageHandler(&messageHandler);
      int status;
      // Keep names when reading an mps file
-     if (argc < 2)
-          status = model.readMps("../../Data/Sample/p0033.mps", true);
-     else
+     if (argc < 2) {
+#if defined(SAMPLEDIR)
+          status = model.readMps(SAMPLEDIR "/p0033.mps", true);
+#else
+          fprintf(stderr, "Do not know where to find sample MPS files.\n");
+          exit(1);
+#endif
+     } else
           status = model.readMps(argv[1], true);
 
      if (status) {
@@ -312,30 +318,30 @@ int main (int argc, const char *argv[])
           std::cout << std::setw(6) << iRow << " " << std::setw(8) << (*rowNames)[iRow];
           value = rowPrimal[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = rowDual[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = rowLower[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           value = rowUpper[iRow];
           if (fabs(value) < 1.0e5)
-               std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
           else
-               std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+               std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           if (rowObjective) {
                value = rowObjective[iRow];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
           }
           std::cout << std::endl;
      }
@@ -375,29 +381,29 @@ int main (int argc, const char *argv[])
           if (fabs(value) > 1.0e-8) {
                std::cout << std::setw(6) << iColumn << " " << std::setw(8) << (*columnNames)[iColumn];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
                value = columnDual[iColumn];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
                value = columnLower[iColumn];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
                value = columnUpper[iColumn];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
                value = columnObjective[iColumn];
                if (fabs(value) < 1.0e5)
-                    std::cout << setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::fixed | std::ios::showpoint) << std::setw(14) << value;
                else
-                    std::cout << setiosflags(std::ios::scientific) << std::setw(14) << value;
+                    std::cout << std::setiosflags(std::ios::scientific) << std::setw(14) << value;
 
                std::cout << std::endl;
           }

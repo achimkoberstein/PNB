@@ -1,12 +1,11 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
+#include <stddef.h>
 #include <iostream>
 
+#include "CoinPragma.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "CoinMpsIO.hpp"
 #include "CoinMessage.hpp"
@@ -237,8 +236,8 @@ OsiSolverInterface::setObjCoeffSet(const int* indexFirst,
 				  const int* indexLast,
 				  const double* coeffList)
 {
-   const ptrdiff_t cnt = indexLast - indexFirst;
-   for (ptrdiff_t i = 0; i < cnt; ++i) {
+   const std::ptrdiff_t cnt = indexLast - indexFirst;
+   for (std::ptrdiff_t i = 0; i < cnt; ++i) {
       setObjCoeff(indexFirst[i], coeffList[i]);
    }
 }
@@ -949,11 +948,12 @@ void OsiSolverInterface::activateRowCutDebugger (const char * modelName)
    Only integer values need to be correct.
    Up to user to get it correct.
 */
-void OsiSolverInterface::activateRowCutDebugger (const double * solution)
+void OsiSolverInterface::activateRowCutDebugger (const double * solution,
+						 bool keepContinuous)
 {
   delete rowCutDebugger_;
   rowCutDebugger_=NULL; // so won't use in new
-  rowCutDebugger_ = new OsiRowCutDebugger(*this,solution);
+  rowCutDebugger_ = new OsiRowCutDebugger(*this,solution,keepContinuous);
 }
 //-------------------------------------------------------------------
 // Get Row Cut Debugger<br>
@@ -972,7 +972,7 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebugger() const
   }
 }
 // If you want to get debugger object even if not on optimal path then use this
-const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebuggerAlways() const
+OsiRowCutDebugger * OsiSolverInterface::getRowCutDebuggerAlways() const
 {
   if (rowCutDebugger_&&rowCutDebugger_->active()) {
     return rowCutDebugger_;
@@ -1019,10 +1019,10 @@ OsiSolverInterface::setInitialData()
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
   intParam_[OsiNameDiscipline] = 0;
 
-  // Dual objective limit is acceptable `badness'; for minimisation, DBL_MAX
-  dblParam_[OsiDualObjectiveLimit] = DBL_MAX;
-  // Primal objective limit is desired `goodness'; for minimisation, -DBL_MAX
-  dblParam_[OsiPrimalObjectiveLimit] = -DBL_MAX;
+  // Dual objective limit is acceptable `badness'; for minimisation, COIN_DBL_MAX
+  dblParam_[OsiDualObjectiveLimit] = COIN_DBL_MAX;
+  // Primal objective limit is desired `goodness'; for minimisation, -COIN_DBL_MAX
+  dblParam_[OsiPrimalObjectiveLimit] = -COIN_DBL_MAX;
   dblParam_[OsiDualTolerance] = 1e-6;
   dblParam_[OsiPrimalTolerance] = 1e-6;
   dblParam_[OsiObjOffset] = 0.0;
@@ -1368,10 +1368,38 @@ void OsiSolverInterface::writeLp(const char * filename,
     // no extension so no trailing period
     fullname = f;
   }
-  // Fall back on Osi version - without names
+
+	char** colnames;
+	char** rownames;
+  int nameDiscipline;
+  if (!getIntParam(OsiNameDiscipline,nameDiscipline))
+     nameDiscipline = 0;
+	if (useRowNames && nameDiscipline==2) {
+		colnames = new char*[getNumCols()];
+		rownames = new char*[getNumRows()+1];
+		for (int i = 0; i < getNumCols(); ++i)
+			colnames[i] = strdup(getColName(i).c_str());
+		for (int i = 0; i < getNumRows(); ++i)
+			rownames[i] = strdup(getRowName(i).c_str());
+		rownames[getNumRows()] = strdup(getObjName().c_str());
+	} else {
+		colnames = NULL;
+		rownames = NULL;
+	}
+
+  // Fall back on Osi version
   OsiSolverInterface::writeLpNative(fullname.c_str(), 
-				    NULL, NULL, epsilon, numberAcross,
+				    rownames, colnames, epsilon, numberAcross,
 				    decimals, objSense, useRowNames);
+
+	if (useRowNames && nameDiscipline==2) {
+		for (int i = 0; i < getNumCols(); ++i)
+			free(colnames[i]);
+		for (int i = 0; i < getNumRows()+1; ++i)
+			free(rownames[i]);
+		delete[] colnames;
+		delete[] rownames;
+	}
 }
 
 /*************************************************************************/
@@ -1382,10 +1410,36 @@ void OsiSolverInterface::writeLp(FILE *fp,
 				  double objSense,
 				  bool useRowNames) const
 {
-  // Fall back on Osi version - without names
+	char** colnames;
+	char** rownames;
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+	if (useRowNames && nameDiscipline==2) {
+		colnames = new char*[getNumCols()];
+		rownames = new char*[getNumRows()+1];
+		for (int i = 0; i < getNumCols(); ++i)
+			colnames[i] = strdup(getColName(i).c_str());
+		for (int i = 0; i < getNumRows(); ++i)
+			rownames[i] = strdup(getRowName(i).c_str());
+      rownames[getNumRows()] = strdup(getObjName().c_str());
+	} else {
+		colnames = NULL;
+		rownames = NULL;
+	}
+
+  // Fall back on Osi version
   OsiSolverInterface::writeLpNative(fp, 
-				    NULL, NULL, epsilon, numberAcross,
+				    rownames, colnames, epsilon, numberAcross,
 				    decimals, objSense, useRowNames);
+
+	if (useRowNames && nameDiscipline==2) {
+		for (int i = 0; i < getNumCols(); ++i)
+			free(colnames[i]);
+		for (int i = 0; i < getNumRows()+1; ++i)
+			free(rownames[i]);
+		delete[] colnames;
+		delete[] rownames;
+	}
 }
 
 /***********************************************************************/
@@ -1540,6 +1594,26 @@ void
 OsiSolverInterface::newLanguage(CoinMessages::Language language)
 {
   messages_ = CoinMessage(language);
+}
+// Is the given primal objective limit reached?
+bool
+OsiSolverInterface::isPrimalObjectiveLimitReached() const
+{
+  double primalobjlimit;
+  if (getDblParam(OsiPrimalObjectiveLimit, primalobjlimit))
+    return getObjSense() * getObjValue() < getObjSense() * primalobjlimit;
+  else
+    return false;
+}
+// Is the given dual objective limit reached?
+bool
+OsiSolverInterface::isDualObjectiveLimitReached() const
+{
+  double dualobjlimit;
+  if (getDblParam(OsiDualObjectiveLimit, dualobjlimit))
+    return getObjSense() * getObjValue() > getObjSense() * dualobjlimit;
+  else
+    return false;
 }
 // copy all parameters in this section from one solver to another
 void 

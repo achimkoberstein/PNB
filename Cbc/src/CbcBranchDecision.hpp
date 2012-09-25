@@ -1,4 +1,10 @@
+// $Id$
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 // Edwin 11/12/2009 carved from CbcBranchBase
+
 #ifndef CbcBranchDecision_H
 #define CbcBranchDecision_H
 
@@ -89,14 +95,14 @@ public:
     }
     /* If chooseMethod_ id non-null then the rest is fairly pointless
        as choosemethod_ will be doing all work
-     This comment makes more sense if you realise that there's a conversion in 
-	 process from the Cbc branching classes to Osi branching classes. The test
+     This comment makes more sense if you realise that there's a conversion in
+     process from the Cbc branching classes to Osi branching classes. The test
      for use of the Osi branching classes is CbcModel::branchingMethod_
      non-null (i.e., it points to one of these CbcBranchDecision objects) and
      that branch decision object has an OsiChooseVariable method set. In which
      case, we'll use it, rather than the choose[*]Variable methods defined in
      CbcNode.
-	 */
+	*/
 
     OsiChooseVariable * chooseMethod() const {
         return chooseMethod_;

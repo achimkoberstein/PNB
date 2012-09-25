@@ -1,6 +1,7 @@
-/* $Id: ClpPrimalColumnSteepest.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: ClpPrimalColumnSteepest.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 
@@ -270,13 +271,13 @@ ClpPrimalColumnSteepest::pivotColumn(CoinIndexedVector * updates,
                     model_->computeDuals(NULL);
                     saveWeights(model_, 4);
                     anyUpdates = 0;
-                    printf("switching to devex %d nel ratio %g\n", sizeFactorization_, ratio);
+                    COIN_DETAIL_PRINT(printf("switching to devex %d nel ratio %g\n", sizeFactorization_, ratio));
                }
                if (switchType == 5) {
                     numberLook *= 5; // needs tuning for gub
                     if (model_->numberIterations() % 1000 == 0 && model_->logLevel() > 1) {
-                         printf("numels %d ratio %g wanted %d look %d\n",
-                                sizeFactorization_, ratio, numberWanted, numberLook);
+                         COIN_DETAIL_PRINT(printf("numels %d ratio %g wanted %d look %d\n",
+						  sizeFactorization_, ratio, numberWanted, numberLook));
                     }
                     // Update duals and row djs
                     // Do partial pricing
@@ -400,7 +401,7 @@ ClpPrimalColumnSteepest::pivotColumn(CoinIndexedVector * updates,
                delete [] weights_;
                weights_ = NULL;
                saveWeights(model_, 4);
-               printf("switching to devex %d nel ratio %g\n", sizeFactorization_, ratio);
+               COIN_DETAIL_PRINT(printf("switching to devex %d nel ratio %g\n", sizeFactorization_, ratio));
           }
           //if (model_->numberIterations()%1000==0)
           //printf("numels %d ratio %g wanted %d\n",sizeFactorization_,ratio,numberWanted);
@@ -430,11 +431,11 @@ ClpPrimalColumnSteepest::pivotColumn(CoinIndexedVector * updates,
                delete [] weights_;
                weights_ = NULL;
                saveWeights(model_, 4);
-               printf("switching to exact %d nel ratio %g\n", sizeFactorization_, ratio);
+               COIN_DETAIL_PRINT(printf("switching to exact %d nel ratio %g\n", sizeFactorization_, ratio));
                updates->clear();
           }
           if (model_->numberIterations() % 1000 == 0)
-               printf("numels %d ratio %g wanted %d type x\n", sizeFactorization_, ratio, numberWanted);
+	    COIN_DETAIL_PRINT(printf("numels %d ratio %g wanted %d type x\n", sizeFactorization_, ratio, numberWanted));
      }
      if (switchType < 4) {
           if (switchType < 2 ) {
@@ -623,17 +624,26 @@ ClpPrimalColumnSteepest::justDjs(CoinIndexedVector * updates,
 
           reducedCost = model_->djRegion(iSection);
           int addSequence;
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	  double slack_multiplier;
+#endif
 
           if (!iSection) {
                number = updates->getNumElements();
                index = updates->getIndices();
                updateBy = updates->denseVector();
                addSequence = model_->numberColumns();
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	       slack_multiplier = CLP_PRIMAL_SLACK_MULTIPLIER;
+#endif
           } else {
                number = spareColumn1->getNumElements();
                index = spareColumn1->getIndices();
                updateBy = spareColumn1->denseVector();
                addSequence = 0;
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	       slack_multiplier = 1.0;
+#endif
           }
 
           for (j = 0; j < number; j++) {
@@ -665,25 +675,37 @@ ClpPrimalColumnSteepest::justDjs(CoinIndexedVector * updates,
                     }
                     break;
                case ClpSimplex::atUpperBound:
+	            iSequence += addSequence;
                     if (value > tolerance) {
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+  		        value *= value*slack_multiplier;
+#else
+		        value *= value;
+#endif
                          // store square in list
-                         if (infeas[iSequence+addSequence])
-                              infeas[iSequence+addSequence] = value * value; // already there
+                         if (infeas[iSequence])
+                              infeas[iSequence] = value; // already there
                          else
-                              infeasible_->quickAdd(iSequence + addSequence, value * value);
+                              infeasible_->quickAdd(iSequence, value);
                     } else {
-                         infeasible_->zero(iSequence + addSequence);
+                         infeasible_->zero(iSequence);
                     }
                     break;
                case ClpSimplex::atLowerBound:
+	            iSequence += addSequence;
                     if (value < -tolerance) {
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+  		        value *= value*slack_multiplier;
+#else
+		        value *= value;
+#endif
                          // store square in list
-                         if (infeas[iSequence+addSequence])
-                              infeas[iSequence+addSequence] = value * value; // already there
+                         if (infeas[iSequence])
+                              infeas[iSequence] = value; // already there
                          else
-                              infeasible_->quickAdd(iSequence + addSequence, value * value);
+                              infeasible_->quickAdd(iSequence, value);
                     } else {
-                         infeasible_->zero(iSequence + addSequence);
+                         infeasible_->zero(iSequence);
                     }
                }
           }
@@ -723,10 +745,10 @@ ClpPrimalColumnSteepest::djsAndDevex(CoinIndexedVector * updates,
      //updates->scanAndPack();
      model_->factorization()->updateColumnTranspose(spareRow2, updates);
      // and we can see if reference
-     double referenceIn = 0.0;
+     //double referenceIn = 0.0;
      int sequenceIn = model_->sequenceIn();
-     if (mode_ != 1 && reference(sequenceIn))
-          referenceIn = 1.0;
+     //if (mode_ != 1 && reference(sequenceIn))
+     //   referenceIn = 1.0;
      // save outgoing weight round update
      double outgoingWeight = 0.0;
      int sequenceOut = model_->sequenceOut();
@@ -796,14 +818,20 @@ ClpPrimalColumnSteepest::djsAndDevex(CoinIndexedVector * updates,
                if (reference(iSequence + numberColumns))
                     value3 += 1.0;
                weight[iSequence] = CoinMax(0.99 * thisWeight, value3);
+	       iSequence += addSequence;
                if (value > tolerance) {
                     // store square in list
-                    if (infeas[iSequence+addSequence])
-                         infeas[iSequence+addSequence] = value * value; // already there
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+    		    value *= value*CLP_PRIMAL_SLACK_MULTIPLIER;
+#else
+		    value *= value;
+#endif
+                    if (infeas[iSequence])
+                         infeas[iSequence] = value; // already there
                     else
-                         infeasible_->quickAdd(iSequence + addSequence, value * value);
+                         infeasible_->quickAdd(iSequence , value);
                } else {
-                    infeasible_->zero(iSequence + addSequence);
+                    infeasible_->zero(iSequence);
                }
                break;
           case ClpSimplex::atLowerBound:
@@ -814,14 +842,20 @@ ClpPrimalColumnSteepest::djsAndDevex(CoinIndexedVector * updates,
                if (reference(iSequence + numberColumns))
                     value3 += 1.0;
                weight[iSequence] = CoinMax(0.99 * thisWeight, value3);
+	       iSequence += addSequence;
                if (value < -tolerance) {
                     // store square in list
-                    if (infeas[iSequence+addSequence])
-                         infeas[iSequence+addSequence] = value * value; // already there
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+    		    value *= value*CLP_PRIMAL_SLACK_MULTIPLIER;
+#else
+		    value *= value;
+#endif
+                    if (infeas[iSequence])
+                         infeas[iSequence] = value; // already there
                     else
-                         infeasible_->quickAdd(iSequence + addSequence, value * value);
+                         infeasible_->quickAdd(iSequence , value);
                } else {
-                    infeasible_->zero(iSequence + addSequence);
+                    infeasible_->zero(iSequence);
                }
           }
      }
@@ -1072,14 +1106,20 @@ ClpPrimalColumnSteepest::djsAndSteepest(CoinIndexedVector * updates,
                     }
                }
                weight[iSequence] = thisWeight;
+	       iSequence += addSequence;
                if (value > tolerance) {
                     // store square in list
-                    if (infeas[iSequence+addSequence])
-                         infeas[iSequence+addSequence] = value * value; // already there
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+    		    value *= value*CLP_PRIMAL_SLACK_MULTIPLIER;
+#else
+		    value *= value;
+#endif
+                    if (infeas[iSequence])
+                         infeas[iSequence] = value; // already there
                     else
-                         infeasible_->quickAdd(iSequence + addSequence, value * value);
+                         infeasible_->quickAdd(iSequence , value);
                } else {
-                    infeasible_->zero(iSequence + addSequence);
+                    infeasible_->zero(iSequence);
                }
                break;
           case ClpSimplex::atLowerBound:
@@ -1105,14 +1145,20 @@ ClpPrimalColumnSteepest::djsAndSteepest(CoinIndexedVector * updates,
                     }
                }
                weight[iSequence] = thisWeight;
+	       iSequence += addSequence;
                if (value < -tolerance) {
                     // store square in list
-                    if (infeas[iSequence+addSequence])
-                         infeas[iSequence+addSequence] = value * value; // already there
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+    		    value *= value*CLP_PRIMAL_SLACK_MULTIPLIER;
+#else
+		    value *= value;
+#endif
+                    if (infeas[iSequence])
+                         infeas[iSequence] = value; // already there
                     else
-                         infeasible_->quickAdd(iSequence + addSequence, value * value);
+                         infeasible_->quickAdd(iSequence, value);
                } else {
-                    infeasible_->zero(iSequence + addSequence);
+                    infeasible_->zero(iSequence); 
                }
           }
      }
@@ -1236,17 +1282,26 @@ ClpPrimalColumnSteepest::djsAndDevex2(CoinIndexedVector * updates,
 
           reducedCost = model_->djRegion(iSection);
           int addSequence;
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	  double slack_multiplier;
+#endif
 
           if (!iSection) {
                number = updates->getNumElements();
                index = updates->getIndices();
                updateBy = updates->denseVector();
                addSequence = model_->numberColumns();
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	       slack_multiplier = CLP_PRIMAL_SLACK_MULTIPLIER;
+#endif
           } else {
                number = spareColumn1->getNumElements();
                index = spareColumn1->getIndices();
                updateBy = spareColumn1->denseVector();
                addSequence = 0;
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	       slack_multiplier = 1.0;
+#endif
           }
 
           for (j = 0; j < number; j++) {
@@ -1278,25 +1333,37 @@ ClpPrimalColumnSteepest::djsAndDevex2(CoinIndexedVector * updates,
                     }
                     break;
                case ClpSimplex::atUpperBound:
+	            iSequence += addSequence;
                     if (value > tolerance) {
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+  		        value *= value*slack_multiplier;
+#else
+		        value *= value;
+#endif
                          // store square in list
-                         if (infeas[iSequence+addSequence])
-                              infeas[iSequence+addSequence] = value * value; // already there
+                         if (infeas[iSequence])
+                              infeas[iSequence] = value; // already there
                          else
-                              infeasible_->quickAdd(iSequence + addSequence, value * value);
+                              infeasible_->quickAdd(iSequence, value);
                     } else {
-                         infeasible_->zero(iSequence + addSequence);
+                         infeasible_->zero(iSequence);
                     }
                     break;
                case ClpSimplex::atLowerBound:
+	            iSequence += addSequence;
                     if (value < -tolerance) {
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+  		        value *= value*slack_multiplier;
+#else
+		        value *= value;
+#endif
                          // store square in list
-                         if (infeas[iSequence+addSequence])
-                              infeas[iSequence+addSequence] = value * value; // already there
+                         if (infeas[iSequence])
+                              infeas[iSequence] = value; // already there
                          else
-                              infeasible_->quickAdd(iSequence + addSequence, value * value);
+                              infeasible_->quickAdd(iSequence, value);
                     } else {
-                         infeasible_->zero(iSequence + addSequence);
+                         infeasible_->zero(iSequence);
                     }
                }
           }
@@ -1317,9 +1384,9 @@ ClpPrimalColumnSteepest::djsAndDevex2(CoinIndexedVector * updates,
           sequenceIn = pivotVariable[pivotRow];
           infeasible_->zero(sequenceIn);
           // and we can see if reference
-          double referenceIn = 0.0;
-          if (mode_ != 1 && reference(sequenceIn))
-               referenceIn = 1.0;
+          //double referenceIn = 0.0;
+          //if (mode_ != 1 && reference(sequenceIn))
+	  //   referenceIn = 1.0;
           // save outgoing weight round update
           double outgoingWeight = 0.0;
           int sequenceOut = model_->sequenceOut();
@@ -1427,17 +1494,26 @@ ClpPrimalColumnSteepest::djsAndSteepest2(CoinIndexedVector * updates,
 
           reducedCost = model_->djRegion(iSection);
           int addSequence;
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	  double slack_multiplier;
+#endif
 
           if (!iSection) {
                number = updates->getNumElements();
                index = updates->getIndices();
                updateBy = updates->denseVector();
                addSequence = model_->numberColumns();
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	       slack_multiplier = CLP_PRIMAL_SLACK_MULTIPLIER;
+#endif
           } else {
                number = spareColumn1->getNumElements();
                index = spareColumn1->getIndices();
                updateBy = spareColumn1->denseVector();
                addSequence = 0;
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER 
+	       slack_multiplier = 1.0;
+#endif
           }
 
           for (j = 0; j < number; j++) {
@@ -1469,25 +1545,37 @@ ClpPrimalColumnSteepest::djsAndSteepest2(CoinIndexedVector * updates,
                     }
                     break;
                case ClpSimplex::atUpperBound:
+	            iSequence += addSequence;
                     if (value > tolerance) {
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+  		        value *= value*slack_multiplier;
+#else
+		        value *= value;
+#endif
                          // store square in list
-                         if (infeas[iSequence+addSequence])
-                              infeas[iSequence+addSequence] = value * value; // already there
+                         if (infeas[iSequence])
+                              infeas[iSequence] = value; // already there
                          else
-                              infeasible_->quickAdd(iSequence + addSequence, value * value);
+                              infeasible_->quickAdd(iSequence, value);
                     } else {
-                         infeasible_->zero(iSequence + addSequence);
+                         infeasible_->zero(iSequence);
                     }
                     break;
                case ClpSimplex::atLowerBound:
+	            iSequence += addSequence;
                     if (value < -tolerance) {
+#ifdef CLP_PRIMAL_SLACK_MULTIPLIER
+  		        value *= value*slack_multiplier;
+#else
+		        value *= value;
+#endif
                          // store square in list
-                         if (infeas[iSequence+addSequence])
-                              infeas[iSequence+addSequence] = value * value; // already there
+                         if (infeas[iSequence])
+                              infeas[iSequence] = value; // already there
                          else
-                              infeasible_->quickAdd(iSequence + addSequence, value * value);
+                              infeasible_->quickAdd(iSequence, value);
                     } else {
-                         infeasible_->zero(iSequence + addSequence);
+                         infeasible_->zero(iSequence);
                     }
                }
           }
@@ -1745,9 +1833,9 @@ ClpPrimalColumnSteepest::justDevex(CoinIndexedVector * updates,
      int sequenceIn = pivotVariable[pivotRow];
      infeasible_->zero(sequenceIn);
      // and we can see if reference
-     double referenceIn = 0.0;
-     if (mode_ != 1 && reference(sequenceIn))
-          referenceIn = 1.0;
+     //double referenceIn = 0.0;
+     //if (mode_ != 1 && reference(sequenceIn))
+     //   referenceIn = 1.0;
      // save outgoing weight round update
      double outgoingWeight = 0.0;
      int sequenceOut = model_->sequenceOut();
@@ -2419,11 +2507,11 @@ ClpPrimalColumnSteepest::pivotColumnOldMethod(CoinIndexedVector * updates,
                delete [] weights_;
                weights_ = NULL;
                saveWeights(model_, 4);
-               printf("switching to devex %d nel ratio %g\n", sizeFactorization_, ratio);
+               COIN_DETAIL_PRINT(printf("switching to devex %d nel ratio %g\n", sizeFactorization_, ratio));
                updates->clear();
           }
           if (model_->numberIterations() % 1000 == 0)
-               printf("numels %d ratio %g wanted %d\n", sizeFactorization_, ratio, numberWanted);
+	    COIN_DETAIL_PRINT(printf("numels %d ratio %g wanted %d\n", sizeFactorization_, ratio, numberWanted));
      }
      if(switchType == 4) {
           // Still in devex mode
@@ -2449,11 +2537,11 @@ ClpPrimalColumnSteepest::pivotColumnOldMethod(CoinIndexedVector * updates,
                delete [] weights_;
                weights_ = NULL;
                saveWeights(model_, 4);
-               printf("switching to exact %d nel ratio %g\n", sizeFactorization_, ratio);
+               COIN_DETAIL_PRINT(printf("switching to exact %d nel ratio %g\n", sizeFactorization_, ratio));
                updates->clear();
           }
           if (model_->numberIterations() % 1000 == 0)
-               printf("numels %d ratio %g wanted %d\n", sizeFactorization_, ratio, numberWanted);
+	    COIN_DETAIL_PRINT(printf("numels %d ratio %g wanted %d\n", sizeFactorization_, ratio, numberWanted));
      }
      if (switchType < 4) {
           if (switchType < 2 ) {
@@ -2947,6 +3035,7 @@ ClpPrimalColumnSteepest::saveWeights(ClpSimplex * model, int mode)
           double * reducedCost = model_->djRegion();
 
           if (!model_->nonLinearCost()->lookBothWays()) {
+#ifndef CLP_PRIMAL_SLACK_MULTIPLIER 
                for (iSequence = 0; iSequence < number; iSequence++) {
                     double value = reducedCost[iSequence];
                     ClpSimplex::Status status = model_->getStatus(iSequence);
@@ -2976,6 +3065,69 @@ ClpPrimalColumnSteepest::saveWeights(ClpSimplex * model, int mode)
                          }
                     }
                }
+#else
+	       // Columns
+	       int numberColumns = model_->numberColumns();
+               for (iSequence = 0; iSequence < numberColumns; iSequence++) {
+                    double value = reducedCost[iSequence];
+                    ClpSimplex::Status status = model_->getStatus(iSequence);
+
+                    switch(status) {
+
+                    case ClpSimplex::basic:
+                    case ClpSimplex::isFixed:
+                         break;
+                    case ClpSimplex::isFree:
+                    case ClpSimplex::superBasic:
+                         if (fabs(value) > FREE_ACCEPT * tolerance) {
+                              // we are going to bias towards free (but only if reasonable)
+                              value *= FREE_BIAS;
+                              // store square in list
+                              infeasible_->quickAdd(iSequence, value * value);
+                         }
+                         break;
+                    case ClpSimplex::atUpperBound:
+                         if (value > tolerance) {
+                              infeasible_->quickAdd(iSequence, value * value);
+                         }
+                         break;
+                    case ClpSimplex::atLowerBound:
+                         if (value < -tolerance) {
+                              infeasible_->quickAdd(iSequence, value * value);
+                         }
+                    }
+               }
+	       // Rows
+               for ( ; iSequence < number; iSequence++) {
+                    double value = reducedCost[iSequence];
+                    ClpSimplex::Status status = model_->getStatus(iSequence);
+
+                    switch(status) {
+
+                    case ClpSimplex::basic:
+                    case ClpSimplex::isFixed:
+                         break;
+                    case ClpSimplex::isFree:
+                    case ClpSimplex::superBasic:
+                         if (fabs(value) > FREE_ACCEPT * tolerance) {
+                              // we are going to bias towards free (but only if reasonable)
+                              value *= FREE_BIAS;
+                              // store square in list
+                              infeasible_->quickAdd(iSequence, value * value);
+                         }
+                         break;
+                    case ClpSimplex::atUpperBound:
+                         if (value > tolerance) {
+                              infeasible_->quickAdd(iSequence, value * value * CLP_PRIMAL_SLACK_MULTIPLIER);
+                         }
+                         break;
+                    case ClpSimplex::atLowerBound:
+                         if (value < -tolerance) {
+                              infeasible_->quickAdd(iSequence, value * value * CLP_PRIMAL_SLACK_MULTIPLIER);
+                         }
+                    }
+               }
+#endif
           } else {
                ClpNonLinearCost * nonLinear = model_->nonLinearCost();
                // can go both ways
@@ -3288,7 +3440,7 @@ ClpPrimalColumnSteepest::checkAccuracy(int sequence,
      double oldDevex = weights_[sequence];
      double check = CoinMax(devex, oldDevex);;
      if ( fabs ( devex - oldDevex ) > relativeTolerance * check ) {
-          printf("check %d old weight %g, new %g\n", sequence, oldDevex, devex);
+       COIN_DETAIL_PRINT(printf("check %d old weight %g, new %g\n", sequence, oldDevex, devex));
           // update so won't print again
           weights_[sequence] = devex;
      }
@@ -3530,12 +3682,10 @@ ClpPrimalColumnSteepest::partialPricing(CoinIndexedVector * updates,
 
      // Rows
      reducedCost = model_->djRegion(0);
-     int addSequence;
 
      number = updates->getNumElements();
      index = updates->getIndices();
      updateBy = updates->denseVector();
-     addSequence = numberColumns;
      int j;
      double * duals = model_->dualRowSolution();
      for (j = 0; j < number; j++) {
@@ -3619,6 +3769,7 @@ ClpPrimalColumnSteepest::partialPricing(CoinIndexedVector * updates,
      int sequenceOut = model_->sequenceOut();
      double * duals2 = duals - numberColumns;
      int chunk = CoinMin(1024, (numberColumns + nSlacks) / 32);
+#ifdef COIN_DETAIL
      if (model_->numberIterations() % 1000 == 0 && model_->logLevel() > 1) {
           printf("%d wanted, nSlacks %d, chunk %d\n", numberWanted, nSlacks, chunk);
           int i;
@@ -3626,6 +3777,7 @@ ClpPrimalColumnSteepest::partialPricing(CoinIndexedVector * updates,
                printf("start R %d C %g ", startR[i], startC[i]);
           printf("\n");
      }
+#endif
      chunk = CoinMax(chunk, 256);
      bool finishedR = false, finishedC = false;
      bool doingR = randomR > randomC;

@@ -1,6 +1,8 @@
-/* $Id: CoinSolve.cpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CoinSolve.cpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2007, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 
 /*! \file CbcSolver.cpp
     \brief Main routine for the cbc stand-alone solver.
@@ -9,7 +11,6 @@
 #include "CbcConfig.h"
 #include "CoinPragma.hpp"
 #include "CbcModel.hpp"
-#include "CbcOrClpParam.hpp"
 #include "OsiClpSolverInterface.hpp"
 
 /*
@@ -40,7 +41,6 @@
     Hmmm ... is it still the case that standard C malloc and C++ new/delete
     do not play well together? 'Cause the hooks here for new and delete will
     not escape from this file.
-
 */
 
 
@@ -338,9 +338,6 @@ int main (int argc, const char *argv[])
 
 #ifdef CLP_DEBUG_MALLOC
     clp_memory(1);
-#endif
-
-#ifdef CBC_STATISTICS
 #endif
 
     if (returnCode != 777) {

@@ -1,5 +1,8 @@
+// $Id: sudoku.cpp 1574 2011-01-05 01:13:55Z lou $
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -16,6 +19,7 @@
 // For all different
 #include "CbcBranchCut.hpp"
 #include "CbcBranchActual.hpp"
+#include "CbcBranchAllDifferent.hpp"
 #include "CbcCutGenerator.hpp"
 #include "CglAllDifferent.hpp"
 #include "OsiClpSolverInterface.hpp"

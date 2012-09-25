@@ -9,6 +9,7 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include "CoinFinite.hpp"
 #include "CoinMpsIO.hpp"
 #include "CoinFileIO.hpp"
 #include "SmiScnModel.hpp"

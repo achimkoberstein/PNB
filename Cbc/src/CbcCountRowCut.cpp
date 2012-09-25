@@ -1,6 +1,8 @@
-/* $Id: CbcCountRowCut.cpp 1315 2009-11-28 11:09:56Z forrest $ */
+/* $Id: CbcCountRowCut.cpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -85,7 +87,7 @@ CbcCountRowCut::decrement(int change)
         assert(numberPointingToThis_ >= 0);
         if (numberPointingToThis_ < change) {
             assert(numberPointingToThis_ > 0);
-            printf("negative cut count %d - %d\n", numberPointingToThis_, change);
+            COIN_DETAIL_PRINT(printf("negative cut count %d - %d\n", numberPointingToThis_, change));
             change = numberPointingToThis_;
         }
         numberPointingToThis_ -= change;

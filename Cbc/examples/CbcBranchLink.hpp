@@ -1,5 +1,8 @@
+// $Id: CbcBranchLink.hpp 1574 2011-01-05 01:13:55Z lou $
 // Copyright (C) 2005, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcBranchLink_H
 #define CbcBranchLink_H
 
@@ -123,8 +126,8 @@ public:
   */
   virtual void print();
   /** Return the type (an integer identifier) of \c this */
-  virtual int type() const 
-  { return -1;}
+  virtual CbcBranchObjType type() const 
+  { return CbcBranchObjType(0);} /*FIXME what type() should be returned here? */
 
   /** Compare the \c this with \c brObj. \c this and \c brObj must be os the
       same type and must have the same original object, but they may have

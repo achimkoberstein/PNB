@@ -1,14 +1,16 @@
-/* $Id: MyMessageHandler.cpp 1525 2010-02-26 17:27:59Z mjs $ */
+/* $Id: MyMessageHandler.cpp 1753 2011-06-19 16:27:26Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #if defined(_MSC_VER)
-#pragma warning(disable:4786)
+// move into CoinPragma.hpp ?
 #pragma warning(disable:4503)
 #endif
 
 #include <cstdio>
 
+#include "CoinPragma.hpp"
 #include "ClpSimplex.hpp"
 #include "ClpNonLinearCost.hpp"
 #include "MyMessageHandler.hpp"
@@ -126,11 +128,10 @@ MyMessageHandler::print()
                     feasibleExtremePoints_.push_front(feasibleExtremePoint);
 
                     // Want maximum of 10 solutions, so if more then 10 get rid of oldest
-                    int numExtremePointsSaved = feasibleExtremePoints_.size();
+                    size_t numExtremePointsSaved = feasibleExtremePoints_.size();
                     if ( numExtremePointsSaved >= 10 ) {
                          feasibleExtremePoints_.pop_back();
-                         assert( feasibleExtremePoints_.size() ==
-                                 static_cast<unsigned int> (numExtremePointsSaved) - 1 );
+                         assert( feasibleExtremePoints_.size() == numExtremePointsSaved - 1 );
                     };
 
                }

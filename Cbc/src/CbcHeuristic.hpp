@@ -1,6 +1,8 @@
-/* $Id: CbcHeuristic.hpp 1432 2010-02-07 19:33:53Z bjarni $ */
+/* $Id: CbcHeuristic.hpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcHeuristic_H
 #define CbcHeuristic_H
 
@@ -21,7 +23,7 @@ class CbcHeuristicNodeList;
 class CbcBranchingObject;
 
 /** A class describing the branching decisions that were made to get
-    to the node where a heuristics was invoked from */
+    to the node where a heuristic was invoked from */
 
 class CbcHeuristicNode {
 private:
@@ -65,7 +67,7 @@ public:
         return nodes_[i];
     }
     inline int size() const {
-        return nodes_.size();
+        return static_cast<int>(nodes_.size());
     }
 };
 
@@ -249,6 +251,9 @@ public:
     inline void setWhereFrom(int value) {
         whereFrom_ = value;
     }
+    inline int whereFrom() const {
+        return whereFrom_;
+    }
     /** Upto this depth we call the tree shallow and the heuristic can be called
         multiple times. That is, the test whether the current node is far from
         the others where the jeuristic was invoked will not be done, only the
@@ -291,10 +296,14 @@ public:
     inline int numCouldRun() const {
         return numCouldRun_;
     }
-    /** Clone but ..
-        type 0 clone solver, 1 clone continuous solver
-        Add 2 to say without integer variables which are at low priority
-        Add 4 to say quite likely infeasible so give up easily.*/
+    /*! \brief Clone, but ...
+
+      If type is
+	- 0 clone the solver for the model,
+	- 1 clone the continuous solver for the model
+        - Add 2 to say without integer variables which are at low priority
+        - Add 4 to say quite likely infeasible so give up easily (clp only).
+    */
     OsiSolverInterface * cloneBut(int type);
 protected:
 

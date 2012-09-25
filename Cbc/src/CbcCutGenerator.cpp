@@ -1,6 +1,8 @@
-/* $Id: CbcCutGenerator.cpp 1393 2009-12-11 00:29:38Z lou $ */
+/* $Id: CbcCutGenerator.cpp 1675 2011-06-19 17:23:14Z stefan $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -273,6 +275,8 @@ CbcCutGenerator::generateCuts( OsiCuts & cs , int fullScan, OsiSolverInterface *
             info.options |= 16;
         if (fullScan < 0)
             info.options |= 128;
+	if (whetherInMustCallAgainMode())
+	  info.options |= 1024;
         // See if we want alternate set of cuts
         if ((model_->moreSpecialOptions()&16384) != 0)
             info.options |= 256;
@@ -530,13 +534,23 @@ CbcCutGenerator::generateCuts( OsiCuts & cs , int fullScan, OsiSolverInterface *
                 if (!feasible) {
                     // not feasible -add infeasible cut
                     OsiRowCut rc;
-                    rc.setLb(DBL_MAX);
+                    rc.setLb(COIN_DBL_MAX);
                     rc.setUb(0.0);
                     cs.insert(rc);
                 }
             }
             //if (!solver->basisIsAvailable())
-            //returnCode=true;
+	    //returnCode=true;
+	    if (!returnCode) {
+	      // bounds changed but still optimal
+#ifdef COIN_HAS_CLP
+	      OsiClpSolverInterface * clpSolver
+		= dynamic_cast<OsiClpSolverInterface *> (solver);
+	      if (clpSolver) {
+		clpSolver->setLastAlgorithm(2);
+	      }
+#endif
+	    }
 #ifdef JJF_ZERO
             // Pass across info to pseudocosts
             char * mark = new char[numberColumns];
@@ -576,8 +590,8 @@ CbcCutGenerator::generateCuts( OsiCuts & cs , int fullScan, OsiSolverInterface *
                 }
             }
             if (nOdd)
-                printf("Cut generator %s produced %d cuts of which %d were modified\n",
-                       generatorName_, numberRowCutsAfter - numberRowCutsBefore, nOdd);
+                COIN_DETAIL_PRINT(printf("Cut generator %s produced %d cuts of which %d were modified\n",
+					 generatorName_, numberRowCutsAfter - numberRowCutsBefore, nOdd));
         }
         {
             // make all row cuts without test for duplicate

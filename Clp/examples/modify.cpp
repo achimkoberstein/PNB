@@ -1,13 +1,15 @@
-/* $Id: modify.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: modify.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2007, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 /*
   This example shows the creation of a model from arrays, solution
   and then changes to objective and adding a row
 */
 #include "ClpSimplex.hpp"
 #include "CoinHelperFunctions.hpp"
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
      ClpSimplex  model;
      // model is as exmip1.mps from Data/samples

@@ -1,6 +1,7 @@
-/* $Id: pdco.cpp 1552 2010-05-25 01:03:59Z mjs $ */
+/* $Id: pdco.cpp 1662 2011-01-04 17:52:40Z lou $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 
 // It also tests pdco
@@ -15,7 +16,7 @@
 #include <assert.h>
 #include <cmath>
 
-int main (int argc, const char *argv[])
+int main(int argc, const char *argv[])
 {
 
      // Get model in some way
@@ -56,12 +57,12 @@ int main (int argc, const char *argv[])
      info.LSdamp = 0.0;
      // These are already set?
      model.xsize_ = 50.0 / (model.numberColumns());
-     model.xsize_ = CoinMin( 1.0, model.xsize_);
+     model.xsize_ = CoinMin(1.0, model.xsize_);
 
      /*
       *     Solve the test problem
       */
-     model.pdco( &stuff, options, info, outfo);
+     model.pdco(&stuff, options, info, outfo);
 
      /*
       *     Examine the results.

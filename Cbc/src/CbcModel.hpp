@@ -1,11 +1,12 @@
-/* $Id: CbcModel.hpp 1409 2009-12-21 16:59:56Z forrest $ */
+/* $Id: CbcModel.hpp 1795 2012-09-03 12:58:59Z stefan $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef CbcModel_H
 #define CbcModel_H
 #include <string>
 #include <vector>
-#include "CoinFinite.hpp"
 #include "CoinMessageHandler.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiBranchingObject.hpp"
@@ -16,7 +17,6 @@
 #include "CbcEventHandler.hpp"
 #include "ClpDualRowPivot.hpp"
 
-//class OsiSolverInterface;
 
 class CbcCutGenerator;
 class CbcBaseModel;
@@ -37,6 +37,7 @@ class CbcStatistics;
 class CbcEventHandler ;
 class CglPreProcess;
 # ifdef COIN_HAS_CLP
+class OsiClpSolverInterface;
 class ClpNodeStuff;
 #endif
 // #define CBC_CHECK_BASIS 1
@@ -891,13 +892,17 @@ public:
     inline void incrementIterationCount(int value) {
         numberIterations_ += value;
     }
-    /// Get how many Nodes it took to solve the problem.
+    /// Get how many Nodes it took to solve the problem (including those in complete fathoming B&B inside CLP).
     inline int getNodeCount() const {
         return numberNodes_;
     }
     /// Increment how many nodes it took to solve the problem.
     inline void incrementNodeCount(int value) {
         numberNodes_ += value;
+    }
+    /// Get how many Nodes were enumerated in complete fathoming B&B inside CLP
+    inline int getExtraNodeCount() const {
+       return numberExtraNodes_;
     }
     /** Final status of problem
         Some of these can be found out by is...... functions
@@ -1170,8 +1175,9 @@ public:
         If fixVariables true then bounds of continuous solver updated.
         Returns objective value (worse than cutoff if not feasible)
         Previously computed objective value is now passed in (in case user does not do solve)
+	virtual so user can override
     */
-    double checkSolution(double cutoff, double * solution,
+    virtual double checkSolution(double cutoff, double * solution,
                          int fixVariables, double originalObjValue);
     /** Test the current solution for feasiblility.
 
@@ -1714,6 +1720,9 @@ public:
         15 bit (32768) - Try reduced model after 0 nodes
         16 bit (65536) - Original model had integer bounds
         17 bit (131072) - Perturbation switched off
+        18 bit (262144) - donor CbcModel
+        19 bit (524288) - recipient CbcModel
+        20 bit (1048576) - waiting for sub model to return
     */
     inline void setSpecialOptions(int value) {
         specialOptions_ = value;
@@ -1722,9 +1731,19 @@ public:
     inline int specialOptions() const {
         return specialOptions_;
     }
+    /// Tell model to stop on event
+    inline void sayEventHappened()
+    { eventHappened_=true;}
     /// Says if normal solver i.e. has well defined CoinPackedMatrix
     inline bool normalSolver() const {
         return (specialOptions_&16) == 0;
+    }
+    /** Says if model is sitting there waiting for mini branch and bound to finish
+	This is because an event handler may only have access to parent model in
+	mini branch and bound
+    */
+    inline bool waitingForMiniBranchAndBound() const {
+        return (specialOptions_&1048576) != 0;
     }
     /** Set more special options
         at present bottom 6 bits used for shadow price mode
@@ -1732,6 +1751,13 @@ public:
         2048,4096 breaking out of cuts
         8192 slowly increase minimum drop
         16384 gomory
+	32768 more heuristics in sub trees
+	65536 no cuts in preprocessing
+        131072 Time limits elapsed
+        18 bit (262144) - Perturb fathom nodes
+        19 bit (524288) - No limit on fathom nodes
+        20 bit (1048576) - Reduce sum of infeasibilities before cuts
+        21 bit (2097152) - Reduce sum of infeasibilities after cuts
     */
     inline void setMoreSpecialOptions(int value) {
         moreSpecialOptions_ = value;
@@ -1739,6 +1765,17 @@ public:
     /// Get more special options
     inline int moreSpecialOptions() const {
         return moreSpecialOptions_;
+    }
+  /// Set time method
+    inline void setUseElapsedTime(bool yesNo) {
+        if (yesNo)
+  	  moreSpecialOptions_ |= 131072;
+	else
+	  moreSpecialOptions_ &= ~131072;
+    }
+    /// Get time method
+    inline bool useElapsedTime() const {
+        return (moreSpecialOptions_&131072)!=0;
     }
     /// Go to dantzig pivot selection if easy problem (clp only)
 #ifdef COIN_HAS_CLP
@@ -1804,7 +1841,7 @@ public:
     CbcModel & operator=(const CbcModel& rhs);
 
     /// Destructor
-    ~CbcModel ();
+    virtual ~CbcModel ();
 
     /// Returns solver - has current state
     inline OsiSolverInterface * solver() const {
@@ -1866,8 +1903,10 @@ public:
     void moveInfo(const CbcModel & rhs);
     //@}
 
-    /// To do with threads
+    ///@name Multithreading
     //@{
+    /// Indicates whether Cbc library has been compiled with multithreading support
+    static bool haveMultiThreadSupport();
     /// Get pointer to masterthread
     CbcThread * masterThread() const {
         return masterThread_;
@@ -1962,7 +2001,7 @@ public:
                      int numberNodes);
     //@}
 
-    /// semi-private i.e. users should not use
+    ///@name semi-private i.e. users should not use
     //@{
     /// Get how many Nodes it took to solve the problem.
     int getNodeCount2() const {
@@ -1988,6 +2027,10 @@ public:
     void deleteSolutions();
     /// Encapsulates solver resolve
     int resolve(OsiSolverInterface * solver);
+#ifdef CLP_RESOLVE
+    /// Special purpose resolve
+    int resolveClp(OsiClpSolverInterface * solver, int type);
+#endif
 
     /** Encapsulates choosing a variable -
         anyAction -2, infeasible (-1 round again), 0 done
@@ -2431,7 +2474,18 @@ private:
     */
     int specialOptions_;
     /** More special options
-        at present bottom 3 bits used for shadow price mode
+        at present bottom 6 bits used for shadow price mode
+        1024 for experimental hotstart
+        2048,4096 breaking out of cuts
+        8192 slowly increase minimum drop
+        16384 gomory
+	32768 more heuristics in sub trees
+	65536 no cuts in preprocessing
+        131072 Time limits elapsed
+        18 bit (262144) - Perturb fathom nodes
+        19 bit (524288) - No limit on fathom nodes
+        20 bit (1048576) - Reduce sum of infeasibilities before cuts
+        21 bit (2097152) - Reduce sum of infeasibilities after cuts
     */
     int moreSpecialOptions_;
     /// User node comparison function
@@ -2523,10 +2577,8 @@ private:
     CbcHeuristic ** heuristic_;
     /// Pointer to heuristic solver which found last solution (or NULL)
     CbcHeuristic * lastHeuristic_;
-# ifdef COIN_HAS_CLP
     /// Depth for fast nodes
     int fastNodeDepth_;
-#endif
     /*! Pointer to the event handler */
 # ifdef CBC_ONLY_CLP
     ClpEventHandler *eventHandler_ ;

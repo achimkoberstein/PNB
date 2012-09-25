@@ -1,6 +1,8 @@
 /* $Id: CbcHeuristicDiveFractional.cpp 1173 2009-06-04 09:44:10Z forrest $ */
 // Copyright (C) 2008, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -73,7 +75,7 @@ CbcHeuristicDiveFractional::selectVariableToBranch(OsiSolverInterface* solver,
 
     bestColumn = -1;
     bestRound = -1; // -1 rounds down, +1 rounds up
-    double bestFraction = DBL_MAX;
+    double bestFraction = COIN_DBL_MAX;
     bool allTriviallyRoundableSoFar = true;
     for (int i = 0; i < numberIntegers; i++) {
         int iColumn = integerVariable[i];
@@ -85,7 +87,7 @@ CbcHeuristicDiveFractional::selectVariableToBranch(OsiSolverInterface* solver,
 
                 if (allTriviallyRoundableSoFar && downLocks_[i] > 0 && upLocks_[i] > 0) {
                     allTriviallyRoundableSoFar = false;
-                    bestFraction = DBL_MAX;
+                    bestFraction = COIN_DBL_MAX;
                 }
 
                 // the variable cannot be rounded
