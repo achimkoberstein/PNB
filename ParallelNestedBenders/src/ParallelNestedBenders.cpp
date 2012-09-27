@@ -2437,48 +2437,49 @@ namespace parallel_benders {
             // Get ENV and LP ptr
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-            int cpx_stat = 0;
+            int cpx_stat = CPXgetstat(env_ptr,lp_ptr);
 
             dual_solution_farkas = new double[number_rows];
 
-            CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
-            CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
-            CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
-            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
-                CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
-            else
-                CPXdualopt(env_ptr,lp_ptr); // Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+            if ( cpx_stat != CPX_STAT_INFEASIBLE ){
+                CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
+                CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
+                CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
+                if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
+                    CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
+                else
+                    CPXdualopt(env_ptr,lp_ptr); // Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+                CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_ON );
+                cpx_stat = CPXgetstat(env_ptr,lp_ptr);
+            }
 
-            cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
-                if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){
+                if ( !use_dual_farkas){
                     cpx_stat = CPXgetpi(env_ptr,lp_ptr,dual_solution_farkas,0,number_rows-1);// If we use the primal method, we get the dual ray via the dual variables
                     if ( cpx_stat != 0){
                         //Routine was unsuccesful, we need to compute the values by the normal method
                         LOG_IF(INFO,cpx_stat) << "CPXgetpi : " << cpx_stat;
+                        use_cplex = false;
                     }
                 }
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
-                    LOG_IF(INFO,cpx_stat)<< "CPXdualfarks : " << cpx_stat;
+                    LOG_IF(INFO,cpx_stat) << "CPXdualfarks : " << cpx_stat;
                     if ( cpx_stat != 0 )// If CPXdualfarkas returns a value that is not zero, it was unsuccessful, so we need to compute the dual ray the normal way
                         use_cplex = false;
-                    else if ( stage_data_[current_stage_]->non_zero_bounds_ ){ // We need to compute the dual values for the bounds! Where do we get the values? Link blogpost by OR in an OB World
+                }
+                if ( !use_cplex ){
+                    delete [] dual_solution_farkas;
+                    dual_solution_farkas = NULL;
+                }
+
+                if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ && use_dual_farkas){ // We need to compute the dual values for the bounds! Where do we get the values? Link blogpost by OR in an OB World: http://orinanobworld.blogspot.de/2011/07/farkas-certificates-in-cplex.html
                         // q^T = y^T*A 
                         // We can compute this with the column based matrices
                         variable_lower_bounds = benders_tree_node_pointer->getDataPtr()->column_lower_;
                         variable_upper_bounds = benders_tree_node_pointer->getDataPtr()->column_upper_;
                         const CoinPackedMatrix* matrix = NULL;
-                        //if ( benders_tree_node_pointer->getDataPtr()->matrix_ == NULL ){ // Do we reuse a problem or not?
-                        //    matrix = osi_solver->getMatrixByCol(); // This matrix is column ordered
-                        //}
-                        //else {
-                        //    benders_tree_node_pointer->getDataPtr()->matrix_->transpose();
-                        //    benders_tree_node_pointer->getDataPtr()->matrix_->reverseOrdering(); // Maybe it is faster to get the matrix from cplex..
-                        //    matrix = benders_tree_node_pointer->getDataPtr()->matrix_;
-                        //}
-                        // TODO: test something
                         matrix = osi_solver->getMatrixByCol(); // This matrix contains also feasibility/optimality cuts..
 
                         dual_solution_primal_variable_bounds = new double[number_coss];
@@ -2501,7 +2502,6 @@ namespace parallel_benders {
                             }
                         }// End For
                     }// End If non_zero_bounds
-                }// End Else
             }//End If infeasible
             else {
                 // Print out the stat
@@ -2517,13 +2517,13 @@ namespace parallel_benders {
                 console_mutex_.unlock();
             }
 
-            if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
+            if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
                 dual_solution_primal_variable_bounds = new double[number_coss];
                 cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
             }
 
             // Compute the value of the primal variable bounds * dual multipliers
-            if ( stage_data_[current_stage_]->non_zero_bounds_ ) {
+            if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ ) {
                 variable_lower_bounds = osi_solver->getColLower();
                 variable_upper_bounds = osi_solver->getColUpper();
                 if ( stage_data_[current_stage_]->non_zero_bounds_)
@@ -2567,8 +2567,10 @@ namespace parallel_benders {
             StoreValuesFromSolverInArray(checked_dual_solution,dual_solution_farkas,number_rows);
             delete [] dual_solution_farkas;
         }
-        else
+        else {
             StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,number_rows);
+
+        }
 
         ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
 
@@ -5612,6 +5614,8 @@ namespace parallel_benders {
 
         osi_solver->addCols(newcols, cols, clb, cub, obj);
         delete[] index;
+        for (int j = 0; j < newcols;j++)
+            delete cols[j];
         delete[] cols;
         delete[] clb;
         delete[] cub;

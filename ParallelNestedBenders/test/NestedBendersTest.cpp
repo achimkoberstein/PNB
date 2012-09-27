@@ -16,7 +16,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "OsiCpxSolverInterface.hpp"
-#include "OsiGrbSolverInterface.hpp"
+//#include "OsiGrbSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "CoinTime.hpp"
 #include "SmiScnModel.hpp"
@@ -73,7 +73,7 @@ public:
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
         folder = "../../../../../Benders/test/instances/";
 #endif
-        SmiScnModel smi;
+        //SmiScnModel smi;
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
         std::string stoch_name_string(stoch_name);
@@ -905,12 +905,12 @@ TEST_F(NestedBendersTest, sslp_NTAIMO) { // binary first, mixed-binary second st
 
 //// Posts test set: http://users.iems.northwestern.edu/~jrbirge/html/dholmes/post.html
 TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts, INDEP
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
-	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+ //   EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+	//EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"),18615.4 , 0.1);// Model probability problems 18615.932
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
-    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
+    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
+    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
+    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 }
 //
 // PLTEXP_POSTS belongs here
@@ -1355,14 +1355,14 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    //::testing::GTEST_FLAG(filter) = "*bonds*";
+    ::testing::GTEST_FLAG(filter) = "*scfxm*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
     //::testing::GTEST_FLAG(filter) = "*bonds_FELT";
     //::testing::GTEST_FLAG(filter) = "*sslp_SIPLIB*";
-    ::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
+    //::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
