@@ -507,7 +507,7 @@ libFlopCpp_la_LIBADD = $(GLOGLIB)/libglog.la
 
 # List additional defines
 AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
-	$(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) $(OSISRCDIR)/src` \
+	$(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) $(OSISRCDIR)/src/Osi` \
 	-I`$(CYGPATH_W) $(OSIOBJDIR)/inc` -I`$(CYGPATH_W) \
 	$(SMISRCDIR)/src` -I`$(CYGPATH_W) $(SMIOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(BOOSTINCDIR)` -I`$(CYGPATH_W) $(GLOGINCDIR)` \

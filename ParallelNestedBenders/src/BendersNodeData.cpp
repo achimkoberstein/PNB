@@ -50,6 +50,9 @@ BendersNodeData::~BendersNodeData(void)
 
     delete [] solver_rhs_;
 
+    delete [] discrepancy_;
+
+
 }
 
 void BendersNodeData::set_col_solution(const double* colSolution)

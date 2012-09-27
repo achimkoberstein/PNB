@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="libOsiGrb"
 	ProjectGUID="{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
 	RootNamespace="libOsiGrb"
@@ -23,7 +23,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\gurobi450\win32\include;..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
+				AdditionalIncludeDirectories="..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\BuildTools\headers;..\..\..\..\CoinUtils\src"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -84,7 +84,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration-x64.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -146,7 +146,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -208,7 +208,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops"
+			InheritedPropertySheets="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.vsprops;..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration-x64.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>

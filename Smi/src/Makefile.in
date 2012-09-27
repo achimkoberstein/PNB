@@ -295,7 +295,7 @@ libSmi_la_LDFLAGS = $(LT_LDFLAGS)
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(OSISRCDIR)/src` \
+	-I`$(CYGPATH_W) $(OSISRCDIR)/src/Osi` \
 	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CLPSRCDIR)/src/OsiClp` \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \

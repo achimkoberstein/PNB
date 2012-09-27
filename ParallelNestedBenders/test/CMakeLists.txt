@@ -12,9 +12,9 @@ target_link_libraries(ParallelNestedBendersTest
 	glog
 	-L${CMAKE_CURRENT_SOURCE_DIR}/../../Osi/src/OsiCpx/.libs
 	OsiCpx
-	-L${CMAKE_CURRENT_SOURCE_DIR}/../../Osi/src/OsiClp/.libs
+	-L${CMAKE_CURRENT_SOURCE_DIR}/../../Clp/src/OsiClp/.libs
 	OsiClp
-	-L${CMAKE_CURRENT_SOURCE_DIR}/../../Osi/src/.libs
+	-L${CMAKE_CURRENT_SOURCE_DIR}/../../Osi/src/Osi/.libs
 	Osi
 	-L${CMAKE_CURRENT_SOURCE_DIR}/../../Smi/src/.libs
 	Smi
