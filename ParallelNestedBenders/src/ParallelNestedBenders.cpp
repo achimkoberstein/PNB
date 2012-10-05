@@ -1834,8 +1834,10 @@ namespace parallel_benders {
         // If we have a fixed_solution we change the bounds to the fixed solution!
         if ( current_stage_ == 0 && fixed_first_stage_ ){
             // Delete the old ones, otherwise: memory leak
-            delete [] benders_node_pointer->column_lower_;
-            delete [] benders_node_pointer->column_upper_;
+            if ( node_pointer->getColLowerLength())
+                delete [] benders_node_pointer->column_lower_;
+            if ( node_pointer->getColUpperLength())
+                delete [] benders_node_pointer->column_upper_;
             benders_node_pointer->column_upper_ = fixed_solution_.get();
             benders_node_pointer->column_lower_ = fixed_solution_.get();
         }
