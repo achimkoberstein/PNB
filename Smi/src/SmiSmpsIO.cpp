@@ -235,6 +235,9 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 
 	if (ifstoch)
 	{
+        // Create discrete distribution
+        SmiDiscreteDistribution *smiDD = NULL;//new SmiDiscreteDistribution(core);
+        SmiDiscreteRV *smiRV = NULL;
 
         switch( smpsCardReader_->nextSmpsField() ) // This does not work as expected, if we expect several fields ( i.e. SMI_INDEPENDENT_SECTION and SMI_SCENARIO_SECTION ). So we have to combine these two..
         {
@@ -250,8 +253,8 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                         printf("Processing INDEPENDENT section\n");
 
                         // Create discrete distribution
-                        SmiDiscreteDistribution *smiDD = new SmiDiscreteDistribution(core);
-                        SmiDiscreteRV *smiRV = NULL;
+                        smiDD = new SmiDiscreteDistribution(core);
+                        smiRV = NULL;
 
                         CoinPackedVector drlo,drup,dclo,dcup,dobj;
                         CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
@@ -575,14 +578,23 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                 int ncol = core->getNumCols();
                 matrix->setDimensions(nrow,ncol);
 
+                if ( sampling_ ){
+                    assert( core->getNumStages() == 2);
+                    smiDD = new SmiDiscreteDistribution(core);
+                    smiRV = new SmiDiscreteRV(1);
+                }
+
                 while( smpsCardReader_->nextSmpsField (  ) == SMI_SCENARIOS_SECTION ) 
                 {
                     if (smpsCardReader_->whichSmpsType() == SMI_SC_CARD)
                     {
                         if (scen)
                         {
-
-                            smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
+                            if ( sampling_ )
+                                smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                            else 
+                                smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
+                            
                             matrix->clear();
                             dclo.clear();
                             dcup.clear();
@@ -681,9 +693,12 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                 {
                     if (scen)
                     {
-
-                        smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
-
+                        if ( sampling_ ){
+                            smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                            smi->setDiscreteDistribution(smiDD);
+                        }
+                        else 
+                            smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
                     }
                     delete matrix;
                     return 0;

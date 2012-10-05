@@ -222,8 +222,8 @@ public:
         benders_parameter_.init();
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
         benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
@@ -1140,7 +1140,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //    EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
 //}
 
-//TEST_F(NestedBendersTest,temporary){// dakota model
+TEST_F(NestedBendersTest,temporary){// dakota model
 //    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
 //    // Cut Consolidation tests
 //    //solveSMPS("temporary/ev_problem-scenario");
@@ -1165,8 +1165,9 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
 //    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 //    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536-noint","scdp/SCDP-65536","scdp/SCDP-65536"), -5183755359, 10); 
+    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
 //
-//}
+}
 //TEST_F(NestedBendersTest,Postponement){// dakota model
 //    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -5183755359, 10); 
 //}
@@ -1284,7 +1285,8 @@ TEST_F(NestedBendersTest,sample_average_approximation){
     SmiScnModel smi;
     smi.setOsiSolverHandle(&osi_cpx);
     smi.setSampling(true);
-    int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
+    //int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
+    int read_in = smi.readSmps("../../../../Benders/test/instances/saphir/saphir_1000");
     if ( read_in != 0 ){
         LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
     }
@@ -1355,7 +1357,8 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    ::testing::GTEST_FLAG(filter) = "*scfxm*";
+    //::testing::GTEST_FLAG(filter) = "*temporary*";
+    ::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
