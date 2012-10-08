@@ -2487,6 +2487,11 @@ void SmiScnModel::setDiscreteDistribution( SmiDiscreteDistribution* smiDD )
     delete discrete_distribution_;
     discrete_distribution_ = smiDD;
 }
+const SmiDiscreteDistribution* SmiScnModel::getDiscreteDistribution(  )
+{
+    return discrete_distribution_;
+
+}
 
 void SmiScnModel::setSampling( bool do_sample)
 {

@@ -1286,18 +1286,20 @@ TEST_F(NestedBendersTest,sample_average_approximation){
     smi.setOsiSolverHandle(&osi_cpx);
     smi.setSampling(true);
     //int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
-    int read_in = smi.readSmps("../../../../Benders/test/instances/saphir/saphir_1000");
+    //int read_in = smi.readSmps("../../../../Benders/test/instances/saphir/saphir_1000");
+    int read_in = smi.readSmps("../../../../Benders/test/instances/other/rand2_10000");
     if ( read_in != 0 ){
         LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
     }
     SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
     parallel_benders::Parameter benders_parameter;
     benders_parameter.init();
-    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,0);
+    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+    benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10);
 
     int runs = 1;
     std::map< int, std::pair<int,int> > sample_map;
-    sample_map[0] = make_pair(20,1000);
+    sample_map[0] = make_pair(100,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
     //sample_map[1] = make_pair(2000,20000);
     //sample_map[2] = make_pair(3000,20000);
     //sample_map[3] = make_pair(5000,20000);
@@ -1316,15 +1318,16 @@ TEST_F(NestedBendersTest,sample_average_approximation){
         //}
         //name_string = name_string + "-" + number_of_scen;
         //smi.writeSmps(name_string.c_str(),false,false);
-        //logfile.open("saa-log",fstream::out | fstream::app);
-        //logfile << core_name_string << std::endl;
-        //logfile.close();
+        std::string core_name_string("rand2_10000");
+        logfile.open("saa-log",fstream::out | fstream::app);
+        logfile << core_name_string << std::endl;
+        logfile.close();
         double solver_time = CoinCpuTime();
         //benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
         saa_solver.setParameters(benders_parameter);
         // These values do not change!
         saa_solver.setNumberBatches(10);
-        saa_solver.setNumberBatchesUpperBound(50);
+        saa_solver.setNumberBatchesUpperBound(10);
         // End values that not change
         std::vector<int> sample_size(2,0);
         sample_size[1] = sample_map[i].first;
@@ -1339,7 +1342,7 @@ TEST_F(NestedBendersTest,sample_average_approximation){
         
         logfile.open("saa-log", fstream::out | fstream::app);
         logfile << "Solution Time: " << solver_time << std::endl;
-        logfile << "--------------------------------------------";
+        logfile << "--------------------------------------------\n";
         logfile.close();
         LOG(INFO) << "Solution Time: " << solver_time;
     }

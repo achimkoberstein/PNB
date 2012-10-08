@@ -480,7 +480,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             logfile << samples_[i] << " ";
     logfile << std::endl;
     logfile << "M : " << number_batches_ << std::endl;
-    logfile << "\bar N : ";
+    logfile << "bar N : ";
     for (int i = 1; i < num_stages; i++)
         logfile << samples_upper_[i] << " ";
     logfile << std::endl;
