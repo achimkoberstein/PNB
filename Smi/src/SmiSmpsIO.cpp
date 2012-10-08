@@ -238,6 +238,8 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
         // Create discrete distribution
         SmiDiscreteDistribution *smiDD = NULL;//new SmiDiscreteDistribution(core);
         SmiDiscreteRV *smiRV = NULL;
+        if ( sampling_ )
+            smiDD = new SmiDiscreteDistribution(core);
 
         switch( smpsCardReader_->nextSmpsField() ) // This does not work as expected, if we expect several fields ( i.e. SMI_INDEPENDENT_SECTION and SMI_SCENARIO_SECTION ). So we have to combine these two..
         {
@@ -253,7 +255,8 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                         printf("Processing INDEPENDENT section\n");
 
                         // Create discrete distribution
-                        smiDD = new SmiDiscreteDistribution(core);
+                        if ( !sampling_)
+                            smiDD = new SmiDiscreteDistribution(core);
                         smiRV = NULL;
 
                         CoinPackedVector drlo,drup,dclo,dcup,dobj;
@@ -385,6 +388,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             if (smiRV != NULL) 
                             {
                                 smiDD->addDiscreteRV(smiRV);
+                                smiRV = NULL;
                             }
                             if ( sampling_ )
                                 smi->setDiscreteDistribution(smiDD);
@@ -401,9 +405,14 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             if (smiRV != NULL) 
                             {
                                 smiDD->addDiscreteRV(smiRV);
+                                smiRV = NULL;
                             }
-                            smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
-                            delete smiDD;
+                            if ( sampling_ )
+                                smi->setDiscreteDistribution(smiDD);
+                            else {
+                                smi->processDiscreteDistributionIntoBlocks(smiDD,&smiBS);
+                                delete smiDD;
+                            }
                             delete matrix;
                             continue;
                         }
@@ -418,6 +427,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                         printf("Processing BLOCK section\n");
                         // Create Block-Structure
                         SmiBlock *smiBlock = NULL;
+
 
                         CoinPackedVector drlo,drup,dclo,dcup,dobj;
                         CoinPackedMatrix *matrix = new CoinPackedMatrix(false,0.25,0.25);
@@ -443,6 +453,9 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                     branch = periodMap_[smpsCardReader_->periodName()];
                                     if(blName!=NULL){
                                         smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                                        if ( smiRV != NULL){
+                                            smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                                        }
 
                                         //first event of a block
                                         if(strcmp(blName,smpsCardReader_->blockName())){
@@ -454,6 +467,15 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                             delete [] blName;
                                             blName = new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
                                             strcpy(blName,smpsCardReader_->blockName());
+
+                                            // store the old one
+                                            if (smiRV != NULL) 
+                                            {
+                                                smiDD->addDiscreteRV(smiRV);
+                                                smiRV = NULL;
+                                            }
+                                            if ( sampling_ )
+                                                smiRV = new SmiDiscreteRV(branch); // Stage 2 variables only
                                         }
                                         matrix->clear();
                                         drlo.clear();
@@ -468,6 +490,14 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                         smiBlock = new SmiBlock(branch);
                                         blName= new char[strlen(smpsCardReader_->blockName())+1]; // Account for terminating null-character
                                         strcpy(blName,smpsCardReader_->blockName());
+                                        // store the old one
+                                        if (smiRV != NULL) 
+                                        {
+                                            smiDD->addDiscreteRV(smiRV);
+                                            smiRV = NULL;
+                                        }
+                                        if ( sampling_ )
+                                            smiRV = new SmiDiscreteRV(branch); // Stage 2 variables only
                                     }
 
                                     prob = smpsCardReader_->value();
@@ -544,7 +574,13 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                         if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
                         {
                             smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                            
                             smiBS.addSmiBlock(smiBlock);
+                            if ( smiRV != NULL){
+                                smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                                smiDD->addDiscreteRV(smiRV);
+                                smiRV = NULL;
+                            }
                             delete matrix;
 
                         }
@@ -558,8 +594,13 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                 }// End While
                 //process SmiBlockStructure into Scenarios
                 // We would like to keep the original blocks and sample from this distribution?!
-                if ( !sampling_)
+                if ( sampling_ ){
+                    if ( smi->getDiscreteDistribution() != smiDD)
+                        smi->setDiscreteDistribution(smiDD);
+                }
+                else {
                     smi->processBlockStructureIntoScenarios(&smiBS);
+                }
                 return 0;
 
                
