@@ -1,5 +1,5 @@
 //#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
-#define GTEST_USE_OWN_TR1_TUPLE 0
+//#define GTEST_USE_OWN_TR1_TUPLE 0
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
