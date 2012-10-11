@@ -2443,7 +2443,7 @@ namespace parallel_benders {
 
             dual_solution_farkas = new double[number_rows];
 
-            if ( cpx_stat != CPX_STAT_INFEASIBLE ){
+            if ( cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
@@ -2468,8 +2468,12 @@ namespace parallel_benders {
                 else {
                     cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
                     LOG_IF(INFO,cpx_stat) << "CPXdualfarks : " << cpx_stat;
-                    if ( cpx_stat != 0 )// If CPXdualfarkas returns a value that is not zero, it was unsuccessful, so we need to compute the dual ray the normal way
+					if ( cpx_stat != 0 ){// If CPXdualfarkas returns a value that is not zero, it was unsuccessful, so we need to compute the dual ray the normal way
+						cpx_stat = CPXdualopt(env_ptr,lp_ptr);
+						cpx_stat = CPXdualfarkas(env_ptr,lp_ptr,dual_solution_farkas,&proof);
                         use_cplex = false;
+
+					}
                 }
                 if ( !use_cplex ){
                     delete [] dual_solution_farkas;
@@ -4786,13 +4790,13 @@ namespace parallel_benders {
             StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,number_of_problem_cols-number_of_variables);
 
             //// Compute objective value! DEBUG
-            //double solution = 0.0;
-            //for (int i = 0; i < number_of_variables; i++)
-            //    solution += benders_tree_node_pointer->getDataPtr()->col_solution_[i]*original_obj_coefs[i];
-            //for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
-            //    solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
-            //LOG(INFO) << "Level problem solution x+theta " << solution;
-            //LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
+            double solution = 0.0;
+            for (int i = 0; i < number_of_variables; i++)
+                solution += benders_tree_node_pointer->getDataPtr()->col_solution_[i]*original_obj_coefs[i];
+            for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
+                solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+            LOG(INFO) << "Level problem solution x+theta " << solution;
+            LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
 
             
             // Store warm start for level problem!

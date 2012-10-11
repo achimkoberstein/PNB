@@ -86,72 +86,9 @@ public:
         int num_childs_first_stage = 1;
 
 
-        //// SAA TEST
-        //// We set the correct folder here: All files are in Benders/instances
-        //double time = CoinCpuTime();  
-        //OsiCpxSolverInterface osi_cpx;
-        //smi.setOsiSolverHandle(&osi_cpx);
-        //smi.setSampling(true);
-        //int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        //if ( read_in != 0 ){
-        //    LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-        //    return -osi_cpx.getInfinity();
-        //}
-        //SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
+    
 
-        //int runs = 5;
-        //std::map< int, std::pair<int,int> > sample_map;
-        //sample_map[0] = make_pair(1000,20000);
-        //sample_map[1] = make_pair(2000,20000);
-        //sample_map[2] = make_pair(3000,20000);
-        //sample_map[3] = make_pair(5000,20000);
-        //sample_map[4] = make_pair(10000,20000);
-        //fstream logfile;
-        //for (int i = 0; i < runs; i++){
-        //    std::vector<int> samples;
-        //    samples.push_back(0);
-        //    samples.push_back(sample_map[i].first);
-        //    smi.sampleScenarioTree(samples,0,get_random_01_variates);
-        //    std::string number_of_scen = boost::lexical_cast<std::string,int>(samples[1]);
-        //    std::string name_string(core_name_string);
-        //    size_t string_number = name_string.find_last_of("/");
-        //    if ( string_number != std::string::npos){
-        //        name_string = name_string.substr(string_number+1,name_string.size());
-        //    }
-        //    name_string = name_string + "-" + number_of_scen;
-        //    smi.writeSmps(name_string.c_str(),false,false);
-        //    //logfile.open("saa-log",fstream::out | fstream::app);
-        //    //logfile << core_name_string << std::endl;
-        //    //logfile.close();
-        //    //double solver_time = CoinCpuTime();
-        //    //SampleAverageApproximationSolverInterface saa(&osi_cpx,&smi);
-        //    //benders_parameter_.init();
-        //    //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
-        //    //saa.setParameters(benders_parameter_);
-        //    //// These values do not change!
-        //    //saa.setNumberBatches(10);
-        //    //saa.setNumberBatchesUpperBound(50);
-        //    //// End values that not change
-        //    //std::vector<int> sample_size(2,0);
-        //    //sample_size[1] = sample_map[i].first;
-        //    //saa.setSampleSize(sample_size);
-        //    //std::vector<int> sample_size_upper(2,0);
-        //    //sample_size_upper[1] = sample_map[i].second;
-        //    //saa.setSampleSizeUpperBound(sample_size_upper);
-        //    //double alpha = 0.95;
-        //    //saa.setConfidenceLevel(alpha);
-        //    //saa.initialSolve();
-        //    //solver_time = CoinCpuTime()-solver_time; // Solver only time
-        //    //
-        //    //logfile.open("saa-log", fstream::out | fstream::app);
-        //    //logfile << "Solution Time: " << solver_time << std::endl;
-        //    //logfile << "--------------------------------------------";
-        //    //logfile.close();
-        //    //LOG(INFO) << "Solution Time: " << solver_time;
-        //}
-        
-
-        int num_repetitions = 0; 
+        int num_repetitions = 2; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -162,16 +99,6 @@ public:
             num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
 
             num_aggregates_by_magic = 0;
-            //// We use the following formula: Max(  (1-#objNZ/#Cols)*#Scen/2, 0.1)
-            //// The less number of objective nonzeroes we have, the more cuts we use
-            //int num_cols = smi_model->getCore()->getNumCols(0);
-            //for (int i = 0; i < num_cols; i++){
-            //    if ( smi_model->getCore()->getNode(0)->getObjectiveElements()[i] != 0.0 )
-            //        num_aggregates_by_magic++;
-            //}
-            //double objective_nonzero_ratio = (double)num_aggregates_by_magic/num_cols;
-            //assert( objective_nonzero_ratio>= 0.0 && objective_nonzero_ratio <= 1.00000000001);
-            ////objective_nonzero_ratio = max( (1-objective_nonzero_ratio)*(smi_model->getNumScenarios()/2), 2); // At least we would like an aggregate number above single cut!
             num_aggregates_by_magic = smi_model->getSmiTree()->getRoot()->numChildren()/10;
             assert(num_aggregates_by_magic >= 0);
             //assert(num_aggregates_by_magic <= smi_model->getNumScenarios());
@@ -222,7 +149,7 @@ public:
         //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.init();
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
         benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
 
@@ -235,7 +162,7 @@ public:
  
         benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
         benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
@@ -250,11 +177,11 @@ public:
         aggregates.push_back(25);
         aggregates.push_back(50);
         aggregates.push_back(100);
-        aggregates.push_back(500);
-        aggregates.push_back(1000);
-        aggregates.push_back(2000);
-        //aggregates.push_back(3000);
-        aggregates.push_back(5000);
+        //aggregates.push_back(500);
+        //aggregates.push_back(1000);
+        //aggregates.push_back(2000);
+        ////aggregates.push_back(3000);
+        //aggregates.push_back(5000);
         //aggregates.push_back(10000);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
@@ -273,27 +200,47 @@ public:
                         // Compute an aggregate number out of problem characteristics!
                         aggregates[i] = num_aggregates_by_magic;
                     }
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,0.064);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                    if ( aggregates[i] != 1 ){ // We do not want cut consolidation for the single cut case
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 
-                        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                    }
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+                    
 
                     ////// Solve problem without adding a newly consolidated cut
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
@@ -305,10 +252,10 @@ public:
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                     // Solve problems without cut consolidation
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+ /*                   benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);*/
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
@@ -1144,29 +1091,9 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 TEST_F(NestedBendersTest,temporary){// dakota model
 //    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
 //    // Cut Consolidation tests
-//    //solveSMPS("temporary/ev_problem-scenario");
-//    //solveSMPS("temporary/ev_problem");
-//        //EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
-//    	////EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
-//    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
-//    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
-//
-//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
-//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-1024"),-6301005010, 10); 
-//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
-//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
-//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
-//    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
-//    //EXPECT_NEAR(solveSMPS("scdp/SCDP-65536-noint","scdp/SCDP-65536","scdp/SCDP-65536"), -5183755359, 10); 
-    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
+    solveSMPS("postponement/pTest-100");
+
+    //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
 //
 }
 //TEST_F(NestedBendersTest,Postponement){// dakota model
@@ -1361,8 +1288,8 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    //::testing::GTEST_FLAG(filter) = "*temporary*";
-    ::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
+    ::testing::GTEST_FLAG(filter) = "*temporary*";
+    //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
