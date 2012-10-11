@@ -4463,7 +4463,7 @@ namespace parallel_benders {
         // MIP Solving only at first stage..
         if ( integer_problems_[current_stage_] ){
           
-            if ( regularization_  ){
+            if ( (regularization_ || level_decomp_ ) && current_stage_ == 0){
                 // We have a QP, so branchAndBound method throws an error..
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
@@ -4493,7 +4493,7 @@ namespace parallel_benders {
             }
         }
         else{
-            if ( regularization_ && current_stage_ == 0){
+            if ( (regularization_ || level_decomp_)&& current_stage_ == 0){
                 // Solve quadratic problem
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
@@ -4780,7 +4780,7 @@ namespace parallel_benders {
 
             // Solve problem!
             CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
-            CPXqpopt(env_ptr,lp_ptr);
+            SolveSolverInterface(osi_solver);
             int code = CPXgetstat(env_ptr,lp_ptr);
             LOG_IF(WARNING,code != 1) << "Quadratic problem solved with status " << code;
 
