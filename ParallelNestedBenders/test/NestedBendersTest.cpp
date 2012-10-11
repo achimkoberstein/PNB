@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
+#include <algorithm>
 #include <limits>
 #include <cmath>
 #include <fstream>
@@ -172,8 +173,9 @@ public:
             //aggregates.push_back(-1);
         //else
         //    aggregates.push_back(1);
-        aggregates.push_back(5);
+        
         aggregates.push_back(10);
+        aggregates.push_back(5);
         aggregates.push_back(25);
         aggregates.push_back(50);
         aggregates.push_back(100);
@@ -224,13 +226,18 @@ public:
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
 
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,true);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 
 					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
 
@@ -440,11 +447,19 @@ protected:
         double solver_time = CoinCpuTime();
         OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
         nested_benders.setParameters(benders_parameter_);
+        if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
+            nested_benders.giveStartSolution(first_stage_solution_.get());
+        }
         nested_benders.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
         cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
         LOG(INFO) << "Solution Time: " << cpuTime;
 
+        if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != PNB_INT_SOLUTION_PRIMAL_NO ){
+            first_stage_solution_.reset(new double[smi.getCore()->getNumCols(0)]);
+            const double * first_stage = nested_benders.getFirstStageSolution();
+            std::copy(first_stage,first_stage+smi.getCore()->getNumCols(0),first_stage_solution_.get());
+        }
 
         int created_opt_cuts = nested_benders.getNumOptimalityCuts();
         int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
@@ -549,6 +564,8 @@ protected:
 
         return nested_benders.getObjValue();
     }
+
+    boost::shared_array<double> first_stage_solution_;
 };
 
 
@@ -1091,7 +1108,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 TEST_F(NestedBendersTest,temporary){// dakota model
 //    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
 //    // Cut Consolidation tests
-    solveSMPS("postponement/pTest-100");
+    solveSMPS("postponement/pTest-1296");
 
     //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
 //
