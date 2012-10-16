@@ -1627,7 +1627,7 @@ namespace parallel_benders {
         // We need the column solution for the next stage problem!
         // We want to differentiate between column solution and theta variables 
         StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
-        if ( level_decomp_ ){
+        if ( level_decomp_ && current_stage_ == 0){
             if ( !oda_level_decomp_ ){
                 std::copy(benders_node_pointer->col_solution_,benders_node_pointer->col_solution_+stage_data_[current_stage_]->num_columns_,regularized_solution_.get());
             }
@@ -4627,7 +4627,7 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     CPXqpopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
-                    LOG_IF(WARNING,code != 1) << "Quadratic problem solved with status " << code;
+                    LOG_IF(WARNING,code != CPX_STAT_OPTIMAL) << "Quadratic problem solved with status " << code;
                 }
             }
             else 
@@ -4906,7 +4906,7 @@ namespace parallel_benders {
             CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
             SolveSolverInterface(osi_solver,false);
             int code = CPXgetstat(env_ptr,lp_ptr);
-            LOG_IF(WARNING,code != CPX_STAT_OPTIMAL || code != CPXMIP_OPTIMAL) << "Quadratic problem solved with status " << code;
+            LOG_IF(WARNING,!(code != CPX_STAT_OPTIMAL || code != CPXMIP_OPTIMAL)) << "Quadratic problem solved with status " << code;
 
             // Store column solution and theta solution
             StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
