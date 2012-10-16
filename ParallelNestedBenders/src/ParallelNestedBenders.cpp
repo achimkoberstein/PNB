@@ -903,10 +903,10 @@ namespace parallel_benders {
                 for ( int i = 0; i < num_nodes_oda; i++ ){
                     // Schedule the tasks for this stage
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveOnDemandAccuracyProblem,this,tree_nodes_by_stage_[current_stage_][i]));
+                    //BuildAndSolveOnDemandAccuracyProblem(tree_nodes_by_stage_[current_stage_][i]);
                 }
                 thread_pool_.wait(0); // We wait until all threads are done
                 oda_tilde_q_ = std::accumulate(oda_current_tilde_q_s_.begin(),oda_current_tilde_q_s_.end(),oda_first_stage_);
-
 
             }
             // Find out if we still need to solve the second stage subproblems when using oda ( with everything entailled )
