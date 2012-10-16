@@ -113,11 +113,11 @@ private:
     void BuildAndSolveRHSProblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     // ODA-Level methods!
-    void BuildAndSolveOnDemandAccuracyProblems(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void BuildAndSolveOnDemandAccuracyProblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void HandleInitialSolutionProcedures();
-
-
+    void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
+    void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, boost::shared_ptr<CutStuff> cut_stuff);
 
     // Problem data
     SmiScnModel* smi_;
@@ -271,15 +271,16 @@ private:
     bool level_decomp_;
     // All variables needed for on demand accuracy level decomposition
     bool oda_level_decomp_; // If we actually use On Demand Accuracy Level decomposition
-    double oda_kappa_; // 0 < kappa < 1
-    double oda_delta_; //
-    double oda_lambda_; // Still needed?
+    double oda_lambda_; // 0 < lambda < 1
+    double oda_kappa_; // 0 < kappa < (1-lambda)^2
     double oda_gap_; // Gap between oda_lower_ and oda_upper_ (absolute)
     double oda_lower_; // Lower bound for oda
     double oda_upper_; // Upper bound for oda
-
-    double oda_phi_value_; // Value of phi(x')
-    double oda_l_value_; // Value of l(x')
+    double oda_first_stage_;
+    double oda_phi_i_;
+    double oda_tilde_q_;
+    std::vector<int> oda_chosen_optimality_cut_by_scenario_;// Which cut to take from each element!
+    std::vector<double> oda_current_tilde_q_s_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
