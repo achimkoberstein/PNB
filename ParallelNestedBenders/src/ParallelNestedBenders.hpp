@@ -103,7 +103,7 @@ private:
     void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
-    void SolveSolverInterface(OsiSolverInterface* osi_solver);
+    void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true);
     int getNumRowsProblem();
     int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
