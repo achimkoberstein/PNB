@@ -147,22 +147,23 @@ public:
         
 
         delete smi_model; // Get rid of the model, before we actually solve stuff
-        //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.init();
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+        num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,10);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_WARM_START,1);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,10);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
  
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,false);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,false);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         // Solve with aggregation and removal of cuts!
@@ -455,7 +456,7 @@ protected:
         cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
         LOG(INFO) << "Solution Time: " << cpuTime;
 
-        if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != PNB_INT_SOLUTION_PRIMAL_NO ){
+        if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO ){
             first_stage_solution_.reset(new double[smi.getCore()->getNumCols(0)]);
             const double * first_stage = nested_benders.getFirstStageSolution();
             std::copy(first_stage,first_stage+smi.getCore()->getNumCols(0),first_stage_solution_.get());
@@ -1108,9 +1109,9 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 TEST_F(NestedBendersTest,temporary){// dakota model
 //    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
 //    // Cut Consolidation tests
-    solveSMPS("postponement/pTest-1296");
+    //solveSMPS("postponement/pTest-1296");
 
-    //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
+    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
 //
 }
 //TEST_F(NestedBendersTest,Postponement){// dakota model

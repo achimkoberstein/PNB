@@ -239,6 +239,10 @@ public:
     std::vector<double> d_square_cut_rhs_;
     double* solver_rhs_;
     bool can_safely_reuse_;
+
+    // ODA-Level decomp
+    std::vector<boost::shared_ptr<OsiRowCut> > oda_optimality_cuts_;
+    
 };
 
 // Methods that work on a BendersNodeData

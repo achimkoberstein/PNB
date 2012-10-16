@@ -2772,6 +2772,9 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
     checkCPXerror( err, "CPXcopylp", "loadProblem" );
     
     CPXchgobjsen(env_, getLpPtr(), objDirection);
+
+    resizeColType(nc);
+    CoinFillN(coltype_, nc, 'C');
     
     return;
   }
