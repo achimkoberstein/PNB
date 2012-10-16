@@ -152,8 +152,9 @@ public:
         num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,50);
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_EPSILON_RELATIVE,1e-05);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
@@ -1113,7 +1114,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //solveSMPS("postponement/pTest-1296");
 
     //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
-    EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 289654, 0.1);
+    EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
 //
 }
 //TEST_F(NestedBendersTest,Postponement){// dakota model
