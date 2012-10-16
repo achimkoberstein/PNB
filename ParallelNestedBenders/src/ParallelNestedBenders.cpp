@@ -1627,6 +1627,11 @@ namespace parallel_benders {
         // We need the column solution for the next stage problem!
         // We want to differentiate between column solution and theta variables 
         StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
+        if ( level_decomp_ ){
+            if ( !oda_level_decomp_ ){
+                std::copy(benders_node_pointer->col_solution_,benders_node_pointer->col_solution_+stage_data_[current_stage_]->num_columns_,regularized_solution_.get());
+            }
+        }
 
         // If we have integer variables, we might want to set these variables to pure integer values!
         if ( integer_problems_[current_stage_] ){
@@ -4824,7 +4829,9 @@ namespace parallel_benders {
         if ( lower_bound_ <= -infinity_ || upper_bound_ >= infinity_)
             return;
 
+        assert( regularized_solution_.get() != NULL );
 
+        // We assume that the first stage problem is present!
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         if ( cpx_ptr != NULL){
             // Get Environment and LP Pointer
@@ -4863,7 +4870,7 @@ namespace parallel_benders {
             // Compute normal objective function elements! -2x_i'
             std::vector<double> linear_coefs(number_of_problem_cols,0.0);
             for (int i = 0; i < number_of_variables; i++){
-                linear_coefs[i] = -benders_tree_node_pointer->getDataPtr()->col_solution_[i]*2.0;
+                linear_coefs[i] = -regularized_solution_[i]*2.0;
             }
 
             // Store old objective coefs
@@ -4903,10 +4910,10 @@ namespace parallel_benders {
 
             // Store column solution and theta solution
             StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
+            // Copy solution to the incumbent as well!
+            std::copy(benders_tree_node_pointer->getDataPtr()->col_solution_,benders_tree_node_pointer->getDataPtr()->col_solution_+number_of_variables,regularized_solution_.get());
             assert(number_of_problem_cols-number_of_variables == benders_tree_node_pointer->getDataPtr()->num_thetas_);
             StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,benders_tree_node_pointer->getDataPtr()->num_thetas_);
-
-
 
             //// Compute objective value! DEBUG
             double solution = 0.0;
@@ -5648,7 +5655,7 @@ namespace parallel_benders {
             for (int i = 0; i < stage_data_[0]->num_columns_;i++)
                 if ( CompareWithZero(warm_up_solution_[i]))
                     warm_up_solution_[i] = 0;
-            if ( regularization_ ){
+            if ( regularization_ || level_decomp_ ){
                 double * temp_array = new double[stage_data_[0]->num_columns_];
                 memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
                 regularized_solution_.reset(temp_array);
@@ -5657,7 +5664,7 @@ namespace parallel_benders {
                 warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
         }
         else
-            if ( regularization_ )
+            if ( regularization_ || level_decomp_)
                 LOG(FATAL) << "No supplied start solution for regularization method. Please change your settings to allow an expected value solution for example.";
 
     }
