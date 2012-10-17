@@ -1983,28 +1983,49 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
    if (cnt <= 0)
       return;
 
+   bool changed_sense = false;
+   // We only want to update the sense, if we actually have to! Saves computational time!
    char* sense = new char[cnt];
-   double* rhs = new double[cnt];
-   double* range = new double[cnt];
-   int* rangeind = new int[cnt];
+   CPXgetsense( env_, getLpPtr(KEEPCACHED_ROW),sense,*indexFirst,*indexLast-1);
+   int compareResult = memcmp(sense,senseList,sizeof(char)*cnt);
+   // If all senses are non-ranged, this suffices. Otherwise we have to recheck.
+   for (int count = 0; count < cnt; count++){
+       if ( rangeList[count] != 0.0 ){
+           changed_sense = true;
+           break;
+       }
+   }
+
+   if ( compareResult != 0 )
+       changed_sense = true;
+   // What we still need to check: Do we have a ranged row?
+   double* rhs = NULL;
+   double* range = NULL;
+   int* rangeind = NULL;
    int rangecnt = 0;
-   for (int i = 0; i < cnt; ++i) {
-      sense[i] = senseList[i];
-      rhs[i] = rhsList[i];
-      if (sense[i] == 'R') {
-	 assert(rangeList[i] >= 0.0);
-	 rhs[i] -= rangeList[i];
-	 rangeind[rangecnt] = indexFirst[i];
-	 range[rangecnt] = rangeList[i];
-	 ++rangecnt;
-      }
-      if (sense[i] == 'N') {
-	 sense[i] = 'R';
-	 rhs[i] = -getInfinity();
-	 rangeind[rangecnt] = indexFirst[i];
-	 range[rangecnt] = 2*getInfinity();
-	 ++rangecnt;
-      }
+   if ( changed_sense ){
+       rhs = new double[cnt];
+       range = new double[cnt];
+       rangeind = new int[cnt];
+
+       for (int i = 0; i < cnt; ++i) {
+           sense[i] = senseList[i];
+           rhs[i] = rhsList[i];
+           if (sense[i] == 'R') {
+               assert(rangeList[i] >= 0.0);
+               rhs[i] -= rangeList[i];
+               rangeind[rangecnt] = indexFirst[i];
+               range[rangecnt] = rangeList[i];
+               ++rangecnt;
+           }
+           if (sense[i] == 'N') {
+               sense[i] = 'R';
+               rhs[i] = -getInfinity();
+               rangeind[rangecnt] = indexFirst[i];
+               range[rangecnt] = 2*getInfinity();
+               ++rangecnt;
+           }
+       }
    }
    int err;
    /******************
@@ -2018,16 +2039,20 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
 		      rangecnt, rangeind, range);
    checkCPXerror( err, "CPXchgrngval", "setRowSetTypes" );
    ********************/
-
-   err = CPXchgsense(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ROW),
-      static_cast<int>(cnt), const_cast<int*>(indexFirst), sense);
-   checkCPXerror( err, "CPXchgsense", "setRowSetTypes" );
+   if ( changed_sense ){
+       err = CPXchgsense(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ROW),
+           static_cast<int>(cnt), const_cast<int*>(indexFirst), sense);
+       checkCPXerror( err, "CPXchgsense", "setRowSetTypes" );
+   }
+   
    err = CPXchgrhs(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
-		   static_cast<int>(cnt), const_cast<int*>(indexFirst), rhs);
+       static_cast<int>(cnt), const_cast<int*>(indexFirst), changed_sense ? rhs : rhsList);
    checkCPXerror( err, "CPXchgrhs", "setRowSetTypes" );
-   err = CPXchgrngval(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
-		      rangecnt, rangeind, range);
-   checkCPXerror( err, "CPXchgrngval", "setRowSetTypes" );
+   if ( rangecnt > 0 ){
+       err = CPXchgrngval(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
+           rangecnt, rangeind, range);
+       checkCPXerror( err, "CPXchgrngval", "setRowSetTypes" );
+   }
 
    int j;
    if(rowsense_ != NULL) {

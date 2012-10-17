@@ -1,7 +1,6 @@
 #ifndef ParallelNestedBenders_h__
 #define ParallelNestedBenders_h__
 
-
 #include <map>
 #include <vector>
 

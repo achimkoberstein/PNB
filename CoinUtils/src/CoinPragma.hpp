@@ -23,4 +23,6 @@
 #  pragma warning(disable:4996)
 #endif
 
+#define COIN_FAST_CODE
+
 #endif

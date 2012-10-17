@@ -1673,8 +1673,9 @@ namespace parallel_benders {
         }
 
         double solution_value = 0; // Compute the value of the c*x solution without all thetas!
+        const double* obj_coefs = osi_solver->getObjCoefficients();
         for (int i = 0; i < stage_data_[current_stage_]->num_columns_;i++){
-            solution_value += benders_node_pointer->col_solution_[i]*osi_solver->getObjCoefficients()[i];
+            solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
 
@@ -2212,6 +2213,9 @@ namespace parallel_benders {
             // We store an optimality cut 
             std::vector<double> cut_elements;
             std::vector<int> cut_indices;
+            // Make copying less frequent!
+            cut_elements.reserve(stage_data_[current_stage_-1]->num_columns_+1);
+            cut_indices.reserve(stage_data_[current_stage_-1]->num_columns_+1);
             int new_index = 0;
             for (int index = 0; index < stage_data_[current_stage_-1]->num_columns_; index++){
                 if ( CompareWithZero(cut_coefficients[index]) ){
