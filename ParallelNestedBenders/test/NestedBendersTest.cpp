@@ -160,7 +160,6 @@ public:
     
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
-        aggregates.push_back(0);
         aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
             //aggregates.push_back(-1);
@@ -174,6 +173,7 @@ public:
         aggregates.push_back(500);
         aggregates.push_back(1000);
         aggregates.push_back(2000);
+        aggregates.push_back(0);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
         //aggregates.push_back(10000);
@@ -204,11 +204,11 @@ public:
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 
@@ -1094,7 +1094,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //}
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-//    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
+    EXPECT_NEAR(solveSMPS("other/rand0_2000"),  -23.8, 0.1); 
 //    // Cut Consolidation tests
     //solveSMPS("postponement/pTest-1296");
 
@@ -1292,9 +1292,9 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    //::testing::GTEST_FLAG(filter) = "*temporary*";
+    ::testing::GTEST_FLAG(filter) = "*temporary*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
 

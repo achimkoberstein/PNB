@@ -301,8 +301,8 @@ namespace parallel_benders {
         //ios_base::sync_with_stdio(true);
         // Enable Buffering
         // 
-        int buffer_size = 16384;
-        setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
+        //int buffer_size = 16384;
+        //setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
 
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios();
@@ -398,6 +398,7 @@ namespace parallel_benders {
             level_decomp_ = true;
             oda_level_decomp_ = true;
         }
+
 
 
         // Trust Region
@@ -540,7 +541,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(1);
         // Use only one thread per cplex instance (except for the first sage
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -1447,10 +1448,7 @@ namespace parallel_benders {
         if ( regularization_ && current_stage_ == 0)
             BuildAndSolveRegularizedProblem(osi_solver,benders_tree_node_pointer);
         else {
-            bool previous_value = level_decomp_;
-            level_decomp_ = false;
             SolveSolverInterface(osi_solver);
-            level_decomp_ = previous_value;
         }
         //LOG(INFO) << "Solution time: " << CoinCpuTime()-time;
 
@@ -1707,12 +1705,12 @@ namespace parallel_benders {
                 temporary_upper_bound_ = 0;
 
             }
-            upper_bound_mutex_.lock();
             if ( compute_stage_bounds_ ){
+                upper_bound_mutex_.lock();
                 temporary_stage_lower_bound_ += current_lower_bound;
                 temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_;
+                upper_bound_mutex_.unlock();
             }
-            upper_bound_mutex_.unlock();
             // Delete column solution, if we do not need to store primal_and_dual solutions. 
             // We can delete the column solution only if we move backward and we do not need to store both!
         }
@@ -4915,16 +4913,24 @@ namespace parallel_benders {
             assert(number_of_problem_cols-number_of_variables == benders_tree_node_pointer->getDataPtr()->num_thetas_);
             StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,benders_tree_node_pointer->getDataPtr()->num_thetas_);
 
-            //// Compute objective value! DEBUG
+            //// Compute objective value! Needed for Upper Bound computation!
             double solution = 0.0;
             for (int i = 0; i < number_of_variables; i++)
                 solution += benders_tree_node_pointer->getDataPtr()->col_solution_[i]*original_obj_coefs[i];
+
+            if ( compute_stage_bounds_ )
+                temporary_stage_upper_bound_ = solution;
+            else 
+                temporary_upper_bound_ = solution;
+
             if ( oda_level_decomp_ )
                 oda_first_stage_ = solution;
             for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
                 solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
             LOG(INFO) << "Level problem solution x+theta " << solution;
             LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
+            
+           
 
             if ( oda_level_decomp_ ){
                 oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,benders_tree_node_pointer->getDataPtr()->next_stage_approximation_+benders_tree_node_pointer->getDataPtr()->num_thetas_,oda_first_stage_);
