@@ -1,5 +1,5 @@
 //#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
-//#define GTEST_USE_OWN_TR1_TUPLE 0
+#define GTEST_USE_OWN_TR1_TUPLE 0
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
@@ -207,8 +207,8 @@ public:
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 
@@ -1292,9 +1292,9 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    ::testing::GTEST_FLAG(filter) = "*temporary*";
+    //::testing::GTEST_FLAG(filter) = "*temporary*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
 
