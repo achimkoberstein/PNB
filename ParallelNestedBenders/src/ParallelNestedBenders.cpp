@@ -5687,57 +5687,77 @@ namespace parallel_benders {
         //
         // We need a free solver instance
         BendersNodeData * benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-
-        // We need to build a new model consisting of num first stage variables (fixed to the current solution) plus num_theta aggregate variables
-        OsiSolverInterface * osi_solver = GetSolverByThread();
-        // If Solver Interface is non-empty we need to empty it first
-        if ( osi_solver->getNumCols() > 0) // We could reuse it somehow? I do not know..
-            osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-
+        bool use_lp = false;
         int first_stage_cols_with_theta = stage_data_[current_stage_-1]->num_columns_ + 1;
-        // Create arrays for lb,ub (set to first stage solution), obj (only one 1, namely the aggregate variable aggregate_number), with no rows.
-        std::vector<double> lower_bound(first_stage_cols_with_theta,0.0);
-        std::vector<double> upper_bound(first_stage_cols_with_theta,0.0);
-        std::vector<double> obj(first_stage_cols_with_theta,0.0);
-        obj[first_stage_cols_with_theta-1] = 1.0; // We minimize by default..
-        
         const double * first_stage_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_;
-        std::copy(first_stage_solution,first_stage_solution+stage_data_[current_stage_-1]->num_columns_,lower_bound.begin());
-        std::copy(first_stage_solution,first_stage_solution+stage_data_[current_stage_-1]->num_columns_,upper_bound.begin());
-        lower_bound[first_stage_cols_with_theta-1] = -infinity_;
-        upper_bound[first_stage_cols_with_theta-1] = infinity_;
 
-        // Append all the optimality cuts for this aggregate number
-        osi_solver->loadProblem(first_stage_cols_with_theta,0,NULL,NULL,NULL,&lower_bound[0],&upper_bound[0],&obj[0],NULL,NULL);
-        // Iterate through opt-cut list!
-        std::vector<boost::shared_ptr<OsiRowCut> >::iterator it = benders_node_pointer->oda_optimality_cuts_.begin();
-        while ( it != benders_node_pointer->oda_optimality_cuts_.end() ){
-            osi_solver->applyRowCuts(1,(*it).get());
-            ++it;
+        if ( use_lp ){
+            // We need to build a new model consisting of num first stage variables (fixed to the current solution) plus num_theta aggregate variables
+            OsiSolverInterface * osi_solver = GetSolverByThread();
+            // If Solver Interface is non-empty we need to empty it first
+            if ( osi_solver->getNumCols() > 0) // We could reuse it somehow? I do not know..
+                osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
+
+            // Create arrays for lb,ub (set to first stage solution), obj (only one 1, namely the aggregate variable aggregate_number), with no rows.
+            std::vector<double> lower_bound(first_stage_cols_with_theta,0.0);
+            std::vector<double> upper_bound(first_stage_cols_with_theta,0.0);
+            std::vector<double> obj(first_stage_cols_with_theta,0.0);
+            obj[first_stage_cols_with_theta-1] = 1.0; // We minimize by default..
+
+            
+            std::copy(first_stage_solution,first_stage_solution+stage_data_[current_stage_-1]->num_columns_,lower_bound.begin());
+            std::copy(first_stage_solution,first_stage_solution+stage_data_[current_stage_-1]->num_columns_,upper_bound.begin());
+            lower_bound[first_stage_cols_with_theta-1] = -infinity_;
+            upper_bound[first_stage_cols_with_theta-1] = infinity_;
+
+            // Append all the optimality cuts for this aggregate number
+            osi_solver->loadProblem(first_stage_cols_with_theta,0,NULL,NULL,NULL,&lower_bound[0],&upper_bound[0],&obj[0],NULL,NULL);
+            // Iterate through opt-cut list!
+            std::vector<boost::shared_ptr<OsiRowCut> >::iterator it = benders_node_pointer->oda_optimality_cuts_.begin();
+            while ( it != benders_node_pointer->oda_optimality_cuts_.end() ){
+                osi_solver->applyRowCuts(1,(*it).get());
+                ++it;
+            }
+
+            //console_mutex_.lock();
+            //std::stringstream stringstream; 
+            //stringstream << "oda_q_" << benders_tree_node_pointer->scenario();
+            //osi_solver->writeLp(stringstream.str().c_str());
+            //console_mutex_.unlock();
+
+            // Solve problem
+            osi_solver->initialSolve();
+
+            // Problem has to be solved to optimality!
+            assert(osi_solver->isProvenOptimal());
+
+            double result = osi_solver->getObjValue();
+
+            // Store solution value AND find out which set of dual variables is used to bound the aggregate variable. Try with dual variables!
+            const double * dual_values = osi_solver->getRowPrice();
+            int iteration_index = std::distance(dual_values,std::max_element(dual_values,dual_values+osi_solver->getNumRows()));
+
+            oda_chosen_optimality_cut_by_scenario_[benders_tree_node_pointer->scenario()] = iteration_index;
+            oda_current_tilde_q_s_[benders_tree_node_pointer->scenario()] = result;
+            // Clean solver interface
+            osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         }
-
-        //console_mutex_.lock();
-        //std::stringstream stringstream; 
-        //stringstream << "oda_q_" << benders_tree_node_pointer->scenario();
-        //osi_solver->writeLp(stringstream.str().c_str());
-        //console_mutex_.unlock();
-
-        // Solve problem
-        osi_solver->initialSolve();
-
-        // Problem has to be solved to optimality!
-        assert(osi_solver->isProvenOptimal());
-
-        double result = osi_solver->getObjValue();
-
-        // Store solution value AND find out which set of dual variables is used to bound the aggregate variable. Try with dual variables!
-        const double * dual_values = osi_solver->getRowPrice();
-        int iteration_index = std::distance(dual_values,std::max_element(dual_values,dual_values+osi_solver->getNumRows()));
-
-        oda_chosen_optimality_cut_by_scenario_[benders_tree_node_pointer->scenario()] = iteration_index;
-        oda_current_tilde_q_s_[benders_tree_node_pointer->scenario()] = result;
-        // Clean solver interface
-        osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+        else {
+            double max_element = -infinity_;
+            int max_index = -1;
+            int count = 0;
+            for ( std::vector<boost::shared_ptr<OsiRowCut> >::iterator it = benders_node_pointer->oda_optimality_cuts_.begin(); it != benders_node_pointer->oda_optimality_cuts_.end(); ++it){
+                double temp = EvaluateCutWithOneAggregate((*it).get(),first_stage_solution);
+                if ( temp > max_element ){
+                    max_element = temp;
+                    max_index = count;
+                }
+                count++;
+            }
+            oda_chosen_optimality_cut_by_scenario_[benders_tree_node_pointer->scenario()] = max_index;
+            oda_current_tilde_q_s_[benders_tree_node_pointer->scenario()] = max_element;
+        }
     }
 
 
@@ -5855,4 +5875,20 @@ namespace parallel_benders {
 
     }
 
+    double EvaluateCutWithOneAggregate( OsiRowCut* osi_cut, const double* col_solution )
+    {
+        assert(col_solution != NULL);
+        // Caller has to ensure that dimensions are correct!
+        // Get RHS of cut
+        // Get Row
+        const CoinPackedVector row(osi_cut->row());
+        const double * elements = row.getElements();
+        const int * indices = row.getIndices();
+        int num_elements = row.getNumElements();
+        double sum = 0.0;
+        for (int i = 0; i < num_elements-1; i++){ // We do not need the aggregate index (which is by construction always the last one!
+            sum += col_solution[indices[i]]*elements[i];
+        }
+        return osi_cut->lb()-sum;     
+    }
 } // end namespace parallel_benders
