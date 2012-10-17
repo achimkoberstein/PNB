@@ -300,6 +300,8 @@ private:
 	bool seperate_stage_solver_;
     bool solve_relaxation_;
 
+    bool debug_test_duplicate_indices_; // Should be set to false, otherwise slows down the problem (Multi-Cut)
+
     // Output parameters
     bool pretty_printing_;
     bool pretty_printing_verbose_;

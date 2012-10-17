@@ -290,7 +290,7 @@ namespace parallel_benders {
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),
         oda_level_decomp_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
     }
@@ -2231,7 +2231,7 @@ namespace parallel_benders {
             boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
             cut_pointer->setLb(cut_rhs);
             cut_pointer->setUb(infinity_);
-            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
+            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             // Store OsiRowCut in a list
             benders_node_pointer->oda_optimality_cuts_.push_back(cut_pointer);
         }
@@ -2448,7 +2448,7 @@ namespace parallel_benders {
             boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
             cut_pointer->setLb(cut_lower_bound);
             cut_pointer->setUb(infinity_);
-            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0]);
+            cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
             if ( change_aggregation_level || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
@@ -2757,7 +2757,7 @@ namespace parallel_benders {
         boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
         cut_pointer->setLb(cut_rhs);
         cut_pointer->setUb(infinity_);
-        cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0]);
+        cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0],debug_test_duplicate_indices_);
         // Increase feasCutCounter, together with locking/unlocking a mutex, and adding the cut the the parent problem
         boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
         infeasible_problem_mutex_.lock();
@@ -3530,7 +3530,7 @@ namespace parallel_benders {
 
                     for (int j = 0; j < number_of_cuts_per_hierarchy_level[i]; j++){
                         // Set the values to our old cut
-                        CoinPackedVector new_row(col_size,col_size,new_indices_vector[j],new_elements_vector[j]); // CoinPackedVector takes ownership of new_indices and new_elements
+                        CoinPackedVector new_row(col_size,col_size,new_indices_vector[j],new_elements_vector[j],debug_test_duplicate_indices_); // CoinPackedVector takes ownership of new_indices and new_elements
                         // Generate the new single cut!
                         OsiRowCut * new_single_cut = cut_stuffs[j]->cut_.get();
                         new_single_cut->setRow(new_row);
@@ -3935,7 +3935,7 @@ namespace parallel_benders {
                         new_indices[i] = i;
                     }
 
-                    CoinPackedVector cpv(col_size,col_size,new_indices,new_elements); // Assigns elements to vector, arrays get nulled
+                    CoinPackedVector cpv(col_size,col_size,new_indices,new_elements,debug_test_duplicate_indices_); // Assigns elements to vector, arrays get nulled
                     assert( new_elements == NULL);
                     assert( new_indices == NULL);
                     new_single_cut->setRow(cpv);
@@ -4064,7 +4064,7 @@ namespace parallel_benders {
         boost::shared_ptr<OsiRowCut> osi_row_cut(new OsiRowCut());
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
-        osi_row_cut->setRow(num_columns+1,&cut_indices[0],&cut_elements[0]);
+        osi_row_cut->setRow(num_columns+1,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
 
         boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,osi_row_cut));
 
@@ -4148,7 +4148,7 @@ namespace parallel_benders {
                 elements[second_vector.getIndices()[i]] += elements2[i];
             }
             // Create NEW CoinPackedVector that takes ownership of supplied arrays
-            CoinPackedVector cpv(num_columns, num_columns,indices, elements);
+            CoinPackedVector cpv(num_columns, num_columns,indices, elements,debug_test_duplicate_indices_);
             first_cut->cut_->setRow(cpv);
         }
 
@@ -4813,8 +4813,7 @@ namespace parallel_benders {
             new_elements[j+first_index_of_theta] = 1;
             new_indices[j+first_index_of_theta] = number_of_columns+j;
         }
-        CoinPackedVector new_row;
-        new_row.assignVector(new_cols_in_row,new_indices,new_elements);
+        CoinPackedVector new_row(new_cols_in_row,new_cols_in_row,new_indices,new_elements,debug_test_duplicate_indices_);
         cut->setRow(new_row);
 
     }
@@ -4857,7 +4856,7 @@ namespace parallel_benders {
             //if ( oda_level_decomp_ )
             //    descent_target = lower_bound_+ lambda_*(upper_bound_-lower_bound_);
             osi_cut->setUb(descent_target);
-            osi_cut->setRow(number_of_problem_cols,&obj_indices[0],obj_coefs);
+            osi_cut->setRow(number_of_problem_cols,&obj_indices[0],obj_coefs,debug_test_duplicate_indices_);
 
             // Compute quadratic coefficient matrix!
             int number_of_variables = stage_data_[current_stage_]->num_columns_;
@@ -5881,7 +5880,7 @@ namespace parallel_benders {
         // Caller has to ensure that dimensions are correct!
         // Get RHS of cut
         // Get Row
-        const CoinPackedVector row(osi_cut->row());
+        const CoinPackedVector& row(osi_cut->row());
         const double * elements = row.getElements();
         const int * indices = row.getIndices();
         int num_elements = row.getNumElements();
