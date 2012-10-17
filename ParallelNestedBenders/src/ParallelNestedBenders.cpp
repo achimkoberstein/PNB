@@ -301,8 +301,8 @@ namespace parallel_benders {
         //ios_base::sync_with_stdio(true);
         // Enable Buffering
         // 
-        //int buffer_size = 16384;
-        //setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
+        int buffer_size = 16384;
+        setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
 
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios();
@@ -1441,8 +1441,8 @@ namespace parallel_benders {
 
 
         // Set the Trust Region
-        if ( trust_region_ && current_stage_ < num_stages_-1)
-            AppendTrustRegionToSubproblem(osi_solver,benders_tree_node_pointer);
+        //if ( trust_region_ && current_stage_ < num_stages_-1)
+        //    AppendTrustRegionToSubproblem(osi_solver,benders_tree_node_pointer);
 
         //double time = CoinCpuTime();
         if ( regularization_ && current_stage_ == 0)
@@ -4495,6 +4495,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::BuildAndSolveRegularizedProblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // To compute ||x-a||^2, we introduce a new variable w that is set to w = x-a and we use ||w||^2 in the objective. 
+        // Could also be done by computing x^2 -2xa+ a^2 (so only the x^2 entries are left)
         // Initialize quadratic matrix with entries on the diagonal axis only
         int num_columns = stage_data_[current_stage_]->num_columns_;
         int num_thetas = getNumThetasByStage(benders_tree_node_pointer);
@@ -4567,8 +4568,6 @@ namespace parallel_benders {
             if ( integer_problems_[current_stage_] == false )
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
-            //int error_code2 = CPXcheckcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
-            //LOG_IF(FATAL,error_code2!=0) << "Wrong quadratic coefficients, must not happen.";
 
             if ( integer_problems_[current_stage_] == false )
                 osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
@@ -4887,19 +4886,10 @@ namespace parallel_benders {
             // We really want to set the warm_start, so we just set the seperate_first_stage_solver to false, regardless of its previous value
             SetWarmStart(osi_solver,benders_tree_node_pointer);
 
-
-
             // Apply level decomposition constraint.
             osi_solver->applyRowCuts(1,osi_cut.get());
 
 
-            // DEBUG
-            //std::stringstream name_string;
-            //name_string << "level";
-            //name_string << current_iteration_;
-            //name_string << ".lp";
-            //CPXwriteprob(env_ptr,lp_ptr,name_string.str().c_str(),"lp");
-            
             // Reload warm start information!
 
 
