@@ -2353,6 +2353,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      smiTree_ = SmiScenarioTree<SmiScnNode *>();
 
      int number_of_independent_vars = smiDD->getNumRV(); 
+     assert( number_of_independent_vars > 0 ); // Otherwise we can not really sample, can we?
      std::vector<int> number_of_random_vars_per_stage(nstages);
  
 
