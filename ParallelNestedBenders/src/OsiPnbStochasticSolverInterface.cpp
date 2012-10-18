@@ -321,10 +321,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         osi_pnb_->setParameters(parameters_);
         // Use solution from previous problem to speed up calculations 
-        //if ( mak_morton_wood )
-        //    osi_pnb_->giveStartSolution(candidate_array.get());
-        //else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
-        //    osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
+        if ( mak_morton_wood )
+            osi_pnb_->giveStartSolution(candidate_array.get());
+        else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
+            osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
         osi_pnb_->initialSolve();
         // We assume that solving went well. If it does not, we have problem
         objective_values[i] = osi_pnb_->getObjValue();
