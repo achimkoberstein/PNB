@@ -196,7 +196,6 @@ void Parameter::init()
     parameter_.put(PNB_FEAS_CUT_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
     //// Aggregation of Cuts ( or single-multi cut )
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
-    parameter_.put(PNB_SCENARIOS_PRO_CUT, 0); // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
     parameter_.put(PNB_RELAXATION, 0); // Solved LP relaxation instead of MIP problem, if we have a MIP problem
@@ -204,8 +203,6 @@ void Parameter::init()
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
     parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON, 1e-06); 
-    parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,false);
-    parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,1);
     // Stage Aggregation
     parameter_.put(PNB_STAGE_AGGREGATION,false);
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
@@ -226,6 +223,9 @@ void Parameter::init()
 	parameter_.put(PNB_CPU_USED,0);
     // Maximal solution time
     parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Minutes
+    // Parameter for Level and ODA
+    parameter_.put(PNB_LEVEL_LAMBDA,0.25);
+    parameter_.put(PNB_ODA_KAPPA,0.5);
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, false); // Do we want to use TrustRegion TODO: Implement this
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver

@@ -1,5 +1,6 @@
 //#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
 //#define GTEST_USE_OWN_TR1_TUPLE 0
+
 #include <gtest/gtest.h>
 #include <iostream>
 #include <ctime>
@@ -89,7 +90,7 @@ public:
 
     
 
-        int num_repetitions = 2; 
+        int num_repetitions = 1; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -162,21 +163,19 @@ public:
         std::vector<int> aggregates;
         aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
-            //aggregates.push_back(-1);
-        //else
-        //    aggregates.push_back(1);
-		aggregates.push_back(5);
-		aggregates.push_back(10);
-        aggregates.push_back(25);
-        aggregates.push_back(50);
-        aggregates.push_back(100);
-        aggregates.push_back(500);
-        aggregates.push_back(1000);
-        aggregates.push_back(2000);
-        aggregates.push_back(0);
+        //    aggregates.push_back(num_aggregates_by_magic);
+        //aggregates.push_back(5);
+        //aggregates.push_back(10);
+        //aggregates.push_back(25);
+        //aggregates.push_back(50);
+        //aggregates.push_back(100);
+        //aggregates.push_back(200);
+        //aggregates.push_back(500);
+        //aggregates.push_back(1000);
+        //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-        //aggregates.push_back(10000);
+        //aggregates.push_back(0);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
 
@@ -190,14 +189,11 @@ public:
                         LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
                         continue;
                     }
-                    if ( aggregates[i] < 0 ){
-                        // Compute an aggregate number out of problem characteristics!
-                        aggregates[i] = num_aggregates_by_magic;
-                    }
                     benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+                    // Necessary for postponement..
+					benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
@@ -215,17 +211,15 @@ public:
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
+
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
-
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                     
 
@@ -239,10 +233,10 @@ public:
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                     // Solve problems without cut consolidation
- /*                   benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);*/
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
@@ -453,13 +447,6 @@ protected:
         // File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
         std::stringstream s;
 		int aggregated_cuts = benders_parameter_.parameter_.get(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-        int num_scen_pro_cut = benders_parameter_.parameter_.get(parallel_benders::PNB_SCENARIOS_PRO_CUT,0);
-        if ( num_scen_pro_cut ){// We used this one
-            assert(num_scen_pro_cut >0);
-            s << "NumScen-" << num_scen_pro_cut;
-            // Do not create an additional entry
-            aggregated_cuts = 0;
-        }
         if ( aggregated_cuts == 0 ){ // We do some Percent/Fixed Aggregation (or dynamic.. beware)
             s << "Multi";
         }
@@ -1094,7 +1081,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //}
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    EXPECT_NEAR(solveSMPS("other/rand0_2000"),  -23.8, 0.1); 
+    EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
 //    // Cut Consolidation tests
     //solveSMPS("postponement/pTest-1296");
 
@@ -1221,23 +1208,27 @@ TEST_F(NestedBendersTest,sample_average_approximation){
     smi.setSampling(true);
     //int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
     //int read_in = smi.readSmps("../../../../Benders/test/instances/saphir/saphir_1000");
-    int read_in = smi.readSmps("../../../../Benders/test/instances/other/rand2_10000");
+    int read_in = smi.readSmps("../../../../Benders/test/instances/postponement/pTest-1296");
     if ( read_in != 0 ){
         LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
     }
     SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
     parallel_benders::Parameter benders_parameter;
     benders_parameter.init();
-    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+    benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
     benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10);
 
     int runs = 1;
     std::map< int, std::pair<int,int> > sample_map;
-    sample_map[0] = make_pair(100,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
+    sample_map[0] = make_pair(50,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
     //sample_map[1] = make_pair(2000,20000);
     //sample_map[2] = make_pair(3000,20000);
     //sample_map[3] = make_pair(5000,20000);
     //sample_map[4] = make_pair(10000,20000);
+
+    int num_batches_lower = 10;
+    int num_batches_upper = 10;
     fstream logfile;
     for (int i = 0; i < runs; i++){
         //std::vector<int> samples;
@@ -1252,16 +1243,16 @@ TEST_F(NestedBendersTest,sample_average_approximation){
         //}
         //name_string = name_string + "-" + number_of_scen;
         //smi.writeSmps(name_string.c_str(),false,false);
-        std::string core_name_string("rand2_10000");
-        logfile.open("saa-log",fstream::out | fstream::app);
+        std::string core_name_string("pTest-1296");
+        logfile.open("saa-log.txt",fstream::out | fstream::app);
         logfile << core_name_string << std::endl;
         logfile.close();
         double solver_time = CoinCpuTime();
         //benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
         saa_solver.setParameters(benders_parameter);
         // These values do not change!
-        saa_solver.setNumberBatches(10);
-        saa_solver.setNumberBatchesUpperBound(10);
+        saa_solver.setNumberBatches(num_batches_lower);
+        saa_solver.setNumberBatchesUpperBound(num_batches_upper);
         // End values that not change
         std::vector<int> sample_size(2,0);
         sample_size[1] = sample_map[i].first;
@@ -1274,7 +1265,7 @@ TEST_F(NestedBendersTest,sample_average_approximation){
         saa_solver.initialSolve();
         solver_time = CoinCpuTime()-solver_time; // Solver only time
         
-        logfile.open("saa-log", fstream::out | fstream::app);
+        logfile.open("saa-log.txt", fstream::out | fstream::app);
         logfile << "Solution Time: " << solver_time << std::endl;
         logfile << "--------------------------------------------\n";
         logfile.close();

@@ -472,7 +472,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     LOG(INFO) << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper;
 
     std::fstream logfile;
-    logfile.open("saa-log", fstream::out | fstream::app);
+    logfile.open("saa-log.txt", fstream::out | fstream::app);
     // Conclusion
     logfile << "N : ";
     for (int i = 1; i < num_stages; i++)

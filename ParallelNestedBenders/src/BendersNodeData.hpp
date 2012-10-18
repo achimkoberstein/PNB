@@ -31,7 +31,6 @@ namespace parallel_benders{
     const std::string PNB_LP_METHOD = "PNB_LP_METHOD";
     const std::string PNB_FEAS_CUT_LP_METHOD = "PNB_FEAS_CUT_LP_METHOD";
     const std::string PNB_AGGREGATED_OPTIMALITY_CUTS = "PNB_AGGREGATED_OPTIMALITY_CUTS";    //
-    const std::string PNB_SCENARIOS_PRO_CUT = "PNB_SCENARIOS_PRO_CUT" ;            //
     const std::string PNB_RELAXATION = "PNB_RELAXATION";                   //
     const std::string PNB_DYNAMIC_AGGREGATION = "PNB_DYNAMIC_AGGREGATION";          //
     const std::string PNB_TRUST_REGION = "PNB_TRUST_REGION";                 //
@@ -40,9 +39,6 @@ namespace parallel_benders{
 	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY"; // Different Strategies. 0 = FastForw/FastBack, 1 = FastForw, 2 = FastBack, 3 = EpsFastForw, 4 = EpsFastBack, 5 = FastForw/FastBackWith2nd.Iteration
 	const std::string PNB_TREE_WALK_STRATEGY_STAGE = "PNB_TREE_WALK_STRATEGY_STAGE"; // up to which stage do we want to follow the given strategy? else we resort to Fastpass
     const std::string PNB_TREE_WALK_STRATEGY_EPSILON = "PNB_TREE_WALK_STRATEGY_EPSILON";
-
-    const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE";
-    const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT";
 
     const std::string PNB_STAGE_AGGREGATION = "PNB_STAGE_AGGREGATION";
     const std::string PNB_STAGE_AGGREGATION_START = "PNB_STAGE_AGGREGATION_START";
@@ -54,8 +50,10 @@ namespace parallel_benders{
     const std::string PNB_CUT_CONSOLIDATION_CUT_COMPUTATION = "PNB_CUT_CONSOLIDATION_CUT_COMPUTATION";
     const std::string PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD = "PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD";
     const std::string PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD = "PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD";
-
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
+    const std::string PNB_LEVEL_LAMBDA = "PNB_LEVEL_LAMBDA";
+    const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
+
 
 
     // Here come the double parameters
@@ -94,6 +92,9 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_BENDERS = 1;
     const int PNB_INT_ALGORITHM_REGULARIZATION = 2;
     const int PNB_INT_ALGORITHM_LEVEL = 3;
+    const int PNB_INT_ALGORITHM_LEVEL_ODA = 4;
+    const int PNB_INT_ALGORITHM_BENDERS_ODA = 5;
+    const int PNB_INT_ALGORITHM_REGULARIZATION_ODA = 6;
 
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
