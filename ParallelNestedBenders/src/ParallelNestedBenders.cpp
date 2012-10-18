@@ -541,7 +541,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        //osi_solver_->messageHandler()->setLogLevel(1);
+        osi_solver_->messageHandler()->setLogLevel(1);
         // Use only one thread per cplex instance (except for the first sage
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -1390,12 +1390,6 @@ namespace parallel_benders {
         AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
 
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
-        //if ( regularization_ && current_stage_ == 0)
-        //    BuildAndSolveRegularizedProblem(osi_solver,benders_tree_node_pointer);
-        // If Level method
-        // BuildAndSolveLevelProjectionProblem
-        // If Regularized
-        // BuildAndSolveRegularizedProblem
         
         // We only need to store data if we have a feasible solution for the subproblem.
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()]){
@@ -3555,20 +3549,24 @@ namespace parallel_benders {
                 } //End For
 
                 if ( !to_remove_from_solver.empty()){
+
+
                     // TODO: Implementation issue: we can also delete the cuts from the container with the classical list.erase function and begin-iterator to end_iterator that we also store. Only feasible if it holds that alls cuts we remove are also fulfill the CutStuffComparison operator(), i.e. should be aggregated!
+
+                    // Remove old cuts from container
                     for ( std::list<BendersNodeData::cut_container::iterator>::iterator list_it = to_remove_from_optimality_cuts.begin();list_it != to_remove_from_optimality_cuts.end(); ++list_it )
                         benders_node_pointer->optimality_cuts_.erase(*list_it);
-
-
+                    // Add aggregated cuts to container
                     if ( add_cut ){
                         // Add all newly created cuts to optimality cut set
                         benders_node_pointer->optimality_cuts_.insert(benders_node_pointer->optimality_cuts_.end(),cuts_to_add.begin(),cuts_to_add.end());
                     }
-
+                     
+                    // Remove old cuts from solver
                     if ( !to_remove_from_solver.empty()){
-                        //already_removed_cuts += to_remove_from_solver.size();
                         osi_solver->deleteRows(to_remove_from_solver.size(),&to_remove_from_solver[0]);
                     }
+                    // Add aggregated cuts to solver
                     if ( add_cut ){
                         for (BendersNodeData::cut_container::iterator it = cuts_to_add.begin(); it != cuts_to_add.end(); ++it)
                             osi_solver->applyRowCuts(1,(*it)->cut_.get());
@@ -4183,11 +4181,11 @@ namespace parallel_benders {
         }//Integer problems. No Warm start for MIP problems, but we need to set an incumbent solution!
         else {
             // Set incumbent of last solution?
-            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){
-                if ( warm_start_scenarios_ ){
+            if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ ){
+                if ( current_stage_ > 0 && warm_start_scenarios_ ){
 
                 }
-                else if ( warm_start_stage_ ){
+                else if ( current_stage_ == 0 || warm_start_stage_ ){
                     
                     // Get solution of first stage node?
                     OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
@@ -4197,8 +4195,11 @@ namespace parallel_benders {
 
                         stage_warm_start_mutex_.lock();
                         if ( !stage_data_[current_stage_]->mip_solution_.empty()){
-                            //CPXaddmipstarts(env_ptr,lp_ptr,)
-                            int err = CPXcopymipstart(env_ptr,lp_ptr,stage_data_[current_stage_]->num_columns_,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0]);
+                            int num_mipstarts = 1; // We only add one mipstart
+                            int begin_mipstarts = 0; // First mipstart starts at location 0
+                            const int effortlevel_mipstarts = 0; // CPLEX decides
+                            int err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0],&effortlevel_mipstarts,NULL);
+                            //int err = CPXcopymipstart(env_ptr,lp_ptr,stage_data_[current_stage_]->num_columns_,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0]);
                             LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
                         }
                         stage_warm_start_mutex_.unlock();
@@ -4552,6 +4553,7 @@ namespace parallel_benders {
         SolveSolverInterface(osi_solver,false);
 
         if ( old_sigma != regularized_sigma_ ){
+            // The Obj Coefficients changed, so we have to resolve the problem!
             benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
             // Update coefficients in the objective function!
             std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+num_thetas,0);
@@ -4564,13 +4566,16 @@ namespace parallel_benders {
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
 
-            // Store warmstart
+            // Store warmstart (gets invalidated by new objective)
             if ( integer_problems_[current_stage_] == false )
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+            // Copy quadratic objective (regular objective function is unchanged)
             CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
 
+            // Set warmstart
             if ( integer_problems_[current_stage_] == false )
                 osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+            // Solve problem
             SolveSolverInterface(osi_solver,false);
             LOG(INFO) << "Coefficients: " << 1.0/regularized_sigma_;
         }
@@ -4856,8 +4861,6 @@ namespace parallel_benders {
             boost::scoped_ptr<OsiRowCut> osi_cut(new OsiRowCut);
             osi_cut->setLb(-infinity_);
             double descent_target = (1-lambda_)*lower_bound_+lambda_*upper_bound_;
-            //if ( oda_level_decomp_ )
-            //    descent_target = lower_bound_+ lambda_*(upper_bound_-lower_bound_);
             osi_cut->setUb(descent_target);
             osi_cut->setRow(number_of_problem_cols,&obj_indices[0],obj_coefs,debug_test_duplicate_indices_);
 
@@ -4883,14 +4886,12 @@ namespace parallel_benders {
             // Set quadratic objective
             CPXcopyqpsep(env_ptr,lp_ptr,&quadratic_coefs[0]);
 
-            // We really want to set the warm_start, so we just set the seperate_first_stage_solver to false, regardless of its previous value
+            // We really want to set the warm_start
+            assert(benders_tree_node_pointer->getDataPtr()->warm_start_added_ == false);
             SetWarmStart(osi_solver,benders_tree_node_pointer);
 
             // Apply level decomposition constraint.
             osi_solver->applyRowCuts(1,osi_cut.get());
-
-
-            // Reload warm start information!
 
 
             // Solve problem!
@@ -4921,7 +4922,7 @@ namespace parallel_benders {
             for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
                 solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
             LOG(INFO) << "Level problem solution x+theta " << solution;
-            LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
+            //LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
             
            
 
