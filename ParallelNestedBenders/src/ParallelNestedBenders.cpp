@@ -399,6 +399,13 @@ namespace parallel_benders {
             oda_level_decomp_ = true;
         }
 
+        // TODO: Remove Again
+        oda_level_decomp_ = true; level_decomp_ = false;
+
+        // Set ODA parameters
+        oda_lambda_ = 0.2;
+        oda_kappa_ = 0.6;
+
 
 
         // Trust Region
@@ -865,7 +872,7 @@ namespace parallel_benders {
             /************************************************************************/
             if ( oda_level_decomp_ && current_stage_ > 0 && added_optimality_cuts_[0] > 0 ){
                 oda_chosen_optimality_cut_by_scenario_.clear(); oda_current_tilde_q_s_.clear();
-                oda_chosen_optimality_cut_by_scenario_.resize(num_scenarios_,0.0);
+                oda_chosen_optimality_cut_by_scenario_.resize(num_scenarios_,0);
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
                 int num_nodes_oda = tree_nodes_by_stage_[current_stage_].size();
                 // Store time needed to compute the oda_stuff in addition to normal Benders!
@@ -881,6 +888,8 @@ namespace parallel_benders {
             // Find out if we still need to solve the second stage subproblems when using oda ( with everything entailled )
             bool solve_subproblems = true;
             if ( oda_level_decomp_ && current_stage_ > 0 && added_optimality_cuts_[0]> 0 ){
+                if ( !level_decomp_)
+                    oda_phi_i_ = lower_bound_;
                 LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
                 LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
                 LOG(INFO) << "Upper Bound : " << upper_bound_;
@@ -1640,6 +1649,8 @@ namespace parallel_benders {
             solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
+        if ( !level_decomp_ )
+            oda_first_stage_ = solution_value;
 
         if ( !forward_ || current_stage_ == 0 || compute_stage_bounds_ ){
             // Compute lower and upper bound estimates on the way back!
@@ -4357,13 +4368,6 @@ namespace parallel_benders {
 
             delete [] coin_vector_rows;
         }
-
-        //upper_bound_mutex_.lock();
-        //osi_solver->writeLp("TrustRegionTest");
-        //upper_bound_mutex_.unlock();
-
-        // Delete these vectors again!
-
 
     }
 
