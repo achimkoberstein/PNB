@@ -776,7 +776,7 @@ SmiScnModel::loadOsiSolverData()
     this->drlo_ = new double[this->nrow_];
     this->drup_ = new double[this->nrow_];
 
-    // initialize row-ordered matrix arrays
+    // initialize row-ordered matrix arrays, needed for SmiScnModelAddNode!
     this->dels_ = new double[this->nels_+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
     this->indx_ = new int[this->nels_];
     this->rstrt_ = new int[this->nrow_+1];
@@ -2340,7 +2340,9 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
  {
     // We have a discrete distribution
     // We need a random_number generator
-    // 
+    
+     // We need to reset totalProb
+     this->totalProb_ = 0.0;
 
      SmiDiscreteDistribution* smiDD = discrete_distribution_;
      assert(smiDD);
