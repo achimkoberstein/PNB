@@ -4537,17 +4537,6 @@ namespace parallel_benders {
                 }
             }
             else{
-                //OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-                //if ( cpx_ptr ){
-                //    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                //    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-                //    CPXsetintparam(env_ptr,CPX_PARAM_MIPEMPHASIS,CPX_MIPEMPHASIS_BESTBOUND);
-                //    CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
-                //    CPXmipopt(env_ptr,lp_ptr);
-                //    int code = CPXgetstat(env_ptr,lp_ptr);
-                //    LOG_IF(WARNING,code != CPXMIP_OPTIMAL) << "MIP solved with status " << code;
-                //}
-                //else 
                 osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
             }
         }
@@ -4869,7 +4858,10 @@ namespace parallel_benders {
             // GOTCHA: Cplex does not ignore it..
             //std::vector<double> overwrite_zeroes(number_of_problem_cols,0.0);
             //CPXcopyqpsep(env_ptr,lp_ptr,&overwrite_zeroes[0]);
-            CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_LP );
+            if (integer_problems_[current_stage_])
+                CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_MILP );
+            else
+                CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_LP );
         }
     }
 
