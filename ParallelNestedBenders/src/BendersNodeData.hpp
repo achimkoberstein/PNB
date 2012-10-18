@@ -162,17 +162,6 @@ public:
     double* next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
     boost::dynamic_bitset<> was_under_threshold_; // Has to have the size of num_thetas_
-    double max_discrepancy_;
-    double min_discrepancy_;
-    double average_discrepancy_;
-    double median_discrepancy_;
-    double discrepancy_value_;
-    double discrepancy_lower_bound_;
-    double average_lower_bound_;
-    double average_gap_per_aggregate_;
-    double average_gap_per_aggregate_lower_bound_;
-    std::list<double> average_discrepancies_;
-    std::list<double> median_discrepancies_;
     double dual_value_variable_bounds_;
     bool feasible_;
     bool unbounded_;

@@ -541,7 +541,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(1);
         // Use only one thread per cplex instance (except for the first sage
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -598,7 +598,7 @@ namespace parallel_benders {
         if ( stage_aggregation_){
             //smi_->writeSmps("beforeStageAgg",true,false);
             smi_->aggregateStages(begin_aggregation_stage_,end_aggregation_stage_, aggregate_from_start_); // Aggregate stage 0 and 1
-            smi_->writeSmps("stageAggreg",true,false);
+            /*smi_->writeSmps("stageAggreg",true,false);*/
             num_stages_ = core_->getNumStages();
             num_scenarios_ = smi_->getNumScenarios();
             InitializeBendersNodeDataTree(tree_nodes_by_stage_[0][0]->getDataPtr()->num_scen_pro_cut_); // Reinitialize the whole tree, based on the updated smi_ tree
@@ -721,7 +721,7 @@ namespace parallel_benders {
             timer_.Start(current_stage_);
             if ( upper_bound_ < lower_bound_ ){
                 if ( !regularization_)
-                    LOG(INFO) << "Upper Bound is lower than lower Bound. This should not happen, unfortunately it has. Iteration: " << current_iteration_;
+                    LOG(INFO) << "Upper Bound is lower than lower Bound. Iteration: " << current_iteration_;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
                 if ( !regularization_)
@@ -813,38 +813,6 @@ namespace parallel_benders {
                     }
                 }
             }
-
-            // Change direction depending on bouncing strategy
-            if ( sequencing_protocol_ == PNB_INT_SECOND_ITERATION && upper_bound_ < infinity_ && !infeasible_problem_){
-                // Boolean to indicate we are in a second iteration. This can be manifested at the first stage.
-                if ( in_second_iteration_ && forward_){
-                    // Simple case: We reached second_iteration_stage
-                    if ( current_stage_ == second_iteration_stage_ && current_stage_ > 0){// To prevent wrong specification of second_iteration_stage
-                        forward_ = false;
-                        in_second_iteration_ = false;
-                        second_iteration_counter_++;
-                        current_cascading_stage_ = 1; // Other values makes no sense, as we can at first cascade back when we reached stage 1
-                        if ( second_iteration_counter_ < repeat_second_iteration_){
-                            in_second_iteration_ = true;
-                        }
-                        else
-                            second_iteration_counter_ = 0;
-                    }
-                    else if ( cascading_second_iteration_ ){
-                        // We want cascading second iteration
-                        if ( current_stage_ == current_cascading_stage_ ){
-                            forward_ = false;
-                            current_cascading_stage_++;
-                        }
-                    }
-                }
-
-                if ( current_stage_ == num_stages_-1 ){
-                    assert( in_second_iteration_ == false); // Otherwise something is wrong. We do not need second_iteration in the last stage, makes no sense
-                    in_second_iteration_ = true;
-                }
-            }
-
 
             if ( current_stage_ == num_stages_-1 ){// We are in last stage
                 at_last_iteration_ = true;
@@ -2314,7 +2282,6 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->num_thetas_ = num_cuts;
             benders_tree_node_pointer->getDataPtr()->active_aggregates_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
             benders_tree_node_pointer->getDataPtr()->was_under_threshold_ = boost::dynamic_bitset<>(num_cuts); // Gets initialized with 0
-            //LOG(INFO) << "Changed aggregation Level :::::::::::::::::";
         }
 
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
@@ -2323,62 +2290,6 @@ namespace parallel_benders {
         int added_cuts = 0;
         bool initialized_iterator = !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty();
         
-
-        // Analyse thetas 
-        if ( benders_tree_node_pointer->getDataPtr()->next_stage_approximation_ && !forward_ && !benders_tree_node_pointer->getDataPtr()->optimality_cuts_.empty()){
-            double minimum = infinity_;
-            double maximum = -infinity_;
-            double average = 0;
-            if ( benders_tree_node_pointer->getDataPtr()->discrepancy_ != NULL)
-                delete [] benders_tree_node_pointer->getDataPtr()->discrepancy_;
-            benders_tree_node_pointer->getDataPtr()->discrepancy_ = new double[benders_tree_node_pointer->getDataPtr()->num_thetas_];
-            for (int i = 0; i < num_cuts; i++){
-
-                //LOG(INFO) << "Approximation of node " << benders_tree_node_pointer->scenario() << " for child nodes is : " << benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
-                std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
-                double real_value = 0;
-
-                for ( int j = 0; j < nodes_in_cut.size(); j++){
-                    real_value += (tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->probability_ / benders_tree_node_pointer->getDataPtr()->probability_) * tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->solution_value_;
-                }
-                benders_tree_node_pointer->getDataPtr()->discrepancy_[i] = real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
-                if (CompareWithZero(benders_tree_node_pointer->getDataPtr()->discrepancy_[i]) )
-                    benders_tree_node_pointer->getDataPtr()->discrepancy_[i] = 0;
-                //LOG(INFO) << " Recourse Function value is : " << real_value;
-                minimum = std::min<double>(minimum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
-                maximum = std::max<double>(maximum,real_value-benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]);
-                average += benders_tree_node_pointer->getDataPtr()->discrepancy_[i];
-
-            }
-
-
-            if ( CompareWithZero(minimum))
-                minimum = 0;
-            if ( CompareWithZero(maximum))
-                maximum = 0;
-            benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = minimum;
-            benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = maximum;
-            benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = average/num_cuts;
-            benders_tree_node_pointer->getDataPtr()->discrepancy_value_ = std::accumulate(&benders_tree_node_pointer->getDataPtr()->discrepancy_[0],&benders_tree_node_pointer->getDataPtr()->discrepancy_[num_cuts],0.0);
-            if ( upper_bound_ != infinity_ && lower_bound_ != -infinity_)
-                benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_ = (upper_bound_-lower_bound_)/num_cuts;
-            if ( benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ > benders_tree_node_pointer->getDataPtr()->discrepancy_value_ )
-                benders_tree_node_pointer->getDataPtr()->discrepancy_lower_bound_ = benders_tree_node_pointer->getDataPtr()->discrepancy_value_;
-            if ( benders_tree_node_pointer->getDataPtr()->average_lower_bound_ > benders_tree_node_pointer->getDataPtr()->average_discrepancy_ )
-                benders_tree_node_pointer->getDataPtr()->average_lower_bound_ = benders_tree_node_pointer->getDataPtr()->average_discrepancy_;
-            if ( upper_bound_ != infinity_ && lower_bound_ != -infinity_)
-                if ( benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_lower_bound_ > benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_)
-                    benders_tree_node_pointer->getDataPtr()->average_gap_per_aggregate_lower_bound_ = (upper_bound_-lower_bound_)/num_cuts;
-
-        }
-        else {
-            benders_tree_node_pointer->getDataPtr()->min_discrepancy_ = 0;
-            benders_tree_node_pointer->getDataPtr()->max_discrepancy_ = 0;
-            benders_tree_node_pointer->getDataPtr()->average_discrepancy_ = 0;
-            delete [] benders_tree_node_pointer->getDataPtr()->discrepancy_;
-            benders_tree_node_pointer->getDataPtr()->discrepancy_ = NULL;
-        }
-
 
         bool added_iterator = false;
         for ( int i = 0; i < num_cuts; i++){
@@ -2968,7 +2879,7 @@ namespace parallel_benders {
                 osi_solver->applyRowCuts(1,(*feas_it)->cut_.get());
                 new_feas_cuts++;
             }
-            // Now we have the problem with all cuts, that we can solve right now!
+            // Now we have the problem with all cuts, that we can solve right now! (with applied warm start)
             SolveSubproblem(osi_solver,benders_tree_node_pointer);
             // Store the warm start
             seperate_first_stage_solver_ = false;
@@ -2986,7 +2897,6 @@ namespace parallel_benders {
                 }
             }
             int number_of_rows_in_problem = osi_solver->getNumRows();
-            //osi_solver->writeLp("current_problem");
             osi_solver->deleteRows(num_cuts,&optimality_cuts_to_delete[0]);
             int number_of_rows_without_opt_cuts = osi_solver->getNumRows();
             // Add all optimality cuts to solver!
@@ -3007,12 +2917,9 @@ namespace parallel_benders {
                 for (int i = 0; i < num_cuts;i++){
                     warm_start_basis->setArtifStatus(i+number_of_rows_without_opt_cuts,status_array[i]);
                 }                
-                seperate_first_stage_solver_ = false;
                 osi_solver->setWarmStart(warm_start_basis);
-                seperate_first_stage_solver_ = true;
-                // Resolve the problem is done in the typical way!
+                // Resolve the problem is done in the typical way, outside the scope of this method!
             }
-            
         }
 
 
@@ -3183,8 +3090,6 @@ namespace parallel_benders {
         tree_nodes_by_stage_[0].push_back(tree_.getRoot());
         // Set probability 1 to root node, to prevent numerical issues
         tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
-        tree_nodes_by_stage_[0][0]->getDataPtr()->discrepancy_lower_bound_ = infinity_;
-        tree_nodes_by_stage_[0][0]->getDataPtr()->average_lower_bound_ = infinity_;
         // Set multicut aggregation for the first stage also
         if ( num_scen_pro_cut)
             tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
@@ -3200,8 +3105,6 @@ namespace parallel_benders {
                     tree_nodes_by_stage_[i].push_back((*children)[k]);
                     tree_nodes_by_stage_[i].back()->getDataPtr()->num_node_in_stage_ = number_of_nodes_in_this_stage++;
                     tree_nodes_by_stage_[i].back()->getDataPtr()->child_node_start_ = number_of_child_nodes_for_next_stage;
-                    tree_nodes_by_stage_[i].back()->getDataPtr()->discrepancy_lower_bound_ = infinity_;
-                    tree_nodes_by_stage_[i].back()->getDataPtr()->average_lower_bound_ = infinity_;
                     number_of_child_nodes_for_next_stage += tree_nodes_by_stage_[i].back()->numChildren();
                     // Set num_scen_pro_cut, if we want to use it..
                     if ( num_scen_pro_cut ){
@@ -3698,14 +3601,9 @@ namespace parallel_benders {
         } 
         else if ( aggregation_scheme_ == PNB_INT_AGGREGATION_STRATEGY_BY_AGGREGATE_DISCREPANCY){
             // Aggregates that have a similar low discrepancy get aggregated together
-            if ( benders_node_pointer->discrepancy_ == NULL || benders_node_pointer->min_discrepancy_ == 0 && benders_node_pointer->max_discrepancy_ == 0)
+            if ( benders_node_pointer->discrepancy_ == NULL )
                 return; // We have a non NULL pointer
 
-            // Compute a threshold for discrepancies we consider low
-            if ( benders_node_pointer->max_discrepancy_ == 0 && benders_node_pointer->min_discrepancy_ == 0)
-                return; // We can not do anything..
-            double absolute_difference = benders_node_pointer->max_discrepancy_-benders_node_pointer->min_discrepancy_;
-            double relative_difference = benders_node_pointer->max_discrepancy_ / benders_node_pointer->min_discrepancy_;
             double discrepancy_threshold = 0;
 
             // Min-based
