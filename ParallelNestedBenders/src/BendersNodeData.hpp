@@ -182,6 +182,8 @@ public:
     int num_trust_region_rows_;
     boost::scoped_array<int> trust_region_cols_;
     int num_trust_region_cols_;
+
+    boost::scoped_array<double> mip_solution_;
     
 
     int cols_; 

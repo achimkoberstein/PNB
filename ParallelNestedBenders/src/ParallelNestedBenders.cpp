@@ -4182,33 +4182,38 @@ namespace parallel_benders {
         else {
             // Set incumbent of last solution?
             if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ ){
-                if ( current_stage_ > 0 && warm_start_scenarios_ ){
-
+                double* mip_solution = NULL;
+                if ( warm_start_scenarios_ ){
+                    mip_solution = benders_tree_node_pointer->getDataPtr()->mip_solution_.get();
+                    if ( mip_solution == NULL)
+                        return;
                 }
-                else if ( current_stage_ == 0 || warm_start_stage_ ){
-                    
-                    // Get solution of first stage node?
-                    OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
-                    if ( osi_cpx != NULL ){
-                        CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-                        CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                else if (  warm_start_stage_ ){
+                    if ( stage_data_[current_stage_]->mip_solution_.empty() )
+                        return;
+                    mip_solution = &stage_data_[current_stage_]->mip_solution_[0];
+                }
 
+                // Get solution of first stage node?
+                OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
+                if ( osi_cpx != NULL ){
+                    CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+                    CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+
+
+                    int num_mipstarts = 1; // We only add one mipstart
+                    int begin_mipstarts = 0; // First mipstart starts at location 0
+                    const int effortlevel_mipstarts = 0; // CPLEX decides
+                    if ( warm_start_stage_ )
                         stage_warm_start_mutex_.lock();
-                        if ( !stage_data_[current_stage_]->mip_solution_.empty()){
-                            int num_mipstarts = 1; // We only add one mipstart
-                            int begin_mipstarts = 0; // First mipstart starts at location 0
-                            const int effortlevel_mipstarts = 0; // CPLEX decides
-                            int err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0],&effortlevel_mipstarts,NULL);
-                            //int err = CPXcopymipstart(env_ptr,lp_ptr,stage_data_[current_stage_]->num_columns_,&stage_data_[current_stage_]->column_indices_[0],&stage_data_[current_stage_]->mip_solution_[0]);
-                            LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
-                        }
+                    int err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],mip_solution,&effortlevel_mipstarts,NULL);
+                    LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
+                    if ( warm_start_stage_ )
                         stage_warm_start_mutex_.unlock();
-                    }
-                    
-                }
-            }
-        }
-    }
+                } // End OsiCpx
+            } // End If WarmStartAdded
+        } // End Else
+    } // End Method
 
     void ParallelNestedBenders::StoreWarmStart( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
@@ -4233,13 +4238,22 @@ namespace parallel_benders {
         }
         else if ( warm_start_ && integer_problems_[current_stage_] && osi_solver->isProvenOptimal() ){
             // Update current mip solution start!
-            stage_warm_start_mutex_.lock();
-            if ( stage_data_[current_stage_]->mip_solution_.empty() ){
-                // Copy mip solution into it 
-                stage_data_[current_stage_]->mip_solution_.resize(stage_data_[current_stage_]->num_columns_,0.0);
+
+            const double* col_solution = osi_solver->getColSolution();
+            if ( warm_start_scenarios_ ){
+                if ( benders_tree_node_pointer->getDataPtr()->mip_solution_.get() == NULL )
+                    benders_tree_node_pointer->getDataPtr()->mip_solution_.reset(new double[stage_data_[current_stage_]->num_columns_]);
+                std::copy(col_solution,col_solution+stage_data_[current_stage_]->num_columns_,benders_tree_node_pointer->getDataPtr()->mip_solution_.get());
             }
-            memcpy(&stage_data_[current_stage_]->mip_solution_[0],osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_*sizeof(double));
-            stage_warm_start_mutex_.unlock();
+            
+            if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0){
+                stage_warm_start_mutex_.lock();
+                if ( stage_data_[current_stage_]->mip_solution_.empty() ){
+                    stage_data_[current_stage_]->mip_solution_.resize(stage_data_[current_stage_]->num_columns_,0.0);                   
+                }
+                std::copy(col_solution,col_solution+stage_data_[current_stage_]->num_columns_,stage_data_[current_stage_]->mip_solution_.begin());
+                stage_warm_start_mutex_.unlock();
+            }
         }
         benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
     }
