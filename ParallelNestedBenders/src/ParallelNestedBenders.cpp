@@ -287,7 +287,7 @@ namespace parallel_benders {
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.5),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
-        sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),repeat_second_iteration_(1),second_iteration_counter_(0),cascading_second_iteration_(false),current_cascading_stage_(1),
+        sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),
         oda_level_decomp_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
         warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
@@ -373,7 +373,6 @@ namespace parallel_benders {
         }
         else
             num_theta = value;
-        num_scen_pro_cut = param.get(PNB_SCENARIOS_PRO_CUT,0);
 
         // Adaptive aggregation
         adaptive_ = param.get(PNB_DYNAMIC_AGGREGATION,false);
@@ -391,22 +390,39 @@ namespace parallel_benders {
             warm_up_ = true;
 
         // Choice of algorithm
-        int algorithm = param.get(PNB_BENDERS,1); // Use Benders as default
+        int algorithm = param.get(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // Use Benders as default
         if ( algorithm == PNB_INT_ALGORITHM_REGULARIZATION )
             regularization_ = true;
+        if ( algorithm == PNB_INT_ALGORITHM_REGULARIZATION ){
+            regularization_ = true;
+            oda_level_decomp_ = true;
+        }
         if ( algorithm == PNB_INT_ALGORITHM_LEVEL ){
+            level_decomp_ = true;
+        }
+        if ( algorithm == PNB_INT_ALGORITHM_LEVEL_ODA ){
             level_decomp_ = true;
             oda_level_decomp_ = true;
         }
+        if ( algorithm == PNB_INT_ALGORITHM_BENDERS_ODA ){
+            oda_level_decomp_ = true;
+        }
+        oda_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
+        oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
 
-        // TODO: Remove Again
-        oda_level_decomp_ = true; level_decomp_ = false;
-
-        // Set ODA parameters
-        oda_lambda_ = 0.2;
-        oda_kappa_ = 0.6;
-
-
+        if ( level_decomp_ && (oda_lambda_ <= 0.0 || oda_lambda_ >= 1)){
+            // We do not want to use level_decomp.
+            LOG(WARNING) << "Not using level decomposition due to lambda out of specification : " << oda_lambda_;
+            level_decomp_ = false;
+        }
+        if ( oda_level_decomp_ ){
+            if ( level_decomp_ ){
+                if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-oda_lambda_)*(1-oda_lambda_))
+                    LOG(FATAL) << "Level parameter are wrong. 0 < lambda < 1, 0 < kappa < (1-lambda)^2.";
+            }
+            if ( oda_kappa_ <= 0 || oda_kappa_ >= 1)
+                LOG(FATAL) << "Kappa is out of range : " << oda_kappa_;
+        }
 
         // Trust Region
         trust_region_ = param.get(PNB_TRUST_REGION,false);
@@ -454,11 +470,6 @@ namespace parallel_benders {
                 break;
                 
         }
-        // Assign parameters for sequencing_protocol_ == PNB_INT_SECOND_ITERATION
-        cascading_second_iteration_ = param.get(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,true);
-        repeat_second_iteration_ = param.get(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,2);
-
-
         // 
         // Feasibility problems
         only_one_feasibility_cut_ = true;
