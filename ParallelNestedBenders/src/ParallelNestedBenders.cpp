@@ -914,6 +914,7 @@ namespace parallel_benders {
                     }
                     thread_pool_.wait(0);
                     solve_subproblems = false;
+                    timer_.Stop(current_stage_);
                     current_stage_--; 
                     assert(current_stage_ == 0);
                     continue; // Skip the rest of the loop (we go to the first stage)
@@ -1278,7 +1279,7 @@ namespace parallel_benders {
             }
             stage_data_[current_stage_]->changed_aggregation_level_ = false; // Necessary for adaptive_ methods!
 
-            timer_.Stop(current_stage_);
+
             // Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
             if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 && current_stage_ == 0 && theta_approximations_everywhere_){ // Store the time it takes to compute certain stages!
                 // Store the time in a vector
@@ -1311,7 +1312,7 @@ namespace parallel_benders {
                 //critical_stage = num_stages_-1;
                 LOG(INFO) << "Bouncing stage is stage " << critical_stage;
             }
-            // Sanity Check for direction!
+            timer_.Stop(current_stage_);
             // Change next stage, depending on where we are heading (forward or backward)
             forward_ ? current_stage_++ : current_stage_--;
         }
