@@ -473,6 +473,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     std::fstream logfile;
     logfile.open("saa-log.txt", fstream::out | fstream::app);
+    logfile << "Seed: " << uniform_generator_struct.seed;
     // Conclusion
     logfile << "N : ";
     for (int i = 1; i < num_stages; i++)
