@@ -243,8 +243,8 @@ public:
 	inline const double * getDenseColUpper(SmiStageIndex t){return cdcup_[t];}
 	inline const double * getDenseObjCoefficients(SmiStageIndex t){return cdobj_[t];}
 
-    inline std::vector<int> getIntCols(int stage) { return intColsStagewise[stage]; };
-    inline std::vector<int> getBinaryCols(int stage) { return binaryColsStagewise[stage]; };
+    inline const std::vector<int>& getIntCols(int stage) { return intColsStagewise[stage]; };
+    inline const std::vector<int>& getBinaryCols(int stage) { return binaryColsStagewise[stage]; };
 	inline const int* getIntegerIndices() { return integerIndices_; } //indices of integer variables
 	inline int getIntegerLength() { return integerLength_; }
     inline const int* getBinaryIndices() { return binaryIndices_; } //indices of binary variables

@@ -198,7 +198,7 @@ void Parameter::init()
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
-    parameter_.put(PNB_RELAXATION, 0); // Solved LP relaxation instead of MIP problem, if we have a MIP problem
+    parameter_.put(PNB_RELAXATION, PNB_INT_NO_RELAXATION); // Give stage from which we should solve the relaxed problem!
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)

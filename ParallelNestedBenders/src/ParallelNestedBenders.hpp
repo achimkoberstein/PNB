@@ -292,7 +292,7 @@ private:
 	// We can change this, if we want to.
 	bool seperate_first_stage_solver_;
 	bool seperate_stage_solver_;
-    bool solve_relaxation_;
+    int solve_relaxation_;
 
     bool debug_test_duplicate_indices_; // Should be set to false, otherwise slows down the problem (Multi-Cut)
 
