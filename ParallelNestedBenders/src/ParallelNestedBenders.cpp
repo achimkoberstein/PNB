@@ -1404,22 +1404,22 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
-            std::stringstream stream;
-            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr ){
-                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-                CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-                //stream << "_C.lp";
-                //CPXsetintparam(env_ptr,)
-                console_mutex_.lock();
-                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
-                console_mutex_.unlock();
-            }
-            stream << "osi";
-            osi_solver->writeLp(stream.str().c_str());
-        } // TODO: Debugging stuff
+        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        //    std::stringstream stream;
+        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+        //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+        //    if ( cpx_ptr ){
+        //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+        //        //stream << "_C.lp";
+        //        //CPXsetintparam(env_ptr,)
+        //        console_mutex_.lock();
+        //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+        //        console_mutex_.unlock();
+        //    }
+        //    stream << "osi";
+        //    osi_solver->writeLp(stream.str().c_str());
+        //} // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1478,8 +1478,20 @@ namespace parallel_benders {
                         osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
                         // We need to remove this row again, when we finished everything with this problem!
                         benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
-                        // Solve the model again
-                        SolveSolverInterface(osi_solver);
+                        benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
+                        // Switch preprocessing and advanced start off
+                        OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+                        if ( osi_cpx != NULL ){
+                            CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+                            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_OFF);
+                            CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
+                            SolveSolverInterface(osi_solver,false);
+                            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_ON);
+                            CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
+
+                        }
+                        else 
+                            SolveSolverInterface(osi_solver);
                     }
                 }
 
@@ -3179,12 +3191,8 @@ namespace parallel_benders {
             
         }
         if ( benders_node_pointer->unbounded_ ){
-            // Remove last row
-            int unbounded_row = osi_solver->getNumRows()-1;
-            //osi_solver->writeLp("before_unbounded");
-            osi_solver->deleteRows(1,&unbounded_row);
-            SolveSolverInterface(osi_solver);
-            //osi_solver->writeLp("after_unbounded");
+            osi_solver->deleteRows(1,&benders_node_pointer->unbounded_row_);
+            //SolveSolverInterface(osi_solver);
             benders_node_pointer->unbounded_ = false;
             // Add this to all methods that resolve the problem in one way or another!
         }
@@ -4523,7 +4531,7 @@ namespace parallel_benders {
         // MIP Solving only at first stage..
         if ( integer_problems_[current_stage_] ){
           
-            if ( !use_coin && current_stage_ == 0){
+            if ( !use_coin ){
                 // We have a QP, so branchAndBound method throws an error..
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
