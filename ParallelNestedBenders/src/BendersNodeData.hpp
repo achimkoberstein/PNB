@@ -107,6 +107,9 @@ namespace parallel_benders{
     const int PNB_INT_SOLUTION_DUAL_NO = -2;
     const int PNB_INT_SOLUTION_DUAL_ALL = -1;
 
+    // Relaxed problem
+    const int PNB_INT_NO_RELAXATION = -1;
+
     struct BendersNodeData;
 
     struct CutStuff

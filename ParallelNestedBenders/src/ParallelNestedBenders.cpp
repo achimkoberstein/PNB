@@ -290,7 +290,7 @@ namespace parallel_benders {
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),
         oda_level_decomp_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
-        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(false),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
+        warm_up_(false),warm_up_solution_(NULL),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
     }
@@ -553,7 +553,7 @@ namespace parallel_benders {
         cut_generation_timer_ = 2;
 
         // Solve LP relaxation instead IP problem?
-        solve_relaxation_ = param.get(PNB_RELAXATION,false);
+        solve_relaxation_ = param.get(PNB_RELAXATION,PNB_INT_NO_RELAXATION);
 
 
         // Set options for solver!
@@ -591,25 +591,35 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
-        if ( integer_problems_[0] && solve_relaxation_ )
+        if ( integer_problems_[0] && solve_relaxation_ == 0 )
             integer_problems_[0] = false;
         for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ".";
-            if ( solve_relaxation_ ){
+            if ( solve_relaxation_ >= i ){
                 integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
                 LOG(INFO) << "We solve the LP relaxation for that stage.";
             }
 
             // TODO: If we want D_square_ we have to remove the && false statement
-            if ( num_stages_ == 2 && integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
-                d_square_ = true;
-                store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
-                // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
-                integer_problems_[i] = false;
-                // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
-                d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
-                d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
-                LOG(INFO) << "Enabling D^2 algorithm.";
+            if ( integer_problems_[i] ){ // If we have second stage integer problems, use the D^2 algorithm. (actually we might need binary variables for that and some other stuff.. but lets try it anyway..
+                // We could enable the D^2 algorithm (with LaporteLouveaux Cuts) only if we have no mixed-integer first stage!
+                const std::vector<int>& binary_cols(core_->getBinaryCols(0)); // Get binary cols of first stage!
+                if ( binary_cols.size() == stage_data_[0]->num_columns_ )
+                {
+                    d_square_ = true;
+                    store_primal_and_dual_ = true; // We need primal solution after we solved the subproblems!
+                    // If we want to solve the actual MIPS, we need to set integer_problems_[i] to true, else to flase
+                    integer_problems_[i] = false;
+                    // We need a translation term! (Solve second stage LP problem and adjust!) D^2 requires theta to be >= 0.
+                    d_square_translation_term_ = 20000; // Is taken for LaporteLoveaux Cuts as the minimum value of second stage problems!
+                    d_square_w_iteration_.resize(stage_data_[1]->num_columns_,-1);
+                    LOG(INFO) << "Enabling D^2 algorithm.";
+                }
+                else {
+                    // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!
+                    LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION. First Stage = 0";
+                    return;
+                }
              }
         }
         // Stage Aggregation!
@@ -634,7 +644,7 @@ namespace parallel_benders {
 
         // Initialize solver instance for every thread?
         current_stage_ = 1;
-        for ( int i = 0; i < num_cpu_*2; i++ ){
+        for ( int i = 0; i < num_cpu_*4; i++ ){ // Should suffice to get every thread its own solver..
             // Schedule the tasks for this stage
             thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GetSolverByThread,this));
         }
@@ -643,15 +653,6 @@ namespace parallel_benders {
 
         // Compute or Use initial solutions!
         HandleInitialSolutionProcedures();
-
-        if ( integer_problems_.any() ){
-            //if ( warm_up_ ) {
-            //    // No warm start!
-            //    LOG(INFO) << "Disabling warm start procedure due to MIP";
-            //    warm_up_ = false;
-            //    start_solution_ = PNB_INT_NO_START_SOLUTION;
-            //}
-        }
 
         double old_gap = 0;
         double gap = 0;
@@ -1403,20 +1404,22 @@ namespace parallel_benders {
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
         // 
-        //if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
-        //    std::stringstream stream;
-        //    stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
-        //    OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-        //    if ( cpx_ptr ){
-        //        CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-        //        CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-        //        //stream << "_C.lp";
-        //        //CPXsetintparam(env_ptr,)
-        //        console_mutex_.lock();
-        //        CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
-        //        console_mutex_.unlock();
-        //    }
-        //} // TODO: Debugging stuff
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+            std::stringstream stream;
+            stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+            if ( cpx_ptr ){
+                CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                //stream << "_C.lp";
+                //CPXsetintparam(env_ptr,)
+                console_mutex_.lock();
+                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+                console_mutex_.unlock();
+            }
+            stream << "osi";
+            osi_solver->writeLp(stream.str().c_str());
+        } // TODO: Debugging stuff
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1541,12 +1544,11 @@ namespace parallel_benders {
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
-                    
-                    LOG_IF(INFO, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+                    LOG_IF(ERROR, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
                 }
-                StoreWarmStart(osi_solver,benders_tree_node_pointer);
-
             }
+            else if ( osi_solver->isProvenOptimal() )
+                StoreWarmStart(osi_solver,benders_tree_node_pointer);
             // TODO Other possible cases
             // Get the cplex stat..
 
@@ -1613,14 +1615,14 @@ namespace parallel_benders {
             }
         }
 
-        // If we have integer variables, we might want to set these variables to pure integer values!
-        if ( integer_problems_[current_stage_] ){
-            // Get integer cols
-            std::vector<int> integer_cols = core_->getIntCols(current_stage_);
-            for (int i = 0; i < integer_cols.size();i++){
-                benders_node_pointer->col_solution_[integer_cols[i]] = boost::math::round(benders_node_pointer->col_solution_[integer_cols[i]]); 
-            }
-        }
+        //// If we have integer variables, we might want to set these variables to pure integer values!
+        //if ( integer_problems_[current_stage_] ){
+        //    // Get integer cols
+        //    const std::vector<int>& integer_cols = core_->getIntCols(current_stage_);
+        //    for (int i = 0; i < integer_cols.size();i++){
+        //        benders_node_pointer->col_solution_[integer_cols[i]] = boost::math::round(benders_node_pointer->col_solution_[integer_cols[i]]); 
+        //    }
+        //}
 
         if ( d_square_ ){
             StoreValuesFromSolverInArray(benders_node_pointer->solver_rhs_,osi_solver->getRightHandSide(),osi_solver->getNumRows());
@@ -4119,7 +4121,6 @@ namespace parallel_benders {
                 if ( osi_cpx != NULL ){
                     CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
                     CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-
 
                     int num_mipstarts = 1; // We only add one mipstart
                     int begin_mipstarts = 0; // First mipstart starts at location 0
