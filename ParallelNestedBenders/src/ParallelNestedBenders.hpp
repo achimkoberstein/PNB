@@ -250,12 +250,7 @@ private:
     int sequencing_protocol_; 
 	int second_iteration_stage_;
     double strategy_epsilon_;
-    int repeat_second_iteration_; // How many times do we want to repeat second iteration?
-    int second_iteration_counter_;
-    bool cascading_second_iteration_; // Cascading: first up to stage 1, then up to stage 2, then up to stage 3, then up to .. second_iteration_stage_
-    int current_cascading_stage_;
-    bool in_second_iteration_;
-	// Stage wise upper and lower bound, necessary for certain sequencing protocols
+   	// Stage wise upper and lower bound, necessary for certain sequencing protocols
 	std::vector<std::pair<double,double> > stage_lower_upper_bounds_;
 	std::vector<std::pair<double,double> > old_lower_upper_bounds_;
 	double temporary_stage_lower_bound_;// p * c * x + \theta <- actual values for this stage plus recourse function
@@ -297,7 +292,7 @@ private:
 	// We can change this, if we want to.
 	bool seperate_first_stage_solver_;
 	bool seperate_stage_solver_;
-    bool solve_relaxation_;
+    int solve_relaxation_;
 
     bool debug_test_duplicate_indices_; // Should be set to false, otherwise slows down the problem (Multi-Cut)
 

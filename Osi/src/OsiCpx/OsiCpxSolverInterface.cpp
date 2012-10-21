@@ -526,8 +526,8 @@ void OsiCpxSolverInterface::branchAndBound()
 
     CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_ON );
   }
-  else
-    CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_OFF );
+  //else
+    //CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_OFF ); // Why should ADVIND be turned of completely?
 
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
@@ -777,7 +777,7 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
   // In CPLEX 8, the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
-  return (stat == CPX_STAT_INFEASIBLE);
+  return (stat == CPX_STAT_INFEASIBLE || stat == CPXMIP_INFEASIBLE);
   //  return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_INFEASIBLE || 
   //  method == CPX_ALG_DUAL && stat == CPX_STAT_UNBOUNDED);
 #else
@@ -801,7 +801,7 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
   // In CPLEX 8, the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
-  return (stat == CPX_STAT_UNBOUNDED);
+  return (stat == CPX_STAT_UNBOUNDED || stat == CPXMIP_UNBOUNDED);
   //return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_UNBOUNDED || 
   //	  method == CPX_ALG_DUAL && stat == CPX_STAT_INFEASIBLE);
 #else

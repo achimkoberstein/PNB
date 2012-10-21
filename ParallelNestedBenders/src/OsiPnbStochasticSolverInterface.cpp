@@ -41,7 +41,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations()
 }
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
-    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1) == 0){
+    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
         parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
         if ( osi_ != NULL ){
@@ -57,7 +57,6 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         std::cout << "Variables: " << osi_->getNumCols() << " Rows: " << osi_->getNumRows() << " Elements: " << osi_->getNumElements() << " Integer: " << osi_->getNumIntegers() << std::endl;
         solution_time.Stop(1);
         solution_time.Start(0);
-        //osi_->writeMps("deterministicEquivalent","mps",1);
         // Use Barrier method if we use cplex.. ugly code results
 #ifdef CPLEX_PRESENT
         OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_);
@@ -68,7 +67,9 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
             CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
-            CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);
+            // We may want to set a start solution!
+
+            //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
@@ -79,22 +80,12 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
                 CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,-1);
 				CPXbaropt(envPtr,lpPtr);
 			}
-            //CPXsetdblparam(envPtr,CPX_PARAM_EPOPT,0.00000001);
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
             if ( result )
                 LOG(INFO) << "Cplex returned with status code " << result;
             double obj;
             CPXgetobjval(envPtr,lpPtr,&obj);
-            //LOG(INFO) << "Solution: " << obj;
-            // Get first stage solution
-            // TODO: Move this to another place later..
-            //int num_first_stage_cols = nested_benders_->smi_->getCore()->getNumCols(0);
-            //const double* col_solution = osi_->getColSolution();
-            //for ( int i = 0; i < num_first_stage_cols; i++ ){
-            //    std::cout << "x" << i << " : " << col_solution[i] << std::endl;
-            //}
-
         }
         else{
 #endif
@@ -184,8 +175,10 @@ SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
 
 const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage )
 {
-    if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,1) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
-        return osi_->getColSolution(); // TODO: We need to go to the correct numbers..
+    if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
+        if ( node_number > 0 || stage > 0)
+            assert(false); // Not yet done
+        return osi_->getColSolution(); // TODO: We need to go to the correct numbers ( if we are not at the first node
     }
     else {
         assert( stage < nested_benders_->num_stages_);
@@ -322,49 +315,55 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     for (int i = 0; i < number_batches_; i++){
         smi_model->sampleScenarioTree(samples_,0, get_latin_hypercube_random_01_variates );
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
-        if ( linderoth_shapiro_wright || naive_estimation )
+        if ( linderoth_shapiro_wright || naive_estimation ) // In this case we need first stage solutions only
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
-        else 
+        else // For MakMortonWood we need no solutions
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         osi_pnb_->setParameters(parameters_);
+        // Use solution from previous problem to speed up calculations 
         if ( mak_morton_wood )
             osi_pnb_->giveStartSolution(candidate_array.get());
         else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
             osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
         osi_pnb_->initialSolve();
+        // We assume that solving went well. If it does not, we have problem
         objective_values[i] = osi_pnb_->getObjValue();
+        LOG(INFO) << "Solved lower bound problem " << i << " with objective value " << objective_values[i];
         // Needed for linderoth and naive_estimation
         if ( linderoth_shapiro_wright || naive_estimation ) {
             first_stage_solutions[i].reset(new double[num_first_stage_cols]);
             memcpy(first_stage_solutions[i].get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
         }
+
+        // Now we compute values for upper bounding.
         parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS); // Use Benders for evaluation of candidate solution!
         if ( mak_morton_wood ){
+            LOG(INFO) << "Evaluating candidate solution with the current sampled scenario tree.";
             // Evaluate candidate solution with the given sample set
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
             osi_pnb_->setParameters(parameters_);
-
             osi_pnb_->fixFirstStageVariables(candidate_array.get());
             osi_pnb_->initialSolve();
             gap_estimates[i] = osi_pnb_->getObjValue() - objective_values[i];
          }
         if ( linderoth_shapiro_wright ) {
+            
             std::vector<double> upper_bound_estimates_for_this_solution(number_batches_upper_,0.0);
             for (int current_batch = 0; current_batch < number_batches_upper_; current_batch++){
+                LOG(INFO) << "Solving evaluation problem " << current_batch << " for current lower bound solution " << i;
                 // Evaluate this very lower bound solution with a larger random number stream!
-                // Evaluate candidate solution with the given sample set
                 smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
                 osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
                 parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
                 osi_pnb_->setParameters(parameters_);
-
                 osi_pnb_->fixFirstStageVariables(first_stage_solutions[i].get());
                 osi_pnb_->initialSolve();
                 upper_bound_estimates_for_this_solution[current_batch] = osi_pnb_->getObjValue();
             }
             upper_bound_estimates[i] = std::accumulate(upper_bound_estimates_for_this_solution.begin(),upper_bound_estimates_for_this_solution.end(),0.0)/number_batches_upper_;
         }
+        // Evaluation of solutions is done with Benders, but we have to switch back for the lower bounding problems!
         if ( dont_use_benders )
             parameters_.parameter_.put(parallel_benders::PNB_BENDERS,preferred_solution_algorithm);
     }
@@ -402,7 +401,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     if ( linderoth_shapiro_wright ) {
         std::vector<double>::iterator min_element_it = std::min_element(upper_bound_estimates.begin(),upper_bound_estimates.end()); 
         assert( min_element_it != upper_bound_estimates.end());
-        int min_element_index = min_element_it-upper_bound_estimates.begin();
+        int min_element_index = std::distance(upper_bound_estimates.begin(),min_element_it); // Works because of vector
         assert( min_element_index >= 0 && min_element_index < number_batches_);
         candidate_array.reset(new double[num_first_stage_cols]);
         memcpy(candidate_array.get(),first_stage_solutions[min_element_index].get(),sizeof(double)*num_first_stage_cols);
@@ -473,7 +472,8 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     LOG(INFO) << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper;
 
     std::fstream logfile;
-    logfile.open("saa-log", fstream::out | fstream::app);
+    logfile.open("saa-log.txt", fstream::out | fstream::app);
+    logfile << "Seed: " << uniform_generator_struct.seed;
     // Conclusion
     logfile << "N : ";
     for (int i = 1; i < num_stages; i++)
