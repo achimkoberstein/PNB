@@ -31,7 +31,6 @@ namespace parallel_benders{
     const std::string PNB_LP_METHOD = "PNB_LP_METHOD";
     const std::string PNB_FEAS_CUT_LP_METHOD = "PNB_FEAS_CUT_LP_METHOD";
     const std::string PNB_AGGREGATED_OPTIMALITY_CUTS = "PNB_AGGREGATED_OPTIMALITY_CUTS";    //
-    const std::string PNB_SCENARIOS_PRO_CUT = "PNB_SCENARIOS_PRO_CUT" ;            //
     const std::string PNB_RELAXATION = "PNB_RELAXATION";                   //
     const std::string PNB_DYNAMIC_AGGREGATION = "PNB_DYNAMIC_AGGREGATION";          //
     const std::string PNB_TRUST_REGION = "PNB_TRUST_REGION";                 //
@@ -40,9 +39,6 @@ namespace parallel_benders{
 	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY"; // Different Strategies. 0 = FastForw/FastBack, 1 = FastForw, 2 = FastBack, 3 = EpsFastForw, 4 = EpsFastBack, 5 = FastForw/FastBackWith2nd.Iteration
 	const std::string PNB_TREE_WALK_STRATEGY_STAGE = "PNB_TREE_WALK_STRATEGY_STAGE"; // up to which stage do we want to follow the given strategy? else we resort to Fastpass
     const std::string PNB_TREE_WALK_STRATEGY_EPSILON = "PNB_TREE_WALK_STRATEGY_EPSILON";
-
-    const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE";
-    const std::string PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT = "PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT";
 
     const std::string PNB_STAGE_AGGREGATION = "PNB_STAGE_AGGREGATION";
     const std::string PNB_STAGE_AGGREGATION_START = "PNB_STAGE_AGGREGATION_START";
@@ -54,8 +50,10 @@ namespace parallel_benders{
     const std::string PNB_CUT_CONSOLIDATION_CUT_COMPUTATION = "PNB_CUT_CONSOLIDATION_CUT_COMPUTATION";
     const std::string PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD = "PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD";
     const std::string PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD = "PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD";
-
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
+    const std::string PNB_LEVEL_LAMBDA = "PNB_LEVEL_LAMBDA";
+    const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
+
 
 
     // Here come the double parameters
@@ -94,6 +92,9 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_BENDERS = 1;
     const int PNB_INT_ALGORITHM_REGULARIZATION = 2;
     const int PNB_INT_ALGORITHM_LEVEL = 3;
+    const int PNB_INT_ALGORITHM_LEVEL_ODA = 4;
+    const int PNB_INT_ALGORITHM_BENDERS_ODA = 5;
+    const int PNB_INT_ALGORITHM_REGULARIZATION_ODA = 6;
 
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
@@ -105,6 +106,9 @@ namespace parallel_benders{
     const int PNB_INT_SOLUTION_PRIMAL_ALL = -1;
     const int PNB_INT_SOLUTION_DUAL_NO = -2;
     const int PNB_INT_SOLUTION_DUAL_ALL = -1;
+
+    // Relaxed problem
+    const int PNB_INT_NO_RELAXATION = -1;
 
     struct BendersNodeData;
 
@@ -162,26 +166,18 @@ public:
     double* next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
     boost::dynamic_bitset<> was_under_threshold_; // Has to have the size of num_thetas_
-    double max_discrepancy_;
-    double min_discrepancy_;
-    double average_discrepancy_;
-    double median_discrepancy_;
-    double discrepancy_value_;
-    double discrepancy_lower_bound_;
-    double average_lower_bound_;
-    double average_gap_per_aggregate_;
-    double average_gap_per_aggregate_lower_bound_;
-    std::list<double> average_discrepancies_;
-    std::list<double> median_discrepancies_;
     double dual_value_variable_bounds_;
     bool feasible_;
     bool unbounded_;
+    int unbounded_row_;
 
     // Trust region information
     boost::scoped_array<int> trust_region_rows_;
     int num_trust_region_rows_;
     boost::scoped_array<int> trust_region_cols_;
     int num_trust_region_cols_;
+
+    boost::scoped_array<double> mip_solution_;
     
 
     int cols_; 

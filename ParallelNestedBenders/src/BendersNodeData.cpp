@@ -15,16 +15,16 @@ using namespace std;
 
 namespace parallel_benders{
 
-BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),max_discrepancy_(0),min_discrepancy_(0),average_discrepancy_(0.0),median_discrepancy_(0.0),discrepancy_value_(0.0),discrepancy_lower_bound_(0.0),average_lower_bound_(0.0),average_gap_per_aggregate_(1000000000000000000000.0),average_gap_per_aggregate_lower_bound_(1000000000000000000000.0),average_discrepancies_(),median_discrepancies_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
-trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
+BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
+trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),mip_solution_(NULL),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(NULL),d_square_cut_rhs_(NULL),solver_rhs_(NULL),can_safely_reuse_(true)
 
 {
 }
 
-BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),max_discrepancy_(0),min_discrepancy_(0),average_discrepancy_(0.0),median_discrepancy_(0.0),discrepancy_value_(0.0),discrepancy_lower_bound_(0.0),average_lower_bound_(0.0),average_gap_per_aggregate_(1000000000000000000000.0),average_gap_per_aggregate_lower_bound_(1000000000000000000000.0),average_discrepancies_(),median_discrepancies_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
-trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
+BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
+trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),mip_solution_(NULL),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(NULL),d_square_cut_rhs_(NULL),solver_rhs_(NULL),can_safely_reuse_(true)
 {
@@ -196,16 +196,13 @@ void Parameter::init()
     parameter_.put(PNB_FEAS_CUT_LP_METHOD,PNB_INT_DUAL_SIMPLEX);
     //// Aggregation of Cuts ( or single-multi cut )
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
-    parameter_.put(PNB_SCENARIOS_PRO_CUT, 0); // Integer value: How many scenarios do we want in a cut? If 0 = use AggregatedOptimalityCuts
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
-    parameter_.put(PNB_RELAXATION, 0); // Solved LP relaxation instead of MIP problem, if we have a MIP problem
+    parameter_.put(PNB_RELAXATION, PNB_INT_NO_RELAXATION); // Give stage from which we should solve the relaxed problem!
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
     parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON, 1e-06); 
-    parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_CASCADE,false);
-    parameter_.put(PNB_TREE_WALK_STRATEGY_SECOND_ITERATION_REPEAT,1);
     // Stage Aggregation
     parameter_.put(PNB_STAGE_AGGREGATION,false);
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
@@ -226,6 +223,9 @@ void Parameter::init()
 	parameter_.put(PNB_CPU_USED,0);
     // Maximal solution time
     parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Minutes
+    // Parameter for Level and ODA
+    parameter_.put(PNB_LEVEL_LAMBDA,0.25);
+    parameter_.put(PNB_ODA_KAPPA,0.5);
 	// Acceleration Techniques
     parameter_.put(PNB_TRUST_REGION, false); // Do we want to use TrustRegion TODO: Implement this
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver

@@ -736,6 +736,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                     {
                         if ( sampling_ ){
                             smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
+                            smiDD->addDiscreteRV(smiRV);
                             smi->setDiscreteDistribution(smiDD);
                         }
                         else 
