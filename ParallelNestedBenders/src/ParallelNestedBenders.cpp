@@ -1486,10 +1486,9 @@ namespace parallel_benders {
                             CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
                             CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_OFF);
                             CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
-                            SolveSolverInterface(osi_solver,false);
+                            SolveSolverInterface(osi_solver);
                             CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_ON);
                             CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
-
                         }
                         else 
                             SolveSolverInterface(osi_solver);
@@ -4533,7 +4532,7 @@ namespace parallel_benders {
         if ( integer_problems_[current_stage_] ){
           
             if ( !use_coin ){
-                // We have a QP, so branchAndBound method throws an error..
+                // 
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
@@ -4541,6 +4540,16 @@ namespace parallel_benders {
                     CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
+                    if ( code == CPXMIP_INForUNBD){ // Solve without presolve to determine correct direction!
+                        CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
+                        // Discard presolve information by changing objective Sense
+                        int objsen = CPXgetobjsen(env_ptr, lp_ptr);
+                        CPXchgobjsen(env_ptr, lp_ptr, -objsen);
+                        CPXchgobjsen(env_ptr, lp_ptr, objsen);
+                        CPXmipopt(env_ptr,lp_ptr);
+                        code = CPXgetstat(env_ptr,lp_ptr);
+                        CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
+                    }
                     console_mutex_.lock();
                     LOG_IF(WARNING,code != CPXMIP_OPTIMAL) << "MIQP solved with status " << code;
                     console_mutex_.unlock();
@@ -4559,7 +4568,21 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     CPXqpopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
+                    if ( code == CPX_STAT_INForUNBD){ // Solve without presolve to determine correct direction!
+                        CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
+                        // Discard presolve information by changing objective Sense
+                        int objsen = CPXgetobjsen(env_ptr, lp_ptr);
+                        CPXchgobjsen(env_ptr, lp_ptr, -objsen);
+                        CPXchgobjsen(env_ptr, lp_ptr, objsen);
+                        CPXqpopt(env_ptr,lp_ptr);
+                        code = CPXgetstat(env_ptr,lp_ptr);
+                        CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
+                        
+                    }
+                    console_mutex_.lock();
                     LOG_IF(WARNING,code != CPX_STAT_OPTIMAL) << "Quadratic problem solved with status " << code;
+                    console_mutex_.unlock();
+                   
                 }
             }
             else 
