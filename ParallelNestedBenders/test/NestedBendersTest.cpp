@@ -1,4 +1,4 @@
-//#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
+#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
 #define GTEST_USE_OWN_TR1_TUPLE 0
 
 #include <gtest/gtest.h>
@@ -148,8 +148,7 @@ public:
         
 
         delete smi_model; // Get rid of the model, before we actually solve stuff
-        benders_parameter_.init();
-
+        
         //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
@@ -193,15 +192,21 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
                     // Necessary for postponement..
-					benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
@@ -1275,6 +1280,16 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
         logfile.close();
         LOG(INFO) << "Solution Time: " << solver_time;
     }
+}
+
+TEST_F(NestedBendersTest,temporary){// dakota model
+    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    //    // Cut Consolidation tests
+    //solveSMPS("postponement/pTest-1296");
+
+    //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
+    //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
+    //
 }
 
 
