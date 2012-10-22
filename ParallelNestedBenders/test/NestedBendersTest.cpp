@@ -190,7 +190,7 @@ public:
                         continue;
                     }
                     benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
                     // Necessary for postponement..
 					benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
@@ -212,9 +212,13 @@ public:
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
 
@@ -1081,7 +1085,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //}
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
 //    // Cut Consolidation tests
     //solveSMPS("postponement/pTest-1296");
 
@@ -1198,7 +1202,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
 //    //     testModel.solve(MP_model::MINIMIZE);
 //}
 
-TEST_F(NestedBendersTest,sample_average_approximation){
+TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation){
     //// SAA TEST
     //// We set the correct folder here: All files are in Benders/instances
     double time = CoinCpuTime();  
@@ -1283,7 +1287,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*temporary*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
