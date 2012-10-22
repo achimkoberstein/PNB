@@ -286,6 +286,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib64"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
