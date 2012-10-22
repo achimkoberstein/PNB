@@ -1621,20 +1621,20 @@ namespace parallel_benders {
         // We need the column solution for the next stage problem!
         // We want to differentiate between column solution and theta variables 
         StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
-        if ( level_decomp_ && current_stage_ == 0){
-            if ( !oda_level_decomp_ ){
-                std::copy(benders_node_pointer->col_solution_,benders_node_pointer->col_solution_+stage_data_[current_stage_]->num_columns_,regularized_solution_.get());
-            }
-        }
-
-        //// If we have integer variables, we might want to set these variables to pure integer values!
-        //if ( integer_problems_[current_stage_] ){
-        //    // Get integer cols
-        //    const std::vector<int>& integer_cols = core_->getIntCols(current_stage_);
-        //    for (int i = 0; i < integer_cols.size();i++){
-        //        benders_node_pointer->col_solution_[integer_cols[i]] = boost::math::round(benders_node_pointer->col_solution_[integer_cols[i]]); 
+        //if ( level_decomp_ && current_stage_ == 0){
+        //    if ( !oda_level_decomp_ ){
+        //        std::copy(benders_node_pointer->col_solution_,benders_node_pointer->col_solution_+stage_data_[current_stage_]->num_columns_,regularized_solution_.get());
         //    }
         //}
+
+        //// If we have integer variables, we might want to set these variables to pure integer values!
+        if ( integer_problems_[current_stage_] ){
+            // Get integer cols
+            const std::vector<int>& integer_cols = core_->getIntCols(current_stage_);
+            for (int i = 0; i < integer_cols.size();i++){
+                benders_node_pointer->col_solution_[integer_cols[i]] = boost::math::round(benders_node_pointer->col_solution_[integer_cols[i]]); 
+            }
+        }
 
         if ( d_square_ ){
             StoreValuesFromSolverInArray(benders_node_pointer->solver_rhs_,osi_solver->getRightHandSide(),osi_solver->getNumRows());
