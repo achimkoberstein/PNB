@@ -80,7 +80,7 @@ private:
     double alpha_;
 };
 // Done this way to be able to call it from Smi without changing Smi to implement boost stuff
-static Uniform01Generator uniform_generator_struct;
+static parallel_benders::Uniform01Generator uniform_generator_struct;
 
 double get_random_0_1_variate();
 double * get_random_01_variates(int number_of_variates);

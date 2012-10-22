@@ -231,17 +231,15 @@ void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {
     parameters_.init();
-    // Initialize random generator
-    unsigned int seed;
 
     // How it works: We need a random generator and a distribution we want to draw numbers from.
     // Set the seed 
-    uniform_generator_struct.seed = get_random_number_from_system();
+    uniform_generator_struct.seed = parallel_benders::get_random_number_from_system();
     // Create a random number generator instance
-    uniform_generator_struct.rng = boost::shared_ptr<base_generator_type>(new base_generator_type(seed));
+    uniform_generator_struct.rng = boost::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
     // Create a random [0,1) variate generator;
     boost::uniform_01<> uniform_01_distribution;
-    uniform_generator_struct.uniform = boost::shared_ptr<uniform_distr_gen>(new uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
+    uniform_generator_struct.uniform = boost::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()
@@ -372,17 +370,17 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     // Compute lower_bound_estimator
     lower_bound_estimator = std::accumulate(objective_values.begin(),objective_values.end(),0.0)/number_batches_;
     // Compute Sample Variance Estimator ( is this also allowed for LHS?)
-    double sample_variance_estimator = computeSampleVarianceEstimator(number_batches_,&objective_values[0],lower_bound_estimator);
+    double sample_variance_estimator = parallel_benders::computeSampleVarianceEstimator(number_batches_,&objective_values[0],lower_bound_estimator);
     // Compute symmetric confidence interval half length
-    half_length_lower = computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_variance_estimator);
+    half_length_lower = parallel_benders::computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_variance_estimator);
     // Output everything for lower bound
     LOG(INFO) << "Lower Bound : [ " << lower_bound_estimator-half_length_lower << " <= " << lower_bound_estimator << " <= " << lower_bound_estimator+half_length_lower;
     LOG(INFO) << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower;
 
     if ( mak_morton_wood ){
         double gap_estimator = std::accumulate(gap_estimates.begin(),gap_estimates.end(),0.0)/number_batches_;
-        double sample_gap_variance_estimator = computeSampleVarianceEstimator(number_batches_,&gap_estimates[0],gap_estimator);
-        double gap_half_length = computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_gap_variance_estimator);
+        double sample_gap_variance_estimator = parallel_benders::computeSampleVarianceEstimator(number_batches_,&gap_estimates[0],gap_estimator);
+        double gap_half_length = parallel_benders::computeSymmetricConfidenceInterval(number_batches_,alpha_,sample_gap_variance_estimator);
         LOG(INFO) << " Gap Confidence Interval with " << 1-alpha_ << "% confidence : " << "[0," << gap_estimator+gap_half_length << "]";
     }
     
@@ -434,10 +432,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             //}
         }
         upper_bound_estimator = std::accumulate(upper_bound_values.begin(),upper_bound_values.end(),0.0)/number_batches_upper_;        
-        double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(number_batches_upper_,&upper_bound_values[0],upper_bound_estimator);
+        double upper_bound_sample_variance_estimator = parallel_benders::computeSampleVarianceEstimator(number_batches_upper_,&upper_bound_values[0],upper_bound_estimator);
 
         // Compute confidence interval for upper bound
-        half_length_upper = computeSymmetricConfidenceInterval(number_batches_upper_,alpha_,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
+        half_length_upper = parallel_benders::computeSymmetricConfidenceInterval(number_batches_upper_,alpha_,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
         // Output everything for lower bound
         LOG(INFO) << "Upper Bound : [ " << upper_bound_estimator-half_length_upper << " <= " << upper_bound_estimator << " <= " << upper_bound_estimator+half_length_upper;
     }
@@ -459,10 +457,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             upper_bound_solution_values[i] = osi_pnb_->getSolutionValueForScenario(i);
         }
         upper_bound_estimator = osi_pnb_->getObjValue();      
-        double upper_bound_sample_variance_estimator = computeSampleVarianceEstimator(samples_upper_[num_stages-1],&upper_bound_solution_values[0],upper_bound_estimator);
+        double upper_bound_sample_variance_estimator = parallel_benders::computeSampleVarianceEstimator(samples_upper_[num_stages-1],&upper_bound_solution_values[0],upper_bound_estimator);
 
         // Compute confidence interval for upper bound
-        half_length_upper = computeSymmetricConfidenceInterval(samples_upper_[num_stages-1],alpha_/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
+        half_length_upper = parallel_benders::computeSymmetricConfidenceInterval(samples_upper_[num_stages-1],alpha_/2,upper_bound_sample_variance_estimator); // With Bonferroni this ensures an overall confidence interval of 1-alpha_ TODO: Change alpha_/2 to alpha_ if we use another candidate solution than that by lower bound..
         // Output everything for lower bound
         LOG(INFO) << "Upper Bound : [ " << upper_bound_estimator-half_length_upper << " <= " << upper_bound_estimator << " <= " << upper_bound_estimator+half_length_upper;
         LOG(INFO) << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper;
@@ -582,7 +580,7 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     for ( double lower_interval = 0.0; lower_interval < 1; lower_interval += division){
         // Sample one variable from [lower_interval,lower_interval+division)
         boost::uniform_real<> uniform_real_distribution(lower_interval,lower_interval+division);
-        boost::variate_generator<base_generator_type&, boost::uniform_real<double> > variate_gen(*uniform_generator_struct.rng,uniform_real_distribution);
+        boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_real<double> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_real_distribution);
         random_variates[i] = variate_gen();
         assert( random_variates[i] >= lower_interval && random_variates[i] < lower_interval+division);
         i++;
@@ -591,6 +589,7 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
         
     }
     // Shuffle random_variates randomly. TODO: Use random number generator uniform_int(0,number_of_variates-1) from boost
+    // TODO: random_shuffle dependent on chosen seed!! (atm it uses another seed)
     std::random_shuffle(&random_variates[0],&random_variates[number_of_variates]);
 
     assert( i == number_of_variates);

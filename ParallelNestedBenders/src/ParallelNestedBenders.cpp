@@ -559,7 +559,7 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        //osi_solver_->messageHandler()->setLogLevel(1);
+        //osi_solver_->messageHandler()->setLogLevel(5);
         // Use only one thread per cplex instance (except for the first sage
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -4532,12 +4532,15 @@ namespace parallel_benders {
         if ( integer_problems_[current_stage_] ){
           
             if ( !use_coin ){
-                // 
                 OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
                 if ( cpx_ptr ){
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
+                    // Set MIP options
+                    CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1);
+                    //CPXsetintparam(env_ptr,CPX_PARAM_STARTALG,CPX_ALG_BARRIER); // BARRIER
+                    //CPXsetintparam(env_ptr,CPX_PARAM_SUBALG,CPX_ALG_BARRIER); // BARRIER
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPXMIP_INForUNBD){ // Solve without presolve to determine correct direction!
@@ -4841,6 +4844,23 @@ namespace parallel_benders {
 
             // Apply level decomposition constraint.
             osi_solver->applyRowCuts(1,osi_cut.get());
+
+            if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+                std::stringstream stream;
+                stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << benders_tree_node_pointer->scenario();
+                OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
+                if ( cpx_ptr ){
+                    CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
+                    CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                    //stream << "_C.lp";
+                    //CPXsetintparam(env_ptr,)
+                    console_mutex_.lock();
+                    CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+                    console_mutex_.unlock();
+                }
+                //stream << "osi";
+                //osi_solver->writeLp(stream.str().c_str());
+            } // TODO: Debugging stuff
 
 
             // Solve problem!
