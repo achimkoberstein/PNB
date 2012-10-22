@@ -1,4 +1,4 @@
-//#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
+#define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
 //#define GTEST_USE_OWN_TR1_TUPLE 0
 
 #include <gtest/gtest.h>
@@ -148,8 +148,7 @@ public:
         
 
         delete smi_model; // Get rid of the model, before we actually solve stuff
-        benders_parameter_.init();
-
+        
         //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
@@ -193,18 +192,24 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
                     // Necessary for postponement..
-					benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 
@@ -212,9 +217,13 @@ public:
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
 
@@ -936,6 +945,8 @@ TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values verified with d
 TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
     EXPECT_NEAR(solveSMPS("felt/chem/chem"), -13009.166667, 0.1); 
     // Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers
+    benders_parameter_.init();
+    benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,1); // Relax the second stage integers!
     EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
 }
 
@@ -1080,15 +1091,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
 //    EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
 //}
 
-TEST_F(NestedBendersTest,temporary){// dakota model
-    EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
-//    // Cut Consolidation tests
-    //solveSMPS("postponement/pTest-1296");
 
-    //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
-    //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
-//
-}
 //TEST_F(NestedBendersTest,Postponement){// dakota model
 //    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -5183755359, 10); 
 //}
@@ -1273,6 +1276,16 @@ TEST_F(NestedBendersTest,sample_average_approximation){
     }
 }
 
+TEST_F(NestedBendersTest,temporary){// dakota model
+    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    //    // Cut Consolidation tests
+    //solveSMPS("postponement/pTest-1296");
+
+    //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
+    //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
+    //
+}
+
 
 
 //TODO: Write Tests for right-hand-side with RV and constant term
@@ -1285,7 +1298,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    ::testing::GTEST_FLAG(filter) = "*temporary*";
+    ::testing::GTEST_FLAG(filter) = "*environ*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.pltexp_POSTS*";
 
