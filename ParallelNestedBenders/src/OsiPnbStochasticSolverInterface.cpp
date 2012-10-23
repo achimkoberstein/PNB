@@ -588,11 +588,19 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
             break;
         
     }
-    // Shuffle random_variates randomly. TODO: Use random number generator uniform_int(0,number_of_variates-1) from boost
-    // TODO: random_shuffle dependent on chosen seed!! (atm it uses another seed)
-    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates]);
+    // Shuffle random_variates randomly. 
+    // Invoke Functor to sample from the RNG we use for our other random numbers too.
+    ptrdiff_t (*p_myrandom)(ptrdiff_t) = getRandomNumberFromRNG;
+    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates],p_myrandom);
 
     assert( i == number_of_variates);
     return random_variates;
 }
 
+ptrdiff_t getRandomNumberFromRNG( ptrdiff_t maximal_number )
+{
+    // Sample one variable from [0,maximal_number)
+    boost::uniform_int<> uniform_int_distribution(0,maximal_number);
+    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_int_distribution);
+    return variate_gen();
+}

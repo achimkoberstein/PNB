@@ -86,4 +86,9 @@ double get_random_0_1_variate();
 double * get_random_01_variates(int number_of_variates);
 double * get_latin_hypercube_random_01_variates(int number_of_variates);
 double * get_antithetic_random_01_variates(int number_of_variates);
+
+// call boost rng from std::random_shuffle
+ptrdiff_t getRandomNumberFromRNG(ptrdiff_t maximal_number);
+
+
 #endif // OsiPnbStochasticSolverInterface_h__
