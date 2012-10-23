@@ -19,6 +19,8 @@ struct Uniform01Generator {
     Uniform01Generator();
 };
 
+
+
 int get_random_number_from_system();
 
 double computeSampleVarianceEstimator(int number_of_samples, double* sampled_values, double average);
