@@ -4675,12 +4675,12 @@ namespace parallel_benders {
         if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
             // Remove theta columns from solver, if we reuse it
             int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_; // This indicates if we reuse a solver, apart from initial run.
-            if ( (regularization_ ||level_decomp_ && level_quadratic_new_variables_) && regularized_solution_value_ < infinity_ && current_stage_ == 0)
+            if ( (regularization_ ||level_decomp_ && level_quadratic_new_variables_ || level_decomp_ && level_manhattan_) && regularized_solution_value_ < infinity_ && current_stage_ == 0)
                 cols_to_remove -= stage_pointer->num_columns_;
 
 
             // We only want to remove the theta columns, if they are different in this node from a previous one. This is necessary if we changed aggregation level in this node or if we changed aggregation level during this iteration for nodes at this stage, as we resolve them during the process!
-            if ( cols_to_remove && (benders_node_pointer->changed_aggregation_level_ || stage_data_[current_stage_]->changed_aggregation_level_) && ( current_stage_ > 0 || !seperate_first_stage_solver_ ) ) { 
+            if ( cols_to_remove > 0 && (benders_node_pointer->changed_aggregation_level_ || stage_data_[current_stage_]->changed_aggregation_level_) && ( current_stage_ > 0 || !seperate_first_stage_solver_ ) ) { 
                 std::vector<int> remove_indices;
                 remove_indices.reserve(cols_to_remove);
                 for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
