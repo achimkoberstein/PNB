@@ -89,8 +89,6 @@ private:
 
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
-	void TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme );
-
     void InitializeBendersNodeDataTree(int num_scen_pro_cut);
 
     OsiSolverInterface* GetSolverByThread();
