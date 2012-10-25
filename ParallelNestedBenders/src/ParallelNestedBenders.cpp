@@ -412,6 +412,12 @@ namespace parallel_benders {
             level_manhattan_ = true;
             level_quadratic_new_variables_ = false;
         }
+        if ( algorithm == PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA ){
+            level_decomp_ = true;
+            level_manhattan_ = true;
+            level_quadratic_new_variables_ = false;
+            oda_level_decomp_ = true;
+        }
         oda_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
 
@@ -595,7 +601,6 @@ namespace parallel_benders {
             assert( !non_staircase_stochastic_problem_);
             LOG(INFO)<< "Done.";
         }
-        solve_relaxation_ = 0; // TODO: Remove!
         if ( integer_problems_[0] && solve_relaxation_ == 0 )
             integer_problems_[0] = false;
         for (int i = 1; i < num_stages_;i++){
@@ -916,7 +921,7 @@ namespace parallel_benders {
                 if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
                     LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
-                    for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->num_thetas_; i++){
+                    for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
                     }
                     thread_pool_.wait(0);
@@ -3025,16 +3030,6 @@ namespace parallel_benders {
 
     }
 
-    void ParallelNestedBenders::TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme )
-    {
-        if ( benders_node_pointer->optimality_cuts_.empty() )
-            return; // We are done
-
-        // We have to transform the old row cuts with the new row cuts
-
-        // Find out which thetas we want to aggregate and disaggregate
-    }
-
     void ParallelNestedBenders::InitializeBendersNodeDataTree(int num_scen_pro_cut)
     {
         tree_ = SmiScenarioTree<BendersNodeData*>();
@@ -3987,35 +3982,42 @@ namespace parallel_benders {
     void ParallelNestedBenders::GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number){
         // Find the subnodes needed for this aggregate
         BendersNodeData * benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        if ( aggregate_number >= benders_node_pointer->num_thetas_ )
+        if ( aggregate_number >= benders_node_pointer->oda_aggregates_.size() )
             return;
 
         benders_node_pointer->active_aggregates_;
         int num_columns = stage_data_[current_stage_-1]->num_columns_;
-        std::vector<double> cut_elements(num_columns+1,0.0);
-        std::vector<int> cut_indices(num_columns+1,0);
+
+        std::vector<int>& oda_aggregates(benders_node_pointer->oda_aggregates_[aggregate_number]);
+        int num_aggregates = oda_aggregates.size();
+        std::vector<double> cut_elements(num_columns+num_aggregates,0.0);
+        std::vector<int> cut_indices(num_columns+num_aggregates,0);
         for ( int i = 0; i < num_columns; i++)
             cut_indices[i] = i;
         // Set theta variable index and element
-        cut_indices[num_columns] = aggregate_number+num_columns;
-        cut_elements[num_columns] = 1.0;
+        for (int i = 0; i < num_aggregates; i++){
+            cut_indices[num_columns+i] = num_columns+oda_aggregates[i];
+            cut_elements[num_columns+i] = 1.0;
+        }
 
         double cut_lower_bound = 0.0;
         // For all the indices, that belong to this cut.
-        std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[aggregate_number]);
-        for ( int j = 0; j < nodes_in_cut.size(); j++){
-            boost::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->oda_optimality_cuts_[ oda_chosen_optimality_cut_by_scenario_[nodes_in_cut[j]]]);
-            const double * elements = osi_cut->row().getElements();
-            const int * indices = osi_cut->row().getIndices();
-            for (int k = 0; k < osi_cut->row().getNumElements()-1; k++) // Ignore index of multi-cut theta variable 
-                cut_elements[indices[k]] += elements[k];
-            cut_lower_bound += osi_cut->lb();
+        for ( int k = 0; k < num_aggregates; k++){
+            std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[oda_aggregates[k]]);
+            for ( int j = 0; j < nodes_in_cut.size(); j++){
+                boost::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->oda_optimality_cuts_[ oda_chosen_optimality_cut_by_scenario_[nodes_in_cut[j]]]);
+                const double * elements = osi_cut->row().getElements();
+                const int * indices = osi_cut->row().getIndices();
+                for (int k = 0; k < osi_cut->row().getNumElements()-1; k++) // Ignore index of multi-cut theta variable 
+                    cut_elements[indices[k]] += elements[k];
+                cut_lower_bound += osi_cut->lb();
+            }
         }
         // Add cut to Optimality Cut Set!
         boost::shared_ptr<OsiRowCut> osi_row_cut(new OsiRowCut());
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
-        osi_row_cut->setRow(num_columns+1,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
+        osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
 
         boost::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,osi_row_cut));
 
