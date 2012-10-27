@@ -174,7 +174,7 @@ public:
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-        //aggregates.push_back(0);
+        aggregates.push_back(0);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
 
@@ -192,7 +192,7 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
                     // Necessary for postponement..
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
@@ -202,14 +202,14 @@ public:
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					////benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					////solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 
@@ -220,13 +220,19 @@ public:
 					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
 
 					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
 
+
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+     //               benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+     //               //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,true);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
@@ -1230,7 +1236,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 
     int runs = 1;
     std::map< int, std::pair<int,int> > sample_map;
-    sample_map[0] = make_pair(50,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
+    sample_map[0] = make_pair(10,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
     //sample_map[1] = make_pair(2000,20000);
     //sample_map[2] = make_pair(3000,20000);
     //sample_map[3] = make_pair(5000,20000);
@@ -1283,7 +1289,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
     //    // Cut Consolidation tests
     //solveSMPS("postponement/pTest-1296");
 
@@ -1304,9 +1310,9 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    //::testing::GTEST_FLAG(filter) = "*temporary*";
+    ::testing::GTEST_FLAG(filter) = "*environ*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    ::testing::GTEST_FLAG(filter) = "*.environ*";
+    ::testing::GTEST_FLAG(filter) = "*.temporary*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";

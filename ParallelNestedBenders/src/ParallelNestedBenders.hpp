@@ -89,8 +89,6 @@ private:
 
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
-	void TransformOptimalityCutAggregation( BendersNodeData* benders_node_pointer, const std::vector< std::vector<int> >& new_aggregation_scheme );
-
     void InitializeBendersNodeDataTree(int num_scen_pro_cut);
 
     OsiSolverInterface* GetSolverByThread();
@@ -103,6 +101,7 @@ private:
     void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true);
+    void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
     int getNumRowsProblem();
     int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
@@ -263,6 +262,8 @@ private:
     int enforce_stage_;
 
     bool level_decomp_;
+    bool level_quadratic_new_variables_;
+    bool level_manhattan_;
     // All variables needed for on demand accuracy level decomposition
     bool oda_level_decomp_; // If we actually use On Demand Accuracy Level decomposition
     double oda_lambda_; // 0 < lambda < 1
@@ -280,6 +281,7 @@ private:
     bool warm_up_;
     boost::scoped_array<double> warm_up_solution_;
     boost::scoped_array<double> regularized_solution_;
+    bool regularized_update_incumbent_;
 
     // Stage Aggreagtion
     bool stage_aggregation_;

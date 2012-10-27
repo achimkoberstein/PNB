@@ -13,10 +13,10 @@
 #endif
 //Linux: Call /dev/urandom to generate a seed
 
-Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
+parallel_benders::Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
 }
 
-int get_random_number_from_system()
+int parallel_benders::get_random_number_from_system()
 {
     
 #ifdef _MSC_VER
@@ -46,7 +46,7 @@ int get_random_number_from_system()
 #endif
 }
 
-double computeSymmetricConfidenceInterval( int number_of_batches, double alpha, double variance )
+double parallel_benders::computeSymmetricConfidenceInterval( int number_of_batches, double alpha, double variance )
 {
     assert( number_of_batches > 1);
     assert(alpha > 0 && alpha < 1);
@@ -54,7 +54,7 @@ double computeSymmetricConfidenceInterval( int number_of_batches, double alpha, 
     return quantile(students_t,1-alpha/2.0)*(std::sqrt(variance/(number_of_batches)) );
 }
 
-double computeSampleVarianceEstimator( int number_of_samples, double* sampled_values, double average )
+double parallel_benders::computeSampleVarianceEstimator( int number_of_samples, double* sampled_values, double average )
 {
     assert( number_of_samples > 1);
     double sum = 0;
