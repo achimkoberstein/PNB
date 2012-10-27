@@ -95,6 +95,8 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_LEVEL_ODA = 4;
     const int PNB_INT_ALGORITHM_BENDERS_ODA = 5;
     const int PNB_INT_ALGORITHM_REGULARIZATION_ODA = 6;
+    const int PNB_INT_ALGORITHM_LEVEL_MANHATTAN = 7;
+    const int PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA = 8;
 
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
@@ -209,6 +211,8 @@ public:
     int num_scen_pro_cut_;
     // We should store a vector of bitsets, needs less memory // TODO
     std::vector< std::vector<int> > nodes_in_cut_; // Stores which subnodes of current node are aggregated to a cut.
+
+    std::vector< std::vector<int> > oda_aggregates_;
 
 	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
 	bool changed_aggregation_level_;

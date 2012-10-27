@@ -6,12 +6,12 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="../../../../ThirdParty/cplex/cplex123/include;../../../../ThirdParty/cplex/cplex123/include/ilcplex;../../../../ThirdParty/gurobi/gurobi501/include"
+		AdditionalIncludeDirectories="../../../../ThirdParty/cplex/cplex124/include;../../../../ThirdParty/cplex/cplex124/include/ilcplex;../../../../ThirdParty/gurobi/gurobi501/include"
 		PreprocessorDefinitions="IL_STD"
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="cplex123.lib gurobi50.lib"
-		AdditionalLibraryDirectories="../../../../ThirdParty/cplex/cplex123/lib/x86;../../../../ThirdParty/gurobi/gurobi501/win32/lib/"
+		AdditionalDependencies="cplex124.lib gurobi50.lib"
+		AdditionalLibraryDirectories="../../../../ThirdParty/cplex/cplex124/lib/x86;../../../../ThirdParty/gurobi/gurobi501/win32/lib/"
 	/>
 </VisualStudioPropertySheet>
