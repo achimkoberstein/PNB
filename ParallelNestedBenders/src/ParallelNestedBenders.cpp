@@ -4988,9 +4988,8 @@ namespace parallel_benders {
 
         // We really want to set the warm_start
         assert(benders_tree_node_pointer->getDataPtr()->warm_start_added_ == false);
-        //SetWarmStart(osi_solver,benders_tree_node_pointer);
 
-        // Remove the old optimality cuts first!
+        // Remove all the cuts from the last iteration, so we get back the problem to which we can apply our warmstart!
         if ( benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end()){
             // Get distance
             int num_cuts = std::distance(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_,benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end());
@@ -5002,67 +5001,42 @@ namespace parallel_benders {
             }
             osi_solver->deleteRows(num_cuts,&cut_indices[0]);
         }
+
         // Apply level decomposition constraint.
         osi_solver->applyRowCuts(1,osi_cut.get());
-
         int level_row_index = osi_solver->getNumRows()-1;
 
         // Now problem is exactly as it was before the added optimality cuts!
-        if ( cpx_ptr != NULL){
-            CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+        if ( level_manhattan_ ){
+            if ( cpx_ptr != NULL){
+                CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+            }
         }
+        else {
+            osi_solver->setWarmStart(level_warm_start_.get());
+        }
+                
+       
 
-        // Readd the optimality cuts we deleted earlier
+        // Add the optimality cuts we deleted earlier
         for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();++it)
-            osi_solver->applyRowCuts(1,(*it)->cut_.get());
-
-//        // We need to modify the warm start!
-//        CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(level_warm_start_.get());
-//        if ( warm_start_basis != NULL){
-//            std::vector<CoinWarmStartBasis::Status> status_array;
-//            int num_rows = osi_solver->getNumRows();
-//            int num_artif = warm_start_basis->getNumArtificial();
-//            // Difference between num_rows and num_artif is the number of new optimality cuts or feasibility cuts.
-//            int num_struct = warm_start_basis->getNumStructural();
-//            CoinWarmStartBasis::Status additional_row = warm_start_basis->getArtifStatus(num_artif-1);
-//            
-//
-//            // We only need to look at the artifical variables (the slack variables for the rows)
-//            // Can be BASIC or AT_LOWER
-//            warm_start_basis->resize(num_rows,osi_solver->getNumCols()); // We need to add the newly added rows! All these are basic!
-//            for (int i = num_artif-1; i < num_rows-1; i++){
-//                warm_start_basis->setArtifStatus(i,CoinWarmStartBasis::Status::basic);
-//            }
-//            warm_start_basis->setArtifStatus(num_rows-1,additional_row);
-//            
-///*            for (int i = 0; i < num_cuts;i++){
-//                status_array.push_back(warm_start_basis->getArtifStatus(i+optimality_cut_start));
-//            }
-//            warm_start_basis->deleteRows(num_cuts,&optimality_cuts_to_delete[0]);
-//            warm_start_basis->resize(number_of_rows_without_opt_cuts+num_cuts,osi_solver->getNumCols());
-//            for (int i = 0; i < num_cuts;i++){
-//                warm_start_basis->setArtifStatus(i+number_of_rows_without_opt_cuts,status_array[i]);
-//            }        */        
-//            osi_solver->setWarmStart(warm_start_basis);
-//            // Resolve the problem is done in the typical way, outside the scope of this method!
-//        }
+                osi_solver->applyRowCuts(1,(*it)->cut_.get());
 
 
-
-        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
+         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
 
         // Solve problem!
         //CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
         osi_solver->messageHandler()->setLogLevel(1);
         SolveSolverInterface(osi_solver,false);
 
-        // Get the warm start and store it for the next iteration!
+        // Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
         level_warm_start_.reset(osi_solver->getWarmStart());
-        if ( cpx_ptr != NULL){
+        if ( cpx_ptr != NULL && level_manhattan_){
             level_cstat2_.reset(new int[osi_solver->getNumCols()]);
             level_rstat2_.reset(new int[osi_solver->getNumRows()]);
             level_dnorm2_.reset(new double[osi_solver->getNumRows()]);
-            CPXgetbasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+            cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
             // Now we need to switch the entries of the new optimality cuts with the extra row 
             int num_current_rows = osi_solver->getNumRows();
             int temp_rstat = level_rstat2_[level_row_index];
@@ -5074,7 +5048,18 @@ namespace parallel_benders {
             level_rstat2_[num_current_rows-1] = temp_rstat;
             level_dnorm2_[num_current_rows-1] = temp_dnorm;
         }
-
+        if ( !level_manhattan_ ){// We need to restructure the warm start in the same way
+            // We need to modify the warm start!
+            CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(level_warm_start_.get());
+            if ( warm_start_basis != NULL){
+                int num_current_rows = osi_solver->getNumRows();
+                CoinWarmStartBasis::Status temp_stat = warm_start_basis->getArtifStatus(level_row_index);
+                for (int i = level_row_index; i < num_current_rows-1; i++){
+                    warm_start_basis->setArtifStatus(i,warm_start_basis->getArtifStatus(i+1));
+                }
+                warm_start_basis->setArtifStatus(num_current_rows-1,temp_stat);
+            }
+        }
 
         // Store column solution and theta solution
         StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
@@ -5095,9 +5080,9 @@ namespace parallel_benders {
 
         if ( oda_level_decomp_ )
             oda_first_stage_ = solution;
-        for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
-            solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
-        LOG(INFO) << "Level problem solution x+theta " << solution;
+        //for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
+        //    solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+        //LOG(INFO) << "Level problem solution x+theta " << solution;
         //LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
 
 
