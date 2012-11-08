@@ -264,6 +264,14 @@ private:
     bool level_decomp_;
     bool level_quadratic_new_variables_;
     bool level_manhattan_;
+    boost::scoped_array<int> level_cstat_;
+    boost::scoped_array<int> level_rstat_;
+    boost::scoped_array<double> level_dnorm_;
+    boost::scoped_array<int> level_cstat2_;
+    boost::scoped_array<int> level_rstat2_;
+    boost::scoped_array<double> level_dnorm2_;
+    boost::shared_ptr<CoinWarmStart> level_warm_start_;
+    
     // All variables needed for on demand accuracy level decomposition
     bool oda_level_decomp_; // If we actually use On Demand Accuracy Level decomposition
     double oda_lambda_; // 0 < lambda < 1
