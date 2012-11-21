@@ -42,7 +42,7 @@ public:
     const parallel_benders::Timer& getTimer() const;
 
     SmiScnModel* getSmiModel();
-
+    int getNumInsubstantialIterations();
 
 private:
     parallel_benders::ParallelNestedBenders* nested_benders_;
