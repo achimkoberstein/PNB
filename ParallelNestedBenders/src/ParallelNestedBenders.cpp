@@ -283,7 +283,7 @@ namespace parallel_benders {
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
+        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
@@ -699,7 +699,7 @@ namespace parallel_benders {
                 not_stop_loop = lower_bound_ < upper_bound_ &&
                 std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
                 RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
-                current_iteration_ < max_iteration_ &&
+                current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else
             {
@@ -931,6 +931,8 @@ namespace parallel_benders {
                     timer_.Stop(current_stage_);
                     current_stage_--; 
                     assert(current_stage_ == 0);
+                    insubstantial_iteration_++;
+                    major_iteration_--; // We accidentaly incremented the major_iteration counter!
                     continue; // Skip the rest of the loop (we go to the first stage)
                 }
             }
@@ -1333,6 +1335,8 @@ namespace parallel_benders {
         std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
         std::cout << "Major Iterations: " << major_iteration_ << std::endl;
         std::cout << "Overall Iterations: " << current_iteration_ << std::endl;
+        if ( insubstantial_iteration_ > 0)
+            std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << std::endl;
         int cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
             cut_counter += added_optimality_cuts_[i];
@@ -1360,7 +1364,7 @@ namespace parallel_benders {
 
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
-        LOG_IF(WARNING,current_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
+        LOG_IF(WARNING,current_iteration_-insubstantial_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
         LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
         LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
         LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
@@ -5932,7 +5936,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")

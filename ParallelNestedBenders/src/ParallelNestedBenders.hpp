@@ -153,6 +153,7 @@ private:
 
     // Solution process
     int current_iteration_;
+    int insubstantial_iteration_;
     const int max_iteration_;
     int minor_iteration_;
     int major_iteration_;
