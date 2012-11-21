@@ -187,10 +187,10 @@ public:
     int num_thetas_; // How many aggregates do we have at this node
     boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
     CoinWarmStart* warm_start_;
-    boost::scoped_ptr<int> warm_start_cstat_;
-    boost::scoped_ptr<int> warm_start_rstat_;
-    boost::scoped_ptr<double> warm_start_dnorm_;
-    bool warm_start_added_;
+    //boost::scoped_ptr<int> warm_start_cstat_;
+    //boost::scoped_ptr<int> warm_start_rstat_;
+    //boost::scoped_ptr<double> warm_start_dnorm_;
+    bool warm_start_added_; // Did we already added a warm start to a problem? Gets reset by a call to StoreWarmStart!
 
     SmiNodeData* smi_node_data_;
     int scenario_index_;
@@ -278,6 +278,7 @@ struct BendersStageData {
     std::vector<int> row_indices_;
     // Coin Warm Start object
     CoinWarmStart* warm_start_;
+    bool problem_was_solved_in_this_iteration_;
 
 	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 
 
@@ -301,7 +302,7 @@ struct BendersStageData {
     bool solve_binary_subproblems_;
 
     // MIP warm start and mip handling
-    std::vector<double> mip_solution_;
+    std::vector<std::vector<double> > mip_solution_;
     std::vector<char> coltype_array_;
 
     
