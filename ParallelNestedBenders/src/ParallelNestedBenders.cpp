@@ -283,7 +283,7 @@ namespace parallel_benders {
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
-        current_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
+        current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
         current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
@@ -699,7 +699,7 @@ namespace parallel_benders {
                 not_stop_loop = lower_bound_ < upper_bound_ &&
                 std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
                 RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
-                current_iteration_ < max_iteration_ &&
+                current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else
             {
@@ -750,6 +750,8 @@ namespace parallel_benders {
             }
             wall_clock_solution_time_.Start(0);
             timer_.Start(current_stage_);
+            // Reset warm start indicator
+            stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = false;
             if ( upper_bound_ < lower_bound_ ){
                 if ( !regularization_)
                     LOG(INFO) << "Upper Bound is lower than lower Bound. Iteration: " << current_iteration_;
@@ -929,6 +931,8 @@ namespace parallel_benders {
                     timer_.Stop(current_stage_);
                     current_stage_--; 
                     assert(current_stage_ == 0);
+                    insubstantial_iteration_++;
+                    major_iteration_--; // We accidentaly incremented the major_iteration counter!
                     continue; // Skip the rest of the loop (we go to the first stage)
                 }
             }
@@ -1331,6 +1335,8 @@ namespace parallel_benders {
         std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
         std::cout << "Major Iterations: " << major_iteration_ << std::endl;
         std::cout << "Overall Iterations: " << current_iteration_ << std::endl;
+        if ( insubstantial_iteration_ > 0)
+            std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << std::endl;
         int cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
             cut_counter += added_optimality_cuts_[i];
@@ -1358,7 +1364,7 @@ namespace parallel_benders {
 
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
-        LOG_IF(WARNING,current_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
+        LOG_IF(WARNING,current_iteration_-insubstantial_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
         LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
         LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
         LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
@@ -2844,7 +2850,7 @@ namespace parallel_benders {
             // Add the cuts
             if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
                 feas_it = benders_node_pointer->last_iteration_start_feasibility_;
-                benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
+                //benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
             }
             // TODO: This can be changed to addRows
             for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
@@ -2869,7 +2875,7 @@ namespace parallel_benders {
             if ( seperate_first_stage_solver_ &&  current_stage_ == 0 ){
                 if (benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
                     it = benders_node_pointer->last_iteration_start_optimality_;
-                    benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
+                    //benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
                 }
                 else
                     it = benders_node_pointer->optimality_cuts_.end();
@@ -2884,6 +2890,17 @@ namespace parallel_benders {
                     // Add warm start
                     SetWarmStart(osi_solver,benders_tree_node_pointer);
                     benders_node_pointer->warm_start_added_ = true;
+                    // When you got level decomposition, we use the same problem, so we might want to store/restore the dual norms!
+                    // Works only with cplex
+                    if ( level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false){
+                        OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+                        if ( osi_cpx != NULL ){
+                            CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+                            CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                            CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+                        }
+
+                    }
                 }
                 if ( (*it)->to_use_ ){
                     assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
@@ -3235,6 +3252,8 @@ namespace parallel_benders {
 
         delete [] benders_node_pointer->row_upper_; benders_node_pointer->row_upper_ = NULL;
         delete [] benders_node_pointer->row_lower_; benders_node_pointer->row_lower_ = NULL;
+
+        benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
     }
 
     void ParallelNestedBenders::findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut )
@@ -4124,18 +4143,17 @@ namespace parallel_benders {
         if ( !integer_problems_[current_stage_] ){
             if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){ // We add a warm_start if configured and first stage solver is not seperate!
                 if ( warm_start_scenarios_ ){
-                    if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ) // If we have a warm start object, we tell the solver to use it
+                    if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ){ // If we have a warm start object, we tell the solver to use it
                         osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
+                    }
                     else{
-                        stage_warm_start_mutex_.lock(); 
+                        boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
                         osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
-                        stage_warm_start_mutex_.unlock();
                     }
                 }
                 else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
-                    stage_warm_start_mutex_.lock(); 
+                    boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
                     osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
-                    stage_warm_start_mutex_.unlock();
                 }
             }
         }//Integer problems. No Warm start for MIP problems, but we need to set an incumbent solution!
@@ -4143,17 +4161,24 @@ namespace parallel_benders {
             // Set incumbent of last solution?
             if ( warm_start_ && !benders_tree_node_pointer->getDataPtr()->warm_start_added_ ){
                 double* mip_solution = NULL;
+                boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
                 if ( warm_start_scenarios_ ){
                     mip_solution = benders_tree_node_pointer->getDataPtr()->mip_solution_.get();
-                    if ( mip_solution == NULL)
-                        return;
+                    if ( mip_solution == NULL){
+                        // Try to take the solution wise solution
+                        if ( !stage_data_[current_stage_]->mip_solution_.empty() )
+                            mip_solution = &stage_data_[current_stage_]->mip_solution_[0][0];
+
+                    }
                 }
                 else if (  warm_start_stage_ ){
-                    if ( stage_data_[current_stage_]->mip_solution_.empty() )
-                        return;
-                    mip_solution = &stage_data_[current_stage_]->mip_solution_[0];
+                    if ( !stage_data_[current_stage_]->mip_solution_.empty() )
+                        mip_solution = &stage_data_[current_stage_]->mip_solution_[0][0];
                 }
+                if ( mip_solution == NULL)
+                    return;
 
+                
                 // Get solution of first stage node?
                 OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
                 if ( osi_cpx != NULL ){
@@ -4163,12 +4188,12 @@ namespace parallel_benders {
                     int num_mipstarts = 1; // We only add one mipstart
                     int begin_mipstarts = 0; // First mipstart starts at location 0
                     const int effortlevel_mipstarts = 0; // CPLEX decides
-                    if ( warm_start_stage_ )
-                        stage_warm_start_mutex_.lock();
                     int err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],mip_solution,&effortlevel_mipstarts,NULL);
-                    LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
-                    if ( warm_start_stage_ )
-                        stage_warm_start_mutex_.unlock();
+                    for (int i = 1; i < stage_data_[current_stage_]->mip_solution_.size(); i++){
+                        mip_solution = &stage_data_[current_stage_]->mip_solution_[i][0];
+                        int err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],mip_solution,&effortlevel_mipstarts,NULL);
+                        LOG_IF(INFO,err != 0) << "CPXcopymipstart returned with " << err;
+                    }
                 } // End OsiCpx
             } // End If WarmStartAdded
         } // End Else
@@ -4178,21 +4203,20 @@ namespace parallel_benders {
     {
         if ( warm_start_ && osi_solver->optimalBasisIsAvailable() && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){ // Store WarmStart Information, otherwise we reuse the old one..
             if ( warm_start_scenarios_ ){
-                if ( benders_tree_node_pointer->scenario() == 0 && benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL ){
-                    stage_warm_start_mutex_.lock();
+                if ( benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL && !stage_data_[current_stage_]->problem_was_solved_in_this_iteration_){
+                    boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
                     delete stage_data_[current_stage_]->warm_start_;
                     stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
-                    stage_warm_start_mutex_.unlock();
                 }
                 delete benders_tree_node_pointer->getDataPtr()->warm_start_;
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
+                stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = true;
             }
             else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){
                 // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
-                stage_warm_start_mutex_.lock();
+                boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
                 delete stage_data_[current_stage_]->warm_start_;
                 stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
-                stage_warm_start_mutex_.unlock();
             }
         }
         else if ( warm_start_ && integer_problems_[current_stage_] && osi_solver->isProvenOptimal() ){
@@ -4205,16 +4229,30 @@ namespace parallel_benders {
                 std::copy(col_solution,col_solution+stage_data_[current_stage_]->num_columns_,benders_tree_node_pointer->getDataPtr()->mip_solution_.get());
             }
             
-            if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0){
-                stage_warm_start_mutex_.lock();
-                if ( stage_data_[current_stage_]->mip_solution_.empty() ){
-                    stage_data_[current_stage_]->mip_solution_.resize(stage_data_[current_stage_]->num_columns_,0.0);                   
-                }
-                std::copy(col_solution,col_solution+stage_data_[current_stage_]->num_columns_,stage_data_[current_stage_]->mip_solution_.begin());
-                stage_warm_start_mutex_.unlock();
+            if ( (warm_start_stage_ || (warm_start_scenarios_ ) )){//&& stage_data_[current_stage_]->mip_solution_.empty() ) ) && !stage_data_[current_stage_]->problem_was_solved_in_this_iteration_){
+                boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
+                //if ( stage_data_[current_stage_]->mip_solution_.empty() ){
+                stage_data_[current_stage_]->mip_solution_.push_back(std::vector<double>());
+                stage_data_[current_stage_]->mip_solution_.back().resize(stage_data_[current_stage_]->num_columns_,0.0);                   
+                //}
+                std::copy(col_solution,col_solution+stage_data_[current_stage_]->num_columns_,stage_data_[current_stage_]->mip_solution_.back().begin());
+                stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = true;
             }
         }
         benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
+        if ( current_stage_ == 0 && level_decomp_ && integer_problems_[current_stage_] == false){
+            // Store warm start for first stage
+            OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
+            if ( osi_cpx != NULL ){
+                CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+                CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+                level_cstat_.reset(new int[osi_cpx->getNumCols()]);
+                level_rstat_.reset(new int[osi_cpx->getNumRows()]);
+                level_dnorm_.reset(new double[osi_cpx->getNumRows()]);
+                CPXgetbasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+
+            }
+        }
     }
 
     int ParallelNestedBenders::GetNumberOfAggregatesFromCut( boost::shared_ptr<CutStuff>& cut )
@@ -4424,7 +4462,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
     {
         // Silence solver 
-        osi_solver->messageHandler()->setLogLevel(0);
+        osi_solver->messageHandler()->setLogLevel(0); // Log nothing
         osi_solver->setHintParam(OsiDoPresolveInInitial,true); // FIXME: Set to true again after testing is done!
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX ){
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
@@ -4446,10 +4484,14 @@ namespace parallel_benders {
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
             // Use only one thread per cplex instance (except for the first sage solver)
-            if ( osi_solver != osi_solver_)
-                CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1);
+            if ( osi_solver != osi_solver_){
+                CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
+                CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.5);
+            }
             // Set markowitz threshold high for better accuracy 
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
+            //CPXsetintparam(env_ptr,CPX_PARAM_SCRIND,CPX_ON);
+
         }
         // We need gurobi options, just in case..
         //OsiGrbSolverInterface* grb_ptr = dynamic_cast<OsiGrbSolverInterface*>(osi_solver);
@@ -4587,6 +4629,7 @@ namespace parallel_benders {
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPXMIP_INForUNBD){ // Solve without presolve to determine correct direction!
+                        LOG(WARNING) << "We need to resolve the problem, because it is either unbounded or infeasible.";
                         CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
                         // Discard presolve information by changing objective Sense
                         int objsen = CPXgetobjsen(env_ptr, lp_ptr);
@@ -4970,16 +5013,78 @@ namespace parallel_benders {
 
         // We really want to set the warm_start
         assert(benders_tree_node_pointer->getDataPtr()->warm_start_added_ == false);
-        SetWarmStart(osi_solver,benders_tree_node_pointer);
+
+        // Remove all the cuts from the last iteration, so we get back the problem to which we can apply our warmstart!
+        if ( benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_ != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end()){
+            // Get distance
+            int num_cuts = std::distance(benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_,benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end());
+            int num_rows = osi_solver->getNumRows();
+            std::vector<int> cut_indices;
+            cut_indices.reserve(num_cuts);
+            for (int i = 0; i < num_cuts; i++){
+                cut_indices.push_back(num_rows-num_cuts+i);
+            }
+            osi_solver->deleteRows(num_cuts,&cut_indices[0]);
+        }
 
         // Apply level decomposition constraint.
         osi_solver->applyRowCuts(1,osi_cut.get());
+        int level_row_index = osi_solver->getNumRows()-1;
 
-        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
+        // Now problem is exactly as it was before the added optimality cuts!
+        if ( level_manhattan_ ){
+            if ( cpx_ptr != NULL){
+                CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+            }
+        }
+        else {
+            osi_solver->setWarmStart(level_warm_start_.get());
+        }
+                
+       
+
+        // Add the optimality cuts we deleted earlier
+        for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();++it)
+                osi_solver->applyRowCuts(1,(*it)->cut_.get());
+
+
+         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
 
         // Solve problem!
         //CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
+        osi_solver->messageHandler()->setLogLevel(1);
         SolveSolverInterface(osi_solver,false);
+
+        // Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
+        level_warm_start_.reset(osi_solver->getWarmStart());
+        if ( cpx_ptr != NULL && level_manhattan_){
+            level_cstat2_.reset(new int[osi_solver->getNumCols()]);
+            level_rstat2_.reset(new int[osi_solver->getNumRows()]);
+            level_dnorm2_.reset(new double[osi_solver->getNumRows()]);
+            cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+            // Now we need to switch the entries of the new optimality cuts with the extra row 
+            int num_current_rows = osi_solver->getNumRows();
+            int temp_rstat = level_rstat2_[level_row_index];
+            double temp_dnorm = level_dnorm2_[level_row_index];
+            for (int i = level_row_index; i < num_current_rows-1; i++){
+                level_rstat2_[i] = level_rstat2_[i+1];
+                level_dnorm2_[i] = level_dnorm2_[i+1];
+            }
+            level_rstat2_[num_current_rows-1] = temp_rstat;
+            level_dnorm2_[num_current_rows-1] = temp_dnorm;
+        }
+        if ( !level_manhattan_ ){// We need to restructure the warm start in the same way
+            // We need to modify the warm start!
+            CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(level_warm_start_.get());
+            if ( warm_start_basis != NULL){
+                int num_current_rows = osi_solver->getNumRows();
+                CoinWarmStartBasis::Status temp_stat = warm_start_basis->getArtifStatus(level_row_index);
+                for (int i = level_row_index; i < num_current_rows-1; i++){
+                    warm_start_basis->setArtifStatus(i,warm_start_basis->getArtifStatus(i+1));
+                }
+                warm_start_basis->setArtifStatus(num_current_rows-1,temp_stat);
+            }
+        }
 
         // Store column solution and theta solution
         StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
@@ -5000,9 +5105,9 @@ namespace parallel_benders {
 
         if ( oda_level_decomp_ )
             oda_first_stage_ = solution;
-        for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
-            solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
-        LOG(INFO) << "Level problem solution x+theta " << solution;
+        //for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
+        //    solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
+        //LOG(INFO) << "Level problem solution x+theta " << solution;
         //LOG(INFO) << "Level problem objective " << osi_solver->getObjValue();
 
 
@@ -5013,8 +5118,7 @@ namespace parallel_benders {
         }
 
         // Remove row constraint and quadratic objective function afterwards!
-        int row_number = osi_solver->getNumRows()-1;
-        osi_solver->deleteRows(1,&row_number);
+        osi_solver->deleteRows(1,&level_row_index);
 
         // Reset original objective function
         if ( level_manhattan_ )

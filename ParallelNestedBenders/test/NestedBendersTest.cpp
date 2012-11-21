@@ -393,7 +393,7 @@ protected:
 		std::stringstream s;
 		// Header line of File should be this one
 		// We need to write the header line for this file
-		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; Insubstantial Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
         s << "Created Optimality Cuts; Created Feasibility Cuts; ";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
@@ -516,7 +516,7 @@ protected:
             log_file.open(log_file_name.c_str(),ios::app | ios::out);
         }
         // Write solution line
-        s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+        s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << ";" << nested_benders.getNumInsubstantialIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
         // Write num cuts
         s << created_opt_cuts << ";" << created_feas_cuts << ";";
 		// Write parameter values

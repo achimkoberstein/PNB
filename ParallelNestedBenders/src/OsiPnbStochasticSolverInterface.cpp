@@ -39,6 +39,10 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations()
 {
     return nested_benders_->current_iteration_;
 }
+int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations()
+{
+    return nested_benders_->insubstantial_iteration_;
+}
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){

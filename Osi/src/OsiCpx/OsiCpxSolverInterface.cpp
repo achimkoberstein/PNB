@@ -283,8 +283,8 @@ void OsiCpxSolverInterface::initialSolve()
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  else
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+  //else
+  //   CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
@@ -535,8 +535,8 @@ void OsiCpxSolverInterface::branchAndBound()
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  else
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+  //else
+  //   CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_MIPDISPLAY, 0 );
@@ -875,12 +875,12 @@ CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
   int numrows = getNumRows();
   int *cstat = new int[numcols];
   int *rstat = new int[numrows];
-  char* sense = new char[numrows];
+  //char* sense = new char[numrows];
   int restat, i;
 
-  restat = CPXgetsense(env_, getMutableLpPtr(), sense, 0, numrows-1);
-  if( restat == 0 )
-    restat = CPXgetbase( env_, getMutableLpPtr(), cstat, rstat );
+  //restat = CPXgetsense(env_, getMutableLpPtr(), sense, 0, numrows-1);
+  //if( restat == 0 )
+  restat = CPXgetbase( env_, getMutableLpPtr(), cstat, rstat );
   if( restat == 0 )
   {
      ws = new CoinWarmStartBasis;
@@ -894,15 +894,15 @@ CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
               ws->setArtifStatus( i, CoinWarmStartBasis::basic );
               break;
            case CPX_AT_LOWER:
-              if(sense[i] == 'G')
-                 ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
-              else
+              //if(sense[i] == 'G')
+              //   ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
+              //else
                  ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
               break;
            case CPX_AT_UPPER:
-              if(sense[i] == 'L')
-                 ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
-              else
+              //if(sense[i] == 'L')
+              //   ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
+              //else
                  ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
               break;
            default:  // unknown row status
@@ -938,7 +938,7 @@ CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
 TERMINATE:
   delete[] cstat;
   delete[] rstat;
-  delete[] sense;
+  //delete[] sense;
 
   return ws;
 }
