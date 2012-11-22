@@ -202,16 +202,32 @@ public:
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
      //               benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-					//benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.99);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.8);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.6);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.4);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.2);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.01);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					////benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
 
