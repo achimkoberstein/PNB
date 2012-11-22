@@ -133,7 +133,6 @@ column_indices_(0),row_indices_(0),warm_start_(NULL),problem_was_solved_in_this_
 
 BendersStageData::~BendersStageData()
 {
-    delete warm_start_;
 }
 
 RowOrderedSparseMatrix::RowOrderedSparseMatrix(const std::vector<double>& elements, const std::vector<int>& indices, const std::vector<int>& start):
