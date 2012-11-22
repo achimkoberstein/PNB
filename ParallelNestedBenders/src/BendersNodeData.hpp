@@ -277,7 +277,7 @@ struct BendersStageData {
     std::vector<int> column_indices_;
     std::vector<int> row_indices_;
     // Coin Warm Start object
-    CoinWarmStart* warm_start_;
+    boost::scoped_ptr<CoinWarmStart> warm_start_;
     bool problem_was_solved_in_this_iteration_;
 
 	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 
