@@ -509,7 +509,7 @@ namespace parallel_benders {
             stage_data_.push_back(new BendersStageData);
             // Set empty warm start object
             if ( warm_start_ && warm_start_stage_ )
-                stage_data_.back()->warm_start_ = osi_solver_->getEmptyWarmStart();
+                stage_data_.back()->warm_start_.reset(osi_solver_->getEmptyWarmStart());
             // Set number of thetas per stage, if we want to do it statically
             stage_data_.back()->num_thetas_ = num_theta;
         }
@@ -4139,12 +4139,12 @@ namespace parallel_benders {
                     }
                     else{
                         boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
-                        osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                        osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_.get());
                     }
                 }
                 else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
                     boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
-                    osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_);
+                    osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_.get());
                 }
             }
         }//Integer problems. No Warm start for MIP problems, but we need to set an incumbent solution!
@@ -4196,8 +4196,7 @@ namespace parallel_benders {
             if ( warm_start_scenarios_ ){
                 if ( benders_tree_node_pointer->getDataPtr()->warm_start_ == NULL && !stage_data_[current_stage_]->problem_was_solved_in_this_iteration_){
                     boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
-                    delete stage_data_[current_stage_]->warm_start_;
-                    stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                    stage_data_[current_stage_]->warm_start_.reset(osi_solver->getWarmStart());
                 }
                 delete benders_tree_node_pointer->getDataPtr()->warm_start_;
                 benders_tree_node_pointer->getDataPtr()->warm_start_ = osi_solver->getWarmStart();
@@ -4206,8 +4205,7 @@ namespace parallel_benders {
             else if ( warm_start_stage_ && benders_tree_node_pointer->scenario() == 0 && ( current_stage_ > 0 || !seperate_first_stage_solver_ || level_decomp_)){
                 // We only generate a warm start for the first scenario and use it then for all the problems. Needs mutex
                 boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
-                delete stage_data_[current_stage_]->warm_start_;
-                stage_data_[current_stage_]->warm_start_ = osi_solver->getWarmStart();
+                stage_data_[current_stage_]->warm_start_.reset(osi_solver->getWarmStart());
             }
         }
         else if ( warm_start_ && integer_problems_[current_stage_] && osi_solver->isProvenOptimal() ){
@@ -5023,7 +5021,7 @@ namespace parallel_benders {
         int level_row_index = osi_solver->getNumRows()-1;
 
         // Now problem is exactly as it was before the added optimality cuts!
-        if ( level_manhattan_ ){
+        if ( level_manhattan_ && integer_problems_[current_stage_] == false){
             if ( cpx_ptr != NULL){
                 CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
             }
@@ -5039,16 +5037,13 @@ namespace parallel_benders {
                 osi_solver->applyRowCuts(1,(*it)->cut_.get());
 
 
-         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
+        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
 
-        // Solve problem!
-        //CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
-        osi_solver->messageHandler()->setLogLevel(1);
         SolveSolverInterface(osi_solver,false);
 
         // Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
         level_warm_start_.reset(osi_solver->getWarmStart());
-        if ( cpx_ptr != NULL && level_manhattan_){
+        if ( cpx_ptr != NULL && level_manhattan_ && integer_problems_[current_stage_] == false){
             level_cstat2_.reset(new int[osi_solver->getNumCols()]);
             level_rstat2_.reset(new int[osi_solver->getNumRows()]);
             level_dnorm2_.reset(new double[osi_solver->getNumRows()]);
@@ -5064,7 +5059,7 @@ namespace parallel_benders {
             level_rstat2_[num_current_rows-1] = temp_rstat;
             level_dnorm2_[num_current_rows-1] = temp_dnorm;
         }
-        if ( !level_manhattan_ ){// We need to restructure the warm start in the same way
+        if ( !level_manhattan_ && integer_problems_[current_stage_] == false){// We need to restructure the warm start in the same way
             // We need to modify the warm start!
             CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(level_warm_start_.get());
             if ( warm_start_basis != NULL){
