@@ -1472,6 +1472,7 @@ namespace parallel_benders {
                         // we bound all thetas with one extra row?
                         // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
                         osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
+						PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"adjusted");
                         // We need to remove this row again, when we finished everything with this problem!
                         benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
                         benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
@@ -2850,7 +2851,7 @@ namespace parallel_benders {
             // Add the cuts
             if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
                 feas_it = benders_node_pointer->last_iteration_start_feasibility_;
-                //benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
+                benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
             }
             // TODO: This can be changed to addRows
             for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
@@ -2925,7 +2926,7 @@ namespace parallel_benders {
                 new_feas_cuts++;
             }
             // Now we have the problem with all cuts, that we can solve right now! (with applied warm start)
-            SolveSubproblem(osi_solver,benders_tree_node_pointer);
+            SolveSolverInterface(osi_solver,benders_tree_node_pointer);
             // Store the warm start
             seperate_first_stage_solver_ = false;
             StoreWarmStart(osi_solver,benders_tree_node_pointer);
@@ -5940,7 +5941,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")

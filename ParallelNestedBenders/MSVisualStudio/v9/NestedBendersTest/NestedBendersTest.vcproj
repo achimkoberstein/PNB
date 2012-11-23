@@ -137,7 +137,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalLibraryDirectories="../../../../ThirdParty/boost/stage/lib64"
-				GenerateManifest="false"
+				GenerateManifest="true"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
 			/>
