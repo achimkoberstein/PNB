@@ -274,7 +274,7 @@ private:
     boost::shared_ptr<CoinWarmStart> level_warm_start_;
     
     // All variables needed for on demand accuracy level decomposition
-    bool oda_level_decomp_; // If we actually use On Demand Accuracy Level decomposition
+    bool oda_method_; // If we actually use On Demand Accuracy Level decomposition
     double oda_lambda_; // 0 < lambda < 1
     double oda_kappa_; // 0 < kappa < (1-lambda)^2
     double oda_gap_; // Gap between oda_lower_ and oda_upper_ (absolute)

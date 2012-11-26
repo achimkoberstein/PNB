@@ -289,7 +289,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),level_quadratic_new_variables_(false),level_manhattan_(false),
-        oda_level_decomp_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
+        oda_method_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
         warm_up_(false),warm_up_solution_(NULL),regularized_solution_(NULL),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
@@ -395,17 +395,17 @@ namespace parallel_benders {
             regularization_ = true;
         if ( algorithm == PNB_INT_ALGORITHM_REGULARIZATION_ODA ){
             regularization_ = true;
-            oda_level_decomp_ = true;
+            oda_method_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_LEVEL ){
             level_decomp_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_LEVEL_ODA ){
             level_decomp_ = true;
-            oda_level_decomp_ = true;
+            oda_method_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_BENDERS_ODA ){
-            oda_level_decomp_ = true;
+            oda_method_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_LEVEL_MANHATTAN ){
             level_decomp_ = true;
@@ -416,7 +416,7 @@ namespace parallel_benders {
             level_decomp_ = true;
             level_manhattan_ = true;
             level_quadratic_new_variables_ = false;
-            oda_level_decomp_ = true;
+            oda_method_ = true;
         }
         oda_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
@@ -425,13 +425,17 @@ namespace parallel_benders {
             // We do not want to use level_decomp.
             LOG(FATAL) << "Wrong parameter: Lambda out of specification : " << oda_lambda_;
         }
-        if ( oda_level_decomp_ ){
+        if ( oda_method_ ){
             if ( level_decomp_ ){
                 if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-oda_lambda_)*(1-oda_lambda_))
                     LOG(FATAL) << "Level parameter are wrong. 0 < lambda < 1, 0 < kappa < (1-lambda)^2.";
             }
             if ( oda_kappa_ <= 0 || oda_kappa_ >= 1)
                 LOG(FATAL) << "Kappa is out of range : " << oda_kappa_;
+        }
+        if ( num_stages_ > 2){
+            if ( level_decomp_ || oda_method_)
+                LOG(FATAL) << "Level Decomposition is not available for Multi-Stage Problems.";
         }
 
         // Trust Region
@@ -896,7 +900,7 @@ namespace parallel_benders {
             /************************************************************************/
             /* ODA-Level Decomposition                                              */
             /************************************************************************/
-            if ( oda_level_decomp_ && current_stage_ > 0 && added_optimality_cuts_[0] > 0 ){
+            if ( oda_method_ && current_stage_ > 0 && added_optimality_cuts_[0] > 0 ){
                 oda_chosen_optimality_cut_by_scenario_.clear(); oda_current_tilde_q_s_.clear();
                 oda_chosen_optimality_cut_by_scenario_.resize(num_scenarios_,0);
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
@@ -913,7 +917,7 @@ namespace parallel_benders {
             }
             // Find out if we still need to solve the second stage subproblems when using oda ( with everything entailled )
             bool solve_subproblems = true;
-            if ( oda_level_decomp_ && current_stage_ > 0 && added_optimality_cuts_[0]> 0 ){
+            if ( oda_method_ && current_stage_ > 0 && added_optimality_cuts_[0]> 0 ){
                 if ( !level_decomp_)
                     oda_phi_i_ = lower_bound_;
                 LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
@@ -1673,7 +1677,7 @@ namespace parallel_benders {
             solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
-        if ( oda_level_decomp_)
+        if ( oda_method_)
             oda_first_stage_ = solution_value;
 
         if ( !forward_ || current_stage_ == 0 || compute_stage_bounds_ ){
@@ -2206,7 +2210,7 @@ namespace parallel_benders {
         benders_node_pointer->current_cut_coefficients_ = cut_coefficients;
         benders_node_pointer->current_cut_rhs_ = cut_rhs;
 
-        if ( oda_level_decomp_ ){ 
+        if ( oda_method_ ){ 
             // We store an optimality cut 
             std::vector<double> cut_elements;
             std::vector<int> cut_indices;
@@ -2467,7 +2471,7 @@ namespace parallel_benders {
 
             dual_solution_farkas = new double[number_rows];
 
-            if ( cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
+            if ( true || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
@@ -2478,6 +2482,7 @@ namespace parallel_benders {
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_ON );
                 cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             }
+            // Where is the difference?!
 
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
@@ -5099,7 +5104,7 @@ namespace parallel_benders {
         else 
             temporary_upper_bound_ = solution;
 
-        if ( oda_level_decomp_ )
+        if ( oda_method_ )
             oda_first_stage_ = solution;
         //for (int i = 0; i < number_of_problem_cols-number_of_variables; i++)
         //    solution += benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i];
@@ -5108,7 +5113,7 @@ namespace parallel_benders {
 
 
 
-        if ( oda_level_decomp_ ){
+        if ( oda_method_ ){
             oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,benders_tree_node_pointer->getDataPtr()->next_stage_approximation_+benders_tree_node_pointer->getDataPtr()->num_thetas_,oda_first_stage_);
             LOG(INFO) << "Phi_i : " << oda_phi_i_;
         }
