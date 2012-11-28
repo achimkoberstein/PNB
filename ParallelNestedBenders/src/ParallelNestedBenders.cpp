@@ -487,7 +487,7 @@ namespace parallel_benders {
         }
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = true;
+        only_one_feasibility_cut_ = false;
 
         // Thread related stuff
         num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -1237,13 +1237,13 @@ namespace parallel_benders {
                 thread_pool_.wait(0); // We wait until all threads are done
                 // If we added no cuts, we might want to notice that
 
-                if ( num_cpu_ > 1 ) {
-                    // Try to restore a deterministic ordering for the latest iterations!
-                    CutStuffLessComparison myobject;
-                    for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++){
-                        tree_nodes_by_stage_[current_stage_-1][i]->getDataPtr()->optimality_cuts_.sort(myobject);
-                    }
-                }
+                //if ( num_cpu_ > 1 ) {
+                //    // Try to restore a deterministic ordering for the latest iterations!
+                //    CutStuffLessComparison myobject;
+                //    for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++){
+                //        tree_nodes_by_stage_[current_stage_-1][i]->getDataPtr()->optimality_cuts_.sort(myobject);
+                //    }
+                //}
             }
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
@@ -2902,6 +2902,7 @@ namespace parallel_benders {
             // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
 
+
             // Problems with warm start and optimality/feasibility cuts mixes..
             for ( ; it != benders_node_pointer->optimality_cuts_.end();++it) {
                 if ( !benders_node_pointer->warm_start_added_ && ( (*it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
@@ -2962,6 +2963,13 @@ namespace parallel_benders {
             int number_of_rows_in_problem = osi_solver->getNumRows();
             osi_solver->deleteRows(num_cuts,&optimality_cuts_to_delete[0]);
             int number_of_rows_without_opt_cuts = osi_solver->getNumRows();
+            // This should be equal to number of feasibility cuts, otherwise something is wrong! (When not using level decomp and stuff..)
+            if (!( level_decomp_ || regularization_ )){
+                LOG_IF(ERROR,number_of_rows_without_opt_cuts != benders_node_pointer->feasibility_cuts_.size()+getNumRowsProblem()) << "Problem with adding opt and feas cuts to problem!";
+
+                //assert( number_of_rows_in_problem == benders_node_pointer->optimality_cuts_.size()+benders_node_pointer->feasibility_cuts_.size()+getNumRowsProblem());
+
+            }
             // Add all optimality cuts to solver!
             for (BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
                 if ( (*it)->to_use_ ){
@@ -2969,6 +2977,7 @@ namespace parallel_benders {
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
                 }
             }
+ 
             CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_node_pointer->warm_start_);
             if ( warm_start_basis != NULL){
                 std::vector<CoinWarmStartBasis::Status> status_array;
@@ -5958,7 +5967,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 2){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
