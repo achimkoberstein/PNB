@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <functional>
 
 #include <math.h>
 #include <sstream>
@@ -1235,6 +1236,14 @@ namespace parallel_benders {
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
                 thread_pool_.wait(0); // We wait until all threads are done
                 // If we added no cuts, we might want to notice that
+
+                if ( num_cpu_ > 1 ) {
+                    // Try to restore a deterministic ordering for the latest iterations!
+                    CutStuffLessComparison myobject;
+                    for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++){
+                        tree_nodes_by_stage_[current_stage_-1][i]->getDataPtr()->optimality_cuts_.sort(myobject);
+                    }
+                }
             }
 
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
@@ -1854,10 +1863,10 @@ namespace parallel_benders {
         // Do a quick matrix check, only if we do not reuse the solver. Necessary for problems that do not have a w_matrix!
         if ( !reuse_solver &&benders_node_pointer->matrix_->getMinorDim() == 0){
             benders_node_pointer->matrix_->reverseOrdering(); // We have an empty matrix, it is col ordered, so we need to reverse that ordering!
-            benders_node_pointer->matrix_->setDimensions(1,stage_pointer->num_columns_);
-            // Insert at least empty entries for our columns
-            for (int i = 0; i < stage_pointer->num_columns_; i++)
-                benders_node_pointer->matrix_->modifyCoefficient(0,i,0,true);
+            benders_node_pointer->matrix_->setDimensions(0,stage_pointer->num_columns_);
+            //// Insert at least empty entries for our columns (why is this necessary?)
+            //for (int i = 0; i < stage_pointer->num_columns_; i++)
+            //    benders_node_pointer->matrix_->modifyCoefficient(0,i,0,true);
         }
 
         // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
@@ -1910,23 +1919,26 @@ namespace parallel_benders {
         // Build RHS via row lower and row upper. We have to add T-matrix with previous stage solutions
         int num_rows = stage_pointer->num_rows_;
         int number_of_allocated_rows = num_rows;
-        if ( d_square_ && current_stage_ == 1 && !stage_pointer->solve_binary_subproblems_)
-            number_of_allocated_rows += stage_pointer->num_d_square_cuts_;
-        benders_node_pointer->row_lower_ = new double[number_of_allocated_rows];
-        memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
-        if ( stage_pointer->stochastic_rhs_ ){
-            for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
-                assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
-                assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
-                benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
+        if ( num_rows > 0 ){
+            if ( d_square_ && current_stage_ == 1 && !stage_pointer->solve_binary_subproblems_)
+                number_of_allocated_rows += stage_pointer->num_d_square_cuts_;
+            benders_node_pointer->row_lower_ = new double[number_of_allocated_rows];
+            memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
+            if ( stage_pointer->stochastic_rhs_ ){
+                for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
+                    assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
+                    assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
+                    benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
+                }
             }
-        }
 
-        benders_node_pointer->row_upper_ = new double[number_of_allocated_rows];
-        memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
-        if  ( stage_pointer->stochastic_rhs_){
-            for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
-                benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+
+            benders_node_pointer->row_upper_ = new double[number_of_allocated_rows];
+            memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
+            if  ( stage_pointer->stochastic_rhs_){
+                for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
+                    benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+                }
             }
         }
 
@@ -5946,7 +5958,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 2){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")

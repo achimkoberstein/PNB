@@ -2573,6 +2573,8 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   	// getLpPtr() call will create new LP
     int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
     checkCPXerror( err, "CPXcopylp", "loadProblem" );
+
+    resizeColType(nc);
     
     CPXchgobjsen(env_, getLpPtr(), objDirection);
     
