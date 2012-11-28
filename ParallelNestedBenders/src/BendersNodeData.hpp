@@ -139,6 +139,12 @@ namespace parallel_benders{
         }
     };
 
+    struct CutStuffLessComparison: public std::binary_function< boost::shared_ptr<CutStuff>, boost::shared_ptr<CutStuff>, bool > {
+        bool operator () ( const boost::shared_ptr<CutStuff> &cut_stuff, const boost::shared_ptr<CutStuff> &cut_stuff2 ) const {
+            return cut_stuff->cut_creation_iteration_ < cut_stuff2->cut_creation_iteration_ || cut_stuff->aggregate_number_ < cut_stuff2->aggregate_number_;
+        }
+    };
+
     
 
     bool is_active (const boost::shared_ptr<CutStuff>& value);

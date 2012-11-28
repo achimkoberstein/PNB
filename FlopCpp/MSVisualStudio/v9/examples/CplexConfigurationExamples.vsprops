@@ -6,11 +6,11 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="../../../../../ThirdParty/cplex/cplex110/include/ilcplex"
+		AdditionalIncludeDirectories="../../../../../ThirdParty/cplex/cplex124/include/ilcplex"
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="cplex110.lib"
-		AdditionalLibraryDirectories="../../../../../ThirdParty/cplex/cplex110/lib/x86"
+		AdditionalDependencies="cplex124.lib"
+		AdditionalLibraryDirectories="../../../../../ThirdParty/cplex/cplex124/lib/x86"
 	/>
 </VisualStudioPropertySheet>
