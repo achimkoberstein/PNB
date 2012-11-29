@@ -270,6 +270,11 @@ void MP_model::assemble(vector<boost::shared_ptr<MP::Coef> >& v, vector<boost::s
                     }
                 }
             }
+            else if ( !scenVector.empty() ){ // We have some constant coefficients, that we need to add to the scenario values too, as we are going to use a replace, not add tactic in smps
+                for (int j = 0; j < scenVector.size(); j++){
+                    scenVector[j] += (*i)->val;
+                }
+            }
             ++i;
         } 
         // We need a new MP::Coef in case of entering the while loop, otherwise it is not necessary. TODO: Fix this
