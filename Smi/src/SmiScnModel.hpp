@@ -20,6 +20,7 @@
 #include "CoinPackedVector.hpp"
 #include "SmiMessage.hpp"
 
+
 // STL declarations
 #include <map>
 #include <vector>
@@ -27,6 +28,7 @@ using namespace std;
 
 // forward declaration of SmiScnNode
 class SmiScnNode;
+class SmiSmpsIO;
 
 
 //#############################################################################
@@ -303,13 +305,15 @@ public:
 
     void setSampling(bool value);
 
+    const char* getColumnName(int index);
+
 
     // constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
     SmiScnModel() :
     handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
         drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
         dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
-        solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL),
+        solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),smpsio_(NULL),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL),
         discrete_distribution_(NULL),block_structure_(NULL),sampling_(false)
     {
 
@@ -385,6 +389,8 @@ private:
     SmiCoreData * core_;
     // scenario tree pointer
     SmiScenarioTree<SmiScnNode *> smiTree_;
+    // 
+    SmiSmpsIO * smpsio_;
 
     int* integerInd;
     int integerLen;

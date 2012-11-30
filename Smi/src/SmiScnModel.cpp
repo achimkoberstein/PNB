@@ -72,6 +72,8 @@ SmiScnModel::~SmiScnModel()
     if (maxNelsPerScenInStage)
         delete [] maxNelsPerScenInStage;
 
+    delete smpsio_;
+
     delete discrete_distribution_;
     delete block_structure_;
 }
@@ -1548,6 +1550,9 @@ SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* st
         return -1;
     }
 
+    // Store the column and row Names that belong to the given indices!!
+    
+
     SmiCoreData *smiCore = NULL;
     const char* time_ext[] = {"tim", "time"};
 
@@ -1590,7 +1595,11 @@ SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* st
         return -1;
     }
 
-    delete smiSmpsIO;
+    // Do not delte smiSmpsIO, keep it, but delete the information we do not need
+    smiSmpsIO->releaseRedundantInformation();
+    smiSmpsIO->releaseMatrixInformation();
+    // Store smiSmpsIO in SmiScnModel!
+    smpsio_ = smiSmpsIO;
 
     core_ = smiCore;
     return 0;
@@ -2528,4 +2537,11 @@ void SmiScnModel::CopyStochasticDataToDetEQModel( int size,const double* source_
     combineRule->Process(destination_array, 0, trlo);
     delete [] temp;
     delete [] indices;
+}
+
+const char* SmiScnModel::getColumnName( int index )
+{
+    if ( smpsio_ )
+        return smpsio_->columnName(index);
+    return "";
 }
