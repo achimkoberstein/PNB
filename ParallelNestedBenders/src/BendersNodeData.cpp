@@ -41,6 +41,8 @@ BendersNodeData::~BendersNodeData(void)
 
     delete [] this->reduced_cost_;
 
+    delete [] this->incumbent_col_solution_;
+
     delete this->warm_start_;
 
     for (int i = 0; i < variable_bounds_.size(); i++)
