@@ -13,6 +13,6 @@
 	/>
 	<Tool
 		Name="VCLinkerTool"
-		AdditionalLibraryDirectories=""
+		AdditionalLibraryDirectories="../../../../../ThirdParty/boost/stage/lib64"
 	/>
 </VisualStudioPropertySheet>

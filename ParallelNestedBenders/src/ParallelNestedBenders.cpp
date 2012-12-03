@@ -291,7 +291,7 @@ namespace parallel_benders {
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),level_quadratic_new_variables_(false),level_manhattan_(false),
         oda_method_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
-        warm_up_(false),warm_up_solution_(NULL),regularized_solution_(NULL),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
+        warm_up_(false),warm_up_solution_(NULL),regularized_solution_(NULL),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
     }
@@ -338,9 +338,9 @@ namespace parallel_benders {
         compute_objective_values_ = param.get(PNB_COMPUTE_OBJECTIVE_VALUES,false);
         // Memory switch: Compute solutions and store them during algorithm?
         if ( compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_ALL )
-            compute_primal_solutions_for_stage_ = num_stages_;
+            compute_primal_solutions_for_stage_ = num_stages_-1;
         if ( compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_ALL )
-            compute_dual_solutions_for_stage_ = num_stages_;
+            compute_dual_solutions_for_stage_ = num_stages_-1;
 
         // Tolerances
         zero_tolerance_ = param.get(PNB_TOLERANCE_ZERO,0.0);
@@ -707,7 +707,7 @@ namespace parallel_benders {
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else
-            {
+            { // Regularization!
                 if ( regularized_solution_value_ >= infinity_)
                     not_stop_loop = true;
                 else if ( current_stage_ == 0){
@@ -730,20 +730,8 @@ namespace parallel_benders {
                 }
 
             }
-            if ( !not_stop_loop ){
-                // We can check if we have any integers, but relaxed the problem first?!
-                // Solve real problem afterwards!
-                if (compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_NO && compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_NO && !compute_objective_values_)
-                    break;
-                // Do some things to ensure proper termination
-                store_primal_and_dual_ = true;
-                sequencing_protocol_ = PNB_INT_FASTPASS;
-                if ( current_stage_ > compute_dual_solutions_for_stage_ && current_stage_ > compute_primal_solutions_for_stage_ && !compute_objective_values_)
-                    break;
-                if ( !forward_ && current_stage_ < num_stages_-1){
-                    assert( current_stage_ == num_stages_-2);
-                    break;
-                }
+            if ( !not_stop_loop ){ // We stop the loop!
+				break;
             }
             wall_clock_solution_time_.Stop(0);
 
@@ -1076,6 +1064,7 @@ namespace parallel_benders {
                 stage_data_[current_stage_]->violated_index_ = -1;
             }
 
+			bool update_upper_bound = false;
             if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
                 // This ensures that we get back to the first stage when we finally reached the last stage! Important only for FastBackward protocols.
@@ -1085,6 +1074,7 @@ namespace parallel_benders {
                 }
                 if ( !compute_stage_bounds_ && temporary_upper_bound_ < upper_bound_ && can_update_upper_bound){
                     upper_bound_ = temporary_upper_bound_; // Update upper bound. When we compute stage bounds, we update upper bound below!
+					update_upper_bound = true;
                     solution_similiarity_counter_ = 0;
                 }
 
@@ -1104,6 +1094,7 @@ namespace parallel_benders {
                     temporary_upper_bound_ = sum_stage_solutions;
                     if ( upper_bound_ > temporary_upper_bound_ && can_update_upper_bound){
                         upper_bound_ = temporary_upper_bound_;
+						update_upper_bound = true;
                         solution_similiarity_counter_ = 0;
                     }
                 }
@@ -1149,6 +1140,18 @@ namespace parallel_benders {
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
                 }
             }
+
+			// In case we updated the upper bound, we now need to store all column solutions!
+			if ( update_upper_bound) {
+				for (int temp_stage = 0; temp_stage <= compute_primal_solutions_for_stage_; temp_stage++){
+					for (int temp_node = 0; temp_node < tree_nodes_by_stage_[temp_stage].size(); temp_node++){
+						// Move solution from col_solution to incumbent_col_solution!
+						StoreValuesFromSolverInArray(tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->incumbent_col_solution_,tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->col_solution_,stage_data_[temp_stage]->num_columns_);
+						// Store scenario wise solution value!
+						tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->incumbent_solution_value_ = tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->solution_value_*tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->probability_;
+					}
+				}
+			}
 
             if ( !infeasible_problem_ && infeasible_problems_.none() ){
                 // No similarity check for FF and epsilonFF ( has to be done in another way, if any)
@@ -1293,12 +1296,12 @@ namespace parallel_benders {
             }
 
 
-            if ( store_primal_and_dual_ && !not_stop_loop){ 
-                // Depending on if we store primal and dual solution, we need to delete the memory allocated for its storage, to lower memory requirements! Only if we are not in the last run to compute solutions we want to return!.
-                for (int i = 0; i < tree_nodes_by_stage_[current_stage_].size(); i++){
-                    tree_nodes_by_stage_[current_stage_][i]->getDataPtr()->CleanUnusedMemory(forward_);
-                }
-            }
+
+			// Depending on if we store primal and dual solution, we need to delete the memory allocated for its storage, to lower memory requirements! Only if we are not in the last run to compute solutions we want to return!.
+			for (int i = 0; i < tree_nodes_by_stage_[current_stage_].size(); i++){
+				tree_nodes_by_stage_[current_stage_][i]->getDataPtr()->CleanUnusedMemory(forward_);
+			}
+            
             stage_data_[current_stage_]->changed_aggregation_level_ = false; // Necessary for adaptive_ methods!
 
 
@@ -1781,12 +1784,6 @@ namespace parallel_benders {
             }
         }
         
-        // If we go backward AND we computed all the dual values we need, we can delete the column solution.
-        if ( !forward_ && !store_primal_and_dual_  ){
-            delete [] benders_node_pointer->col_solution_;
-            benders_node_pointer->col_solution_ = NULL;
-        }
-
         // We got all the data stored, now we can remove TrustRegionConstraints!
         if ( trust_region_ ){
             // Just keep old trust region constraints!!
@@ -4303,6 +4300,7 @@ namespace parallel_benders {
     void ParallelNestedBenders::StoreValuesFromSolverInArray( double*& destination_values,const double* source_values,int size )
     {
         delete [] destination_values;
+		assert( source_values != NULL );
         destination_values = new double[size];
         memcpy(destination_values,source_values,size*sizeof(double));
         for (int i = 0; i < size;i++){

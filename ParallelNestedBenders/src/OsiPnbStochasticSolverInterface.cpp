@@ -2,6 +2,7 @@
 #include <fstream>
 #include <numeric>
 #include <vector>
+#include <iostream>
 
 #include <glog/logging.h>
 #include <boost/shared_array.hpp>
@@ -30,7 +31,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const para
 }
 
 
-double OsiStochasticParallelNestedBendersSolverInterface::getObjValue()
+double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
 {
     return nested_benders_->upper_bound_;
 }
@@ -69,6 +70,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
 			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
             CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
+			CPXsetintparam(envPtr,CPX_PARAM_THREADS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_NUM_CPU,0));
             CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
             // We may want to set a start solution!
@@ -177,7 +179,7 @@ SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
     return nested_benders_->smi_;
 }
 
-const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage )
+const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage ) const
 {
     if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
         if ( node_number > 0 || stage > 0)
@@ -187,7 +189,7 @@ const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByN
     else {
         assert( stage < nested_benders_->num_stages_);
         assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->col_solution_;
+        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_;
     }
 }
 
@@ -196,22 +198,22 @@ const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageS
     return getSolutionByNodeAndStage(0,0);
 }
 
-const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageDuals()
-{
-    return getDualsByNodeAndStage(0,0);
-}
-
-const double * OsiStochasticParallelNestedBendersSolverInterface::getDualsByNodeAndStage( int node_number, int stage )
-{
-    if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,1) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
-        return osi_->getRowPrice(); // TODO: We need to go to the correct numbers..
-    }
-    else {
-        assert( stage < nested_benders_->num_stages_);
-        assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->dual_solution_;
-    }
-}
+//const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageDuals()
+//{
+//    return getDualsByNodeAndStage(0,0);
+//}
+//
+//const double * OsiStochasticParallelNestedBendersSolverInterface::getDualsByNodeAndStage( int node_number, int stage ) const
+//{
+//    if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,1) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
+//        return osi_->getRowPrice(); // TODO: We need to go to the correct numbers..
+//    }
+//    else {
+//        assert( stage < nested_benders_->num_stages_);
+//        assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
+//        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->dual_solution_;
+//    }
+//}
 
 double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForScenario( int scenario )
 {
@@ -231,6 +233,46 @@ void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const
     // If cplex, we may need to think about it?
     nested_benders_->setWarmUpSolution(solution);
 }
+
+void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( const char* filename )
+{
+	if ( nested_benders_->compute_primal_solutions_for_stage_ < 0 )
+		return;
+	// We want to print the solution we got by solving the model, to the file! Therefore we need a solved problem first!
+	std::ofstream solution_file(filename, fstream::out | fstream::trunc  ); // Open the file, regardless if it exists or not!
+	LOG_IF(ERROR,!solution_file.is_open()) << "Solution file " << filename << " could not be opened to write.";
+	// Get the values for which we actually want to store the solution from the param file
+	assert( nested_benders_->compute_primal_solutions_for_stage_ >= 0);
+	assert( nested_benders_->compute_primal_solutions_for_stage_ < nested_benders_->num_stages_);
+	// At first, print a summary of the solution value
+	solution_file << "Objective Value : " << nested_benders_->upper_bound_ << std::endl;
+	for (int i = 0; i < nested_benders_->num_stages_; i++){
+		// Sum over all nodes at this stage!
+		double obj_value = 0.0;
+		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[i].size();scen++){
+			obj_value += nested_benders_->tree_nodes_by_stage_[i][scen]->getDataPtr()->incumbent_solution_value_;
+		}
+		solution_file << "Objective Value Stage " << i << " : " << obj_value << std::endl;
+	}
+	solution_file << "Column Values sorted by Stage and Scenario" << std::endl;
+	for ( int stage = 0; stage <= nested_benders_->compute_primal_solutions_for_stage_; stage++){
+		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[stage].size();scen++){
+			solution_file << "Objective Value Stage-Scenario=" <<  stage << "-" << scen << " : " <<  nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << std::endl;
+			const double * primal_solution = getSolutionByNodeAndStage(scen,stage);
+			assert( primal_solution != NULL);
+			// Write out objective value for stage and scenario wise (probability discounted)
+			// Get the correct name for the variable in question via smi!
+			int column_offset = smi_model_->getCore()->getColStart(stage);
+			for ( int current_column = 0; current_column < nested_benders_->stage_data_[stage]->num_columns_; current_column++){
+				solution_file << "Stage-Scenario=" << stage << "-" << scen << " : " << smi_model_->getColumnName(current_column+column_offset) << " : " << primal_solution[current_column] << std::endl;
+			}
+			
+		}
+	}
+	solution_file.close();
+
+}
+
 
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {

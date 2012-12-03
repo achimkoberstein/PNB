@@ -170,6 +170,7 @@ public:
     // Information about the solution
     double* col_solution_;
     double* dual_solution_;
+	double* incumbent_col_solution_;
     double* reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
     double* next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
@@ -207,6 +208,7 @@ public:
     double conditional_probability_; // Probability with respect to the parent node
     // solution without approximation terms
     double solution_value_;
+	double incumbent_solution_value_;
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
     typedef std::list<boost::shared_ptr<CutStuff> > cut_container;
     cut_container optimality_cuts_;
