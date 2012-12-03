@@ -245,26 +245,26 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 	assert( nested_benders_->compute_primal_solutions_for_stage_ >= 0);
 	assert( nested_benders_->compute_primal_solutions_for_stage_ < nested_benders_->num_stages_);
 	// At first, print a summary of the solution value
-	solution_file << "Objective Value : " << nested_benders_->upper_bound_ << std::endl;
+	solution_file << "Objective Value : " << nested_benders_->upper_bound_ << "\n";
 	for (int i = 0; i < nested_benders_->num_stages_; i++){
 		// Sum over all nodes at this stage!
 		double obj_value = 0.0;
 		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[i].size();scen++){
 			obj_value += nested_benders_->tree_nodes_by_stage_[i][scen]->getDataPtr()->incumbent_solution_value_;
 		}
-		solution_file << "Objective Value Stage " << i << " : " << obj_value << std::endl;
+		solution_file << "Objective Value Stage " << i << " : " << obj_value << "\n";
 	}
-	solution_file << "Column Values sorted by Stage and Scenario" << std::endl;
+	solution_file << "Column Values sorted by Stage and Scenario" << "\n";
 	for ( int stage = 0; stage <= nested_benders_->compute_primal_solutions_for_stage_; stage++){
 		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[stage].size();scen++){
-			solution_file << "Objective Value Stage-Scenario=" <<  stage << "-" << scen << " : " <<  nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << std::endl;
+			solution_file << "Objective Value Stage-Scenario=" <<  stage << "-" << scen << " : " <<  nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << "\n";
 			const double * primal_solution = getSolutionByNodeAndStage(scen,stage);
 			assert( primal_solution != NULL);
 			// Write out objective value for stage and scenario wise (probability discounted)
 			// Get the correct name for the variable in question via smi!
 			int column_offset = smi_model_->getCore()->getColStart(stage);
 			for ( int current_column = 0; current_column < nested_benders_->stage_data_[stage]->num_columns_; current_column++){
-				solution_file << "Stage-Scenario=" << stage << "-" << scen << " : " << smi_model_->getColumnName(current_column+column_offset) << " : " << primal_solution[current_column] << std::endl;
+				solution_file << "Stage-Scenario=" << stage << "-" << scen << " : " << smi_model_->getColumnName(current_column+column_offset) << " : " << primal_solution[current_column] << "\n";
 			}
 			
 		}

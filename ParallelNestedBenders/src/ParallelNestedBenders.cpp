@@ -1183,7 +1183,7 @@ namespace parallel_benders {
                     last_lower_bound = lower_bound_;
                     last_upper_bound = upper_bound_;
                     last_gap = std::abs(last_upper_bound-last_lower_bound) / std::abs(last_upper_bound+1e-10);
-                    std::cout << std::endl;
+                    std::cout << "\n";
                 }
 
                 //ostringstream os;
@@ -1199,19 +1199,19 @@ namespace parallel_benders {
             else {
                 if ( regularization_ ){
                     if ( current_stage_ == num_stages_-1 ){
-                        std::cout << "Current Incumbent solution " << regularized_solution_value_ << std::endl;
+                        std::cout << "Current Incumbent solution " << regularized_solution_value_ << "\n";
                         double current_solution = 0;
                         for (int i = 0; i < num_stages_; i++)
                             current_solution += stage_lower_upper_bounds_[i].second;
                         double regularized_tolerance = 1e-10;
-                        std::cout << "Current Iteration solution " << current_solution << std::endl;
-                        std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << std::endl;
+                        std::cout << "Current Iteration solution " << current_solution << "\n";
+                        std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << "\n";
                         std::cout << "Lower Bound: " << lower_bound_ << std::endl;
                     }
                 }
                 else if ( current_stage_ == 0){
-                    std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-                    std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+                    std::cout << "Lower Bound:  " << lower_bound_ << "\n";
+                    std::cout << "Upper Bound:  " << upper_bound_ << "\n";
                     std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
 
                 }
@@ -1343,14 +1343,14 @@ namespace parallel_benders {
         }
         timer_.Stop(current_stage_);
         if ( pretty_printing_ )
-            std::cout << std::endl;
+            std::cout << "\n";
         // Output the final values once again!
-        std::cout << "Algorithm finished, final values below." << std::endl;
-        std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-        std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
-        std::cout << "Major Iterations: " << major_iteration_ << std::endl;
-        std::cout << "Overall Iterations: " << current_iteration_ << std::endl;
+        std::cout << "Algorithm finished, final values below." << "\n";
+        std::cout << "Lower Bound:  " << lower_bound_ << "\n";
+        std::cout << "Upper Bound:  " << upper_bound_ << "\n";
+        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << "\n";
+        std::cout << "Major Iterations: " << major_iteration_ << "\n";
+        std::cout << "Overall Iterations: " << current_iteration_ << "\n";
         if ( insubstantial_iteration_ > 0)
             std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << std::endl;
         int cut_counter = 0;
@@ -1819,9 +1819,9 @@ namespace parallel_benders {
         //            cut_information.inactive_iteration_counter_++;
         //    }// End For
         //    // Print it out
-        //    //  std::cout << "Node " << benders_node_pointer->scenario_index_  << std::endl;
+        //    //  std::cout << "Node " << benders_node_pointer->scenario_index_  << "\n";
         //    //if ( std::abs(osi_solver->getRowPrice()[i]) > zero_tolerance_)
-        //    //    std::cout << "Cut " << i-stage_data_[current_stage_]->num_rows_ << " is active with " << osi_solver->getRowPrice()[i] << std::endl;
+        //    //    std::cout << "Cut " << i-stage_data_[current_stage_]->num_rows_ << " is active with " << osi_solver->getRowPrice()[i] << "\n";
         //}// End if store_cut_information_
     }
 
@@ -2633,7 +2633,7 @@ namespace parallel_benders {
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                 // Look at variable value and their bounds
                 if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
-                    std::cout << "var " << i << " has reduced cost of " << dual_values_variable_bounds[i] << std::endl;
+                    std::cout << "var " << i << " has reduced cost of " << dual_values_variable_bounds[i] << "\n";
                     if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
                     else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
