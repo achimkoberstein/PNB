@@ -22,12 +22,15 @@ public:
     void initialSolve();
     void printProblemCharacteristics();
 
-    double getObjValue();
+    double getObjValue() const;
+	
     const double * getFirstStageSolution();
-    const double * getSolutionByNodeAndStage(int node_number, int stage);
+    const double * getSolutionByNodeAndStage(int node_number, int stage) const;
 
-    const double * getFirstStageDuals();
-    const double * getDualsByNodeAndStage(int node_number, int stage);
+    //const double * getFirstStageDuals();
+    //const double * getDualsByNodeAndStage(int node_number, int stage) const;
+
+	void printSolutionToFile(const char* filename);
 
     void fixFirstStageVariables(const double* solution);
     void giveStartSolution(const double* solution);

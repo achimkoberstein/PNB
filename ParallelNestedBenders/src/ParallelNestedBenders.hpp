@@ -315,6 +315,8 @@ private:
     int compute_primal_solutions_for_stage_;
     int compute_dual_solutions_for_stage_;
     bool compute_objective_values_;
+	bool final_solution_run_;
+	int final_solution_iteration_;
 
     // Fixing first-stage variables : If unfixed write back to Smi->Core->cdclo
     boost::scoped_array<double> first_stage_original_col_lower_;

@@ -19,7 +19,7 @@ public:
     //What methods are necessary?
     virtual void initialSolve() = 0;
     OsiSolverInterface* getOsiSolverInterface();
-    virtual double getObjValue() = 0;
+    virtual double getObjValue() const = 0;
 
     SmiScnModel* getSmiModel() { return smi_model_; }
 
