@@ -13,7 +13,7 @@
 #endif
 //Linux: Call /dev/urandom to generate a seed
 
-parallel_benders::Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(0) {
+parallel_benders::Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(get_random_number_from_system()) {
 }
 
 int parallel_benders::get_random_number_from_system()

@@ -91,7 +91,7 @@ public:
 
     
 
-        int num_repetitions = 1; 
+        int num_repetitions = 0; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -162,8 +162,8 @@ public:
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
         aggregates.push_back(1);
-        if ( num_aggregates_by_magic > 1)
-            aggregates.push_back(num_aggregates_by_magic);
+        //if ( num_aggregates_by_magic > 1)
+        //    aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -175,7 +175,20 @@ public:
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-        aggregates.push_back(0);
+        //aggregates.push_back(0);
+
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+
+
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
 
@@ -199,8 +212,8 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
 
@@ -1217,7 +1230,7 @@ TEST_F(NestedBendersTest,sample_average_approximation){
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
     //    // Cut Consolidation tests
     //solveSMPS("postponement/pTest-1296");
 
@@ -1236,11 +1249,11 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    //::testing::GTEST_FLAG(filter) = "*environ*";
+    //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    //::testing::GTEST_FLAG(filter) = "*.temporary*";
+    ::testing::GTEST_FLAG(filter) = "*.temporary*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
