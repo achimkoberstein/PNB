@@ -1,6 +1,7 @@
 #ifndef ParallelNestedBenders_h__
 #define ParallelNestedBenders_h__
 
+//#define _SECURE_SCL 0
 #include <map>
 #include <vector>
 

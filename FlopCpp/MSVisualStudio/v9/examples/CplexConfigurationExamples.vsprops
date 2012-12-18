@@ -12,5 +12,6 @@
 		Name="VCLinkerTool"
 		AdditionalDependencies="cplex124.lib"
 		AdditionalLibraryDirectories="../../../../../ThirdParty/cplex/cplex124/lib/x86"
+		Profile="false"
 	/>
 </VisualStudioPropertySheet>
