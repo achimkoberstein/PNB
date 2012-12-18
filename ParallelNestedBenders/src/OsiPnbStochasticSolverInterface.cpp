@@ -264,6 +264,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 			// Get the correct name for the variable in question via smi!
 			int column_offset = smi_model_->getCore()->getColStart(stage);
 			for ( int current_column = 0; current_column < nested_benders_->stage_data_[stage]->num_columns_; current_column++){
+                if ( abs(primal_solution[current_column]) >= nested_benders_->zero_tolerance_ )
 				solution_file << "Stage-Scenario=" << stage << "-" << scen << " : " << smi_model_->getColumnName(current_column+column_offset) << " : " << primal_solution[current_column] << "\n";
 			}
 			
