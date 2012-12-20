@@ -112,6 +112,18 @@ namespace parallel_benders{
     // Relaxed problem
     const int PNB_INT_NO_RELAXATION = -1;
 
+    // Solution code
+    const int PNB_SOLUTION_OPTIMAL = 0;
+    const int PNB_SOLUTION_INFEASIBLE = 1;
+    const int PNB_SOLUTION_UNBOUNDED = 2;
+    const int PNB_SOLUTION_TIME_LIMIT = 3;
+    const int PNB_SOLUTION_ITERATION_LIMIT = 4;
+    const int PNB_SOLUTION_SIMILARITY_LIMIT = 5;
+    const int PNB_SOLUTION_GAP_NONIMPROVING = 6;
+    const int PNB_SOLUTION_SUBSOLVER_PROBLEM = 7;
+    const int PNB_SOLUTION_PARAMETER_PROBLEM = 8;
+
+
     struct BendersNodeData;
 
     struct CutStuff

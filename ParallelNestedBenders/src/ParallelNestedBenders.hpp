@@ -221,6 +221,8 @@ private:
 
     int maximal_solution_time_;
 
+    int solution_code_;
+
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
 
@@ -233,6 +235,7 @@ private:
     boost::mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
 	boost::mutex stage_lower_upper_bounds_mutex_;  
     boost::mutex misc_mutex_; // Mutex for miscellanious stuff
+    boost::mutex debug_mutex_;
     // Further thread management stuff
 	boost::threadpool::pool thread_pool_;
 
