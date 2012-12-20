@@ -177,7 +177,7 @@ public:
         //aggregates.push_back(5000);
         //aggregates.push_back(0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
         benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
         benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
@@ -1034,6 +1034,17 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
+}
+
+TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
+    EXPECT_NEAR(solveSMPS("frankellsion/CEP1"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("frankellsion/Ypgp2"),0.0, 1); 
+}
+
+TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
+    EXPECT_NEAR(solveSMPS("bikesharing/bike-100"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("bikesharing/bike-523"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("bikesharing/bike-731"),0.0, 1); 
 }
 
 //TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc

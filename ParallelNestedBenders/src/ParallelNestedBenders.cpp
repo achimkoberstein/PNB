@@ -285,7 +285,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -341,6 +341,9 @@ namespace parallel_benders {
             compute_primal_solutions_for_stage_ = num_stages_-1;
         if ( compute_dual_solutions_for_stage_ == PNB_INT_SOLUTION_DUAL_ALL )
             compute_dual_solutions_for_stage_ = num_stages_-1;
+        if ( compute_primal_solutions_for_stage_ >= num_stages_)
+            compute_primal_solutions_for_stage_ = num_stages_-1;
+        assert(compute_primal_solutions_for_stage_ < num_stages_);
 
         // Tolerances
         zero_tolerance_ = param.get(PNB_TOLERANCE_ZERO,0.0);
@@ -583,8 +586,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Solve()
     {
-        if ( thread_pool_.size() == 0)
+        if ( thread_pool_.size() == 0){
+            solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             return;
+        }
         int setup_timer = num_stages_;
         timer_.Start(setup_timer);
         AdjustProblem();
@@ -633,6 +638,7 @@ namespace parallel_benders {
                 else {
                     // We have a problem with first-stage mixed-integer and second stage integers. We can not solve such a problem!
                     LOG(ERROR) << "You tried to solve a problem with mixed-integer or pure integer first stage and mixed-integers at another stage. We can not solve this, only the relaxation. You can specify the stage from which you would like to relax the integer constraints with param PNB_RELAXATION. First Stage = 0";
+                    solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
                     return;
                 }
              }
@@ -657,7 +663,7 @@ namespace parallel_benders {
             sequencing_protocol_ = PNB_INT_FASTPASS;
         bool made_one_turn = false;
 
-        // Initialize solver instance for every thread?
+        // Initialize solver instance for every thread!
         current_stage_ = 1;
         for ( int i = 0; i < num_cpu_*4; i++ ){ // Should suffice to get every thread its own solver..
             // Schedule the tasks for this stage
@@ -732,6 +738,10 @@ namespace parallel_benders {
             }
             if ( !not_stop_loop ){ // We stop the loop!
                 LOG_IF(INFO,solution_similiarity_counter_ >= max_similarity_iteration_) << "Stopped due to solution similarity for " << solution_similiarity_counter_ << " iterations.";
+                if ( solution_similiarity_counter_ >= max_similarity_iteration_ )
+                    solution_code_ = PNB_SOLUTION_SIMILARITY_LIMIT;
+                if ( current_iteration_-insubstantial_iteration_ >= max_iteration_ )
+                    solution_code_ = PNB_SOLUTION_ITERATION_LIMIT;
 				break;
             }
             wall_clock_solution_time_.Stop(0);
@@ -740,6 +750,7 @@ namespace parallel_benders {
             // Check if we already went over the time limit
             if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
                 LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
+                solution_code_ = PNB_SOLUTION_TIME_LIMIT;
                 return; // We stop solving the problem
             }
             wall_clock_solution_time_.Start(0);
@@ -772,6 +783,7 @@ namespace parallel_benders {
                         gap_counter = 0;
                     if ( gap_counter > gap_counter_maximum ){
                         LOG(INFO) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
+                        solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
                         break;
                     }
                 }
@@ -1189,7 +1201,7 @@ namespace parallel_benders {
                     last_lower_bound = lower_bound_;
                     last_upper_bound = upper_bound_;
                     last_gap = std::abs(last_upper_bound-last_lower_bound) / std::abs(last_upper_bound+1e-10);
-                    std::cout << std::endl;
+                    std::cout << "\n";
                 }
 
                 //ostringstream os;
@@ -1205,19 +1217,19 @@ namespace parallel_benders {
             else {
                 if ( regularization_ ){
                     if ( current_stage_ == num_stages_-1 ){
-                        std::cout << "Current Incumbent solution " << regularized_solution_value_ << std::endl;
+                        std::cout << "Current Incumbent solution " << regularized_solution_value_ << "\n";
                         double current_solution = 0;
                         for (int i = 0; i < num_stages_; i++)
                             current_solution += stage_lower_upper_bounds_[i].second;
                         double regularized_tolerance = 1e-10;
-                        std::cout << "Current Iteration solution " << current_solution << std::endl;
-                        std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << std::endl;
+                        std::cout << "Current Iteration solution " << current_solution << "\n";
+                        std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << "\n";
                         std::cout << "Lower Bound: " << lower_bound_ << std::endl;
                     }
                 }
                 else if ( current_stage_ == 0){
-                    std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-                    std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
+                    std::cout << "Lower Bound:  " << lower_bound_ << "\n";
+                    std::cout << "Upper Bound:  " << upper_bound_ << "\n";
                     std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
 
                 }
@@ -1231,6 +1243,7 @@ namespace parallel_benders {
                 }
                 else {
                     LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+                    solution_code_ = PNB_SOLUTION_UNBOUNDED;
                     break;
                 }
             }
@@ -1262,6 +1275,7 @@ namespace parallel_benders {
                 if ( current_stage_ == 0){
                     LOG(INFO) << "First stage problem is infeasible.";
                     // We have to stop the algorithm, our master problem is infeasible..
+                    solution_code_ = PNB_SOLUTION_INFEASIBLE;
                     break;
                 }
                 // Change direction
@@ -1349,16 +1363,16 @@ namespace parallel_benders {
         }
         timer_.Stop(current_stage_);
         if ( pretty_printing_ )
-            std::cout << std::endl;
+            std::cout << "\n";
         // Output the final values once again!
-        std::cout << "Algorithm finished, final values below." << std::endl;
-        std::cout << "Lower Bound:  " << lower_bound_ << std::endl;
-        std::cout << "Upper Bound:  " << upper_bound_ << std::endl;
-        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
-        std::cout << "Major Iterations: " << major_iteration_ << std::endl;
-        std::cout << "Overall Iterations: " << current_iteration_ << std::endl;
+        std::cout << "Algorithm finished with status code " << solution_code_ << ", final values below.\n"; 
+        std::cout << "Lower Bound:  " << lower_bound_ << "\n";
+        std::cout << "Upper Bound:  " << upper_bound_ << "\n";
+        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << "\n";
+        std::cout << "Major Iterations: " << major_iteration_ << "\n";
+        std::cout << "Overall Iterations: " << current_iteration_ << "\n";
         if ( insubstantial_iteration_ > 0)
-            std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << std::endl;
+            std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << "\n";
         int cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
             cut_counter += added_optimality_cuts_[i];
@@ -1405,6 +1419,9 @@ namespace parallel_benders {
         if ( unbounded_problem_ )
             return; // There is no need to actually solve other problems, as we have unbounded problems..
 
+        // For debugging reasons only!
+        //boost::unique_lock<boost::mutex> u_lock(debug_mutex_);
+
         OsiSolverInterface* osi_solver = GetSolverByThread();
 
         if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1)) 
@@ -1431,6 +1448,7 @@ namespace parallel_benders {
             }
         }
         DeleteSubproblem(osi_solver,benders_tree_node_pointer);
+
     }
 
     void ParallelNestedBenders::SolveSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  ){
@@ -2640,7 +2658,7 @@ namespace parallel_benders {
             for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                 // Look at variable value and their bounds
                 if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
-                    std::cout << "var " << i << " has reduced cost of " << dual_values_variable_bounds[i] << std::endl;
+                    std::cout << "var " << i << " has reduced cost of " << dual_values_variable_bounds[i] << "\n";
                     if ( CompareForEquality( column_solution[i], variable_lower_bounds[i],zero_tolerance_) )
                         computed_dual_value_for_variable_bounds += dual_values_variable_bounds[i]*variable_lower_bounds[i];
                     else if ( CompareForEquality( column_solution[i], variable_upper_bounds[i],zero_tolerance_))
@@ -4177,10 +4195,10 @@ namespace parallel_benders {
                     if ( benders_tree_node_pointer->getDataPtr()->warm_start_  ){ // If we have a warm start object, we tell the solver to use it
                         osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_);
                     }
-                    //else{
-                    //    boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
-                    //    osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_.get());
-                    //}
+                    else{
+                        boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
+                        osi_solver->setWarmStart(stage_data_[current_stage_]->warm_start_.get());
+                    }
                 }
                 else if ( warm_start_stage_ ){ // If we have a warm start object, we tell the solver to use it. We need a mutex, because we do not have read-only access.
                     boost::unique_lock<boost::mutex> temp_lock(stage_warm_start_mutex_);
@@ -4637,7 +4655,7 @@ namespace parallel_benders {
     {
         if ( (regularization_ || level_decomp_ && level_quadratic_new_variables_)&& current_stage_ == 0 && seperate_first_stage_solver_)
             return stage_data_[current_stage_]->num_rows_+stage_data_[current_stage_]->num_columns_;
-        else if ( level_decomp_ && level_manhattan_ )
+        else if ( level_decomp_ && level_manhattan_ && current_stage_ == 0)
             return stage_data_[current_stage_]->num_rows_+2*stage_data_[current_stage_]->num_columns_;
         else
             return stage_data_[current_stage_]->num_rows_;
