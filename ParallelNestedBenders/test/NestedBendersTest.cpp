@@ -37,6 +37,7 @@ public:
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::string testbed_log_file_string_;
 	std::string parameter_name_string_;
+	bool use_multi_cut_;
     static const int max_stages_ = 10;
 
     double solveSMPS(const char* name) {
@@ -91,7 +92,7 @@ public:
 
     
 
-        int num_repetitions = 0; 
+        int num_repetitions = 2; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -162,8 +163,8 @@ public:
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
         aggregates.push_back(1);
-        //if ( num_aggregates_by_magic > 1)
-        //    aggregates.push_back(num_aggregates_by_magic);
+        if ( num_aggregates_by_magic > 1)
+            aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -175,17 +176,18 @@ public:
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-        //aggregates.push_back(0);
+		if ( use_multi_cut_ )
+			aggregates.push_back(0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
 
@@ -217,13 +219,12 @@ public:
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
 
-					if ( aggregates[i] != 1){
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-					}
+					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					
 
 					////// Solve problem without adding a newly consolidated cut
 					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
@@ -252,6 +253,13 @@ public:
 						// Different Lambdas..
 						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+						// Make different lambdas work and kappa
+						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+						// Different Lambdas and kappa
+						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
                     // Solve problems without cut consolidation
@@ -304,6 +312,7 @@ public:
 protected:
     NestedBendersTest() {
         benders_parameter_.init();
+		use_multi_cut_ = true;
     }
     virtual ~NestedBendersTest(){}
     virtual void SetUp(){
@@ -641,7 +650,6 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 }
 
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
-	benders_parameter_.init();
 	benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
 
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
@@ -897,6 +905,13 @@ TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed 
     //EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
 }
 
+TEST_F(NestedBendersTestInteger,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
+	// Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers
+	//benders_parameter_.init();
+	benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,1); // Relax the second stage integers!
+	EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
+}
+
 TEST_F(NestedBendersTestMultiStage,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. verified
     EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
     EXPECT_NEAR(solveSMPS("felt/electric/LandS","felt/electric/LandS","felt/electric/LandS2"), 719.21, 0.1); // Independent 
@@ -917,8 +932,6 @@ TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values
 TEST_F(NestedBendersTest,phone_FELT){//INDEP, two-stage, mixed-integer on both stages, values not verified
     EXPECT_NEAR(solveSMPS("felt/phone/phone"), 36.9, 0.1); // Stochastic problem: 2^15 scenarios
     EXPECT_NEAR(solveSMPS("felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9
-
-
 }
 
 TEST_F(NestedBendersTestInteger,phone_FELT){//INDEP, two-stage, mixed-integer on both stages, values not verified
@@ -955,16 +968,27 @@ TEST_F(NestedBendersTestSampleAverageApproximation,storm_WRIGHT){// 6*10^81 scen
     EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
 }
 
-TEST_F(NestedBendersTest,scenarios_WRIGHT){
+TEST_F(NestedBendersTest,LandS_WRIGHT){
+	// No multicut
+	use_multi_cut_ = false;
+    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); 
+}
+TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
+	// No multicut
+	use_multi_cut_ = false;
+	EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
+}
+
+TEST_F(NestedBendersTest,scenarios_WRIGHT){ // TODO: Update the scenario values here!
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
+	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
 }
 
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
@@ -997,10 +1021,10 @@ TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solve
     EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1920"), -1778.95,0.1);
 }
 
-//TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
-//    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
-//    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
-//}
+TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
+    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
+    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
+}
 
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
@@ -1008,7 +1032,6 @@ TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     //EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); // Hard to solve, no solution with benders!
     EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
-    //EXPECT_NEAR(solveSMPS("saphir/SAPHIR_SAMPL_SCEN_10"),-149, 0.1); 
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
@@ -1260,11 +1283,11 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    ::testing::GTEST_FLAG(filter) = "*.temporary*";
+    //::testing::GTEST_FLAG(filter) = "*.temporary*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
