@@ -330,7 +330,9 @@ int main(int argc, char* argv[]) {
     const double ef = 1.28;  //sigma = 0.25
 
     // probability for the exchange rate going up
-    const double p_up = (1-(1/ef))/(ef-(1/ef)); 
+    //const double p_up = (1-(1/ef))/(ef-(1/ef)); 
+
+    const double p_up = std::pow(boost::math::constants::e<double>(),ir_ref-ir(1)-(1/ef)/(ef-(1/ef))); 
 
 // let  p_up:=((exp(ir_ref-ir["C2"]))-(1/ef))/(ef-(1/ef)); # general case, valid for unequal interest rates
 
