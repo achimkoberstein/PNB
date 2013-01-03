@@ -2791,9 +2791,12 @@ namespace parallel_benders {
         if ( seperate_first_stage_solver_ && current_stage_ == 0 ){
             return osi_solver_; // We do not clear this solver. We ALWAYS reuse it.
         }
-        boost::unique_lock<boost::mutex> lock(solver_map_mutex_); // TODO: Remove the mutex and initialize the solver in the init method.
-        OsiSolverInterface* osi_solver = osi_solver_map_[boost::this_thread::get_id()];
-        if ( osi_solver == NULL ){
+        std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
+        if ( it != osi_solver_map_.end() )
+            return (*it).second;
+        else {
+            boost::unique_lock<boost::mutex> lock(solver_map_mutex_); 
+            OsiSolverInterface* osi_solver = NULL;
             // Create new osi_solver object from sepearete first stage solver? if we have a mip
             if ( seperate_first_stage_solver_ && integer_problems_[0] ){ // If we have a seperate first stage solver AND a MIP, we need to get rid of the mip first before we clone!
                 // If we call this method we are not in the first stage.
@@ -2806,9 +2809,9 @@ namespace parallel_benders {
             SetSolverOptions(osi_solver);
             // Set primal algorithm
             osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
-
+            return osi_solver;
         }
-        return osi_solver;
+        return NULL;
     }
 
     void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer )
@@ -5162,7 +5165,7 @@ namespace parallel_benders {
 
         if ( oda_method_ ){
             oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,benders_tree_node_pointer->getDataPtr()->next_stage_approximation_+benders_tree_node_pointer->getDataPtr()->num_thetas_,oda_first_stage_);
-            LOG(INFO) << "Phi_i : " << oda_phi_i_;
+            std::cout << "Phi_i : " << oda_phi_i_;
         }
 
         // Remove row constraint and quadratic objective function afterwards!

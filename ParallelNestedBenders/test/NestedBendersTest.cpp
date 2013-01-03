@@ -182,10 +182,10 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
         benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
         solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
 
