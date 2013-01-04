@@ -181,6 +181,7 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
         benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
         benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
         solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);

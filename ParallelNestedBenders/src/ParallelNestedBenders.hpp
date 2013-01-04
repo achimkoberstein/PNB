@@ -214,6 +214,7 @@ private:
     Timer timer_;
     Timer wall_clock_solution_time_;
     Timer detailed_timer_;
+    Timer solution_times_;
     // Some integer relating to the detailed_timer
     int build_problem_timer_;
     int solve_problem_timer_;
@@ -289,6 +290,12 @@ private:
     double oda_tilde_q_;
     std::vector<int> oda_chosen_optimality_cut_by_scenario_;// Which cut to take from each element!
     std::vector<double> oda_current_tilde_q_s_;
+
+    bool critical_iteration_;
+    int uncritical_iteration_counter_;
+    int maximal_number_of_uncritical_iterations_;
+    double lambda_gap_;
+    double last_critical_iteration_gap_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
