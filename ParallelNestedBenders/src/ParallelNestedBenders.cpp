@@ -282,15 +282,15 @@ namespace parallel_benders {
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
     smi_(smi_model_ptr),core_(smi_->getCore()),osi_solver_(NULL),osi_solver_map_(),tree_(),tree_nodes_by_stage_(),stage_data_(),
-        num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(0),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
+        num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),temporary_upper_bound_(0),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),trust_region_(false),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),level_quadratic_new_variables_(false),level_manhattan_(false),
-        oda_method_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),
+        oda_method_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),lambda_gap_(0.5),last_critical_iteration_gap_(infinity_),
         warm_up_(false),warm_up_solution_(NULL),regularized_solution_(NULL),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
@@ -769,7 +769,9 @@ namespace parallel_benders {
                 // Count if gap is similar
                 if ( current_stage_ == 0 ){
                     old_gap = gap;
-                    gap = abs(upper_bound_-lower_bound_)/ (abs(upper_bound_)+1e-10);
+                    gap = abs(upper_bound_-lower_bound_)/ (abs(lower_bound_)+1e-10); // Be consistent!
+                    if ( upper_bound_ >= infinity_ || lower_bound_ <= -infinity_ )
+                        gap = infinity_;
                     if ( regularization_ ){
                         double solution_qx = 0;
                         double ten_to_minus_ten = 1e-10;
@@ -786,6 +788,15 @@ namespace parallel_benders {
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
                         break;
                     }
+                    // Count critical iterations!
+                    critical_iteration_ = false;
+                    if ( (1-lambda_gap_)*last_critical_iteration_gap_ > gap ){
+                        maximal_number_of_uncritical_iterations_ = std::max(maximal_number_of_uncritical_iterations_,uncritical_iteration_counter_);
+                        LOG(INFO) << "Critical iteration after " << uncritical_iteration_counter_;
+                        uncritical_iteration_counter_ = 0;
+                        last_critical_iteration_gap_ = gap;
+                        critical_iteration_ = true;
+                    }
                 }
             }
             else
@@ -794,6 +805,7 @@ namespace parallel_benders {
             if ( current_stage_ == 0 ){ // Things to do if we are in the first stage
                 current_iteration_++;
                 minor_iteration_++;
+                uncritical_iteration_counter_++;
             }
             if ( sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD){
                 if ( current_stage_ == 0)
@@ -908,6 +920,7 @@ namespace parallel_benders {
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
                 int num_nodes_oda = tree_nodes_by_stage_[current_stage_].size();
                 // Store time needed to compute the oda_stuff in addition to normal Benders!
+                solution_times_.Start(3);
                 for ( int i = 0; i < num_nodes_oda; i++ ){
                     // Schedule the tasks for this stage
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveOnDemandAccuracyProblem,this,tree_nodes_by_stage_[current_stage_][i]));
@@ -915,6 +928,7 @@ namespace parallel_benders {
                 }
                 thread_pool_.wait(0); // We wait until all threads are done
                 oda_tilde_q_ = std::accumulate(oda_current_tilde_q_s_.begin(),oda_current_tilde_q_s_.end(),oda_first_stage_);
+                solution_times_.Stop(3);
 
             }
             // Find out if we still need to solve the second stage subproblems when using oda ( with everything entailled )
@@ -922,18 +936,20 @@ namespace parallel_benders {
             if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && added_optimality_cuts_[0]> 0 ){
                 if ( !level_decomp_)
                     oda_phi_i_ = lower_bound_;
-                LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
+ /*               LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
                 LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
                 LOG(INFO) << "Upper Bound : " << upper_bound_;
-                LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;
+                LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
 
                 if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
+                    solution_times_.Start(3);
                     LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
                     }
                     thread_pool_.wait(0);
+                    solution_times_.Stop(3);
                     solve_subproblems = false;
                     timer_.Stop(current_stage_);
                     current_stage_--; 
@@ -1424,12 +1440,24 @@ namespace parallel_benders {
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
 
+        if ( current_stage_ == 0){
+            detailed_timer_.Start(0);
+        }
         if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1)) 
             BuildSubproblem(osi_solver, benders_tree_node_pointer);
         AppendColsToSubproblem(osi_solver,benders_tree_node_pointer);
         AppendCutsToSubproblem(osi_solver,benders_tree_node_pointer);
 
+        if ( current_stage_ == 0){
+            detailed_timer_.Stop(0);
+            solution_times_.Start(0);
+        }
+
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
+
+        if ( current_stage_ == 0){
+            solution_times_.Stop(0);
+        }
         
         // We only need to store data if we have a feasible solution for the subproblem.
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()]){
@@ -4970,6 +4998,8 @@ namespace parallel_benders {
 
         assert( regularized_solution_.get() != NULL );
 
+        detailed_timer_.Start(1);
+
         // We assume that the first stage problem is present!
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         CPXENVptr env_ptr = NULL;
@@ -5104,7 +5134,13 @@ namespace parallel_benders {
 
         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
 
+        detailed_timer_.Stop(1);
+        solution_times_.Start(1);
+
         SolveSolverInterface(osi_solver,false);
+
+        solution_times_.Stop(1);
+        detailed_timer_.Start(1);
 
         // Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
         level_warm_start_.reset(osi_solver->getWarmStart());
@@ -5165,7 +5201,7 @@ namespace parallel_benders {
 
         if ( oda_method_ ){
             oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,benders_tree_node_pointer->getDataPtr()->next_stage_approximation_+benders_tree_node_pointer->getDataPtr()->num_thetas_,oda_first_stage_);
-            std::cout << "Phi_i : " << oda_phi_i_;
+            std::cout << "Phi_i : " << oda_phi_i_ << "\n";
         }
 
         // Remove row constraint and quadratic objective function afterwards!
@@ -5183,6 +5219,7 @@ namespace parallel_benders {
             else
                 CPXchgprobtype( env_ptr, lp_ptr, CPXPROB_LP );
         }
+        detailed_timer_.Stop(1);
 
     }
 
