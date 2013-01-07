@@ -91,7 +91,7 @@ public:
 
     
 
-        int num_repetitions = 0; 
+        int num_repetitions = 2; 
         // TODO: Uncomment if we want to use tests based on problem properties!
         SmiScnModel* smi_model = new SmiScnModel();
         int num_aggregates_by_magic = 0;
@@ -162,8 +162,8 @@ public:
         // Solve with aggregation and removal of cuts!
         std::vector<int> aggregates;
         aggregates.push_back(1);
-        //if ( num_aggregates_by_magic > 1)
-        //    aggregates.push_back(num_aggregates_by_magic);
+        if ( num_aggregates_by_magic > 1)
+            aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -175,14 +175,14 @@ public:
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-        //aggregates.push_back(0);
+        aggregates.push_back(0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
@@ -203,7 +203,7 @@ public:
                         LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
                         continue;
                     }
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
@@ -222,8 +222,8 @@ public:
 						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 					}
 
 					////// Solve problem without adding a newly consolidated cut
@@ -232,26 +232,26 @@ public:
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
 					if ( num_stages == 2) {
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						// Make different lambdas work
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+						//// Make different lambdas work
+						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-						// Different Lambdas..
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+						//// Different Lambdas..
+						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
 
@@ -966,6 +966,8 @@ TEST_F(NestedBendersTest,scenarios_WRIGHT){
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 0, 0.1);
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 0, 0.1);
+    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
+    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
 }
 
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
@@ -1261,11 +1263,11 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    ::testing::GTEST_FLAG(filter) = "*.temporary*";
+    //::testing::GTEST_FLAG(filter) = "*.temporary*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
