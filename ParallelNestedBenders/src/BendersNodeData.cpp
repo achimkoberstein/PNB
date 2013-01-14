@@ -152,14 +152,18 @@ elements_(elements),indices_(indices),start_(start)
 
 void Timer::Start( int stg )
 {
+    assert( start_time_[stg] != 0);
     start_time_[stg] = CoinCpuTime();
+
 }
 
 void Timer::Stop( int stg )
 {
     if ( start_time_[stg] != 0)
         overall_time_[stg] += CoinCpuTime() - start_time_[stg];
-    start_time_[stg] = 0;
+    else
+        assert(false);
+    start_time_[stg] = 0.0;
 }
 
 double Timer::GetAggregatedTime() const
@@ -184,6 +188,14 @@ std::string Timer::GetFullTimeString() const
 int Timer::GetTimeStages() const
 {
     return stages_;
+}
+
+void Timer::AddTime( int stg, double time )
+{
+    if ( start_time_[stg] == 0.0 )
+        overall_time_[stg] += time;
+    else
+        assert(false);
 }
 void Parameter::init()
 {
