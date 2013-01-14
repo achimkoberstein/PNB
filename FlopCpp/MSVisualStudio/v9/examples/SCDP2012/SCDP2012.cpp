@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     MP_stage T(numT);
     T.setName("T");
 
-    MP_set T2(numT);
+	MP_set T2(numT);
     T2.setName("T2");
 
     // Lines
@@ -305,11 +305,11 @@ int main(int argc, char* argv[]) {
 #pragma region financial
 
     // ir{c in C}; #interest rate of risk free investment in currency c
-    double ir_data[numC] = { 0.04, 0.04};
+    double ir_data[numC] = { 0.02, 0.07};
     MP_data ir(&ir_data[0],C);
 
     // ir_ref; #interest rate of the reference currency
-    const double ir_ref = 0.04;
+    const double ir_ref = 0.02;
 
 	// ir_wacc; #interest used to calculate the npv (wacc - weighted average cost of capital) 
 	const double ir_wacc = 0.08;
@@ -330,11 +330,10 @@ int main(int argc, char* argv[]) {
     const double ef = 1.28;  //sigma = 0.25
 
     // probability for the exchange rate going up
-    //const double p_up = (1-(1/ef))/(ef-(1/ef)); 
+//    const double p_up = (1-(1/ef))/(ef-(1/ef)); 
+    const double p_up = (std::pow(boost::math::constants::e<double>(),ir_ref-ir(1))-(1/ef))/(ef-(1/ef));
 
-    const double p_up = std::pow(boost::math::constants::e<double>(),ir_ref-ir(1)-(1/ef)/(ef-(1/ef))); 
-
-// let  p_up:=((exp(ir_ref-ir["C2"]))-(1/ef))/(ef-(1/ef)); # general case, valid for unequal interest rates
+	// let  p_up:=((exp(ir_ref-ir["C2"]))-(1/ef))/(ef-(1/ef)); # general case, valid for unequal interest rates
 
    // exchange rate
     std::vector<double> probsE;
@@ -360,12 +359,12 @@ int main(int argc, char* argv[]) {
     exr(T,C) = mpif(T>0,exr(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T)) ,exr_initial(0,C));//+exr_initial(T-1,C)*mpif(exr_offset(C)==1,1,exr_factor(T)); // This construction is necessary at the moment for this recursive formulation TODO
    
     // fexr; #exchange rate for a forward contract buying currency c and selling referency currency. contracted in period tbuy, operating in period teffect
-    MP_random_data fexr(C,T,T2); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
+    MP_random_data fexr(C,T2,T); // {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time}:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy))
     fexr.setName("fexr");
     MP_index tbuy, teffect;
 
 	// let {c in C,s in Scen,tbuy in T, teffect in T:teffect>tbuy and teffect-tbuy<=max_hedge_time} fexr[c,s,tbuy,teffect]:=exr[c,tbuy,s]*exp((ir_ref-ir[c])*(teffect-tbuy)) ; #exchange rate for a forward contract buying currency c and selling referency currency. contracted in period tbuy, operating in period teffect
-	fexr(C,T,T2).such_that(T2 > T && T2-T <= max_hedge_time) = mpif(T == 0,1,exr(T,C))*power(boost::math::constants::e<double>(),(ir_ref-ir(C) )*(T2-T)); 
+	fexr(C,T2,T).such_that(T > T2 && T-T2 <= max_hedge_time) = mpif(T2 == 0,1.0,exr(T2,C)*power(boost::math::constants::e<double>(),(ir_ref-ir(C))*(T-T2))); 
 
 	// rc; #recourse coefficient. how high are the recourse costs for not serving the demand (1.0 means that there are no. 1.1 means 10% additional loss of the price for a not delivered unit
     const double rc = 1;
@@ -452,9 +451,9 @@ int main(int argc, char* argv[]) {
     call_b.fix(0);
     put_e.fix(0);
     put_b.fix(0);
-*/
 	f_cost.fix(0);
     f_rev.fix(0);
+*/
 
 #pragma endregion
 
@@ -595,7 +594,6 @@ int main(int argc, char* argv[]) {
             + call_e(C,T2,T) - put_e(C,T2,T)) * fexr(C,T2,T)) 
         - cost_optionbuy(T);
 
-
     MP_data power_constant(T);
     power_constant(0) = 0;
     power_constant(1) = 1;
@@ -610,7 +608,7 @@ int main(int argc, char* argv[]) {
 
 	MP_data lambda;
 	MP_data cvar_alpha;
-	lambda() = 1.0;
+	lambda() = 0.5;
 	cvar_alpha() = 0.05;
 
 	MP_constraint cvar_y(T);
@@ -650,21 +648,23 @@ int main(int argc, char* argv[]) {
 
  //   cost_linebuild.display("cost_linebuild");
 	//cf_ref.display("cf_ref");
-	x.display("x");
-	y_build.display("y");
+//	x.display("x");
+//	y_build.display("y");
     //y_s.display("y_s");
 	//y.display("y");
-	//fexr.display("fexr");
+	fexr.display("fexr");
+	p_put.display("p_put");
+	p_call.display("p_call");
 	//f_cost.display("f_cost");
 	//f_rev.display("f_rev");
 
-	call_b.display("call_b");
-	call_e.display("call_e");
+//	call_b.display("call_b");
+//	call_e.display("call_e");
 	//put_b.display("put_b");
 	//put_e.display("put_e");
-    cf.display("cf");
-    cf_ref.display("cf_ref");
-    cost_optionbuy.display("cost_optionbuy");
+//    cf.display("cf");
+//    cf_ref.display("cf_ref");
+//    cost_optionbuy.display("cost_optionbuy");
 
     //revenue.display();
 

@@ -274,6 +274,11 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 
 }
 
+int OsiStochasticParallelNestedBendersSolverInterface::getSolutionCode() const
+{
+    assert(nested_benders_);
+    return nested_benders_->solution_code_;
+}
 
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {

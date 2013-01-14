@@ -199,6 +199,10 @@ public:
     int num_trust_region_cols_;
 
     boost::scoped_array<double> mip_solution_;
+
+    bool unbounded_problem_;
+    boost::scoped_array<double> unbounded_extreme_ray_; // Stores an extreme ray!
+    boost::scoped_array<double> unbounded_right_hand_side_; // Stores right hand side as it would be normally generated. Only used when problem at previous stage is unbounded!
     
 
     int cols_; 

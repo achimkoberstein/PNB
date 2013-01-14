@@ -1252,16 +1252,18 @@ namespace parallel_benders {
 
             }
 
-            // If we had unbounded problems, we have to stop the algorihtm.
+            // If we had unbounded problems, we have to stop the algorithm.
             if ( unbounded_problem_ ){
                 if ( infeasible_problems_.any() ){
                     unbounded_problem_ = false;
                 }
-                else {
-                    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
-                    solution_code_ = PNB_SOLUTION_UNBOUNDED;
-                    break;
-                }
+                //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
+                //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+                //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
+                //    break;
+                //}
+                //else
+                //    unbounded_problem_ = false;
             }
 
             /*******************************************************************************/
@@ -1431,9 +1433,9 @@ namespace parallel_benders {
             if ( infeasible_problems_.any() )
                 return; 
 
-        // Check if we got unbounded subproblems
-        if ( unbounded_problem_ )
-            return; // There is no need to actually solve other problems, as we have unbounded problems..
+        //// Check if we got unbounded subproblems
+        //if ( unbounded_problem_ )
+        //    return; // There is no need to actually solve other problems, as we have unbounded problems..
 
         // For debugging reasons only!
         //boost::unique_lock<boost::mutex> u_lock(debug_mutex_);
@@ -1529,8 +1531,24 @@ namespace parallel_benders {
                 // If we are in a problem with theta variables, we might have success in restricting the theta variables
                 if ( current_stage_ < num_stages_-1){
                     // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
+                    // Get a primal ray! Store the ray! Look at ray!
+                    if ( integer_problems_[current_stage_] ){
+                        // Solve LP problem, but we need to switch it back to MIP afterwards!
+                        osi_solver->initialSolve();
+                        assert( osi_solver->isProvenDualInfeasible());
+                    }
+                    benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_.reset(osi_solver->getPrimalRays(1)[0]);
+                    
+                    unbounded_problem_ = true;
+                    //std::vector<SmiTreeNode<BendersNodeData*>*>* children = benders_tree_node_pointer->getChildren();
+                    //for ( std::vector<SmiTreeNode<BendersNodeData*>*>::iterator it = children->begin(); it != children->end(); ++it){
+                    //    (*it)->getDataPtr()->unbounded_problem_ = true;
+                    //}
+
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
                     if ( num_thetas ){
+                        // Inspect the unbounded extreme ray to see if we need this extra row!
+                        // TODO
                         boost::scoped_array<int> extra_indices(new int[num_thetas]);
                         boost::scoped_array<double> extra_elements(new double[num_thetas]);
                         for (int i = 0; i < num_thetas; i++){
@@ -1562,25 +1580,26 @@ namespace parallel_benders {
                 if ( osi_solver->isProvenPrimalInfeasible() ){
                     // Go below for feasibility cut
                 }
-                else if ( !osi_solver->isProvenOptimal()){
-                    if ( osi_solver->isProvenDualInfeasible() ){
-                        if ( seperate_first_stage_solver_ && current_stage_ == 0) // Strange behaviour may results if we use the seperate_first_stage_solver!
-                            seperate_first_stage_solver_ = false;
-                        console_mutex_.lock();
-                        LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
-                        LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
-                        SolveSolverInterface(osi_solver);
-                        if ( osi_solver->isProvenDualInfeasible() ){
-                            // We can not work with that in a reasonable manner..
-                            upper_bound_ = infinity_;
-                            unbounded_problem_ = true; // If a problem is really unbounded, the whole problem is unbounded ( see paper VanSlyke & Wets )
-                            osi_solver->writeLp("unboundedProblem");
-                            osi_solver->writeMps("unboundedProblem");
-                        }
-                        console_mutex_.unlock();
+                // TODO: This section should not be necessary anyway..
+                //else if ( !osi_solver->isProvenOptimal()){
+                //    if ( osi_solver->isProvenDualInfeasible() ){
+                //        if ( seperate_first_stage_solver_ && current_stage_ == 0) // Strange behaviour may results if we use the seperate_first_stage_solver!
+                //            seperate_first_stage_solver_ = false;
+                //        console_mutex_.lock();
+                //        LOG(ERROR)<< "Problem for scenario " << benders_tree_node_pointer->scenario() << " in stage " << current_stage_ << " is primal unbounded.";
+                //        LOG(ERROR) << "This can point to an error in your model/data. This may also happen, when your original problem was meant as an maximization problem. Switching off seperate first stage solver.";
+                //        SolveSolverInterface(osi_solver);
+                //        if ( osi_solver->isProvenDualInfeasible() ){
+                //            // We can not work with that in a reasonable manner..
+                //            upper_bound_ = infinity_;
+                //            unbounded_problem_ = true; 
+                //            osi_solver->writeLp("unboundedProblem");
+                //            osi_solver->writeMps("unboundedProblem");
+                //        }
+                //        console_mutex_.unlock();
 
-                    }
-                }
+                //    }
+                //}
             }
 
             if ( osi_solver->isProvenPrimalInfeasible() ){
@@ -1621,6 +1640,7 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
                     LOG_IF(ERROR, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+                    CPXwriteprob(env_ptr,lp_ptr,"not_optimal","lp");
                 }
             }
             else if ( osi_solver->isProvenOptimal() )
@@ -1760,7 +1780,7 @@ namespace parallel_benders {
                 old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
                 if ( !warm_up_ )
                     lower_bound_ = current_lower_bound;
-                if (num_theta == 0){// We have no thetas yet
+                if (num_theta == 0 || unbounded_problem_){// We have no thetas yet
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
                 }
@@ -1968,25 +1988,34 @@ namespace parallel_benders {
         // Build RHS via row lower and row upper. We have to add T-matrix with previous stage solutions
         int num_rows = stage_pointer->num_rows_;
         int number_of_allocated_rows = num_rows;
+
+        // If we have an unbounded problem in the previous stage ( and we really would like to solve this problem ) we have to generate an unbounded problem right hand side!
         if ( num_rows > 0 ){
             if ( d_square_ && current_stage_ == 1 && !stage_pointer->solve_binary_subproblems_)
                 number_of_allocated_rows += stage_pointer->num_d_square_cuts_;
             benders_node_pointer->row_lower_ = new double[number_of_allocated_rows];
-            memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
-            if ( stage_pointer->stochastic_rhs_ ){
-                for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
-                    assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
-                    assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
-                    benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
-                }
-            }
-
-
             benders_node_pointer->row_upper_ = new double[number_of_allocated_rows];
-            memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
-            if  ( stage_pointer->stochastic_rhs_){
-                for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
-                    benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+            if ( benders_node_pointer->unbounded_problem_ ){
+                CoinFillN(benders_node_pointer->row_lower_,number_of_allocated_rows,0.0);
+                CoinFillN(benders_node_pointer->row_upper_,number_of_allocated_rows,0.0);
+            }
+            else {
+                memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
+                if ( stage_pointer->stochastic_rhs_ ){
+                    for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
+                        assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
+                        assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
+                        benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
+                    }
+                }
+
+
+
+                memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
+                if  ( stage_pointer->stochastic_rhs_){
+                    for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
+                        benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+                    }
                 }
             }
         }
@@ -1994,7 +2023,12 @@ namespace parallel_benders {
         // Add solution from previous problem, i.e. form right hand side of the problem
         if ( current_stage_ > 0 ){
             // Get solution from predecessor in tree
-            double* column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
+            double* column_solution = NULL;
+            if ( !benders_node_pointer->unbounded_problem_ )
+                column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
+            else 
+                column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->unbounded_extreme_ray_.get();
+
             if ( column_solution != NULL){
                 // Add T-matrix together with stochastic entries to the problem if there are any
                 // We need the T-matrix from the previous stage asap

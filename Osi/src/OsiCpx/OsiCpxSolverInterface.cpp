@@ -511,6 +511,14 @@ void OsiCpxSolverInterface::branchAndBound()
 
   debugMessage("OsiCpxSolverInterface::branchAndBound()\n");
 
+  int presolve = 1;
+  bool gotHint,takeHint;
+  OsiHintStrength strength;
+  gotHint= (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+      presolve = takeHint ? 1 : 0;
+
   switchToMIP();
 
   if( colsol_ != NULL && domipstart )
@@ -545,8 +553,24 @@ void OsiCpxSolverInterface::branchAndBound()
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_MIPDISPLAY, 2 );
 
+  if (presolve)
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
+  else
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+
   term = CPXmipopt( env_, lp );
   checkCPXerror( term, "CPXmipopt", "branchAndBound" );
+  int stat = CPXgetstat( env_, getMutableLpPtr() );
+  if (stat == CPXMIP_INForUNBD && presolve) {
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+      // In CPLEX 9, this is a way to discard the presolve information: 
+      int objsen = CPXgetobjsen(env_, lp);
+      CPXchgobjsen(env_, lp, -objsen);
+      CPXchgobjsen(env_, lp, objsen);
+      term = CPXmipopt(env_, lp);
+      checkCPXerror( term, "CPXlpopt", "initialSolve" );
+      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
+  }
 }
 
 //#############################################################################
@@ -1470,7 +1494,7 @@ const double * OsiCpxSolverInterface::getRowPrice() const
         /* check if a solution exists */
         CPXsolninfo(env_, getMutableLpPtr(), NULL, &solntype, NULL, NULL);
 
-        if( solntype != CPX_NO_SOLN )
+        if( solntype == CPX_BASIC_SOLN )
         {
            int err = CPXgetpi( env_, getMutableLpPtr(), rowsol_, 0, nrows-1 );
            checkCPXerror( err, "CPXgetpi", "getRowPrice" );
@@ -1499,7 +1523,7 @@ const double * OsiCpxSolverInterface::getReducedCost() const
         /* check if a solution exists */
         CPXsolninfo(env_, getMutableLpPtr(), NULL, &solntype, NULL, NULL);
 
-        if( solntype != CPX_NO_SOLN )
+        if( solntype == CPX_BASIC_SOLN )
         {
            int err = CPXgetdj( env_, getMutableLpPtr(), redcost_, 0, ncols-1 );
            checkCPXerror( err, "CPXgetdj", "getReducedCost" );
@@ -2539,6 +2563,7 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const char* rowsen, const double* rowrhs,
 				    const double* rowrng )
 {
+
   debugMessage("OsiCpxSolverInterface::loadProblem(2)(%p, %p, %p, %p, %p, %p, %p)\n",
   		(void*)&matrix, (void*)collb, (void*)colub, (void*)obj, (void*)rowsen, (void*)rowrhs, (void*)rowrng);
 
@@ -2569,6 +2594,9 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   		lp_ = NULL;
   		freeAllMemory();
   	}
+    // We load a new problem, we must reset the probtypemip variable to false!
+    if ( probtypemip_ == true )
+        switchToLP();
     
   	// getLpPtr() call will create new LP
     int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
@@ -2794,6 +2822,9 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
   		freeAllMemory();
   	}
     
+    // We load a new problem, we must reset the probtypemip variable to false!
+    if ( probtypemip_ == true )
+        switchToLP();
   	// getLpPtr() call will create new LP
     int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
     checkCPXerror( err, "CPXcopylp", "loadProblem" );
