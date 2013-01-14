@@ -152,17 +152,15 @@ elements_(elements),indices_(indices),start_(start)
 
 void Timer::Start( int stg )
 {
-    assert( start_time_[stg] != 0);
+    assert( start_time_[stg] == 0.0);
     start_time_[stg] = CoinCpuTime();
 
 }
 
 void Timer::Stop( int stg )
 {
-    if ( start_time_[stg] != 0)
+    if ( start_time_[stg] != 0.0)
         overall_time_[stg] += CoinCpuTime() - start_time_[stg];
-    else
-        assert(false);
     start_time_[stg] = 0.0;
 }
 
