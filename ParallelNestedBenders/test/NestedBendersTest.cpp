@@ -180,20 +180,6 @@ public:
         //aggregates.push_back(5000);
         //aggregates.push_back(0);
 
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-
-
-
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
 
         for (int cpu = 0; cpu < 1; cpu++){
@@ -336,33 +322,36 @@ protected:
         s << "Date; Time; ";
 		parameter_name_string_ = s.str();
 		
-		if ( !FileExists(testbed_log_file_string_.c_str()) && !FileExists(testbed_aggregated_log_file_string_.c_str()) ){
+		if ( !FileExists(testbed_log_file_string_.c_str()) )  {
 		    ofstream log_file;
 			log_file.open(testbed_log_file_string_.c_str(), ios::app | ios::out);
 			log_file << parameter_name_string_ << std::endl;
 			log_file.close();
 
+		}
+        if ( !FileExists(testbed_aggregated_log_file_string_.c_str()) ){
+            ofstream log_file;
             log_file.open(testbed_aggregated_log_file_string_.c_str(), ios::app | ios::out);
             log_file << parameter_name_string_ << std::endl;
             log_file.close();
-		}
-		else {
-			// We need to check if first line is still valid
-			ifstream log_file(testbed_log_file_string_.c_str());
-			std::string line;
-			std::getline(log_file,line);
-			log_file.close();
-            if ( line != parameter_name_string_ ){
-                LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_log_file_string_ << " before proceeding!.";
-            }
-            
-            log_file.open(testbed_aggregated_log_file_string_.c_str());
-            std::getline(log_file,line);
-            log_file.close();
-            if ( line != parameter_name_string_ ){
-                LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_aggregated_log_file_string_ << " before proceeding!.";
-            }
-		}
+        }
+
+        // We need to check if first line is still valid
+        ifstream log_file(testbed_log_file_string_.c_str());
+        std::string line;
+        std::getline(log_file,line);
+        log_file.close();
+        if ( line != parameter_name_string_ ){
+            LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_log_file_string_ << " before proceeding!.";
+        }
+
+        log_file.open(testbed_aggregated_log_file_string_.c_str());
+        std::getline(log_file,line);
+        log_file.close();
+        if ( line != parameter_name_string_ ){
+            LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_aggregated_log_file_string_ << " before proceeding!.";
+        }
+		
 	}
     virtual void TearDown(){}
 

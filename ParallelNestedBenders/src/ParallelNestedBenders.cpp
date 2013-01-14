@@ -4214,6 +4214,7 @@ namespace parallel_benders {
 
         misc_mutex_.lock();
         AddOptimalityCutToContainer(benders_tree_node_pointer,cut_stuff);
+        added_optimality_cuts_[current_stage_] += 1;
         misc_mutex_.unlock();
 
     }
