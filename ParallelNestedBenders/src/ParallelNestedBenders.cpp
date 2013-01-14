@@ -431,8 +431,9 @@ namespace parallel_benders {
         }
         if ( oda_method_ ){
             if ( level_decomp_ ){
-                if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-level_lambda_)*(1-level_lambda_))
-                    LOG(FATAL) << "Level parameter are wrong. 0 < lambda < 1, 0 < kappa < (1-lambda)^2.";
+				// TODO: Reenable after first test set run, see if anything breaks..
+                //if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-level_lambda_)*(1-level_lambda_))
+                //    LOG(FATAL) << "Level parameter are wrong. 0 < lambda < 1, 0 < kappa < (1-lambda)^2.";
             }
             if ( oda_kappa_ <= 0 || oda_kappa_ >= 1)
                 LOG(FATAL) << "Kappa is out of range : " << oda_kappa_;
