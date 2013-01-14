@@ -361,6 +361,8 @@ public:
     void Start(int stg);
     void Stop(int stg);
 
+    void AddTime(int stg, double time);
+
     double GetTime(int stg) const { return overall_time_[stg]; }
 
     double GetAggregatedTime() const;

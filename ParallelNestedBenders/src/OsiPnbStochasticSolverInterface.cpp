@@ -138,16 +138,19 @@ OsiStochasticParallelNestedBendersSolverInterface::~OsiStochasticParallelNestedB
 
 const parallel_benders::Parameter& OsiStochasticParallelNestedBendersSolverInterface::getParameters() const
 {
+    assert(nested_benders_);
 	return nested_benders_->parameter_;
 }
 
 const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getTimer() const
 {
+    assert(nested_benders_);
     return nested_benders_->timer_;
 }
 
 int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts()
 {
+    assert(nested_benders_);
     int cut_counter = 0;
     for (int i = 0; i < nested_benders_->num_stages_; i++){
         cut_counter += nested_benders_->added_optimality_cuts_[i];
@@ -157,6 +160,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts()
 
 int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
 {
+    assert(nested_benders_);
     int cut_counter = 0;
     for (int i = 0; i < nested_benders_->num_stages_; i++){
         cut_counter += nested_benders_->added_feasibility_cuts_[i];
@@ -166,6 +170,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
 
 void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics()
 {
+    assert(nested_benders_);
     if ( osi_solver_ ){
         double cols = osi_solver_->getNumCols();
         double rows = osi_solver_->getNumRows();
@@ -176,11 +181,13 @@ void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacterist
 
 SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
 {
+    assert(nested_benders_);
     return nested_benders_->smi_;
 }
 
 const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage ) const
 {
+    assert(nested_benders_);
     if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
         if ( node_number > 0 || stage > 0)
             assert(false); // Not yet done
@@ -229,6 +236,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( 
 
 void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution )
 {
+    assert(nested_benders_);
     // Store a warm_up solution
     // If cplex, we may need to think about it?
     nested_benders_->setWarmUpSolution(solution);
@@ -278,6 +286,24 @@ int OsiStochasticParallelNestedBendersSolverInterface::getSolutionCode() const
 {
     assert(nested_benders_);
     return nested_benders_->solution_code_;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getNumInfeasibilityIterations()
+{
+    assert(nested_benders_);
+    return getNumIterations()-nested_benders_->feasible_iteration_; // Feasible Iterations
+}
+
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getBuildTimer() const
+{
+    assert(nested_benders_);
+    return nested_benders_->detailed_timer_;
+}
+
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getComputingTimer() const
+{
+    assert(nested_benders_);
+    return nested_benders_->solution_times_;
 }
 
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)

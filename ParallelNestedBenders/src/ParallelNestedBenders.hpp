@@ -2,6 +2,7 @@
 #define ParallelNestedBenders_h__
 
 //#define _SECURE_SCL 0
+#define COMPUTING_TIMER 1
 #include <map>
 #include <vector>
 

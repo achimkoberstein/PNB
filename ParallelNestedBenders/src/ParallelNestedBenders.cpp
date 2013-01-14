@@ -920,7 +920,7 @@ namespace parallel_benders {
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
                 int num_nodes_oda = tree_nodes_by_stage_[current_stage_].size();
                 // Store time needed to compute the oda_stuff in addition to normal Benders!
-                solution_times_.Start(3);
+                solution_times_.Start(2);
                 for ( int i = 0; i < num_nodes_oda; i++ ){
                     // Schedule the tasks for this stage
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveOnDemandAccuracyProblem,this,tree_nodes_by_stage_[current_stage_][i]));
@@ -928,7 +928,7 @@ namespace parallel_benders {
                 }
                 thread_pool_.wait(0); // We wait until all threads are done
                 oda_tilde_q_ = std::accumulate(oda_current_tilde_q_s_.begin(),oda_current_tilde_q_s_.end(),oda_first_stage_);
-                solution_times_.Stop(3);
+                solution_times_.Stop(2);
 
             }
             // Find out if we still need to solve the second stage subproblems when using oda ( with everything entailled )
@@ -942,14 +942,14 @@ namespace parallel_benders {
                 LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
 
                 if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
-                    solution_times_.Start(3);
+                    solution_times_.Start(2);
                     LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
                     }
                     thread_pool_.wait(0);
-                    solution_times_.Stop(3);
+                    solution_times_.Stop(2);
                     solve_subproblems = false;
                     timer_.Stop(current_stage_);
                     current_stage_--; 
@@ -1445,6 +1445,12 @@ namespace parallel_benders {
         if ( current_stage_ == 0){
             detailed_timer_.Start(0);
         }
+#ifdef COMPUTING_TIMER
+        double current_time = CoinCpuTime();
+        double elapsed_build_time = 0;
+#endif // COMPUTING_TIMER
+
+
         if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1)) 
             BuildSubproblem(osi_solver, benders_tree_node_pointer);
         AppendColsToSubproblem(osi_solver,benders_tree_node_pointer);
@@ -1454,12 +1460,28 @@ namespace parallel_benders {
             detailed_timer_.Stop(0);
             solution_times_.Start(0);
         }
+#ifdef COMPUTING_TIMER
+        if ( current_stage_ == 1){
+            elapsed_build_time = CoinCpuTime()-current_time;
+            current_time = CoinCpuTime();
+        }
+#endif // COMPUTING_TIMER
+
+
 
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
 
         if ( current_stage_ == 0){
             solution_times_.Stop(0);
         }
+#ifdef COMPUTING_TIMER
+        if ( current_stage_ == 1){
+            double elapsed_solution_time = CoinCpuTime()-current_time;
+            boost::unique_lock<boost::mutex> lock_timer(debug_mutex_);
+            detailed_timer_.AddTime(3,elapsed_build_time);
+            solution_times_.AddTime(3,elapsed_solution_time);
+        }
+#endif // COMPUTING_TIMER
         
         // We only need to store data if we have a feasible solution for the subproblem.
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()]){

@@ -17,6 +17,7 @@
 #include <glog/logging.h>
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 #include "OsiCpxSolverInterface.hpp"
 //#include "OsiGrbSolverInterface.hpp"
@@ -36,6 +37,7 @@ public:
 
     parallel_benders::Parameter benders_parameter_; // Used to store parameters
 	std::string testbed_log_file_string_;
+    std::string testbed_aggregated_log_file_string_;
 	std::string parameter_name_string_;
     static const int max_stages_ = 10;
 
@@ -93,9 +95,10 @@ public:
 
         int num_repetitions = 0; 
         // TODO: Uncomment if we want to use tests based on problem properties!
-        SmiScnModel* smi_model = new SmiScnModel();
+        
         int num_aggregates_by_magic = 0;
         if ( num_repetitions ){
+            boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
             assert( smi_read_in == 0);
             num_stages = smi_model->getCore()->getNumStages();
@@ -148,8 +151,7 @@ public:
         }
         
 
-        delete smi_model; // Get rid of the model, before we actually solve stuff
-        
+       
         //num_repetitions = 0; // Stop here TODO:REMOVE_AGAIN!!
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
@@ -160,6 +162,7 @@ public:
 
     
         // Solve with aggregation and removal of cuts!
+        repetitions_ = 2;
         std::vector<int> aggregates;
         aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
@@ -177,12 +180,12 @@ public:
         //aggregates.push_back(5000);
         //aggregates.push_back(0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
-        solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.24);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0);
+        //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
         //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
@@ -194,7 +197,6 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
 
         for (int cpu = 0; cpu < 1; cpu++){
-            for (int j = 0; j < num_repetitions; j++){
                 //// Solve DetEq as comparison
                 //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
                 //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -265,7 +267,6 @@ public:
                     //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 					}// End if num_stages == 2
 				}//end for: aggregates
-            }//end for:repetition
         }//end for:cpu
 
 
@@ -305,16 +306,18 @@ public:
 protected:
     NestedBendersTest() {
         benders_parameter_.init();
+        repetitions_ = 1;
     }
     virtual ~NestedBendersTest(){}
     virtual void SetUp(){
 		testbed_log_file_string_ = "Results.csv";
+        testbed_aggregated_log_file_string_ = "Results-Aggregated.csv";
 
 		// Write title line.
 		std::stringstream s;
 		// Header line of File should be this one
 		// We need to write the header line for this file
-		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; Insubstantial Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; Infeasibility Iterations; Substantial Iterations; Insubstantial Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
         s << "Created Optimality Cuts; Created Feasibility Cuts; ";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
@@ -327,15 +330,21 @@ protected:
         for (int i = 0; i < max_stages_; i++){
             s << "Time Stage " << i << "; ";
         }
+        // Detailled Time for several tasks
+        s << "Time Master; Time Projection; Time ODA; Time Sub; Build Master; Build Projection; Build ODA, Build Sub;";
         // Date/Timestamp
         s << "Date; Time; ";
 		parameter_name_string_ = s.str();
 		
-		if ( !FileExists(testbed_log_file_string_.c_str() ) ){
+		if ( !FileExists(testbed_log_file_string_.c_str()) && !FileExists(testbed_aggregated_log_file_string_.c_str()) ){
 		    ofstream log_file;
 			log_file.open(testbed_log_file_string_.c_str(), ios::app | ios::out);
 			log_file << parameter_name_string_ << std::endl;
 			log_file.close();
+
+            log_file.open(testbed_aggregated_log_file_string_.c_str(), ios::app | ios::out);
+            log_file << parameter_name_string_ << std::endl;
+            log_file.close();
 		}
 		else {
 			// We need to check if first line is still valid
@@ -343,10 +352,16 @@ protected:
 			std::string line;
 			std::getline(log_file,line);
 			log_file.close();
-			if ( line != parameter_name_string_ ){
-				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
-			}
-
+            if ( line != parameter_name_string_ ){
+                LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_log_file_string_ << " before proceeding!.";
+            }
+            
+            log_file.open(testbed_aggregated_log_file_string_.c_str());
+            std::getline(log_file,line);
+            log_file.close();
+            if ( line != parameter_name_string_ ){
+                LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file " << testbed_aggregated_log_file_string_ << " before proceeding!.";
+            }
 		}
 	}
     virtual void TearDown(){}
@@ -363,132 +378,244 @@ protected:
         std::string total_core_string = folder+core_name_string;
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
-        // This can be done in a loop.
-        double cpuTime = CoinCpuTime();  
-        SmiScnModel smi;
-        OsiCpxSolverInterface osi_cpx;
-        smi.setOsiSolverHandle(&osi_cpx);
-        int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-        if ( read_in != 0 ){
-            LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-            return -osi_cpx.getInfinity();
-        }
-        // Load ParallelNestedBendersSolver
-        double solver_time = CoinCpuTime();
-        OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
-        nested_benders.setParameters(benders_parameter_);
-        if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
-            nested_benders.giveStartSolution(first_stage_solution_.get());
-        }
-        nested_benders.initialSolve();
-        solver_time = CoinCpuTime()-solver_time; // Solver only time
-        cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
-        LOG(INFO) << "Solution Time: " << cpuTime;
+        // Store some data in aggregated-form (for repetitions_ > 1)
 
-        if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO ){
-            first_stage_solution_.reset(new double[smi.getCore()->getNumCols(0)]);
-            const double * first_stage = nested_benders.getFirstStageSolution();
-            std::copy(first_stage,first_stage+smi.getCore()->getNumCols(0),first_stage_solution_.get());
-        }
+        // Store results we would like to keep
+        std::map<std::string,double> values_map;
 
-        int created_opt_cuts = nested_benders.getNumOptimalityCuts();
-        int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
+        std::string cpu_time_string("cpu");
+        std::string solver_time_string("solver");
+        std::string iterations_string("iterations");
+        std::string insubstantial_iterations_string("insusbstantial_iterations");
+        std::string substantial_iterations_string("substantial_iterations");
+        std::string infeasibility_iterations_string("infeasibility_iterations");
+        std::string objective_value_string("objective_value");
+        std::string optimality_cuts_string("optimality_cuts");
+        std::string feasibility_cuts_string("feasibility_cuts");
+        std::string error_code_string("return_code");
+        std::string time_stage_0_string("stage0");
+        std::string time_stage_1_string("stage1");
+        std::string time_stage_2_string("stage2");
+        std::string time_stage_3_string("stage3");
+        std::string time_stage_4_string("stage4");
+        std::string time_stage_5_string("stage5");
+        std::string time_stage_6_string("stage6");
+        std::string time_stage_7_string("stage7");
+        std::string time_stage_8_string("stage8");
+        std::string time_stage_9_string("stage9");
+        std::string time_initial_string("time_initial");
+        std::string computing_time_0_string("computing0");
+        std::string computing_time_1_string("computing1");
+        std::string computing_time_2_string("computing2");
+        std::string computing_time_3_string("computing3");
+        std::string building_time_0_string("building0");
+        std::string building_time_1_string("building1");
+        std::string building_time_2_string("building2");
+        std::string building_time_3_string("building3");
 
-		// We get the parameters from the solver back to evaluate it.
-		benders_parameter_ = nested_benders.getParameters();
 
-        // Write to log file
-        ofstream log_file;
-        std::string log_file_name; // <- set name according to Parameters..
-        // File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
-        std::stringstream s;
-		int aggregated_cuts = benders_parameter_.parameter_.get(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-        if ( aggregated_cuts == 0 ){ // We do some Percent/Fixed Aggregation (or dynamic.. beware)
-            s << "Multi";
-        }
-        else{
-            if ( aggregated_cuts == 1)// Single
-                s << "Single";
-            else if ( aggregated_cuts >= smi.getNumScenarios())
+        std::stringstream aggregated_s; 
+        int num_stages = 0;
+
+        for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
+            // This can be done in a loop.
+            double cpuTime = CoinCpuTime();  
+            SmiScnModel smi;
+            OsiCpxSolverInterface osi_cpx;
+            smi.setOsiSolverHandle(&osi_cpx);
+            int read_in = smi.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+            if ( read_in != 0 ){
+                LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+                return -osi_cpx.getInfinity();
+            }
+            num_stages = smi.getCore()->getNumStages();
+            // Load ParallelNestedBendersSolver
+            double solver_time = CoinCpuTime();
+            OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
+            nested_benders.setParameters(benders_parameter_);
+            if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
+                nested_benders.giveStartSolution(first_stage_solution_.get());
+            }
+            nested_benders.initialSolve();
+            solver_time = CoinCpuTime()-solver_time; // Solver only time
+            cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
+            LOG(INFO) << "Solution Time: " << cpuTime;
+
+            if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO ){
+                first_stage_solution_.reset(new double[smi.getCore()->getNumCols(0)]);
+                const double * first_stage = nested_benders.getFirstStageSolution();
+                std::copy(first_stage,first_stage+smi.getCore()->getNumCols(0),first_stage_solution_.get());
+            }
+
+            int created_opt_cuts = nested_benders.getNumOptimalityCuts();
+            int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
+
+            // We get the parameters from the solver back to evaluate it.
+            benders_parameter_ = nested_benders.getParameters();
+
+            // Write to log file
+            ofstream log_file;
+            std::string log_file_name; // <- set name according to Parameters..
+            // File name Should have the following form based on Parameters: Single/Multi/Aggregate-NumberCuts/Aggregate-Percent-Number/Aggregate-Fixed-Number
+            std::stringstream s;
+            int aggregated_cuts = benders_parameter_.parameter_.get(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+            if ( aggregated_cuts == 0 ){ // We do some Percent/Fixed Aggregation (or dynamic.. beware)
                 s << "Multi";
-            else
-                s << "StaticAggregation-" << aggregated_cuts;
-        }
-        s << ".csv";
-        log_file_name = s.str();
-		// Reset stringstream
-		s.str("");
+            }
+            else{
+                if ( aggregated_cuts == 1)// Single
+                    s << "Single";
+                else if ( aggregated_cuts >= smi.getNumScenarios())
+                    s << "Multi";
+                else
+                    s << "StaticAggregation-" << aggregated_cuts;
+            }
+            s << ".csv";
+            log_file_name = s.str();
+            // Reset stringstream
+            s.str("");
 
-        if ( !FileExists(log_file_name.c_str() )){ // Otherwise we would like to check if the first line matches with our line.
-            log_file.open(log_file_name.c_str(),ios::app | ios::out);
-			log_file << parameter_name_string_ << std::endl;
+            if ( !FileExists(log_file_name.c_str() )){ // Otherwise we would like to check if the first line matches with our line.
+                log_file.open(log_file_name.c_str(),ios::app | ios::out);
+                log_file << parameter_name_string_ << std::endl;
 
-        }
-        else {
-			ifstream check_log_file(log_file_name.c_str());
-			std::string line;
-			std::getline(check_log_file,line);
-			check_log_file.close();
+            }
+            else {
+                ifstream check_log_file(log_file_name.c_str());
+                std::string line;
+                std::getline(check_log_file,line);
+                check_log_file.close();
 
-			if ( line != parameter_name_string_ ){
-				// We need to write this string first, because somehow our parameter ordering/number of them changed. If we notice this, we want to warn the user?!
-				LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
-			}
-            log_file.open(log_file_name.c_str(),ios::app | ios::out);
+                if ( line != parameter_name_string_ ){
+                    // We need to write this string first, because somehow our parameter ordering/number of them changed. If we notice this, we want to warn the user?!
+                    LOG(FATAL) << "Your parameter line changed in your output log file. Please remove old log file before proceeding!.";
+                }
+                log_file.open(log_file_name.c_str(),ios::app | ios::out);
+            }
+            // Write solution line
+            s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << ";" << nested_benders.getNumInfeasibilityIterations() << ";" << nested_benders.getNumIterations()-nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+            // Write num cuts
+            s << created_opt_cuts << ";" << created_feas_cuts << ";";
+            // Store all of the above values in value_map!
+            values_map[cpu_time_string] += cpuTime;
+            values_map[solver_time_string] += solver_time;
+            values_map[iterations_string] += nested_benders.getNumIterations();
+            values_map[insubstantial_iterations_string] += nested_benders.getNumInsubstantialIterations();
+            values_map[substantial_iterations_string] += nested_benders.getNumIterations()-nested_benders.getNumInsubstantialIterations();
+            values_map[infeasibility_iterations_string] += nested_benders.getNumInfeasibilityIterations();
+            values_map[objective_value_string] += nested_benders.getObjValue();
+            values_map[optimality_cuts_string] += created_opt_cuts;
+            values_map[feasibility_cuts_string] += created_feas_cuts;
+
+            // Write parameter values
+            // Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
+            BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
+            {   
+                std::string name = v.first;
+                std::string value = benders_parameter_.parameter_.get<std::string>(name);
+                s << value << "; ";
+            }
+            // Write Detailed Time Statistics
+            const parallel_benders::Timer& timer(nested_benders.getTimer());
+            s << timer.GetTime(timer.GetTimeStages()-1) << "; "; // num_stages is time for setup and stuff
+            values_map[time_initial_string] = timer.GetTime(timer.GetTimeStages()-1);
+
+            if ( num_stages > max_stages_)
+                LOG(ERROR) << "Only the first " << num_stages << " stages get reported with wall clock time.";
+            for (int i = 0; i < num_stages; i++){
+                s << timer.GetTime(i) << "; ";
+                values_map["stage"+i] += timer.GetTime(i);
+            }
+            for (int i = 0; i < max_stages_-num_stages; i++)// Ensure that the date/time stamp is where it is supposed to be!
+                s << 0 << "; ";
+
+            const parallel_benders::Timer& solution_timer(nested_benders.getComputingTimer());
+            const parallel_benders::Timer& build_timer(nested_benders.getBuildTimer());
+            for (int i = 0; i < solution_timer.GetTimeStages(); i++){
+                s << solution_timer.GetTime(i) << ";";
+                values_map["computing" +i] += solution_timer.GetTime(i);
+            }
+            for (int i = 0; i < build_timer.GetTimeStages(); i++){
+                s << build_timer.GetTime(i) << ";";
+                values_map["building" +i] += build_timer.GetTime(i);
+            }
+            
+
+
+            time_t timeStamp = time(NULL);
+            tm * time = localtime(&timeStamp);
+            char buffer[256];
+            strftime(buffer, 256, "%m/%d/%y; %H:%M:%S", time);
+            s << buffer;
+
+            s << std::endl;
+
+            // Write to log_file
+            log_file << s.str();
+            log_file.close();
+
+            // Write to testbed log file
+            ofstream testbed_log_file;
+            testbed_log_file.open(testbed_log_file_string_.c_str(),ios::app | ios::out);
+            testbed_log_file << s.str();
+            testbed_log_file.close();
         }
-        // Write solution line
-        s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << ";" << nested_benders.getNumInsubstantialIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+
+        // Compute average 
+        BOOST_FOREACH( double& value, values_map | boost::adaptors::map_values ){
+            value /= repetitions_;
+        }
+        // Prepare outputstring, according to ordering from above (bad coding..)
+        aggregated_s << stoch_name << "; " << values_map[objective_value_string] << "; " << values_map[iterations_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << "; "<< values_map[solver_time_string] << "; " << values_map[objective_value_string] << "; ";
         // Write num cuts
-        s << created_opt_cuts << ";" << created_feas_cuts << ";";
-		// Write parameter values
-		// Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
-		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
-		{   
-			std::string name = v.first;
-			std::string value = benders_parameter_.parameter_.get<std::string>(name);
-			s << value << "; ";
-		}
+        aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";";
+
+        BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
+        {   
+            std::string name = v.first;
+            std::string value = benders_parameter_.parameter_.get<std::string>(name);
+            aggregated_s << value << "; ";
+        }
         // Write Detailed Time Statistics
-        const parallel_benders::Timer& timer(nested_benders.getTimer());
-        s << timer.GetTime(timer.GetTimeStages()-1) << "; "; // num_stages is time for setup and stuff
-        int num_stages = smi.getCore()->getNumStages();
+        aggregated_s << values_map[time_initial_string] << "; "; // num_stages is time for setup and stuff
         if ( num_stages > max_stages_)
             LOG(ERROR) << "Only the first " << num_stages << " stages get reported with wall clock time.";
-        for (int i = 0; i < smi.getCore()->getNumStages(); i++){
-            s << timer.GetTime(i) << "; ";
+        for (int i = 0; i < num_stages; i++){
+            aggregated_s << values_map["stage"+i] << "; ";
         }
-        for (int i = 0; i < max_stages_-num_stages; i++)// Ensure that the date/time stamp is where it is supposed to be!
-            s << 0 << "; ";
-        
+        for (int i = 0; i < max_stages_-num_stages; i++)// Ensure that the date/time stamp is where it is supposed to be by inserting missing zeroes
+            aggregated_s << 0 << "; ";
 
-        // Write date/time stamp of log file writing time
-//#ifdef _MSC_VER
-//        char sdate[9];
-//        char stime[9];
-//        s << _strdate(sdate) << "; " << _strtime(stime);
-//#else
+        // Write Time for Master solves, etc. Write Building Time for Master solves etc.
+        aggregated_s << values_map[computing_time_0_string] << ";";
+        aggregated_s << values_map[computing_time_1_string] << ";";
+        aggregated_s << values_map[computing_time_2_string] << ";";
+        aggregated_s << values_map[computing_time_3_string] << ";";
+        aggregated_s << values_map[building_time_0_string] << ";";
+        aggregated_s << values_map[building_time_1_string] << ";";
+        aggregated_s << values_map[building_time_2_string] << ";";
+        aggregated_s << values_map[building_time_3_string] << ";";
+
+
         time_t timeStamp = time(NULL);
         tm * time = localtime(&timeStamp);
         char buffer[256];
         strftime(buffer, 256, "%m/%d/%y; %H:%M:%S", time);
-        s << buffer;
-//#endif
-        s << std::endl;
+        aggregated_s << buffer;
 
-		// Write to log_file
-		log_file << s.str();
-        log_file.close();
+        // Write string to file
+        // Write to testbed log file
+        ofstream testbed_aggregated_log_file;
+        testbed_aggregated_log_file.open(testbed_aggregated_log_file_string_.c_str(),ios::app | ios::out);
+        testbed_aggregated_log_file << aggregated_s.str();
+        testbed_aggregated_log_file.close();
+        
 
-		// Write to testbed log file
-		ofstream testbed_log_file;
-		testbed_log_file.open(testbed_log_file_string_.c_str(),ios::app | ios::out);
-		testbed_log_file << s.str();
-		testbed_log_file.close();
-
-        return nested_benders.getObjValue();
+        return values_map[objective_value_string];
     }
 
     boost::shared_array<double> first_stage_solution_;
+    int repetitions_;
 };
 
 
