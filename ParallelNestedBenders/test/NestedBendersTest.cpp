@@ -49,6 +49,41 @@ public:
         return solveSMPS(core_time_name, core_time_name,stoch_name);
     }
 
+	void solveForProtocolsWithLambda(std::vector<double>& solutions, const char* core_name, const char* time_name, const char* stoch_name){
+		// Vary Lambda from 0.9 to 0.1
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.9);
+		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
+		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
+		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.3);
+		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.1);
+		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+	}
+
+	void solveForProtocolsWithKappa(std::vector<double>& solutions,const char* core_name, const char* time_name, const char* stoch_name){
+		int algorithm = benders_parameter_.parameter_.get(parallel_benders::PNB_BENDERS,1);
+		bool use_lambda = false;
+		if ( algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA ){
+			use_lambda = true;
+		}
+		// Vary Kappa, call Lambda
+		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+	}
+
     void solveForProtocols(std::vector<double>& solutions, int num_stages, const char* core_name, const char* time_name, const char* stoch_name){
         benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -182,7 +217,7 @@ public:
 		if ( use_multi_cut_ )
 			aggregates.push_back(0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
+        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour!
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
@@ -203,16 +238,13 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					if ( aggregates[i] != 1) {
+						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					}
 					
 
 					////// Solve problem without adding a newly consolidated cut
@@ -225,40 +257,32 @@ public:
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 
-					if ( num_stages == 2) {
+					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 
+					if ( num_stages == 2) {
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
 						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
 						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 						// Make different lambdas work
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-						// Different Lambdas..
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
 						// Make different lambdas work and kappa
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+						// Different Lambdas..
+						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
 						// Different Lambdas and kappa
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-
-                    // Solve problems without cut consolidation
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-                    //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    //solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 					}// End if num_stages == 2
 				}//end for: aggregates
         }//end for:cpu
@@ -984,10 +1008,6 @@ TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values verified with d
 //
 TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
     EXPECT_NEAR(solveSMPS("felt/chem/chem"), -13009.166667, 0.1); 
-    // Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers
-    //benders_parameter_.init();
-    //benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,1); // Relax the second stage integers!
-    //EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
 }
 
 TEST_F(NestedBendersTestInteger,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
