@@ -118,7 +118,7 @@ private:
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
     void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, boost::shared_ptr<CutStuff> cut_stuff);
-
+    void SetSolverByThread();
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
@@ -281,7 +281,7 @@ private:
     
     // All variables needed for on demand accuracy level decomposition
     bool oda_method_; // If we actually use On Demand Accuracy Level decomposition
-    double oda_lambda_; // 0 < lambda < 1
+    double level_lambda_; // 0 < lambda < 1
     double oda_kappa_; // 0 < kappa < (1-lambda)^2
     double oda_gap_; // Gap between oda_lower_ and oda_upper_ (absolute)
     double oda_lower_; // Lower bound for oda
@@ -295,6 +295,7 @@ private:
     bool critical_iteration_;
     int uncritical_iteration_counter_;
     int maximal_number_of_uncritical_iterations_;
+    int critical_iteration_counter_;
     double lambda_gap_;
     double last_critical_iteration_gap_;
 

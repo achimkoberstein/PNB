@@ -36,11 +36,11 @@ double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
     return nested_benders_->upper_bound_;
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations() const
 {
     return nested_benders_->current_iteration_;
 }
-int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations() const
 {
     return nested_benders_->insubstantial_iteration_;
 }
@@ -148,7 +148,7 @@ const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface
     return nested_benders_->timer_;
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts() const 
 {
     assert(nested_benders_);
     int cut_counter = 0;
@@ -158,7 +158,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts()
     return cut_counter;
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts() const 
 {
     assert(nested_benders_);
     int cut_counter = 0;
@@ -168,7 +168,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
     return cut_counter;
 }
 
-void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics()
+void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics() const
 {
     assert(nested_benders_);
     if ( osi_solver_ ){
@@ -288,7 +288,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getSolutionCode() const
     return nested_benders_->solution_code_;
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumInfeasibilityIterations()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumInfeasibilityIterations() const 
 {
     assert(nested_benders_);
     return getNumIterations()-nested_benders_->feasible_iteration_; // Feasible Iterations
@@ -306,6 +306,17 @@ const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface
     return nested_benders_->solution_times_;
 }
 
+int OsiStochasticParallelNestedBendersSolverInterface::getNumCriticalIteration() const
+{
+    assert(nested_benders_);
+    return nested_benders_->uncritical_iteration_counter_;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getMaximalLengthOfCriticalIterationSequence() const
+{
+    assert(nested_benders_);
+    return nested_benders_->maximal_number_of_uncritical_iterations_;
+}
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {
     parameters_.init();

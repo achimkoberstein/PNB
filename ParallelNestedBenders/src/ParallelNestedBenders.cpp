@@ -290,7 +290,7 @@ namespace parallel_benders {
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_decomp_(false),level_quadratic_new_variables_(false),level_manhattan_(false),
-        oda_method_(false),oda_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),lambda_gap_(0.5),last_critical_iteration_gap_(infinity_),
+        oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
         warm_up_(false),warm_up_solution_(NULL),regularized_solution_(NULL),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(NULL),first_stage_original_col_upper_(NULL),fixed_solution_(NULL),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
@@ -422,16 +422,16 @@ namespace parallel_benders {
             level_quadratic_new_variables_ = false;
             oda_method_ = true;
         }
-        oda_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
+        level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
 
-        if ( level_decomp_ && (oda_lambda_ <= 0.0 || oda_lambda_ >= 1)){
+        if ( level_decomp_ && (level_lambda_ <= 0.0 || level_lambda_ >= 1)){
             // We do not want to use level_decomp.
-            LOG(FATAL) << "Wrong parameter: Lambda out of specification : " << oda_lambda_;
+            LOG(FATAL) << "Wrong parameter: Lambda out of specification : " << level_lambda_;
         }
         if ( oda_method_ ){
             if ( level_decomp_ ){
-                if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-oda_lambda_)*(1-oda_lambda_))
+                if ( oda_kappa_ <= 0 || oda_kappa_ >= (1-level_lambda_)*(1-level_lambda_))
                     LOG(FATAL) << "Level parameter are wrong. 0 < lambda < 1, 0 < kappa < (1-lambda)^2.";
             }
             if ( oda_kappa_ <= 0 || oda_kappa_ >= 1)
@@ -667,7 +667,7 @@ namespace parallel_benders {
         current_stage_ = 1;
         for ( int i = 0; i < num_cpu_*4; i++ ){ // Should suffice to get every thread its own solver..
             // Schedule the tasks for this stage
-            thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GetSolverByThread,this));
+            thread_pool_.schedule(boost::bind(&ParallelNestedBenders::SetSolverByThread,this));
         }
         thread_pool_.wait(0); // We wait until all threads are done
         current_stage_ = 0;
@@ -790,12 +790,13 @@ namespace parallel_benders {
                     }
                     // Count critical iterations!
                     critical_iteration_ = false;
-                    if ( (1-lambda_gap_)*last_critical_iteration_gap_ > gap ){
+                    if ( (1-level_lambda_)*last_critical_iteration_gap_ > gap ){
                         maximal_number_of_uncritical_iterations_ = std::max(maximal_number_of_uncritical_iterations_,uncritical_iteration_counter_);
                         LOG(INFO) << "Critical iteration after " << uncritical_iteration_counter_;
                         uncritical_iteration_counter_ = 0;
                         last_critical_iteration_gap_ = gap;
                         critical_iteration_ = true;
+                        critical_iteration_counter_++;
                     }
                 }
             }
@@ -2896,6 +2897,32 @@ namespace parallel_benders {
             return osi_solver;
         }
         return NULL;
+    }
+
+    void ParallelNestedBenders::SetSolverByThread(){
+        // Used in the beginning to set a solver for every thread
+        {
+            boost::unique_lock<boost::mutex> lock(solver_map_mutex_); 
+            std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
+            if ( it == osi_solver_map_.end() )
+            {
+                OsiSolverInterface* osi_solver = NULL;
+                // Create new osi_solver object from sepearete first stage solver? if we have a mip
+                if ( seperate_first_stage_solver_ && integer_problems_[0] ){ // If we have a seperate first stage solver AND a MIP, we need to get rid of the mip first before we clone!
+                    // If we call this method we are not in the first stage.
+                    osi_solver_->initialSolve(); // Get rid of the integers!
+                }
+                osi_solver = osi_solver_->clone(false); // The boolean does not alway do what it is supposed to do.: We can only clone it if it is a LP problem
+                // Clean the solver object by loading an empty problem ( that works for cplex, reset crashes cplex)
+                osi_solver->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+                // We want to emphasize numerical stability / for CPLEX
+                SetSolverOptions(osi_solver);
+                // Set primal algorithm
+                osi_solver_map_[boost::this_thread::get_id()] = osi_solver;
+            }
+        }
+        boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+
     }
 
     void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer )
@@ -5083,7 +5110,7 @@ namespace parallel_benders {
 
         boost::scoped_ptr<OsiRowCut> osi_cut(new OsiRowCut);
         osi_cut->setLb(-infinity_);
-        double descent_target = (1-oda_lambda_)*lower_bound_+oda_lambda_*upper_bound_;
+        double descent_target = (1-level_lambda_)*lower_bound_+level_lambda_*upper_bound_;
         osi_cut->setUb(descent_target);
         osi_cut->setRow(number_of_problem_cols,&obj_indices[0],obj_coefs,debug_test_duplicate_indices_);
         int number_of_variables = stage_data_[current_stage_]->num_columns_;
