@@ -180,7 +180,7 @@ public:
         //aggregates.push_back(5000);
         //aggregates.push_back(0);
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,13200); // Not longer than three hours!
+        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour!
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison

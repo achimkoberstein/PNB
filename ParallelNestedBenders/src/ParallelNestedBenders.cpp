@@ -93,8 +93,9 @@ namespace parallel_benders {
                     int row_length = current_node->getRowLength(j);
                     bool non_staircase_row = false;
                     for ( int k = 0; k < row_length; k++ ){
-                        if ( row_indices[k] < core_->getColStart(stage-1) ){ // This means, we have a non-staircase structure. Store all the indices in a std::map[]
+                        if ( row_indices[k] < core_->getColStart(stage-1) ){ // Column index is from 2 stages before the current stage. This means, we have a non-staircase structure. Store all the indices in a std::map[]
                             non_staircase_row = true;
+                            break;
                         }
                     }
                     if ( non_staircase_row ){
@@ -6117,7 +6118,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 3){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
