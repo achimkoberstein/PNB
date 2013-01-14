@@ -489,6 +489,12 @@ int main(int argc, char* argv[]) {
     //MP_constraint fix_build_y(L,P);
     //fix_build_y.setName("fix_build_y");
     //fix_build_y(L,P) = y_build(L,P) == buildY(L,P);
+
+    MP_variable y_build_loop(L,P,T);
+    MP_constraint fix_y_build(L,P,T);
+    MP_constraint loop_y_build(L,P,T);
+    fix_y_build(L,P,T).such_that(T==0) = y_build_loop(L,P,T) == y_build(L,P);
+    loop_y_build(L,P,T+1) = y_build_loop(L,P,T) == y_build_loop(L,P,T-1);
     
 
 #pragma endregion
@@ -511,12 +517,18 @@ int main(int argc, char* argv[]) {
     line_operating_costs_in_currency_c.setName("line_operating_cost");
 
     demand_fulfilment(M,T,P) = sum(L, x(L,M,P,T)) + x2(M,P,T) == d(M,P,T);
-    max_capacity(L,P,T) = sum(M, x(L,M,P,T) * r(P)) <= m(L) * y_build(L,P);
+    max_capacity(L,P,T) = sum(M, x(L,M,P,T) * r(P)) <= m(L) * y_build_loop(L,P,T);
     prod_costs_for_line_l_in_period_t(L,T) = cost_prod(L,T) == sum(M*P, x(L,M,P,T) * q_prod(L,P));
     transportation_costs_from_line_l(L,T) = cost_trans(L,T) == sum(M*P, x(L,M,P,T) * q_trans(L,P,M));
     revenue_in_market_m_in_periode_t(M,T) = revenue(M,T) == sum(P, (d(M,P,T) - rc * x2(M,P,T)) * price(M,P));
     line_building_costs_in_currency_c(C) = cost_linebuild(C) == sum(LineLinks(L,C)*P, fc_level * c_build(L) * y_build(L,P));
     line_operating_costs_in_currency_c(C) = cost_lineoperate(C) == sum(LineLinks(L,C)*P, fc_level * c_operate(L) * y_build(L,P));
+
+    MP_variable cost_lineoperate_loop(C,T);
+    MP_constraint loop_cost_lineoperate(C,T);
+    MP_constraint fix_cost_lineoperate(C,T);
+    loop_cost_lineoperate(C,T+1) = cost_lineoperate_loop(C,T) == cost_lineoperate_loop(C,T-1);
+    fix_cost_lineoperate(C,T).such_that(T==0) = cost_lineoperate_loop(C,T) == cost_lineoperate(C);
 
 #pragma endregion
 
@@ -537,7 +549,7 @@ int main(int argc, char* argv[]) {
 	fix_f_rev0.setName("fix_frev0");
 	fix_f_rev0(C,T2) = f_rev(C,0,T2) == 0.0;
 
-    production_cash_flow_in_period_p_in_currency_c(C,T) = cfp(C,T) == sum(MarketLinks(M,C), revenue(M,T)) - sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) - cost_lineoperate(C);
+    production_cash_flow_in_period_p_in_currency_c(C,T) = cfp(C,T) == sum(MarketLinks(M,C), revenue(M,T)) - sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) - cost_lineoperate_loop(C,T);
 
 //	hedge_rate_lt_1_for_revenues(C,T) = sum(T2.such_that(T < T2 && T2-T <= max_hedge_time), (f_rev(C,T,T2) - put_e(C,T,T2))) >= -sum(MarketLinks(M,C), revenue(M,T2));
 //    hedge_rate_lt_1_for_costs(C,T) = sum(T2.such_that(T < T2 && T2-T <= max_hedge_time), (f_cost(C,T,T2) + call_e(C,T,T2))) <= sum(LineLinks(L,C), cost_prod(L,T2) + cost_trans(L,T2)) + cost_lineoperate(C);
@@ -545,7 +557,7 @@ int main(int argc, char* argv[]) {
 
 	hedge_rate_lt_1_for_revenues(C,T+1) = sum(T2.such_that(T2 < T && T-T2 <= max_hedge_time), f_rev(C,T2,T) - put_e(C,T2,T) ) >= -sum(MarketLinks(M,C), revenue(M,T));
      // Non-staircase constraint!
-     hedge_rate_lt_1_for_costs(C,T+1) = sum(T2.such_that(T2 < T && T-T2 <= max_hedge_time), (f_cost(C,T2,T) + call_e(C,T2,T))) <= sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) + cost_lineoperate(C);
+     hedge_rate_lt_1_for_costs(C,T+1) = sum(T2.such_that(T2 < T && T-T2 <= max_hedge_time), (f_cost(C,T2,T) + call_e(C,T2,T))) <= sum(LineLinks(L,C), cost_prod(L,T) + cost_trans(L,T)) + cost_lineoperate_loop(C,T);
 
 
 
@@ -615,9 +627,26 @@ int main(int argc, char* argv[]) {
 	cvar_y.setName("cvar_y");
 	cvar_y(T+1) = y(T) == y(T-1);
 
+    // Loop through some variables
+    MP_variable first_stage_costs(T);
+
+    MP_constraint first_stage_fix; first_stage_fix.setName("first_stage_fix");
+    MP_constraint first_stage_loop(T); first_stage_loop.setName("first_stage_loop");
+
+    first_stage_fix() = first_stage_costs(0) == sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)));
+    first_stage_loop(T+1) = first_stage_costs(T) == first_stage_costs(T-1);
+
+    MP_variable sum_npv_stage(T);
+
+    MP_constraint npv_stage_loop(T); npv_stage_loop.setName("npv_stage_loop");
+    MP_constraint npv_stage_fix(T); npv_stage_fix.setName("npv_stage_fix");
+    npv_stage_fix(T).such_that(T==1) = sum_npv_stage(1) == npv_stage(1);
+    npv_stage_loop(T+2) = sum_npv_stage(T) == sum_npv_stage(T-1)+npv_stage(T);
+
 	MP_constraint cvar_npv(T);
 	cvar_npv.setName("cvar_npv");
-	cvar_npv(T+2) = y(T)-y_s(T) <= (sum(T2.such_that(T2>0),npv_stage(T2)) - sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C))))/1000.0; 
+	cvar_npv(T+2) = y(T)-y_s(T) <= (sum_npv_stage(T) - first_stage_costs(T))/1000.0; 
+    // Evtl npv_stage durchschleifen. Genauso cost_linebuild!
 
 
 
