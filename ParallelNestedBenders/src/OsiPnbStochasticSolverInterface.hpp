@@ -20,7 +20,7 @@ public:
     ~OsiStochasticParallelNestedBendersSolverInterface();
 
     void initialSolve();
-    void printProblemCharacteristics();
+    void printProblemCharacteristics() const ;
 
     double getObjValue() const;
 	
@@ -37,18 +37,21 @@ public:
 
     double getSolutionValueForScenario(int scenario);
 
-    int getNumOptimalityCuts();
-    int getNumFeasibilityCuts();
+    int getNumOptimalityCuts() const;
+    int getNumFeasibilityCuts() const;
     void setParameters(const parallel_benders::Parameter& parameters);
-    int getNumIterations();
+    int getNumIterations() const;
 	const parallel_benders::Parameter& getParameters() const;
     const parallel_benders::Timer& getTimer() const;
     const parallel_benders::Timer& getBuildTimer() const;
     const parallel_benders::Timer& getComputingTimer() const;
 
     SmiScnModel* getSmiModel();
-    int getNumInsubstantialIterations();
-    int getNumInfeasibilityIterations();
+    int getNumInsubstantialIterations() const;
+    int getNumInfeasibilityIterations() const;
+
+    int getNumCriticalIteration() const ;
+    int getMaximalLengthOfCriticalIterationSequence() const;
 
     int getSolutionCode() const;
 

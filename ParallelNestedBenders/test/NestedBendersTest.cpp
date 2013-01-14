@@ -317,7 +317,7 @@ protected:
 		std::stringstream s;
 		// Header line of File should be this one
 		// We need to write the header line for this file
-		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; Infeasibility Iterations; Substantial Iterations; Insubstantial Iterations; " << "Solver Wall Clock Time (s); " << "Solution value; ";
+		s << "Problem Name; " << "Overall Wall Clock Time (s); " << "Iterations; Solution value; Return Code; Infeasibility Iterations; Substantial Iterations; Insubstantial Iterations; Solver Wall Clock Time (s); Critical Iterations; Max Length between Crit. It.;";
         s << "Created Optimality Cuts; Created Feasibility Cuts; ";
 		// //TODO: Iterate over property tree
 		BOOST_FOREACH(boost::property_tree::ptree::value_type &v, benders_parameter_.parameter_)
@@ -392,7 +392,9 @@ protected:
         std::string objective_value_string("objective_value");
         std::string optimality_cuts_string("optimality_cuts");
         std::string feasibility_cuts_string("feasibility_cuts");
-        std::string error_code_string("return_code");
+        std::string return_code_string("return_code");
+        std::string critical_iteration_sequence_length_string("critical_iteration_sequence");
+        std::string critical_iterations_string("critical_iterations");
         std::string time_stage_0_string("stage0");
         std::string time_stage_1_string("stage1");
         std::string time_stage_2_string("stage2");
@@ -458,7 +460,7 @@ protected:
             s.str("");
 
             // Write solution line
-            s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << ";" << nested_benders.getNumInfeasibilityIterations() << ";" << nested_benders.getNumIterations()-nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << "; "<< solver_time << "; " << nested_benders.getObjValue() << "; ";
+            s << stoch_name << "; " << cpuTime << "; " << nested_benders.getNumIterations() << ";" << nested_benders.getObjValue() << "; " << nested_benders.getSolutionCode() << ";" << nested_benders.getNumInfeasibilityIterations() << ";" << nested_benders.getNumIterations()-nested_benders.getNumInsubstantialIterations() << ";" << nested_benders.getNumInsubstantialIterations() << "; "<< solver_time << "; " << nested_benders.getNumCriticalIteration() << ";" << nested_benders.getMaximalLengthOfCriticalIterationSequence() << ";";
             // Write num cuts
             s << created_opt_cuts << ";" << created_feas_cuts << ";";
             // Store all of the above values in value_map!
@@ -471,6 +473,9 @@ protected:
             values_map[objective_value_string] += nested_benders.getObjValue();
             values_map[optimality_cuts_string] += created_opt_cuts;
             values_map[feasibility_cuts_string] += created_feas_cuts;
+            values_map[return_code_string] += nested_benders.getSolutionCode();
+            values_map[critical_iterations_string] += nested_benders.getNumCriticalIteration();
+            values_map[critical_iteration_sequence_length_string] += nested_benders.getMaximalLengthOfCriticalIterationSequence();
 
             // Write parameter values
             // Tree is ordered after insertion. This should be the same as the first iteration, because we insert EVERY value in the init() method of the parameter class.
@@ -528,7 +533,7 @@ protected:
             value /= repetitions_;
         }
         // Prepare outputstring, according to ordering from above (bad coding..)
-        aggregated_s << stoch_name << "; " << values_map[cpu_time_string] << "; " << values_map[iterations_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << "; "<< values_map[solver_time_string] << "; " << values_map[objective_value_string] << "; ";
+        aggregated_s << stoch_name << "; " << values_map[cpu_time_string] << "; " << values_map[iterations_string] << ";"  << values_map[objective_value_string] << "; "<< values_map[return_code_string] << ";" << values_map[infeasibility_iterations_string] << ";" << values_map[substantial_iterations_string] << ";" << values_map[insubstantial_iterations_string] << "; "<< values_map[solver_time_string] << "; " << values_map[critical_iterations_string] << ";" << values_map[critical_iteration_sequence_length_string] << ";";
         // Write num cuts
         aggregated_s << values_map[optimality_cuts_string] << ";" << values_map[feasibility_cuts_string] << ";";
 
