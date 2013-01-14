@@ -47,6 +47,8 @@ public:
     SmiScnModel* getSmiModel();
     int getNumInsubstantialIterations();
 
+    int getSolutionCode() const;
+
 private:
     parallel_benders::ParallelNestedBenders* nested_benders_;
     OsiSolverInterface * osi_;
