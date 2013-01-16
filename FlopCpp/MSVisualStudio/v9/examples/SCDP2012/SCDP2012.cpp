@@ -437,7 +437,7 @@ int main(int argc, char* argv[]) {
     MP_variable x(L,M,P,T); x.setName("x"); // Amount of product p produced on line l, delivered to market m in time period t
     MP_variable f_rev(C,T,T2); f_rev.setName("f_rev"); // {c in C, tbuy in T, teffect in T, s in Scen:teffect>tbuy and teffect-tbuy<=max_hedge_time}  =0; # forward amount (between currency c (buy) and reference currency (sell), bought in period tbuy, operates in period teffect), is limited to the production activities (i. e. 1 is the maxmium hedge rate - see restriction)
     f_rev.upperLimit(C,T,T2) = 0;
-    f_rev.lowerLimit(C,T,T2) = -1e30;
+    f_rev.lowerLimit(C,T,T2) = -1e30; // -1e20 is infinity?
 	MP_variable f_cost(C,T,T2); f_cost.setName("f_cost"); // {c in C, tbuy in T, teffect in T, s in Scen:teffect>tbuy and teffect-tbuy<=max_hedge_time} =0; # forward amount (between currency c (buy) and reference currency (sell), bought in period tbuy, operates in period teffect), is limited to the production activities (i. e. 1 is the maxmium hedge rate - see restriction)
     MP_variable call_b(C,T,T2); call_b.setName("call_b"); // {c in C, tbuy in T, texpire in T, s in Scen:texpire>tbuy and texpire-tbuy<=max_hedge_time} = 0; # amount of bought call options for currency c in period tbuy, expire in period texpire, strike price is the exr in period tbuy (european options)
     MP_variable put_b(C,T,T2); put_b.setName("put_b"); // {c in C, tbuy in T, texpire in T, s in Scen:texpire>tbuy and texpire-tbuy<=max_hedge_time} = 0; # amount of bought put options for currency c in period tbuy, expire in period texpire, strike price is the exr in period tbuy (european options)
@@ -517,7 +517,7 @@ int main(int argc, char* argv[]) {
     line_operating_costs_in_currency_c.setName("line_operating_cost");
 
     demand_fulfilment(M,T,P) = sum(L, x(L,M,P,T)) + x2(M,P,T) == d(M,P,T);
-    max_capacity(L,P,T) = sum(M, x(L,M,P,T) * r(P)) <= m(L) * y_build_loop(L,P,T);
+    max_capacity(L,P,T) = sum(M, x(L,M,P,T) * r(P)) <= m(L) * y_build_loop(L,P,T); // Constraint that is rather odd from a stagewise constraint?!
     prod_costs_for_line_l_in_period_t(L,T) = cost_prod(L,T) == sum(M*P, x(L,M,P,T) * q_prod(L,P));
     transportation_costs_from_line_l(L,T) = cost_trans(L,T) == sum(M*P, x(L,M,P,T) * q_trans(L,P,M));
     revenue_in_market_m_in_periode_t(M,T) = revenue(M,T) == sum(P, (d(M,P,T) - rc * x2(M,P,T)) * price(M,P));
@@ -525,6 +525,7 @@ int main(int argc, char* argv[]) {
     line_operating_costs_in_currency_c(C) = cost_lineoperate(C) == sum(LineLinks(L,C)*P, fc_level * c_operate(L) * y_build(L,P));
 
     MP_variable cost_lineoperate_loop(C,T);
+    cost_lineoperate_loop.free();
     MP_constraint loop_cost_lineoperate(C,T);
     MP_constraint fix_cost_lineoperate(C,T);
     loop_cost_lineoperate(C,T+1) = cost_lineoperate_loop(C,T) == cost_lineoperate_loop(C,T-1);
@@ -629,6 +630,7 @@ int main(int argc, char* argv[]) {
 
     // Loop through some variables
     MP_variable first_stage_costs(T);
+    first_stage_costs.free();
 
     MP_constraint first_stage_fix; first_stage_fix.setName("first_stage_fix");
     MP_constraint first_stage_loop(T); first_stage_loop.setName("first_stage_loop");
@@ -637,6 +639,7 @@ int main(int argc, char* argv[]) {
     first_stage_loop(T+1) = first_stage_costs(T) == first_stage_costs(T-1);
 
     MP_variable sum_npv_stage(T);
+    sum_npv_stage.free();
 
     MP_constraint npv_stage_loop(T); npv_stage_loop.setName("npv_stage_loop");
     MP_constraint npv_stage_fix(T); npv_stage_fix.setName("npv_stage_fix");
