@@ -3463,6 +3463,7 @@ namespace parallel_benders {
             // Add this to all methods that resolve the problem in one way or another!
         }
         benders_node_pointer->unbounded_ = false;
+        benders_node_pointer->unbounded_problem_ = false;
 
         delete benders_node_pointer->matrix_; benders_node_pointer->matrix_ = NULL;
         if ( node_pointer->getColLowerLength())
@@ -6183,7 +6184,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 2){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
