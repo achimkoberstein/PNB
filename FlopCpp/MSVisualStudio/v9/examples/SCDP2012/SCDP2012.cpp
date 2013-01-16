@@ -665,7 +665,7 @@ int main(int argc, char* argv[]) {
     //p_call.display("p_call");
     
     model.setObjective( lambda() * (-sum(T.such_that(T>0),npv_stage(T)) + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) )) 
-        - (1-lambda()) * 1000.0 * (y(0) - (1.0/cvar_alpha())*y_s(T.size()-1)) );
+        - (1-lambda()) * 1000.0 * (y(T.size()-1) - (1.0/cvar_alpha())*y_s(T.size()-1)) );
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
 
     model.attach(); // Load OsiSolverData??
