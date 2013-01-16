@@ -200,9 +200,10 @@ public:
 
     boost::scoped_array<double> mip_solution_;
 
-    bool unbounded_problem_;
+    bool unbounded_problem_; // If we should generate a unbounded_right_hand_side for a special problem?
     boost::scoped_array<double> unbounded_extreme_ray_; // Stores an extreme ray!
-    boost::scoped_array<double> unbounded_right_hand_side_; // Stores right hand side as it would be normally generated. Only used when problem at previous stage is unbounded!
+    boost::scoped_array<double> unbounded_right_hand_side_; // Stores right hand side generated for extreme ray subproblem!
+    bool solve_ray_right_hand_side_; // If we actually solve the ray_right_hand_side!
     
 
     int cols_; 

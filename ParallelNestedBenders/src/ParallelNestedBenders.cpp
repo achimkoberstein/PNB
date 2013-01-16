@@ -1468,10 +1468,25 @@ namespace parallel_benders {
             current_time = CoinCpuTime();
         }
 #endif // COMPUTING_TIMER
+        
 
-
-
+        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario());
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
+
+        // In case of unbounded parent problem, we exchange the right-hand-side of the solver and resolve the problem (point problem)!
+        if ( benders_tree_node_pointer->getDataPtr()->unbounded_problem_ ){
+            // Exchange right-hand-side of problem! Resolve!
+            // Only works for problems without cuts, I suppose?!
+            for (int i = 0; i < stage_data_[current_stage_]->num_rows_;i++)
+                osi_solver->setRowBounds(i,benders_tree_node_pointer->getDataPtr()->row_lower_[i],benders_tree_node_pointer->getDataPtr()->row_upper_[i]);
+            benders_tree_node_pointer->getDataPtr()->solve_ray_right_hand_side_ = false;
+            PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"point");
+            SolveSubproblem(osi_solver,benders_tree_node_pointer);
+            // What about store data?
+            // Try to store this solution
+            //StoreData(osi_solver,benders_tree_node_pointer);
+            LOG(INFO) << "Debug Breakpoint";
+        }
 
         if ( current_stage_ == 0){
             solution_times_.Stop(0);
@@ -1484,7 +1499,7 @@ namespace parallel_benders {
             solution_times_.AddTime(3,elapsed_solution_time);
         }
 #endif // COMPUTING_TIMER
-        
+
         // We only need to store data if we have a feasible solution for the subproblem.
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()]){
             StoreData(osi_solver,benders_tree_node_pointer);
@@ -1509,7 +1524,7 @@ namespace parallel_benders {
         // Warm Start Handling
         // Depending on Warm Start behaviour, use the corresponding entry
         // If WarmstartForScenario or WarmstartForStage do the following
-        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario());
+        //PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario());
 
         SetWarmStart(osi_solver,benders_tree_node_pointer);
 
@@ -1562,17 +1577,30 @@ namespace parallel_benders {
                         assert( osi_solver->isProvenDualInfeasible());
                     }
                     benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_.reset(osi_solver->getPrimalRays(1)[0]);
-                    
-                    unbounded_problem_ = true;
-                    //std::vector<SmiTreeNode<BendersNodeData*>*>* children = benders_tree_node_pointer->getChildren();
-                    //for ( std::vector<SmiTreeNode<BendersNodeData*>*>::iterator it = children->begin(); it != children->end(); ++it){
-                    //    (*it)->getDataPtr()->unbounded_problem_ = true;
-                    //}
+
+                    // Normalize values
+                    for (int counter = 0; counter < stage_data_[current_stage_]->num_columns_; counter++){
+                        if ( CompareWithZero(benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter]) )
+                            benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] = 0.0;
+                        benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] *= -1.0;
+                    }
+
+                    int start_theta = stage_data_[current_stage_]->num_columns_;
+                    bool unbounded_theta = false;
+                    // Find out if the problem is unbounded in the direction of the theta variable.
+                    for (int count_theta = start_theta; count_theta < start_theta+benders_tree_node_pointer->getDataPtr()->num_thetas_;count_theta++){
+                        if ( benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[count_theta] != 0.0 ){
+                            unbounded_theta = true; break;
+                        }
+                    }
+
+
+
 
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
-                    if ( num_thetas ){
-                        // Inspect the unbounded extreme ray to see if we need this extra row!
-                        // TODO
+                    if ( num_thetas && unbounded_theta){
+                        // TODO Inspect the unbounded extreme ray to see if we need this extra row!
+                        // 
                         boost::scoped_array<int> extra_indices(new int[num_thetas]);
                         boost::scoped_array<double> extra_elements(new double[num_thetas]);
                         for (int i = 0; i < num_thetas; i++){
@@ -1582,9 +1610,8 @@ namespace parallel_benders {
                         // we bound all thetas with one extra row?
                         // We could also bound every theta itself ( or set variable bounds do not work right now.. ) 
                         osi_solver->addRow(num_thetas,extra_indices.get(),extra_elements.get(),-10000000000000, infinity_); // We assume that will work. I mean: Half infinity? 
-						PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"adjusted");
+                        PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"adjusted");
                         // We need to remove this row again, when we finished everything with this problem!
-                        benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
                         benders_tree_node_pointer->getDataPtr()->unbounded_row_ = osi_solver->getNumRows()-1;
                         // Switch preprocessing and advanced start off
                         OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
@@ -1598,11 +1625,18 @@ namespace parallel_benders {
                         }
                         else 
                             SolveSolverInterface(osi_solver);
+                        // Depending on the solution to this
                     }
-                }
 
-                if ( osi_solver->isProvenPrimalInfeasible() ){
-                    // Go below for feasibility cut
+                    if ( osi_solver->isProvenDualInfeasible()){
+                        benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
+                        if ( forward_ ){
+                            std::vector<SmiTreeNode<BendersNodeData*>*>* children = benders_tree_node_pointer->getChildren();
+                            for ( std::vector<SmiTreeNode<BendersNodeData*>*>::iterator it = children->begin(); it != children->end(); ++it){
+                                (*it)->getDataPtr()->unbounded_problem_ = true;
+                            }
+                        }
+                    }
                 }
                 // TODO: This section should not be necessary anyway..
                 //else if ( !osi_solver->isProvenOptimal()){
@@ -1625,8 +1659,7 @@ namespace parallel_benders {
                 //    }
                 //}
             }
-
-            if ( osi_solver->isProvenPrimalInfeasible() ){
+            else if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
                 infeasible_problem_mutex_.lock();
                 if ( only_one_feasibility_cut_ && infeasible_problems_.any() ){ 
@@ -1667,11 +1700,6 @@ namespace parallel_benders {
                     CPXwriteprob(env_ptr,lp_ptr,"not_optimal","lp");
                 }
             }
-            else if ( osi_solver->isProvenOptimal() )
-                StoreWarmStart(osi_solver,benders_tree_node_pointer);
-            // TODO Other possible cases
-            // Get the cplex stat..
-
         }// if not provenOptimal end
         else { // Proven Optimal: 
             StoreWarmStart(osi_solver,benders_tree_node_pointer);
@@ -1723,7 +1751,12 @@ namespace parallel_benders {
             }
             assert(num_theta >= 0);
             StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
+            if (  benders_node_pointer->unbounded_ && num_theta > 0){
+                for (int i = 0; i < num_theta;i++)
+                    benders_node_pointer->next_stage_approximation_[i] = -infinity_;
+            }
         }
+
 
         // We need the column solution for the next stage problem!
         // We want to differentiate between column solution and theta variables 
@@ -1804,7 +1837,7 @@ namespace parallel_benders {
                 old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
                 if ( !warm_up_ )
                     lower_bound_ = current_lower_bound;
-                if (num_theta == 0 || unbounded_problem_){// We have no thetas yet
+                if (num_theta == 0 || benders_node_pointer->unbounded_){// We have no thetas yet
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
                 }
@@ -2019,39 +2052,36 @@ namespace parallel_benders {
                 number_of_allocated_rows += stage_pointer->num_d_square_cuts_;
             benders_node_pointer->row_lower_ = new double[number_of_allocated_rows];
             benders_node_pointer->row_upper_ = new double[number_of_allocated_rows];
-            if ( benders_node_pointer->unbounded_problem_ ){
-                CoinFillN(benders_node_pointer->row_lower_,number_of_allocated_rows,0.0);
-                CoinFillN(benders_node_pointer->row_upper_,number_of_allocated_rows,0.0);
+            if ( benders_node_pointer->unbounded_problem_ ){ // This is wrong, because we have equality rows instead of inequality rows?
+                benders_node_pointer->unbounded_right_hand_side_.reset(new double[number_of_allocated_rows]);
+                CoinFillN(benders_node_pointer->unbounded_right_hand_side_.get(),number_of_allocated_rows,0.0);
+                benders_tree_node_pointer->getDataPtr()->solve_ray_right_hand_side_ = true; // We solve this problem first!
             }
-            else {
-                memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
-                if ( stage_pointer->stochastic_rhs_ ){
-                    for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
-                        assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
-                        assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
-                        benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
-                    }
-                }
-
-
-
-                memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
-                if  ( stage_pointer->stochastic_rhs_){
-                    for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
-                        benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
-                    }
+            memcpy(benders_node_pointer->row_lower_, core_->getDenseRowLower(current_stage_), num_rows*sizeof(double));
+            if ( stage_pointer->stochastic_rhs_ ){
+                for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
+                    assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) >= 0);
+                    assert(node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_) < num_rows);
+                    benders_node_pointer->row_lower_[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
                 }
             }
+            memcpy(benders_node_pointer->row_upper_, core_->getDenseRowUpper(current_stage_), num_rows*sizeof(double));
+            if  ( stage_pointer->stochastic_rhs_){
+                for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
+                    benders_node_pointer->row_upper_[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+                }
+            }
+            
         }
 
         // Add solution from previous problem, i.e. form right hand side of the problem
         if ( current_stage_ > 0 ){
             // Get solution from predecessor in tree
             double* column_solution = NULL;
-            if ( !benders_node_pointer->unbounded_problem_ )
-                column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
-            else 
-                column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->unbounded_extreme_ray_.get();
+            double* unbounded_rhs = NULL;
+            column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
+            if ( benders_node_pointer->unbounded_problem_ )
+                unbounded_rhs = benders_tree_node_pointer->getParent()->getDataPtr()->unbounded_extreme_ray_.get();
 
             if ( column_solution != NULL){
                 // Add T-matrix together with stochastic entries to the problem if there are any
@@ -2066,6 +2096,7 @@ namespace parallel_benders {
                 // Now we need the loop. Do go on.
                 for (int row = 0; row < stage_pointer->num_rows_; row++){ // For every row we have to calculate the correct value that has to added to rlo or rup
                     double value = 0;
+                    double unbounded_value = 0;
                     if ( node_pointer->hasMatrix() )// We only need stochastic T matrix here
                         stochastic_element_in_row = (stochastic_matrix.start_[row+1]-stochastic_matrix.start_[row]) ? true : false;
 
@@ -2090,12 +2121,16 @@ namespace parallel_benders {
                             if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index] ){
                                 assert( stochastic_matrix.indices_[stochastic_column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && stochastic_matrix.indices_[stochastic_column_index]-previous_stage_columns >= 0);
                                 value += stochastic_matrix.elements_[stochastic_column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
+                                if ( unbounded_rhs != NULL)
+                                    unbounded_value += stochastic_matrix.elements_[stochastic_column_index]*unbounded_rhs[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                                 stochastic_column_index++;
                             }
 
                             else {  // We assume Staircase-Problems. 
                                 assert( deterministic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && deterministic_matrix.indices_[column_index]-previous_stage_columns >= 0 );
                                 value += deterministic_matrix.elements_[column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
+                                if ( unbounded_rhs != NULL)
+                                     unbounded_value += deterministic_matrix.elements_[column_index]*unbounded_rhs[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                             }
                         }
 
@@ -2117,6 +2152,9 @@ namespace parallel_benders {
 
                         benders_node_pointer->row_lower_[row] -= value; // lb == row == ub, we can not handle lb <= row <= ub with one real inequality ( have to split up to two rows somewhere..
                         benders_node_pointer->row_upper_[row] -= value;
+                    }
+                    if ( unbounded_rhs != NULL ){
+                        benders_node_pointer->unbounded_right_hand_side_[row] -= unbounded_value;
                     }
                 }
             }
@@ -2146,7 +2184,11 @@ namespace parallel_benders {
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
-            osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->row_lower_,benders_node_pointer->row_upper_);
+            if ( !benders_node_pointer->unbounded_problem_  )
+                osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->row_lower_,benders_node_pointer->row_upper_);
+            else
+                osi_solver->loadProblem(*benders_node_pointer->matrix_,benders_node_pointer->column_lower_,benders_node_pointer->column_upper_,benders_node_pointer->objective_,benders_node_pointer->unbounded_right_hand_side_.get(),benders_node_pointer->unbounded_right_hand_side_.get());
+            
         }
         else{
             if ( stage_pointer->stochastic_bounds_ ){
@@ -2167,8 +2209,14 @@ namespace parallel_benders {
             std::vector<double> row_bounds;
             row_bounds.reserve(number_of_allocated_rows*2);
             for ( int i = 0; i < number_of_allocated_rows; i++ ){
-                row_bounds.push_back(benders_node_pointer->row_lower_[i]);
-                row_bounds.push_back(benders_node_pointer->row_upper_[i]);
+                if ( !benders_node_pointer->unbounded_problem_ ){
+                    row_bounds.push_back(benders_node_pointer->row_lower_[i]);
+                    row_bounds.push_back(benders_node_pointer->row_upper_[i]);
+                }
+                else {
+                    row_bounds.push_back(benders_node_pointer->unbounded_right_hand_side_[i]);
+                    row_bounds.push_back(benders_node_pointer->unbounded_right_hand_side_[i]);
+                }
             }
             osi_solver->setRowSetBounds(&stage_pointer->row_indices_[0],&stage_pointer->row_indices_[number_of_allocated_rows],&row_bounds[0]);
 
@@ -2514,6 +2562,8 @@ namespace parallel_benders {
 
             // Add cut
             boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
+            if ( CompareWithZero(cut_lower_bound))
+                cut_lower_bound = 0.0;
             cut_pointer->setLb(cut_lower_bound);
             cut_pointer->setUb(infinity_);
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
@@ -2591,7 +2641,7 @@ namespace parallel_benders {
 
             dual_solution_farkas = new double[number_rows];
 
-            if ( true || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
+            if ( true || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){// If this is not done everytime, problems can occur with fxm4_16 that say no dual solution present!
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
@@ -2629,7 +2679,7 @@ namespace parallel_benders {
                     dual_solution_farkas = NULL;
                 }
 
-                if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ && use_dual_farkas){ // We need to compute the dual values for the bounds! Where do we get the values? Link blogpost by OR in an OB World: http://orinanobworld.blogspot.de/2011/07/farkas-certificates-in-cplex.html
+                if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ && use_dual_farkas){ // We need to compute the dual values for the primal variable bounds! Where do we get the values? Link blogpost by OR in an OB World: http://orinanobworld.blogspot.de/2011/07/farkas-certificates-in-cplex.html
                         // q^T = y^T*A 
                         // We can compute this with the column based matrices
                         variable_lower_bounds = benders_tree_node_pointer->getDataPtr()->column_lower_;
@@ -2755,26 +2805,34 @@ namespace parallel_benders {
         // Compute the cut coefficients for the RHS.
         // We compute prob* \pi * T + \theta >= prob*\pi*h (+ prob*dual_value_variable_bounds)
         double* row_lower = NULL; double * row_upper = NULL;
-        if ( node_pointer->getRowLowerLength() ){
-            row_lower = new double[stage_pointer->num_rows_];
-            memcpy(row_lower, core_->getDenseRowLower(current_stage_), stage_pointer->num_rows_*sizeof(double));
-            for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
-                row_lower[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
+        if ( !benders_node_pointer->solve_ray_right_hand_side_ ){
+            if ( node_pointer->getRowLowerLength() ){
+                row_lower = new double[stage_pointer->num_rows_];
+                memcpy(row_lower, core_->getDenseRowLower(current_stage_), stage_pointer->num_rows_*sizeof(double));
+                for (int i = 0; i < node_pointer->getRowLowerLength(); i++) {
+                    row_lower[node_pointer->getRowLowerIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowLowerElements()[i];
+                }
             }
-        }
-        else 
-            row_lower = const_cast<double*> (core_->getDenseRowLower(current_stage_));
+            else 
+                row_lower = const_cast<double*> (core_->getDenseRowLower(current_stage_));
 
-        if ( node_pointer->getRowUpperLength() ){
-
-            row_upper = new double[stage_pointer->num_rows_];
-            memcpy(row_upper, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
-            for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
-                row_upper[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+            if ( node_pointer->getRowUpperLength() ){
+                row_upper = new double[stage_pointer->num_rows_];
+                memcpy(row_upper, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
+                for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
+                    row_upper[node_pointer->getRowUpperIndices()[i] - core_->getRowStart(current_stage_)] = node_pointer->getRowUpperElements()[i];
+                }
             }
+            else           
+                row_upper = const_cast<double*> (core_->getDenseRowUpper(current_stage_));
         }
-        else           
-            row_upper = const_cast<double*> (core_->getDenseRowUpper(current_stage_));
+        else {
+            // If we generate a feasibility cut for the ray problem, we need to take the extreme ray stored in this node!
+
+            row_lower = benders_node_pointer->unbounded_right_hand_side_.get();
+            row_upper = benders_node_pointer->unbounded_right_hand_side_.get();
+        }
+
 
         // Now we generate the RHS value of the cut
         // To calculate RHS, use constant RHS/LHS; if the 
@@ -2809,18 +2867,22 @@ namespace parallel_benders {
             row++;
         }
 
-        for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-            if ( (*it)->to_use_ ) {
-                LOG_IF(INFO,checked_dual_solution[row] < 0) << "Problem at cut with row " << row << " has dual value " << checked_dual_solution[row] << " writing problem.";
-                //if ( checked_dual_solution[row] < 0) 
-                //    osi_solver->writeLp("murks");
-                assert( checked_dual_solution[row] >= 0 || CompareWithZero(checked_dual_solution[row]));
-                cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
-                row++;
-            }
-        }
+        // We do not need optimality cuts here!
+
+        //for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
+        //    if ( (*it)->to_use_ ) {
+        //        LOG_IF(INFO,checked_dual_solution[row] < 0) << "Problem at cut with row " << row << " has dual value " << checked_dual_solution[row] << " writing problem.";
+        //        //if ( checked_dual_solution[row] < 0) 
+        //        //    osi_solver->writeLp("murks");
+        //        assert( checked_dual_solution[row] >= 0 || CompareWithZero(checked_dual_solution[row]));
+        //        cut_rhs += (*it)->cut_->lb()*checked_dual_solution[row];
+        //        row++;
+        //    }
+        //}
         // Append value for dual variable bounds
         cut_rhs += computed_dual_value_for_variable_bounds;
+        if ( CompareWithZero(cut_rhs))
+            cut_rhs = 0.0;
 
         // Add cut to set of feasibility cuts of parent problem
         boost::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
@@ -2863,9 +2925,9 @@ namespace parallel_benders {
         }
 
         // Delete the computed lower and upper bounds
-        if ( node_pointer->getRowLowerLength())
+        if ( node_pointer->getRowLowerLength() && !benders_node_pointer->solve_ray_right_hand_side_)
             delete [] row_lower;
-        if ( node_pointer->getRowUpperLength())
+        if ( node_pointer->getRowUpperLength() && !benders_node_pointer->solve_ray_right_hand_side_)
             delete [] row_upper;
 
         delete [] checked_dual_solution;
@@ -3394,12 +3456,13 @@ namespace parallel_benders {
             warm_up_solution_.reset(); // Delete the content of the warm_up solution, not longer needed
             
         }
-        if ( benders_node_pointer->unbounded_ ){
+        if ( benders_node_pointer->unbounded_ && benders_node_pointer->unbounded_row_ > 0 ){
             osi_solver->deleteRows(1,&benders_node_pointer->unbounded_row_);
             //SolveSolverInterface(osi_solver);
-            benders_node_pointer->unbounded_ = false;
+            benders_node_pointer->unbounded_row_ = 0;
             // Add this to all methods that resolve the problem in one way or another!
         }
+        benders_node_pointer->unbounded_ = false;
 
         delete benders_node_pointer->matrix_; benders_node_pointer->matrix_ = NULL;
         if ( node_pointer->getColLowerLength())
@@ -4207,6 +4270,8 @@ namespace parallel_benders {
         }
         // Add cut to Optimality Cut Set!
         boost::shared_ptr<OsiRowCut> osi_row_cut(new OsiRowCut());
+        if ( CompareWithZero(cut_lower_bound))
+            cut_lower_bound = 0.0;
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
         osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
@@ -6118,7 +6183,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 3){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 2){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
