@@ -781,8 +781,10 @@ namespace parallel_benders {
                     }
                     if (CompareForEquality(old_gap,gap,zero_tolerance_) )
                         gap_counter++;
-                    else
+					else{
                         gap_counter = 0;
+						solution_similiarity_counter_ = 0;
+					}
                     if ( gap_counter > gap_counter_maximum ){
                         LOG(INFO) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
@@ -1190,6 +1192,7 @@ namespace parallel_benders {
 				}
 			}
 
+			// Check for solution similarity (can be used if gap is non-increasing!)
             if ( !infeasible_problem_ && infeasible_problems_.none() ){
                 // No similarity check for FF and epsilonFF ( has to be done in another way, if any)
                 if ( current_stage_ == num_stages_-1 && !(sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD)){
@@ -1254,18 +1257,18 @@ namespace parallel_benders {
             }
 
             // If we had unbounded problems, we have to stop the algorithm.
-            if ( unbounded_problem_ ){
-                if ( infeasible_problems_.any() ){
-                    unbounded_problem_ = false;
-                }
-                //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
-                //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
-                //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
-                //    break;
-                //}
-                //else
-                //    unbounded_problem_ = false;
-            }
+            //if ( unbounded_problem_ ){
+            //    if ( infeasible_problems_.any() ){
+            //        unbounded_problem_ = false;
+            //    }
+            //    //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
+            //    //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+            //    //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
+            //    //    break;
+            //    //}
+            //    //else
+            //    //    unbounded_problem_ = false;
+            //}
 
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
@@ -1562,7 +1565,7 @@ namespace parallel_benders {
                     }
                     benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_.reset(osi_solver->getPrimalRays(1)[0]);
                     
-                    unbounded_problem_ = true;
+                    //unbounded_problem_ = true;
                     //std::vector<SmiTreeNode<BendersNodeData*>*>* children = benders_tree_node_pointer->getChildren();
                     //for ( std::vector<SmiTreeNode<BendersNodeData*>*>::iterator it = children->begin(); it != children->end(); ++it){
                     //    (*it)->getDataPtr()->unbounded_problem_ = true;
@@ -1598,6 +1601,10 @@ namespace parallel_benders {
                         else 
                             SolveSolverInterface(osi_solver);
                     }
+					else {
+						// We can not handle this correctly for now
+						LOG(FATAL) << "Your problem got unbounded.";
+					}
                 }
 
                 if ( osi_solver->isProvenPrimalInfeasible() ){
@@ -1803,7 +1810,7 @@ namespace parallel_benders {
                 old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
                 if ( !warm_up_ )
                     lower_bound_ = current_lower_bound;
-                if (num_theta == 0 || unbounded_problem_){// We have no thetas yet
+                if (num_theta == 0 ){// We have no thetas yet
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
                 }
