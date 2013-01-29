@@ -491,7 +491,7 @@ namespace parallel_benders {
         }
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = false;
+        only_one_feasibility_cut_ = true;
 
         // Thread related stuff
         num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -1593,10 +1593,7 @@ namespace parallel_benders {
                             unbounded_theta = true; break;
                         }
                     }
-
-
-
-
+                    benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
                     if ( num_thetas && unbounded_theta){
                         // TODO Inspect the unbounded extreme ray to see if we need this extra row!
@@ -1629,7 +1626,6 @@ namespace parallel_benders {
                     }
 
                     if ( osi_solver->isProvenDualInfeasible()){
-                        benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
                         if ( forward_ ){
                             std::vector<SmiTreeNode<BendersNodeData*>*>* children = benders_tree_node_pointer->getChildren();
                             for ( std::vector<SmiTreeNode<BendersNodeData*>*>::iterator it = children->begin(); it != children->end(); ++it){
@@ -3148,6 +3144,7 @@ namespace parallel_benders {
             seperate_first_stage_solver_ = false;
             StoreWarmStart(osi_solver,benders_tree_node_pointer);
             seperate_first_stage_solver_ = true;
+            PrintSubproblem(osi_solver,0,"optfeas");
 
             // Delete the optimality cuts from the problem and add them again, so all feas cuts are clumped together!
             int num_cuts = 0;
@@ -3538,7 +3535,6 @@ namespace parallel_benders {
 
             if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1 ){
                 add_cut = false;
-                CutStuff::strike_threshold_ = 5; 
             }
 
             if ( adaptive_ ){
@@ -3616,10 +3612,11 @@ namespace parallel_benders {
                 // The active value for all cuts sums up to the number of aggregates. All cuts for each aggregate sum up to 1.
                 for (int i = 1; i < current_iteration_; i++){ // Iterate over all iterations
                     assert( cuts_from_iteration[i].second >= 0);
-                    number_of_cuts_per_hierarchy_level.push_back(max(consolidatable_cuts_in_iteration[i]/reduce_by_ratio,max_minimal_cuts)); // So we use one-fourth of the aggregates from now on, no more single-cuts?
+                    //number_of_cuts_per_hierarchy_level.push_back(max(consolidatable_cuts_in_iteration[i]/reduce_by_ratio,max_minimal_cuts)); // So we use one-fourth of the aggregates from now on, no more single-cuts?
+                    number_of_cuts_per_hierarchy_level.push_back(max_minimal_cuts); // So we use one-fourth of the aggregates from now on, no more single-cuts?
                     if ( cuts_from_iteration[i].second > intra_aggregate_threshold ) // We only proceed with the aggregation if the active level falls below the threshold
                         continue;
-                    if ( consolidatable_cuts_in_iteration[i] == max_minimal_cuts )// We do not need to consolidate single cuts!
+                    if ( cuts_in_iteration[i] <= max_minimal_cuts )// We do not need to consolidate single cuts ( when we have not consolidated cuts earlier )
                         continue;
                     
 
@@ -3640,8 +3637,7 @@ namespace parallel_benders {
                     std::vector<double*> new_elements_vector;
                     std::vector<int*> new_indices_vector;
                     std::vector<double> rhs_vector;
-                    // We might reserve it here!
-                    int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_;
+                    int col_size = stage_data_[current_stage_]->num_columns_+ benders_node_pointer->num_thetas_; 
                     BendersNodeData::cut_container::iterator cut_it = cut_stuff_it;
                     // We need to create more cut_stuff elements here!
                     int count_cuts = 0;
@@ -3676,7 +3672,7 @@ namespace parallel_benders {
                         continue; 
                     }
                     assert( count_cuts == number_of_cuts_per_hierarchy_level[i]);
-                    LOG(INFO) << "Iteration " << i << " with now " << number_of_cuts_per_hierarchy_level[i] << " and before " << consolidatable_cuts_in_iteration[i];
+                    LOG(INFO) << "Iteration " << i << " with now " << number_of_cuts_per_hierarchy_level[i] << " and before consolidable " << consolidatable_cuts_in_iteration[i] << " from " << cuts_in_iteration[i];
 
                     /******
                     // Compute the new cut coefficients and right hand side values
@@ -3700,11 +3696,10 @@ namespace parallel_benders {
                             //break; // For now just quit!
                         }
                         //assert( (*it)->aggregate_number_ >= 0);
+                        // Decide to which new cut we would like to add the current old cut
                         int cut_counter_modulo = cut_counter % number_of_cuts_per_hierarchy_level[i];
-                        cut_counter_modulo = cut_counter / number_of_cuts_per_hierarchy_level[i];
-                        if ( cut_counter_modulo >= number_of_cuts_per_hierarchy_level[i] ){
+                         if ( cut_counter_modulo >= number_of_cuts_per_hierarchy_level[i] ){
                             cut_counter_modulo = number_of_cuts_per_hierarchy_level[i]-1;
-                            //assert(number_of_cuts_per_hierarchy_level[i] <= 1);
                         }
                         if ( (*it)->cut_creation_iteration_ == i ){
                             if ( comparison_object(*it,i) ){ // See if this cut is aggregatable!

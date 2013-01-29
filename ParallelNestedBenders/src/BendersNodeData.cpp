@@ -111,6 +111,10 @@ const CoinWarmStart* BendersNodeData::warm_start(void)
 
 void BendersNodeData::CleanUnusedMemory( bool direction )
 {
+    unbounded_ = false;
+    unbounded_problem_ = false;
+    unbounded_extreme_ray_.reset(NULL);
+    unbounded_right_hand_side_.reset(NULL);
     if ( direction ){ // We go forward, we do not need dual values. We recompute them, if needed
         delete [] dual_solution_;
         delete [] reduced_cost_;
