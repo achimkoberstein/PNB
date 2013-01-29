@@ -782,8 +782,10 @@ namespace parallel_benders {
                     }
                     if (CompareForEquality(old_gap,gap,zero_tolerance_) )
                         gap_counter++;
-                    else
+					else{
                         gap_counter = 0;
+						solution_similiarity_counter_ = 0;
+					}
                     if ( gap_counter > gap_counter_maximum ){
                         LOG(INFO) << "Algorithm stops as gap does not narrow anymore for " << gap_counter << " successive iterations.";
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
@@ -1191,6 +1193,7 @@ namespace parallel_benders {
 				}
 			}
 
+			// Check for solution similarity (can be used if gap is non-increasing!)
             if ( !infeasible_problem_ && infeasible_problems_.none() ){
                 // No similarity check for FF and epsilonFF ( has to be done in another way, if any)
                 if ( current_stage_ == num_stages_-1 && !(sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD)){
@@ -1255,18 +1258,18 @@ namespace parallel_benders {
             }
 
             // If we had unbounded problems, we have to stop the algorithm.
-            if ( unbounded_problem_ ){
-                if ( infeasible_problems_.any() ){
-                    unbounded_problem_ = false;
-                }
-                //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
-                //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
-                //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
-                //    break;
-                //}
-                //else
-                //    unbounded_problem_ = false;
-            }
+            //if ( unbounded_problem_ ){
+            //    if ( infeasible_problems_.any() ){
+            //        unbounded_problem_ = false;
+            //    }
+            //    //else if ( current_stage_ == 0 && !tree_nodes_by_stage_[0][0]->getDataPtr()->optimality_cuts_.empty() ){// Lets see if we already have optimality cuts added to the problem?!
+            //    //    LOG(ERROR) << "Your problem got unbounded in stage " << current_stage_+1 << ".";
+            //    //    solution_code_ = PNB_SOLUTION_UNBOUNDED;
+            //    //    break;
+            //    //}
+            //    //else
+            //    //    unbounded_problem_ = false;
+            //}
 
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
@@ -1623,6 +1626,10 @@ namespace parallel_benders {
                         else 
                             SolveSolverInterface(osi_solver);
                         // Depending on the solution to this
+					else {
+						// We can not handle this correctly for now
+						LOG(FATAL) << "Your problem got unbounded.";
+					}
                     }
 
                     if ( osi_solver->isProvenDualInfeasible()){
