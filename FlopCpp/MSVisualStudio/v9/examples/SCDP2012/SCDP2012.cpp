@@ -676,6 +676,19 @@ int main(int argc, char* argv[]) {
     std::cout << "Optimal: " << model->isProvenOptimal();
     std::cout << "Objective-Value " << model->getObjValue();
     model->writeMps("scdp-problem"); // We should take objective sense into account
+    OsiCpxSolverInterface osi_cpx;
+
+    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,model.getSmi());
+    // Declare parameter file
+    parallel_benders::Parameter benders_param;
+    benders_param.init();
+    benders_param.parameter_.put(parallel_benders::PNB_RELAXATION,0); // Relax first stage constraints, if not wanted, comment the line.
+    // To set a parameter look in NestedBendersTest.cpp
+    nested_benders.setParameters(benders_param);
+
+    nested_benders.initialSolve();
+    std::cout << "Objective-Value " << nested_benders.getObjValue();
+
     
 
  //   cost_linebuild.display("cost_linebuild");

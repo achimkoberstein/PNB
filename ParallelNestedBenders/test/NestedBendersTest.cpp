@@ -164,9 +164,9 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-        aggregates.push_back(1);
-        //if ( num_aggregates_by_magic > 1)
-        //    aggregates.push_back(num_aggregates_by_magic);
+        //aggregates.push_back(1);
+        if ( num_aggregates_by_magic > 1)
+            aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -1362,7 +1362,7 @@ int main(int argc, char *argv[]) {
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
 #endif
     google::LogToStderr();
-    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0
+    google::SetStderrLogging(0); // logging to std::err enabled for all logging levels >= 0 (Different logging under release builds?)
     result = RUN_ALL_TESTS();
     
     //_CrtDumpMemoryLeaks(); // outside of scoping { }
