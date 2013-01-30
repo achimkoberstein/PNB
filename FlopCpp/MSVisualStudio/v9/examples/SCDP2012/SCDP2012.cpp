@@ -624,9 +624,9 @@ int main(int argc, char* argv[]) {
 	lambda() = 0.5;
 	cvar_alpha() = 0.05;
 
-	MP_constraint cvar_y(T);
-	cvar_y.setName("cvar_y");
-	cvar_y(T+1) = y(T) == y(T-1);
+	//MP_constraint cvar_y(T);
+	//cvar_y.setName("cvar_y");
+	//cvar_y(T+1) = y(T) == y(T-1);
 
     // Loop through some variables
     MP_variable first_stage_costs(T);
@@ -646,9 +646,9 @@ int main(int argc, char* argv[]) {
     npv_stage_fix(T).such_that(T==1) = sum_npv_stage(1) == npv_stage(1);
     npv_stage_loop(T+2) = sum_npv_stage(T) == sum_npv_stage(T-1)+npv_stage(T);
 
-	MP_constraint cvar_npv(T);
-	cvar_npv.setName("cvar_npv");
-	cvar_npv(T+2) = y(T)-y_s(T) <= (sum_npv_stage(T) - first_stage_costs(T))/1000.0; 
+	//MP_constraint cvar_npv(T);
+	//cvar_npv.setName("cvar_npv");
+	//cvar_npv(T+2) = y(T)-y_s(T) <= (sum_npv_stage(T) - first_stage_costs(T))/1000.0; 
     // Evtl npv_stage durchschleifen. Genauso cost_linebuild!
 
 
@@ -664,8 +664,9 @@ int main(int argc, char* argv[]) {
     //o_d2.display("o_d2");
     //p_call.display("p_call");
     
-    model.setObjective( lambda() * (-sum(T.such_that(T>0),npv_stage(T)) + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) )) 
-        - (1-lambda()) * 1000.0 * (y(T.size()-1) - (1.0/cvar_alpha())*y_s(T.size()-1)) );
+    model.setObjective( -sum(T.such_that(T>0),npv_stage(T) ) + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) ) );
+    //model.setObjective( lambda() * (-sum(T.such_that(T>0),npv_stage(T)) + sum(C, cost_linebuild(C) * (exr_offset(C) + exr_basis(C)) )) 
+    //    - (1-lambda()) * 1000.0 * (y(T.size()-1) - (1.0/cvar_alpha())*y_s(T.size()-1)) );
     //model.setObjective(sum(L*M*P*T, x(L,M,P,T)));
 
     model.attach(); // Load OsiSolverData??
@@ -682,7 +683,8 @@ int main(int argc, char* argv[]) {
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-    benders_param.parameter_.put(parallel_benders::PNB_RELAXATION,0); // Relax first stage constraints, if not wanted, comment the line.
+    benders_param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_BENDERS);
+    //benders_param.parameter_.put(parallel_benders::PNB_RELAXATION,0); // Relax first stage constraints, if not wanted, comment the line.
     // To set a parameter look in NestedBendersTest.cpp
     nested_benders.setParameters(benders_param);
 
