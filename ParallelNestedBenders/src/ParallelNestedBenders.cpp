@@ -4731,6 +4731,7 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.01);
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
                 CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
