@@ -29,8 +29,24 @@ int main(int argc, char* argv[]) {
 #pragma region sets
 
     // Stages
-    enum {T2009, T2010, T2011, numT};
-    MP_stage T(numT);
+
+//	T = 2
+//	enum {T2009, T2010, T2011, numT};
+
+//  T = 3
+//	enum {T2009, T2010, T2011, T2012, numT};
+
+//  T = 4
+//	enum {T2009, T2010, T2011, T2012, T2013, numT};
+
+//  T = 5
+	enum {T2009, T2010, T2011, T2012, T2013, T2014, numT};
+
+//  T = 6
+//	enum {T2009, T2010, T2011, T2012, T2013, T2014, T2015, numT};
+
+
+	MP_stage T(numT);
     T.setName("T");
 
 	MP_set T2(numT);
@@ -143,7 +159,8 @@ int main(int argc, char* argv[]) {
     q_prod.setName("q_prod");
 
     // d_basis{m in M,p in P,t in T}; # basis_demand, used to calculate the real demand
-    double basisDemand[numM][numP][numT] =
+	// T = 2	
+/*	double basisDemand[numM][numP][numT] =
     {
         { // M1
             { // P1
@@ -157,7 +174,77 @@ int main(int argc, char* argv[]) {
             }
         }
     };
-    MP_data d_basis(&basisDemand[0][0][0], M, P, T);
+*/
+/*
+	// T = 3
+	double basisDemand[numM][numP][numT] =
+    {
+        { // M1
+            { // P1
+                0, 270000, 200000, 120000
+            },
+            { // P2
+                0, 0, 120000, 240000
+            },
+            { // P3
+                0, 160000, 180000, 180000
+            }
+        }
+    };
+*/
+/*
+	// T = 4
+	double basisDemand[numM][numP][numT] =
+    {
+        { // M1
+            { // P1
+                0, 270000, 200000, 120000, 30000
+            },
+            { // P2
+                0, 0, 120000, 240000, 240000
+            },
+            { // P3
+                0, 160000, 180000, 180000, 150000
+            }
+        }
+    };
+*/
+
+	// T = 5
+	double basisDemand[numM][numP][numT] =
+    {
+        { // M1
+            { // P1
+                0, 330000, 330000, 270000, 200000, 120000
+            },
+            { // P2
+                0, 0, 0, 0, 120000, 240000
+            },
+            { // P3
+                0, 40000, 120000, 160000, 180000, 180000
+            }
+        }
+    };
+
+/*
+	// T = 6
+	double basisDemand[numM][numP][numT] =
+    {
+        { // M1
+            { // P1
+                0, 330000, 330000, 270000, 200000, 120000, 30000
+            },
+            { // P2
+                0, 0, 0, 0, 120000, 240000, 240000
+            },
+            { // P3
+                0, 40000, 120000, 160000, 180000, 180000, 150000
+            }
+        }
+    };
+*/
+
+	MP_data d_basis(&basisDemand[0][0][0], M, P, T);
     d_basis.setName("d_basis");
 
     // q_trans{l in L, p in P, m in M}; transportation costs for one unit of product p from line l to market m
@@ -293,8 +380,28 @@ int main(int argc, char* argv[]) {
     valuesD.push_back(df);
     valuesD.push_back(1/df);
 
+/*
+	// T = 2
     RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD)};
-    MP_random_data d_factor(&rVarDemand[0], T);
+*/
+/*
+	// T = 3
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD)};
+*/
+/*
+	// T = 4
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD)};
+*/
+
+	// T = 5
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD)};
+
+/*
+	// T = 6
+    RandomVariable* rVarDemand[numT-1] = { new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD), new EmpiricalRandomVariable(valuesD,probsD)};
+*/
+
+	MP_random_data d_factor(&rVarDemand[0], T);
 
     MP_random_data d(M,P,T); // We need a recursive formulation for that! (again..)
     d(M,P,T) = d_basis(M,P,T)* product(T2.such_that(T2<=T && T2 > 0),d_factor(T2));
@@ -305,11 +412,11 @@ int main(int argc, char* argv[]) {
 #pragma region financial
 
     // ir{c in C}; #interest rate of risk free investment in currency c
-    double ir_data[numC] = { 0.02, 0.07};
+    double ir_data[numC] = { 0.04, 0.04};
     MP_data ir(&ir_data[0],C);
 
     // ir_ref; #interest rate of the reference currency
-    const double ir_ref = 0.02;
+    const double ir_ref = 0.04;
 
 	// ir_wacc; #interest used to calculate the npv (wacc - weighted average cost of capital) 
 	const double ir_wacc = 0.08;
@@ -327,7 +434,8 @@ int main(int argc, char* argv[]) {
     MP_data exr_offset(&val_exr_offset[0], C);
 
     // ef; #factor for calculating the exchange rate
-    const double ef = 1.28;  //sigma = 0.25
+//    const double ef = 1.28;  //sigma = 0.25
+    const double ef = 1.57;  //sigma = 0.45
 
     // probability for the exchange rate going up
 //    const double p_up = (1-(1/ef))/(ef-(1/ef)); 
@@ -343,8 +451,27 @@ int main(int argc, char* argv[]) {
     valuesE.push_back(ef);
     valuesE.push_back(1/ef);
 
-    RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE)};
-    
+/*
+	// T = 2
+	RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE)};
+*/
+/*
+	// T = 3
+	RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE)};
+*/
+/*
+	// T = 4
+	RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE)};
+*/
+
+	// T = 5
+	RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE)};
+
+/*
+	// T = 6
+	RandomVariable* rVarExr[numT-1] = { new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE),new EmpiricalRandomVariable(valuesE,probsE)};
+*/
+
     MP_random_data exr_factor(&rVarExr[0], T);
     exr_factor.setName("exr_factor");
     
@@ -673,8 +800,12 @@ int main(int argc, char* argv[]) {
     std::cout << "Writing SMPS" << std::endl;
     model.getSmi()->writeSmps("SCDP", false, false); // We always assume MINIMIZATION
     std::cout << "Solving model" << std::endl;
-    model.solve(MP_model::MINIMIZE);
-    std::cout << "Optimal: " << model->isProvenOptimal();
+
+    double cpxtime = CoinCpuTime();
+	model.solve(MP_model::MINIMIZE);
+    cpxtime = CoinCpuTime()- cpxtime;
+	
+	std::cout << "Optimal: " << model->isProvenOptimal();
     std::cout << "Objective-Value " << model->getObjValue();
     model->writeMps("scdp-problem"); // We should take objective sense into account
     OsiCpxSolverInterface osi_cpx;
@@ -683,15 +814,27 @@ int main(int argc, char* argv[]) {
     // Declare parameter file
     parallel_benders::Parameter benders_param;
     benders_param.init();
-    benders_param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_BENDERS);
+    benders_param.parameter_.put(parallel_benders::PNB_BENDERS,1);
+
+
+	benders_param.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+	benders_param.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+
+/*
+//	benders_param.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+	benders_param.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+*/
     //benders_param.parameter_.put(parallel_benders::PNB_RELAXATION,0); // Relax first stage constraints, if not wanted, comment the line.
     // To set a parameter look in NestedBendersTest.cpp
     nested_benders.setParameters(benders_param);
 
-    nested_benders.initialSolve();
-    std::cout << "Objective-Value " << nested_benders.getObjValue();
-
+    double pnbtime = CoinCpuTime();
+	nested_benders.initialSolve();
+    pnbtime = CoinCpuTime()- pnbtime;
     
+	std::cout << "Objective-Value " << nested_benders.getObjValue() << std::endl;
+    std::cout << "Cplex time = " << cpxtime << "     Benders time = " << pnbtime << std::endl;
+ 
 
  //   cost_linebuild.display("cost_linebuild");
 	//cf_ref.display("cf_ref");
