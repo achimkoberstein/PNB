@@ -267,18 +267,15 @@ namespace parallel_benders {
             benders_stage_ptr->coltype_array_.resize(benders_stage_ptr->num_columns_,'C');
             std::vector<int> int_cols(core_->getIntCols(stage));
             std::vector<int>::iterator it = int_cols.begin();
-            for (int i = 0; i < benders_stage_ptr->num_columns_; i++){
-                if ( it != int_cols.end() && *it == i ){
-                    // Depends on upper / and or lower bounds, but at first we only solve binary problems..
-                    if ( core_->getDenseColUpper(stage)[i] == 1.0 && core_->getDenseColLower(stage)[i] == 0.0)
-                        benders_stage_ptr->coltype_array_[i] = 'B';
-                    else 
-                        benders_stage_ptr->coltype_array_[i] = 'I';
-                    ++it;
-                }
+            for ( std::vector<int>::iterator it = int_cols.begin(); it != int_cols.end() ; ++it){
+                // Depends on upper / and or lower bounds, but at first we only solve binary problems..
+                if ( core_->getDenseColUpper(stage)[*it] == 1.0 && core_->getDenseColLower(stage)[*it] == 0.0)
+                    benders_stage_ptr->coltype_array_[*it] = 'B';
+                else 
+                    benders_stage_ptr->coltype_array_[*it] = 'I';
             }
-            assert( it == int_cols.end());
         }
+        
     }
 
     ParallelNestedBenders::ParallelNestedBenders( SmiScnModel* smi_model_ptr ) :
@@ -303,8 +300,10 @@ namespace parallel_benders {
         //ios_base::sync_with_stdio(true);
         // Enable Buffering
         // 
+        bool debug_first_stage = true;
         int buffer_size = 16384;
-        setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
+        if ( !debug_first_stage)
+            setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
 
         num_stages_ = core_->getNumStages();
         num_scenarios_ = smi_->getNumScenarios();
@@ -578,7 +577,8 @@ namespace parallel_benders {
         // Set options for solver!
         SetSolverOptions(osi_solver_);
         // Unsilence first stage solver!
-        //osi_solver_->messageHandler()->setLogLevel(5);
+        if ( debug_first_stage )
+            osi_solver_->messageHandler()->setLogLevel(2);
         // Use only one thread per cplex instance (except for the first sage
 
         // Initialize all benders node data objects with the correct cut aggregation policy. TODO
@@ -4422,6 +4422,8 @@ namespace parallel_benders {
                     int num_mipstarts = 1; // We only add one mipstart
                     int begin_mipstarts = 0; // First mipstart starts at location 0
                     const int effortlevel_mipstarts = 0; // CPLEX decides
+
+                    //CPXdelmipstarts(env_ptr,lp_ptr,0,CPXgetnummipstarts(env_ptr,lp_ptr)-1);
                     int err = CPXaddmipstarts(env_ptr,lp_ptr,num_mipstarts,stage_data_[current_stage_]->num_columns_,&begin_mipstarts,&stage_data_[current_stage_]->column_indices_[0],mip_solution,&effortlevel_mipstarts,NULL);
                     for (int i = 1; i < stage_data_[current_stage_]->mip_solution_.size(); i++){
                         mip_solution = &stage_data_[current_stage_]->mip_solution_[i][0];
@@ -4721,7 +4723,7 @@ namespace parallel_benders {
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
                 CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
-                CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.5);
+                //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.5);
             }
             // Set markowitz threshold high for better accuracy 
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
@@ -4860,8 +4862,10 @@ namespace parallel_benders {
                     CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
                     // Set MIP options
                     CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1);
-                    //CPXsetintparam(env_ptr,CPX_PARAM_STARTALG,CPX_ALG_BARRIER); // BARRIER
-                    //CPXsetintparam(env_ptr,CPX_PARAM_SUBALG,CPX_ALG_BARRIER); // BARRIER
+                    CPXsetintparam(env_ptr,CPX_PARAM_STARTALG,CPX_ALG_BARRIER); // BARRIER
+                    CPXsetintparam(env_ptr,CPX_PARAM_SUBALG,CPX_ALG_BARRIER); // BARRIER
+                    CPXwriteprob(env_ptr,lp_ptr,"test2.sav","sav");
+                    //CPXreadcopyprob(env_ptr,lp_ptr,"test2.lp","lp");
                     CPXmipopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPXMIP_INForUNBD){ // Solve without presolve to determine correct direction!
@@ -6187,7 +6191,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6199,6 +6203,8 @@ namespace parallel_benders {
                 stream << ".lp";
                 console_mutex_.lock();
                 CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
+                stream << ".mps";
+                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"mps");
                 console_mutex_.unlock();
             }
             //stream << "osi";
