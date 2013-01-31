@@ -300,7 +300,7 @@ namespace parallel_benders {
         //ios_base::sync_with_stdio(true);
         // Enable Buffering
         // 
-        bool debug_first_stage = true;
+        bool debug_first_stage = false;
         int buffer_size = 16384;
         if ( !debug_first_stage)
             setvbuf(stdout, NULL, _IOFBF, buffer_size); // Full Bufferung, IOLBF = Line Buffering, IONBF = No Buffering
@@ -743,6 +743,8 @@ namespace parallel_benders {
                     solution_code_ = PNB_SOLUTION_SIMILARITY_LIMIT;
                 if ( current_iteration_-insubstantial_iteration_ >= max_iteration_ )
                     solution_code_ = PNB_SOLUTION_ITERATION_LIMIT;
+                if ( upper_bound_ < lower_bound_-zero_tolerance_ )
+                    solution_code_ = PNB_SOLUTION_UPPER_LESS_LOWER_BOUND;
                 break;
             }
             wall_clock_solution_time_.Stop(0);

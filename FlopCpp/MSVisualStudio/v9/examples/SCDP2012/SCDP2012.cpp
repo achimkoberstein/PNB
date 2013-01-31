@@ -802,12 +802,12 @@ int main(int argc, char* argv[]) {
     std::cout << "Solving model" << std::endl;
 
     double cpxtime = CoinCpuTime();
-	model.solve(MP_model::MINIMIZE);
+	//model.solve(MP_model::MINIMIZE);
     cpxtime = CoinCpuTime()- cpxtime;
 	
-	std::cout << "Optimal: " << model->isProvenOptimal();
-    std::cout << "Objective-Value " << model->getObjValue();
-    model->writeMps("scdp-problem"); // We should take objective sense into account
+	//std::cout << "Optimal: " << model->isProvenOptimal();
+ //   std::cout << "Objective-Value " << model->getObjValue();
+    //model->writeMps("scdp-problem"); // We should take objective sense into account
     OsiCpxSolverInterface osi_cpx;
 
     OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,model.getSmi());
@@ -842,9 +842,9 @@ int main(int argc, char* argv[]) {
 //	y_build.display("y");
     //y_s.display("y_s");
 	//y.display("y");
-	fexr.display("fexr");
-	p_put.display("p_put");
-	p_call.display("p_call");
+	//fexr.display("fexr");
+	//p_put.display("p_put");
+	//p_call.display("p_call");
 	//f_cost.display("f_cost");
 	//f_rev.display("f_rev");
 

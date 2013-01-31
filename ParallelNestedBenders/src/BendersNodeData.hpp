@@ -122,6 +122,7 @@ namespace parallel_benders{
     const int PNB_SOLUTION_GAP_NONIMPROVING = 6;
     const int PNB_SOLUTION_SUBSOLVER_PROBLEM = 7;
     const int PNB_SOLUTION_PARAMETER_PROBLEM = 8;
+    const int PNB_SOLUTION_UPPER_LESS_LOWER_BOUND = 9;
 
 
     struct BendersNodeData;
