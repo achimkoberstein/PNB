@@ -1576,28 +1576,28 @@ namespace parallel_benders {
                 if ( current_stage_ < num_stages_-1){
                     // Put bound on theta variable via row, column bounds do not cut it ( do not know why )
                     // Get a primal ray! Store the ray! Look at ray!
-                    if ( integer_problems_[current_stage_] ){
-                        // Solve LP problem, but we need to switch it back to MIP afterwards!
-                        osi_solver->initialSolve();
-                        assert( osi_solver->isProvenDualInfeasible());
-                    }
-                    benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_.reset(osi_solver->getPrimalRays(1)[0]);
+                    //if ( integer_problems_[current_stage_] ){
+                    //    // Solve LP problem, but we need to switch it back to MIP afterwards!
+                    //    osi_solver->initialSolve();
+                    //    assert( osi_solver->isProvenDualInfeasible());
+                    //}
+                    //benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_.reset(osi_solver->getPrimalRays(1)[0]);
 
-                    // Normalize values
-                    for (int counter = 0; counter < stage_data_[current_stage_]->num_columns_; counter++){
-                        if ( CompareWithZero(benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter]) )
-                            benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] = 0.0;
-                        benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] *= -1.0;
-                    }
+                    //// Normalize values
+                    //for (int counter = 0; counter < stage_data_[current_stage_]->num_columns_; counter++){
+                    //    if ( CompareWithZero(benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter]) )
+                    //        benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] = 0.0;
+                    //    benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[counter] *= -1.0;
+                    //}
 
                     int start_theta = stage_data_[current_stage_]->num_columns_;
-                    bool unbounded_theta = false;
-                    // Find out if the problem is unbounded in the direction of the theta variable.
-                    for (int count_theta = start_theta; count_theta < start_theta+benders_tree_node_pointer->getDataPtr()->num_thetas_;count_theta++){
-                        if ( benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[count_theta] != 0.0 ){
-                            unbounded_theta = true; break;
-                        }
-                    }
+                    bool unbounded_theta = true;
+                    //// Find out if the problem is unbounded in the direction of the theta variable.
+                    //for (int count_theta = start_theta; count_theta < start_theta+benders_tree_node_pointer->getDataPtr()->num_thetas_;count_theta++){
+                    //    if ( benders_tree_node_pointer->getDataPtr()->unbounded_extreme_ray_[count_theta] != 0.0 ){
+                    //        unbounded_theta = true; break;
+                    //    }
+                    //}
                     benders_tree_node_pointer->getDataPtr()->unbounded_ = true;
                     int num_thetas = benders_tree_node_pointer->getDataPtr()->num_thetas_;
                     if ( num_thetas && unbounded_theta){
@@ -2361,6 +2361,12 @@ namespace parallel_benders {
                 not_used++;
         }
         assert( row+not_used == for_bound);
+        if ( benders_node_pointer->unbounded_ ){
+            // We MUST add the unbounded row value to the RHS, otherwise we probably restrict theta values too much (lower bound gets much higher than allowed)!
+            // We must assert that the row index points to the unbounded row!
+            assert( row == benders_node_pointer->unbounded_row_);
+            cut_rhs += -10000000000000*dual_solution[row];
+        }
 
         if ( d_square_ ){
             assert( row == stage_pointer->num_rows_);
@@ -2379,6 +2385,9 @@ namespace parallel_benders {
         // Multiply with probability
         cut_rhs *= prob;
 
+        if ( CompareWithZero(cut_rhs))
+            cut_rhs = 0.0;
+
         // Store computed values in BendersNodeData
         benders_node_pointer->current_cut_coefficients_ = cut_coefficients;
         benders_node_pointer->current_cut_rhs_ = cut_rhs;
@@ -2393,7 +2402,7 @@ namespace parallel_benders {
             int new_index = 0;
             for (int index = 0; index < stage_data_[current_stage_-1]->num_columns_; index++){
                 if ( CompareWithZero(cut_coefficients[index]) ){
-                    // Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise
+                    // Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise by not adding it to the vector!
                 }
                 else {
                     cut_elements.push_back( cut_coefficients[index]);
@@ -6193,7 +6202,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
