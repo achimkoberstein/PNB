@@ -32,7 +32,7 @@
 #define CPXERR_NO_INT_SOLN CPXERR_NO_SOLN
 #endif
 
-// #define DEBUG 1
+//#define DEBUG 1
 
 #ifdef DEBUG
 #define debugMessage printf

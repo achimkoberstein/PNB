@@ -1804,7 +1804,7 @@ namespace parallel_benders {
                 old_lower_bound_ = lower_bound_; // Set old lower bound to last lower bound. If we added a feasibility cut lately, we have to take special care.
                 if ( !warm_up_ )
                     lower_bound_ = current_lower_bound;
-                if (num_theta == 0 || unbounded_problem_){// We have no thetas yet
+                if (num_theta == 0 || benders_node_pointer->unbounded_){// We have no thetas yet
                     lower_bound_ = -infinity_;
                     old_lower_bound_ = -infinity_;
                 }
@@ -3007,21 +3007,34 @@ namespace parallel_benders {
                 feas_it = benders_node_pointer->last_iteration_start_feasibility_;
                 benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
             }
-            // TODO: This can be changed to addRows
-            for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
-                if ( seperate_first_stage_solver_ && current_stage_ == 0 && !benders_node_pointer->optimality_cuts_.empty()){
-                    add_feas_cut_with_opt_cuts_present = true;
-                    break;
-                }
-                assert( (*feas_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
+			if ( feas_it != benders_node_pointer->feasibility_cuts_.end()){
+				if ( level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false){
+					OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+					if ( osi_cpx != NULL && level_cstat_ != NULL ){
+						CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+						CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+						if ( level_length_ == osi_cpx->getNumRows() )
+							CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+						else
+							LOG(INFO) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+					}
+				}
+				// TODO: This can be changed to addRows
+				for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
+					if ( seperate_first_stage_solver_ && current_stage_ == 0 && !benders_node_pointer->optimality_cuts_.empty()){
+						add_feas_cut_with_opt_cuts_present = true;
+						break;
+					}
+					assert( (*feas_it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
 
-                if ( !benders_node_pointer->warm_start_added_ && ( (*feas_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*feas_it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
-                    // Add warm start
-                    SetWarmStart(osi_solver,benders_tree_node_pointer);
-                    benders_node_pointer->warm_start_added_ = true;
-                }
-                osi_solver->applyRowCuts(1,(*feas_it)->cut_.get());
-            }
+					if ( !benders_node_pointer->warm_start_added_ && ( (*feas_it)->cut_creation_iteration_ == current_iteration_ && current_stage_ > 0 || (*feas_it)->cut_creation_iteration_ == current_iteration_-1 && current_stage_ == 0)){
+						// Add warm start
+						SetWarmStart(osi_solver,benders_tree_node_pointer);
+						benders_node_pointer->warm_start_added_ = true;
+					}
+					osi_solver->applyRowCuts(1,(*feas_it)->cut_.get());
+				}
+			}
         }
 
         if ( !benders_node_pointer->optimality_cuts_.empty()){
@@ -3035,10 +3048,7 @@ namespace parallel_benders {
                 else
                     it = benders_node_pointer->optimality_cuts_.end();
             }
-            // TODO: First optimality cuts get not added to problem!! Because at first time they were added, the last_iteration pointer points to end..
-            // If this was true, reset it now!
             benders_tree_node_pointer->getDataPtr()->changed_aggregation_level_ = false;
-
 
             // Problems with warm start and optimality/feasibility cuts mixes..
             for ( ; it != benders_node_pointer->optimality_cuts_.end();++it) {
@@ -3050,10 +3060,13 @@ namespace parallel_benders {
                     // Works only with cplex
                     if ( level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false){
                         OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-                        if ( osi_cpx != NULL ){
+                        if ( osi_cpx != NULL && level_cstat_ != NULL ){
                             CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
                             CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-                            CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+							if ( level_length_ == osi_cpx->getNumRows() )
+								CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+							else
+								LOG(INFO) << "Trying to copy basednorms where problem has now " << osi_cpx->getNumRows() << " rows and had " << level_length_;
                         }
 
                     }
@@ -3084,7 +3097,8 @@ namespace parallel_benders {
             SolveSolverInterface(osi_solver,benders_tree_node_pointer);
             // Store the warm start
             seperate_first_stage_solver_ = false;
-            StoreWarmStart(osi_solver,benders_tree_node_pointer);
+			if ( osi_solver->isProvenOptimal() )
+				StoreWarmStart(osi_solver,benders_tree_node_pointer);
             seperate_first_stage_solver_ = true;
 
             // Delete the optimality cuts from the problem and add them again, so all feas cuts are clumped together!
@@ -4414,7 +4428,10 @@ namespace parallel_benders {
                 level_cstat_.reset(new int[osi_cpx->getNumCols()]);
                 level_rstat_.reset(new int[osi_cpx->getNumRows()]);
                 level_dnorm_.reset(new double[osi_cpx->getNumRows()]);
-                CPXgetbasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+
+                int cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+				level_length_ = CPXgetnumrows(env_ptr,lp_ptr);
+				LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
 
             }
         }
@@ -4812,7 +4829,12 @@ namespace parallel_benders {
                 }
             }
             else{
+				try {
                 osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+				}
+				catch(std::exception& e){
+					LOG(ERROR) << e.what();
+				}
             }
         }
         else{
@@ -4842,8 +4864,15 @@ namespace parallel_benders {
                    
                 }
             }
-            else 
-                osi_solver->initialSolve();
+			else {
+				try {
+					osi_solver->initialSolve(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
+				}
+				catch(std::exception& e){
+					LOG(ERROR) << e.what();
+				}
+			}
+
         }
     }
 
@@ -5202,8 +5231,13 @@ namespace parallel_benders {
 
         // Now problem is exactly as it was before the added optimality cuts!
         if ( level_manhattan_ && integer_problems_[current_stage_] == false){
-            if ( cpx_ptr != NULL){
-                CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+            if ( cpx_ptr != NULL && level_cstat2_ != NULL && level_rstat2_ != NULL && level_dnorm2_ != NULL){
+				int number_of_rows_temp = CPXgetnumrows(env_ptr,lp_ptr);
+				if ( number_of_rows_temp == level_2_length_)
+					CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+				else 
+					LOG(INFO) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << level_2_length_;
+				// Question is: Can we really apply this call?
             }
         }
         else {
@@ -5234,8 +5268,10 @@ namespace parallel_benders {
             level_rstat2_.reset(new int[osi_solver->getNumRows()]);
             level_dnorm2_.reset(new double[osi_solver->getNumRows()]);
             cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+			LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
             // Now we need to switch the entries of the new optimality cuts with the extra row 
             int num_current_rows = osi_solver->getNumRows();
+			level_2_length_ = num_current_rows;
             int temp_rstat = level_rstat2_[level_row_index];
             double temp_dnorm = level_dnorm2_[level_row_index];
             for (int i = level_row_index; i < num_current_rows-1; i++){
