@@ -532,7 +532,7 @@ void OsiCpxSolverInterface::branchAndBound()
 
   	delete[] ind;
 
-    CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_ON );
+    //CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_ON );
   }
   //else
     //CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_OFF ); // Why should ADVIND be turned of completely?

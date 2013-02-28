@@ -106,7 +106,8 @@ namespace parallel_benders{
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
-    const int PNB_INT_BARRIER_MASTER = 12;
+    const int PNB_INT_BARRIER = 12;
+    const int PNB_INT_BARRIER_WITH_CROSSOVER = 12;
 
     // SOlution handling
     const int PNB_INT_SOLUTION_PRIMAL_NO = -2;
