@@ -491,7 +491,23 @@ namespace parallel_benders {
         }
         // 
         // Feasibility problems
-        only_one_feasibility_cut_ = true;
+        int feasibility_cut_handling = param.get(PNB_HANDLE_FEAS_CUTS,PNB_INT_FEAS_CUT_ONLY_ONE);
+        switch ( feasibility_cut_handling){
+            case PNB_INT_FEAS_CUT_ONLY_ONE:
+                only_one_feasibility_cut_ = true;
+                break;
+            case PNB_INT_FEAS_CUT_ALL:
+                only_one_feasibility_cut_ = false;
+                break;
+            case PNB_INT_FEAS_CUT_WITH_OPT:
+                only_one_feasibility_cut_ = false;
+                generate_feasibility_and_optimality_cuts_ = true;
+                break;
+            default:
+                only_one_feasibility_cut_ = true;
+                break;
+        }
+
 
         // Thread related stuff
         num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -855,7 +871,7 @@ namespace parallel_benders {
                     double current_upper_bound = 0;
                     for (int i = current_stage_; i < num_stages_; i++)
                         current_upper_bound += stage_lower_upper_bounds_[i].second;
-                    if ( RelativeGapPresent(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_) ){// If true, values are not equal. 
+                    if ( RelativeGapPresent(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_*std::min(std::abs(lower_bound_),std::abs(upper_bound_))) ){// If true, values are not equal. 
                         forward_ = true; // We want to move forward again, with the newest cuts..
                         // Check for nearby values
                         if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
@@ -3579,6 +3595,8 @@ namespace parallel_benders {
                 CutStuff::strike_threshold_ = 1;
                 add_cut = false;
             }
+            if ( CompareWithZero(intra_aggregate_threshold))
+                intra_aggregate_threshold = zero_tolerance_*2;
 
             int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
             if ( !benders_node_pointer->variable_bounds_.empty() )
@@ -5315,7 +5333,7 @@ namespace parallel_benders {
         osi_solver->applyRowCuts(1,osi_cut.get());
         int level_row_index = osi_solver->getNumRows()-1;
 
-        // Now problem is exactly as it was before the added optimality cuts!
+        // Now problem is exactly as it was before the added optimality cuts! (except for the eventual present bounding optimality cut when problem was unbounded otherwise..)
         if ( level_manhattan_ && integer_problems_[current_stage_] == false){
             if ( cpx_ptr != NULL && level_cstat2_ != NULL && level_rstat2_ != NULL && level_dnorm2_ != NULL){
 				int number_of_rows_temp = CPXgetnumrows(env_ptr,lp_ptr);
@@ -5335,6 +5353,8 @@ namespace parallel_benders {
         // Add the optimality cuts we deleted earlier
         for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->last_iteration_start_optimality_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();++it)
             osi_solver->applyRowCuts(1,(*it)->cut_.get());
+
+        // If problem was unbounded, we do not care about it in the projection problem case?!
 
 
         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
@@ -6249,11 +6269,13 @@ namespace parallel_benders {
             if ( cpx_ptr ){
                 CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                 CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-                stream << ".lp";
                 console_mutex_.lock();
-                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"lp");
-                stream << ".mps";
-                CPXwriteprob(env_ptr,lp_ptr,stream.str().c_str(),"mps");
+                std::string name = stream.str()+"lp";
+                CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"lp");
+                name = stream.str()+"mps";
+                CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"mps");
+                name = stream.str()+"sav";
+                CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
                 console_mutex_.unlock();
             }
             //stream << "osi";

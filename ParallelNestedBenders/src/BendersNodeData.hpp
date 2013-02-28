@@ -39,7 +39,7 @@ namespace parallel_benders{
 	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY"; // Different Strategies. 0 = FastForw/FastBack, 1 = FastForw, 2 = FastBack, 3 = EpsFastForw, 4 = EpsFastBack, 5 = FastForw/FastBackWith2nd.Iteration
 	const std::string PNB_TREE_WALK_STRATEGY_STAGE = "PNB_TREE_WALK_STRATEGY_STAGE"; // up to which stage do we want to follow the given strategy? else we resort to Fastpass
     const std::string PNB_TREE_WALK_STRATEGY_EPSILON = "PNB_TREE_WALK_STRATEGY_EPSILON";
-
+    const std::string PNB_HANDLE_FEAS_CUTS = "PNB_HANDLE_FEAS_CUTS";
     const std::string PNB_STAGE_AGGREGATION = "PNB_STAGE_AGGREGATION";
     const std::string PNB_STAGE_AGGREGATION_START = "PNB_STAGE_AGGREGATION_START";
     const std::string PNB_STAGE_AGGREGATION_END = "PNB_STAGE_AGGREGATION_END";
@@ -77,6 +77,11 @@ namespace parallel_benders{
 	const int PNB_INT_SECOND_ITERATION = 5;
     const int PNB_INT_FASTPASS_WITH_FASTBACK = 6;
 	const int PNB_INT_STAGE_AGGREGATION_LAST_STAGE = -1;
+
+    // some fixed integer for handle feas cuts
+    const int PNB_INT_FEAS_CUT_ONLY_ONE = 0;
+    const int PNB_INT_FEAS_CUT_ALL = 1;
+    const int PNB_INT_FEAS_CUT_WITH_OPT = 2;
 
     // Dynamic Adapative Aggregation strategies
     const int PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION = 1;
