@@ -4761,6 +4761,10 @@ namespace parallel_benders {
             osi_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);
             osi_solver->setHintParam(OsiDoDualInResolve,true,OsiHintIgnore);
         }
+        else if ( lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD ){
+            osi_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);
+            osi_solver->setHintParam(OsiDoDualInResolve,true,OsiHintIgnore);
+        }
 
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
         if ( cpx_ptr ){
@@ -4783,6 +4787,10 @@ namespace parallel_benders {
                 }
                 CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
                 //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.5);
+            }
+            else {
+                if ( lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD)
+                    CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_CONCURRENT); // Use all algorithms concurrently (should work for the master problem)
             }
             // Set markowitz threshold high for better accuracy 
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
