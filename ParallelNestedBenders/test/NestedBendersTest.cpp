@@ -1,5 +1,5 @@
 #define BOOST_TR1_TUPLE_HPP_INCLUDED //This prevents compilation issues.
-#define GTEST_USE_OWN_TR1_TUPLE 0
+//#define GTEST_USE_OWN_TR1_TUPLE 0
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -146,44 +146,23 @@ public:
             //assert(num_aggregates_by_magic <= smi_model->getNumScenarios());
 
             //std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET";
-            // Open File!
-            //int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            //int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            //int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
-            //if ( smi_model->getCore()->getNumStages() > 2)
-            //{
-            //    det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-            //}
-            //OsiSolverInterface* osi = new OsiCpxSolverInterface;
-            //smi_model->setOsiSolverHandle(osi);
-            //delete osi;
-            //osi = smi_model->loadOsiSolverData();
-            //det_cols = osi->getNumCols();
-            //det_rows = osi->getNumRows();
-            //det_nonzeroes = osi->getNumElements();
-            //
-            //// Compute DETEQ column, row and nonzeroes sizes..
-            //std::ofstream file_out;
-            //file_out.open("sizes.csv",ios::app);
-            //file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-            //    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
-            //}
-            //OsiSolverInterface* osi = new OsiCpxSolverInterface;
-            //smi_model->setOsiSolverHandle(osi);
-            //delete osi;
-            //osi = smi_model->loadOsiSolverData();
-            //det_cols = osi->getNumCols();
-            //det_rows = osi->getNumRows();
-            //det_nonzeroes = osi->getNumElements();
-            //
-            //// Compute DETEQ column, row and nonzeroes sizes..
-            //std::ofstream file_out;
-            //file_out.open("sizes.csv",ios::app);
-            //file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-            //    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
-            //// Now we need the data for DEQ
-            //file_out.close();
-            //LOG(INFO) << "printed to file";
+            //Open File!
+            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
+            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
+            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            if ( smi_model->getCore()->getNumStages() > 2)
+            {
+                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+            }
+
+            // Compute DETEQ column, row and nonzeroes sizes..
+            std::ofstream file_out;
+            file_out.open("sizes.csv",ios::app);
+            file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+                << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
+
+            file_out.close();
+            LOG(INFO) << "printed to file";
         }
         
 
@@ -200,9 +179,9 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-        //aggregates.push_back(1);
-        if ( num_aggregates_by_magic > 1)
-            aggregates.push_back(num_aggregates_by_magic);
+        ////aggregates.push_back(1);
+        //if ( num_aggregates_by_magic > 1)
+        //    aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -214,8 +193,8 @@ public:
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-		if ( use_multi_cut_ )
-			aggregates.push_back(0);
+		//if ( use_multi_cut_ )
+		//	aggregates.push_back(0);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour!
 
@@ -1375,10 +1354,8 @@ TEST_F(NestedBendersTest,sample_average_approximation){
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
     //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
-    //    // Cut Consolidation tests
-    //solveSMPS("postponement/pTest-1296");
 
     //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
     //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);

@@ -218,6 +218,8 @@ void Parameter::init()
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
     parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON, 1e-06); 
+    // Feas cut generation
+    parameter_.put(PNB_HANDLE_FEAS_CUTS,PNB_INT_FEAS_CUT_ONLY_ONE);
     // Stage Aggregation
     parameter_.put(PNB_STAGE_AGGREGATION,false);
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
