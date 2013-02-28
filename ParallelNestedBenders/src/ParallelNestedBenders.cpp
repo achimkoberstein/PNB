@@ -1636,10 +1636,10 @@ namespace parallel_benders {
                         OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
                         if ( osi_cpx != NULL ){
                             CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-                            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_OFF);
+                            //CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_OFF);
                             CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
                             SolveSolverInterface(osi_solver);
-                            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_ON);
+                            //CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,CPX_ON);
                             CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
                         }
                         else 
@@ -4752,9 +4752,14 @@ namespace parallel_benders {
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
             osi_solver->setHintParam(OsiDoDualInResolve,false);
         }
-        else {
+        else if ( lp_method_ == PNB_INT_DUAL_SIMPLEX){
             osi_solver->setHintParam(OsiDoDualInInitial,true);
             osi_solver->setHintParam(OsiDoDualInResolve,true);
+        }
+        else if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){ // We ignore the hint, so we use the methos CPXlpopt instead of primopt or dualopt in initialSolve();
+            // We must set the algorithm paramter for cplex!
+            osi_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);
+            osi_solver->setHintParam(OsiDoDualInResolve,true,OsiHintIgnore);
         }
 
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -4766,10 +4771,16 @@ namespace parallel_benders {
             // Maximal solution time
             CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
             // Use aggresive scaling
-            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1);
+            CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1); 
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.01);
+            // Use a supplied warm start basis and crush it, to use the presolved model!
+            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,2);
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
+                if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){
+                    CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
+                    CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG, lp_method_ == PNB_INT_BARRIER ? -1 : 0); 
+                }
                 CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
                 //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.5);
             }
@@ -4933,12 +4944,7 @@ namespace parallel_benders {
                 }
             }
             else{
-				try {
                 osi_solver->branchAndBound(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
-				}
-				catch(std::exception& e){
-					LOG(ERROR) << e.what();
-				}
             }
         }
         else{
@@ -4969,12 +4975,7 @@ namespace parallel_benders {
                 }
             }
 			else {
-				try {
-					osi_solver->initialSolve(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
-				}
-				catch(std::exception& e){
-					LOG(ERROR) << e.what();
-				}
+    			osi_solver->initialSolve(); // We might need a fixed first-stage solver for this ( preferable from the viewpoint of performance anyway.. ) 
 			}
 
         }
