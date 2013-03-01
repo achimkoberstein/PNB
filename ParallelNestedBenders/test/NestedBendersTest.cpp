@@ -133,6 +133,8 @@ public:
         // TODO: Uncomment if we want to use tests based on problem properties!
         int read_in_smps_file = 1; 
         int num_aggregates_by_magic = 0;
+        double * min_scenario_pointer = NULL;
+        double * max_scenario_pointer = NULL;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -147,10 +149,31 @@ public:
 
             OsiCpxSolverInterface osi_cpx;
             // Compute Wait-And-See
-            std::vector<std::pair<double, double> > ws_results = smi_model->solveWS(&osi_cpx);
+            std::vector<std::pair<double, double*> > ws_results = smi_model->solveWS(&osi_cpx);
             double ws = 0;
-            for ( int i = 0; i < ws_results.size();i++)
-                ws += ws_results[i].first*ws_results[i].second;
+            std::pair<int,double> minimum = std::make_pair(-1,1e20);
+            std::pair<int,double> maximum = std::make_pair(-1,-1e20);
+            for ( int i = 0; i < ws_results.size();i++){
+                ws += ws_results[i].first*smi_model->getScenarioProb(i);
+                // Look for best and worst scenario!
+                if ( ws_results[i].first > maximum.second ){
+                    maximum.first = i;
+                    maximum.second = ws_results[i].first;
+                    max_scenario_pointer = ws_results[i].second;
+                }
+                if ( ws_results[i].first < minimum.second ){
+                    minimum.first = i;
+                    minimum.second = ws_results[i].first;
+                    min_scenario_pointer = ws_results[i].second;
+                }
+            }
+            // Delete other than minimum and maximum values
+            for (int i = 0; i < ws_results.size();i++){
+                if (!( i == minimum.first || i == maximum.first)){
+                    delete [] ws_results[i].second;
+                    ws_results[i].second = NULL;
+                }
+            }
             boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
             smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
             double eev = smi_model->solveEEV(&osi_cpx);
@@ -191,15 +214,16 @@ public:
             LOG(INFO) << "printed to file";
         }
         
+        // Solve with worst-case or best-case scenario!
 
        
         //read_in_smps_file = 0; // Stop here TODO:REMOVE_AGAIN!!
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_EPSILON_RELATIVE,1e-06);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_EPSILON_RELATIVE,1e-06);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         // Method that computes EVPI,EEV,WS and outputs all stuff to file!
 
     
@@ -401,7 +425,7 @@ protected:
 	}
     virtual void TearDown(){}
 
-    double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name ){
+    double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name, double * supplied_solution = NULL){
         // We set the correct folder here: All files are in Benders/instances
         std::string folder("../../../../Benders/test/instances/");
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
