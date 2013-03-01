@@ -829,6 +829,7 @@ namespace parallel_benders {
                 current_iteration_++;
                 minor_iteration_++;
                 uncritical_iteration_counter_++;
+                warm_up_ = false; // We do not need it anymore, when we reached the first stage!
             }
             if ( sequencing_protocol_ == PNB_INT_FAST_FORWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_FORWARD){
                 if ( current_stage_ == 0)
@@ -988,19 +989,13 @@ namespace parallel_benders {
             /************************************************************************/
             double copy_of_temporary_upper_bound_ = temporary_upper_bound_;
             int num_nodes = tree_nodes_by_stage_[current_stage_].size();
-            // Debugging reasons!
-            //std::vector<int> shuffle_around;
-            //for (int i = 0; i < num_nodes; i++)
-            //    shuffle_around.push_back(i);
-            //std::random_shuffle(shuffle_around.begin(),shuffle_around.end());
             for ( int i = 0; i < num_nodes; i++ ){
                 // Schedule the tasks for this stage
                 thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
-                //HandleSubproblem(tree_nodes_by_stage_[current_stage_][shuffle_around[i]]);
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            bool can_update_upper_bound = true;
+            bool can_update_upper_bound = !warm_up_;
             if ( d_square_ && current_stage_==1){
                 // Solve C^3-SLP
                 if ( stage_data_[current_stage_]->violated_index_ >= 0){
@@ -1124,7 +1119,7 @@ namespace parallel_benders {
             }
 
             bool update_upper_bound = false;
-            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() ){// Update upper bound only, when we have no infeasible problems!
+            if ( current_stage_ == num_stages_-1 && infeasible_problems_.none() && !warm_up_ ){// Update upper bound only, when we have no infeasible problems!
                 theta_approximations_everywhere_ = true; // Only needed in case of FAST_BACKWARD and EPSILON_FAST_BACKWARD and FASTPASS_WITH_FASTBACK
                 // This ensures that we get back to the first stage when we finally reached the last stage! Important only for FastBackward protocols.
                 if ( sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD){
@@ -2017,7 +2012,6 @@ namespace parallel_benders {
             //    benders_node_pointer->matrix_->modifyCoefficient(0,i,0,true);
         }
 
-        // TODO: Insert appropriate boolean conditions to prevent unnecessary work for the 5 arrays to come
         if (  node_pointer->getColLowerLength()) {
             benders_node_pointer->column_lower_ = new double[stage_pointer->num_columns_];
             memcpy(benders_node_pointer->column_lower_, core_->getDenseColLower(current_stage_), stage_pointer->num_columns_*sizeof(double));
@@ -2102,6 +2096,12 @@ namespace parallel_benders {
             double* column_solution = NULL;
             double* unbounded_rhs = NULL;
             column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
+            if ( warm_up_ ){ // We want the column solution of the warm_up_ solution! This is the warm_up_solution_ with an offset according the number of cols until current_stage-2.
+                int offset_warmup = 0;
+                for (int i = 0; i < current_stage_-1; i++)
+                    offset_warmup += stage_data_[i]->num_columns_;
+                column_solution = warm_up_solution_.get()+offset_warmup;
+            }
             if ( benders_node_pointer->unbounded_problem_ )
                 unbounded_rhs = benders_tree_node_pointer->getParent()->getDataPtr()->unbounded_extreme_ray_.get();
 
@@ -2254,12 +2254,6 @@ namespace parallel_benders {
                 for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+cuts_to_remove;i++)
                     remove_indices.push_back(i);
                 osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
-            }
-        }
-        // We set the first stage warm_up solution, if we had one!
-        if ( warm_up_  && current_stage_ == 0 ){
-            for (int i = 0; i < stage_data_[0]->num_columns_; i++){
-                osi_solver->setColBounds(i,warm_up_solution_[i],warm_up_solution_[i]);
             }
         }
 
@@ -2469,9 +2463,18 @@ namespace parallel_benders {
             assert(false);
         }
 
-        if ( benders_tree_node_pointer->getDataPtr()->col_solution_ == NULL){
-            assert(false);
+        double * column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
+        if ( column_solution == NULL){
             // We do not add any cuts, we have no prior column solution. This is an error.
+            if ( warm_up_ ){
+                int offset = 0;
+                for (int i = 0; i < current_stage_-1;i++)
+                    warm_up_ += stage_data_[i]->num_columns_;
+                column_solution = warm_up_solution_.get()+offset;
+            }
+            else 
+                assert(false);
+
         }
         if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){
             // Return or better: call method that calls laporte-louveaux cut generation routine
@@ -2560,7 +2563,6 @@ namespace parallel_benders {
 
             // Theta = cut lower bound - cut_vector * column_solution
             // Compute cut_vector * column_solution
-            const double * column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
             double sum = 0.0;
             for ( int index = 0;  index < num_columns;  index++ ) { // We iterate over column_solution, but not over the theta index, which is always the last one.
                 int column_index = cut_indices[index];
@@ -3480,28 +3482,7 @@ namespace parallel_benders {
         // Delete all the stuff we created
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_;
-        if ( warm_up_ && current_stage_ == 0 ){
-            if ( seperate_first_stage_solver_ ){ // We need to reset the bounds of the variables!
-                // We need to store warm start before that
-                CoinWarmStart* coin_warm_start = NULL;
-                if ( !integer_problems_[current_stage_] ){
-                    coin_warm_start = osi_solver->getWarmStart();
-                }
-                for (int i = 0; i < stage_data_[0]->num_columns_; i++){
-                    osi_solver->setColBounds(i,benders_node_pointer->column_lower_[i],benders_node_pointer->column_upper_[i]);
-                }
-                if ( !integer_problems_[current_stage_])
-                    osi_solver->setWarmStart(coin_warm_start);
-                SolveSolverInterface(osi_solver);
-                delete coin_warm_start;
 
-            }
-            /* osi_solver->setColLower(benders_node_pointer->column_lower_);
-            osi_solver->setColUpper(benders_node_pointer->column_upper_);*/
-            warm_up_ = false;
-            warm_up_solution_.reset(); // Delete the content of the warm_up solution, not longer needed
-
-        }
         if ( benders_node_pointer->unbounded_ && benders_node_pointer->unbounded_row_ > 0 ){
             osi_solver->deleteRows(1,&benders_node_pointer->unbounded_row_);
             //SolveSolverInterface(osi_solver);
@@ -4602,8 +4583,12 @@ namespace parallel_benders {
     {
         start_solution_ = PNB_INT_USE_SUPPLIED_SOLUTION; 
         warm_up_ = true;
-        warm_up_solution_.reset(new double[smi_->getCore()->getNumCols(0)]);
-        memcpy(warm_up_solution_.get(),solution,smi_->getCore()->getNumCols(0)*sizeof(double));
+        // Get num cols for all stages except the last
+        int num_cols = 0;
+        for (int i = 0; i < num_stages_-1; i++)
+            num_cols += stage_data_[i]->num_columns_;
+        warm_up_solution_.reset(new double[num_cols]);
+        memcpy(warm_up_solution_.get(),solution,num_cols*sizeof(double)); // We copy all, but the last stage!
     }
 
     void ParallelNestedBenders::AppendTrustRegionToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -4778,7 +4763,7 @@ namespace parallel_benders {
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1); 
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.01);
             // Use a supplied warm start basis and crush it, to use the presolved model!
-            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,2);
+            CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,1);
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
                 if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){
@@ -6056,6 +6041,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::HandleInitialSolutionProcedures()
     {
+        int num_cols_for_warm_up_solution = 0;
+        for (int i = 0; i < num_stages_-1;i++)
+            num_cols_for_warm_up_solution += stage_data_[i]->num_columns_;
         // Check if method is applicable!
         if ( warm_up_ && start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION){
             for (int stage = 1; stage < num_stages_; stage++){
@@ -6080,7 +6068,7 @@ namespace parallel_benders {
             param.init();
             param.parameter_.put(PNB_EPSILON_RELATIVE,0.1);
             param.parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS,1); // Single cut (only have one scenario anyway..)
-            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // We need to apply the solution later, otherwise we have a problem!
+            param.parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,num_stages_-2); // We need to apply the solution later, otherwise we have a problem!
             param.parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_SUPPLIED_SOLUTION);
             ev_pnb.parameter_ = param;
             // Solve EV first with deteq, then use this as a start solution for EV problem
@@ -6093,8 +6081,9 @@ namespace parallel_benders {
             //}
             ev_pnb.Init();
             ev_pnb.Solve();
-            double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
-            memcpy(temp_ptr,ev_pnb.tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,sizeof(double)*stage_data_[current_stage_]->num_columns_);
+            double * temp_ptr = new double[num_cols_for_warm_up_solution];
+            for (int i = 0; i < num_stages_-1; i++)
+                memcpy(temp_ptr+ (i>0?stage_data_[i-1]->num_columns_:0),ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->incumbent_col_solution_,sizeof(double)*stage_data_[i]->num_columns_);
             warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
             // Copy cuts to this problem!
             ev_smi->releaseCore();
@@ -6147,10 +6136,8 @@ namespace parallel_benders {
             SolveSolverInterface(osi_solver_);
 
             if ( osi_solver_->isProvenOptimal() ){
-                double * temp_ptr = new double[stage_data_[current_stage_]->num_columns_];
-                memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
-                //StoreValuesFromSolverInArray(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*stage_data_[current_stage_]->num_columns_);
-                // Is done later at if (warm_up)
+                double * temp_ptr = new double[num_cols_for_warm_up_solution];
+                memcpy(temp_ptr,osi_solver_->getColSolution(),sizeof(double)*num_cols_for_warm_up_solution);
                 warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
                 LOG(INFO) << "Calculated EV Solution with value " << osi_solver_->getObjValue();
             }
@@ -6165,16 +6152,19 @@ namespace parallel_benders {
 
         }
         if ( warm_up_ ){
-            for (int i = 0; i < stage_data_[0]->num_columns_;i++)
+            current_stage_ = num_stages_-1;
+            for (int i = 0; i < num_cols_for_warm_up_solution;i++)
                 if ( CompareWithZero(warm_up_solution_[i]))
                     warm_up_solution_[i] = 0;
             if ( regularization_ || level_decomp_ ){
-                double * temp_array = new double[stage_data_[0]->num_columns_];
-                memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*stage_data_[0]->num_columns_);
+                double * temp_array = new double[num_cols_for_warm_up_solution];
+                memcpy(temp_array,warm_up_solution_.get(),sizeof(double)*num_cols_for_warm_up_solution);
                 regularized_solution_.reset(temp_array);
             }
-            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION )
+            if ( start_solution_ == PNB_INT_COMPUTE_EV_SOLUTION ){
                 warm_up_ = false; // If this stays true, we set the first solution of the problem to the EV-solution
+                current_stage_ = 0;
+            }
         }
         else
             if ( regularization_ || level_decomp_)
