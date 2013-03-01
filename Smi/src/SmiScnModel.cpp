@@ -253,11 +253,12 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
 // Main public interfaces for getting WS, EV, and EEV values (no coefficients whatsoever).
 double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense ){
     //Test if wsValues is empty, if this is the case, run solveWS
-    std::vector< std::pair<double,double> > tempVector = solveWS(osiSolver, objSense);
+    std::vector< std::pair<double,double*> > tempVector = solveWS(osiSolver, objSense);
     assert( tempVector.size() == smiTree_.getNumScenarios()); 
     double result = 0;
     for (unsigned int i = 0; i < tempVector.size(); i++){
-        result += tempVector[i].first*tempVector[i].second;
+        result += tempVector[i].first*this->getScenarioProb(i);
+        delete [] tempVector[i].second;
     }
     return result;
 }
@@ -628,7 +629,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
     return eev;
 }
 
-std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense) 
+std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense) 
 {
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false); // We copy the existing solverHandle, so we have to delete it at the end?
@@ -652,7 +653,7 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
     for (int i = 0; i < this->core_->getNumStages(); i++)
         tempNels += this->maxNelsPerScenInStage[i];
 
-    std::vector<std::pair<double,double> > solutionValues;
+    std::vector<std::pair<double,double*> > solutionValues;
     solutionValues.reserve(this->smiTree_.getNumScenarios());
 
 
@@ -701,7 +702,9 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
             
             warm_start = osiStoch_->getWarmStart();
         }
-        solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
+        double* solution_array = new double[osiStoch_->getNumCols()];
+        memcpy(solution_array,osiStoch_->getColSolution(),sizeof(double)*osiStoch_->getNumCols());
+        solutionValues.push_back(make_pair<double,double*>(osiStoch_->getObjValue(),solution_array));
 
         //Delete new-ed objects
         delete matrix_;
