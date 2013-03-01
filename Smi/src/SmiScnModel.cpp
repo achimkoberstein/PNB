@@ -549,6 +549,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         nrow_=0;
         nels_=0;
         osiStoch_->reset();
+        osiStoch_->messageHandler()->setLogLevel(0); // Silence solver
         // initialize row-ordered matrix arrays
         this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
         this->indx_ = new int[tempNels];

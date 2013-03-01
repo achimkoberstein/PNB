@@ -145,24 +145,50 @@ public:
             assert(num_aggregates_by_magic >= 0);
             //assert(num_aggregates_by_magic <= smi_model->getNumScenarios());
 
-            //std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET";
+            OsiCpxSolverInterface osi_cpx;
+            // Compute Wait-And-See
+            std::vector<std::pair<double, double> > ws_results = smi_model->solveWS(&osi_cpx);
+            double ws = 0;
+            for ( int i = 0; i < ws_results.size();i++)
+                ws += ws_results[i].first*ws_results[i].second;
+            boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
+            smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+            double eev = smi_model->solveEEV(&osi_cpx);
+
+            // Now we need the HN-solution
+            boost::scoped_ptr<SmiScnModel> smi_model_hn(new SmiScnModel());
+            smi_read_in = smi_model_hn->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+            double hn = solveProblemWithParameters(core_name,time_name,stoch_name);
+
+
+
+            std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
             //Open File!
-            //int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            //int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            //int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
-            //if ( smi_model->getCore()->getNumStages() > 2)
-            //{
-            //    det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-            //}
+            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
+            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
+            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            if ( smi_model->getCore()->getNumStages() > 2)
+            {
+                // Compute det_cols and det_rows by aggregating over the scenario tree?!
+                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+                std::vector<SmiScnNode*> tree_nodes = smi_model->getSmiTree()->wholeTree();
+                BOOST_FOREACH( SmiScnNode* node, tree_nodes){
+                    int node_stage = node->getStage();
+                    det_cols += smi_model->getCore()->getNumCols(node_stage);
+                    det_rows += smi_model->getCore()->getNumRows(node_stage);;
+                    det_nonzeroes += smi_model->getCore()->getNode(node_stage)->getNumMatrixElements();
+                }
 
-            //// Compute DETEQ column, row and nonzeroes sizes..
-            //std::ofstream file_out;
-            //file_out.open("sizes.csv",ios::app);
-            //file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-            //    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
+            }
 
-            //file_out.close();
-            //LOG(INFO) << "printed to file";
+            // Compute DETEQ column, row and nonzeroes sizes..
+            std::ofstream file_out;
+            file_out.open("sizes.csv",ios::app);
+            file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+                << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << ";" <<
+                ws << ";" << hn << ";" << eev << ";" << hn-ws << ";" << eev-hn << "\n";
+            file_out.close();
+            LOG(INFO) << "printed to file";
         }
         
 
@@ -170,16 +196,17 @@ public:
         //read_in_smps_file = 0; // Stop here TODO:REMOVE_AGAIN!!
         //benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,50);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_EPSILON_RELATIVE,1e-05);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_EPSILON_RELATIVE,1e-06);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        // Method that computes EVPI,EEV,WS and outputs all stuff to file!
 
     
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-        aggregates.push_back(1);
+        //aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
         //    aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
@@ -237,9 +264,13 @@ public:
 					
 					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_WITH_OPT);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
 					//if ( num_stages == 2) {
 					//	benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
@@ -1354,11 +1385,11 @@ TEST_F(NestedBendersTest,sample_average_approximation){
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
-    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 
-    //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
+    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
     //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
     //
 }
