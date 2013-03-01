@@ -85,21 +85,21 @@ public:
 	}
 
     void solveForProtocols(std::vector<double>& solutions, int num_stages, const char* core_name, const char* time_name, const char* stoch_name){
-        benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
         if ( num_stages > 2) {
-            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -147,22 +147,22 @@ public:
 
             //std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET";
             //Open File!
-            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
-            if ( smi_model->getCore()->getNumStages() > 2)
-            {
-                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-            }
+            //int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
+            //int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
+            //int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            //if ( smi_model->getCore()->getNumStages() > 2)
+            //{
+            //    det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+            //}
 
-            // Compute DETEQ column, row and nonzeroes sizes..
-            std::ofstream file_out;
-            file_out.open("sizes.csv",ios::app);
-            file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-                << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
+            //// Compute DETEQ column, row and nonzeroes sizes..
+            //std::ofstream file_out;
+            //file_out.open("sizes.csv",ios::app);
+            //file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+            //    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << "\n";
 
-            file_out.close();
-            LOG(INFO) << "printed to file";
+            //file_out.close();
+            //LOG(INFO) << "printed to file";
         }
         
 
@@ -179,7 +179,7 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-        ////aggregates.push_back(1);
+        aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
         //    aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
@@ -218,11 +218,11 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
 					if ( aggregates[i] != 1) {
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
 						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+
+						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 					
 						////// Solve problem without added cut!
 						benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
@@ -1354,8 +1354,9 @@ TEST_F(NestedBendersTest,sample_average_approximation){
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
+    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
     //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 
     //EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
     //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
