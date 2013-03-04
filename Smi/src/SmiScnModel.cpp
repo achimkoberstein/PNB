@@ -588,8 +588,23 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         else
             osiStoch_->initialSolve(); //Solve this problem.
 
+        bool optimal = osiStoch_->isProvenOptimal();
+        bool infeasible = osiStoch_->isProvenPrimalInfeasible();
+        bool unbounded = osiStoch_->isProvenDualInfeasible();
+
+        if ( infeasible ){
+            eev = osiStoch_->getInfinity();
+            // Finish with computations!
+            i = this->smiTree_.getNumScenarios();
+        }
+        if ( unbounded ){
+            eev = -osiStoch_->getInfinity();
+            i = this->smiTree_.getNumScenarios();
+        }
+        if (optimal)
+            eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
         // sum up the solution values (multiplied with probabilities)
-        eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
+        
 
         //Delete new-ed objects
         delete matrix_;
