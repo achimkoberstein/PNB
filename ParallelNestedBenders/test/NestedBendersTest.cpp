@@ -49,18 +49,46 @@ public:
         return solveSMPS(core_time_name, core_time_name,stoch_name);
     }
 
+	void solveForProtocolsWithStartSolutions(std::vector<double>& solutions, const char* core_name, const char* time_name, const char* stoch_name){
+        int algorithm = benders_parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        // We can not use the no start solution option, when we have an algorithm that needs a start solution!
+        if ( !(algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA)){
+            benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+            solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+        }
+
+        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+        // Copy optimal solution value (of first scenario) to current_start_solution array
+        current_start_solution_.reset(new double[num_det_cols_]);
+        CoinFillN(current_start_solution_.get(),num_det_cols_,0.0);
+        std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_det_cols_,current_start_solution_.get());
+
+        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+        // Use the optimal solution!
+        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+
+        // Worst-case solution
+        std::copy(worst_case_solution_.get(),worst_case_solution_.get()+num_det_cols_,current_start_solution_.get());
+        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+
+        // Best case
+        std::copy(best_case_solution_.get(),best_case_solution_.get()+num_det_cols_,current_start_solution_.get());
+        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+    }
+
 	void solveForProtocolsWithLambda(std::vector<double>& solutions, const char* core_name, const char* time_name, const char* stoch_name){
 		// Vary Lambda from 0.9 to 0.1
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.9);
-		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
-		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
-		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.3);
-		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.1);
-		solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 	}
 
@@ -72,22 +100,19 @@ public:
 		}
 		// Vary Kappa, call Lambda
 		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 	}
 
     void solveForProtocols(std::vector<double>& solutions, int num_stages, const char* core_name, const char* time_name, const char* stoch_name){
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
         if ( num_stages > 2) {
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -101,9 +126,15 @@ public:
             //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
             //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
+            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        }
+        else {
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-
         }
 		benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
     }
@@ -147,7 +178,25 @@ public:
             num_aggregates_by_magic = 0;
             num_aggregates_by_magic = smi_model->getSmiTree()->getRoot()->numChildren()/10;
             assert(num_aggregates_by_magic >= 0);
-            //assert(num_aggregates_by_magic <= smi_model->getNumScenarios());
+
+            //Open File!
+            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
+            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
+            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            if ( smi_model->getCore()->getNumStages() > 2)
+            {
+                // Compute det_cols and det_rows by aggregating over the scenario tree?!
+                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+                std::vector<SmiScnNode*> tree_nodes = smi_model->getSmiTree()->wholeTree();
+                BOOST_FOREACH( SmiScnNode* node, tree_nodes){
+                    int node_stage = node->getStage();
+                    det_cols += smi_model->getCore()->getNumCols(node_stage);
+                    det_rows += smi_model->getCore()->getNumRows(node_stage);;
+                    det_nonzeroes += smi_model->getCore()->getNode(node_stage)->getNumMatrixElements();
+                }
+
+            }
+            num_det_cols_ = det_cols;
 
             OsiCpxSolverInterface osi_cpx;
 			double ws = 0;
@@ -171,13 +220,14 @@ public:
                     min_scenario_pointer = ws_results[i].second;
                 }
             }
-            // Delete other than minimum and maximum values
+            best_case_solution_.reset(new double[num_det_cols_]);
+            worst_case_solution_.reset(new double[num_det_cols_]);
+            std::copy(max_scenario_pointer,max_scenario_pointer+num_det_cols_,worst_case_solution_.get());
+            std::copy(min_scenario_pointer,min_scenario_pointer+num_det_cols_,best_case_solution_.get());
             for (int i = 0; i < ws_results.size();i++){
-                if (!( i == minimum.first || i == maximum.first)){
-                    delete [] ws_results[i].second;
-                    ws_results[i].second = NULL;
-                }
-			}
+                delete [] ws_results[i].second;
+                ws_results[i].second = NULL;
+            }
 			smi_model->releaseSolver();
 			{
 				boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
@@ -191,28 +241,8 @@ public:
 				hn = solveProblemWithParameters(core_name,time_name,stoch_name);
 			}
 
-
-
-            std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
-            //Open File!
-            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
-            if ( smi_model->getCore()->getNumStages() > 2)
-            {
-                // Compute det_cols and det_rows by aggregating over the scenario tree?!
-                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-                std::vector<SmiScnNode*> tree_nodes = smi_model->getSmiTree()->wholeTree();
-                BOOST_FOREACH( SmiScnNode* node, tree_nodes){
-                    int node_stage = node->getStage();
-                    det_cols += smi_model->getCore()->getNumCols(node_stage);
-                    det_rows += smi_model->getCore()->getNumRows(node_stage);;
-                    det_nonzeroes += smi_model->getCore()->getNode(node_stage)->getNumMatrixElements();
-                }
-
-            }
-
             // Compute DETEQ column, row and nonzeroes sizes..
+            std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
             std::ofstream file_out;
             file_out.open("sizes.csv",ios::app);
             file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
@@ -277,27 +307,18 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.01);
 
 					if ( aggregates[i] != 1) {
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 					
 						////// Solve problem without added cut!
 						benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
-
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
-
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 					}
 					
 					
 					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-					//solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
                     benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
 					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
@@ -307,10 +328,7 @@ public:
 
 					if ( num_stages == 2) {
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
-						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
 						benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
@@ -505,7 +523,7 @@ protected:
             OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
             nested_benders.setParameters(benders_parameter_);
             if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
-                nested_benders.giveStartSolution(first_stage_solution_.get());
+                nested_benders.giveStartSolution(current_start_solution_.get());
             }
             nested_benders.initialSolve();
             solver_time = CoinCpuTime()-solver_time; // Solver only time
@@ -513,9 +531,24 @@ protected:
             LOG(INFO) << "Solution Time: " << cpuTime;
 
             if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO ){
-                first_stage_solution_.reset(new double[smi.getCore()->getNumCols(0)]);
-                const double * first_stage = nested_benders.getFirstStageSolution();
-                std::copy(first_stage,first_stage+smi.getCore()->getNumCols(0),first_stage_solution_.get());
+                // Get num_cols when specified correctly
+                // This works for non-appended problems!
+                int last_stage = benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
+                int number_of_cols = smi.getCore()->getNumCols(0);
+                if ( last_stage == parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL )
+                    last_stage = num_stages-1;
+                if ( last_stage < num_stages ){
+                    for (int i = 1; i <= last_stage; i++)
+                        number_of_cols += smi.getCore()->getNumCols(i);
+                }
+                first_stage_solution_.reset(new double[number_of_cols]);
+                int offset_cols = 0;
+                CoinFillN(first_stage_solution_.get(),number_of_cols,0.0);
+                for (int i = 0; i < num_stages; i++){
+                    const double * first_stage = nested_benders.getSolutionByNodeAndStage(0,i);
+                    std::copy(first_stage,first_stage+smi.getCore()->getNumCols(i),first_stage_solution_.get()+offset_cols);
+                    offset_cols += smi.getCore()->getNumCols(i);
+                }
             }
 
             int created_opt_cuts = nested_benders.getNumOptimalityCuts();
@@ -652,6 +685,11 @@ protected:
     }
 
     boost::shared_array<double> first_stage_solution_;
+    boost::shared_array<double> current_start_solution_;
+    boost::shared_array<double> best_case_solution_;
+    boost::shared_array<double> worst_case_solution_;
+    int num_stages_;
+    int num_det_cols_;
     int repetitions_;
 };
 
@@ -1442,7 +1480,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.environ*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
