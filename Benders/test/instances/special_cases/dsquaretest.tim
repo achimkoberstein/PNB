@@ -1,0 +1,5 @@
+TIME   dsquaretest
+PERIODS	 LP
+     x_1  c1  STAGE-1
+     y_1  c3  STAGE-2
+ENDATA

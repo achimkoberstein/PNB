@@ -1,0 +1,5 @@
+TIME          FARMER
+PERIODS       LP
+    X1        NB0                     STAGE1
+    Y1        NB1                     STAGE2
+ENDATA
