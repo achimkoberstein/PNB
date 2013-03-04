@@ -236,7 +236,7 @@ public:
 
     
         // Specify the number of repetitions_ 
-        repetitions_ = 2;
+        repetitions_ = 1;
         std::vector<int> aggregates;
         //aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
@@ -1441,8 +1441,8 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*unbounded*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    //::testing::GTEST_FLAG(filter) = "*unbounded*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
