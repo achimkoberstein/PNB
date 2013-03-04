@@ -126,6 +126,8 @@ public:
         int num_stages = 2;
         int num_childs_first_stage = 1;
 
+        parallel_benders::Parameter param(benders_parameter_); // Copy parameter!
+
 
     
 
@@ -333,7 +335,8 @@ public:
 
 
 
-        
+        // Reset benders parameter setting!
+        benders_parameter_ = param;
         double average = 0;
         for (int i = 0; i < solutions.size(); i++)
             average += solutions[i];
@@ -813,7 +816,7 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, m
     EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    //EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
+    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
 }
 ////
 //TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // binary first, mixed-binary second stage
@@ -835,44 +838,44 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, m
 //
 //
 //
-//TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 2559.297, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_200"), 1060.676, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_300"), 1253.040, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
-//}
+TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 2559.297, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_200"), 1060.676, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_300"), 1253.040, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+}
 //
-//TEST_F(NestedBendersTestInteger, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage
-//    EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 1545, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/semi/semi3"), 224486.00, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/semi/semi4"), 224564.3, 0.1);
-//}
+TEST_F(NestedBendersTestInteger, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 1545, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi3"), 224486.00, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/semi/semi4"), 224564.3, 0.1);
+}
 //
-//TEST_F(NestedBendersTestInteger, sizes_SIPLIB) { // Contains Integer on both stages, two-stage
-//    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 224486.00, 0.1);
-//    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes10"), 224564.3, 0.1);
-//}
-//TEST_F(NestedBendersTestInteger, ssch_OTHER) { // Contains Integer on both stages, two-stage
-//    EXPECT_NEAR(solveSMPS("ssch/c1"), -184439, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c2"), 0, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c3"), -230268, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c4"), -201454, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c5"), 0, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c6"), -231369, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c7"), -137217, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c8"), -100523, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c9"), 0, 1.0);
-//    EXPECT_NEAR(solveSMPS("ssch/c10"),-139739, 1.0);
-//}
+TEST_F(NestedBendersTestInteger, sizes_SIPLIB) { // Contains Integer on both stages, two-stage
+    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes3"), 224434.32, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes5"), 224486.00, 0.1);
+    EXPECT_NEAR(solveSMPS("siplib/sizes/sizes10"), 224564.3, 0.1);
+}
+TEST_F(NestedBendersTestInteger, ssch_OTHER) { // Contains Integer on both stages, two-stage
+    EXPECT_NEAR(solveSMPS("ssch/c1"), -184439, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c2"), 0, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c3"), -230268, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c4"), -201454, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c5"), 0, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c6"), -231369, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c7"), -137217, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c8"), -100523, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c9"), 0, 1.0);
+    EXPECT_NEAR(solveSMPS("ssch/c10"),-139739, 1.0);
+}
 //
 //TEST_F(NestedBendersTestInteger, sslp_NTAIMO) { // binary first, mixed-binary second stage
 //    EXPECT_NEAR(solveSMPS("sslp-ntaimo/sslp_5_25_50a"), -121.6, 0.1); // Solvable
@@ -1050,16 +1053,16 @@ TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values verified with d
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32768"), 446.86, 0.1);
 }
 ////
-//TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
-//    EXPECT_NEAR(solveSMPS("felt/chem/chem"), -13009.166667, 0.1); 
-//}
+TEST_F(NestedBendersTest,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
+    EXPECT_NEAR(solveSMPS("felt/chem/chem"), -13009.166667, 0.1); 
+}
 //
-//TEST_F(NestedBendersTestInteger,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
-//	// Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers
-//	//benders_parameter_.init();
-//	benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,1); // Relax the second stage integers!
-//	EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
-//}
+TEST_F(NestedBendersTestInteger,chem_FELT){ //BLOCKS, two-stage LP-relaxation of mixed integer problem, verified with det-eq
+	// Mixed-integer problem is available here: has integers on second stage also, but we only solve first-stage integers
+	benders_parameter_.init();
+	benders_parameter_.parameter_.put(parallel_benders::PNB_RELAXATION,1); // Relax the second stage integers!
+	EXPECT_NEAR(solveSMPS("felt/chem/chem-int","felt/chem/chem","felt/chem/chem"), -8130, 0.1); // For mixed-integer case should be: -3300
+}
 //
 TEST_F(NestedBendersTestMultiStage,electric_FELT){ //SCENARIOS, three-stage, No staircase problem. verified
     EXPECT_NEAR(solveSMPS("felt/electric/LandS"), 722.58, 0.1); // Dependent
@@ -1087,7 +1090,6 @@ TEST_F(NestedBendersTestInteger,phone_FELT){//INDEP, two-stage, mixed-integer on
 	EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone"), 36.9, 0.1); // Stochastic problem with 2^15 scenarios and integer
 	EXPECT_NEAR(solveSMPS("felt/phone/phone-int","felt/phone/phone","felt/phone/phone1"), 36.9, 0.1); // No stochasticity involved: 36.9, but integers
 }
-
 
 //
 TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ranges, verified with det-eq
@@ -1117,16 +1119,16 @@ TEST_F(NestedBendersTestSampleAverageApproximation,storm_WRIGHT){// 6*10^81 scen
     EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
 }
 
-TEST_F(NestedBendersTest,LandS_WRIGHT){
-	// No multicut
-	use_multi_cut_ = false;
-    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); 
-}
-TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
-	// No multicut
-	use_multi_cut_ = false;
-	EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
-}
+//TEST_F(NestedBendersTest,LandS_WRIGHT){
+//	// No multicut
+//	use_multi_cut_ = false;
+//    EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); 
+//}
+//TEST_F(NestedBendersTest,gbd_WRIGHT){// 6.5*10^5 , 646.425 scenarios
+//	// No multicut
+//	use_multi_cut_ = false;
+//	EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
+//}
 
 TEST_F(NestedBendersTest,scenarios_WRIGHT){ // TODO: Update the scenario values here!
     EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 0, 0.1);
@@ -1173,15 +1175,18 @@ TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solve
     EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1920"), -1778.95,0.1);
 }
 
-//TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
-//    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
-//    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
-//}
+TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
+    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
+    EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
+    EXPECT_NEAR(solveSMPS("special_cases/unbounded/unbound"), -3, 0.1); // is not really unbounded
+    EXPECT_NEAR(solveSMPS("special_cases/unbounded/unbound_fake"), -3, 0.1); // is not really unbounded
+
+}
 
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
-    //EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); // Hard to solve, no solution with benders!
+    EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); // Hard to solve, no solution with benders!
     EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
 }
@@ -1206,14 +1211,14 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
 }
 
 TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
-    EXPECT_NEAR(solveSMPS("frankellsion/CEP1"),0.0, 1); 
-    EXPECT_NEAR(solveSMPS("frankellsion/Ypgp2"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("frankellison/CEP1"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"),0.0, 1); 
 }
 
 TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
@@ -1436,7 +1441,8 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*unbounded*";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";

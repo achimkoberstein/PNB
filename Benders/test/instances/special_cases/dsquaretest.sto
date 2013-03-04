@@ -1,0 +1,9 @@
+STOCH dsquaretest
+SCENARIOS	DISCRETE
+ SC Scen1    'ROOT' 0.500000	STAGE-2
+      RHS   c3     -5
+      RHS   c4     -2
+ SC Scen2    'ROOT' 0.500000	STAGE-2
+      RHS   c3     -10
+      RHS   c4     -3
+ENDATA

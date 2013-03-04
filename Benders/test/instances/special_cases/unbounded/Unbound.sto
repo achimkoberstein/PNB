@@ -1,0 +1,4 @@
+STOCH         UNBOUND
+SCENARIOS     DISCRETE                
+ SC SCEN1     ROOT              1     STAGE2
+ENDATA
