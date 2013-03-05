@@ -60,20 +60,20 @@ public:
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
         // Copy optimal solution value (of first scenario) to current_start_solution array
-        current_start_solution_.reset(new double[num_det_cols_]);
-        CoinFillN(current_start_solution_.get(),num_det_cols_,0.0);
-        std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_det_cols_,current_start_solution_.get());
+        current_start_solution_.reset(new double[num_single_scenario_cols_]);
+        CoinFillN(current_start_solution_.get(),num_single_scenario_cols_,0.0);
+        std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
         // Use the optimal solution!
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
         // Worst-case solution
-        std::copy(worst_case_solution_.get(),worst_case_solution_.get()+num_det_cols_,current_start_solution_.get());
+        std::copy(worst_case_solution_.get(),worst_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
         // Best case
-        std::copy(best_case_solution_.get(),best_case_solution_.get()+num_det_cols_,current_start_solution_.get());
+        std::copy(best_case_solution_.get(),best_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
     }
 
@@ -154,7 +154,7 @@ public:
         std::string total_time_string = folder+time_name_string;
         std::string total_stoch_string = folder+stoch_name_string;
 
-        int num_stages = 2;
+        num_stages_ = 2;
         int num_childs_first_stage = 1;
 
         parallel_benders::Parameter param(benders_parameter_); // Copy parameter!
@@ -172,7 +172,7 @@ public:
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
             assert( smi_read_in == 0);
-            num_stages = smi_model->getCore()->getNumStages();
+            num_stages_ = smi_model->getCore()->getNumStages();
             num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
 
             num_aggregates_by_magic = 0;
@@ -183,6 +183,7 @@ public:
             int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
             int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
             int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+            
             if ( smi_model->getCore()->getNumStages() > 2)
             {
                 // Compute det_cols and det_rows by aggregating over the scenario tree?!
@@ -196,7 +197,10 @@ public:
                 }
 
             }
-            num_det_cols_ = det_cols;
+            num_single_scenario_cols_ = 0;
+            for (int i = 0; i < num_stages_;i++)
+                num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
+
 
             OsiCpxSolverInterface osi_cpx;
 			double ws = 0;
@@ -220,10 +224,10 @@ public:
                     min_scenario_pointer = ws_results[i].second;
                 }
             }
-            best_case_solution_.reset(new double[num_det_cols_]);
-            worst_case_solution_.reset(new double[num_det_cols_]);
-            std::copy(max_scenario_pointer,max_scenario_pointer+num_det_cols_,worst_case_solution_.get());
-            std::copy(min_scenario_pointer,min_scenario_pointer+num_det_cols_,best_case_solution_.get());
+            best_case_solution_.reset(new double[num_single_scenario_cols_]);
+            worst_case_solution_.reset(new double[num_single_scenario_cols_]);
+            std::copy(max_scenario_pointer,max_scenario_pointer+num_single_scenario_cols_,worst_case_solution_.get());
+            std::copy(min_scenario_pointer,min_scenario_pointer+num_single_scenario_cols_,best_case_solution_.get());
             for (int i = 0; i < ws_results.size();i++){
                 delete [] ws_results[i].second;
                 ws_results[i].second = NULL;
@@ -321,12 +325,12 @@ public:
 
                     benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-					solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+					solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_WITH_OPT);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-                    solveForProtocols(solutions,num_stages,core_name,time_name,stoch_name);
+                    solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
-					if ( num_stages == 2) {
+					if ( num_stages_ == 2) {
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
                         solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
@@ -689,7 +693,7 @@ protected:
     boost::shared_array<double> best_case_solution_;
     boost::shared_array<double> worst_case_solution_;
     int num_stages_;
-    int num_det_cols_;
+    int num_single_scenario_cols_;
     int repetitions_;
 };
 
