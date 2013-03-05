@@ -1264,9 +1264,9 @@ TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
 }
 
 TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
-    EXPECT_NEAR(solveSMPS("bikesharing/bike-100"),0.0, 1); 
-    EXPECT_NEAR(solveSMPS("bikesharing/bike-523"),0.0, 1); 
-    EXPECT_NEAR(solveSMPS("bikesharing/bike-731"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),0.0, 1); 
+    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),0.0, 1); 
 }
 
 //TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
