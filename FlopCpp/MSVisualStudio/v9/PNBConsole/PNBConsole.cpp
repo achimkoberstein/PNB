@@ -7,7 +7,7 @@
 #include <boost/exception/all.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to correct linking issues
 #include <glog/logging.h>
 
 #include "CoinTime.hpp"

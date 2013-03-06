@@ -50,6 +50,8 @@
 
 #if defined(HAVE_SYMBOLIZE)
 
+#include <limits>
+
 #include "symbolize.h"
 #include "demangle.h"
 
@@ -80,8 +82,8 @@ static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, int out_size) {
   char demangled[256];  // Big enough for sane demangled symbols.
   if (Demangle(out, demangled, sizeof(demangled))) {
     // Demangling succeeded. Copy to out if the space allows.
-    int len = strlen(demangled);
-    if (len + 1 <= out_size) {  // +1 for '\0'.
+    size_t len = strlen(demangled);
+    if (len + 1 <= (size_t)out_size) {  // +1 for '\0'.
       SAFE_ASSERT(len < sizeof(demangled));
       memmove(out, demangled, len + 1);
     }
@@ -121,7 +123,7 @@ _START_GOOGLE_NAMESPACE_
 // success, return the number of bytes read.  Otherwise, return -1.
 static ssize_t ReadPersistent(const int fd, void *buf, const size_t count) {
   SAFE_ASSERT(fd >= 0);
-  SAFE_ASSERT(count >= 0 && count <= SSIZE_MAX);
+  SAFE_ASSERT(count >= 0 && count <= std::numeric_limits<ssize_t>::max());
   char *buf0 = reinterpret_cast<char *>(buf);
   ssize_t num_bytes = 0;
   while (num_bytes < count) {
@@ -635,7 +637,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                                     int out_size) {
   Dl_info info;
   if (dladdr(pc, &info)) {
-    if (strlen(info.dli_sname) < out_size) {
+    if ((int)strlen(info.dli_sname) < out_size) {
       strcpy(out, info.dli_sname);
       // Symbolization succeeded.  Now we try to demangle the symbol.
       DemangleInplace(out, out_size);

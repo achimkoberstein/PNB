@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <fstream>
 #include <functional>
+#include <utility> // std::pair
 
 #include <math.h>
 #include <sstream>
@@ -22,6 +23,7 @@
 #include <boost/multi_index/random_access_index.hpp>
 #include <boost/math/special_functions/round.hpp>
 
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to prevent linking issues!
 #include <glog/logging.h>
 // Include all the other files
 
@@ -3602,7 +3604,7 @@ namespace parallel_benders {
                 // Put values in the corresponding vectors!
                 if ( active >= CutStuff::active_threshold_ ){
                     if ( active_aggregates_per_aggregate_information && aggregate >= 0)
-                        active_aggregates_per_aggregate[aggregate].push_back(make_pair<int,double>(cut_creation,active));
+                        active_aggregates_per_aggregate[aggregate].push_back(std::pair<int,double>(cut_creation,active));
                     cuts_from_iteration[cut_creation].first++;
                     cuts_from_iteration[cut_creation].second += active;
                     (*it)->active_value = active;

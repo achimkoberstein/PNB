@@ -14,6 +14,7 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to correct linking issues
 #include <glog/logging.h>
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
