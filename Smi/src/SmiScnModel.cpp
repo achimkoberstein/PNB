@@ -719,7 +719,7 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
         }
         double* solution_array = new double[osiStoch_->getNumCols()];
         memcpy(solution_array,osiStoch_->getColSolution(),sizeof(double)*osiStoch_->getNumCols());
-        solutionValues.push_back(make_pair<double,double*>(osiStoch_->getObjValue(),solution_array));
+        solutionValues.push_back(std::make_pair(osiStoch_->getObjValue(),solution_array));
 
         //Delete new-ed objects
         delete matrix_;
