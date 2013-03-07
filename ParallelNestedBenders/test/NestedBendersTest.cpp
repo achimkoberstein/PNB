@@ -234,15 +234,22 @@ public:
                 ws_results[i].second = NULL;
             }
 			smi_model->releaseSolver();
+			boost::shared_array<double> ev_solution(NULL);
+			double eev2 = 0;
 			{
 				boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
 				smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-				eev = smi_model_eev->solveEEV(&osi_cpx);
-				smi_model_eev->releaseSolver();
+				std::pair<double,double*> results = smi_model_eev->solveEV(&osi_cpx);
+				ev_solution.reset(results.second);
 			}
 
             // Now we need the HN-solution
 			{
+				OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
+				osi_pnb.fixFirstStageVariables(ev_solution.get());
+				osi_pnb.initialSolve();
+				eev2 = osi_pnb.getObjValue();
+
 				hn = solveProblemWithParameters(core_name,time_name,stoch_name);
 			}
 
@@ -252,7 +259,7 @@ public:
             file_out.open("sizes.csv",ios::app);
             file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
                 << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << ";" <<
-                ws << ";" << hn << ";" << eev << ";" << hn-ws << ";" << eev-hn << "\n";
+                ws << ";" << hn << ";" << eev2 << ";" << hn-ws << ";" << eev2-hn << "\n";
             file_out.close();
             LOG(INFO) << "printed to file";
         }
@@ -850,7 +857,6 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 //
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
 	benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
-
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
@@ -881,20 +887,20 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, m
 //
 //
 //
-TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 2559.297, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_200"), 1060.676, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_300"), 1253.040, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
-    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
-}
+//TEST_F(NestedBendersTestInteger, dcap_SIPLIP) { // Contains integer, two-stage
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_200"), 1834.868, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_300"), 1644.342, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap233_500"), 1737.719, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_200"), 2322.721, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_300"), 2559.297, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap243_500"), 2167.512, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_200"), 1060.676, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_300"), 1253.040, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap332_500"), 1588.717, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_200"), 1619.531, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_300"), 2067.777, 0.1);
+//    EXPECT_NEAR(solveSMPS("siplib/dcap/dcap342_500"), 1904.722, 0.1);
+//}
 //
 TEST_F(NestedBendersTestInteger, semi_SIPLIP) { // Needs feasibility cuts, contains integer on first stage, two-stage
     EXPECT_NEAR(solveSMPS("siplib/semi/semi2"), 1545, 0.1);
@@ -1485,7 +1491,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*NestedBendersTestInteger*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";

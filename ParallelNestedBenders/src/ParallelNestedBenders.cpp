@@ -1430,12 +1430,11 @@ namespace parallel_benders {
             std::cout.unsetf(std::ios::fixed);
         }
         else{
-            upper_bound_ = -infinity_;
+            upper_bound_ = infinity_;
             LOG(INFO) << "Problem is infeasible.";
         }
-        //if ( seperate_first_stage_solver_ ){
-        //    osi_solver_->writeLp("finalLP");
-        //}
+		// For unbounded problem, set upper_bound_ to -infinity
+
 
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";

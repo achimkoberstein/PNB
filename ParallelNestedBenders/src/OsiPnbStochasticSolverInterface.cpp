@@ -33,7 +33,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const para
 
 double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
 {
-    return nested_benders_->upper_bound_;
+    return nested_benders_->upper_bound_; // Depending on the solution status code, this might be appropriate!
 }
 
 int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations() const

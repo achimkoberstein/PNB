@@ -272,7 +272,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BendersTest", "BendersTest\
 		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v9\libOsiGrb\libOsiGrb.vcproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v9\libOsiGrb\libOsiGrb.vcxproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParallelNestedBenders", "..\..\..\ParallelNestedBenders\MSVisualStudio\v9\ParallelNestedBenders\ParallelNestedBenders.vcxproj", "{3B3EF83A-DC3D-45E8-B93F-2BDC8B557992}"
 	ProjectSection(ProjectDependencies) = postProject
