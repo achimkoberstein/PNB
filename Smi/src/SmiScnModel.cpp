@@ -496,16 +496,22 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     }
 #endif
 
-    //string name;
-    //if (calculateAverageValues) name = "ev_calculated";
-    //else name = "ev";
-    //osiStoch_->writeLp(name.c_str());
 
     double * colSolution = new double[core_->getNumCols()];
-    memcpy(colSolution, osiStoch_->getColSolution(), (core_->getNumCols()* sizeof(double)) );
+    memcpy(colSolution, osiStoch_->getColSolution(), core_->getNumCols()* sizeof(double) );
     double objValue = osiStoch_->getObjValue();
-    // Reset osiStoch_ to old solver
-    osiStoch_ = tempPtr;
+
+	if ( !osiStoch_->isProvenOptimal()){
+		// Not optimal
+		// If infeasible
+		if ( osiStoch_->isProvenPrimalInfeasible())
+			objValue = osiStoch_->getInfinity();
+		if ( osiStoch_->isProvenDualInfeasible()){
+			objValue = -osiStoch_->getInfinity();
+		}
+	}
+	// Reset osiStoch_ to old solver
+	osiStoch_ = tempPtr;
     return make_pair(objValue,colSolution );
 }
 
@@ -516,10 +522,9 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
     std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
     
 
-    // save the column solution for stage-1-columns
-    int numStage1Cols = core_->getColStart(1);
+ 	int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
     double * colSolution = evResult.second;
-
+	double prob = 0;
 
 #pragma region EEVP
     double eev = 0; // the value of the EEVP
@@ -572,11 +577,9 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
         // fix stage-1-columns to the values of the evp
-        for (int col = 0; col < numStage1Cols; col++) {
-            if (this->core_->getColStage(col) == 0) {
-                osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
-            }
-        }
+		for (int col = 0; col < numStageTMinus1Cols; col++) {
+			osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
+		}
 
         //Set objSense
         osiStoch_->setObjSense(objSense);
@@ -601,8 +604,14 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
             eev = -osiStoch_->getInfinity();
             i = this->smiTree_.getNumScenarios();
         }
-        if (optimal)
+
+		if (optimal){
             eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
+			prob += nodes[nodes.size()-1]->getProb();
+		}
+		else {
+			std::cout << "test";
+		}
         // sum up the solution values (multiplied with probabilities)
         
 
@@ -706,8 +715,19 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
             // If we have integer indices, we need the branch-and-bound solver
         // Silence Cplex!
         osiStoch_->messageHandler()->setLogLevel(0);
-        if (intIndices.size()){
-            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+		int integer_cutoff = -1;
+		for (int i = 0; i < intIndices.size(); i++){
+			if ( intIndices[i] >= core_->getColStart(1)){
+				integer_cutoff = i;
+				break;
+			}
+			else 
+				integer_cutoff = intIndices.size();
+			
+		}
+        if (intIndices.size() && integer_cutoff > 0){
+			// We set Integers only for the first stage!
+            osiStoch_->setInteger(&intIndices[0],integer_cutoff);
             osiStoch_->branchAndBound();
         }
         else{
