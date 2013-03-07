@@ -40,6 +40,7 @@
 
 // Files necessary for cplex
 #include "ilcplex/cplex.h"
+#include "ilcplex/cpxconst.h"
 //#include "ilcplex/cplexcheck.h"
 //#include "check.c"
 #include "OsiCpxSolverInterface.hpp"
@@ -2470,7 +2471,7 @@ namespace parallel_benders {
             if ( warm_up_ ){
                 int offset = 0;
                 for (int i = 0; i < current_stage_-1;i++)
-                    warm_up_ += stage_data_[i]->num_columns_;
+                    offset += stage_data_[i]->num_columns_;
                 column_solution = warm_up_solution_.get()+offset;
             }
             else 
@@ -3190,7 +3191,7 @@ namespace parallel_benders {
                 new_feas_cuts++;
             }
             // Now we have the problem with all cuts, that we can solve right now! (with applied warm start)
-            SolveSolverInterface(osi_solver,benders_tree_node_pointer);
+            SolveSolverInterface(osi_solver,false);
             // Store the warm start
             seperate_first_stage_solver_ = false;
 			if ( osi_solver->isProvenOptimal() )

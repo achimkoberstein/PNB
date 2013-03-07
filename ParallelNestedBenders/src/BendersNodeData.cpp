@@ -45,8 +45,8 @@ BendersNodeData::~BendersNodeData(void)
 
     delete this->warm_start_;
 
-    for (int i = 0; i < variable_bounds_.size(); i++)
-        delete variable_bounds_[i];
+    for ( auto ptr : variable_bounds_)
+        delete ptr;
 
     delete [] d_square_cut_t_matrix_;
 
