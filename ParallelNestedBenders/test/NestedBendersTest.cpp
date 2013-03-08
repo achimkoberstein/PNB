@@ -43,6 +43,9 @@ public:
     static const int max_stages_ = 11; // This can be set differently
     bool use_multi_cut_;
 
+    bool compute_statistics_;
+    bool generate_initial_solution_;
+
     double solveSMPS(const char* name) {
         return solveSMPS(name, name,name);
     }
@@ -59,6 +62,7 @@ public:
         }
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL); // Compute the first-stage solution! We need it for the subsequent solution run
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
         // Copy optimal solution value (of first scenario) to current_start_solution array
         current_start_solution_.reset(new double[num_single_scenario_cols_]);
@@ -66,6 +70,7 @@ public:
         std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         // Use the optimal solution!
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
@@ -169,7 +174,8 @@ public:
         int num_aggregates_by_magic = 0;
         double * min_scenario_pointer = NULL;
         double * max_scenario_pointer = NULL;
-        bool compute_statistics = false;
+        compute_statistics_ = true;
+        generate_initial_solution_ = true;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -181,7 +187,11 @@ public:
             num_aggregates_by_magic = smi_model->getSmiTree()->getRoot()->numChildren()/10;
             assert(num_aggregates_by_magic >= 0);
 
-            if ( compute_statistics ){
+            num_single_scenario_cols_ = 0;
+            for (int i = 0; i < num_stages_;i++)
+                num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
+
+            if ( compute_statistics_ || generate_initial_solution_ ){
                 //Open File!
                 int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
                 int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
@@ -200,9 +210,7 @@ public:
                     }
 
                 }
-                num_single_scenario_cols_ = 0;
-                for (int i = 0; i < num_stages_;i++)
-                    num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
+
 
 
                 OsiCpxSolverInterface osi_cpx;
@@ -236,34 +244,36 @@ public:
                     ws_results[i].second = NULL;
                 }
                 smi_model->releaseSolver();
-                boost::shared_array<double> ev_solution(NULL);
-                double eev2 = 0;
-                {
-                    boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
-                    smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-                    std::pair<double,double*> results = smi_model_eev->solveEV(&osi_cpx);
-                    ev_solution.reset(results.second);
+                if ( compute_statistics_ ){
+                    boost::shared_array<double> ev_solution(NULL);
+                    double eev2 = 0;
+                    {
+                        boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
+                        smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                        std::pair<double,double*> results = smi_model_eev->solveEV(&osi_cpx);
+                        ev_solution.reset(results.second);
+                    }
+
+                    // Now we need the HN-solution
+                    {
+                        OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
+                        osi_pnb.fixFirstStageVariables(ev_solution.get());
+                        osi_pnb.initialSolve();
+                        eev2 = osi_pnb.getObjValue();
+
+                        hn = solveProblemWithParameters(core_name,time_name,stoch_name);
+                    }
+
+                    // Compute DETEQ column, row and nonzeroes sizes..
+                    std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
+                    std::ofstream file_out;
+                    file_out.open("sizes.csv",ios::app);
+                    file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+                        << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << ";" <<
+                        ws << ";" << hn << ";" << eev2 << ";" << hn-ws << ";" << eev2-hn << "\n";
+                    file_out.close();
+                    LOG(INFO) << "printed to file";
                 }
-
-                // Now we need the HN-solution
-                {
-                    OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
-                    osi_pnb.fixFirstStageVariables(ev_solution.get());
-                    osi_pnb.initialSolve();
-                    eev2 = osi_pnb.getObjValue();
-
-                    hn = solveProblemWithParameters(core_name,time_name,stoch_name);
-                }
-
-                // Compute DETEQ column, row and nonzeroes sizes..
-                std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
-                std::ofstream file_out;
-                file_out.open("sizes.csv",ios::app);
-                file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-                    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << ";" <<
-                    ws << ";" << hn << ";" << eev2 << ";" << hn-ws << ";" << eev2-hn << "\n";
-                file_out.close();
-                LOG(INFO) << "printed to file";
             }
         }
         
@@ -405,7 +415,9 @@ protected:
     NestedBendersTest() {
         benders_parameter_.init();
         repetitions_ = 1;
-	use_multi_cut_ = true;
+        use_multi_cut_ = true;
+        generate_initial_solution_ = true;
+        compute_statistics_ = false;
     }
     virtual ~NestedBendersTest(){}
     virtual void SetUp(){

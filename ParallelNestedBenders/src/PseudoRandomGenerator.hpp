@@ -1,7 +1,6 @@
 #ifndef PseudoRandomGenerator_hpp__
 #define PseudoRandomGenerator_hpp__
 
-#include <boost/shared_ptr.hpp>
 #include <boost/random.hpp>
 #include <boost/math/distributions/students_t.hpp>
 
@@ -12,8 +11,8 @@ typedef boost::variate_generator<base_generator_type&, boost::uniform_01<> > uni
 
 //// Stores Uniform01Generator, hides implementation from .hpp
 struct Uniform01Generator {
-    boost::shared_ptr<base_generator_type> rng;
-    boost::shared_ptr<uniform_distr_gen> uniform;
+    std::shared_ptr<base_generator_type> rng;
+    std::shared_ptr<uniform_distr_gen> uniform;
     unsigned int seed;
 
     Uniform01Generator();

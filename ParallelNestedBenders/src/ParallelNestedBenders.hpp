@@ -85,9 +85,9 @@ private:
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
-    void CombineTwoCuts( shared_ptr<CutStuff>&, shared_ptr<CutStuff>& );
+    void CombineTwoCuts( std::shared_ptr<CutStuff>&, std::shared_ptr<CutStuff>& );
 
-    int GetNumberOfAggregatesFromCut( shared_ptr<CutStuff>& cut);
+    int GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut);
 
     void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
 
@@ -117,7 +117,7 @@ private:
 
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
-    void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, shared_ptr<CutStuff> cut_stuff);
+    void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
     void SetSolverByThread();
     // Problem data
     SmiScnModel* smi_;
@@ -228,16 +228,16 @@ private:
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
 
-    mutex console_mutex_; // Mutex for console output
-    mutex solver_map_mutex_; // Mutex for access to solver map
-    mutex stage_warm_start_mutex_; // Mutex for access to warm start 
-    mutex upper_bound_mutex_; // Mutex for access to upper bound
-    mutex infeasible_problem_mutex_; // Mutex for access to infeasible problem setter 
-    mutex osi_solver_mutex_; // Mutex that is used if we want to clone an OsiSolverInterface
-    mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
-	mutex stage_lower_upper_bounds_mutex_;  
-    mutex misc_mutex_; // Mutex for miscellanious stuff
-    mutex debug_mutex_;
+    std::mutex console_mutex_; // std::mutex for console output
+    std::mutex solver_map_mutex_; // std::mutex for access to solver map
+    std::mutex stage_warm_start_mutex_; // std::mutex for access to warm start 
+    std::mutex upper_bound_mutex_; // std::mutex for access to upper bound
+    std::mutex infeasible_problem_mutex_; // std::mutex for access to infeasible problem setter 
+    std::mutex osi_solver_mutex_; // std::mutex that is used if we want to clone an OsiSolverInterface
+    std::mutex add_cut_counter_mutex_; // std::mutex that is used if we increase the cut counter
+	std::mutex stage_lower_upper_bounds_mutex_;  
+    std::mutex misc_mutex_; // std::mutex for miscellanious stuff
+    std::mutex debug_mutex_;
     // Further thread management stuff
 	boost::threadpool::pool thread_pool_;
 
@@ -279,7 +279,7 @@ private:
     boost::scoped_array<int> level_rstat2_;
     boost::scoped_array<double> level_dnorm2_;
 	int level_2_length_;
-    shared_ptr<CoinWarmStart> level_warm_start_;
+    std::shared_ptr<CoinWarmStart> level_warm_start_;
     
     // All variables needed for on demand accuracy level decomposition
     bool oda_method_; // If we actually use On Demand Accuracy Level decomposition
