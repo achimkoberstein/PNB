@@ -49,7 +49,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
         parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
-        if ( osi_ != NULL ){
+        if ( osi_ != nullptr ){
             delete osi_;
         }
         osi_ = nested_benders_->smi_->loadOsiSolverData();
@@ -122,9 +122,9 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 }
 
 OsiStochasticParallelNestedBendersSolverInterface::OsiStochasticParallelNestedBendersSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
-: OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL),osi_(NULL)
+: OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(nullptr),osi_(nullptr)
 {
-    if ( smi_model == NULL )
+    if ( smi_model == nullptr )
         assert(false);
     //this->smi_model_->releaseSolver(); // Forget about previous solver, we do not care about it!
     this->smi_model_->setOsiSolverHandle(this->osi_solver_);
@@ -230,7 +230,7 @@ double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForSce
 
 void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( const double* solution )
 {
-    assert(solution != NULL);
+    assert(solution != nullptr);
     nested_benders_->fixFirstStageVariables(solution);
 }
 
@@ -267,7 +267,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[stage].size();scen++){
 			solution_file << "Objective Value Stage-Scenario=" <<  stage << "-" << scen << " : " <<  nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << "\n";
 			const double * primal_solution = getSolutionByNodeAndStage(scen,stage);
-			assert( primal_solution != NULL);
+			assert( primal_solution != nullptr);
 			// Write out objective value for stage and scenario wise (probability discounted)
 			// Get the correct name for the variable in question via smi!
 			int column_offset = smi_model_->getCore()->getColStart(stage);
@@ -631,7 +631,7 @@ double get_random_0_1_variate(){
 double * get_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
     if ( uniform_generator_struct.seed == 0)
-        return NULL;
+        return nullptr;
 
     double* random_variates = new double[number_of_variates];
     for (int i = 0; i < number_of_variates; i++)
@@ -643,7 +643,7 @@ double * get_random_01_variates(int number_of_variates){
 double * get_antithetic_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
     if ( uniform_generator_struct.seed == 0)
-        return NULL;
+        return nullptr;
 
     double* random_variates = new double[number_of_variates];
     for (int i = 0; i < number_of_variates; i++){
@@ -659,7 +659,7 @@ double * get_antithetic_random_01_variates(int number_of_variates){
 double * get_latin_hypercube_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
     if ( uniform_generator_struct.seed == 0)
-        return NULL;
+        return nullptr;
 
     // Generate one variate uniformly at random in every interval
     double* random_variates = new double[number_of_variates];
