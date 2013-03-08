@@ -169,6 +169,7 @@ public:
         int num_aggregates_by_magic = 0;
         double * min_scenario_pointer = NULL;
         double * max_scenario_pointer = NULL;
+        bool compute_statistics = false;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -180,88 +181,90 @@ public:
             num_aggregates_by_magic = smi_model->getSmiTree()->getRoot()->numChildren()/10;
             assert(num_aggregates_by_magic >= 0);
 
-            //Open File!
-            int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
-            int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
-            int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
-            
-            if ( smi_model->getCore()->getNumStages() > 2)
-            {
-                // Compute det_cols and det_rows by aggregating over the scenario tree?!
-                det_cols = 0; det_rows = 0; det_nonzeroes = 0;
-                std::vector<SmiScnNode*> tree_nodes = smi_model->getSmiTree()->wholeTree();
-                BOOST_FOREACH( SmiScnNode* node, tree_nodes){
-                    int node_stage = node->getStage();
-                    det_cols += smi_model->getCore()->getNumCols(node_stage);
-                    det_rows += smi_model->getCore()->getNumRows(node_stage);;
-                    det_nonzeroes += smi_model->getCore()->getNode(node_stage)->getNumMatrixElements();
+            if ( compute_statistics ){
+                //Open File!
+                int det_cols = smi_model->getCore()->getNumCols(0)+num_childs_first_stage*smi_model->getCore()->getNumCols(1);
+                int det_rows = smi_model->getCore()->getNumRows(0)+num_childs_first_stage*smi_model->getCore()->getNumRows(1);;
+                int det_nonzeroes = smi_model->getCore()->getNode(0)->getNumMatrixElements()+num_childs_first_stage*smi_model->getCore()->getNode(1)->getNumMatrixElements();
+
+                if ( smi_model->getCore()->getNumStages() > 2)
+                {
+                    // Compute det_cols and det_rows by aggregating over the scenario tree?!
+                    det_cols = 0; det_rows = 0; det_nonzeroes = 0;
+                    std::vector<SmiScnNode*> tree_nodes = smi_model->getSmiTree()->wholeTree();
+                    BOOST_FOREACH( SmiScnNode* node, tree_nodes){
+                        int node_stage = node->getStage();
+                        det_cols += smi_model->getCore()->getNumCols(node_stage);
+                        det_rows += smi_model->getCore()->getNumRows(node_stage);;
+                        det_nonzeroes += smi_model->getCore()->getNode(node_stage)->getNumMatrixElements();
+                    }
+
+                }
+                num_single_scenario_cols_ = 0;
+                for (int i = 0; i < num_stages_;i++)
+                    num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
+
+
+                OsiCpxSolverInterface osi_cpx;
+                double ws = 0;
+                double eev = 0;
+                double hn = 0;
+                // Compute Wait-And-See
+                std::vector<std::pair<double, double*> > ws_results = smi_model->solveWS(&osi_cpx);
+                std::pair<int,double> minimum = std::make_pair(-1,1e20);
+                std::pair<int,double> maximum = std::make_pair(-1,-1e20);
+                for ( int i = 0; i < ws_results.size();i++){
+                    ws += ws_results[i].first*smi_model->getScenarioProb(i);
+                    // Look for best and worst scenario!
+                    if ( ws_results[i].first > maximum.second ){
+                        maximum.first = i;
+                        maximum.second = ws_results[i].first;
+                        max_scenario_pointer = ws_results[i].second;
+                    }
+                    if ( ws_results[i].first < minimum.second ){
+                        minimum.first = i;
+                        minimum.second = ws_results[i].first;
+                        min_scenario_pointer = ws_results[i].second;
+                    }
+                }
+                best_case_solution_.reset(new double[num_single_scenario_cols_]);
+                worst_case_solution_.reset(new double[num_single_scenario_cols_]);
+                std::copy(max_scenario_pointer,max_scenario_pointer+num_single_scenario_cols_,worst_case_solution_.get());
+                std::copy(min_scenario_pointer,min_scenario_pointer+num_single_scenario_cols_,best_case_solution_.get());
+                for (int i = 0; i < ws_results.size();i++){
+                    delete [] ws_results[i].second;
+                    ws_results[i].second = NULL;
+                }
+                smi_model->releaseSolver();
+                boost::shared_array<double> ev_solution(NULL);
+                double eev2 = 0;
+                {
+                    boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
+                    smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                    std::pair<double,double*> results = smi_model_eev->solveEV(&osi_cpx);
+                    ev_solution.reset(results.second);
                 }
 
-            }
-            num_single_scenario_cols_ = 0;
-            for (int i = 0; i < num_stages_;i++)
-                num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
+                // Now we need the HN-solution
+                {
+                    OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
+                    osi_pnb.fixFirstStageVariables(ev_solution.get());
+                    osi_pnb.initialSolve();
+                    eev2 = osi_pnb.getObjValue();
 
-
-            OsiCpxSolverInterface osi_cpx;
-			double ws = 0;
-			double eev = 0;
-			double hn = 0;
-            // Compute Wait-And-See
-            std::vector<std::pair<double, double*> > ws_results = smi_model->solveWS(&osi_cpx);
-            std::pair<int,double> minimum = std::make_pair(-1,1e20);
-            std::pair<int,double> maximum = std::make_pair(-1,-1e20);
-            for ( int i = 0; i < ws_results.size();i++){
-                ws += ws_results[i].first*smi_model->getScenarioProb(i);
-                // Look for best and worst scenario!
-                if ( ws_results[i].first > maximum.second ){
-                    maximum.first = i;
-                    maximum.second = ws_results[i].first;
-                    max_scenario_pointer = ws_results[i].second;
+                    hn = solveProblemWithParameters(core_name,time_name,stoch_name);
                 }
-                if ( ws_results[i].first < minimum.second ){
-                    minimum.first = i;
-                    minimum.second = ws_results[i].first;
-                    min_scenario_pointer = ws_results[i].second;
-                }
+
+                // Compute DETEQ column, row and nonzeroes sizes..
+                std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
+                std::ofstream file_out;
+                file_out.open("sizes.csv",ios::app);
+                file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
+                    << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << ";" <<
+                    ws << ";" << hn << ";" << eev2 << ";" << hn-ws << ";" << eev2-hn << "\n";
+                file_out.close();
+                LOG(INFO) << "printed to file";
             }
-            best_case_solution_.reset(new double[num_single_scenario_cols_]);
-            worst_case_solution_.reset(new double[num_single_scenario_cols_]);
-            std::copy(max_scenario_pointer,max_scenario_pointer+num_single_scenario_cols_,worst_case_solution_.get());
-            std::copy(min_scenario_pointer,min_scenario_pointer+num_single_scenario_cols_,best_case_solution_.get());
-            for (int i = 0; i < ws_results.size();i++){
-                delete [] ws_results[i].second;
-                ws_results[i].second = NULL;
-            }
-			smi_model->releaseSolver();
-			boost::shared_array<double> ev_solution(NULL);
-			double eev2 = 0;
-			{
-				boost::scoped_ptr<SmiScnModel> smi_model_eev(new SmiScnModel());
-				smi_read_in = smi_model_eev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-				std::pair<double,double*> results = smi_model_eev->solveEV(&osi_cpx);
-				ev_solution.reset(results.second);
-			}
-
-            // Now we need the HN-solution
-			{
-				OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
-				osi_pnb.fixFirstStageVariables(ev_solution.get());
-				osi_pnb.initialSolve();
-				eev2 = osi_pnb.getObjValue();
-
-				hn = solveProblemWithParameters(core_name,time_name,stoch_name);
-			}
-
-            // Compute DETEQ column, row and nonzeroes sizes..
-            std::cout << "Problem Name; Cols; Rows; Cols 2nd; Rows 2nd; Cols DET; Rows DET; NZ DET; Wait-and-See; Here-and-Now; EV; EEV; EVPI; VSS";
-            std::ofstream file_out;
-            file_out.open("sizes.csv",ios::app);
-            file_out << stoch_name << ";" << num_childs_first_stage << ";" << smi_model->getCore()->getNumCols(0) << ";" << smi_model->getCore()->getNumRows(0) << ";" << smi_model->getCore()->getNumCols(1)
-                << ";" << smi_model->getCore()->getNumRows(1) << ";" << det_cols << ";" << det_rows << ";" << det_nonzeroes << ";" <<
-                ws << ";" << hn << ";" << eev2 << ";" << hn-ws << ";" << eev2-hn << "\n";
-            file_out.close();
-            LOG(INFO) << "printed to file";
         }
         
         // Solve with worst-case or best-case scenario!
@@ -280,7 +283,7 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 1;
         std::vector<int> aggregates;
-        //aggregates.push_back(1);
+        aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
         //    aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
@@ -1491,7 +1494,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*NestedBendersTestInteger*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*scfxm*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";

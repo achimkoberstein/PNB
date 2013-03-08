@@ -564,8 +564,8 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         // Get all nodes for this scenario
         std::vector<SmiScnNode*>& nodes = smiTree_.getScenario(i);
         // Call addNode on all these nodes
-        for (unsigned int i = 0; i < nodes.size(); i++) {
-            addNode(nodes[i],true);
+        for (unsigned int j = 0; j < nodes.size(); j++) {
+            addNode(nodes[j],true);
         }
 
         matrix_ = new CoinPackedMatrix(false,0,0);
