@@ -325,10 +325,10 @@ SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInter
     // Set the seed 
     uniform_generator_struct.seed = parallel_benders::get_random_number_from_system();
     // Create a random number generator instance
-    uniform_generator_struct.rng = boost::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
+    uniform_generator_struct.rng = std::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
     // Create a random [0,1) variate generator;
     boost::uniform_01<> uniform_01_distribution;
-    uniform_generator_struct.uniform = boost::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
+    uniform_generator_struct.uniform = std::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()

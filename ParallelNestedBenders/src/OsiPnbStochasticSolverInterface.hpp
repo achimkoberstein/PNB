@@ -81,7 +81,7 @@ public:
 
 
 private:
-    boost::shared_ptr<OsiStochasticParallelNestedBendersSolverInterface> osi_pnb_;
+    std::shared_ptr<OsiStochasticParallelNestedBendersSolverInterface> osi_pnb_;
     parallel_benders::Parameter parameters_;
     std::vector<int> samples_;
     std::vector<int> samples_upper_;
