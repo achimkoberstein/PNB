@@ -2651,7 +2651,7 @@ namespace parallel_benders {
         double * dual_solution_primal_variable_bounds = nullptr;
         const double * dual_solution = nullptr;
         int number_rows = osi_solver->getNumRows(); // Also account for optimality and feasibility cuts
-        int number_coss = stage_data_[current_stage_]->num_columns_;//osi_solver->getNumCols(); Ignore next stage approximations
+        int number_cols_of_basic_problem = stage_data_[current_stage_]->num_columns_; //Ignore next stage approximations
 
         const double* variable_lower_bounds = nullptr;
         const double* variable_upper_bounds = nullptr;
@@ -2711,9 +2711,9 @@ namespace parallel_benders {
 
             if ( true || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){// If this is not done everytime, problems can occur with fxm4_16 that say no dual solution present!
                 // We lose the warm-start solution this way, so we should add it.
-                std::vector<int> cstat(number_coss);
-                std::vector<int> rstat(number_rows);
-                std::vector<double> dnorm(number_rows);
+                std::vector<int> cstat(osi_solver->getNumCols());
+                std::vector<int> rstat(osi_solver->getNumRows());
+                std::vector<double> dnorm(osi_solver->getNumRows());
                 bool copied_basednorms = false;
                 if ( cpx_stat == CPX_STAT_INFEASIBLE ){ // This is usually the case!
                     // Store basednorms
@@ -2763,9 +2763,9 @@ namespace parallel_benders {
                     const CoinPackedMatrix* matrix = nullptr;
                     matrix = osi_solver->getMatrixByCol(); // This matrix contains also feasibility/optimality cuts..
 
-                    dual_solution_primal_variable_bounds = new double[number_coss];
+                    dual_solution_primal_variable_bounds = new double[number_cols_of_basic_problem];
                     const double* objective_coefficients = benders_tree_node_pointer->getDataPtr()->objective_;
-                    for (int i = 0; i < number_coss; i++){
+                    for (int i = 0; i < number_cols_of_basic_problem; i++){
                         dual_solution_primal_variable_bounds[i] = 0;
                         if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ || variable_upper_bounds[i] && variable_upper_bounds[i] < infinity_ ){
                             // Get column of the matrix to compute q_j = y^T A_j
@@ -2798,8 +2798,8 @@ namespace parallel_benders {
             }
 
             if ( use_cplex && stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas){ // If we use the primal simplex to obtain the multipliers, we take the reduced costs = dual logicals
-                dual_solution_primal_variable_bounds = new double[number_coss];
-                cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_coss-1);
+                dual_solution_primal_variable_bounds = new double[number_cols_of_basic_problem];
+                cpx_stat = CPXgetdj(env_ptr,lp_ptr,dual_solution_primal_variable_bounds,0,number_cols_of_basic_problem-1);
             }
 
             // Compute the value of the primal variable bounds * dual multipliers
@@ -2807,7 +2807,7 @@ namespace parallel_benders {
                 variable_lower_bounds = osi_solver->getColLower();
                 variable_upper_bounds = osi_solver->getColUpper();
                 if ( stage_data_[current_stage_]->non_zero_bounds_)
-                    for (int i = 0; i < number_coss; i++){
+                    for (int i = 0; i < number_cols_of_basic_problem; i++){
                         if ( variable_lower_bounds[i] && variable_lower_bounds[i] > -infinity_ && dual_solution_primal_variable_bounds[i] > 0 ){ // This means, we have a variable lower bound not zero and the bound is breached below
                             computed_dual_value_for_variable_bounds += dual_solution_primal_variable_bounds[i]*variable_lower_bounds[i];
                         }
