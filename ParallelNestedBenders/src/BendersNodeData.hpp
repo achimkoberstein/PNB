@@ -183,8 +183,6 @@ public:
     const double* col_solution();
     void set_dual_solution(const double* dualSolution);
     const double* dual_solution();
-    void set_warm_start(CoinWarmStart* coinWarmStart);
-    const CoinWarmStart* warm_start();
 
     void CleanUnusedMemory(bool direction);
 
@@ -219,7 +217,7 @@ public:
     int rows_;
     int num_thetas_; // How many aggregates do we have at this node
     boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
-    CoinWarmStart* warm_start_;
+    unique_ptr<CoinWarmStart> warm_start_;
     //boost::scoped_ptr<int> warm_start_cstat_;
     //boost::scoped_ptr<int> warm_start_rstat_;
     //boost::scoped_ptr<double> warm_start_dnorm_;
@@ -311,7 +309,7 @@ struct BendersStageData {
     std::vector<int> column_indices_;
     std::vector<int> row_indices_;
     // Coin Warm Start object
-    boost::scoped_ptr<CoinWarmStart> warm_start_;
+    unique_ptr<CoinWarmStart> warm_start_;
     bool problem_was_solved_in_this_iteration_;
 
 	std::map<boost::thread::id,OsiSolverInterface*> osi_solver_map_; // Store solver interfaces for every stage 

@@ -15,18 +15,18 @@ using namespace std;
 
 namespace parallel_benders{
 
-BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),incumbent_col_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
-trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),mip_solution_(NULL),unbounded_problem_(false),unbounded_extreme_ray_(NULL),unbounded_right_hand_side_(NULL),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
-matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(NULL),d_square_cut_rhs_(NULL),solver_rhs_(NULL),can_safely_reuse_(true)
+BendersNodeData::BendersNodeData():col_solution_(nullptr),dual_solution_(nullptr),incumbent_col_solution_(nullptr),reduced_cost_(nullptr),next_stage_approximation_(nullptr),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
+trust_region_rows_(nullptr),num_trust_region_rows_(0),trust_region_cols_(nullptr),num_trust_region_cols_(0),mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true)
 
 {
 }
 
-BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),incumbent_col_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
-trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),mip_solution_(NULL),unbounded_problem_(false),unbounded_extreme_ray_(NULL),unbounded_right_hand_side_(NULL),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
-matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(NULL),d_square_cut_rhs_(NULL),solver_rhs_(NULL),can_safely_reuse_(true)
+BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(nullptr),dual_solution_(nullptr),incumbent_col_solution_(nullptr),reduced_cost_(nullptr),next_stage_approximation_(nullptr),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
+trust_region_rows_(nullptr),num_trust_region_rows_(0),trust_region_cols_(nullptr),num_trust_region_cols_(0),mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(nullptr),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true)
 {
 
 }
@@ -42,8 +42,6 @@ BendersNodeData::~BendersNodeData(void)
     delete [] this->reduced_cost_;
 
     delete [] this->incumbent_col_solution_;
-
-    delete this->warm_start_;
 
     for ( auto ptr : variable_bounds_)
         delete ptr;
@@ -61,7 +59,7 @@ void BendersNodeData::set_col_solution(const double* colSolution)
 {
     int n = smi_node_data_->getCore()->getNumCols(smi_node_data_->getStage()) + 1; //+1 for THETA
 
-    if (this->col_solution_ == NULL)
+    if (this->col_solution_ == nullptr)
     {
         this->col_solution_ = new double[n];
     }
@@ -75,7 +73,7 @@ void BendersNodeData::set_col_solution(const double* colSolution)
 void BendersNodeData::set_dual_solution(const double* dualSolution) {
     int n = smi_node_data_->getCore()->getNumRows(smi_node_data_->getStage()) + optimality_cuts_.size()+feasibility_cuts_.size();
 
-    if (this->dual_solution_ == NULL) {
+    if (this->dual_solution_ == nullptr) {
         // first time, allocate memory
         this->dual_solution_ = new double[n];
     } else {
@@ -98,41 +96,31 @@ const double* BendersNodeData::dual_solution(void)
     return this->dual_solution_;
 }
 
-void BendersNodeData::set_warm_start(CoinWarmStart* coinWarmStart)
-{
-    delete this->warm_start_;
-    this->warm_start_ = coinWarmStart;
-}
-
-const CoinWarmStart* BendersNodeData::warm_start(void)
-{
-    return this->warm_start_;
-}
 
 void BendersNodeData::CleanUnusedMemory( bool direction )
 {
     unbounded_ = false;
     unbounded_problem_ = false;
-    unbounded_extreme_ray_.reset(NULL);
-    unbounded_right_hand_side_.reset(NULL);
+    unbounded_extreme_ray_.reset(nullptr);
+    unbounded_right_hand_side_.reset(nullptr);
     if ( direction ){ // We go forward, we do not need dual values. We recompute them, if needed
         delete [] dual_solution_;
         delete [] reduced_cost_;
-        dual_solution_ = NULL;
-        reduced_cost_ = NULL;
+        dual_solution_ = nullptr;
+        reduced_cost_ = nullptr;
     }
     else { // We go backward, we do not need the column solution;
         delete [] col_solution_;
         delete [] next_stage_approximation_; // Needed in aggregate_cut method, for already solved problems. This means, we can get rid of it, if we go backwards.
-        col_solution_ = NULL;
-        next_stage_approximation_ = NULL;
+        col_solution_ = nullptr;
+        next_stage_approximation_ = nullptr;
     }
 }
 
 BendersStageData::BendersStageData()
 : num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),non_zero_bounds_(false),
-column_indices_(0),row_indices_(0),warm_start_(NULL),problem_was_solved_in_this_iteration_(false),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(NULL),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(NULL), d_square_lambda_1_1_(NULL),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(NULL),d_square_disjunctive_indices_(),solve_binary_subproblems_(false)
+column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_this_iteration_(false),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(nullptr),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(nullptr),d_square_disjunctive_indices_(),solve_binary_subproblems_(false)
 {
 
 }
