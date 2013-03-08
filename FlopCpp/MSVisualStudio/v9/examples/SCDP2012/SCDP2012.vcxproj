@@ -219,9 +219,8 @@
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\ThirdParty\glog\vsprojects\libglog\libglog.vcxproj">
-      <Project>{34bd04bd-bc1d-4bfc-aafc-ed02d9e960f1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    <ProjectReference Include="..\..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">
+      <Project>{772c2111-bbbf-49e6-b912-198a7f7a88e5}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\..\ThirdParty\gtest\msvc\gtest.vcxproj">
       <Project>{c8f6c172-56f2-4e76-b5fa-c3b423b31be7}</Project>

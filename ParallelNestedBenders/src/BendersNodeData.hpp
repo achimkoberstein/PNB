@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <functional>
+#include <memory>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -141,33 +142,33 @@ namespace parallel_benders{
         static double active_threshold_; // If active_value is less than
         static int strike_threshold_; // If non_active_iterations_ is more than
 
-        CutStuff(int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer);
+        CutStuff(int iteration, shared_ptr<OsiRowCut>& cut_pointer);
 
         int cut_creation_iteration_;
         int not_active_iterations_;
         int aggregate_number_; // We can extend that to a list of aggregates if this is necessary
-        boost::shared_ptr<OsiRowCut> cut_;
+        shared_ptr<OsiRowCut> cut_;
         double active_value; // Used to rate cuts, how good is a cut, how useful was it in the course of the algorithm?
         int current_index_in_solver_; // Needs to be updated at each run to be meaningful
         bool to_use_;
     };
 
-    // To be able to use find_if on std::list< boost::shared_ptr<CutStuff> > in conjunction with active values
-    struct CutStuffComparison: public std::binary_function< boost::shared_ptr<CutStuff>, int, bool > {
-        bool operator () ( const boost::shared_ptr<CutStuff> &cut_stuff, const int &number ) const {
+    // To be able to use find_if on std::list< shared_ptr<CutStuff> > in conjunction with active values
+    struct CutStuffComparison: public std::binary_function< shared_ptr<CutStuff>, int, bool > {
+        bool operator () ( const shared_ptr<CutStuff> &cut_stuff, const int &number ) const {
             return cut_stuff->cut_creation_iteration_ == number && cut_stuff->active_value < CutStuff::active_threshold_ && cut_stuff->not_active_iterations_ > CutStuff::strike_threshold_;
         }
     };
 
-    struct CutStuffLessComparison: public std::binary_function< boost::shared_ptr<CutStuff>, boost::shared_ptr<CutStuff>, bool > {
-        bool operator () ( const boost::shared_ptr<CutStuff> &cut_stuff, const boost::shared_ptr<CutStuff> &cut_stuff2 ) const {
+    struct CutStuffLessComparison: public std::binary_function< shared_ptr<CutStuff>, shared_ptr<CutStuff>, bool > {
+        bool operator () ( const shared_ptr<CutStuff> &cut_stuff, const shared_ptr<CutStuff> &cut_stuff2 ) const {
             return cut_stuff->cut_creation_iteration_ < cut_stuff2->cut_creation_iteration_ || cut_stuff->aggregate_number_ < cut_stuff2->aggregate_number_;
         }
     };
 
     
 
-    bool is_active (const boost::shared_ptr<CutStuff>& value);
+    bool is_active (const shared_ptr<CutStuff>& value);
 
 // We can make it a struct anyway?!
 struct BendersNodeData 
@@ -235,7 +236,7 @@ public:
     double solution_value_;
 	double incumbent_solution_value_;
     // Store optimality and feasibility cuts. We can also use a deque for that, if we want to remove elements later on..
-    typedef std::list<boost::shared_ptr<CutStuff> > cut_container;
+    typedef std::list<shared_ptr<CutStuff> > cut_container;
     cut_container optimality_cuts_;
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
@@ -277,7 +278,7 @@ public:
     bool can_safely_reuse_;
 
     // ODA-Level decomp
-    std::vector<boost::shared_ptr<OsiRowCut> > oda_optimality_cuts_;
+    std::vector<shared_ptr<OsiRowCut> > oda_optimality_cuts_;
     
 };
 

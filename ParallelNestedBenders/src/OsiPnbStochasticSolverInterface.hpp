@@ -1,7 +1,6 @@
 #ifndef OsiPnbStochasticSolverInterface_h__
 #define OsiPnbStochasticSolverInterface_h__
 
-
 #include "PseudoRandomGenerator.hpp"
 #include "OsiStochasticSolverInterface.hpp"
 #include "BendersNodeData.hpp"
