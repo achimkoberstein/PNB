@@ -2667,32 +2667,34 @@ namespace parallel_benders {
         else
             use_dual_farkas = true;
 
-        bool fischetti_cut_procedure = true;
-        // Maybe we would like to change the problem: Fischetti Generation!
-        // We must add a new row for this: q y = \le \theta !
-        // But we have no theta yet..
-        // How does this translate into a constraint I like?!
-        std::vector<int> indices(number_rows);
-        std::vector<double> elements(number_rows);
-        double * row_lower_node = benders_tree_node_pointer->getDataPtr()->row_lower_;
-        double * row_upper_node = benders_tree_node_pointer->getDataPtr()->row_upper_;
-        for (std::size_t i = 0; i < number_rows;i++){
-            indices[i] = i;
-            if ( row_lower_node[i] == row_upper_node[i] ){ // This is an equality row, therefore the dual value is free. 
-                // The RHS is equal to the obj function value of the dual. The dual gets maximized. Therefore a RHS >= 0 implies that the value will be increased when it is possible.
-                if ( row_lower_node[i] >= 0 )
-                    elements[i] = 0;
-                else 
-                    elements[i] = 0;
-            }
-            if ( row_lower_node[i] <= -infinity_ ) // This is a less-than row, therefore the dual value is <= 0. Set w_i = -1
-                elements[i] = -1;
-            else if (row_upper_node[i] >= infinity_ ) // This is a greater-than row, therefore the dual value is >= 0. Set w_i = 1.
-                elements[i] = 1;
+        bool fischetti_cut_procedure = false;
+        if ( fischetti_cut_procedure ){
+            // Maybe we would like to change the problem: Fischetti Generation!
+            // We must add a new row for this: q y = \le \theta !
+            // But we have no theta yet..
+            // How does this translate into a constraint I like?!
+            std::vector<int> indices(number_rows);
+            std::vector<double> elements(number_rows);
+            double * row_lower_node = benders_tree_node_pointer->getDataPtr()->row_lower_;
+            double * row_upper_node = benders_tree_node_pointer->getDataPtr()->row_upper_;
+            for (std::size_t i = 0; i < number_rows;i++){
+                indices[i] = i;
+                if ( row_lower_node[i] == row_upper_node[i] ){ // This is an equality row, therefore the dual value is free. 
+                    // The RHS is equal to the obj function value of the dual. The dual gets maximized. Therefore a RHS >= 0 implies that the value will be increased when it is possible.
+                    if ( row_lower_node[i] >= 0 )
+                        elements[i] = 0;
+                    else 
+                        elements[i] = 0;
+                }
+                if ( row_lower_node[i] <= -infinity_ ) // This is a less-than row, therefore the dual value is <= 0. Set w_i = -1
+                    elements[i] = -1;
+                else if (row_upper_node[i] >= infinity_ ) // This is a greater-than row, therefore the dual value is >= 0. Set w_i = 1.
+                    elements[i] = 1;
 
+            }
+            CoinPackedVector cpv(number_rows,&indices[0],&elements[0]);
+            osi_solver->addCol(cpv,-infinity_,infinity_,1);
         }
-        CoinPackedVector cpv(number_rows,&indices[0],&elements[0]);
-        osi_solver->addCol(cpv,-infinity_,infinity_,1);
         // We need the currents problem row sense to set the correct values!
 
         // Now we try to solve the same stuff with dual farkas: Primal problem is infeasible, we use the dual simplex, so it should work fine.
@@ -2985,8 +2987,10 @@ namespace parallel_benders {
             dual_ray_problem->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
         }
 
-        int number_of_cols = osi_solver->getNumCols()-1;
-        osi_solver->deleteCols(1,&number_of_cols);
+        if ( fischetti_cut_procedure){
+            int number_of_cols = osi_solver->getNumCols()-1;
+            osi_solver->deleteCols(1,&number_of_cols);
+        }
 
         // Delete the computed lower and upper bounds
         if ( node_pointer->getRowLowerLength() && !benders_node_pointer->solve_ray_right_hand_side_)
