@@ -2735,7 +2735,6 @@ namespace parallel_benders {
                 if ( cpx_stat == CPX_STAT_INFEASIBLE )
                     StoreWarmStart(osi_solver,benders_tree_node_pointer);
             }
-            // Where is the difference?!
 
             double proof = 0;
             if ( cpx_stat == CPX_STAT_INFEASIBLE ){
@@ -2848,7 +2847,6 @@ namespace parallel_benders {
         }
         else {
             StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,number_rows);
-
         }
 
         ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
