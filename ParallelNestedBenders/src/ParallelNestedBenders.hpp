@@ -270,7 +270,9 @@ private:
 
     bool level_decomp_;
     bool level_quadratic_new_variables_;
+    bool level_euclidean_;
     bool level_manhattan_;
+    bool level_infinity_;
     boost::scoped_array<int> level_cstat_;
     boost::scoped_array<int> level_rstat_;
     boost::scoped_array<double> level_dnorm_;

@@ -102,6 +102,8 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_REGULARIZATION_ODA = 6;
     const int PNB_INT_ALGORITHM_LEVEL_MANHATTAN = 7;
     const int PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA = 8;
+    const int PNB_INT_ALGORITHM_LEVEL_INFINITY = 9;
+    const int PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA = 10;
 
 
     const int PNB_INT_PRIMAL_SIMPLEX = 10;

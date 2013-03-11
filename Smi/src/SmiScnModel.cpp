@@ -681,7 +681,7 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
     solutionValues.reserve(this->smiTree_.getNumScenarios());
 
 
-    CoinWarmStart* warm_start = osiStoch_->getEmptyWarmStart();
+    CoinWarmStart* warm_start = NULL;
     // loop over all scenarios and solve each of it individually
     for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
         // We have an empty model (zero cols,rows,els)
@@ -731,10 +731,11 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
             osiStoch_->branchAndBound();
         }
         else{
-            osiStoch_->setWarmStart(warm_start);
-            //delete warm_start;
+            if ( warm_start != NULL )
+                osiStoch_->setWarmStart(warm_start);
             osiStoch_->initialSolve(); //Solve this problem.
-            
+/*            if ( warm_start != NULL)
+                delete warm_start;  */          
             warm_start = osiStoch_->getWarmStart();
         }
         double* solution_array = new double[osiStoch_->getNumCols()];
@@ -746,7 +747,7 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
         delete [] this->dels_;
         delete [] this->indx_;
         delete [] this->rstrt_;
-        matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
+        matrix_ = NULL; dels_ = NULL; indx_ = NULL; rstrt_ = NULL;
 
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
