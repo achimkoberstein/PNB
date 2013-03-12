@@ -190,6 +190,9 @@
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">
+      <Project>{772c2111-bbbf-49e6-b912-198a7f7a88e5}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\libflopcpp\libflopc.vcxproj">
       <Project>{98885124-894a-48bf-9c20-d9f389c92275}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

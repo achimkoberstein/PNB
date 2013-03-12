@@ -10,7 +10,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalOptions>/WL %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Osi/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Osi/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost;../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Cbc/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Clp/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost;../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
