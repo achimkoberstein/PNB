@@ -430,6 +430,17 @@ namespace parallel_benders {
             level_quadratic_new_variables_ = false;
             oda_method_ = true;
         }
+        if ( algorithm == PNB_INT_ALGORITHM_LEVEL_INFINITY ){
+            level_decomp_ = true;
+            level_infinity_ = true;
+            level_quadratic_new_variables_ = false;
+        }
+        if ( algorithm == PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA){
+            level_decomp_ = true;
+            level_infinity_ = true;
+            level_quadratic_new_variables_ = false;
+            oda_method_ = true;
+        }
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
 
@@ -1774,7 +1785,7 @@ namespace parallel_benders {
                 num_theta -= stage_data_[current_stage_]->num_columns_;
             }
             else if ( level_decomp_ && level_infinity_ ){
-                num_theta -= stage_data_[current_stage_]->num_columns_;
+                num_theta -= 1;
             }
             assert(num_theta >= 0);
             StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
@@ -4935,7 +4946,7 @@ namespace parallel_benders {
     { // TODO: If we want to solve level method in a later stage, we need a modifier that tells us what we want to know!
         if ( (regularization_ || level_decomp_ && level_quadratic_new_variables_)&& current_stage_ == 0 && seperate_first_stage_solver_)
             return stage_data_[current_stage_]->num_rows_+stage_data_[current_stage_]->num_columns_;
-        else if ( level_decomp_ && level_manhattan_ && current_stage_ == 0)
+        else if ( level_decomp_ && (level_manhattan_ || level_infinity_)&& current_stage_ == 0)
             return stage_data_[current_stage_]->num_rows_+2*stage_data_[current_stage_]->num_columns_;
         else
             return stage_data_[current_stage_]->num_rows_;
@@ -5182,7 +5193,7 @@ namespace parallel_benders {
                 }
                 osi_solver->addCols(num_columns,cpvb, &collb[0], &colub[0], &colobj[0]);
 
-                assert(osi_solver->getNumCols() == 2*num_columns+num_theta);
+                assert(osi_solver->getNumCols() == stage_data_[current_stage_]->num_columns_ + num_columns+num_theta);
 
                 for (int i = 0; i < num_columns; i++)
                     delete cpvb[i];
