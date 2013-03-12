@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets">
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.51106.1</_ProjectFileVersion>
+    <_PropertySheetDisplayName>IncludeFiles</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/WL %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>../../../../../Smi/src;../../../../../Osi/src/Osi;../../../../../FlopCpp/src;../../../../../Cbc/src;../../../../../Clp/src;../../../../../Osi/src/OsiCbc;../../../../../Osi/src/OsiCpx;../../../../../Osi/src/OsiClp;../../../../../BuildTools/headers;../../../../../CoinUtils/src;../../../../../ThirdParty/gtest/include;../../../../../ThirdParty/boost;../../../../../ThirdParty/glog/src/windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>../../../../../ThirdParty/boost/stage/lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>
