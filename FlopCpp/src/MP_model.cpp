@@ -16,7 +16,7 @@ using std::endl;
 #include <set>
 
 
-
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to prevent linking issues!
 #include <glog/logging.h>
 
 #include <boost/dynamic_bitset.hpp>

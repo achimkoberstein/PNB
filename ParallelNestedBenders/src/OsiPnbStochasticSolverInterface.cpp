@@ -3,8 +3,9 @@
 #include <numeric>
 #include <vector>
 #include <iostream>
-
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to prevent linking issues!
 #include <glog/logging.h>
+
 #include <boost/shared_array.hpp>
 #include <boost/math/distributions/students_t.hpp>
 
