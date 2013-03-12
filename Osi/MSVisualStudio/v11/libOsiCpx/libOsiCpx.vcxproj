@@ -50,23 +50,23 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.props" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\CplexConfiguration.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\IncludeFiles.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.props" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\CplexConfiguration.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\IncludeFiles.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.props" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\CplexConfiguration.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\IncludeFiles.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\CplexConfiguration.props" />
-    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v9\IncludeFiles.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\CplexConfiguration.props" />
+    <Import Project="..\..\..\..\FlopCpp\MSVisualStudio\v11\IncludeFiles.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -143,7 +143,7 @@
     <ClInclude Include="..\..\..\src\OsiCpx\OsiCpxSolverInterface.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v9\libCoinUtils\libCoinUtils.vcxproj">
+    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
