@@ -188,23 +188,23 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v9\libOsiClp\libOsiClp.vcxproj">
+    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v11\libOsiClp\libOsiClp.vcxproj">
       <Project>{02d45875-a8cf-41b9-990b-3699c0ecfe10}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v9\libCoinUtils\libCoinUtils.vcxproj">
+    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v9\libOsiCpx\libOsiCpx.vcxproj">
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v9\libOsi\libOsi.vcxproj">
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v9\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
+    <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v11\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v9\libSmi\smiLib.vcxproj">
+    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v11\libSmi\smiLib.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">

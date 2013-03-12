@@ -501,15 +501,15 @@
     <ClInclude Include="..\..\..\src\CbcTreeLocal.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Cgl\MSVisualStudio\v9\libCgl\libCgl.vcxproj">
+    <ProjectReference Include="..\..\..\..\Cgl\MSVisualStudio\v11\libCgl\libCgl.vcxproj">
       <Project>{dbea3904-f0b8-408a-9e1a-6497febe8c42}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v9\libClp\libClp.vcxproj">
+    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v11\libClp\libClp.vcxproj">
       <Project>{4f8f7d1c-3a9e-444d-8ee9-77f33fa05994}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v9\libCoinUtils\libCoinUtils.vcxproj">
+    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
