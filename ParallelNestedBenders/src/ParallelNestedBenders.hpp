@@ -1,7 +1,8 @@
 #ifndef ParallelNestedBenders_h__
 #define ParallelNestedBenders_h__
 //#define _SECURE_SCL 0
-#define COMPUTING_TIMER 1
+// We do not measure CPU time !
+//#define COMPUTING_TIMER 1
 #include <map>
 #include <vector>
 #include <mutex>
@@ -89,13 +90,14 @@ private:
 
     int GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut);
 
-    void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
+    void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer);
 
     void InitializeBendersNodeDataTree(int num_scen_pro_cut);
 
-    OsiSolverInterface* GetSolverByThread();
-    bool CompareWithZero( double value );
+    inline OsiSolverInterface* GetSolverByThread();
+    inline bool CompareWithZero( double value );
     void StoreValuesFromSolverInArray(double*& destination_values,const double* source_values,int size);
+    void StoreValuesFromSolverInVector(std::vector<double>& destination_vector,const double* source_values,int size);
     void findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut );
     void IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  );
 
@@ -104,8 +106,8 @@ private:
 
     void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true);
     void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
-    int getNumRowsProblem();
-    int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    inline int getNumRowsProblem();
+    inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
 
     void AppendDSquareCutsToSubproblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);

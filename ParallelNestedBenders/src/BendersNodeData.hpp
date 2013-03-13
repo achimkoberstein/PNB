@@ -180,19 +180,14 @@ public:
     BendersNodeData(SmiNodeData* nodeData);
     ~BendersNodeData();
 
-    void set_col_solution(const double* colSolution);
-    const double* col_solution();
-    void set_dual_solution(const double* dualSolution);
-    const double* dual_solution();
-
     void CleanUnusedMemory(bool direction);
 
     // Information about the solution
-    double* col_solution_;
-    double* dual_solution_;
-	double* incumbent_col_solution_;
-    double* reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
-    double* next_stage_approximation_;
+    std::vector<double> col_solution_;
+    std::vector<double> dual_solution_;
+	std::vector<double> incumbent_col_solution_;
+    std::vector<double> reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
+    std::vector<double> next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
     boost::dynamic_bitset<> was_under_threshold_; // Has to have the size of num_thetas_
     double dual_value_variable_bounds_;
