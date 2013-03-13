@@ -76,6 +76,11 @@ SmiScnModel::~SmiScnModel()
 
     delete discrete_distribution_;
     delete block_structure_;
+
+    if ( integerLen )
+        delete [] integerInd;
+    if ( binaryLen)
+        delete [] binaryInd;
 }
 
 //Generates Tree Nodes with Data for given scenario
@@ -367,10 +372,14 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     memcpy(smi->drup_,drup_,sizeof(double)*this->core_->getNumRows());
 
     // Set integer values!
-    smi->integerInd = new int[this->getIntegerLen()];
-    memcpy(smi->integerInd,this->integerInd,sizeof(int)*this->integerLen);
-    smi->binaryInd = new int[this->getBinaryLen()];
-    memcpy(smi->binaryInd,this->binaryInd,sizeof(int)*this->binaryLen);
+    if ( this->getIntegerLen()) {
+        smi->integerInd = new int[this->getIntegerLen()];
+        memcpy(smi->integerInd,this->integerInd,sizeof(int)*this->integerLen);
+    }
+    if ( this->getBinaryLen()) {
+        smi->binaryInd = new int[this->getBinaryLen()];
+        memcpy(smi->binaryInd,this->binaryInd,sizeof(int)*this->binaryLen);
+    }
     smi->integerLen = this->integerLen;
     smi->binaryLen = this->binaryLen;
     smi->intIndices = this->intIndices;

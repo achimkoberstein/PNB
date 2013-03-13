@@ -1090,7 +1090,7 @@ namespace parallel_benders {
                     std::vector<double> cut_coefficients;
                     cut_coefficients.reserve(integer_cols.size());
                     // Get first stage solution and compute cut coefficients
-                    const double* col_solution = tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_;
+                    std::vector<double>& col_solution = tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_;
                     int count_binaries_valued_one = -1;
                     // Laporte-Louveaux Paper 1993, we have - and + exchanged, because we move these values to the other side of >= compared with the paper
                     for ( std::vector<int>::iterator it  = integer_cols.begin();it < integer_cols.end(); ++it){
@@ -1219,7 +1219,7 @@ namespace parallel_benders {
                 for (int temp_stage = 0; temp_stage <= compute_primal_solutions_for_stage_; temp_stage++){
                     for (int temp_node = 0; temp_node < tree_nodes_by_stage_[temp_stage].size(); temp_node++){
                         // Move solution from col_solution to incumbent_col_solution!
-                        StoreValuesFromSolverInArray(tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->incumbent_col_solution_,tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->col_solution_,stage_data_[temp_stage]->num_columns_);
+                        StoreValuesFromSolverInVector(tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->incumbent_col_solution_,&tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->col_solution_[0],stage_data_[temp_stage]->num_columns_);
                         // Store scenario wise solution value!
                         tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->incumbent_solution_value_ = tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->solution_value_*tree_nodes_by_stage_[temp_stage][temp_node]->getDataPtr()->probability_;
                     }
@@ -1758,23 +1758,13 @@ namespace parallel_benders {
 
             old_first_stage_solution_.resize(stage_data_[current_stage_]->num_columns_+num_theta,0.0);
 
-            if ( benders_node_pointer->col_solution_ != nullptr )
-                memcpy(&old_first_stage_solution_[0],benders_node_pointer->col_solution_,sizeof(double)*(stage_data_[current_stage_]->num_columns_));
-            if ( benders_node_pointer->next_stage_approximation_ != nullptr)
-                memcpy(&old_first_stage_solution_[0]+stage_data_[current_stage_]->num_columns_,benders_node_pointer->next_stage_approximation_,sizeof(double)*(num_theta));
+            if ( !benders_node_pointer->col_solution_.empty() )
+                memcpy(&old_first_stage_solution_[0],&benders_node_pointer->col_solution_[0],sizeof(double)*(stage_data_[current_stage_]->num_columns_));
+            if ( !benders_node_pointer->next_stage_approximation_.empty())
+                memcpy(&old_first_stage_solution_[0]+stage_data_[current_stage_]->num_columns_,&benders_node_pointer->next_stage_approximation_[0],sizeof(double)*(num_theta));
         }
 
-        // Delete old values 
-        delete [] benders_node_pointer->col_solution_;
-        delete [] benders_node_pointer->dual_solution_;
-        delete [] benders_node_pointer->reduced_cost_;
-        delete [] benders_node_pointer->next_stage_approximation_;
-        // Set to nullptr
-        benders_node_pointer->col_solution_ = nullptr;
-        benders_node_pointer->dual_solution_ = nullptr;
-        benders_node_pointer->reduced_cost_ = nullptr;
-        benders_node_pointer->next_stage_approximation_ = nullptr;
-
+        
         // Retrieve and store the theta variables
         if ( num_theta ){
             if ( (regularization_ || level_decomp_ && level_quadratic_new_variables_)&& current_stage_ == 0){
@@ -1788,7 +1778,7 @@ namespace parallel_benders {
                 num_theta -= 1;
             }
             assert(num_theta >= 0);
-            StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
+            StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
             if (  benders_node_pointer->unbounded_ && num_theta > 0){
                 for (int i = 0; i < num_theta;i++)
                     benders_node_pointer->next_stage_approximation_[i] = -infinity_;
@@ -1798,7 +1788,7 @@ namespace parallel_benders {
 
         // We need the column solution for the next stage problem!
         // We want to differentiate between column solution and theta variables 
-        StoreValuesFromSolverInArray(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
+        StoreValuesFromSolverInVector(benders_node_pointer->col_solution_,osi_solver->getColSolution(),stage_data_[current_stage_]->num_columns_);
 
         //// If we have integer variables, we might want to set these variables to pure integer values!
         //if ( integer_problems_[current_stage_] ){
@@ -1828,7 +1818,7 @@ namespace parallel_benders {
                 int index_for_fractional_max = -1;
                 for (int i = 0; i < binaries.size(); i++){
                     if ( !CompareForEquality(benders_node_pointer->col_solution_[binaries[i]],boost::math::round(benders_node_pointer->col_solution_[binaries[i]]),integer_tolerance_) ){
-                        double fractional = 0.5-std::abs(benders_node_pointer->col_solution()[binaries[i]]-0.5);
+                        double fractional = 0.5-std::abs(benders_node_pointer->col_solution_[binaries[i]]-0.5);
                         fractional_variables.push_back(make_pair(binaries[i],fractional));
                         if (index_for_fractional_max >= 0 && fractional_variables[index_for_fractional_max].second < fractional ){
                             index_for_fractional_max = fractional_variables.size()-1;
@@ -1892,8 +1882,6 @@ namespace parallel_benders {
                 temporary_stage_upper_bound_ += solution_value*benders_node_pointer->probability_;
                 upper_bound_mutex_.unlock();
             }
-            // Delete column solution, if we do not need to store primal_and_dual solutions. 
-            // We can delete the column solution only if we move backward and we do not need to store both!
         }
         if ( !compute_stage_bounds_ ){
             // If we go forward, we add to our upper bound!
@@ -1912,30 +1900,30 @@ namespace parallel_benders {
                     // Compute dual information from solution we got!
                     std::vector<double> dual(osi_solver->getNumRows());
                     std::vector<double> reduced(osi_solver->getNumCols());
-                    ComputeDualSolutionForMipProblem(osi_solver,&dual[0],&reduced[0],benders_node_pointer->col_solution_);
-                    StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,&dual[0],osi_solver->getNumRows());
-                    StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
+                    ComputeDualSolutionForMipProblem(osi_solver,&dual[0],&reduced[0],&benders_node_pointer->col_solution_[0]);
+                    StoreValuesFromSolverInVector(benders_node_pointer->dual_solution_,&dual[0],osi_solver->getNumRows());
+                    StoreValuesFromSolverInVector(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
                 }
             }
             else{ // In case of non-integer problems
-                StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
+                StoreValuesFromSolverInVector(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
                 if ( current_stage_ > 0 ) {
                     // Compute the values: \lambda * lower_bound - \mu * upper_bound
                     // Compute the resulting values right away, as we have the osi_solver_interface at hand.
                     if ( stage_data_[current_stage_]->non_zero_bounds_ ){
                         // Store Reduced Cost ( needed for dual values of primal variable bounds )
-                        StoreValuesFromSolverInArray(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
+                        StoreValuesFromSolverInVector(benders_node_pointer->reduced_cost_,osi_solver->getReducedCost(),osi_solver->getNumCols());
                     }
                 }
             }
 
-            if ( (stage_data_[current_stage_]->non_zero_bounds_ || integer_problems_[current_stage_] ) && benders_node_pointer->reduced_cost_ != nullptr){
-                const double* dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
-                const double* variable_lower_bounds = integer_problems_[current_stage_] ? benders_node_pointer->col_solution_ : osi_solver->getColLower();
-                const double* variable_upper_bounds = integer_problems_[current_stage_] ? benders_node_pointer->col_solution_ : osi_solver->getColUpper();
+            if ( (stage_data_[current_stage_]->non_zero_bounds_ || integer_problems_[current_stage_] ) && !benders_node_pointer->reduced_cost_.empty()){
+                std::vector<double>& dual_values_variable_bounds = benders_node_pointer->reduced_cost_;
+                const double *  variable_lower_bounds = integer_problems_[current_stage_] ? &benders_node_pointer->col_solution_[0] : osi_solver->getColLower();
+                const double *  variable_upper_bounds = integer_problems_[current_stage_] ? &benders_node_pointer->col_solution_[0] : osi_solver->getColUpper();
                 double computed_dual_value_for_variable_bounds = 0;
-                const double* column_solution = benders_node_pointer->col_solution_;
-                assert(column_solution!=nullptr);
+               std::vector<double>& column_solution = benders_node_pointer->col_solution_;
+                assert(!column_solution.empty());
                 for (int i = 0; i< stage_data_[current_stage_]->num_columns_; i++){
                     // Look at variable value and their bounds
                     if ( !CompareWithZero(column_solution[i]) && !CompareWithZero(dual_values_variable_bounds[i]) ){ // If variable is zero, it is either at one of its bounds ( then we do not want to worry ) or it is basic and we also do not have to worry..
@@ -1950,46 +1938,6 @@ namespace parallel_benders {
                 benders_node_pointer->dual_value_variable_bounds_ = computed_dual_value_for_variable_bounds;
             }
         }
-
-        // We got all the data stored, now we can remove TrustRegionConstraints!
-        if ( trust_region_ ){
-            // Just keep old trust region constraints!!
-            //// Remove trust region constraints or rows from the problem!
-            //if ( benders_node_pointer->num_trust_region_cols_ > 0)
-            //    osi_solver->deleteCols(benders_node_pointer->num_trust_region_cols_,benders_node_pointer->trust_region_cols_.get());
-            //if ( benders_node_pointer->num_trust_region_rows_ > 0)
-            //    osi_solver->deleteRows(benders_node_pointer->num_trust_region_rows_,benders_node_pointer->trust_region_rows_.get());
-            //if ( benders_node_pointer->num_trust_region_cols_  > 0 || benders_node_pointer->num_trust_region_rows_ > 0){
-            //    // Store WarmStart!
-            //    osi_solver->resolve();
-            //    //osi_solver->writeLp("After_Trust_region");
-            //    StoreWarmStart(osi_solver,benders_tree_node_pointer);
-            //    benders_node_pointer->num_trust_region_cols_ = 0;
-            //    benders_node_pointer->num_trust_region_rows_ = 0;
-            //}
-        }
-
-
-        //if ( store_cut_information_ && !integer_problems_[current_stage_]){ // Store Cut information only for non-integer problems!
-        //    // Store values about active cuts in own data structure
-        //    for ( int i = stage_data_[current_stage_]->num_rows_; i < stage_data_[current_stage_]->num_rows_+benders_node_pointer->optimality_cuts_.size();i++ ){
-        //        CutInformation& cut_information = benders_node_pointer->cut_information_.GetCut(i-stage_data_[current_stage_]->num_rows_);
-        //        double cut_active_value = osi_solver->getRowPrice()[i];
-        //        if ( cut_active_value ){ // Not Zero
-        //            if ( forward_ )
-        //                cut_information.iteration_forward_active_vector_[current_iteration_] = cut_active_value;
-        //            else
-        //                cut_information.iteration_backward_active_vector_[current_iteration_] = cut_active_value;
-        //            cut_information.active_iteration_counter_++;
-        //        }
-        //        else
-        //            cut_information.inactive_iteration_counter_++;
-        //    }// End For
-        //    // Print it out
-        //    //  std::cout << "Node " << benders_node_pointer->scenario_index_  << std::endl;
-        //    //if ( std::abs(osi_solver->getRowPrice()[i]) > zero_tolerance_)
-        //    //    std::cout << "Cut " << i-stage_data_[current_stage_]->num_rows_ << " is active with " << osi_solver->getRowPrice()[i] << std::endl;
-        //}// End if store_cut_information_
     }
 
     void ParallelNestedBenders::BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -2114,9 +2062,8 @@ namespace parallel_benders {
         // Add solution from previous problem, i.e. form right hand side of the problem
         if ( current_stage_ > 0 ){
             // Get solution from predecessor in tree
-            double* column_solution = nullptr;
             double* unbounded_rhs = nullptr;
-            column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_; // Is of length num_columns of previous stage
+            double * column_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_.empty() ? nullptr : &benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_[0]; // Is of length num_columns of previous stage
             if ( warm_up_ ){ // We want the column solution of the warm_up_ solution! This is the warm_up_solution_ with an offset according the number of cols until current_stage-2.
                 int offset_warmup = 0;
                 for (int i = 0; i < current_stage_-1; i++)
@@ -2164,16 +2111,16 @@ namespace parallel_benders {
                             if ( stochastic_element_in_row && deterministic_matrix.indices_[column_index] == stochastic_matrix.indices_[stochastic_column_index] ){
                                 assert( stochastic_matrix.indices_[stochastic_column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && stochastic_matrix.indices_[stochastic_column_index]-previous_stage_columns >= 0);
                                 value += stochastic_matrix.elements_[stochastic_column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
-                                if ( unbounded_rhs != nullptr)
-                                    unbounded_value += stochastic_matrix.elements_[stochastic_column_index]*unbounded_rhs[deterministic_matrix.indices_[column_index]-previous_stage_columns];
+                                //if ( unbounded_rhs != nullptr)
+                                //    unbounded_value += stochastic_matrix.elements_[stochastic_column_index]*unbounded_rhs[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                                 stochastic_column_index++;
                             }
 
                             else {  // We assume Staircase-Problems. 
                                 assert( deterministic_matrix.indices_[column_index]-previous_stage_columns < stage_data_[current_stage_-1]->num_columns_ && deterministic_matrix.indices_[column_index]-previous_stage_columns >= 0 );
                                 value += deterministic_matrix.elements_[column_index]*column_solution[deterministic_matrix.indices_[column_index]-previous_stage_columns];
-                                if ( unbounded_rhs != nullptr)
-                                    unbounded_value += deterministic_matrix.elements_[column_index]*unbounded_rhs[deterministic_matrix.indices_[column_index]-previous_stage_columns];
+                                //if ( unbounded_rhs != nullptr)
+                                //    unbounded_value += deterministic_matrix.elements_[column_index]*unbounded_rhs[deterministic_matrix.indices_[column_index]-previous_stage_columns];
                             }
                         }
 
@@ -2196,9 +2143,10 @@ namespace parallel_benders {
                         benders_node_pointer->row_lower_[row] -= value; // lb == row == ub, we can not handle lb <= row <= ub with one real inequality ( have to split up to two rows somewhere..
                         benders_node_pointer->row_upper_[row] -= value;
                     }
-                    if ( unbounded_rhs != nullptr ){
-                        benders_node_pointer->unbounded_right_hand_side_[row] -= unbounded_value;
-                    }
+                    // TODO: reenable if necessary
+                    //if ( unbounded_rhs != nullptr ){
+                    //    benders_node_pointer->unbounded_right_hand_side_[row] -= unbounded_value;
+                    //}
                 }
             }
         }
@@ -2213,7 +2161,7 @@ namespace parallel_benders {
             double* t_array = new double[stage_pointer->num_d_square_cuts_];
             assert( benders_node_pointer->d_square_cut_t_matrix_ != nullptr);
             assert( benders_node_pointer->d_square_cut_t_matrix_->getNumRows() == stage_pointer->num_d_square_cuts_);
-            benders_node_pointer->d_square_cut_t_matrix_->times(benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_,t_array);
+            benders_node_pointer->d_square_cut_t_matrix_->times(&benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_[0],t_array);
             for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+stage_pointer->num_d_square_cuts_; i++){
                 benders_node_pointer->row_upper_[i] = infinity_;
 
@@ -2336,9 +2284,9 @@ namespace parallel_benders {
             row_upper = const_cast<double*> (core_->getDenseRowUpper(current_stage_));
 
         // Store results of the computation 
-        std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
-        const double* dual_solution = benders_node_pointer->dual_solution_;
-        assert( dual_solution != nullptr );
+       std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
+       std::vector<double>& dual_solution = benders_node_pointer->dual_solution_;
+       assert( !dual_solution.empty() );
 
         ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
 
@@ -2465,8 +2413,7 @@ namespace parallel_benders {
 
         // We also remove the dual values, because we do not need them anymore.
         if ( !store_primal_and_dual_ ){
-            delete [] benders_node_pointer->dual_solution_;
-            benders_node_pointer->dual_solution_ = nullptr;
+            benders_node_pointer->dual_solution_.clear();
         }
 
     }
@@ -2484,14 +2431,15 @@ namespace parallel_benders {
             assert(false);
         }
 
-        double * column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
-        if ( column_solution == nullptr){
+        std::vector<double>& column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
+        if ( column_solution.empty() ){
             // We do not add any cuts, we have no prior column solution. This is an error.
             if ( warm_up_ ){
                 int offset = 0;
                 for (int i = 0; i < current_stage_-1;i++)
                     offset += stage_data_[i]->num_columns_;
-                column_solution = warm_up_solution_.get()+offset;
+                //std::copy(warm_up_solution_.get()+offset,warm_up_solution_.get()+offset+stage_data_[current_stage_-1]->num_columns_,column_solution.begin());
+                column_solution.assign(warm_up_solution_.get()+offset,warm_up_solution_.get()+offset+stage_data_[current_stage_-1]->num_columns_);
             }
             else 
                 assert(false);
@@ -2669,11 +2617,11 @@ namespace parallel_benders {
         int number_rows = osi_solver->getNumRows(); // Also account for optimality and feasibility cuts
         int number_cols_of_basic_problem = stage_data_[current_stage_]->num_columns_; //Ignore next stage approximations
 
-        const double* variable_lower_bounds = nullptr;
-        const double* variable_upper_bounds = nullptr;
-        const double* dual_values_variable_bounds = nullptr; // We set this either in the dual_farkas section or via the traditional way
-
         double computed_dual_value_for_variable_bounds = 0;
+
+        const double * dual_values_variable_bounds = nullptr;
+        const double * variable_lower_bounds = nullptr;
+        const double * variable_upper_bounds = nullptr;
 
 
 
@@ -2857,12 +2805,12 @@ namespace parallel_benders {
         std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
 
         // Copy solution to enable zero bound check
-        double* checked_dual_solution = new double[number_rows];
+        std::vector<double> checked_dual_solution; checked_dual_solution.reserve(number_rows);
         if ( use_cplex ){
-            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution_farkas.get(),number_rows);
+            StoreValuesFromSolverInVector(checked_dual_solution,dual_solution_farkas.get(),number_rows);
         }
         else {
-            StoreValuesFromSolverInArray(checked_dual_solution,dual_solution,number_rows);
+            StoreValuesFromSolverInVector(checked_dual_solution,dual_solution,number_rows);
         }
 
         ComputeCutCoefficients(benders_tree_node_pointer,checked_dual_solution,&cut_coefficients);
@@ -2873,7 +2821,7 @@ namespace parallel_benders {
         // Compute the resulting values right away, as we have the osi_solver_interface at hand.
 
         if ( !use_cplex ){ 
-            dual_values_variable_bounds = const_cast<double*> (dual_ray_problem->getReducedCost());
+            dual_values_variable_bounds = dual_ray_problem->getReducedCost();
             variable_lower_bounds = osi_solver->getColLower();
             variable_upper_bounds = osi_solver->getColUpper();
             computed_dual_value_for_variable_bounds = 0;
@@ -3023,7 +2971,6 @@ namespace parallel_benders {
         if ( node_pointer->getRowUpperLength() && !benders_node_pointer->solve_ray_right_hand_side_)
             delete [] row_upper;
 
-        delete [] checked_dual_solution;
         delete [] dual_solution_primal_variable_bounds;
     }
 
@@ -3081,9 +3028,9 @@ namespace parallel_benders {
 
     }
 
-    void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer )
+    void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer )
     {
-        assert( dual_solution != nullptr);
+        assert( !dual_solution.empty());
         SmiNodeData* node_pointer = benders_tree_node_pointer->getDataPtr()->smi_node_data_;
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         assert(cut_coefficients_pointer->size() == stage_data_[current_stage_-1]->num_columns_);
@@ -3139,7 +3086,7 @@ namespace parallel_benders {
         // Add cut coefficients for the d_square_case
         if ( d_square_ && stage_pointer->num_d_square_cuts_ > 0 && !stage_data_[current_stage_]->solve_binary_subproblems_){
             std::vector<double> x_results(stage_data_[current_stage_-1]->num_columns_,0.0);
-            benders_tree_node_pointer->getDataPtr()->d_square_cut_t_matrix_->transposeTimes(dual_solution+stage_pointer->num_rows_,&x_results[0]);
+            benders_tree_node_pointer->getDataPtr()->d_square_cut_t_matrix_->transposeTimes(&dual_solution[stage_pointer->num_rows_],&x_results[0]);
             for (int i = 0; i< stage_data_[current_stage_-1]->num_columns_;i++)
                 cut_coefficients_pointer->operator[](i) += x_results[i];
         }
@@ -3577,7 +3524,7 @@ namespace parallel_benders {
             // IN the case of pure single cuts, we can still remove cuts from the problem!
             //return;
         }
-        if ( benders_tree_node_pointer->getDataPtr()->dual_solution_ == nullptr){
+        if ( benders_tree_node_pointer->getDataPtr()->dual_solution_.empty()){
             LOG(INFO) << "You tried to do cut consolidation without dual solution information.";
             return;
         }
@@ -3585,7 +3532,7 @@ namespace parallel_benders {
         double start_time = CoinCpuTime();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values. They are stored and thus checked against zero tolerance
-        assert( benders_node_pointer->dual_solution_ != nullptr);
+        assert( !benders_node_pointer->dual_solution_.empty());
         assert(store_cut_information_); // If we do not want to store cut information this method should not be called
         CutStuffComparison comparison_object; // Compares number,active value and non-active-generations
 
@@ -3892,7 +3839,7 @@ namespace parallel_benders {
         double inactive_ratio = 0.7; // Aggregates that are inactive for more than inactive_ratio of all iterations (only feasible iterations!)
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         // We have the dual solution
-        if ( benders_node_pointer->dual_solution_ == nullptr){
+        if ( benders_node_pointer->dual_solution_.empty()){
             LOG(WARNING) << "You tried to analyse optimality cuts without dual information.";
         }
         // Optimality cuts start after normal rows and feasibility cuts
@@ -4280,8 +4227,8 @@ namespace parallel_benders {
 
             if ( osi_solver->isProvenOptimal() ){
                 StoreWarmStart(osi_solver,benders_tree_node_pointer);
-                StoreValuesFromSolverInArray(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()); // Store duals
-                StoreValuesFromSolverInArray(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
+                StoreValuesFromSolverInVector(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows()); // Store duals
+                StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,new_thetas); // Store new approximation
             }
             else{
                 console_mutex_.lock();
@@ -4603,6 +4550,18 @@ namespace parallel_benders {
         }
     }
 
+    void ParallelNestedBenders::StoreValuesFromSolverInVector( std::vector<double>& destination_vector,const double* source_values,int size )
+    {
+        if ( destination_vector.size() < size)
+            destination_vector.reserve(size);
+        destination_vector.assign(source_values,source_values+size);
+        //memcpy(&destination_vector[0],,size*sizeof(double));
+        for ( double i : destination_vector){
+            if ( CompareWithZero(i))
+                i = 0;
+        }
+    }
+
     double ParallelNestedBenders::computeScenarioValue( int scenario )
     {
         double sum = 0.0;
@@ -4657,8 +4616,8 @@ namespace parallel_benders {
         int num_rows = num_cols; // In case of infty_norm
         int solver_cols = osi_solver->getNumCols();
         int solver_rows = osi_solver->getNumRows();
-        double* candidate_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
-        if ( candidate_solution == nullptr)
+        std::vector<double>& candidate_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
+        if ( candidate_solution.empty())
             return;
         // Our integer indices
         std::vector<int> binary_indices;
@@ -4712,8 +4671,8 @@ namespace parallel_benders {
         if ( num_rows > 0 ){
             CoinPackedVectorBase** coin_vector_rows = new CoinPackedVectorBase*[num_rows];
             // Define the new rows: Equality rows (rlb = rub = candidate solution) with two/three entries \mu- + \mu+ + x = x' or \mu + x = x'
-            std::vector<double> row_lower_bounds(num_rows,0);
-            std::vector<double> row_upper_bounds(num_rows,0);
+            std::vector<double> row_lower_bounds(num_rows,0.0);
+            std::vector<double> row_upper_bounds(num_rows,0.0);
 
             if ( binary_constraint ){
                 row_lower_bounds[0] = -infinity_;
@@ -4745,8 +4704,8 @@ namespace parallel_benders {
                 row_upper_bounds[0] -= number_of_ones;
             }
             else {
-                memcpy(&row_lower_bounds[0],candidate_solution,sizeof(double)*num_cols);
-                memcpy(&row_upper_bounds[0],candidate_solution,sizeof(double)*num_cols);
+                memcpy(&row_lower_bounds[0],&candidate_solution[0],sizeof(double)*num_cols);
+                memcpy(&row_upper_bounds[0],&candidate_solution[0],sizeof(double)*num_cols);
             }
 
             if ( infty_norm ){
@@ -4882,8 +4841,8 @@ namespace parallel_benders {
             // Otherwise we have not yet added theta variables
             if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_+ (regularized_gamma_)*approximation_solution ){
                 // Update the solution!
-                assert( benders_tree_node_pointer->getDataPtr()->col_solution_);
-                memcpy(regularized_solution_.get(),benders_tree_node_pointer->getDataPtr()->col_solution_,sizeof(double)*stage_data_[0]->num_columns_);
+                assert(!benders_tree_node_pointer->getDataPtr()->col_solution_.empty());
+                memcpy(regularized_solution_.get(),&benders_tree_node_pointer->getDataPtr()->col_solution_[0],sizeof(double)*stage_data_[0]->num_columns_);
                 // Update the solution value
                 regularized_solution_value_ = solution_qx;
                 regularized_update_incumbent_ = true;
@@ -5425,11 +5384,11 @@ namespace parallel_benders {
         }
 
         // Store column solution and theta solution
-        StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
+        StoreValuesFromSolverInVector(benders_tree_node_pointer->getDataPtr()->col_solution_,osi_solver->getColSolution(),number_of_variables);
         // Copy solution to the incumbent as well!
-        std::copy(benders_tree_node_pointer->getDataPtr()->col_solution_,benders_tree_node_pointer->getDataPtr()->col_solution_+number_of_variables,regularized_solution_.get());
+        std::copy(benders_tree_node_pointer->getDataPtr()->col_solution_.begin(),benders_tree_node_pointer->getDataPtr()->col_solution_.end(),regularized_solution_.get());
         assert(number_of_problem_cols-number_of_variables == benders_tree_node_pointer->getDataPtr()->num_thetas_);
-        StoreValuesFromSolverInArray(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,benders_tree_node_pointer->getDataPtr()->num_thetas_);
+        StoreValuesFromSolverInVector(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,benders_tree_node_pointer->getDataPtr()->num_thetas_);
 
         // Compute objective value! Needed for Upper Bound computation!
         double solution = 0.0;
@@ -5451,7 +5410,7 @@ namespace parallel_benders {
 
 
         if ( oda_method_ ){
-            oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,benders_tree_node_pointer->getDataPtr()->next_stage_approximation_+benders_tree_node_pointer->getDataPtr()->num_thetas_,oda_first_stage_);
+            oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(),benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(),oda_first_stage_);
             std::cout << "Phi_i : " << oda_phi_i_ << "\n";
         }
 
@@ -5682,16 +5641,16 @@ namespace parallel_benders {
         if ( conditional_expectation ){
             for (std::vector<int>::iterator it = stage_pointer->non_integer_scenarios.begin(); it != stage_pointer->non_integer_scenarios.end(); ++it){
                 double conditional_prob = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->probability_/sum_prob;
-                const double* col_solution = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->col_solution_;
-                assert( col_solution != nullptr);
+                std::vector<double>& col_solution = tree_nodes_by_stage_[current_stage_][*it]->getDataPtr()->col_solution_;
+                assert( !col_solution.empty());
                 for (int i = 0; i < num_cols; i++)
                     obj_coef[pi_col_start+i] -= conditional_prob*col_solution[i];
             }
         }
         else {
             for (int j = 0; j < tree_nodes_by_stage_[current_stage_].size(); j++){
-                const double* col_solution = tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->col_solution_;
-                assert( col_solution != nullptr);
+                std::vector<double>& col_solution = tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->col_solution_;
+                assert( !col_solution.empty());
                 for (int i = 0; i < num_cols; i++)
                     obj_coef[pi_col_start+i] -= tree_nodes_by_stage_[current_stage_][j]->getDataPtr()->probability_*col_solution[i];
             }
@@ -6111,7 +6070,7 @@ namespace parallel_benders {
             ev_pnb.Solve();
             double * temp_ptr = new double[num_cols_for_warm_up_solution];
             for (int i = 0; i < num_stages_-1; i++)
-                memcpy(temp_ptr+ (i>0?stage_data_[i-1]->num_columns_:0),ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->incumbent_col_solution_,sizeof(double)*stage_data_[i]->num_columns_);
+                memcpy(temp_ptr+ (i>0?stage_data_[i-1]->num_columns_:0),&ev_pnb.tree_nodes_by_stage_[i][0]->getDataPtr()->incumbent_col_solution_[0],sizeof(double)*stage_data_[i]->num_columns_);
             warm_up_solution_.reset(temp_ptr); // Store column solution for warm up problem in scoped_ptr.
             // Copy cuts to this problem!
             ev_smi->releaseCore();
@@ -6214,7 +6173,7 @@ namespace parallel_benders {
         BendersNodeData * benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         bool use_lp = false;
         int first_stage_cols_with_theta = stage_data_[current_stage_-1]->num_columns_ + 1;
-        const double * first_stage_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_;
+        std::vector<double>& first_stage_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_;
 
         if ( use_lp ){
             // We need to build a new model consisting of num first stage variables (fixed to the current solution) plus num_theta aggregate variables
@@ -6231,8 +6190,8 @@ namespace parallel_benders {
             obj[first_stage_cols_with_theta-1] = 1.0; // We minimize by default..
 
 
-            std::copy(first_stage_solution,first_stage_solution+stage_data_[current_stage_-1]->num_columns_,lower_bound.begin());
-            std::copy(first_stage_solution,first_stage_solution+stage_data_[current_stage_-1]->num_columns_,upper_bound.begin());
+            std::copy(first_stage_solution.begin(),first_stage_solution.end(),lower_bound.begin());
+            std::copy(first_stage_solution.begin(),first_stage_solution.end(),upper_bound.begin());
             lower_bound[first_stage_cols_with_theta-1] = -infinity_;
             upper_bound[first_stage_cols_with_theta-1] = infinity_;
 
@@ -6273,7 +6232,7 @@ namespace parallel_benders {
             int max_index = -1;
             int count = 0;
             for ( std::vector<std::shared_ptr<OsiRowCut> >::iterator it = benders_node_pointer->oda_optimality_cuts_.begin(); it != benders_node_pointer->oda_optimality_cuts_.end(); ++it){
-                double temp = EvaluateCutWithOneAggregate((*it).get(),first_stage_solution);
+                double temp = EvaluateCutWithOneAggregate((*it).get(),&first_stage_solution[0]);
                 if ( temp > max_element ){
                     max_element = temp;
                     max_index = count;

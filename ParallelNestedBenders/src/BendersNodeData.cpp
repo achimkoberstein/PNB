@@ -15,7 +15,7 @@ using namespace std;
 
 namespace parallel_benders{
 
-BendersNodeData::BendersNodeData():col_solution_(nullptr),dual_solution_(nullptr),incumbent_col_solution_(nullptr),reduced_cost_(nullptr),next_stage_approximation_(nullptr),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
+BendersNodeData::BendersNodeData():col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
 trust_region_rows_(nullptr),num_trust_region_rows_(0),trust_region_cols_(nullptr),num_trust_region_cols_(0),mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true)
@@ -23,7 +23,7 @@ matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullpt
 {
 }
 
-BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(nullptr),dual_solution_(nullptr),incumbent_col_solution_(nullptr),reduced_cost_(nullptr),next_stage_approximation_(nullptr),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
+BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
 trust_region_rows_(nullptr),num_trust_region_rows_(0),trust_region_cols_(nullptr),num_trust_region_cols_(0),mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(nullptr),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
 matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true)
@@ -33,15 +33,6 @@ matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullpt
 
 BendersNodeData::~BendersNodeData(void)
 {
-    delete [] this->col_solution_;
-
-    delete [] this->dual_solution_;
-
-    delete [] this->next_stage_approximation_;
-
-    delete [] this->reduced_cost_;
-
-    delete [] this->incumbent_col_solution_;
 
     for ( auto ptr : variable_bounds_)
         delete ptr;
@@ -55,48 +46,6 @@ BendersNodeData::~BendersNodeData(void)
 
 }
 
-void BendersNodeData::set_col_solution(const double* colSolution)
-{
-    int n = smi_node_data_->getCore()->getNumCols(smi_node_data_->getStage()) + 1; //+1 for THETA
-
-    if (this->col_solution_ == nullptr)
-    {
-        this->col_solution_ = new double[n];
-    }
-
-    if (optimality_cuts_.empty())
-        memcpy(this->col_solution_, colSolution, (n-1)*sizeof(double));
-    else
-        memcpy(this->col_solution_, colSolution, n*sizeof(double));
-}
-
-void BendersNodeData::set_dual_solution(const double* dualSolution) {
-    int n = smi_node_data_->getCore()->getNumRows(smi_node_data_->getStage()) + optimality_cuts_.size()+feasibility_cuts_.size();
-
-    if (this->dual_solution_ == nullptr) {
-        // first time, allocate memory
-        this->dual_solution_ = new double[n];
-    } else {
-        delete [] this->dual_solution_;
-        this->dual_solution_ = new double[n];
-    }
-
-    //realloc(this->dualSolution, n*sizeof(double));
-
-    memcpy(this->dual_solution_, dualSolution, n*sizeof(double));
-}
-
-const double* BendersNodeData::col_solution(void)
-{
-    return this->col_solution_;
-}
-
-const double* BendersNodeData::dual_solution(void)
-{
-    return this->dual_solution_;
-}
-
-
 void BendersNodeData::CleanUnusedMemory( bool direction )
 {
     unbounded_ = false;
@@ -104,16 +53,14 @@ void BendersNodeData::CleanUnusedMemory( bool direction )
     unbounded_extreme_ray_.reset(nullptr);
     unbounded_right_hand_side_.reset(nullptr);
     if ( direction ){ // We go forward, we do not need dual values. We recompute them, if needed
-        delete [] dual_solution_;
-        delete [] reduced_cost_;
-        dual_solution_ = nullptr;
-        reduced_cost_ = nullptr;
+        dual_solution_.clear();
+        reduced_cost_.clear();
     }
     else { // We go backward, we do not need the column solution;
-        delete [] col_solution_;
-        delete [] next_stage_approximation_; // Needed in aggregate_cut method, for already solved problems. This means, we can get rid of it, if we go backwards.
-        col_solution_ = nullptr;
-        next_stage_approximation_ = nullptr;
+        col_solution_.clear();
+        next_stage_approximation_.clear();
+    // Needed in aggregate_cut method, for already solved problems. This means, we can get rid of it, if we go backwards.
+
     }
 }
 
