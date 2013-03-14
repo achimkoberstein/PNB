@@ -213,9 +213,10 @@ public:
     boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
     std::unique_ptr<CoinWarmStart> warm_start_;
     std::unique_ptr<CoinWarmStart> level_warm_start_;
-    //boost::scoped_ptr<int> warm_start_cstat_;
-    //boost::scoped_ptr<int> warm_start_rstat_;
-    //boost::scoped_ptr<double> warm_start_dnorm_;
+    std::unique_ptr<int[]> level_warm_start_cstat_;
+    std::unique_ptr<int[]> level_warm_start_rstat_;
+    std::unique_ptr<double[]> level_warm_start_dnorm_;
+    int level_warm_start_length_;
     bool warm_start_added_; // Did we already added a warm start to a problem? Gets reset by a call to StoreWarmStart!
 
     SmiNodeData* smi_node_data_;

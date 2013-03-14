@@ -61,19 +61,19 @@ public:
             solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
         }
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL); // Compute the first-stage solution! We need it for the subsequent solution run
-        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
-        // Copy optimal solution value (of first scenario) to current_start_solution array
-        current_start_solution_.reset(new double[num_single_scenario_cols_]);
-        CoinFillN(current_start_solution_.get(),num_single_scenario_cols_,0.0);
-        std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL); // Compute the first-stage solution! We need it for the subsequent solution run
+        //solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+        //// Copy optimal solution value (of first scenario) to current_start_solution array
+        //current_start_solution_.reset(new double[num_single_scenario_cols_]);
+        //CoinFillN(current_start_solution_.get(),num_single_scenario_cols_,0.0);
+        //std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
 
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
-        // Use the optimal solution!
-        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+        //// Use the optimal solution!
+        //solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
         if ( generate_initial_solution_){
             // Worst-case solution
@@ -347,7 +347,7 @@ public:
 					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_CONCURRENT_MASTER_STANDARD);
-     //               solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+                    solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
      //               benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
@@ -376,9 +376,9 @@ public:
 						//// Different Lambdas and kappa
 						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
                         // Different Lambdas..
-                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        //solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
                         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL__INFINITY_ODA);
                         //// Different Lambdas and kappa
@@ -1518,7 +1518,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*rand*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*sslp*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
