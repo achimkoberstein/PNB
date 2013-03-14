@@ -1779,6 +1779,8 @@ namespace parallel_benders {
                 for (int i = 0; i < num_theta;i++)
                     benders_node_pointer->next_stage_approximation_[i] = -infinity_;
             }
+            if ( benders_node_pointer->optimality_cuts_.empty() )
+                num_theta = 0;
         }
 
 
@@ -1841,6 +1843,8 @@ namespace parallel_benders {
             for ( double theta_value : benders_node_pointer->next_stage_approximation_){ // Add all thetas to the c*x solution to get lower bound for node at this stage
                 benders_node_pointer->lower_bound_ += theta_value;
             }
+            if ( d_square_ )
+                lower_bound_ -= d_square_translation_term_;
         }
 
         if ( current_stage_ == 0){ // This works in the multithreaded cases, as we have only one thread for the first stage problem{
@@ -1851,10 +1855,6 @@ namespace parallel_benders {
             if (num_theta == 0 || benders_node_pointer->unbounded_){// We have no thetas yet or whole problem is unbounded!
                 lower_bound_ = -infinity_;
                 old_lower_bound_ = -infinity_;
-            }
-            else {
-                if ( d_square_ )
-                    lower_bound_ -= d_square_translation_term_;
             }
         }
 
@@ -2335,7 +2335,7 @@ namespace parallel_benders {
             cut_rhs = 0.0;
 
         // Store computed values in BendersNodeData
-        benders_node_pointer->current_cut_coefficients_ = cut_coefficients;
+        benders_node_pointer->current_cut_coefficients_ = std::move(cut_coefficients);
         benders_node_pointer->current_cut_rhs_ = cut_rhs;
 
         if ( oda_method_ ){ 
@@ -2470,7 +2470,7 @@ namespace parallel_benders {
         bool added_iterator = false;
         for ( int i = 0; i < num_cuts; i++){
             // Start a new OsiRowCut
-            double cut_lower_bound = 0;
+            double cut_lower_bound = 0.0;
             int num_theta_indices = 1;//benders_tree_node_pointer->numChildren(); // or 1. What needs to be changed accordingly is the number in AppendCut method
             std::vector<double> cut_elements(num_columns+num_theta_indices,0);
             for ( int j = num_columns; j < num_columns+num_theta_indices; j++)
@@ -2508,9 +2508,6 @@ namespace parallel_benders {
             // Check with previous stuff only, if we did not changed the aggregation level. Because if we changed we do not have the data yet to check for validity of new cut
             // If solution value of problem is greater than approximation we have, we need to add a new cut, otherwise we don't, but it does not harm to do so (except solution time..)
 
-            /************************************************************************/
-            /* If-Condition can be put here, if the cut should be added, instead of just set to to_use_ = false/true */
-            /************************************************************************/
 
             // "Sparsify" the cut
             int new_index = 0;
@@ -6072,7 +6069,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
