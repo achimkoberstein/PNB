@@ -197,7 +197,10 @@ const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByN
     else {
         assert( stage < nested_benders_->num_stages_);
         assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-        return &nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_[0];
+        if ( nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_.empty() )
+            return nullptr;
+        else
+            return &nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_[0];
     }
 }
 

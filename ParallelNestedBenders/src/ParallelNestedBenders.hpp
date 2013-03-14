@@ -71,7 +71,6 @@ private:
     void BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void AppendColsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-    void AppendTrustRegionToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SolveSubproblem( OsiSolverInterface* osi_solver ,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -105,7 +104,7 @@ private:
     void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
     void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true);
-    void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
+    inline void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
     inline int getNumRowsProblem();
     inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
@@ -164,7 +163,6 @@ private:
     int feasible_iteration_;
     double lower_bound_;
     double upper_bound_;
-    double temporary_upper_bound_;
     double old_lower_bound_;
     std::vector<double> old_first_stage_solution_;
 
@@ -193,9 +191,6 @@ private:
     bool cut_consolidation_add_cut_;
     int cut_consolidation_strike_threshold_;
     double cut_consolidation_partial_threshold_;
-
-    // Trust Region stuff
-    bool trust_region_;
 
     // Regularization
     bool regularization_;

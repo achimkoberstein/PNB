@@ -33,7 +33,6 @@ namespace parallel_benders{
     const std::string PNB_AGGREGATED_OPTIMALITY_CUTS = "PNB_AGGREGATED_OPTIMALITY_CUTS";    //
     const std::string PNB_RELAXATION = "PNB_RELAXATION";                   //
     const std::string PNB_DYNAMIC_AGGREGATION = "PNB_DYNAMIC_AGGREGATION";          //
-    const std::string PNB_TRUST_REGION = "PNB_TRUST_REGION";                 //
 	const std::string PNB_NUM_CPU = "PNB_NUM_CPU"; // 0 = take what hardware_concurrency offers you, otherwise equal to the number of CPU we would like to use.
 	const std::string PNB_CPU_USED = "PNB_CPU_USED"; // indicates how many CPU we used ( we have to set that from the solver)
 	const std::string PNB_TREE_WALK_STRATEGY = "PNB_TREE_WALK_STRATEGY"; // Different Strategies. 0 = FastForw/FastBack, 1 = FastForw, 2 = FastBack, 3 = EpsFastForw, 4 = EpsFastBack, 5 = FastForw/FastBackWith2nd.Iteration
@@ -195,11 +194,10 @@ public:
     bool unbounded_;
     int unbounded_row_;
 
-    // Trust region information
-    boost::scoped_array<int> trust_region_rows_;
-    int num_trust_region_rows_;
-    boost::scoped_array<int> trust_region_cols_;
-    int num_trust_region_cols_;
+    // Information about node-wise upper and lower bounds
+    double lower_bound_;
+    double upper_bound_;
+    double temporary_upper_bound_;
 
     boost::scoped_array<double> mip_solution_;
 
@@ -214,6 +212,7 @@ public:
     int num_thetas_; // How many aggregates do we have at this node
     boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
     std::unique_ptr<CoinWarmStart> warm_start_;
+    std::unique_ptr<CoinWarmStart> level_warm_start_;
     //boost::scoped_ptr<int> warm_start_cstat_;
     //boost::scoped_ptr<int> warm_start_rstat_;
     //boost::scoped_ptr<double> warm_start_dnorm_;
@@ -224,7 +223,7 @@ public:
     int branch_scenario_;
     int num_node_in_stage_;
     int child_node_start_;
-    double probability_; // Overal probability
+    double probability_; // Overall probability
     double conditional_probability_; // Probability with respect to the parent node
     // solution without approximation terms
     double solution_value_;
@@ -235,7 +234,6 @@ public:
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
     cut_container::iterator last_iteration_start_feasibility_;
-    cut_container trust_region_cuts_;
 
     
     // Multicut Aggregation Strategies..
@@ -292,6 +290,10 @@ struct BendersStageData {
     int num_rows_;
     int stage_; // Just to be sure
     int num_thetas_; // Number of variables that represent the approximation of the next stage
+
+    // Store stage-wise upper and lower bounds
+    double upper_bound_;
+    double lower_bound_; 
 
     // Store information about stochasticity in stage
     bool stochastic_matrix_w_;
