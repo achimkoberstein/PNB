@@ -360,29 +360,29 @@ public:
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
       //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
-						////// Make different lambdas work
-						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
+						//// Make different lambdas work
+						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-						//// Make different lambdas work and kappa
-						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+						// Make different lambdas work and kappa
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-						//// Different Lambdas..
-						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+						// Different Lambdas..
+						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-						//// Different Lambdas and kappa
-						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+						// Different Lambdas and kappa
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
                         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
                         // Different Lambdas..
                         //solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL__INFINITY_ODA);
-                        //// Different Lambdas and kappa
-                        //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+                        // Different Lambdas and kappa
+                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 					}// End if num_stages == 2
 				}//end for: aggregates
@@ -866,20 +866,20 @@ TEST_F(NestedBendersTest, gas_OTHER) { // ok
 ////
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
     EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
-    //EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_4000"), 218.247, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_6000"), 239.721, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_8000"), 239.158, 0.1);
+    EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 }
 //
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
@@ -1518,7 +1518,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*sslp*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*NestedBendersTest.sslp*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
