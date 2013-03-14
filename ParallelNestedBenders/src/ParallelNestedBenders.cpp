@@ -3372,8 +3372,7 @@ namespace parallel_benders {
 
         // Create one BendersNodeData vector for every scenario
         for (int i = 0; i < num_scenarios_; i++) {
-            std::vector<BendersNodeData*> vec;
-            nodeVec.emplace_back(vec);
+            nodeVec.emplace_back(std::vector<BendersNodeData*>());
         } 
         // Fill the node vectors with real nodes
         std::vector<SmiScnNode *>::iterator it = smi_->getSmiTree()->treeBegin();
@@ -5154,12 +5153,12 @@ namespace parallel_benders {
 
         // Now problem is exactly as it was before the added optimality cuts! (except for the eventual present bounding optimality cut when problem was unbounded otherwise..)
         if ( (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false){
-            if ( cpx_ptr != nullptr && level_cstat2_ != nullptr && level_rstat2_ != nullptr && level_dnorm2_ != nullptr){
+            if ( cpx_ptr != nullptr && benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ > 0){
 				int number_of_rows_temp = CPXgetnumrows(env_ptr,lp_ptr);
-				if ( number_of_rows_temp == level_2_length_)
-					CPXcopybasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+				if ( number_of_rows_temp == benders_tree_node_pointer->getDataPtr()->level_warm_start_length_)
+					CPXcopybasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
 				else 
-					LOG(INFO) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << level_2_length_;
+					LOG(INFO) << "Trying to copy basednorms where problem has " << osi_solver->getNumRows() << " and had " << benders_tree_node_pointer->getDataPtr()->level_warm_start_length_;
 				// Question is: Can we really apply this call?
             }
         }
@@ -5188,22 +5187,22 @@ namespace parallel_benders {
         // Get the warm start and store it for the next iteration! This means put the value for the level-cut at the end!
         benders_tree_node_pointer->getDataPtr()->level_warm_start_.reset(osi_solver->getWarmStart());
         if ( cpx_ptr != nullptr && (level_manhattan_ || level_infinity_) && integer_problems_[current_stage_] == false){
-            level_cstat2_.reset(new int[osi_solver->getNumCols()]);
-            level_rstat2_.reset(new int[osi_solver->getNumRows()]);
-            level_dnorm2_.reset(new double[osi_solver->getNumRows()]);
-            cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat2_.get(),level_rstat2_.get(),level_dnorm2_.get());
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.reset(new int[osi_solver->getNumCols()]);
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.reset(new int[osi_solver->getNumRows()]);
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.reset(new double[osi_solver->getNumRows()]);
+            cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_.get(),benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_.get());
 			LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
             // Now we need to switch the entries of the new optimality cuts with the extra row 
             int num_current_rows = osi_solver->getNumRows();
-			level_2_length_ = num_current_rows;
-            int temp_rstat = level_rstat2_[level_row_index];
-            double temp_dnorm = level_dnorm2_[level_row_index];
+			benders_tree_node_pointer->getDataPtr()->level_warm_start_length_ = num_current_rows;
+            int temp_rstat = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[level_row_index];
+            double temp_dnorm = benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[level_row_index];
             for (int i = level_row_index; i < num_current_rows-1; i++){
-                level_rstat2_[i] = level_rstat2_[i+1];
-                level_dnorm2_[i] = level_dnorm2_[i+1];
+                benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i] = benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[i+1];
+                benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[i] = benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[i+1];
             }
-            level_rstat2_[num_current_rows-1] = temp_rstat;
-            level_dnorm2_[num_current_rows-1] = temp_dnorm;
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_rstat_[num_current_rows-1] = temp_rstat;
+            benders_tree_node_pointer->getDataPtr()->level_warm_start_dnorm_[num_current_rows-1] = temp_dnorm;
         }
         if ( level_euclidean_ && integer_problems_[current_stage_] == false){// We need to restructure the warm start in the same way
             // We need to modify the warm start!
