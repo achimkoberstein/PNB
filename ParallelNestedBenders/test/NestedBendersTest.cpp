@@ -1518,7 +1518,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*NestedBendersTest.sslp*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
