@@ -18,7 +18,6 @@
 #include <sstream>
 
 
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include "boost/multi_array.hpp"
 #include <boost/scoped_array.hpp>
@@ -1369,8 +1368,8 @@ namespace parallel_benders {
 
 
             // We change the stage, so we should clear all of the osiSolverInterfaces we used
-            std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
-            BOOST_FOREACH( id_solver_pair, osi_solver_map_ ){
+            //std::pair<boost::thread::id, OsiSolverInterface* > id_solver_pair;
+            for ( auto id_solver_pair : osi_solver_map_ ){
                 //id_solver_pair.second->reset(); // This method throws exception with Cplex
                 id_solver_pair.second->loadProblem(0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr);
                 // Workaround: Load empty problem. 
@@ -2202,17 +2201,16 @@ namespace parallel_benders {
 
     ParallelNestedBenders::~ParallelNestedBenders()
     {
-        // Solver 
+        // Delete all solver instances 
         delete osi_solver_;
-        std::pair< boost::thread::id,OsiSolverInterface*> id_solver_pair;
-        BOOST_FOREACH( id_solver_pair, osi_solver_map_ ){
+        for( auto id_solver_pair: osi_solver_map_ ){
             delete id_solver_pair.second;
         }
         // Data structures (SmiTree deletes the remaining BendersNodeData elements
-        BOOST_FOREACH( BendersStageData* stage_data, stage_data_ ){
+        for( BendersStageData* stage_data : stage_data_ ){
             delete stage_data;
         }
-        //BOOST_FOREACH // Delete Benders Note Data ?
+
     }
 
     void ParallelNestedBenders::GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
@@ -2255,7 +2253,7 @@ namespace parallel_benders {
 
         ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
 
-        BOOST_FOREACH(double& value, cut_coefficients){
+        for (double& value: cut_coefficients){
             value *= prob;
         }
 
@@ -3311,7 +3309,7 @@ namespace parallel_benders {
                     // Go one step up and get all the childs of this node. Set the proability of this node. Get the siblings.
                     // Sum up the probabilities
                     double sum = 0;
-                    BOOST_FOREACH( SmiTreeNode<SmiScnNode*> * child_node, *childs )
+                    for ( SmiTreeNode<SmiScnNode*> * child_node: *childs )
                         sum += child_node->getDataPtr()->getProb();
                     current_node->getDataPtr()->setProb(sum);
                     goSibling = true;
@@ -3329,7 +3327,7 @@ namespace parallel_benders {
                     // Go one step up and get all the childs of this node. Set the proability of this node. Get the siblings.
                     // Sum up the probabilities
                     double sum = 0;
-                    BOOST_FOREACH( SmiTreeNode<SmiScnNode*> * child_node, *childs )
+                    for ( SmiTreeNode<SmiScnNode*> * child_node : *childs )
                         sum += child_node->getDataPtr()->getProb();
                     current_node->getDataPtr()->setProb(sum);
 
