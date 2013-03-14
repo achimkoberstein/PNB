@@ -885,14 +885,14 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve
 TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, modification of SIPLIB instance
 	benders_parameter_.parameter_.put(parallel_benders::PNB_BOUNDS_IN_MATRIX,true);
     EXPECT_NEAR(solveSMPS("other/sslp_10_50_50"), -365.517, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
-    EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
-    EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_100"), -354.868, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_500"), -349.916, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_10_50_2000"), -348.092, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_5"), -265.569, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_10"), -261.905, 0.1);
+    //EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
+    //EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
 }
 ////
 //TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // binary first, mixed-binary second stage

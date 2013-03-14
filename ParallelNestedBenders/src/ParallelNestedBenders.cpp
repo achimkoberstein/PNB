@@ -2239,7 +2239,6 @@ namespace parallel_benders {
             row_lower = const_cast<double*> (core_->getDenseRowLower(current_stage_));
 
         if ( node_pointer->getRowUpperLength() ){
-
             row_upper = new double[stage_pointer->num_rows_];
             memcpy(row_upper, core_->getDenseRowUpper(current_stage_), stage_pointer->num_rows_*sizeof(double));
             for (int i = 0; i < node_pointer->getRowUpperLength(); i++) {
@@ -2251,7 +2250,7 @@ namespace parallel_benders {
 
         // Store results of the computation 
        std::vector<double> cut_coefficients(stage_data_[current_stage_-1]->num_columns_,0);
-       std::vector<double>& dual_solution = benders_node_pointer->dual_solution_;
+       const std::vector<double>& dual_solution = benders_node_pointer->dual_solution_;
        assert( !dual_solution.empty() );
 
         ComputeCutCoefficients(benders_tree_node_pointer,dual_solution,&cut_coefficients);
@@ -2267,6 +2266,8 @@ namespace parallel_benders {
         // value, use LHS;
         double cut_rhs = 0;
         int for_bound = getNumRowsProblem();
+        assert( for_bound <= stage_pointer->num_rows_);
+        assert(for_bound <= dual_solution.size());
         int row = 0;
         for ( ; row < for_bound; row++){
             if ( dual_solution[row] < 0 )
@@ -2274,20 +2275,7 @@ namespace parallel_benders {
             else if ( dual_solution[row] > 0)
                 cut_rhs += dual_solution[row]*row_lower[row];
         }
-        // Skip the values of the bounds_in_matrix, if we have them!
-        if ( bounds_in_matrix_ ){ // TODO: Redo, if needed
-            for (std::vector<OsiRowCut*>::iterator it = benders_node_pointer->variable_bounds_.begin(); it != benders_node_pointer->variable_bounds_.end(); ++it){
-                // Depending on the value of the dual solution, we need the lower or the upper bound!
-                if ( dual_solution[row] < 0){ // Dual value is negative => corresponds to 
-                    cut_rhs += dual_solution[row]*(*it)->ub();
-                }
-                else if ( dual_solution[row] > 0) {
-                    cut_rhs += dual_solution[row]*(*it)->lb();
-                }
-                row++;
-                for_bound++;
-            }
-        }
+
 
         // Append values for optimality and feasibility cuts.. ( if we have any at this node )
         for_bound += benders_node_pointer->feasibility_cuts_.size();
@@ -2490,9 +2478,10 @@ namespace parallel_benders {
             // For all the indices, that belong to this cut.
             std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[i]);
             for ( int j = 0; j < nodes_in_cut.size(); j++){
+                cut_lower_bound += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_rhs_;
                 for (int k = 0; k < num_columns; k++)
                     cut_elements[k] += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_coefficients_[k];
-                cut_lower_bound += tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->current_cut_rhs_;
+                
             }
             // Check if cut is not redundant: Conditional Expected Value of Subproblems (theta) is greater than before. For implementation reasons, we only do this if we do not change aggregation level..
 
@@ -2538,8 +2527,8 @@ namespace parallel_benders {
                 cut_stuff->to_use_ = true;
                 added_cuts++;
             }
-            else
-                cut_stuff->to_use_ = false;
+            //else
+            //    cut_stuff->to_use_ = false;
 
             AddOptimalityCutToContainer(benders_tree_node_pointer,cut_stuff);
 
@@ -3806,8 +3795,6 @@ namespace parallel_benders {
         }
         // Optimality cuts start after normal rows and feasibility cuts
         int optimality_cut_start = stage_data_[current_stage_]->num_rows_+benders_node_pointer->feasibility_cuts_.size(); // TODO: Performance issues may arise here
-        if ( bounds_in_matrix_ )
-            optimality_cut_start += benders_node_pointer->variable_bounds_.size();
 
         int number_of_aggregates = benders_node_pointer->num_thetas_;
         if ( number_of_aggregates <= 3)
@@ -4174,8 +4161,7 @@ namespace parallel_benders {
             // Delete the cuts
             int num_rows = osi_solver->getNumRows();
             int num_feas_cuts = benders_node_pointer->feasibility_cuts_.size();
-            if ( bounds_in_matrix_ )
-                num_feas_cuts += benders_node_pointer->variable_bounds_.size();
+
             std::vector<int> removed_rows(num_rows-stage_data_[current_stage_]->num_rows_-num_feas_cuts);
             for (int i = 0; i < num_rows-stage_data_[current_stage_]->num_rows_-num_feas_cuts;i++)
                 removed_rows[i] = stage_data_[current_stage_]->num_rows_+num_feas_cuts+i;
@@ -4518,7 +4504,7 @@ namespace parallel_benders {
             destination_vector.reserve(size);
         destination_vector.assign(source_values,source_values+size);
         //memcpy(&destination_vector[0],,size*sizeof(double));
-        for ( double i : destination_vector){
+        for ( double& i : destination_vector){
             if ( CompareWithZero(i))
                 i = 0;
         }
