@@ -274,10 +274,6 @@ private:
     boost::scoped_array<int> level_rstat_;
     boost::scoped_array<double> level_dnorm_;
 	int level_length_;
-    boost::scoped_array<int> level_cstat2_;
-    boost::scoped_array<int> level_rstat2_;
-    boost::scoped_array<double> level_dnorm2_;
-	int level_2_length_;
     std::shared_ptr<CoinWarmStart> level_warm_start_;
     
     // All variables needed for on demand accuracy level decomposition
