@@ -199,11 +199,11 @@ public:
     double upper_bound_;
     double temporary_upper_bound_;
 
-    boost::scoped_array<double> mip_solution_;
+    std::unique_ptr<double[]> mip_solution_;
 
     bool unbounded_problem_; // If we should generate a unbounded_right_hand_side for a special problem?
-    boost::scoped_array<double> unbounded_extreme_ray_; // Stores an extreme ray!
-    boost::scoped_array<double> unbounded_right_hand_side_; // Stores right hand side generated for extreme ray subproblem!
+    std::unique_ptr<double[]> unbounded_extreme_ray_; // Stores an extreme ray!
+    std::unique_ptr<double[]> unbounded_right_hand_side_; // Stores right hand side generated for extreme ray subproblem!
     bool solve_ray_right_hand_side_; // If we actually solve the ray_right_hand_side!
     
 
@@ -218,6 +218,9 @@ public:
     std::unique_ptr<double[]> level_warm_start_dnorm_;
     int level_warm_start_length_;
     bool warm_start_added_; // Did we already added a warm start to a problem? Gets reset by a call to StoreWarmStart!
+
+    // Level regularization solution
+    std::vector<double> level_regularized_solution_;
 
     SmiNodeData* smi_node_data_;
     int scenario_index_;
@@ -259,7 +262,6 @@ public:
     double* objective_;
     double* row_lower_;
     double* row_upper_;
-    std::vector<OsiRowCut*> variable_bounds_;
 
     // In the non-staircase case
     std::vector< std::vector<std::pair<int,double> > > no_staircase_constraints_;

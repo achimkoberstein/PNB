@@ -302,7 +302,7 @@ private:
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
-    boost::scoped_array<double> warm_up_solution_;
+    std::unique_ptr<double[]> warm_up_solution_;
     boost::scoped_array<double> regularized_solution_;
     bool regularized_update_incumbent_;
 

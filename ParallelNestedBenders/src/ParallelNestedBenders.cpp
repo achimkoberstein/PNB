@@ -19,7 +19,7 @@
 
 
 #include <boost/lexical_cast.hpp>
-#include "boost/multi_array.hpp"
+#include <boost/multi_array.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/thread.hpp>
 #include <boost/multi_index_container.hpp>
@@ -1479,8 +1479,6 @@ namespace parallel_benders {
         //if ( unbounded_problem_ )
         //    return; // There is no need to actually solve other problems, as we have unbounded problems..
 
-        // For debugging reasons only!
-        //std::unique_lock<std::mutex> u_lock(debug_mutex_);
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
 
@@ -1552,7 +1550,8 @@ namespace parallel_benders {
                 if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
                     IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
             }
-            if ( level_decomp_ && current_stage_ == 0 ){
+            // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
+            if ( level_decomp_ && current_stage_ < num_stages_-1 ){
                 BuildAndSolveLevelProblem(osi_solver,benders_tree_node_pointer);
             }
         }
@@ -1914,7 +1913,7 @@ namespace parallel_benders {
         SmiNodeData* deterministic_node_pointer = core_->getNode(current_stage_); // Deterministic node (there is one per stage)
         bool reuse_solver = true;
         // If we do not want to reuse the solver, we have to compute the matrix // Other condition for not reusing: || osi_solver->getNumCols() != stage_pointer->num_columns_+ benders_node_pointer->num_thetas_
-        if ( node_pointer->hasMatrix() || osi_solver->getNumCols() == 0  || !reuse_solver ){ // We have to load the matrix / change the matrix => load the problem
+        if ( node_pointer->hasMatrix() || osi_solver->getNumCols() == 0  ){ // We have to load the matrix / change the matrix => load the problem
             reuse_solver = false;
             // See if we really have a w_matrix here!! TODO
             // We get the deterministic matrix first ( T and W together ).
@@ -1941,9 +1940,6 @@ namespace parallel_benders {
         if ( !reuse_solver &&benders_node_pointer->matrix_->getMinorDim() == 0){
             benders_node_pointer->matrix_->reverseOrdering(); // We have an empty matrix, it is col ordered, so we need to reverse that ordering!
             benders_node_pointer->matrix_->setDimensions(0,stage_pointer->num_columns_);
-            //// Insert at least empty entries for our columns (why is this necessary?)
-            //for (int i = 0; i < stage_pointer->num_columns_; i++)
-            //    benders_node_pointer->matrix_->modifyCoefficient(0,i,0,true);
         }
 
         if (  node_pointer->getColLowerLength()) {
@@ -2152,8 +2148,8 @@ namespace parallel_benders {
                 std::vector<double> col_bounds;
                 col_bounds.reserve(stage_pointer->num_columns_*2);
                 for ( int i = 0; i < stage_pointer->num_columns_; i++ ){
-                    col_bounds.push_back(benders_node_pointer->column_lower_[i]);
-                    col_bounds.push_back(benders_node_pointer->column_upper_[i]);
+                    col_bounds.emplace_back(benders_node_pointer->column_lower_[i]);
+                    col_bounds.emplace_back(benders_node_pointer->column_upper_[i]);
                 }
                 osi_solver->setColSetBounds(&stage_pointer->column_indices_[0],&stage_pointer->column_indices_[stage_pointer->num_columns_],&col_bounds[0]);
             }
@@ -2166,27 +2162,26 @@ namespace parallel_benders {
             row_bounds.reserve(number_of_allocated_rows*2);
             for ( int i = 0; i < number_of_allocated_rows; i++ ){
                 if ( !benders_node_pointer->unbounded_problem_ ){
-                    row_bounds.push_back(benders_node_pointer->row_lower_[i]);
-                    row_bounds.push_back(benders_node_pointer->row_upper_[i]);
+                    row_bounds.emplace_back(benders_node_pointer->row_lower_[i]);
+                    row_bounds.emplace_back(benders_node_pointer->row_upper_[i]);
                 }
                 else {
-                    row_bounds.push_back(benders_node_pointer->unbounded_right_hand_side_[i]);
-                    row_bounds.push_back(benders_node_pointer->unbounded_right_hand_side_[i]);
+                    row_bounds.emplace_back(benders_node_pointer->unbounded_right_hand_side_[i]);
+                    row_bounds.emplace_back(benders_node_pointer->unbounded_right_hand_side_[i]);
                 }
             }
             osi_solver->setRowSetBounds(&stage_pointer->row_indices_[0],&stage_pointer->row_indices_[number_of_allocated_rows],&row_bounds[0]);
 
             // Remove all cuts from previous solutions ( includes "Theta" Constraints )
-            int cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_;
+            int cuts_to_remove = osi_solver->getNumRows()-getNumRowsProblem();
+            assert(cuts_to_remove >= 0);
             if ( d_square_ && current_stage_ == 1 && !stage_data_[current_stage_]->solve_binary_subproblems_)
             {
                 cuts_to_remove = osi_solver->getNumRows()-stage_pointer->num_rows_-stage_pointer->num_d_square_cuts_;
             }
             if ( cuts_to_remove ){
-                std::vector<int> remove_indices;
-                remove_indices.reserve(cuts_to_remove);
-                for (int i = stage_pointer->num_rows_; i < stage_pointer->num_rows_+cuts_to_remove;i++)
-                    remove_indices.push_back(i);
+                std::vector<int> remove_indices(cuts_to_remove);
+                std::iota(remove_indices.begin(),remove_indices.end(),getNumRowsProblem());
                 osi_solver->deleteRows(cuts_to_remove,&remove_indices[0]);
             }
         }
@@ -2833,16 +2828,6 @@ namespace parallel_benders {
                 cut_rhs += checked_dual_solution[row]*row_lower[row];
         }
         assert( row == for_bound);
-        // Append values for bounds? bounds are moved in the matrix.. TODO: Test it
-        if ( !benders_node_pointer->variable_bounds_.empty() ){
-            for ( int i = 0; i < benders_node_pointer->variable_bounds_.size(); i++){
-                if ( checked_dual_solution[row] < 0 )
-                    cut_rhs += benders_node_pointer->variable_bounds_[i]->ub()*checked_dual_solution[row];
-                else if ( checked_dual_solution[row] > 0)
-                    cut_rhs += benders_node_pointer->variable_bounds_[i]->lb()*checked_dual_solution[row];
-                row++;
-            }
-        }
         //// Append values for optimality and feasibility cuts.. ( if we have any at this node )
         // Optimality cuts should not count into the feasibility question
         for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->feasibility_cuts_.begin(); it != benders_node_pointer->feasibility_cuts_.end(); ++it){
@@ -3529,8 +3514,6 @@ namespace parallel_benders {
                 intra_aggregate_threshold = zero_tolerance_*2;
 
             int current_cut = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size(); // TODO: Store size in variable
-            if ( !benders_node_pointer->variable_bounds_.empty() )
-                current_cut += benders_node_pointer->variable_bounds_.size();
 
             // TODO: If we have any more cuts expect of these, we need to be careful here! (i.e. level decomp or regularization )
             // Store the number of rows/columns
@@ -5009,9 +4992,7 @@ namespace parallel_benders {
         if ( lower_bound <= -infinity_ || upper_bound >= infinity_) // We do not call the projection problem, when we have not yet achieved finite upper and/or lower bounds?!
             return;
 
-
-
-        assert( regularized_solution_.get() != nullptr ); // We need a regularization point 
+        assert( regularized_solution_.get() != nullptr ); // We need a regularization point! 
 
         detailed_timer_.Start(1); // TODO: This is no longer true in the multi-stage case!
 
@@ -6053,7 +6034,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 3){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
