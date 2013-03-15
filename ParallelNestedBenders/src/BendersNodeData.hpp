@@ -212,15 +212,17 @@ public:
     int num_thetas_; // How many aggregates do we have at this node
     boost::dynamic_bitset<> active_aggregates_; // Has to have the size of num_thetas_
     std::unique_ptr<CoinWarmStart> warm_start_;
+    bool warm_start_added_; // Did we already added a warm start to a problem? Gets reset by a call to StoreWarmStart!
     std::unique_ptr<CoinWarmStart> level_warm_start_;
     std::unique_ptr<int[]> level_warm_start_cstat_;
     std::unique_ptr<int[]> level_warm_start_rstat_;
     std::unique_ptr<double[]> level_warm_start_dnorm_;
     int level_warm_start_length_;
-    bool warm_start_added_; // Did we already added a warm start to a problem? Gets reset by a call to StoreWarmStart!
+
 
     // Level regularization solution
     std::vector<double> level_regularized_solution_;
+    int level_regularized_start_row_;
 
     SmiNodeData* smi_node_data_;
     int scenario_index_;
