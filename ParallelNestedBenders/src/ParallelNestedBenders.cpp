@@ -2324,7 +2324,7 @@ namespace parallel_benders {
         benders_node_pointer->current_cut_coefficients_ = std::move(cut_coefficients);
         benders_node_pointer->current_cut_rhs_ = cut_rhs;
 
-        if ( oda_method_ ){ 
+        if ( oda_method_ && !benders_node_pointer->current_cut_coefficients_.empty()){ 
             // We store a multi-cut type optimality cut 
             std::vector<double> cut_elements;
             std::vector<int> cut_indices;
@@ -2333,12 +2333,12 @@ namespace parallel_benders {
             cut_indices.reserve(stage_data_[current_stage_-1]->num_columns_+1);
             int new_index = 0;
             for (int index = 0; index < stage_data_[current_stage_-1]->num_columns_; index++){
-                if ( CompareWithZero(cut_coefficients[index]) ){
+                if ( CompareWithZero(benders_node_pointer->current_cut_coefficients_[index]) ){
                     // Set cut element to zero, if near enough to zero, otherwise numerical difficulties arise by not adding it to the vector!
                 }
                 else {
-                    cut_elements.push_back( cut_coefficients[index]);
-                    cut_indices.push_back( index );
+                    cut_elements.emplace_back( benders_node_pointer->current_cut_coefficients_[index]);
+                    cut_indices.emplace_back( index );
                     new_index++;
                 }
             }
@@ -2352,7 +2352,7 @@ namespace parallel_benders {
             cut_pointer->setUb(infinity_);
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             // Store OsiRowCut in a list
-            benders_node_pointer->oda_optimality_cuts_.push_back(cut_pointer);
+            benders_node_pointer->oda_optimality_cuts_.emplace_back(cut_pointer);
         }
 
         // Cleanup
