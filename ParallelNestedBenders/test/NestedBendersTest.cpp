@@ -345,6 +345,7 @@ public:
 					
 					
 					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
+                    
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_CONCURRENT_MASTER_STANDARD);
                     solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
@@ -360,6 +361,8 @@ public:
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
       //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
+                        // Allow level decomp only for first stage!
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_LEVEL,0);
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
 						//// Make different lambdas work
 						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
