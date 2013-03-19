@@ -52,6 +52,7 @@ namespace parallel_benders{
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
     const std::string PNB_LEVEL_LAMBDA = "PNB_LEVEL_LAMBDA";
     const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
+    const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
 
 
 
@@ -220,6 +221,7 @@ public:
     int level_warm_start_length_;
 
 
+
     // Level regularization solution
     std::vector<double> level_regularized_solution_;
     int level_regularized_start_row_;
@@ -240,6 +242,7 @@ public:
     cut_container feasibility_cuts_;
     cut_container::iterator last_iteration_start_optimality_;
     cut_container::iterator last_iteration_start_feasibility_;
+    cut_container::iterator level_opt_iterator_;
 
     
     // Multicut Aggregation Strategies..
@@ -339,6 +342,9 @@ struct BendersStageData {
     // MIP warm start and mip handling
     std::vector<std::vector<double> > mip_solution_;
     std::vector<char> coltype_array_;
+
+    // Level stuff
+    bool use_level_;
 
     
 

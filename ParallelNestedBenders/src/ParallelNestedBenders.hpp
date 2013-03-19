@@ -103,7 +103,7 @@ private:
     void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
-    void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true);
+    void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true, bool use_quadratic = false);
     inline void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
     inline int getNumRowsProblem();
     inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
@@ -202,6 +202,8 @@ private:
     int regularized_start_row_;
     int start_solution_;
 
+
+
     // D^2 C^3
     bool d_square_;
     int d_square_translation_term_;
@@ -265,7 +267,11 @@ private:
 	bool enforce_direction_;
     int enforce_stage_;
 
+    bool level_loop_forward_;
+    bool level_loop_backward_;
+
     bool level_decomp_;
+    int level_stage_;
     bool level_quadratic_new_variables_;
     bool level_euclidean_;
     bool level_manhattan_;
