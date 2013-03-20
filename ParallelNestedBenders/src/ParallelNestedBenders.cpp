@@ -5235,6 +5235,12 @@ namespace parallel_benders {
             std::cout << "Phi_i : " << oda_phi_i_ << "\n";
         }
         
+        if ( regularization_ && current_stage_ == 0){
+            // We need to set the lower bound, to have an approximation!
+            solution = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(),benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(),solution);
+            benders_tree_node_pointer->getDataPtr()->lower_bound_ = solution;
+        }
+
 
         if ( level_decomp_)
         // Remove row constraint and quadratic objective function afterwards!
