@@ -272,7 +272,6 @@ private:
 
     bool level_decomp_;
     int level_stage_;
-    bool level_quadratic_new_variables_;
     bool level_euclidean_;
     bool level_manhattan_;
     bool level_infinity_;
