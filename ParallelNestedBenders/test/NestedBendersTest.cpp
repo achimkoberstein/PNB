@@ -1503,16 +1503,16 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
     }
 }
 
-//TEST_F(NestedBendersTest,temporary){// dakota model
+TEST_F(NestedBendersTest,temporary){// dakota model
 //    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
-//    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
-//    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
+    EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 //	//EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
 //
 //    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
 //    //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
 //    //
-//}
+}
 
 
 
@@ -1525,7 +1525,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*postponement*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*temporary*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
