@@ -294,7 +294,7 @@ public:
 
     
         // Specify the number of repetitions_ 
-        repetitions_ = 2;
+        repetitions_ = 1;
         std::vector<int> aggregates;
         aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
@@ -324,7 +324,7 @@ public:
                         LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
                         continue;
                     }
-                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,1); // TODO: Change back to "cpu"
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back to "cpu"
                     benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
 
@@ -348,7 +348,7 @@ public:
                     
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_CONCURRENT_MASTER_STANDARD);
-                    solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+                    //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
      //               benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
@@ -367,25 +367,25 @@ public:
 						//// Make different lambdas work
 						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-						// Make different lambdas work and kappa
-						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+						//// Make different lambdas work and kappa
+						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-						// Different Lambdas..
-						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+						//// Different Lambdas..
+						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-						// Different Lambdas and kappa
-						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+						//// Different Lambdas and kappa
+						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
-                        // Different Lambdas..
-                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
+      //                  // Different Lambdas..
+      //                  solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
-                        // Different Lambdas and kappa
-                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+      //                  // Different Lambdas and kappa
+      //                  solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 					}// End if num_stages == 2
 				}//end for: aggregates
@@ -1314,7 +1314,12 @@ TEST_F(NestedBendersTest,dakota){// dakota model
 }
 
 
-TEST_F(NestedBendersTest,Postponement){// postponement
+TEST_F(NestedBendersTest,postponement){// postponement
+//	EXPECT_NEAR(solveSMPS("postponement/Kor+1-4-4und15new=SL600L2Flex_2_end"),0,1);
+//	EXPECT_NEAR(solveSMPS("postponement/Kor0-4-4und45new=SL600L2Flex_2_end"),0,1);
+//	EXPECT_NEAR(solveSMPS("postponement/TS_36_new=SL600L2Flex_2_end"),0,1);
+//	EXPECT_NEAR(solveSMPS("postponement/TS_81_new=SL600L2Flex_2_end"),0,1);
+//	EXPECT_NEAR(solveSMPS("postponement/TS_81_new=SL600L2Flex_2_end"),0,1);
     EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -515723, 10); 
 }
 
@@ -1520,7 +1525,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*pltexp*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*postponement*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";

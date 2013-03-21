@@ -1127,7 +1127,7 @@ namespace parallel_benders {
                     std::vector<double>& col_solution = tree_nodes_by_stage_[current_stage_-1][0]->getDataPtr()->col_solution_;
                     int count_binaries_valued_one = -1;
                     // Laporte-Louveaux Paper 1993, we have - and + exchanged, because we move these values to the other side of >= compared with the paper
-                    for ( std::vector<int>::iterator it  = integer_cols.begin();it < integer_cols.end(); ++it){
+                    for ( auto it  = integer_cols.begin();it != integer_cols.end(); ++it){
                         if ( CompareForEquality(col_solution[*it], 1,integer_tolerance_) ){
                             cut_coefficients.push_back(-cut_coefficient_scalar);
                             count_binaries_valued_one++;
@@ -3258,7 +3258,7 @@ namespace parallel_benders {
 			if ( osi_solver->isProvenOptimal() )
 				StoreWarmStart(osi_solver,benders_tree_node_pointer);
             seperate_first_stage_solver_ = true;
-            PrintSubproblem(osi_solver,0,"optfeas");
+            //PrintSubproblem(osi_solver,0,"optfeas");
 
             // Delete the optimality cuts from the problem and add them again, so all feas cuts are clumped together!
             int num_cuts = 0;
@@ -4610,16 +4610,16 @@ namespace parallel_benders {
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1); 
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.01);
+            //CPXsetintparam(env_ptr,CPX_PARAM_PREDUAL,1); // Use the dual presolve option
             // Use a supplied warm start basis and crush it, to use the presolved model!
             CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,1);
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
                 if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){
                     CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
-                    CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG, (lp_method_ == PNB_INT_BARRIER ? -1 : 0)); 
+                    CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG, (lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ? 0 : -1)); 
                 }
                 CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
-                //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.5);
             }
             else {
                 if ( lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD)
@@ -4627,6 +4627,8 @@ namespace parallel_benders {
             }
             // Set markowitz threshold high for better accuracy 
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
+
+			CPXsetdblparam(env_ptr,CPX_PARAM_EPINT,integer_tolerance_); 
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-07);
             //CPXsetintparam(env_ptr,CPX_PARAM_SCRIND,CPX_ON);
 
@@ -4761,7 +4763,7 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     CPXchgctype( env_ptr, lp_ptr, stage_data_[current_stage_]->num_columns_, &stage_data_[current_stage_]->column_indices_[0], &stage_data_[current_stage_]->coltype_array_[0] );
                     // Set MIP options
-                    //CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1);
+                    //CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1); // This may be a bad choice ( depending on the chosen LP method!)
                     CPXsetintparam(env_ptr,CPX_PARAM_STARTALG,CPX_ALG_BARRIER); // BARRIER
                     //CPXsetintparam(env_ptr,CPX_PARAM_SUBALG,CPX_ALG_BARRIER); // BARRIER
                     //CPXwriteprob(env_ptr,lp_ptr,"test2.sav","sav");
