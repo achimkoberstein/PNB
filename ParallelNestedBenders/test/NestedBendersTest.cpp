@@ -361,31 +361,41 @@ public:
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
       //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+                        // Different Lambdas..
+                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
+                        // Different Lambdas and kappa
+                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+
                         // Allow level decomp only for first stage!
                         benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_LEVEL,0);
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
 						//// Make different lambdas work
 						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-						//// Make different lambdas work and kappa
-						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+						// Make different lambdas work and kappa
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-						//// Different Lambdas..
-						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+						// Different Lambdas..
+						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-						//// Different Lambdas and kappa
-						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+						// Different Lambdas and kappa
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
-      //                  // Different Lambdas..
-      //                  solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
+                        // Different Lambdas..
+                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
-      //                  // Different Lambdas and kappa
-      //                  solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+                        // Different Lambdas and kappa
+                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+
+
 
 					}// End if num_stages == 2
 				}//end for: aggregates
