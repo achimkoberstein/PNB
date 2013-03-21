@@ -4560,7 +4560,7 @@ namespace parallel_benders {
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1); 
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.01);
-            // Use a supplied warm start basis and crush it, to use the presolved model!
+            // Use a supplied warm start basis (that is actually the default)
             CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,1);
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
@@ -4579,6 +4579,7 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-07);
             //CPXsetintparam(env_ptr,CPX_PARAM_SCRIND,CPX_ON);
+            CPXsetintparam(env_ptr,CPX_PARAM_WORKMEM,512); // Allow 512 megabytes of working memory instead of usual 128
 
         }
         // We need gurobi options, just in case..
@@ -5015,6 +5016,7 @@ namespace parallel_benders {
         assert( regularized_gamma_ > 0.5 && regularized_gamma_ < 1.0);
         double old_sigma = regularized_sigma_;
         
+        // TODO: Test values of Vladimirou!
         // Test if we should update the regularized solution
         if ( approximation_solution > -infinity_  && change_sigma){
             // Otherwise we have not yet added theta variables
@@ -5033,7 +5035,7 @@ namespace parallel_benders {
             else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
                 if ( 1.0/regularized_sigma_ < 2 ) // TODO: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 0.5;
-                LOG(INFO) << "nullptr Step";
+                LOG(INFO) << "Null Step";
 
             }
             else 
