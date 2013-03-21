@@ -445,6 +445,7 @@ namespace parallel_benders {
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
         level_stage_ = param.get(PNB_STAGE_LEVEL,0);
+        // regularized_gamma_ = level_lambda_;
 
         if ( level_decomp_ && (level_lambda_ <= 0.0 || level_lambda_ >= 1.0)){
             // We do not want to use level_decomp.
@@ -972,7 +973,7 @@ namespace parallel_benders {
                 solution_times_.Stop(2);
 
             }
-            // Find out if we still need to solve the second stage subproblems when using oda ( with everything entailled )
+            // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
             bool solve_subproblems = true;
             if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && added_optimality_cuts_[0]> 0 ){
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
@@ -993,6 +994,11 @@ namespace parallel_benders {
                     solution_times_.Stop(2);
                     solve_subproblems = false;
                     timer_.Stop(current_stage_);
+                    // We need to invalidate all the lower/upper bound solutions we got at later stages!
+                    for ( int temp_stage = current_stage_; temp_stage < num_stages_;temp_stage++){
+                        stage_lower_upper_bounds_[temp_stage].first = infinity_;
+                        stage_lower_upper_bounds_[temp_stage].second = infinity_;
+                    }
                     current_stage_--; 
                     assert(current_stage_ == 0);
                     insubstantial_iteration_++;
@@ -1614,7 +1620,7 @@ namespace parallel_benders {
 
         // Result/Error Handling: Introduce a global variable, when feasibility problems occurs..
         // Check for errors
-        if ( !osi_solver->isProvenOptimal() && !regularization_ || regularization_ && !benders_tree_node_pointer->getDataPtr()->feasible_ && current_stage_ <= level_stage_ ){
+        if ( !osi_solver->isProvenOptimal() && (!regularization_  || regularization_ && current_stage_ > level_stage_) || regularization_ && !benders_tree_node_pointer->getDataPtr()->feasible_ && current_stage_ <= level_stage_ ){
             // We need to check for errors in this case
             if ( osi_solver->isAbandoned() ){
                 //Problem
@@ -2993,7 +2999,6 @@ namespace parallel_benders {
             }
         }
         boost::this_thread::sleep(boost::posix_time::milliseconds(10));
-
     }
 
     void ParallelNestedBenders::ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer )
@@ -4581,7 +4586,7 @@ namespace parallel_benders {
 			CPXsetdblparam(env_ptr,CPX_PARAM_EPINT,integer_tolerance_); 
             //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-07);
             //CPXsetintparam(env_ptr,CPX_PARAM_SCRIND,CPX_ON);
-            CPXsetintparam(env_ptr,CPX_PARAM_WORKMEM,512); // Allow 512 megabytes of working memory instead of usual 128
+            CPXsetdblparam(env_ptr,CPX_PARAM_WORKMEM,512.0); // Allow 512 megabytes of working memory instead of usual 128
 
         }
         // We need gurobi options, just in case..
@@ -4590,101 +4595,6 @@ namespace parallel_benders {
         //    GRBmodel* env_ptr = grb_ptr->getLpPtr();
         //    GRBsetintattr(env_ptr,GRB_INT_PAR_THREADS,0);
         //}
-    }
-
-    void ParallelNestedBenders::BuildAndSolveRegularizedProblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
-    {
-        // To compute ||x-a||^2, we introduce a new variable w that is set to w = x-a and we use ||w||^2 in the objective. 
-        // Could also be done by computing x^2 -2xa+ a^2 (so only the x^2 entries are left)
-        // Initialize quadratic matrix with entries on the diagonal axis only
-        int num_columns = stage_data_[current_stage_]->num_columns_;
-        int num_thetas = getNumThetasByStage(benders_tree_node_pointer);
-
-        double approximation_solution = stage_lower_upper_bounds_[current_stage_].first;
-        // Due to the algorithm it always hold that approximation_solution <= solution_qx
-
-        // Update regularized solution value, when upper bound is available! Only needed once, in the second iteration!
-        if ( regularized_solution_value_ >= infinity_ && upper_bound_ < infinity_ ){
-                regularized_solution_value_ = upper_bound_; // Compute the regularized solution value!
-        }
-            // Else: Regularized_solution_value_ stays at >= infinity and we update the incumbent at the first possible chance!
-        
-
-        // Compute Q(x^it)
-        double solution_qx = 0;
-        bool change_sigma = true;// If we had an infeasible solution earlier, we do not change sigma and do not update the incumbent!
-        for (int i = 0; i < num_stages_; i++){
-            solution_qx += stage_lower_upper_bounds_[i].second;
-            if ( stage_lower_upper_bounds_[i].second <= -infinity_ ) 
-                change_sigma = false;
-        }
-
-        assert( regularized_gamma_ > 0.5 && regularized_gamma_ < 1.0);
-
-        double old_sigma = regularized_sigma_;
-        // Test if we should update the regularized solution
-        if ( approximation_solution > -infinity_  && change_sigma){
-            // Otherwise we have not yet added theta variables
-            if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_+ (regularized_gamma_)*approximation_solution ){
-                // Update the solution!
-                benders_tree_node_pointer->getDataPtr()->col_solution_.reserve(stage_data_[current_stage_]->num_columns_);
-                //memcpy(benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.get(),&benders_tree_node_pointer->getDataPtr()->col_solution_[current_stage_],sizeof(double)*stage_data_[current_stage_]->num_columns_);
-                // Update the solution value
-                regularized_solution_value_ = solution_qx;
-                regularized_update_incumbent_ = true;
-                if ( 1.0/regularized_sigma_ > 0.125 )
-                    regularized_sigma_ *= 2;
-                LOG(INFO) << "Exact serious step";
-
-            }
-            else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
-                if ( 1.0/regularized_sigma_ < 2 )
-                    regularized_sigma_ *= 0.5;
-                LOG(INFO) << "nullptr Step";
-
-            }
-            else 
-                LOG(INFO) << "Approximate Step";
-        }
-
-        if ( regularized_update_incumbent_ ){ // Problem is initialized, we may have to update matrix coefficients
-            regularized_update_incumbent_ = false;
-            // Update problem coefficients!
-            // What about warm start?
-            for (int index = 0; index < stage_data_[current_stage_]->num_columns_; index++)
-                osi_solver->setRowBounds(stage_data_[current_stage_]->num_rows_+index,benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[index],benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[index]);
-        }
-
-        // Solve problem!
-        SolveSolverInterface(osi_solver,false,true);
-
-        if ( old_sigma != regularized_sigma_ ){
-            // The Obj Coefficients changed, so we have to resolve the problem!
-            benders_tree_node_pointer->getDataPtr()->warm_start_.reset(osi_solver->getWarmStart());
-            // Update coefficients in the objective function!
-            std::vector<double> sigmas(stage_data_[current_stage_]->num_columns_*2+num_thetas,0);
-            CoinFillN(&sigmas[stage_data_[current_stage_]->num_columns_+num_thetas],stage_data_[current_stage_]->num_columns_,1.0/regularized_sigma_);
-
-            OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
-            if ( cpx_ptr == nullptr)
-                LOG(FATAL)<< "OsiSolverInstance is no cplex instance.";
-            // Get ENV and LP ptr
-            CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
-            CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-
-            // Store warmstart (gets invalidated by new objective)
-            if ( integer_problems_[current_stage_] == false )
-                benders_tree_node_pointer->getDataPtr()->warm_start_.reset(osi_solver->getWarmStart());
-            // Copy quadratic objective (regular objective function is unchanged)
-            CPXcopyqpsep(env_ptr,lp_ptr,&sigmas[0]);
-
-            // Set warmstart
-            if ( integer_problems_[current_stage_] == false )
-                osi_solver->setWarmStart(benders_tree_node_pointer->getDataPtr()->warm_start_.get());
-            // Solve problem
-            SolveSolverInterface(osi_solver,false,true);
-            LOG(INFO) << "Coefficients: " << 1.0/regularized_sigma_;
-        }
     }
 
     int ParallelNestedBenders::getNumRowsProblem()
@@ -5018,9 +4928,9 @@ namespace parallel_benders {
         assert( regularized_gamma_ > 0.5 && regularized_gamma_ < 1.0);
         double old_sigma = regularized_sigma_;
         
-        // TODO: Test values of Vladimirou!
+        // TODO: Test values of Vladimirou! When no new cut was added, set *= 100
         // Test if we should update the regularized solution
-        if ( approximation_solution > -infinity_  && change_sigma){
+        if ( regularization_ && approximation_solution > -infinity_  && change_sigma){
             // Otherwise we have not yet added theta variables
             if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_+ (regularized_gamma_)*approximation_solution ){
                 // Update the solution!
@@ -5030,13 +4940,13 @@ namespace parallel_benders {
                 regularized_solution_value_ = solution_qx;
                 regularized_update_incumbent_ = true;
                 if ( 1.0/regularized_sigma_ > 0.125 ) // TODO: Hard-fixed value, should be replaced by something else!
-                    regularized_sigma_ *= 2;
+                    regularized_sigma_ *= 2; // Vladimirou: *= 10;
                 LOG(INFO) << "Exact serious step";
 
             }
             else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
                 if ( 1.0/regularized_sigma_ < 2 ) // TODO: Hard-fixed value, should be replaced by something else!
-                    regularized_sigma_ *= 0.5;
+                    regularized_sigma_ *= 0.5; // Vladimirou: *= 0.25
                 LOG(INFO) << "Null Step";
 
             }
@@ -5164,6 +5074,8 @@ namespace parallel_benders {
                     benders_tree_node_pointer->getDataPtr()->feasible_ = false;
                 else if ( cpx_stat == CPX_STAT_UNBOUNDED )
                     benders_tree_node_pointer->getDataPtr()->feasible_ = false;
+                else if ( cpx_stat == CPX_STAT_OPTIMAL_INFEAS )
+                    regularized_sigma_ *= 100; // This way we practically disable regularization..
 
             }
         }
@@ -5243,6 +5155,7 @@ namespace parallel_benders {
             // We need to set the lower bound, to have an approximation!
             solution = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(),benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(),solution);
             benders_tree_node_pointer->getDataPtr()->lower_bound_ = solution;
+            lower_bound_ = solution;
         }
 
 
@@ -6086,7 +5999,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
