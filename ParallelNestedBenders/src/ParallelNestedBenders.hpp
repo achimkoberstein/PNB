@@ -360,9 +360,10 @@ private:
 // We need a coordinator, that tells the threads what to do. 
 // It waits for the threads to end, then does some stuff and waits again.
 // True if equal with given tolerance
-bool CompareForEquality( double first, double second, double tolerance);
+inline bool CompareForEquality( double first, double second, double tolerance);
 // True if gap is not small enough yet
-bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
+inline bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
+inline double ComputeRelativeGap(double upper_bound, double lower_bound,double epsilon = 1e-10);
 
 
 
