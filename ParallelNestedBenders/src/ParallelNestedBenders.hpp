@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <atomic>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
@@ -176,9 +177,6 @@ private:
     bool unbounded_problem_;
     boost::dynamic_bitset<> infeasible_problems_;
 
-    // How many cuts did we added?
-    std::vector<int> added_optimality_cuts_;
-    std::vector<int> added_feasibility_cuts_;
 	int num_added_feasibility_cuts_;
     bool store_cut_information_;
 

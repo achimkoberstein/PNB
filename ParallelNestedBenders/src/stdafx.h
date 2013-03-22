@@ -12,6 +12,7 @@
 #include <functional>
 #include <utility> // std::pair
 #include <memory>
+#include <atomic>
 
 #include <mutex>
 

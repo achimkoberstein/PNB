@@ -5,6 +5,7 @@
 #include <map>
 #include <functional>
 #include <memory>
+#include <atomic>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -325,6 +326,9 @@ struct BendersStageData {
 
     // Store if we changed aggregation level
     bool changed_aggregation_level_;
+
+	std::atomic_int added_optimality_cuts_;
+	std::atomic_int added_feasibility_cuts_;
 
     // D^2C^3 stuff
     int num_d_square_cuts_;
