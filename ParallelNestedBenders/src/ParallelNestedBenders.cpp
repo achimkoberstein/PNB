@@ -1427,9 +1427,6 @@ namespace parallel_benders {
                 tree_nodes_by_stage_[current_stage_][i]->getDataPtr()->CleanUnusedMemory(forward_);
             }
 
-            stage_data_[current_stage_]->changed_aggregation_level_ = false; // Necessary for adaptive_ methods!
-
-
             // Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
             if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK && time_not_measured && major_iteration_ > 0 && current_stage_ == 0 && theta_approximations_everywhere_){ // Store the time it takes to compute certain stages!
                 // Store the time in a vector
@@ -1806,10 +1803,10 @@ namespace parallel_benders {
 
         // Retrieve and store the theta variables
         if ( num_theta ){
-            if ( level_decomp_ && level_manhattan_ ){
+            if ( level_decomp_ && level_manhattan_ && current_stage_ <= level_stage_){
                 num_theta -= stage_data_[current_stage_]->num_columns_;
             }
-            else if ( level_decomp_ && level_infinity_ ){
+            else if ( level_decomp_ && level_infinity_  && current_stage_ <= level_stage_){
                 num_theta -= 1;
             }
             assert(num_theta >= 0);
@@ -2418,7 +2415,7 @@ namespace parallel_benders {
             // This is not yet implemented TOOD: we do not call this method, if we have infeasibly problems
             assert(false);
         }
-
+		
         std::vector<double>& column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
         if ( column_solution.empty() ){
             // We do not add any cuts, we have no prior column solution. This is an error.
@@ -2431,8 +2428,8 @@ namespace parallel_benders {
             }
             else 
                 assert(false);
-
         }
+
         if ( stage_data_[current_stage_]->solve_binary_subproblems_ ){
             // Return or better: call method that calls laporte-louveaux cut generation routine
             LOG(INFO) << "Not adding new benders style optimality cuts to problems at stage " << current_stage_-1 << " because we solved mip-subproblems.";
@@ -2557,7 +2554,7 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
-            if ( change_aggregation_level || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
+            if ( change_aggregation_level || warm_up_ || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
                 cut_stuff->to_use_ = true;
                 added_cuts++;
             }
@@ -3075,40 +3072,40 @@ namespace parallel_benders {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersNodeData::cut_container::iterator feas_it = benders_node_pointer->feasibility_cuts_.begin();
 
-        if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 ){
-            if ( !seperate_first_stage_solver_ ){
+        if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 && current_stage_ <= level_stage_){
+            if ( !seperate_first_stage_solver_ && current_stage_ == 0){
                 //LOG(FATAL) << "Regularized Decomposition can not work without a seperable first stage solver instance.";
                 regularized_initialized_rows_ = false;
             }
-            if ( !regularized_initialized_rows_ && current_stage_ == 0 || osi_solver->getNumRows() <= stage_data_[current_stage_]->num_rows_ ){
-                if ( current_stage_ == 0)
-                regularized_initialized_rows_ = true;
-                int num_columns = stage_data_[current_stage_]->num_columns_;
-                int num_theta = benders_tree_node_pointer->getDataPtr()->num_thetas_;
-                if ( num_theta == 0)
-                    num_theta = getNumThetasByStage(benders_tree_node_pointer);
-                // Prepare the new rows that are meant to set w +x >= x' and w - x >= -x'
-                int overall_columns = num_columns*2;
-                std::vector<double> rowlb(overall_columns);
-                std::vector<double> rowub(overall_columns);
-                std::vector<int> rowstrt(overall_columns+1);
-                std::vector<int> columns(overall_columns*2);
-                std::vector<double> elements(overall_columns*2);
-                rowstrt[0] = 0;
-                for (int i = 0; i < num_columns; i++){ // We need two rows per column!
-                    rowlb[2*i] = benders_node_pointer->level_regularized_solution_[i]; rowub[2*i] = infinity_; // we have a >= x'
-                    rowlb[2*i+1] = -benders_node_pointer->level_regularized_solution_[i]; rowub[2*i+1] = infinity_; // we have a >= -x'
-                    columns[4*i] = i; columns[4*i+1] = num_columns+num_theta+ (level_manhattan_ ? i:0); // x+w
-                    elements[4*i] = 1; elements[4*i+1] = 1;
-                    columns[4*i+2] = i; columns[4*i+3] = num_columns+num_theta+(level_manhattan_ ? i:0); // -x+w
-                    elements[4*i+2] = -1; elements[4*i+3] = 1;
-                    rowstrt[2*i+1] = rowstrt[2*i]+2; // We have two elements per row, so we have to add two for first row
-                    rowstrt[2*i+2] = rowstrt[2*i+1]+2; // We have two elements per row, so we have to add two for second row
-                }
-                int start_rows = osi_solver->getNumRows();
-                assert(start_rows == stage_data_[current_stage_]->num_rows_);
-                // We have to store the row numbers, so we can update these rows later on if the regularized solution changes
-                osi_solver->addRows(overall_columns, &rowstrt[0], &columns[0], &elements[0], &rowlb[0], &rowub[0] );
+            if ( !regularized_initialized_rows_ && current_stage_ == 0 || osi_solver->getNumRows() <= getNumRowsProblem() ){
+				if ( current_stage_ == 0)
+					regularized_initialized_rows_ = true;
+				int num_columns = stage_data_[current_stage_]->num_columns_;
+				int num_theta = benders_tree_node_pointer->getDataPtr()->num_thetas_;
+				if ( num_theta == 0)
+					num_theta = getNumThetasByStage(benders_tree_node_pointer);
+				// Prepare the new rows that are meant to set w +x >= x' and w - x >= -x'
+				int overall_columns = num_columns*2;
+				std::vector<double> rowlb(overall_columns);
+				std::vector<double> rowub(overall_columns);
+				std::vector<int> rowstrt(overall_columns+1);
+				std::vector<int> columns(overall_columns*2);
+				std::vector<double> elements(overall_columns*2);
+				rowstrt[0] = 0;
+				for (int i = 0; i < num_columns; i++){ // We need two rows per column!
+					rowlb[2*i] = benders_node_pointer->level_regularized_solution_[i]; rowub[2*i] = infinity_; // we have a >= x'
+					rowlb[2*i+1] = -benders_node_pointer->level_regularized_solution_[i]; rowub[2*i+1] = infinity_; // we have a >= -x'
+					columns[4*i] = i; columns[4*i+1] = num_columns+num_theta+ (level_manhattan_ ? i:0); // x+w
+					elements[4*i] = 1; elements[4*i+1] = 1;
+					columns[4*i+2] = i; columns[4*i+3] = num_columns+num_theta+(level_manhattan_ ? i:0); // -x+w
+					elements[4*i+2] = -1; elements[4*i+3] = 1;
+					rowstrt[2*i+1] = rowstrt[2*i]+2; // We have two elements per row, so we have to add two for first row
+					rowstrt[2*i+2] = rowstrt[2*i+1]+2; // We have two elements per row, so we have to add two for second row
+				}
+				int start_rows = osi_solver->getNumRows();
+				assert(start_rows == stage_data_[current_stage_]->num_rows_);
+				// We have to store the row numbers, so we can update these rows later on if the regularized solution changes
+				osi_solver->addRows(overall_columns, &rowstrt[0], &columns[0], &elements[0], &rowlb[0], &rowub[0] );
             }
         }
 
@@ -4481,6 +4478,10 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::StoreValuesFromSolverInVector( std::vector<double>& destination_vector,const double* source_values,int size )
     {
+		if ( size == 0 ){
+			destination_vector.clear();
+			return;
+		}
         if ( destination_vector.size() < size)
             destination_vector.reserve(size);
         destination_vector.assign(source_values,source_values+size);
@@ -4599,7 +4600,7 @@ namespace parallel_benders {
 
     int ParallelNestedBenders::getNumRowsProblem()
     { // TODO: If we want to solve level method in a later stage, we need a modifier that tells us what we want to know!
-        if ( level_decomp_ && (level_manhattan_ || level_infinity_)&& current_stage_ < num_stages_-1 )
+        if ( level_decomp_ && (level_manhattan_ || level_infinity_)&& current_stage_ <= level_stage_ && current_stage_ < num_stages_-1)
             return stage_data_[current_stage_]->num_rows_+2*stage_data_[current_stage_]->num_columns_;
         else
             return stage_data_[current_stage_]->num_rows_;
@@ -4702,108 +4703,76 @@ namespace parallel_benders {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersStageData* stage_pointer = stage_data_[current_stage_];
         int num_theta = benders_node_pointer->num_thetas_;
-        bool no_real_thetas = false;
         if ( num_theta == 0 ){
             num_theta = getNumThetasByStage(benders_tree_node_pointer);
-            no_real_thetas = true;
         }
+		int extra_columns = (level_decomp_ && (level_infinity_|| level_manhattan_) ? stage_data_[current_stage_]->num_columns_:0 );
         // We need an objective function variable that is added to the problem for level decomp!
-        if ( current_stage_ == 0 && seperate_first_stage_solver_ && current_iteration_ == 1 || level_decomp_ && benders_node_pointer->optimality_cuts_.empty() && current_stage_ < num_stages_-1) {
-            // If we reuse a solver instance, do not add it!
-            if ( osi_solver->getNumCols() < stage_data_[current_stage_]->num_columns_+num_theta+ (level_euclidean_ ? 0:stage_data_[current_stage_]->num_columns_ )){
-                // Add the columns only once!
-                int num_cols = num_theta;
-                assert( num_cols > 0);
-                std::vector<double> lower(num_cols,-infinity_);
-                std::vector<double> upper(num_cols,infinity_);
-                double term = 0.0;
-                if (!benders_node_pointer->optimality_cuts_.empty() )
-                    term = 1.0;
-                std::vector<double> objective(num_cols,term); 
-                CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
-                for (int i = 0; i < num_cols; i++){
-                    coin_vector[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
-                }
-                osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
-                LOG_IF(FATAL,osi_solver->getNumCols() != stage_pointer->num_columns_+num_cols) << osi_solver->getNumCols();
-                for (int i = 0; i < num_cols; i++){
-                    delete coin_vector[i];
-                }
-                delete [] coin_vector;
-            }
-        }
-        // Add the theta-stuff ( how many we have depends on current multi-cut aggregation level.. ) TODO: Reuse stuff
-        if ( !benders_node_pointer->optimality_cuts_.empty() ){// We have some optimality cuts, so we need theta variables
-            // Remove theta columns from solver, if we reuse it
-            int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_; // This indicates if we reuse a solver, apart from initial run.
-            if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ <= level_stage_ )
-                cols_to_remove -= stage_pointer->num_columns_;
+		if ( osi_solver->getNumCols() < stage_data_[current_stage_]->num_columns_+num_theta ) { // We need to add the theta variables!
+			int num_cols = num_theta;
+			assert( num_cols > 0);
+			std::vector<double> lower(num_cols,-infinity_);
+			std::vector<double> upper(num_cols,infinity_);
+			double term = 0.0;
+			if (!benders_node_pointer->optimality_cuts_.empty() )
+				term = 1.0;
+			std::vector<double> objective(num_cols,term); 
+			CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
+			for (int i = 0; i < num_cols; i++){
+				coin_vector[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
+			}
+			osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
+			LOG_IF(FATAL,osi_solver->getNumCols() != stage_pointer->num_columns_+num_cols) << osi_solver->getNumCols();
+			for (int i = 0; i < num_cols; i++){
+				delete coin_vector[i];
+			}
+			delete [] coin_vector;
+		}
+		else if ( benders_node_pointer->changed_aggregation_level_ && osi_solver->getNumCols() > stage_data_[current_stage_]->num_columns_+num_theta +extra_columns){
+			// We have more cols than we should have! We must remove the theta columns we have too much off!
+			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_-extra_columns;
+			assert( cols_to_remove < num_theta );
+			std::vector<int> remove_indices;
+			remove_indices.reserve(cols_to_remove);
+			for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
+				remove_indices.push_back(i);
+			osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
+		}
 
-
-            // We only want to remove the theta columns, if they are different in this node from a previous one. This is necessary if we changed aggregation level in this node or if we changed aggregation level during this iteration for nodes at this stage, as we resolve them during the process!
-            if ( cols_to_remove > 0 && (benders_node_pointer->changed_aggregation_level_ || stage_data_[current_stage_]->changed_aggregation_level_) && ( current_stage_ > 0 || !seperate_first_stage_solver_ ) ) { 
-                std::vector<int> remove_indices;
-                remove_indices.reserve(cols_to_remove);
-                for (int i = stage_pointer->num_columns_; i < stage_pointer->num_columns_+cols_to_remove;i++)
-                    remove_indices.push_back(i);
-                int extra_cols = cols_to_remove-benders_node_pointer->num_thetas_;// Number of cols we actually remove
-                for (int i = 0; i < extra_cols; i++)
-                    osi_solver->setObjCoeff(stage_pointer->num_columns_+benders_node_pointer->num_thetas_+i,0);
-            }
-            if ( seperate_first_stage_solver_ && benders_node_pointer->changed_aggregation_level_ && current_stage_ == 0){
-                // We need to activate the theta variables!
-                for (int i = 0; i < benders_node_pointer->num_thetas_; i++)
-                    osi_solver->setObjCoeff(stage_data_[current_stage_]->num_columns_+i,1);
-            }
-            if ( (current_stage_ > 0 && cols_to_remove == 0) || (current_stage_ == 0 && !seperate_first_stage_solver_)){ // We have no thetas yet, so we add them all!
-                int num_cols = benders_node_pointer->num_thetas_;
-                assert( num_cols > 0);
-                std::vector<double> lower(num_cols,-infinity_);
-                std::vector<double> upper(num_cols,infinity_);
-                std::vector<double> objective(num_cols,1.0); 
-                CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
-                for (int i = 0; i < num_cols; i++){
-                    coin_vector[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
-                }
-                osi_solver->addCols(num_cols,coin_vector,&lower[0],&upper[0],&objective[0]);
-                assert(osi_solver->getNumCols() == stage_pointer->num_columns_+num_cols);
-                for (int i = 0; i < num_cols; i++){
-                    delete coin_vector[i];
-                }
-                delete [] coin_vector;
-            }
-        }
-        else {
-        }
+   		if ( benders_node_pointer->changed_aggregation_level_ ) {
+			// We need to activate the theta variables!
+			for (int i = 0; i < benders_node_pointer->num_thetas_; i++)
+				osi_solver->setObjCoeff(stage_data_[current_stage_]->num_columns_+i,1.0);
+		}
 
         // We need to add num_columns_ many columns to the problem
-        if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 ){
+        if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 && current_stage_ <= level_stage_){
 
             if ( !seperate_first_stage_solver_ ){
                 regularized_initialized_cols_ = false;
             }
             if ( !regularized_initialized_cols_ && current_stage_ == 0 || osi_solver->getNumCols() != stage_data_[current_stage_]->num_columns_+num_theta+stage_data_[current_stage_]->num_columns_ && level_manhattan_ || 
-                osi_solver->getNumCols() != stage_data_[current_stage_]->num_columns_+num_theta+1 && level_infinity_){
-                int num_columns = (level_manhattan_ ? stage_data_[current_stage_]->num_columns_ : 1);
-                if ( current_stage_ == 0 )
-                regularized_initialized_cols_ = true;
-                assert(num_theta>0);
+				osi_solver->getNumCols() != stage_data_[current_stage_]->num_columns_+num_theta+1 && level_infinity_){
+					int num_columns = (level_manhattan_ ? stage_data_[current_stage_]->num_columns_ : 1);
+					if ( current_stage_ == 0 )
+						regularized_initialized_cols_ = true;
+					assert(num_theta>0);
 
-                // We add the new columns to the problem
-                std::vector<double> collb(num_columns,0.0); 
-                std::vector<double> colub(num_columns,infinity_);
-                std::vector<double> colobj(num_columns,0.0);// Only needed in level_decomp problem, so we set them there!
-                CoinPackedVectorBase** cpvb = new CoinPackedVectorBase*[num_columns];
-                for (int i = 0; i < num_columns; i++){
-                    cpvb[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
-                }
-                osi_solver->addCols(num_columns,cpvb, &collb[0], &colub[0], &colobj[0]);
+					// We add the new columns to the problem
+					std::vector<double> collb(num_columns,0.0); 
+					std::vector<double> colub(num_columns,infinity_);
+					std::vector<double> colobj(num_columns,0.0);// Only needed in level_decomp problem, so we set them there!
+					CoinPackedVectorBase** cpvb = new CoinPackedVectorBase*[num_columns];
+					for (int i = 0; i < num_columns; i++){
+						cpvb[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
+					}
+					osi_solver->addCols(num_columns,cpvb, &collb[0], &colub[0], &colobj[0]);
 
-                assert(osi_solver->getNumCols() == stage_data_[current_stage_]->num_columns_ + num_columns+num_theta);
+					assert(osi_solver->getNumCols() == stage_data_[current_stage_]->num_columns_ + num_columns+num_theta);
 
-                for (int i = 0; i < num_columns; i++)
-                    delete cpvb[i];
-                delete[] cpvb;
+					for (int i = 0; i < num_columns; i++)
+						delete cpvb[i];
+					delete[] cpvb;
             }//End regularized_initialized
         }//End Regularization
     }
@@ -5999,7 +5968,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
