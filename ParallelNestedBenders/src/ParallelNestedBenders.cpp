@@ -2556,17 +2556,12 @@ namespace parallel_benders {
             cut_stuff->aggregate_number_ = i;
             if ( change_aggregation_level || warm_up_ || (sum + zero_tolerance_) > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
                 added_cuts++;
+                benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
             else
                 cut_stuff->to_use_ = false;
 
             AddOptimalityCutToContainer(benders_tree_node_pointer,cut_stuff);
-
-            // Set aggregate to active: We have a cut for this aggregate
-            benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;
-
-            // Store information about this new cut, we added a new one to our set!
-            //benders_tree_node_pointer->getDataPtr()->cut_information_.CreateCut(current_iteration_);
             /************************************************************************/
             /* End If-Condition here                                                */
             /************************************************************************/
@@ -4723,10 +4718,11 @@ namespace parallel_benders {
 			osi_solver->deleteCols(cols_to_remove,&remove_indices[0]);
 		}
 
-   		if ( benders_node_pointer->changed_aggregation_level_ ) {
+   		if ( benders_node_pointer->changed_aggregation_level_ && !benders_node_pointer->optimality_cuts_.empty()) {
 			// We need to activate the theta variables!
-			for (int i = 0; i < benders_node_pointer->num_thetas_; i++)
-				osi_solver->setObjCoeff(stage_data_[current_stage_]->num_columns_+i,1.0);
+			for (int i = 0; i < benders_node_pointer->num_thetas_; i++){
+				osi_solver->setObjCoeff(stage_data_[current_stage_]->num_columns_+i,benders_node_pointer->active_aggregates_[i] ? 1.0 : 0.0);
+            }
 		}
 
         // We need to add num_columns_ many columns to the problem
