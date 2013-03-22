@@ -2554,7 +2554,7 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
-            if ( change_aggregation_level || warm_up_ || (sum + zero_tolerance_) > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
+            if ( change_aggregation_level || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
                 added_cuts++;
             }
             else
@@ -2573,6 +2573,9 @@ namespace parallel_benders {
 
         }// End for num_cuts
         stage_data_[current_stage_-1]->added_optimality_cuts_ += added_cuts;
+		if ( regularization_ && added_cuts == 0 ){
+			regularized_sigma_ *= 100;
+		}
 
     }
 
@@ -4885,20 +4888,20 @@ namespace parallel_benders {
         // Test if we should update the regularized solution
         if ( regularization_ && approximation_solution > -infinity_  && change_sigma){
             // Otherwise we have not yet added theta variables
-            if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_+ (regularized_gamma_)*approximation_solution ){
+            if ( solution_qx < (1-regularized_gamma_)*regularized_solution_value_ + (regularized_gamma_)*approximation_solution ){
                 // Update the solution!
                 assert( benders_tree_node_pointer->getDataPtr()->col_solution_.size() == stage_data_[current_stage_]->num_columns_);
                 memcpy(&benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[0],&benders_tree_node_pointer->getDataPtr()->col_solution_[0],sizeof(double)*stage_data_[current_stage_]->num_columns_);
                 // Update the solution value
                 regularized_solution_value_ = solution_qx;
                 regularized_update_incumbent_ = true;
-                if ( 1.0/regularized_sigma_ > 0.125 ) // TODO: Hard-fixed value, should be replaced by something else!
+                if ( 1.0/regularized_sigma_ > 0.0125 ) // TODO: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 2; // Vladimirou: *= 10;
                 LOG(INFO) << "Exact serious step";
 
             }
             else if ( solution_qx > regularized_gamma_*regularized_solution_value_+ (1-regularized_gamma_)*approximation_solution ){
-                if ( 1.0/regularized_sigma_ < 2 ) // TODO: Hard-fixed value, should be replaced by something else!
+                if ( 1.0/regularized_sigma_ < 1024 ) // TODO: Hard-fixed value, should be replaced by something else!
                     regularized_sigma_ *= 0.5; // Vladimirou: *= 0.25
                 LOG(INFO) << "Null Step";
 
@@ -4928,7 +4931,7 @@ namespace parallel_benders {
                     linear_coefs.assign(number_of_problem_cols,0.0);
 
                 for (int i = 0; i < number_of_variables; i++){
-                    linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i]*2.0*term;
+                    linear_coefs[i] -= benders_tree_node_pointer->getDataPtr()->level_regularized_solution_[i]*term;
                 }
 
                 // Set new linear objective : invalidates old warm_start
@@ -5952,7 +5955,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
