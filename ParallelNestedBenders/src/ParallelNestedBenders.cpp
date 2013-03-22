@@ -780,7 +780,7 @@ namespace parallel_benders {
                     solution_code_ = PNB_SOLUTION_ITERATION_LIMIT;
                 if ( upper_bound_ < lower_bound_-zero_tolerance_ )
                     solution_code_ = PNB_SOLUTION_UPPER_LESS_LOWER_BOUND;
-                break;
+                break;// We stop solving the problem
             }
             wall_clock_solution_time_.Stop(0);
 
@@ -789,7 +789,7 @@ namespace parallel_benders {
             if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
                 LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
                 solution_code_ = PNB_SOLUTION_TIME_LIMIT;
-                return; // We stop solving the problem
+                break; // We stop solving the problem
             }
             wall_clock_solution_time_.Start(0);
             timer_.Start(current_stage_);
@@ -5952,7 +5952,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
