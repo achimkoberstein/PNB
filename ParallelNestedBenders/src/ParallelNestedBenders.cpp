@@ -752,11 +752,10 @@ namespace parallel_benders {
                     not_stop_loop = true;
                 else if ( current_stage_ == 0){
                     double solution_qx = 0;
-                    double ten_to_minus_ten = 1e-10;
                     double ten_to_minus_eight = 1e-8;
                     for (int i = 0; i < num_stages_; i++)
                         solution_qx += stage_lower_upper_bounds_[i].second;
-                    not_stop_loop = (std::abs(regularized_solution_value_-solution_qx)/ ( std::abs(regularized_solution_value_)+ten_to_minus_ten) > ten_to_minus_eight);
+                    not_stop_loop = ComputeRelativeGap(regularized_solution_value_,solution_qx) > ten_to_minus_eight;
                     // Compute Other Gap
                     //if ( lower_bound_ > -infinity_ ){
                     //    double regularized_gap = std::abs(regularized_solution_value_-lower_bound_)/(std::abs(regularized_solution_value_)+ten_to_minus_ten);
@@ -807,7 +806,7 @@ namespace parallel_benders {
                 // Count if gap is similar
                 if ( current_stage_ == 0 ){
                     old_gap = gap;
-                    gap = abs(upper_bound_-lower_bound_)/ (abs(lower_bound_)+1e-10); // Be consistent!
+                    gap = upper_bound_-lower_bound_;
                     if ( upper_bound_ >= infinity_ || lower_bound_ <= -infinity_ )
                         gap = infinity_;
                     if ( regularization_ ){
@@ -815,7 +814,7 @@ namespace parallel_benders {
                         double ten_to_minus_ten = 1e-10;
                         for (int i = 0; i < num_stages_; i++)
                             solution_qx += stage_lower_upper_bounds_[i].second;
-                        gap = std::abs(regularized_solution_value_-solution_qx)/( std::abs(regularized_solution_value_)+ten_to_minus_ten);
+                        gap = regularized_solution_value_-solution_qx;
                     }
                     if (CompareForEquality(old_gap,gap,zero_tolerance_) )
                         gap_counter++;
@@ -1303,7 +1302,7 @@ namespace parallel_benders {
                     last_current_iteration = current_iteration_;
                     last_lower_bound = lower_bound_;
                     last_upper_bound = upper_bound_;
-                    last_gap = std::abs(last_upper_bound-last_lower_bound) / std::abs(last_upper_bound+1e-10);
+                    last_gap = ComputeRelativeGap(last_upper_bound,last_lower_bound);
                     std::cout << "\n";
                 }
 
@@ -1326,14 +1325,14 @@ namespace parallel_benders {
                             current_solution += stage_lower_upper_bounds_[i].second;
                         double regularized_tolerance = 1e-10;
                         std::cout << "Current Iteration solution " << current_solution << "\n";
-                        std::cout << "Relative Gap: " << abs(regularized_solution_value_-current_solution)/(abs(regularized_solution_value_)+regularized_tolerance ) << "\n";
+                        std::cout << "Relative Gap: " << ComputeRelativeGap(regularized_solution_value_,current_solution) << "\n";
                         std::cout << "Lower Bound: " << lower_bound_ << std::endl;
                     }
                 }
                 else if ( current_stage_ == 0){
                     std::cout << "Lower Bound:  " << lower_bound_ << "\n";
                     std::cout << "Upper Bound:  " << upper_bound_ << "\n";
-                    std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << std::endl;
+                    std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_,lower_bound_) << std::endl;
 
                 }
 
@@ -1470,7 +1469,7 @@ namespace parallel_benders {
         std::cout << "Algorithm finished with status code " << solution_code_ << ", final values below.\n"; 
         std::cout << "Lower Bound:  " << (regularization_ ? regularized_solution_value_ : lower_bound_) << "\n";
         std::cout << "Upper Bound:  " << upper_bound_ << "\n";
-        std::cout << "Relative Gap: " << abs(upper_bound_-lower_bound_)/abs(upper_bound_+1e-10)  << "\n";
+        std::cout << "Relative Gap: " << ComputeRelativeGap(upper_bound_,lower_bound_)  << "\n";
         std::cout << "Major Iterations: " << major_iteration_ << "\n";
         std::cout << "Overall Iterations: " << current_iteration_ << "\n";
         if ( insubstantial_iteration_ > 0)
@@ -5975,13 +5974,18 @@ namespace parallel_benders {
 
     }
 
+    double ComputeRelativeGap(double upper_bound, double lower_bound, double epsilon){
+        return std::abs(upper_bound-lower_bound)/ (std::abs(upper_bound)+epsilon);
+
+    }
+
 
     bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
         if (std::abs(upper_bound) < 1 && std::abs(lower_bound) < 1) //in this case we do not want relative difference, instead we want absolute difference..
             return true;
-        return std::abs(upper_bound-lower_bound)/(std::abs(lower_bound)+0.00000000001) >= epsilon; 
+        return ComputeRelativeGap(upper_bound,lower_bound) >= epsilon; 
         // Cplex MIPGAP is |bestnode-bestinteger| / ( |bestinteger| + 0.0000000001 )
         //Gap as defined in POSTS test set (except 0.0..01 instead of 0.1)
     }
