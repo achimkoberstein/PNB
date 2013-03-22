@@ -2554,7 +2554,7 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
-            if ( change_aggregation_level || warm_up_ || true || (sum + zero_tolerance_) > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
+            if ( change_aggregation_level || warm_up_ || (sum + zero_tolerance_) > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
                 added_cuts++;
             }
             else
@@ -2894,31 +2894,18 @@ namespace parallel_benders {
         cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0],debug_test_duplicate_indices_);
         // Increase feasCutCounter, together with locking/unlocking a std::mutex, and adding the cut the the parent problem
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
-        infeasible_problem_mutex_.lock();
-        // Check if this is the first cut we added
-        num_added_feasibility_cuts_++;
+		{
+			std::unique_lock<std::mutex> temp_lock(infeasible_problem_mutex_);
+			// Check if this is the first cut we added
+			num_added_feasibility_cuts_++;
 
-        benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_stuff);
-        if ( num_added_feasibility_cuts_ == 1 ){
-            benders_tree_node_pointer->getParent()->getDataPtr()->last_iteration_start_feasibility_ = --benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.end();
-        }
-        // If the first stage solver has some optimality cuts, we need to construct it anew, because we add feasibility cuts at the moment at the end of the problem instead of at first!
-        //if ( !benders_tree_node_pointer->getParent()->getDataPtr()->optimality_cuts_.empty() && current_stage_ == 1){
-        //    seperate_first_stage_solver_ = false;
-        //    LOG(FATAL)<< "First stage solver is no longer a seperate instance, but build each time. This is due to added feasibility cuts.";
-        //}
-        //if ( store_cut_information_ || adaptive_ ){
-        //    seperate_first_stage_solver_ = false;
-        //    LOG(INFO) << "First stage solver is no longer a seperate instance, but build each time. This is due to feasibility cuts.";
-        //}
+			benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_stuff);
+			if ( num_added_feasibility_cuts_ == 1 ){
+				benders_tree_node_pointer->getParent()->getDataPtr()->last_iteration_start_feasibility_ = --benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.end();
+			}
+		}
 
-        // Why do we want to not longer allow a seperate_first_stage_solver_ when we add feasibility cuts? 
-        // It is the wrong order of cuts.
-        // We assume that we add the feasibility cuts first and the optimality cuts second, so that we have blocks of cuts in the problem.
-        // We can relax this assumption only, if we store an index for every cut.
-
-        infeasible_problem_mutex_.unlock();
-
+     
         // Delete dual ray problem
         if ( !cplex_licence_problem && !use_cplex)
             delete dual_ray_problem;
