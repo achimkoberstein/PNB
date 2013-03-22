@@ -302,8 +302,8 @@ public:
         repetitions_ = 1;
         std::vector<int> aggregates;
         aggregates.push_back(1);
-        //if ( num_aggregates_by_magic > 1)
-        //    aggregates.push_back(num_aggregates_by_magic);
+        if ( num_aggregates_by_magic > 1)
+            aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -362,43 +362,44 @@ public:
      //               benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
      //               solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
-					if ( num_stages_ >= 2) {
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-      //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+					if ( num_stages_ <= 2) {
+						benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_LEVEL,0);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+                        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
-                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
-                        //// Different Lambdas..
-                        //solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+                        // Different Lambdas..
+                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
-                        //// Different Lambdas and kappa
-                        //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
+                        // Different Lambdas and kappa
+                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
                         // Allow level decomp only for first stage!
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_LEVEL,0);
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
-						////// Make different lambdas work
-						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
+						//// Make different lambdas work
+						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-						//// Make different lambdas work and kappa
-						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+						// Make different lambdas work and kappa
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
 						// Different Lambdas..
 						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-						//// Different Lambdas and kappa
-						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+						// Different Lambdas and kappa
+						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
                         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
                         // Different Lambdas..
                         solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
-                        //// Different Lambdas and kappa
-                        //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+                        // Different Lambdas and kappa
+                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 
 
@@ -1541,7 +1542,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*unbounded_infeasible*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
