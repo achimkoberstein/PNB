@@ -294,7 +294,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),added_optimality_cuts_(num_stages_,0),added_feasibility_cuts_(num_stages_,0),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -876,7 +876,7 @@ namespace parallel_benders {
             if ( theta_approximations_everywhere_ && (sequencing_protocol_ == PNB_INT_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD) ){
                 if ( current_stage_ > 0 && current_stage_ < num_stages_-1){
                     forward_ = false;
-                    cuts_added_last_round_ = added_optimality_cuts_[current_stage_-1]; // count how many cuts were present before this iteration!
+                    cuts_added_last_round_ = stage_data_[current_stage_-1]->added_optimality_cuts_; // count how many cuts were present before this iteration!
                 }
 
             }
@@ -956,7 +956,7 @@ namespace parallel_benders {
             /************************************************************************/
             /* ODA-Level Decomposition                                              */
             /************************************************************************/
-            if ( oda_method_ && current_stage_ > 0 && added_optimality_cuts_[0] > 0 ){
+            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){
                 oda_chosen_optimality_cut_by_scenario_.clear(); oda_current_tilde_q_s_.clear();
                 oda_chosen_optimality_cut_by_scenario_.resize(num_scenarios_,0);
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
@@ -975,7 +975,7 @@ namespace parallel_benders {
             }
             // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
             bool solve_subproblems = true;
-            if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && added_optimality_cuts_[0]> 0 ){
+            if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
                     oda_phi_i_ = lower_bound_;
                 /*               LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
@@ -1388,7 +1388,7 @@ namespace parallel_benders {
                 // Reset infeasible_problems_ set
                 infeasible_problems_.reset();
                 // Add generated feasibility cuts to cut counter
-                added_feasibility_cuts_[current_stage_-1] += num_added_feasibility_cuts_;
+                stage_data_[current_stage_-1]->added_feasibility_cuts_ += num_added_feasibility_cuts_;
                 // Reset num_added_feasibility_cuts_
                 num_added_feasibility_cuts_ = 0;
                 // If we encounter an infeasible problem, we go straight back to the first stage!
@@ -1404,7 +1404,7 @@ namespace parallel_benders {
 
             // When we did not added any cuts, we have to go forward! (except last stage of course and when all problems were feasible!)
             if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD )&& theta_approximations_everywhere_ && !forward_){
-                if ( current_stage_ > 0 && current_stage_ < num_stages_-1 && cuts_added_last_round_ == added_optimality_cuts_[current_stage_-1] && !infeasible_problem_ && !enforce_direction_){
+                if ( current_stage_ > 0 && current_stage_ < num_stages_-1 && cuts_added_last_round_ == stage_data_[current_stage_-1]->added_optimality_cuts_ && !infeasible_problem_ && !enforce_direction_){
                     forward_ = true;
                     LOG_IF(INFO,sequencing_protocol_==PNB_INT_EPSILON_FAST_BACKWARD) << "Going forward to next stage because of no new cuts!.";
                 }
@@ -1477,12 +1477,12 @@ namespace parallel_benders {
             std::cout << "Insubstantial Iterations: " << insubstantial_iteration_ << "\n";
         int cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
-            cut_counter += added_optimality_cuts_[i];
+            cut_counter += stage_data_[i]->added_optimality_cuts_;
         }
         LOG(INFO) << "Added " << cut_counter << " optimality cuts.";
         cut_counter = 0;
         for (int i = 0; i < num_stages_; i++){
-            cut_counter += added_feasibility_cuts_[i];
+            cut_counter += stage_data_[i]->added_feasibility_cuts_;
         }
         LOG(INFO) << "Added " << cut_counter << " feasibility cuts.";
         // We finished solving
@@ -2554,12 +2554,11 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
-            if ( change_aggregation_level || warm_up_ || sum > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
-                cut_stuff->to_use_ = true;
+            if ( change_aggregation_level || warm_up_ || true || (sum + zero_tolerance_) > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
                 added_cuts++;
             }
-            //else
-            //    cut_stuff->to_use_ = false;
+            else
+                cut_stuff->to_use_ = false;
 
             AddOptimalityCutToContainer(benders_tree_node_pointer,cut_stuff);
 
@@ -2573,10 +2572,7 @@ namespace parallel_benders {
             /************************************************************************/
 
         }// End for num_cuts
-
-        add_cut_counter_mutex_.lock();
-        added_optimality_cuts_[current_stage_-1] += added_cuts;
-        add_cut_counter_mutex_.unlock();
+        stage_data_[current_stage_-1]->added_optimality_cuts_ += added_cuts;
 
     }
 
@@ -4235,8 +4231,9 @@ namespace parallel_benders {
 
         misc_mutex_.lock();
         AddOptimalityCutToContainer(benders_tree_node_pointer,cut_stuff);
-        added_optimality_cuts_[current_stage_] += 1;
-        misc_mutex_.unlock();
+		misc_mutex_.unlock();
+        stage_data_[current_stage_]->added_optimality_cuts_ += 1;
+
 
     }
 
@@ -5968,7 +5965,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
