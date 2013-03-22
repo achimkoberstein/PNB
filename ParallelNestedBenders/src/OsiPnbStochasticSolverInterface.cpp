@@ -58,7 +58,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             // We have no scenarios
             LOG(ERROR) << "No scenarios available.";
         }
-        bool use_relaxation = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_RELAXATION,false);
+        int relaxation = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_RELAXATION,false);
         // Model statistics
         std::cout << "Variables: " << osi_->getNumCols() << " Rows: " << osi_->getNumRows() << " Elements: " << osi_->getNumElements() << " Integer: " << osi_->getNumIntegers() << std::endl;
         solution_time.Stop(1);
@@ -79,11 +79,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
 			// Wee need to differentiate between integer and not
-			if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
+			if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
 				osi_->branchAndBound();
 			}
 			else {
-                //CPXdualopt(envPtr,lpPtr);
                 CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,-1);
 				CPXbaropt(envPtr,lpPtr);
 			}
@@ -96,7 +95,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         }
         else{
 #endif
-            if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
+            if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
                 osi_->branchAndBound();
             }
             else {
