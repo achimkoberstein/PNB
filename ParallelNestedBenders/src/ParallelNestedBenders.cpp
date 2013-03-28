@@ -974,7 +974,7 @@ namespace parallel_benders {
             }
             // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
             bool solve_subproblems = true;
-            if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){
+            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 && gap_counter < 1){
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
                     oda_phi_i_ = lower_bound_;
                 /*               LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
@@ -984,7 +984,7 @@ namespace parallel_benders {
 
                 if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
                     solution_times_.Start(2);
-                    LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
+                    //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
@@ -4546,9 +4546,9 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1); 
-            //CPXsetdblparam(env_ptr,CPX_PARAM_EPGAP,0.01);
+
             //CPXsetintparam(env_ptr,CPX_PARAM_PREDUAL,1); // Use the dual presolve option
-            // Use a supplied warm start basis and crush it, to use the presolved model!
+            // Use a supplied warm start basis
             CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,1);
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
@@ -4566,9 +4566,12 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
 
 			CPXsetdblparam(env_ptr,CPX_PARAM_EPINT,integer_tolerance_); 
-            //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-07);
+            //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-07); // Simplex optimality tolerance
             //CPXsetintparam(env_ptr,CPX_PARAM_SCRIND,CPX_ON);
             CPXsetdblparam(env_ptr,CPX_PARAM_WORKMEM,512.0); // Allow 512 megabytes of working memory instead of usual 128
+
+			// Set zero tolerances and feasibility tolerances, that we got from our user!
+			CPXsetdblparam(env_ptr,CPX_PARAM_EPRHS,zero_tolerance_);
 
         }
         // We need gurobi options, just in case..
@@ -4621,7 +4624,8 @@ namespace parallel_benders {
                     if ( code != CPXMIP_OPTIMAL ){
                         console_mutex_.lock();
                         LOG(WARNING) << "MIQP solved with status " << code;
-                        console_mutex_.unlock();
+						console_mutex_.unlock();
+						
                     }
                 }
             }
@@ -4641,7 +4645,7 @@ namespace parallel_benders {
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPX_STAT_INForUNBD){ // Solve without presolve to determine correct direction!
                         CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_OFF);
-                        // Discard presolve information by changing objective Sense
+                        // Discard presolve information by changing objective Sense (do we lose warmstart?!)
                         int objsen = CPXgetobjsen(env_ptr, lp_ptr);
                         CPXchgobjsen(env_ptr, lp_ptr, -objsen);
                         CPXchgobjsen(env_ptr, lp_ptr, objsen);
@@ -4650,8 +4654,11 @@ namespace parallel_benders {
                         CPXsetintparam(env_ptr,CPX_PARAM_PREIND,CPX_ON);
                     }
                     if ( code != CPX_STAT_OPTIMAL ){
+						double kappa_value;
+						CPXgetdblquality(env_ptr,lp_ptr,&kappa_value,CPX_KAPPA);
                         console_mutex_.lock();
-                        LOG(WARNING) << "Quadratic problem solved with status " << code;
+						//CPXwriteprob(env_ptr,lp_ptr,"test2.lp","lp");
+                        LOG(WARNING) << "Quadratic problem solved with status " << code << " and has condition number " << kappa_value;
                         console_mutex_.unlock();
                     }
 
@@ -5042,8 +5049,11 @@ namespace parallel_benders {
             // Check for primal feasibility
             cpx_stat = CPXgetstat(env_ptr,lp_ptr);
             if ( cpx_stat != CPX_STAT_OPTIMAL ){
+				double kappa_value;
+				int status = CPXgetdblquality(env_ptr, lp_ptr, &kappa_value, CPX_KAPPA);
                 std::unique_lock<std::mutex> console_lock(console_mutex_);
-                LOG(INFO) << "Level projection problem returned with status " << cpx_stat << ".";
+	             LOG(INFO) << "Level projection problem returned with status " << cpx_stat << " and has a basis condition number of " << kappa_value << ".";
+				
             }
 
             benders_tree_node_pointer->getDataPtr()->level_warm_start_cstat_.reset(new int[osi_solver->getNumCols()]); // This might be unnecessary, when problem is fully initialized, as number of cols does not change. TODO: Change these to vectors?
@@ -5099,7 +5109,7 @@ namespace parallel_benders {
 
         if ( oda_method_ && current_stage_ == 0){
             oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(),benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(),oda_first_stage_);
-            std::cout << "Phi_i : " << oda_phi_i_ << "\n";
+            //std::cout << "Phi_i : " << oda_phi_i_ << "\n";
         }
         
         if ( regularization_ && current_stage_ == 0){
