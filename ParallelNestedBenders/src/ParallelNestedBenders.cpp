@@ -974,17 +974,20 @@ namespace parallel_benders {
             }
             // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
             bool solve_subproblems = true;
-            if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){
+            // When the gap_counter is bigger than zero, the gap between lower and upper bound did not got smaller in the last iteration.
+            if ( gap_counter < 1 && oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){ // We only use oda, when we have the oda_method, and we are not in the first stage, and we already have optimality cuts!
+                
+                /
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
                     oda_phi_i_ = lower_bound_;
-                /*               LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
-                LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
-                LOG(INFO) << "Upper Bound : " << upper_bound_;
-                LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
+                //LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
+                //LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
+                //LOG(INFO) << "Upper Bound : " << upper_bound_;
+                //LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
 
                 if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
                     solution_times_.Start(2);
-                    LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
+                    //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
@@ -1001,7 +1004,7 @@ namespace parallel_benders {
                     current_stage_--; 
                     assert(current_stage_ == 0);
                     insubstantial_iteration_++;
-                    major_iteration_--; // We accidentaly incremented the major_iteration counter!
+                    major_iteration_--; // We accidentally incremented the major_iteration counter!
                     continue; // Skip the rest of the loop (we go to the first stage)
                 }
             }
@@ -5099,7 +5102,7 @@ namespace parallel_benders {
 
         if ( oda_method_ && current_stage_ == 0){
             oda_phi_i_ = std::accumulate(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.begin(),benders_tree_node_pointer->getDataPtr()->next_stage_approximation_.end(),oda_first_stage_);
-            std::cout << "Phi_i : " << oda_phi_i_ << "\n";
+            //std::cout << "Phi_i : " << oda_phi_i_ << "\n";
         }
         
         if ( regularization_ && current_stage_ == 0){
