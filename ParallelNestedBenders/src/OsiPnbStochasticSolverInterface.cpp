@@ -83,7 +83,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 				osi_->branchAndBound();
 			}
 			else {
-                CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,-1);
+                CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,2);
+				CPXsetdblparam(envPtr,CPX_PARAM_BAREPCOMP,1e-10);
 				CPXbaropt(envPtr,lpPtr);
 			}
             // Check for errors

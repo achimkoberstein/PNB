@@ -396,7 +396,7 @@ namespace parallel_benders {
         store_cut_information_ = param.get(PNB_CUT_CONSOLIDATION,false);
         cut_consolidation_add_cut_ = param.get(PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,true);
         cut_consolidation_strike_threshold_ = param.get(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
-        cut_consolidation_partial_threshold_ = param.get(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.0);
+        cut_consolidation_partial_threshold_ = param.get(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.1);
 
         // Warm Up Period
         start_solution_ = param.get(PNB_USE_START_SOLUTION,0);

@@ -181,8 +181,8 @@ void Parameter::init()
     parameter_.put(PNB_ODA_KAPPA,0.5);
     parameter_.put(PNB_STAGE_LEVEL,0); // Up to which stage should we solve level problems? default is only the first stage (parameter holds also for regularization)
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
-    parameter_.put(PNB_TOLERANCE_ZERO, 1e-08);
-	parameter_.put(PNB_TOLERANCE_INTEGER,  1e-08); 
+    parameter_.put(PNB_TOLERANCE_ZERO, 1e-06);
+	parameter_.put(PNB_TOLERANCE_INTEGER,  1e-06); 
     parameter_.put(PNB_EPSILON_ABSOLUTE,  1e-06);
     parameter_.put(PNB_EPSILON_RELATIVE,  1e-06);
     // Solution management
