@@ -153,9 +153,10 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts() co
 {
     assert(nested_benders_);
     int cut_counter = 0;
-    for (int i = 0; i < nested_benders_->num_stages_; i++){
-        cut_counter += nested_benders_->stage_data_[i]->added_optimality_cuts_;
-    }
+    if ( !nested_benders_->stage_data_.empty())
+        for (int i = 0; i < nested_benders_->num_stages_; i++){
+            cut_counter += nested_benders_->stage_data_[i]->added_optimality_cuts_;
+        }
     return cut_counter;
 }
 
@@ -163,6 +164,7 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts() c
 {
     assert(nested_benders_);
     int cut_counter = 0;
+    if ( !nested_benders_->stage_data_.empty())
     for (int i = 0; i < nested_benders_->num_stages_; i++){
         cut_counter += nested_benders_->stage_data_[i]->added_feasibility_cuts_;
     }

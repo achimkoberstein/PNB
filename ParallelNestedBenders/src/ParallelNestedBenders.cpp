@@ -977,10 +977,10 @@ namespace parallel_benders {
             if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 && gap_counter < 1){
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
                     oda_phi_i_ = lower_bound_;
-                /*               LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
-                LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
-                LOG(INFO) << "Upper Bound : " << upper_bound_;
-                LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
+                //LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
+                //LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
+                //LOG(INFO) << "Upper Bound : " << upper_bound_;
+                //LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
 
                 if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
                     solution_times_.Start(2);
@@ -1001,7 +1001,7 @@ namespace parallel_benders {
                     current_stage_--; 
                     assert(current_stage_ == 0);
                     insubstantial_iteration_++;
-                    major_iteration_--; // We accidentaly incremented the major_iteration counter!
+                    major_iteration_--; // We accidentally incremented the major_iteration counter!
                     continue; // Skip the rest of the loop (we go to the first stage)
                 }
             }
@@ -1551,7 +1551,7 @@ namespace parallel_benders {
         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario());
         SolveSubproblem(osi_solver,benders_tree_node_pointer);
 
-        // In case of unbounded parent problem, we exchange the right-hand-side of the solver and resolve the problem (point problem)!
+        //// In case of unbounded parent problem, we exchange the right-hand-side of the solver and resolve the problem (point problem)!
         if ( benders_tree_node_pointer->getDataPtr()->unbounded_problem_ ){
             // Exchange right-hand-side of problem! Resolve!
             // Only works for problems without cuts, I suppose?!
@@ -1563,7 +1563,6 @@ namespace parallel_benders {
             // What about store data?
             // Try to store this solution
             //StoreData(osi_solver,benders_tree_node_pointer);
-            LOG(INFO) << "Debug Breakpoint";
         }
 
         if ( current_stage_ == 0){
@@ -1698,7 +1697,10 @@ namespace parallel_benders {
                     }
                     else {
                         // We can not handle this correctly for now
-                        LOG(FATAL) << "Your problem got unbounded.";
+                        if ( theta_approximations_everywhere_){
+                            PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"unbounded");
+                            LOG(FATAL) << "Your problem got unbounded.";
+                        }
                     }
 
                     if ( osi_solver->isProvenDualInfeasible()){
