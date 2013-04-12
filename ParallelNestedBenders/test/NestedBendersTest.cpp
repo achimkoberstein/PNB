@@ -193,7 +193,7 @@ public:
             num_childs_first_stage = smi_model->getSmiTree()->getRoot()->numChildren();
 
             num_aggregates_by_magic = 0;
-            num_aggregates_by_magic = smi_model->getSmiTree()->getRoot()->numChildren()/10;
+            num_aggregates_by_magic = smi_model->getSmiTree()->getRoot()->numChildren()/50;
             assert(num_aggregates_by_magic >= 0);
 
             num_single_scenario_cols_ = 0;
@@ -286,27 +286,14 @@ public:
             }
         }
         
-        // Solve with worst-case or best-case scenario!
-
-       
-        //read_in_smps_file = 0; // Stop here TODO:REMOVE_AGAIN!!
-        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        // Method that computes EVPI,EEV,WS and outputs all stuff to file!
-
-    
         // Specify the number of repetitions_ 
-        repetitions_ = 1;
+        repetitions_ = 2;
         std::vector<int> aggregates;
         //aggregates.push_back(1);
         //if ( num_aggregates_by_magic > 1)
-            //aggregates.push_back(num_aggregates_by_magic);
+        //    aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -348,15 +335,50 @@ public:
 					
 						//////// Solve problem without added cut!
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION_CUT_COMPUTATION,false);
-      //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+                        //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 					}
-					
-					
 					benders_parameter_.parameter_.put(parallel_benders::PNB_CUT_CONSOLIDATION,false);
-                    
+					//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+					//solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+					//
+					
+					if ( aggregates[i] != 0 ) {
+
+
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+						//solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
+						//solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
+					//	benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+					//	
+					//	benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
+					//	solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
+						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.3);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
+						//solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
+					//	benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
+					//	benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+					//	solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
+						benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
+						benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
+						solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+					}
+					//else {
+					//	benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+					//	solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+					//}
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_CONCURRENT_MASTER_STANDARD);
-                    solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+
 
      //               benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
@@ -370,13 +392,13 @@ public:
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
       //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
-      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
-      //                  // Different Lambdas..
-      //                  solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+                        //// Different Lambdas..
+                        //solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
-      //                  // Different Lambdas and kappa
-      //                  solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
+                        //// Different Lambdas and kappa
+                        //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
       //                  // Allow level decomp only for first stage!
       //                  
@@ -390,19 +412,19 @@ public:
 
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
 						//// Different Lambdas..
-						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+						////solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
 						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
 						//// Different Lambdas and kappa
 						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
-      //                  // Different Lambdas..
-      //                  solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
+                        //// Different Lambdas..
+                        //solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
-      //                  // Different Lambdas and kappa
-      //                  solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+                        //// Different Lambdas and kappa
+                        //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 
 
@@ -1273,9 +1295,9 @@ TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solve
 }
 
 TEST_F(NestedBendersTest,unbounded_infeasible){// BLOCKS, values not verified
-    EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
+    //EXPECT_NEAR(solveSMPS("special_cases/unbounded/BenF4"),-149, 0.1); // Primal master problem gets unbounded, if one does not restrict value of theta variable.
     //EXPECT_NEAR(solveSMPS("special_cases/infeasible/BENF4INF"), -1e20, 0.1); // is infeasible, feasibility cuts
-    EXPECT_NEAR(solveSMPS("special_cases/unbounded/unbound"), -3, 0.1); // is not really unbounded
+    //EXPECT_NEAR(solveSMPS("special_cases/unbounded/unbound"), -3, 0.1); // is not really unbounded
     //EXPECT_NEAR(solveSMPS("special_cases/unbounded/unbound_fake"), -3, 0.1); // not readable
 
 }
@@ -1318,11 +1340,11 @@ TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
     EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"),47.324, 0.1); 
 }
 
-TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
-    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"), 2.693e6, 1e3); 
-    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),3.4349e6, 1e3); 
-    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),3.67583e6, 1e3); 
-}
+//TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
+//    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"), 2.693e6, 1e3); 
+//    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),3.4349e6, 1e3); 
+//    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),3.67583e6, 1e3); 
+//}
 
 //TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
 //    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
@@ -1487,14 +1509,14 @@ TEST_F(NestedBendersTest,deak){
 }
 
 
-TEST_F(NestedBendersTest,postponement){// postponement
-	EXPECT_NEAR(solveSMPS("postponement/Kor+1-4-4und15new=SL600L2Flex_2_end"),-775187,1);
-	EXPECT_NEAR(solveSMPS("postponement/Kor0-4-4und45new=SL600L2Flex_2_end"),-786896,1);
-	EXPECT_NEAR(solveSMPS("postponement/TS_36_new=SL600L2Flex_2_end"),0,1);
-	EXPECT_NEAR(solveSMPS("postponement/TS_81_new=SL600L2Flex_2_end"),0,1);
-	EXPECT_NEAR(solveSMPS("postponement/TS_256_new=SL600L2Flex_2_end"),0,1);
-    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -515723, 10); 
-}
+//TEST_F(NestedBendersTest,postponement){// postponement
+//	EXPECT_NEAR(solveSMPS("postponement/Kor+1-4-4und15new=SL600L2Flex_2_end"),-775187,1);
+//	EXPECT_NEAR(solveSMPS("postponement/Kor0-4-4und45new=SL600L2Flex_2_end"),-786896,1);
+//	EXPECT_NEAR(solveSMPS("postponement/TS_36_new=SL600L2Flex_2_end"),0,1);
+//	EXPECT_NEAR(solveSMPS("postponement/TS_81_new=SL600L2Flex_2_end"),0,1);
+//	EXPECT_NEAR(solveSMPS("postponement/TS_256_new=SL600L2Flex_2_end"),0,1);
+//    EXPECT_NEAR(solveSMPS("PostponementSMPS/SMPS 11/pTest"), -515723, 10); 
+//}
 
 //TEST_F(NestedBendersTest,FeasibilityCutTest){
 //    using namespace flopc;
@@ -1677,6 +1699,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
+	EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
 //    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
     //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
@@ -1697,7 +1720,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*deak*";
+    //::testing::GTEST_FLAG(filter) = "*unbounded*";
     //::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
