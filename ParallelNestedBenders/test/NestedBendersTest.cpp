@@ -13,6 +13,7 @@
 #include <string>
 #include <sstream>
 #include <sys/stat.h>
+#include <array>
 
 #define GOOGLE_GLOG_DLL_DECL // Has to be done to correct linking issues
 #include <glog/logging.h>
@@ -290,20 +291,22 @@ public:
        
         //read_in_smps_file = 0; // Stop here TODO:REMOVE_AGAIN!!
         benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_EPSILON_RELATIVE,1e-06);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         // Method that computes EVPI,EEV,WS and outputs all stuff to file!
 
     
         // Specify the number of repetitions_ 
         repetitions_ = 1;
         std::vector<int> aggregates;
-        aggregates.push_back(1);
-        if ( num_aggregates_by_magic > 1)
-            aggregates.push_back(num_aggregates_by_magic);
+        //aggregates.push_back(1);
+        //if ( num_aggregates_by_magic > 1)
+            //aggregates.push_back(num_aggregates_by_magic);
         //aggregates.push_back(5);
         //aggregates.push_back(10);
         //aggregates.push_back(25);
@@ -353,7 +356,7 @@ public:
                     
 
                     //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_CONCURRENT_MASTER_STANDARD);
-                    //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+                    solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
      //               benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 					//benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
@@ -363,43 +366,43 @@ public:
      //               solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
 					if ( num_stages_ <= 2) {
-						benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_LEVEL,0);
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-                        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_STAGE_LEVEL,0);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+      //                  solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
-                        // Different Lambdas..
-                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION);
+      //                  // Different Lambdas..
+      //                  solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
-                        // Different Lambdas and kappa
-                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
+      //                  // Different Lambdas and kappa
+      //                  solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-                        // Allow level decomp only for first stage!
-                        
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
-						//// Make different lambdas work
-						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+      //                  // Allow level decomp only for first stage!
+      //                  
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN);
+						////// Make different lambdas work
+						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
-						// Make different lambdas work and kappa
-						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+						//// Make different lambdas work and kappa
+						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-						// Different Lambdas..
-						solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+						//// Different Lambdas..
+						//solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-						benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-						// Different Lambdas and kappa
-						solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+						//// Different Lambdas and kappa
+						//solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
-                        // Different Lambdas..
-                        solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY);
+      //                  // Different Lambdas..
+      //                  solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
-                        // Different Lambdas and kappa
-                        solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+      //                  // Different Lambdas and kappa
+      //                  solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 
 
 
@@ -609,7 +612,6 @@ protected:
                     offset_cols += smi.getCore()->getNumCols(i);
                 }
             }
-
             int created_opt_cuts = nested_benders.getNumOptimalityCuts();
             int created_feas_cuts = nested_benders.getNumFeasibilityCuts();
 
@@ -1330,6 +1332,160 @@ TEST_F(NestedBendersTest,dakota){// dakota model
     EXPECT_NEAR(solveSMPS("other/Dakota/dakota"),24014.05, 1); 
 }
 
+TEST_F(NestedBendersTest,deak){
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),44606554.59,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_20"),44611301.64,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_30"),44609685.95,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_40"),44614519.98,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50"),44614403.23,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_80"),44604040.59,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_100"),44606938.74,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_150"),44613450.91,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_200"),44618458.42,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_250"),44608878.56,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_300"),44615377.3,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_350"),44616596.56,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_400"),44612737.76,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_450"),44610702.25,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_500"),44614465.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_10"),151490015.3,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_20"),151500118.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_30"),151498688.8,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_40"),151521810.3,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_50"),151529265.1,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_80"),151529828.7,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_100"),151513637.7,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_150"),151519544.9,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_200"),151508605.8,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_250"),151535842.3,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_300"),151515174.3,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_350"),151519425.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_400"),151521266.9,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_450"),151515081.3,100);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_500"),151516869.5,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_10"),198831288.1,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_20"),198823245.6,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_30"),198817888.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_40"),198819796.4,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_50"),198823619.6,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_80"),198816786.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_100"),198820431.4,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_150"),198819422.5,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_200"),198819003.6,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_250"),198819997.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_300"),198820819.6,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_350"),198820939,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_400"),198820485.9,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_450"),198820295.2,100);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_500"),198821227.5,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_10"),39668846.22,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_20"),39693942.35,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_30"),39689095.35,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_40"),39684207.51,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_50"),39682887.05,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_80"),39682947.44,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_100"),39691245.71,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_150"),39687708.43,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_200"),39687437.05,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_250"),39689849.11,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_300"),39692311.09,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_350"),39692419.33,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_400"),39694027.01,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_450"),39689514.09,100);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_500"),39691154.77,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_10"),69665178.96,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_20"),69596388.7,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_30"),69650182.24,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_40"),69660062.86,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_50"),69658478.23,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_80"),69660225.43,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_100"),69633857.85,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_150"),69653107.89,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_200"),69647496.74,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_250"),69650139.3,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_300"),69677132.45,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_350"),69662647.33,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_400"),69631633.18,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_450"),69641278.71,100);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_500"),69668563.57,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_10"),109528280,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_20"),109534903.5,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_30"),109533335,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_40"),109528747,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_50"),109525694.3,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_80"),109529469.9,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_100"),109528666.9,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_150"),109530076.3,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_200"),109531104.1,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_250"),109533534.9,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_300"),109530604.1,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_350"),109531603.4,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_400"),109531689.7,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_450"),109532168.8,100);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_500"),109531715.8,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_10"),13574011.14,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_20"),13571655.96,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_30"),13572574.24,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_40"),13575173.51,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_50"),13575994.46,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_80"),13574791.36,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_100"),13573384.81,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_150"),13573814.75,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_200"),13574946.06,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_250"),38419133.52,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_300"),13575208.73,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_350"),13575296.52,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_400"),13574529.91,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_450"),13574705.68,100);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_500"),13575839.93,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_10"),103234381.5,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_20"),103226968.5,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_30"),103223866.2,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_40"),103227577.7,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_50"),103227314.5,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_80"),103228356.3,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_100"),103226198.5,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_150"),103227784.8,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_200"),103226947.7,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_250"),103225840.6,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_300"),103227101.6,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_350"),103227337.6,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_400"),103226174,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_450"),103226436.7,100);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_500"),103226452.8,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_10"),37125339.17,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_20"),37119511.79,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_30"),37120336.59,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_40"),37123830.54,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_50"),37123357,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_80"),9652560.439,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_100"),37122250.36,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_150"),37124433.18,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_200"),37124752.86,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_250"),37123908.11,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_300"),37124277.74,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_350"),37123487.09,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_400"),37122981.4,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_450"),37122776.08,100);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_500"),37122706.32,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_10"),1708156.116,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_20"),1703060.565,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_30"),1713706.076,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_40"),1713586.806,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_50"),1708963.371,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_80"),1709746.496,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_100"),1707818.179,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_150"),1710481.871,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_200"),1710772.775,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_250"),1710559.951,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_300"),1707658.324,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_350"),1710426.284,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_400"),1713554.821,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_450"),1709684.718,100);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_500"),1712095.189,100);
+
+}
+
 
 TEST_F(NestedBendersTest,postponement){// postponement
 	EXPECT_NEAR(solveSMPS("postponement/Kor+1-4-4und15new=SL600L2Flex_2_end"),-775187,1);
@@ -1541,8 +1697,8 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*unbounded*";
-    ::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*deak*";
+    //::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
