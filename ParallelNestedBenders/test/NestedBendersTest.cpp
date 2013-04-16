@@ -287,6 +287,8 @@ public:
         }
         
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.25);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         // Specify the number of repetitions_ 
         repetitions_ = 2;
@@ -1720,7 +1722,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*unbounded*";
+    ::testing::GTEST_FLAG(filter) = "*rand*";
     //::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
