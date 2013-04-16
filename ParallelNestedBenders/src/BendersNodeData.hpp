@@ -280,6 +280,8 @@ public:
 
     // ODA-Level decomp
     std::vector<std::shared_ptr<OsiRowCut> > oda_optimality_cuts_;
+    std::vector<double> oda_cut_evaluation_;
+    std::map<int,double> oda_lambdas_;
     
 };
 
