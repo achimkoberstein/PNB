@@ -986,8 +986,9 @@ namespace parallel_benders {
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
                     
-                    bool csaba_steeepest_edge = true;
+                    bool csaba_steeepest_edge = false;
                     if ( csaba_steeepest_edge){
+
 
                         // Now we want to solve one huge LP to determine the cut coefficients. When that is done, we generate a new cut out of the existing cuts with the coefficients!
                         int number_of_subproblems = tree_nodes_by_stage_[0][0]->numChildren();
@@ -1003,6 +1004,7 @@ namespace parallel_benders {
                         int total_cols = number_of_iterations*number_of_subproblems+stage_data_[current_stage_-1]->num_columns_*2;
                         int total_rows = 1+number_of_subproblems+stage_data_[current_stage_-1]->num_columns_;
                         int length_of_one_row = number_of_iterations*number_of_subproblems+2;
+                        int number_of_parent_cols = stage_data_[current_stage_-1]->num_columns_;
                         std::vector< double > oda_elements_inaccuracy( 2*number_of_iterations*number_of_subproblems+length_of_one_row*stage_data_[current_stage_-1]->num_columns_,0.0);
                         std::vector<int> oda_indices( 2*number_of_iterations*number_of_subproblems+length_of_one_row*stage_data_[current_stage_-1]->num_columns_); // Lambda_{s,i}  v_{s,i}+g+g- (m each)
                         std::vector<int> oda_strt(total_rows+1,0);
@@ -1052,8 +1054,8 @@ namespace parallel_benders {
                         {
                             oda_strt[row_count] = oda_strt[row_count-1]+length_of_one_row;
                             // Insert the two indices for g+ and g-
-                            oda_elements_inaccuracy[start_index_g+length_of_one_row*(strt_count+1)-2] = 1.0;
-                            oda_elements_inaccuracy[start_index_g+length_of_one_row*(strt_count+1)-1] = -1.0;
+                            oda_elements_inaccuracy[start_index_g+length_of_one_row*(strt_count+1)-2] = 1.0; // g-
+                            oda_elements_inaccuracy[start_index_g+length_of_one_row*(strt_count+1)-1] = -1.0;// g+
                             oda_indices[start_index_g+length_of_one_row*(strt_count+1)-2] = number_of_iterations*number_of_subproblems+strt_count;
                             oda_indices[start_index_g+length_of_one_row*(strt_count+1)-1] = number_of_iterations*number_of_subproblems+stage_data_[current_stage_-1]->num_columns_+strt_count;
                             std::iota(oda_indices.begin()+start_index_g+length_of_one_row*strt_count,oda_indices.begin()+start_index_g+length_of_one_row*(strt_count+1)-2,0);
@@ -1083,9 +1085,47 @@ namespace parallel_benders {
 
                         CoinPackedMatrix coinMatrixRowOrdered(false,total_cols,total_rows,oda_indices.size(),&oda_elements_inaccuracy[0],&oda_indices[0],&oda_strt[0],&oda_len[0]);
                         osi_cpx.loadProblem(coinMatrixRowOrdered,&col_lower[0],&col_upper[0],&obj[0],&row_lower[0],&row_upper[0]);
-                        osi_cpx.writeLp("oda","lp",1e-06);
+                        //osi_cpx.writeLp("oda","lp",1e-06);
+                        // Get cplex 
+
+                        // Set Warm Start
+                        std::vector<char> col_stat(total_cols);
+                        std::vector<char> row_stat(total_rows); // All rows are equlity rows, except the first, which is basic
+                        
+                        for (int col = 0; col < total_cols;col++)
+                            setStatus(&col_stat[0],col,CoinWarmStartBasis::atLowerBound);
+                        for (int row = 0; row < total_rows;row++)
+                            setStatus(&row_stat[0],row,CoinWarmStartBasis::atLowerBound);
+                        // Set Basic variables! First Row Slack variable is basic, lambda_{s,\hat i} is basic and g^+ or g^- is basic (depending upon the value of lambda_{s,\hat i}
+                        setStatus(&row_stat[0],0,CoinWarmStartBasis::basic);
+                        std::vector<int> basic_indices(number_of_subproblems,0);
+                        for (int current_scenario = 0; current_scenario < number_of_subproblems; current_scenario++){
+                            assert((*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first < number_of_iterations );
+                            basic_indices[current_scenario] = current_scenario*number_of_iterations+(*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first;
+                            setStatus(&col_stat[0],basic_indices[current_scenario],CoinWarmStartBasis::basic);
+                        }
+                        // We need to clear the oda_lambdas, now that we used the information!
+                        for (auto node : tree_nodes_by_stage_[current_stage_])
+                            node->getDataPtr()->oda_lambdas_.clear();
+
+                        // Now we can iterate over the columns g+ or g+ to compute the value
+                        // Set columns g+ or g- to be basic, depends upon the basic columns chosen earlier!
+                        for ( int current_first_stage_col = 0; current_first_stage_col < number_of_parent_cols; ++current_first_stage_col){
+                            double sum = 0.0;
+                            for ( int current_scenario = 0; current_scenario < number_of_subproblems; ++current_scenario){
+                                sum += oda_elements_inaccuracy[basic_indices[current_scenario]];
+                            }
+                            if ( sum < 0)// Sum is smaller than zero, the slack has to be taken up by the g- variables
+                                setStatus(&col_stat[0],number_of_iterations*number_of_subproblems+current_first_stage_col,CoinWarmStartBasis::basic);
+                            else // Sum is greather than zero, slack has to be taken up by the g+ variables
+                                 setStatus(&col_stat[0],number_of_iterations*number_of_subproblems+number_of_parent_cols+current_first_stage_col,CoinWarmStartBasis::basic);
+                        }
+                        CoinWarmStartBasis dual_warm_start(total_cols,total_rows,&col_stat[0],&row_stat[0]);
+                        osi_cpx.setWarmStart(&dual_warm_start);
+                        osi_cpx.setHintParam(OsiDoDualInInitial,false);
+                        //osi_cpx.setIntParam(OsiMaxNumIteration,100);
                         osi_cpx.initialSolve();
-                        bool optimal = osi_cpx.isProvenOptimal();
+                        bool optimal = osi_cpx.isProvenOptimal() || osi_cpx.isIterationLimitReached();
                         if ( optimal ){
                             // Generate all the cuts for all the scenarios via the corresponding lambda constraints!
                             const double * column_solution = osi_cpx.getColSolution();
@@ -6084,7 +6124,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
