@@ -83,9 +83,21 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 				osi_->branchAndBound();
 			}
 			else {
-                CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,2);
-				CPXsetdblparam(envPtr,CPX_PARAM_BAREPCOMP,1e-10);
-				CPXbaropt(envPtr,lpPtr);
+				if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_BARRIER){
+					CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,2); // Do not use crossover
+					CPXbaropt(envPtr,lpPtr);
+				}
+				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_DUAL_SIMPLEX){
+					CPXdualopt(envPtr,lpPtr);
+				}
+				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_PRIMAL_SIMPLEX){
+					CPXprimopt(envPtr,lpPtr);
+				}
+				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER) == parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER){
+					CPXprimopt(envPtr,lpPtr);
+				}
+				
+
 			}
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
