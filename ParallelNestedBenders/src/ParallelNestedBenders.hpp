@@ -2,7 +2,7 @@
 #define ParallelNestedBenders_h__
 //#define _SECURE_SCL 0
 // We do not measure CPU time !
-//#define COMPUTING_TIMER 1
+#define COMPUTING_TIMER 1
 #include <map>
 #include <vector>
 #include <mutex>
