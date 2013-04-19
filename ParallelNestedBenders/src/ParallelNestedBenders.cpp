@@ -1046,7 +1046,7 @@ namespace parallel_benders {
                                 const int * row_indices = row.getIndices();
                                 const double* row_elements = row.getElements();
                                 for ( int current_index = 0; current_index < num_elements; current_index++){
-                                    oda_elements_inaccuracy[start_index_g+children*number_of_iterations+iteration-first_iteration+row_indices[current_index]*length_of_one_row] = row_elements[current_index];
+                                    oda_elements_inaccuracy[start_index_g+children*number_of_iterations+iteration-first_iteration+row_indices[current_index]*length_of_one_row] = -row_elements[current_index];
                                 }
                             }
                         }
@@ -1113,9 +1113,9 @@ namespace parallel_benders {
                         for ( int current_first_stage_col = 0; current_first_stage_col < number_of_parent_cols; ++current_first_stage_col){
                             double sum = 0.0;
                             for ( int current_scenario = 0; current_scenario < number_of_subproblems; ++current_scenario){
-                                sum += oda_elements_inaccuracy[basic_indices[current_scenario]];
+                                sum += oda_elements_inaccuracy[oda_strt[number_of_subproblems+1+current_first_stage_col]+basic_indices[current_scenario]];
                             }
-                            if ( sum < 0)// Sum is smaller than zero, the slack has to be taken up by the g- variables
+                            if ( sum <= 0)// Sum is smaller than zero, the slack has to be taken up by the g- variables
                                 setStatus(&col_stat[0],number_of_iterations*number_of_subproblems+current_first_stage_col,CoinWarmStartBasis::basic);
                             else // Sum is greather than zero, slack has to be taken up by the g+ variables
                                  setStatus(&col_stat[0],number_of_iterations*number_of_subproblems+number_of_parent_cols+current_first_stage_col,CoinWarmStartBasis::basic);
@@ -1123,8 +1123,11 @@ namespace parallel_benders {
                         CoinWarmStartBasis dual_warm_start(total_cols,total_rows,&col_stat[0],&row_stat[0]);
                         osi_cpx.setWarmStart(&dual_warm_start);
                         osi_cpx.setHintParam(OsiDoDualInInitial,false);
-                        //osi_cpx.setIntParam(OsiMaxNumIteration,100);
+                        //osi_cpx.setHintParam(OsiDoScale,false);
+                        osi_cpx.setIntParam(OsiMaxNumIteration,100);
+                        osi_cpx.messageHandler()->setLogLevel(0);
                         osi_cpx.initialSolve();
+                        //osi_cpx.writeLp("oda",".lp",zero_tolerance_);
                         bool optimal = osi_cpx.isProvenOptimal() || osi_cpx.isIterationLimitReached();
                         if ( optimal ){
                             // Generate all the cuts for all the scenarios via the corresponding lambda constraints!
@@ -4349,18 +4352,16 @@ namespace parallel_benders {
 
         double cut_lower_bound = 0.0;
         // For all the indices, that belong to this cut.
-        for ( int k = 0; k < num_aggregates; k++){
-            std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[oda_aggregates[k]]);
-            for ( int j = 0; j < nodes_in_cut.size(); j++){
-                // For all the lambda variables with corresponding weight!
-                for ( std::pair<int,double> lambda : tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->oda_lambdas_ ){
-                    std::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->oda_optimality_cuts_[ lambda.first ]);
-                    const double * elements = osi_cut->row().getElements();
-                    const int * indices = osi_cut->row().getIndices();
-                    for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++) // Ignore index of multi-cut theta variable 
-                        cut_elements[indices[element_index]] += lambda.second*elements[element_index];
-                    cut_lower_bound += lambda.second*osi_cut->lb();
-                }
+        for ( int real_agg : oda_aggregates ){
+            for ( int node : benders_node_pointer->nodes_in_cut_[real_agg] )
+            // For all the lambda variables with corresponding weight!
+            for ( std::pair<int,double> lambda : tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_lambdas_ ){
+                std::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_optimality_cuts_[ lambda.first ]);
+                const double * elements = osi_cut->row().getElements();
+                const int * indices = osi_cut->row().getIndices();
+                for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++) // Ignore index of multi-cut theta variable 
+                    cut_elements[indices[element_index]] += lambda.second*elements[element_index];
+                cut_lower_bound += lambda.second*osi_cut->lb();
             }
         }
         // Add cut to Optimality Cut Set!
@@ -6043,10 +6044,11 @@ namespace parallel_benders {
         //
         // We need a free solver instance
         BendersNodeData * benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        bool use_lp = false;
+        
         int first_stage_cols_with_theta = stage_data_[current_stage_-1]->num_columns_ + 1;
         std::vector<double>& first_stage_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_;
 
+        bool use_lp = false;
         if ( use_lp ){
             // We need to build a new model consisting of num first stage variables (fixed to the current solution) plus num_theta aggregate variables
             OsiSolverInterface * osi_solver = GetSolverByThread();
@@ -6075,12 +6077,6 @@ namespace parallel_benders {
                 osi_solver->applyRowCuts(1,(*it).get());
                 ++it;
             }
-
-            //console_mutex_.lock();
-            //std::stringstream stringstream; 
-            //stringstream << "oda_q_" << benders_tree_node_pointer->scenario();
-            //osi_solver->writeLp(stringstream.str().c_str());
-            //console_mutex_.unlock();
 
             // Solve problem
             osi_solver->initialSolve();

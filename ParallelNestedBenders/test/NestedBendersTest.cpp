@@ -287,6 +287,7 @@ public:
         }
         
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10);
         benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
         benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.25);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
