@@ -19,7 +19,7 @@ BendersNodeData::BendersNodeData():col_solution_(),dual_solution_(),incumbent_co
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
-matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true)
+matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_()
 
 {
 
@@ -29,7 +29,7 @@ BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(),dual_sol
 mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(nullptr),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
 smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
 probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
-matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true)
+matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_()
 {
     
 }
@@ -210,10 +210,17 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 			}
 		}
         // Create oda_nodes_in_cut Aggregate Vector!
+        benders_node_data->oda_aggregates_.resize(node_in_cut_vector.size());
+        int count = 0;
+        for ( std::vector<int>& vec : benders_node_data->oda_aggregates_ )
+            vec.push_back(count++);
+        assert( count == node_in_cut_vector.size());
+
         // For now we just add all aggregates into it!
-        benders_node_data->oda_aggregates_.push_back(std::vector<int>(node_in_cut_vector.size()));
-        for (int i = 0; i < node_in_cut_vector.size();i++)
-            benders_node_data->oda_aggregates_[0][i] = i;
+        // 
+        //benders_node_data->oda_aggregates_.push_back(std::vector<int>(node_in_cut_vector.size()));
+        //for (int i = 0; i < node_in_cut_vector.size();i++)
+        //    benders_node_data->oda_aggregates_[0][i] = i;
 	}
 	else{
         // Do not do it!

@@ -286,6 +286,9 @@ public:
             }
         }
         
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.25);
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
@@ -1725,7 +1728,7 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*unbounded*";
+    ::testing::GTEST_FLAG(filter) = "*rand*";
     ::testing::GTEST_FLAG(filter) = "*deak*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";

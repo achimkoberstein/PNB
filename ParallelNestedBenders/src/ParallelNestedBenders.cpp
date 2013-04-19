@@ -965,7 +965,6 @@ namespace parallel_benders {
                 for ( int i = 0; i < num_nodes_oda; i++ ){
                     // Schedule the tasks for this stage
                     thread_pool_.schedule(boost::bind(&ParallelNestedBenders::BuildAndSolveOnDemandAccuracyProblem,this,tree_nodes_by_stage_[current_stage_][i]));
-                    //BuildAndSolveOnDemandAccuracyProblem(tree_nodes_by_stage_[current_stage_][i]);
                 }
                 thread_pool_.wait(0); // We wait until all threads are done
                 oda_tilde_q_ = std::accumulate(oda_current_tilde_q_s_.begin(),oda_current_tilde_q_s_.end(),oda_first_stage_);
@@ -986,10 +985,169 @@ namespace parallel_benders {
                     solution_times_.Start(2);
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
+                    
+                    bool csaba_steeepest_edge = false;
+                    if ( csaba_steeepest_edge){
+
+
+                        // Now we want to solve one huge LP to determine the cut coefficients. When that is done, we generate a new cut out of the existing cuts with the coefficients!
+                        int number_of_subproblems = tree_nodes_by_stage_[0][0]->numChildren();
+                        int first_iteration = 0; // Our Iteration counting starts at 1!
+                        int last_iteration = current_iteration_-insubstantial_iteration_-1; // We can only use the iterations where we added optimality cuts via second stage problem, aka substantial iterations
+
+                        int number_of_iterations = last_iteration-first_iteration;
+                        assert(number_of_iterations>0);
+                        double oda_epsilon = 0.5*(1-level_lambda_)*(1-level_lambda_)*(upper_bound_-lower_bound_);
+
+                        auto benders_node_pointer = tree_nodes_by_stage_[0][0]->getDataPtr();
+
+                        int total_cols = number_of_iterations*number_of_subproblems+stage_data_[current_stage_-1]->num_columns_*2;
+                        int total_rows = 1+number_of_subproblems+stage_data_[current_stage_-1]->num_columns_;
+                        int length_of_one_row = number_of_iterations*number_of_subproblems+2;
+                        int number_of_parent_cols = stage_data_[current_stage_-1]->num_columns_;
+                        std::vector< double > oda_elements_inaccuracy( 2*number_of_iterations*number_of_subproblems+length_of_one_row*stage_data_[current_stage_-1]->num_columns_,0.0);
+                        std::vector<int> oda_indices( 2*number_of_iterations*number_of_subproblems+length_of_one_row*stage_data_[current_stage_-1]->num_columns_); // Lambda_{s,i}  v_{s,i}+g+g- (m each)
+                        std::vector<int> oda_strt(total_rows+1,0);
+
+                        int start_index_g = number_of_iterations*2*number_of_subproblems;
+                        int start_index_v = start_index_g+2*stage_data_[current_stage_-1]->num_columns_;
+
+
+                        std::iota(oda_indices.begin(),oda_indices.begin()+number_of_iterations*number_of_subproblems,0);
+                        std::iota(oda_indices.begin()+number_of_iterations*number_of_subproblems,oda_indices.begin()+2*number_of_iterations*number_of_subproblems,0);
+
+                        // Iterate over children nodes
+                        // Lambda w_si <= \epsilon constraint
+                        for ( int children = 0; children < number_of_subproblems; children++){
+                            auto current_child = tree_nodes_by_stage_[1][children];
+                            for (int iteration = first_iteration; iteration < last_iteration; iteration++){
+                                // Compute p_s q_s(x)-l_s,i (x)
+                                // We need a mapping from iterations to oda_cuts_?!
+                                oda_elements_inaccuracy[children*number_of_iterations+iteration-first_iteration] = oda_current_tilde_q_s_[children] - current_child->getDataPtr()->oda_cut_evaluation_[iteration];
+                            }
+                        }
+                        oda_strt[1] = number_of_iterations*number_of_subproblems;
+                        int row_count = 2;
+                        // Lambda = 1 constraints, 1 for each scenario
+                        for ( int children = 0; children < number_of_subproblems; children++){
+                            oda_strt[row_count] = oda_strt[row_count-1] + number_of_iterations;
+                            ++row_count;
+                        }
+                        std::fill(oda_elements_inaccuracy.begin()+number_of_subproblems*number_of_iterations,oda_elements_inaccuracy.begin()+2*number_of_iterations*number_of_subproblems,1.0);
+
+                        for ( int children = 0; children < number_of_subproblems; children++){
+                            // Iterate over all cuts
+                            auto current_child = tree_nodes_by_stage_[1][children];
+                            for (int iteration = first_iteration; iteration < last_iteration; iteration++){
+                                // Compute v_s,i
+                                const OsiRowCut* cut_ptr = current_child->getDataPtr()->oda_optimality_cuts_[iteration].get();
+                                const CoinPackedVector& row = cut_ptr->row();
+                                int num_elements = row.getNumElements()-1; // Account for the aggregate variable
+                                const int * row_indices = row.getIndices();
+                                const double* row_elements = row.getElements();
+                                for ( int current_index = 0; current_index < num_elements; current_index++){
+                                    oda_elements_inaccuracy[start_index_g+children*number_of_iterations+iteration-first_iteration+row_indices[current_index]*length_of_one_row] = -row_elements[current_index];
+                                }
+                            }
+                        }
+                        for (int strt_count = 0; strt_count < stage_data_[current_stage_-1]->num_columns_; ++strt_count)
+                        {
+                            oda_strt[row_count] = oda_strt[row_count-1]+length_of_one_row;
+                            // Insert the two indices for g+ and g-
+                            oda_elements_inaccuracy[start_index_g+length_of_one_row*(strt_count+1)-2] = 1.0; // g-
+                            oda_elements_inaccuracy[start_index_g+length_of_one_row*(strt_count+1)-1] = -1.0;// g+
+                            oda_indices[start_index_g+length_of_one_row*(strt_count+1)-2] = number_of_iterations*number_of_subproblems+strt_count;
+                            oda_indices[start_index_g+length_of_one_row*(strt_count+1)-1] = number_of_iterations*number_of_subproblems+stage_data_[current_stage_-1]->num_columns_+strt_count;
+                            std::iota(oda_indices.begin()+start_index_g+length_of_one_row*strt_count,oda_indices.begin()+start_index_g+length_of_one_row*(strt_count+1)-2,0);
+                            ++row_count;
+                        }
+                        // Create a new solver object with the given elements/indices and row/lower obj col/lower bounds!
+                        OsiCpxSolverInterface osi_cpx;
+                        std::vector<double> col_lower(total_cols,0.0);
+                        std::vector<double> col_upper(total_cols,infinity_);
+                        std::vector<double> obj(total_cols,0.0);
+                        std::vector<double> row_lower(total_rows,0.0);
+                        std::vector<double> row_upper(total_rows,0.0);
+                        // First row : <= epsilon
+                        row_lower[0] = -infinity_; row_upper[0] = oda_epsilon;
+                        // #Subproblem rows!
+                        for ( int cur_row = 0; cur_row < number_of_subproblems;++cur_row){
+                            row_lower[cur_row+1] = 1; row_upper[cur_row+1] = 1;
+                        }
+                        // Third to last row = equality rows
+                        for ( int current_col = number_of_iterations*number_of_subproblems; current_col < number_of_iterations*number_of_subproblems+stage_data_[current_stage_-1]->num_columns_;++current_col){
+                            obj[current_col] = 1.0;
+                            obj[current_col+stage_data_[current_stage_-1]->num_columns_] = 1.0;
+                        }
+                        std::vector<int> oda_len(oda_strt.size());
+                        for ( int counter = 0; counter < oda_strt.size()-1;++counter)
+                            oda_len[counter] = oda_strt[counter+1]-oda_strt[counter];
+
+                        CoinPackedMatrix coinMatrixRowOrdered(false,total_cols,total_rows,oda_indices.size(),&oda_elements_inaccuracy[0],&oda_indices[0],&oda_strt[0],&oda_len[0]);
+                        osi_cpx.loadProblem(coinMatrixRowOrdered,&col_lower[0],&col_upper[0],&obj[0],&row_lower[0],&row_upper[0]);
+                        //osi_cpx.writeLp("oda","lp",1e-06);
+                        // Get cplex 
+
+                        // Set Warm Start
+                        std::vector<char> col_stat(total_cols);
+                        std::vector<char> row_stat(total_rows); // All rows are equlity rows, except the first, which is basic
+                        
+                        for (int col = 0; col < total_cols;col++)
+                            setStatus(&col_stat[0],col,CoinWarmStartBasis::atLowerBound);
+                        for (int row = 0; row < total_rows;row++)
+                            setStatus(&row_stat[0],row,CoinWarmStartBasis::atLowerBound);
+                        // Set Basic variables! First Row Slack variable is basic, lambda_{s,\hat i} is basic and g^+ or g^- is basic (depending upon the value of lambda_{s,\hat i}
+                        setStatus(&row_stat[0],0,CoinWarmStartBasis::basic);
+                        std::vector<int> basic_indices(number_of_subproblems,0);
+                        for (int current_scenario = 0; current_scenario < number_of_subproblems; current_scenario++){
+                            assert((*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first < number_of_iterations );
+                            basic_indices[current_scenario] = current_scenario*number_of_iterations+(*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first;
+                            setStatus(&col_stat[0],basic_indices[current_scenario],CoinWarmStartBasis::basic);
+                        }
+                        // We need to clear the oda_lambdas, now that we used the information!
+                        for (auto node : tree_nodes_by_stage_[current_stage_])
+                            node->getDataPtr()->oda_lambdas_.clear();
+
+                        // Now we can iterate over the columns g+ or g+ to compute the value
+                        // Set columns g+ or g- to be basic, depends upon the basic columns chosen earlier!
+                        for ( int current_first_stage_col = 0; current_first_stage_col < number_of_parent_cols; ++current_first_stage_col){
+                            double sum = 0.0;
+                            for ( int current_scenario = 0; current_scenario < number_of_subproblems; ++current_scenario){
+                                sum += oda_elements_inaccuracy[oda_strt[number_of_subproblems+1+current_first_stage_col]+basic_indices[current_scenario]];
+                            }
+                            if ( sum <= 0)// Sum is smaller than zero, the slack has to be taken up by the g- variables
+                                setStatus(&col_stat[0],number_of_iterations*number_of_subproblems+current_first_stage_col,CoinWarmStartBasis::basic);
+                            else // Sum is greather than zero, slack has to be taken up by the g+ variables
+                                 setStatus(&col_stat[0],number_of_iterations*number_of_subproblems+number_of_parent_cols+current_first_stage_col,CoinWarmStartBasis::basic);
+                        }
+                        CoinWarmStartBasis dual_warm_start(total_cols,total_rows,&col_stat[0],&row_stat[0]);
+                        osi_cpx.setWarmStart(&dual_warm_start);
+                        osi_cpx.setHintParam(OsiDoDualInInitial,false);
+                        //osi_cpx.setHintParam(OsiDoScale,false);
+                        osi_cpx.setIntParam(OsiMaxNumIteration,100);
+                        osi_cpx.messageHandler()->setLogLevel(0);
+                        osi_cpx.initialSolve();
+                        //osi_cpx.writeLp("oda",".lp",zero_tolerance_);
+                        bool optimal = osi_cpx.isProvenOptimal() || osi_cpx.isIterationLimitReached();
+                        if ( optimal ){
+                            // Generate all the cuts for all the scenarios via the corresponding lambda constraints!
+                            const double * column_solution = osi_cpx.getColSolution();
+                            // Iterate over the solution to get the correct lambdas
+                            for ( int current_column = 0; current_column < number_of_subproblems*number_of_iterations; ++current_column){
+                                if ( !CompareWithZero(column_solution[current_column]) ){
+                                    assert( column_solution[current_column] <= 1.0);
+                                    // Get current scenario. All number_of_iterations many variables, we have a new scenario= current_column / number_of_iterations
+                                    tree_nodes_by_stage_[current_stage_][current_column / number_of_iterations]->getDataPtr()->oda_lambdas_[current_column % number_of_iterations] = column_solution[current_column];
+                                }
+                            }
+                        }
+                    }
+
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
                     }
                     thread_pool_.wait(0);
+
                     solution_times_.Stop(2);
                     solve_subproblems = false;
                     timer_.Stop(current_stage_);
@@ -4194,15 +4352,16 @@ namespace parallel_benders {
 
         double cut_lower_bound = 0.0;
         // For all the indices, that belong to this cut.
-        for ( int k = 0; k < num_aggregates; k++){
-            std::vector<int>& nodes_in_cut(benders_tree_node_pointer->getDataPtr()->nodes_in_cut_[oda_aggregates[k]]);
-            for ( int j = 0; j < nodes_in_cut.size(); j++){
-                std::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][nodes_in_cut[j]]->getDataPtr()->oda_optimality_cuts_[ oda_chosen_optimality_cut_by_scenario_[nodes_in_cut[j]]]);
+        for ( int real_agg : oda_aggregates ){
+            for ( int node : benders_node_pointer->nodes_in_cut_[real_agg] )
+            // For all the lambda variables with corresponding weight!
+            for ( std::pair<int,double> lambda : tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_lambdas_ ){
+                std::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_optimality_cuts_[ lambda.first ]);
                 const double * elements = osi_cut->row().getElements();
                 const int * indices = osi_cut->row().getIndices();
                 for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++) // Ignore index of multi-cut theta variable 
-                    cut_elements[indices[element_index]] += elements[element_index];
-                cut_lower_bound += osi_cut->lb();
+                    cut_elements[indices[element_index]] += lambda.second*elements[element_index];
+                cut_lower_bound += lambda.second*osi_cut->lb();
             }
         }
         // Add cut to Optimality Cut Set!
@@ -4219,8 +4378,6 @@ namespace parallel_benders {
         AddOptimalityCutToContainer(benders_tree_node_pointer,cut_stuff);
 		misc_mutex_.unlock();
         stage_data_[current_stage_]->added_optimality_cuts_ += 1;
-
-
     }
 
     void ParallelNestedBenders::CombineTwoCuts( std::shared_ptr<CutStuff>& first_cut, std::shared_ptr<CutStuff>& cut_to_add)
@@ -5887,10 +6044,11 @@ namespace parallel_benders {
         //
         // We need a free solver instance
         BendersNodeData * benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        bool use_lp = false;
+        
         int first_stage_cols_with_theta = stage_data_[current_stage_-1]->num_columns_ + 1;
         std::vector<double>& first_stage_solution = benders_tree_node_pointer->getParent()->getDataPtr()->col_solution_;
 
+        bool use_lp = false;
         if ( use_lp ){
             // We need to build a new model consisting of num first stage variables (fixed to the current solution) plus num_theta aggregate variables
             OsiSolverInterface * osi_solver = GetSolverByThread();
@@ -5920,12 +6078,6 @@ namespace parallel_benders {
                 ++it;
             }
 
-            //console_mutex_.lock();
-            //std::stringstream stringstream; 
-            //stringstream << "oda_q_" << benders_tree_node_pointer->scenario();
-            //osi_solver->writeLp(stringstream.str().c_str());
-            //console_mutex_.unlock();
-
             // Solve problem
             osi_solver->initialSolve();
 
@@ -5937,7 +6089,8 @@ namespace parallel_benders {
             // Store solution value AND find out which set of dual variables is used to bound the aggregate variable. Try with dual variables!
             const double * dual_values = osi_solver->getRowPrice();
             int iteration_index = std::distance(dual_values,std::max_element(dual_values,dual_values+osi_solver->getNumRows()));
-
+            benders_node_pointer->oda_lambdas_.clear();
+            benders_node_pointer->oda_lambdas_[iteration_index] = 1.0;
             oda_chosen_optimality_cut_by_scenario_[benders_tree_node_pointer->scenario()] = iteration_index;
             oda_current_tilde_q_s_[benders_tree_node_pointer->scenario()] = result;
             // Clean solver interface
@@ -5947,14 +6100,19 @@ namespace parallel_benders {
             double max_element = -infinity_;
             int max_index = -1;
             int count = 0;
+            int num_cuts = benders_node_pointer->oda_optimality_cuts_.size();
+            benders_node_pointer->oda_cut_evaluation_.resize(num_cuts);
+            benders_node_pointer->oda_lambdas_.clear();
             for ( std::vector<std::shared_ptr<OsiRowCut> >::iterator it = benders_node_pointer->oda_optimality_cuts_.begin(); it != benders_node_pointer->oda_optimality_cuts_.end(); ++it){
                 double temp = EvaluateCutWithOneAggregate((*it).get(),&first_stage_solution[0]);
+                benders_node_pointer->oda_cut_evaluation_[count] = temp;
                 if ( temp > max_element ){
                     max_element = temp;
                     max_index = count;
                 }
                 count++;
             }
+            benders_node_pointer->oda_lambdas_[max_index] = 1.0;
             oda_chosen_optimality_cut_by_scenario_[benders_tree_node_pointer->scenario()] = max_index;
             oda_current_tilde_q_s_[benders_tree_node_pointer->scenario()] = max_element;
         }

@@ -251,7 +251,7 @@ public:
     // We should store a vector of bitsets, needs less memory // TODO
     std::vector< std::vector<int> > nodes_in_cut_; // Stores which subnodes of current node are aggregated to a cut.
 
-    std::vector< std::vector<int> > oda_aggregates_;
+    std::vector< std::vector<int> > oda_aggregates_;// Stores which aggregates are aggregated (can also be one-to-one correspondence to nodes_in_cut_ by setting nodes_in_cut_.size() as vector size and each vector containing one element, the aggregate index!
 
 	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
 	bool changed_aggregation_level_;
@@ -280,6 +280,8 @@ public:
 
     // ODA-Level decomp
     std::vector<std::shared_ptr<OsiRowCut> > oda_optimality_cuts_;
+    std::vector<double> oda_cut_evaluation_;
+    std::map<int,double> oda_lambdas_;
     
 };
 
