@@ -371,7 +371,7 @@ RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* 
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
 void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced,double* col_solution);
 
-double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
+inline double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
 
 } // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__
