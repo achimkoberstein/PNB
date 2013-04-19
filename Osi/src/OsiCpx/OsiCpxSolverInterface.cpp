@@ -274,12 +274,28 @@ void OsiCpxSolverInterface::initialSolve()
   if (strength!=OsiHintIgnore)
      presolve = takeHint ? 1 : 0;
 
+  int scale = 1;
+  gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+      scale = takeHint ? 1 : 0;
+
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
   if (presolve)
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   else
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+
+  if ( scale == 0 )
+      CPXsetintparam( env_, CPX_PARAM_SCAIND, -1 ); //-1 is no scaling, 0 is normal scaling, 1 is aggresive scaling
+  else {
+      int scale_param = 0;
+      CPXgetintparam(env_,CPX_PARAM_SCAIND,&scale_param);
+      if ( scale_param == -1)// If we do not scale, we change it. If we scale already, we leave it.
+          CPXsetintparam(env_, CPX_PARAM_SCAIND,0);
+  }
+
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );

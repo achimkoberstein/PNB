@@ -210,10 +210,17 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 			}
 		}
         // Create oda_nodes_in_cut Aggregate Vector!
+        benders_node_data->oda_aggregates_.resize(node_in_cut_vector.size());
+        int count = 0;
+        for ( std::vector<int>& vec : benders_node_data->oda_aggregates_ )
+            vec.push_back(count++);
+        assert( count == node_in_cut_vector.size());
+
         // For now we just add all aggregates into it!
-        benders_node_data->oda_aggregates_.push_back(std::vector<int>(node_in_cut_vector.size()));
-        for (int i = 0; i < node_in_cut_vector.size();i++)
-            benders_node_data->oda_aggregates_[0][i] = i;
+        // 
+        //benders_node_data->oda_aggregates_.push_back(std::vector<int>(node_in_cut_vector.size()));
+        //for (int i = 0; i < node_in_cut_vector.size();i++)
+        //    benders_node_data->oda_aggregates_[0][i] = i;
 	}
 	else{
         // Do not do it!
