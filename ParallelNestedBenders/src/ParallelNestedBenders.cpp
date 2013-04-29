@@ -588,12 +588,6 @@ namespace parallel_benders {
         
 
         // Set values depending on others
-        if ( adaptive_ ){
-            store_primal_and_dual_ = true;
-            // We need to set an aggregation_scheme
-            aggregation_scheme_ = PNB_INT_AGGREGATION_STRATEGY_BY_INACTIVE_ITERATION;
-            //seperate_first_stage_solver_ = false; // TODO: Until we worked out how to deal with first stage problem directly, we turn it of
-        }
         if ( store_cut_information_){
             store_primal_and_dual_ = true; 
         }
@@ -1684,11 +1678,6 @@ namespace parallel_benders {
             if ( infeasible_problems_.any() )
                 return; 
 
-        //// Check if we got unbounded subproblems
-        //if ( unbounded_problem_ )
-        //    return; // There is no need to actually solve other problems, as we have unbounded problems..
-
-
         OsiSolverInterface* osi_solver = GetSolverByThread();
 
         if ( current_stage_ == 0){
@@ -2544,12 +2533,10 @@ namespace parallel_benders {
             delete [] row_lower; 
         if (node_pointer->getRowUpperLength())
             delete [] row_upper;
-
-
-
+        
         // We also remove the dual values, because we do not need them anymore.
         if ( !store_primal_and_dual_ ){
-            vector<double>().swap(benders_node_pointer->dual_solution_); // Clear and reallocate
+            benders_node_pointer->dual_solution_.clear(); // Clear and reallocate
         }
 
     }
