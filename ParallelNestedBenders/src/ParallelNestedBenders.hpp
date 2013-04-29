@@ -2,7 +2,7 @@
 #define ParallelNestedBenders_h__
 //#define _SECURE_SCL 0
 // We do not measure CPU time !
-//#define COMPUTING_TIMER 1
+#define COMPUTING_TIMER 1
 #include <map>
 #include <vector>
 #include <mutex>
@@ -370,6 +370,7 @@ inline double ComputeRelativeGap(double upper_bound, double lower_bound,double e
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
 void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced,double* col_solution);
+std::vector<double> computeTTransposeX(BendersNodeData* benders_node_pointer, SmiCoreData* core_pointer,int current_stage,const std::vector<double> x);
 
 inline double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
 
