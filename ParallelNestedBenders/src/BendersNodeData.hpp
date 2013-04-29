@@ -187,6 +187,7 @@ public:
     std::vector<double> col_solution_;
     std::vector<double> dual_solution_;
 	std::vector<double> incumbent_col_solution_;
+    std::vector<double> incumbent_dual_solution_;
     std::vector<double> reduced_cost_; // Only needed if we have variable bounds! Reduced costs = dual logicals
     std::vector<double> next_stage_approximation_;
     double* discrepancy_; // Store discrepancy of this approximation to the actual achieved value
@@ -207,7 +208,6 @@ public:
     std::unique_ptr<double[]> unbounded_extreme_ray_; // Stores an extreme ray!
     std::unique_ptr<double[]> unbounded_right_hand_side_; // Stores right hand side generated for extreme ray subproblem!
     bool solve_ray_right_hand_side_; // If we actually solve the ray_right_hand_side!
-    
 
     int cols_; 
     int rows_;
@@ -282,7 +282,10 @@ public:
     std::vector<std::shared_ptr<OsiRowCut> > oda_optimality_cuts_;
     std::vector<double> oda_cut_evaluation_;
     std::map<int,double> oda_lambdas_;
-    
+
+    // Time spent!
+    double build_time_;
+    double solution_time_;
 };
 
 // Methods that work on a BendersNodeData

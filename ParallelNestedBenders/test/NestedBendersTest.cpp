@@ -285,9 +285,10 @@ public:
                 }
             }
         }
-        
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_NUM_CPU,0); // TODO: Change back to "cpu"
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
         benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
         benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.25);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -1702,8 +1703,8 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-	EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
-//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
+	//EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
     //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 //	//EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
@@ -1723,12 +1724,12 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*rand*";
+    //::testing::GTEST_FLAG(filter) = "*pltexp_POSTS*";
     //::testing::GTEST_FLAG(filter) = "*NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    //::testing::GTEST_FLAG(filter) = "*.temporary*";
+    ::testing::GTEST_FLAG(filter) = "*.temporary*";
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
