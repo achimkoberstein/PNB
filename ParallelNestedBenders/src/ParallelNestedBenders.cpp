@@ -444,7 +444,9 @@ namespace parallel_benders {
 
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
-        level_stage_ = param.get(PNB_STAGE_LEVEL,0); // Up to which stage should we call the level method
+        level_stage_ = param.get(PNB_STAGE_LEVEL,0); // Up to which stage should we call the level method?
+        if ( level_stage_ > num_stages_-2)// Example: Level_stage = 1, with 3 stages. Level decomp is applied to first and second stage!
+            level_stage_ = num_stages_-2;
         // regularized_gamma_ = level_lambda_;
 
         if ( level_decomp_ && (level_lambda_ <= 0.0 || level_lambda_ >= 1.0)){
@@ -1747,7 +1749,7 @@ namespace parallel_benders {
                     IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
             }
             // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
-            if ( level_decomp_ && (current_stage_ == 0 || ( current_stage_ < num_stages_-1  && forward_  && level_loop_backward_ ))){
+            if ( level_decomp_ && (current_stage_ == 0 || ( current_stage_ <= level_stage_ && forward_  && level_loop_backward_ ))){
                 BuildAndSolveLevelProblem(osi_solver,benders_tree_node_pointer);
             }
         }
