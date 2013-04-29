@@ -4934,23 +4934,18 @@ namespace parallel_benders {
         double lower_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->lower_bound_ : lower_bound_);
         double upper_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->upper_bound_ : upper_bound_);
 
-        if ( !(num_stages_ > 2 && current_stage_ > 0 && upper_bound_ < infinity_)){
-            return;
+        if ( current_stage_ > 0 ){
+            // Compute discrepancy ( all child nodes must have been solved!)
+            double discrepancy = 0.0;
+            auto node = benders_tree_node_pointer->getChild();
+            do 
+            {
+                discrepancy += node->getDataPtr()->lower_bound_*node->getDataPtr()->conditional_probability_;
+                node = node->getSibling();
+            } while ( node!= nullptr );
+
+            upper_bound = benders_tree_node_pointer->getDataPtr()->solution_value_ + discrepancy;
         }
-
-
-        //if ( current_stage_ > 0 ){
-        //    // Compute discrepancy ( all child nodes must have been solved!)
-        //    double discrepancy = 0.0;
-        //    auto node = benders_tree_node_pointer->getChild();
-        //    do 
-        //    {
-        //        discrepancy += node->getDataPtr()->lower_bound_*node->getDataPtr()->conditional_probability_;
-        //        node = node->getSibling();
-        //    } while ( node!= nullptr );
-
-        //    upper_bound = benders_tree_node_pointer->getDataPtr()->lower_bound_ - discrepancy;
-        //}
 
         // Alternative approach? 
 
