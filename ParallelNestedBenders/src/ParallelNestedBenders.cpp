@@ -447,6 +447,8 @@ namespace parallel_benders {
         level_stage_ = param.get(PNB_STAGE_LEVEL,0); // Up to which stage should we call the level method?
         if ( level_stage_ > num_stages_-2)// Example: Level_stage = 1, with 3 stages. Level decomp is applied to first and second stage!
             level_stage_ = num_stages_-2;
+        if ( level_stage_ < 0  && level_decomp_)
+            level_stage_ = 0;
         // regularized_gamma_ = level_lambda_;
 
         if ( level_decomp_ && (level_lambda_ <= 0.0 || level_lambda_ >= 1.0)){
