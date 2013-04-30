@@ -1,13 +1,17 @@
 #ifndef PseudoRandomGenerator_hpp__
 #define PseudoRandomGenerator_hpp__
 
+#include <cstdint>
+
 #include <boost/random.hpp>
 #include <boost/math/distributions/students_t.hpp>
+
 
 namespace parallel_benders {
 
 typedef boost::mt19937 base_generator_type; //Set RNG
 typedef boost::variate_generator<base_generator_type&, boost::uniform_01<> > uniform_distr_gen;
+
 
 //// Stores Uniform01Generator, hides implementation from .hpp
 struct Uniform01Generator {

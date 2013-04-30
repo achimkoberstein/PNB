@@ -1679,8 +1679,8 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
     smi.setOsiSolverHandle(&osi_cpx);
     smi.setSampling(true);
     //int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
-    //int read_in = smi.readSmps("../../../../Benders/test/instances/saphir/saphir_1000");
-    int read_in = smi.readSmps("../../../../Benders/test/instances/postponement/pTest-1296");
+    int read_in = smi.readSmps("../../../../../Benders/test/instances/saphir/saphir_1000");
+    //int read_in = smi.readSmps("../../../../Benders/test/instances/postponement/pTest-1296");
     if ( read_in != 0 ){
         LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
     }
@@ -1757,7 +1757,29 @@ TEST_F(NestedBendersTest,temporary){// dakota model
 //    //
 }
 
+TEST_F(NestedBendersTest,temporarySD){
+    double cpuTime = CoinCpuTime();  
+    SmiScnModel smi;
+    OsiCpxSolverInterface osi_cpx;
+    smi.setOsiSolverHandle(&osi_cpx);
+    smi.setSampling(true);
+    int read_in = smi.readSmps("../../../../../Benders/test/instances/wright/data-storm/storm");
 
+    if ( read_in != 0 ){
+        LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+    }
+    int num_stages = smi.getCore()->getNumStages();
+    // Load ParallelNestedBendersSolver
+    double solver_time = CoinCpuTime();
+    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
+    parallel_benders::Parameter benders_parameter;
+    benders_parameter.init();
+    nested_benders.setParameters(benders_parameter);
+    nested_benders.initialSolve();
+    solver_time = CoinCpuTime()-solver_time; // Solver only time
+    cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
+    LOG(INFO) << "Solution Time: " << cpuTime;
+}
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
@@ -1768,11 +1790,12 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*rand*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    //::testing::GTEST_FLAG(filter) = "*.temporary*";
+    ::testing::GTEST_FLAG(filter) = "*.temporarySD*";
+
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
     //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
