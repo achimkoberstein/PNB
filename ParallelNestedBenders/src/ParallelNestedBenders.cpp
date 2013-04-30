@@ -2321,7 +2321,6 @@ namespace parallel_benders {
             }
             delete [] t_array;
         }
-
         // Load the basic problem
         // We call this method if we just constructed the matrix for the first time
         if ( !reuse_solver ){
