@@ -40,6 +40,8 @@
 #include "SmiScnModel.hpp"
 #include "SmiCoreCombineRule.hpp"
 #include "CoinTime.hpp"
+#include "PseudoRandomGenerator.hpp"
+#include "OsiPnbStochasticSolverInterface.hpp"
 
 // Files necessary for cplex
 #include "ilcplex/cplex.h"
@@ -913,6 +915,22 @@ namespace parallel_benders {
             // Initialize lower/upper bounds for this stage.
             temporary_stage_lower_bound_ = 0;
             temporary_stage_upper_bound_ = 0;
+
+            // Stochastic Cutting Plane Method
+            //stochastic_cutting_plane_ = true;
+            //number_of_observations_to_sample_ = 1;
+            //if ( current_stage_ == 0 && stochastic_cutting_plane_){
+            //    // Sample number_of_observations_ many *new* additional scenarios!
+            //    std::vector<int> samples;
+            //    samples.push_back(0);
+            //    samples.push_back(number_of_observations_to_sample_);
+            //    std::vector<int> old_samples;
+            //    old_samples.push_back(0);
+            //    old_samples.push_back(0);
+            //    smi_->sampleScenarioTree(samples,0,get_latin_hypercube_random_01_variates,false,old_samples);
+            //    // Add sampled nodes to tree_nodes_by_stage vectors!
+            //    std::cout << "sampled";
+            //}
 
             if ( !pretty_printing_ ){
                 std::string direction(forward_ ? "F " : "B ");
@@ -3486,12 +3504,14 @@ namespace parallel_benders {
             std::vector<SmiTreeNode<BendersNodeData*>*> vec;
             tree_nodes_by_stage_.push_back(vec);
         }
-        tree_nodes_by_stage_[0].push_back(tree_.getRoot());
-        // Set probability 1 to root node, to prevent numerical issues
-        tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
-        // Set multicut aggregation for the first stage also
-        if ( num_scen_pro_cut)
-            tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+        if ( tree_.getRoot() != nullptr){
+            tree_nodes_by_stage_[0].push_back(tree_.getRoot());
+            // Set probability 1 to root node, to prevent numerical issues
+            tree_nodes_by_stage_[0][0]->getDataPtr()->probability_ = 1;
+            // Set multicut aggregation for the first stage also
+            if ( num_scen_pro_cut)
+                tree_nodes_by_stage_[0].back()->getDataPtr()->num_scen_pro_cut_ = num_scen_pro_cut;
+        }
 
 
         // Create tree nodes by stage vectors
@@ -3513,17 +3533,6 @@ namespace parallel_benders {
                 delete children;
             }
         }
-
-        // Check for probability at every stage. Sanity check, that we can, but do not need to run.
-        //for (int i = 0; i < num_stages_; i++){
-        //    double sum = 0;
-        //    
-        //    for (int j = 0; j < tree_nodes_by_stage_[i].size(); j++){
-        //        sum += tree_nodes_by_stage_[i][j]->getDataPtr()->probability_;
-        //    }
-        //    if ( sum > 1 + zero_tolerance_ || sum < 1-zero_tolerance_)
-        //        LOG(ERROR) << "Probabilities in stage " << i << " do not sum to one, but " << sum;
-        //}
     }
 
     void ParallelNestedBenders::DeleteSubproblem( OsiSolverInterface* osi_solver,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )

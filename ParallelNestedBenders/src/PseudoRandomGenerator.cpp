@@ -14,6 +14,11 @@
 //Linux: Call /dev/urandom to generate a seed
 
 parallel_benders::Uniform01Generator::Uniform01Generator() : rng(),uniform(),seed(get_random_number_from_system()) {
+    // Create a random number generator instance
+    rng = std::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(seed));
+    // Create a [0,1) distribution
+    boost::uniform_01<> uniform_01_distribution;
+    uniform = std::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*(rng.get()),uniform_01_distribution));
 }
 
 int parallel_benders::get_random_number_from_system()

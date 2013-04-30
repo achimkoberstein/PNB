@@ -1,8 +1,6 @@
 #ifndef OsiStochasticSolverInterface_h__
 #define OsiStochasticSolverInterface_h__
 
-
-
 #include "OsiStochasticSolverInterface.hpp"
 
 //Forward declaration.

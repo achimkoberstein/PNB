@@ -2394,7 +2394,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      }
  }
 
- void SmiScnModel::sampleScenarioTree( std::vector<int> number_samples, int sampling_method, double* (*random_generator)(int ) )
+ void SmiScnModel::sampleScenarioTree( const std::vector<int>& number_samples, int sampling_method, double* (*random_generator)(int ), bool replace_scenario_tree, const std::vector<int>& old_samples )
  {
     // We have a discrete distribution
     // We need a random_number generator
@@ -2410,7 +2410,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
      //SmiBlockStructure* smiBS = new SmiBlockStructure(core);
      // Delete old scenario tree. Should be done by copy constructor!
-     smiTree_ = SmiScenarioTree<SmiScnNode *>();
+     if ( replace_scenario_tree)
+         smiTree_ = SmiScenarioTree<SmiScnNode *>();
 
      int number_of_independent_vars = smiDD->getNumRV(); 
      assert( number_of_independent_vars > 0 ); // Otherwise we can not really sample, can we?
@@ -2474,20 +2475,24 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.     
 
      // Create a new block here
-     int cur_stage = 1;
+     int current_stage = 1;
      int current_sample = 0;
      int branch = 1;
      int anc = 0;
      double prob = 0;
+     std::vector<double> stage_prob(nstages,1.0);
+     for ( int prob_stage = 1; prob_stage < nstages; prob_stage++ ){
+        stage_prob[prob_stage] = stage_prob[prob_stage-1]*(1.0/number_samples[prob_stage]);    
+     }
      int cur_scen = 0;
      // We need counter for every stage!
      std::vector<int> current_sample_per_stage(nstages,0);
      std::vector<int> current_sample_per_stage_modulo_size(nstages,0);
 
-     SmiBlock* smi_block = new SmiBlock(cur_stage);
-     while ( cur_stage >= 1 ){
+     SmiBlock* smi_block = new SmiBlock(current_stage);
+     while ( current_stage >= 1 ){
 
-         current_sample = current_sample_per_stage[cur_stage];
+         current_sample = current_sample_per_stage[current_stage];
          CoinPackedMatrix matrix;
          matrix.setDimensions(core->getNumRows(),core->getNumCols());
          CoinPackedVector obj;
@@ -2496,49 +2501,61 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
          CoinPackedVector rlo;
          CoinPackedVector rup;
          // Combine all random variables at this stage
-         for (int current_var = 0; current_var < number_of_random_vars_per_stage[cur_stage]; current_var++){
+         for (int current_var = 0; current_var < number_of_random_vars_per_stage[current_stage]; current_var++){
              // Append the vector stuff to the existing ones.
-             obj.append(random_events_per_stage[cur_stage][current_var][current_sample]->getObjective());
-             clo.append(random_events_per_stage[cur_stage][current_var][current_sample]->getColLower());
-             cup.append(random_events_per_stage[cur_stage][current_var][current_sample]->getColUpper());
-             rlo.append(random_events_per_stage[cur_stage][current_var][current_sample]->getRowLower());
-             rup.append(random_events_per_stage[cur_stage][current_var][current_sample]->getRowUpper());
-             const CoinPackedMatrix& matrix2(random_events_per_stage[cur_stage][current_var][current_sample]->getMatrix());
-             if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
-                 int pos = 0; // position in the elements / indice arrays
-                 const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
-                 for (int k = 0; k < matrix2.getNumRows(); k++) {
-                     pos = colStartIndices[k];
-                     for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-                         matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
-                         pos++;
-                     }
-                 }
-                 assert( pos == matrix2.getNumElements());
-             }
+             obj.append(random_events_per_stage[current_stage][current_var][current_sample]->getObjective());
+             clo.append(random_events_per_stage[current_stage][current_var][current_sample]->getColLower());
+             cup.append(random_events_per_stage[current_stage][current_var][current_sample]->getColUpper());
+             rlo.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowLower());
+             rup.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowUpper());
+             matrix = random_events_per_stage[current_stage][current_var][current_sample]->getMatrix();
+             //if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
+             //    int pos = 0; // position in the elements / indice arrays
+             //    const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
+             //    for (int k = 0; k < matrix2.getNumRows(); k++) {
+             //        pos = colStartIndices[k];
+             //        for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+             //            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
+             //            pos++;
+             //        }
+             //    }
+             //    assert( pos == matrix2.getNumElements());
+             //}
              
          }
-         prob = 1.0 / number_samples[cur_stage];
+         prob = stage_prob[current_stage];
          // Create SmiBlockEvent with modified matrix and stuff
          cur_scen = generateScenario(core,&matrix,&clo,&cup,&obj,&rlo,&rup,branch,anc,prob);
-         current_sample_per_stage[cur_stage]++;
-         current_sample_per_stage_modulo_size[cur_stage]++;
+         current_sample_per_stage[current_stage]++;
+         current_sample_per_stage_modulo_size[current_stage]++;
 
          // Go to next stage, if possible
-         if ( cur_stage < nstages -1 ){
-             cur_stage++;
+         if ( current_stage < nstages -1 ){
+             current_stage++;
              branch++;
              anc = cur_scen;
          } // If we added all samples for this stage, we can go back a stage, else we don't
-         else if ( current_sample_per_stage_modulo_size[cur_stage] >= number_samples[cur_stage]  ){
-             cur_stage--;
-             current_sample_per_stage_modulo_size[cur_stage] = 0;
+         else if ( current_sample_per_stage_modulo_size[current_stage] >= number_samples[current_stage]  ){
+             current_stage--;
+             current_sample_per_stage_modulo_size[current_stage] = 0;
              branch--;
-             if ( cur_stage == 1)
+             if ( current_stage == 1){
                  anc = 0;
+             }
          }
          else{
              // We stay at this stage!
+         }
+     }
+     // Probabilities of all nodes must be recalculated if we add scenario instead of replacing the whole tree
+     if ( !replace_scenario_tree ){
+         assert(!old_samples.empty());
+         // TODO: for now we assume that the number_samples vector does not change from iteration to iteration
+         std::vector<double> new_scenario_prob_by_stage(nstages,1.0);
+         for (int i = 1; i < nstages; i++)
+             new_scenario_prob_by_stage[i] = new_scenario_prob_by_stage[i-1]*(number_samples[i]+old_samples[i]);
+         for ( std::vector<SmiScnNode*>::iterator it = smiTree_.treeBegin(); it != smiTree_.treeEnd();++it){
+            (*it)->setProb(new_scenario_prob_by_stage[(*it)->getStage()]); // All scenarios have the same probability!
          }
      }
 }

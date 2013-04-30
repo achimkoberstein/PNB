@@ -199,6 +199,10 @@ private:
     int regularized_start_row_;
     int start_solution_;
 
+    // Stochastic Cutting Plane Method (aka Sampling)
+    bool stochastic_cutting_plane_;
+    int number_of_observations_to_sample_; // Can use LHS for example
+
 
 
     // D^2 C^3

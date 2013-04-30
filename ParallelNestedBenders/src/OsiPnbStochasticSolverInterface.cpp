@@ -341,12 +341,12 @@ SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInter
 
     // How it works: We need a random generator and a distribution we want to draw numbers from.
     // Set the seed 
-    uniform_generator_struct.seed = parallel_benders::get_random_number_from_system();
-    // Create a random number generator instance
-    uniform_generator_struct.rng = std::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
-    // Create a random [0,1) variate generator;
-    boost::uniform_01<> uniform_01_distribution;
-    uniform_generator_struct.uniform = std::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
+    //uniform_generator_struct.seed = parallel_benders::get_random_number_from_system();
+    //// Create a random number generator instance
+    //uniform_generator_struct.rng = std::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
+    //// Create a random [0,1) variate generator;
+    //boost::uniform_01<> uniform_01_distribution;
+    //uniform_generator_struct.uniform = std::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()
@@ -687,7 +687,7 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     for ( double lower_interval = 0.0; lower_interval < 1; lower_interval += division){
         // Sample one variable from [lower_interval,lower_interval+division)
         boost::uniform_real<> uniform_real_distribution(lower_interval,lower_interval+division);
-        boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_real<double> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_real_distribution);
+        boost::variate_generator<parallel_benders::base_generator_type*, boost::uniform_real<double> > variate_gen(uniform_generator_struct.rng.get(),uniform_real_distribution);
         random_variates[i] = variate_gen();
         assert( random_variates[i] >= lower_interval && random_variates[i] < lower_interval+division);
         i++;
@@ -697,8 +697,10 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     }
     // Shuffle random_variates randomly. 
     // Invoke Functor to sample from the RNG we use for our other random numbers too.
-    ptrdiff_t (*p_myrandom)(ptrdiff_t) = getRandomNumberFromRNG;
-    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates],p_myrandom);
+    //ptrdiff_t (*p_myrandom)(ptrdiff_t) = getRandomNumberFromRNG;
+    boost::uniform_int<> uniform_int_distribution;
+    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_int_distribution);
+    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates],variate_gen);
 
     assert( i == number_of_variates);
     return random_variates;
