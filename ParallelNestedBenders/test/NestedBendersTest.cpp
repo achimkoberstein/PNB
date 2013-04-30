@@ -1747,7 +1747,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 
 TEST_F(NestedBendersTest,temporary){// dakota model
 	//EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
-//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
     //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 //	//EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
