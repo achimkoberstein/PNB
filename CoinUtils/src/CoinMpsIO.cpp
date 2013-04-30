@@ -1841,7 +1841,7 @@ int CoinMpsIO::readMps(int & numberSets,CoinSet ** &sets)
 	  start[column] = numberElements_;
 	  numberColumns_++;
 	}
-	if ( fabs ( cardReader_->value (  ) ) > smallElement_ ) {
+	if ( fabs ( cardReader_->value (  ) ) > smallElement_ || cardReader_->value() == 0.0 ) {
 	  if ( numberElements_ == maxElements ) {
 	    maxElements = ( 3 * maxElements ) / 2 + 1000;
 	    row = reinterpret_cast<COINRowIndex *>
