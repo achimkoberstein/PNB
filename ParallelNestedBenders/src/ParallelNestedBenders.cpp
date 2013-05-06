@@ -3257,17 +3257,6 @@ namespace parallel_benders {
                 benders_node_pointer->last_iteration_start_feasibility_ = benders_node_pointer->feasibility_cuts_.end();
             }
 			if ( feas_it != benders_node_pointer->feasibility_cuts_.end()){
-				if ( level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false){
-					OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
-					if ( osi_cpx != nullptr && level_cstat_ != nullptr ){
-						CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-						CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-						if ( level_length_ == osi_cpx->getNumRows() )
-							CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
-						else
-							LOG(INFO) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
-					}
-				}
 				// TODO: This can be changed to addRows
 				for (; feas_it != benders_node_pointer->feasibility_cuts_.end();++feas_it) {
 					if ( seperate_first_stage_solver_ && current_stage_ == 0 && !benders_node_pointer->optimality_cuts_.empty()){
@@ -3280,6 +3269,17 @@ namespace parallel_benders {
 						// Add warm start
 						SetWarmStart(osi_solver,benders_tree_node_pointer);
 						benders_node_pointer->warm_start_added_ = true;
+						if ( level_decomp_ && current_stage_ == 0 && integer_problems_[current_stage_] == false){
+							OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> (osi_solver);
+							if ( osi_cpx != nullptr && level_cstat_ != nullptr ){
+								CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+								CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+								if ( level_length_ == osi_cpx->getNumRows() )
+									CPXcopybasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+								else
+									LOG(INFO) << "Trying to copy basednorms where problem has " << osi_cpx->getNumRows() << " rows and had " << level_length_;
+							}
+						}
 					}
 					osi_solver->applyRowCuts(1,(*feas_it)->cut_.get());
 				}
@@ -3347,8 +3347,8 @@ namespace parallel_benders {
             SolveSolverInterface(osi_solver,false);
             // Store the warm start
             seperate_first_stage_solver_ = false;
-			if ( osi_solver->isProvenOptimal() )
-				StoreWarmStart(osi_solver,benders_tree_node_pointer);
+			//if ( osi_solver->isProvenOptimal() )
+			StoreWarmStart(osi_solver,benders_tree_node_pointer);
             seperate_first_stage_solver_ = true;
             //PrintSubproblem(osi_solver,0,"optfeas");
 
@@ -3383,6 +3383,8 @@ namespace parallel_benders {
             CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_node_pointer->warm_start_.get());
             if ( warm_start_basis != nullptr){
                 std::vector<CoinWarmStartBasis::Status> status_array;
+				// Problem with pushing into the array ( which I do not think is the case)
+				// So the problem is probably that the warm_start_basis->getArtifStatus method can not be called!
                 for (int i = 0; i < num_cuts;i++){
                     status_array.push_back(warm_start_basis->getArtifStatus(i+optimality_cut_start));
                 }
