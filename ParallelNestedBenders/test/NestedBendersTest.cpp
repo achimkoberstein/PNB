@@ -295,7 +295,6 @@ public:
         repetitions_ = 2;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
-        num_aggregates_by_magic = 1;
         //aggregates.push_back(10);
         ////aggregates.push_back(25);
         //aggregates.push_back(50);
@@ -310,7 +309,7 @@ public:
 			aggregates.push_back(0);
 
 		// If we have not yet added num_aggregates_by_magic, we add it now
-		if ( aggregates.end() != std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic)) 
+		if ( aggregates.end() == std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic)) 
 			aggregates.push_back(num_aggregates_by_magic);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour!
