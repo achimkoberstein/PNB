@@ -487,23 +487,23 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
-#ifdef NDEBUG
-    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-    }
-    std::cout << std::endl;
-    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-        printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-        for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-            printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-        }
-        printf("<= %g",osiStoch_->getRowUpper()[mi]);
-    }
-    printf("\n Matrix printed \n");
-    for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-        printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-    }
-#endif
+//#ifdef NDEBUG
+//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//    }
+//    std::cout << std::endl;
+//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//        printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//        for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//            printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//        }
+//        printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//    }
+//    printf("\n Matrix printed \n");
+//    for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//        printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//    }
+//#endif
 
 
     double * colSolution = new double[core_->getNumCols()];
@@ -634,25 +634,25 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
-#ifdef NDEBUG
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-        }
-        std::cout << std::endl;
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-            }
-            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        }
-        printf("\n Matrix printed \n");
-        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-
-        }
-        printf("\n");
-#endif
+//#ifdef NDEBUG
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//        }
+//        std::cout << std::endl;
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//            }
+//            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//        }
+//        printf("\n Matrix printed \n");
+//        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//
+//        }
+//        printf("\n");
+//#endif
     }
 #pragma endregion EEVP;
 
@@ -761,24 +761,24 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
-#ifdef NDEBUG
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-        }
-        std::cout << std::endl;
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-            }
-            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        }
-        printf("\n Matrix printed \n");
-        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-        }
-        printf("\n");
-#endif
+//#ifdef NDEBUG
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//        }
+//        std::cout << std::endl;
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//            }
+//            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//        }
+//        printf("\n Matrix printed \n");
+//        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//        }
+//        printf("\n");
+//#endif
     }
     delete osiStoch_;
     osiStoch_ = tempPtr;

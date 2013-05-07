@@ -453,6 +453,12 @@ namespace parallel_benders {
             level_stage_ = 0;
         // regularized_gamma_ = level_lambda_;
 
+        // For now
+        if ( oda_method_ ){
+            LOG_IF(WARNING,level_stage_ >= 0) << "Adjusting level_stage to first stage, because we use ODA cuts.";
+            level_stage_ = 0;
+        }
+
         if ( level_decomp_ && (level_lambda_ <= 0.0 || level_lambda_ >= 1.0)){
             // We do not want to use level_decomp.
             LOG(FATAL) << "Wrong parameter: Lambda out of specification : " << level_lambda_;
@@ -468,7 +474,7 @@ namespace parallel_benders {
         }
         if ( num_stages_ > 2){
             if ( oda_method_)
-                LOG(FATAL) << "ODA is not available for Multi-Stage Problems.";
+                LOG(FATAL) << "ODA is not yet available for Multi-Stage Problems.";
         }
 
         // Regularization
@@ -971,7 +977,7 @@ namespace parallel_benders {
             /************************************************************************/
             /* ODA-Level Decomposition                                              */
             /************************************************************************/
-            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){
+            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 && current_stage_ <= level_stage_+1 ){// Store results for level_stage+1, only apply if we are on a backward-run, otherwise we have no good data!
                 oda_chosen_optimality_cut_by_scenario_.clear(); oda_current_tilde_q_s_.clear();
                 oda_chosen_optimality_cut_by_scenario_.resize(num_scenarios_,0);
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
@@ -989,7 +995,7 @@ namespace parallel_benders {
             }
             // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
             bool solve_subproblems = true;
-            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 && gap_counter < 1){
+            if ( oda_method_ && current_stage_ > 0 && current_stage_<= level_stage_+1 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 && gap_counter < 1){
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
                     oda_phi_i_ = lower_bound_;
                 //LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
@@ -1001,7 +1007,6 @@ namespace parallel_benders {
                     solution_times_.Start(2);
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
-                    
                     bool csaba_steeepest_edge = false;
                     if ( csaba_steeepest_edge){
 
@@ -1186,7 +1191,7 @@ namespace parallel_benders {
                     level_loop_forward_ = false;
                     level_loop_backward_ = false;
                 }
-                if ( current_stage_ > 0 ){
+                if ( current_stage_ > 0 && current_stage_ <= level_stage_+1){// Restrict level loops adjacent to level stage..
                     if ( forward_ && level_loop_forward_)
                         forward_ = false;
                     if ( !forward_ && level_loop_backward_)
@@ -1204,21 +1209,21 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            //if ( level_decomp_ && num_stages_ > 2 && theta_approximations_everywhere_){
-            //    // Specify the use_level point!
-            //    if ( current_stage_ > 0 && !infeasible_problem_ ){
-            //        if ( forward_ && !level_loop_backward_ && current_stage_ <= level_stage_){
-            //            level_loop_forward_ = true;
-            //        }
-            //        else if ( forward_ && level_loop_backward_ ){
-            //            level_loop_backward_ = false;
-            //        }
-            //        else if ( !forward_ && level_loop_forward_){
-            //            level_loop_forward_ = false;
-            //            level_loop_backward_ = true;
-            //        }
-            //    }
-            //}
+            if ( level_decomp_ && num_stages_ > 2 && theta_approximations_everywhere_ && level_stage_ > 0){
+                // Specify the use_level point!
+                if ( current_stage_ > 0 && !infeasible_problem_ ){
+                    if ( forward_ && !level_loop_backward_ && current_stage_ <= level_stage_){
+                        level_loop_forward_ = true;
+                    }
+                    else if ( forward_ && level_loop_backward_ ){
+                        level_loop_backward_ = false;
+                    }
+                    else if ( !forward_ && level_loop_forward_){
+                        level_loop_forward_ = false;
+                        level_loop_backward_ = true;
+                    }
+                }
+            }
 
             // Update the temporary stage lower/upper bounds!
             for ( auto node : tree_nodes_by_stage_[current_stage_]){
@@ -2518,7 +2523,7 @@ namespace parallel_benders {
         benders_node_pointer->current_cut_coefficients_ = std::move(cut_coefficients);
         benders_node_pointer->current_cut_rhs_ = cut_rhs;
 
-        if ( oda_method_ && !benders_node_pointer->current_cut_coefficients_.empty()){ 
+        if ( oda_method_ && !benders_node_pointer->current_cut_coefficients_.empty() && current_stage_ <= level_stage_+1){ 
             // We store a multi-cut type optimality cut 
             std::vector<double> cut_elements;
             std::vector<int> cut_indices;
@@ -4661,7 +4666,8 @@ namespace parallel_benders {
     {
         // Silence solver 
         osi_solver->messageHandler()->setLogLevel(0); // Log nothing
-        osi_solver->setHintParam(OsiDoPresolveInInitial,true); // FIXME: Set to true again after testing is done!
+        osi_solver->setHintParam(OsiDoPresolveInInitial,true); 
+
         if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX ){
             osi_solver->setHintParam(OsiDoDualInInitial,false);// Parameter : Use Primal or Dual Algorithm for Subproblem Solve.
             osi_solver->setHintParam(OsiDoDualInResolve,false);
@@ -4671,13 +4677,19 @@ namespace parallel_benders {
             osi_solver->setHintParam(OsiDoDualInResolve,true);
         }
         else if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){ // We ignore the hint, so we use the methos CPXlpopt instead of primopt or dualopt in initialSolve();
-            // We must set the algorithm paramter for cplex!
+            // We must set the algorithm parameter for cplex!
             osi_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);
             osi_solver->setHintParam(OsiDoDualInResolve,true,OsiHintIgnore);
         }
         else if ( lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD ){
-            osi_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);
-            osi_solver->setHintParam(OsiDoDualInResolve,true,OsiHintIgnore);
+            if ( osi_solver == osi_solver_){
+                osi_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);
+                osi_solver->setHintParam(OsiDoDualInResolve,true,OsiHintIgnore);
+            }
+            else {
+                osi_solver->setHintParam(OsiDoDualInInitial,true);
+                osi_solver->setHintParam(OsiDoDualInResolve,true);
+            }
         }
 
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);
@@ -4690,16 +4702,15 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,maximal_solution_time_);
             // Use aggresive scaling
             CPXsetintparam(env_ptr,CPX_PARAM_SCAIND,1); 
-
             //CPXsetintparam(env_ptr,CPX_PARAM_PREDUAL,1); // Use the dual presolve option
             // Use a supplied warm start basis
             CPXsetintparam(env_ptr,CPX_PARAM_ADVIND,1);
+            if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){
+                CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
+                CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG, (lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ? 0 : -1)); 
+            }
             // Use only one thread per cplex instance (except for the first sage solver)
             if ( osi_solver != osi_solver_){
-                if ( lp_method_ == PNB_INT_BARRIER || lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){
-                    CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
-                    CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG, (lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ? 0 : -1)); 
-                }
                 CPXsetintparam(env_ptr,CPX_PARAM_THREADS,1); // Should be set to 1 usually! (
             }
             else {
@@ -4768,8 +4779,6 @@ namespace parallel_benders {
                     if ( code != CPXMIP_OPTIMAL ){
                         std::lock_guard<std::mutex> unique_lock(console_mutex_);
                         LOG(WARNING) << "MIQP solved with status " << code;
-
-						
                     }
                 }
             }
@@ -4784,7 +4793,21 @@ namespace parallel_benders {
                 if ( cpx_ptr ){
                     CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-                    CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
+                    // Set this param for QPMETHOD according to lp_method_
+                    if ( lp_method_ == PNB_INT_DUAL_SIMPLEX )
+                        CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_DUAL);
+                    else if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX)
+                        CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_PRIMAL);
+                    else if ( lp_method_ == PNB_INT_BARRIER){
+                        CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_BARRIER);
+                        CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1);
+                    }
+                    else if ( lp_method_ == PNB_INT_CONCURRENT_MASTER_STANDARD )
+                        CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_CONCURRENT);
+                    else if ( lp_method_ == PNB_INT_BARRIER_WITH_CROSSOVER ){
+                         CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_BARRIER);
+                         CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,0);
+                    }
                     CPXqpopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPX_STAT_INForUNBD){ // Solve without presolve to determine correct direction!
@@ -5001,9 +5024,6 @@ namespace parallel_benders {
         // Store old objective coefs
         const double * osi_obj_coefs = osi_solver->getObjCoefficients();
         std::vector<double> original_obj_coefs(osi_obj_coefs,osi_obj_coefs+solver_cols);
-
-
-
 
         // Due to the algorithm it always hold that approximation_solution <= solution_qx
         // Update regularized solution value, when upper bound is available! Only needed once, in the second iteration!

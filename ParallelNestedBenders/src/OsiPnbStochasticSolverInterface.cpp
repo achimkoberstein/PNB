@@ -269,7 +269,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 	LOG_IF(ERROR,!solution_file.is_open()) << "Solution file " << filename << " could not be opened to write.";
 	// Get the values for which we actually want to store the solution from the param file
 	assert( nested_benders_->compute_primal_solutions_for_stage_ >= 0);
-	assert( nested_benders_->compute_primal_solutions_for_stage_ < nested_benders_->num_stages_);
+	assert( nested_benders_->compute_primal_solutions_for_stage_ <= nested_benders_->num_stages_);
 	// At first, print a summary of the solution value
 	solution_file << "Objective Value : " << nested_benders_->upper_bound_ << "\n";
 	for (int i = 0; i < nested_benders_->num_stages_; i++){
@@ -281,7 +281,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 		solution_file << "Objective Value Stage " << i << " : " << obj_value << "\n";
 	}
 	solution_file << "Column Values sorted by Stage and Scenario" << "\n";
-	for ( int stage = 0; stage <= nested_benders_->compute_primal_solutions_for_stage_; stage++){
+	for ( int stage = 0; stage < nested_benders_->compute_primal_solutions_for_stage_; stage++){
 		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[stage].size();scen++){
 			solution_file << "Objective Value Stage-Scenario=" <<  stage << "-" << scen << " : " <<  nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << "\n";
 			const double*  primal_solution = getSolutionByNodeAndStage(scen,stage);
