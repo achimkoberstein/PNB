@@ -87,7 +87,7 @@ int main(int argc,  char* argv[])
         }
     }
     if ( smps_read_in != 0){
-        LOG(FATAL) << "Reading in your SMPS file failed.";
+        LOG(ERROR) << "Reading in your SMPS file failed.";
         return -1;
     }
 

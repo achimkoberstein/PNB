@@ -149,7 +149,7 @@ void Parameter::init()
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
-    parameter_.put(PNB_RELAXATION, 1); // Give stage from which we should solve the relaxed problem! (Standard is: Allow integers in first-stage, but relax later stages!
+    parameter_.put(PNB_RELAXATION, 1); // Give stage from which we should solve the relaxed problem! (Standard is: Allow integers in first-stage, but relax later stages!)
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
@@ -170,14 +170,14 @@ void Parameter::init()
     parameter_.put(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
     parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.1);
     // Start solution
-    parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution
+    parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_EV_SOLUTION); 
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);
     // Maximal solution time
-    parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Minutes
+    parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Seconds
     // Parameter for Level and ODA
-    parameter_.put(PNB_LEVEL_LAMBDA,0.25);
+    parameter_.put(PNB_LEVEL_LAMBDA,0.5);
     parameter_.put(PNB_ODA_KAPPA,0.5);
     parameter_.put(PNB_STAGE_LEVEL,0); // Up to which stage should we solve level problems? default is only the first stage (parameter holds also for regularization)
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
