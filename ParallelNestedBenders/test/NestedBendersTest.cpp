@@ -275,7 +275,6 @@ public:
                         // Maybe we want to use some kind of regularization technique to speed up the computations?!
                         osi_pnb.initialSolve();
                         hn = osi_pnb.getObjValue();
-
                     }
 
                     // Compute DETEQ column, row and nonzeroes sizes..
@@ -319,15 +318,15 @@ public:
 
         
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = false;
+        bool test_level_euclidean = true;
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_oda = false;
-        bool test_normal = true;
+        bool test_oda = true;
+        bool test_normal = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
-        bool test_dem = true;
+        bool test_dem = false;
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
@@ -506,6 +505,7 @@ protected:
         s << "Time Master; Time Projection; Time ODA; Time Sub; Build Master; Build Projection; Build ODA; Build Sub;";
         // Date/Timestamp
         s << "Date; Time; ";
+        s << "Min CPU; Min Solver; Max CPU; Max Solver; "
 		parameter_name_string_ = s.str();
 		
 		if ( !FileExists(testbed_log_file_string_.c_str()) )  {
@@ -1701,10 +1701,12 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
+
     EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);
     EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50000"),44614465.2,100);
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 254536, 1);
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 	//EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
     //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
