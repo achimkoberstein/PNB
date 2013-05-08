@@ -877,7 +877,6 @@ namespace parallel_benders {
                     forward_ = false;
                     cuts_added_last_round_ = stage_data_[current_stage_-1]->added_optimality_cuts_; // count how many cuts were present before this iteration!
                 }
-
             }
 
             // Try the shuffle or FastForward Strategy
@@ -971,7 +970,7 @@ namespace parallel_benders {
             /************************************************************************/
             /* ODA-Level Decomposition                                              */
             /************************************************************************/
-            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 ){
+            if ( oda_method_ && current_stage_ > 0 && theta_approximations_everywhere_ ){
                 oda_chosen_optimality_cut_by_scenario_.clear(); oda_current_tilde_q_s_.clear();
                 oda_chosen_optimality_cut_by_scenario_.resize(num_scenarios_,0);
                 oda_current_tilde_q_s_.resize(num_scenarios_,0.0);
@@ -989,7 +988,7 @@ namespace parallel_benders {
             }
             // Find out if we still need to solve the second stage subproblems when using ODA ( with everything entailed )
             bool solve_subproblems = true;
-            if ( oda_method_ && current_stage_ > 0 && stage_data_[current_stage_-1]->added_optimality_cuts_ > 0 && gap_counter < 1){
+            if ( oda_method_ && current_stage_ > 0 && theta_approximations_everywhere_ && gap_counter < 1){
                 if ( !level_decomp_) // We need to set oda_phi_i, which is not done for methods not using level_decomp!
                     oda_phi_i_ = lower_bound_;
                 //LOG(INFO) << "Tilde Q : " << oda_tilde_q_;
@@ -1002,14 +1001,14 @@ namespace parallel_benders {
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
                     
-                    bool csaba_steeepest_edge = false;
+                    bool csaba_steeepest_edge = true;
                     if ( csaba_steeepest_edge){
 
 
                         // Now we want to solve one huge LP to determine the cut coefficients. When that is done, we generate a new cut out of the existing cuts with the coefficients!
                         int number_of_subproblems = tree_nodes_by_stage_[0][0]->numChildren();
-                        int first_iteration = 0; // Our Iteration counting starts at 1!
-                        int last_iteration = current_iteration_-insubstantial_iteration_-1; // We can only use the iterations where we added optimality cuts via second stage problem, aka substantial iterations
+                        int first_iteration = 0; // Our Iteration counting starts at 1! (or 0 when we use a start solution!)
+                        int last_iteration = opt_cut_iterations_.size(); // We can only use the iterations where we added optimality cuts via second stage problem, aka substantial iterations
 
                         int number_of_iterations = last_iteration-first_iteration;
                         assert(number_of_iterations>0);
@@ -1055,6 +1054,7 @@ namespace parallel_benders {
                             // Iterate over all cuts
                             auto current_child = tree_nodes_by_stage_[1][children];
                             for (int iteration = first_iteration; iteration < last_iteration; iteration++){
+								// We should only 
                                 // Compute v_s,i
                                 const OsiRowCut* cut_ptr = current_child->getDataPtr()->oda_optimality_cuts_[iteration].get();
                                 const CoinPackedVector& row = cut_ptr->row();
@@ -1203,6 +1203,13 @@ namespace parallel_benders {
                 thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
             }
             thread_pool_.wait(0); // We wait until all threads are done
+
+			if ( current_stage_ == 1 && !forward_ ){
+				if ( infeasible_problems_.none() )
+					opt_cut_iterations_.emplace_back(current_iteration_);
+				else
+					feas_cut_iterations_.emplace_back(current_iteration_);
+			}
 
             //if ( level_decomp_ && num_stages_ > 2 && theta_approximations_everywhere_){
             //    // Specify the use_level point!
