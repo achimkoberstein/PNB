@@ -305,15 +305,15 @@ public:
         //aggregates.push_back(2000);
         //aggregates.push_back(3000);
         //aggregates.push_back(5000);
-		if ( use_multi_cut_ )
-			aggregates.push_back(0);
+		//if ( use_multi_cut_ )
+		//	aggregates.push_back(0);
 
 		// If we have not yet added num_aggregates_by_magic, we add it now
 		if ( aggregates.end() == std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic)) 
-			aggregates.push_back(num_aggregates_by_magic);
+		//	aggregates.push_back(num_aggregates_by_magic);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour!
-
+		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         
@@ -329,7 +329,8 @@ public:
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
-                //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,0);
+
+				// Copy benders_parameter
                 //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                 for (int i = 0; i < aggregates.size(); i++){
                     if ( aggregates[i] >= num_childs_first_stage && num_childs_first_stage > 1){
@@ -496,6 +497,7 @@ protected:
         s << "Time Master; Time Projection; Time ODA; Time Sub; Build Master; Build Projection; Build ODA; Build Sub;";
         // Date/Timestamp
         s << "Date; Time; ";
+		s << "Min_CPU; Min_Solver; Max_CPU; Max_Solver;";
 		parameter_name_string_ = s.str();
 		
 		if ( !FileExists(testbed_log_file_string_.c_str()) )  {
@@ -583,6 +585,10 @@ protected:
 
         std::stringstream aggregated_s; 
         int num_stages = 0;
+		double min_solver = DBL_MAX;
+		double min_cpu = DBL_MAX;
+		double max_solver = 0.0;
+		double max_cpu = 0.0;
 
         for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
             // This can be done in a loop.
@@ -606,6 +612,10 @@ protected:
             nested_benders.initialSolve();
             solver_time = CoinCpuTime()-solver_time; // Solver only time
             cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
+			min_cpu = min(cpuTime,min_cpu);
+			min_solver = min(solver_time,min_solver);
+			max_cpu = max(max_cpu,cpuTime);
+			max_solver = max(max_solver,solver_time);
             LOG(INFO) << "Solution Time: " << cpuTime;
 
             if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO ){
@@ -691,14 +701,11 @@ protected:
                 values_map["building" + boost::lexical_cast<std::string>(i)] += build_timer.GetTime(i);
             }
             
-
-
             time_t timeStamp = time(NULL);
             tm * time = localtime(&timeStamp);
             char buffer[256];
             strftime(buffer, 256, "%m/%d/%y; %H:%M:%S", time);
             s << buffer;
-
             s << "\n";
 
             // Write to testbed log file
@@ -749,6 +756,9 @@ protected:
         char buffer[256];
         strftime(buffer, 256, "%m/%d/%y; %H:%M:%S", time);
         aggregated_s << buffer;
+
+		// Min,Max times
+		aggregated_s << min_cpu <<";" << min_solver << ";" << max_cpu << ";" << max_solver;
         aggregated_s << "\n";
 
         // Write string to file
@@ -921,7 +931,6 @@ TEST_F(NestedBendersTest, sslp_OTHER) { // Contains "Only" Binary First Stage, m
     EXPECT_NEAR(solveSMPS("other/sslp_15_45_15"), -254.71, 0.1);
     //EXPECT_NEAR(solveSMPS("special_cases/dsquaretest"), -37.5, 0.1); 
 }
-
 TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // binary first, mixed-binary second stage
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_50"), -121.6, 0.1); // Solvable
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_5_25_100"), -127.37, 0.1); // Solvable
@@ -930,7 +939,6 @@ TEST_F(NestedBendersTestInteger, sslp_SIPLIB) { // binary first, mixed-binary se
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_500"), -349.136, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_1000"), -351.171, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_10_50_2000"), -347.262, 0.1);
-
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_5"), -262.400, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_10"), -260.500, 0.1);
     EXPECT_NEAR(solveSMPS("siplib/sslp/sslp_15_45_15"), -253.602, 0.1);
@@ -1073,8 +1081,6 @@ TEST_F(NestedBendersTestMultiStage, scfxm_POSTS) { // Generates feasibility cuts
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
     EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
 }
-
-
 
 //// Alternative: bonds_FELT
 //TEST_F(NestedBendersTestMultiStage, sgpf_POSTS) { // Verified with original values
@@ -1285,9 +1291,7 @@ TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
     EXPECT_NEAR(solveSMPS("scdp/SCDP-4096"),-5204538801, 10);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-16384"), -5183755359, 10); 
     EXPECT_NEAR(solveSMPS("scdp/SCDP-65536"), -5183755359, 10); 
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-8000-reduced"), -5183755359, 1);
     EXPECT_NEAR(solveSMPS("scdp/SCDP-64000"), -3860456379, 10);
-    //EXPECT_NEAR(solveSMPS("scdp/SCDP-64000-reduced"), -5183755359, 1);
 }
 
 TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#ScenPerStage, BLOCKS, values for problem A5_16 and above not verified.
@@ -1682,40 +1686,41 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 
 TEST_F(NestedBendersTest,temporary){// dakota model
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
-	//EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
-    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
-    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
-//	//EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
-//
-//    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
-//    //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
-//    //
+//	//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
+//	////EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
+// //   EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
+//    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
+//    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
+////	//EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
+////
+////    EXPECT_NEAR(solveSMPS("twostage/l10/100x20"), 289654, 0.1);
+////    //EXPECT_NEAR(solveSMPS("twostage/l9/60x60"), 302421.20, 1.0);
+////    //
 }
 
-TEST_F(NestedBendersTest,temporarySD){
-    double cpuTime = CoinCpuTime();  
-    SmiScnModel smi;
-    OsiCpxSolverInterface osi_cpx;
-    smi.setOsiSolverHandle(&osi_cpx);
-    smi.setSampling(true);
-    int read_in = smi.readSmps("../../../../../Benders/test/instances/wright/data-storm/storm");
+//TEST_F(NestedBendersTest,temporarySD){
+    //double cpuTime = CoinCpuTime();  
+    //SmiScnModel smi;
+    //OsiCpxSolverInterface osi_cpx;
+    //smi.setOsiSolverHandle(&osi_cpx);
+    //smi.setSampling(true);
+    //int read_in = smi.readSmps("../../../../../Benders/test/instances/wright/data-storm/storm");
 
-    if ( read_in != 0 ){
-        LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-    }
-    int num_stages = smi.getCore()->getNumStages();
-    // Load ParallelNestedBendersSolver
-    double solver_time = CoinCpuTime();
-    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
-    parallel_benders::Parameter benders_parameter;
-    benders_parameter.init();
-    nested_benders.setParameters(benders_parameter);
-    nested_benders.initialSolve();
-    solver_time = CoinCpuTime()-solver_time; // Solver only time
-    cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
-    LOG(INFO) << "Solution Time: " << cpuTime;
-}
+    //if ( read_in != 0 ){
+    //    LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+    //}
+    //int num_stages = smi.getCore()->getNumStages();
+    //// Load ParallelNestedBendersSolver
+    //double solver_time = CoinCpuTime();
+    //OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
+    //parallel_benders::Parameter benders_parameter;
+    //benders_parameter.init();
+    //nested_benders.setParameters(benders_parameter);
+    //nested_benders.initialSolve();
+    //solver_time = CoinCpuTime()-solver_time; // Solver only time
+    //cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
+    //LOG(INFO) << "Solution Time: " << cpuTime;
+//}
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
@@ -1726,8 +1731,8 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "*.temporary*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+	//::testing::GTEST_FLAG(filter) = "*.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
