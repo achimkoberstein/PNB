@@ -225,6 +225,9 @@ private:
 
     int solution_code_;
 
+	std::vector<int> opt_cut_iterations_;
+	std::vector<int> feas_cut_iterations_;
+
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
 
