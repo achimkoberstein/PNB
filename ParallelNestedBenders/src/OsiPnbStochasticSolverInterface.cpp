@@ -94,7 +94,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 					CPXprimopt(envPtr,lpPtr);
 				}
 				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER) == parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER){
-					CPXprimopt(envPtr,lpPtr);
+                    CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,0); // Choose to use crossover
+					CPXbaropt(envPtr,lpPtr);
 				}
 				
 
