@@ -63,20 +63,21 @@ public:
         //}
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO); // Compute the first-stage solution! We need it for the subsequent solution run
+        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Compute the first-stage solution! We need it for the subsequent solution run.
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
-        // Copy optimal solution value (of first scenario) to current_start_solution array
-        current_start_solution_.reset(new double[num_single_scenario_cols_]);
-        CoinFillN(current_start_solution_.get(),num_single_scenario_cols_,0.0);
-        std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
-
-
-        benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
-        // Use the optimal solution!
-        solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
-
         if ( generate_initial_solution_){
+            // Copy optimal solution value (of first scenario) to current_start_solution array
+            current_start_solution_.reset(new double[num_single_scenario_cols_]);
+            CoinFillN(current_start_solution_.get(),num_single_scenario_cols_,0.0);
+            std::copy(first_stage_solution_.get(),first_stage_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
+
+
+            benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+            // Use the optimal solution!
+            solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+
+
             // Worst-case solution
             std::copy(worst_case_solution_.get(),worst_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
             solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
@@ -633,7 +634,7 @@ protected:
                 int last_stage = benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
                 int number_of_cols = smi.getCore()->getNumCols(0);
                 if ( last_stage == parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL )
-                    last_stage = num_stages-1;
+                    last_stage = num_stages;
                 if ( last_stage < num_stages ){
                     for (int i = 1; i <= last_stage; i++)
                         number_of_cols += smi.getCore()->getNumCols(i);
@@ -641,7 +642,7 @@ protected:
                 first_stage_solution_.reset(new double[number_of_cols]);
                 int offset_cols = 0;
                 CoinFillN(first_stage_solution_.get(),number_of_cols,0.0);
-                for (int i = 0; i < num_stages; i++){
+                for (int i = 0; i < last_stage; i++){
                     const double * first_stage = nested_benders.getSolutionByNodeAndStage(0,i);
 					if ( first_stage != nullptr) 
 						std::copy(first_stage,first_stage+smi.getCore()->getNumCols(i),first_stage_solution_.get()+offset_cols);
@@ -763,7 +764,7 @@ protected:
         time_t timeStamp = time(NULL);
         tm * time = localtime(&timeStamp);
         char buffer[256];
-        strftime(buffer, 256, "%m/%d/%y; %H:%M:%S", time);
+        strftime(buffer, 256, "%m/%d/%y; %H:%M:%S; ", time);
         aggregated_s << buffer;
 
 		// Min,Max times
