@@ -455,7 +455,7 @@ namespace parallel_benders {
 
         // For now
         if ( oda_method_ ){
-            LOG_IF(WARNING,level_stage_ >= 0) << "Adjusting level_stage to first stage, because we use ODA cuts.";
+            LOG_IF(WARNING,level_stage_ > 0) << "Adjusting level_stage to first stage, because we use ODA cuts.";
             level_stage_ = 0;
         }
 
