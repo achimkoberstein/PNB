@@ -444,6 +444,7 @@ namespace parallel_benders {
             oda_method_ = true;
         }
 
+		csaba_steepest_edge_ = true; // Csaba-Steepest-Edge
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
         level_stage_ = param.get(PNB_STAGE_LEVEL,0); // Up to which stage should we call the level method?
@@ -1006,8 +1007,8 @@ namespace parallel_benders {
                     solution_times_.Start(2);
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
-                    bool csaba_steeepest_edge = true;
-                    if ( csaba_steeepest_edge){
+
+                    if ( csaba_steepest_edge_){
 
 
                         // Now we want to solve one huge LP to determine the cut coefficients. When that is done, we generate a new cut out of the existing cuts with the coefficients!
@@ -1121,8 +1122,8 @@ namespace parallel_benders {
                         setStatus(&row_stat[0],0,CoinWarmStartBasis::basic);
                         std::vector<int> basic_indices(number_of_subproblems,0);
                         for (int current_scenario = 0; current_scenario < number_of_subproblems; current_scenario++){
-                            assert((*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first < number_of_iterations );
-                            basic_indices[current_scenario] = current_scenario*number_of_iterations+(*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first;
+                            assert((*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first < number_of_iterations);
+							basic_indices[current_scenario] = current_scenario*number_of_iterations+(*tree_nodes_by_stage_[current_stage_][current_scenario]->getDataPtr()->oda_lambdas_.begin()).first;
                             setStatus(&col_stat[0],basic_indices[current_scenario],CoinWarmStartBasis::basic);
                         }
                         // We need to clear the oda_lambdas, now that we used the information!
@@ -1162,6 +1163,9 @@ namespace parallel_benders {
                                 }
                             }
                         }
+						else {
+						// Can we add an oda cut, without oda_lambdas?!
+						}
                     }
 
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
@@ -1611,8 +1615,19 @@ namespace parallel_benders {
 
             // Depending on if we store primal and dual solution, we need to delete the memory allocated for its storage, to lower memory requirements! Only if we are not in the last run to compute solutions we want to return!.
             //if ( !store_primal_and_dual_)
-            for (int i = 0; i < tree_nodes_by_stage_[current_stage_].size(); i++)
-                tree_nodes_by_stage_[current_stage_][i]->getDataPtr()->CleanUnusedMemory(forward_);
+            for (auto node : tree_nodes_by_stage_[current_stage_]){
+                node->getDataPtr()->CleanUnusedMemory(forward_);
+			}
+
+			if ( oda_method_ && csaba_steepest_edge_ && infeasible_problem_ ){
+				for (auto node : tree_nodes_by_stage_[current_stage_])
+					// Remove the oda_cuts for those where we generated one
+						if ( node->getDataPtr()->oda_iterations_.count(current_iteration_) )
+							// Remove last entry from oda_optimality_cuts
+								node->getDataPtr()->oda_optimality_cuts_.pop_back();
+
+			}
+			
             
 
             // Decide the critical stage in case of PNB_INT_FASTPASS_WITH_FASTBACK strategy
@@ -2559,6 +2574,9 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             // Store OsiRowCut in a list
             benders_node_pointer->oda_optimality_cuts_.emplace_back(cut_pointer);
+			if ( csaba_steepest_edge_ ){
+				benders_node_pointer->oda_iterations_[current_iteration_] = benders_node_pointer->oda_optimality_cuts_.size()-1;
+			}
         }
 
         // Cleanup

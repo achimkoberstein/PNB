@@ -297,6 +297,7 @@ private:
     double oda_tilde_q_;
     std::vector<int> oda_chosen_optimality_cut_by_scenario_;// Which cut to take from each element!
     std::vector<double> oda_current_tilde_q_s_;
+	bool csaba_steepest_edge_;
 
     bool critical_iteration_;
     int uncritical_iteration_counter_;
