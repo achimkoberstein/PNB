@@ -281,7 +281,8 @@ public:
     // ODA-Level decomp
     std::vector<std::shared_ptr<OsiRowCut> > oda_optimality_cuts_;
     std::vector<double> oda_cut_evaluation_;
-    std::map<int,double> oda_lambdas_;
+    std::map<int,double> oda_lambdas_; // Stores which of oda_optimality_cuts_ is to be used for cut aggregation (and with which weight)
+	std::map<int,int> oda_iterations_; // Stores iteration numbers, provides a mapping of iteration numbers to size of other vectors!
 
     // Time spent!
     double build_time_;
