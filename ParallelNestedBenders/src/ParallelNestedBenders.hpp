@@ -56,7 +56,7 @@ public:
     /************************************************************************/
     /* Takes ownership of solution                                          */
     /************************************************************************/
-    void setWarmUpSolution( const double* solution);
+    void setWarmUpSolution( const double* solution, int num_cols_given = 0);
     void unfixFirstStageVariables();
 
 private:

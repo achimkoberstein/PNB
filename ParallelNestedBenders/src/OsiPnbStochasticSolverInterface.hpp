@@ -32,7 +32,7 @@ public:
 	void printSolutionToFile(const char* filename);
 
     void fixFirstStageVariables(const double* solution);
-    void giveStartSolution(const double* solution);
+    void giveStartSolution(const double* solution, int num_cols_given = 0);
 
     double getSolutionValueForScenario(int scenario);
 
