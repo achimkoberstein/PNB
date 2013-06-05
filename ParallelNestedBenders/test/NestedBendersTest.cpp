@@ -55,17 +55,17 @@ public:
     }
 
 	void solveForProtocolsWithStartSolutions(std::vector<double>& solutions, const char* core_name, const char* time_name, const char* stoch_name){
-        //int algorithm = benders_parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-        //// We can not use the no start solution option, when we have an algorithm that needs a start solution!
-        //if ( !(algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY || algorithm==parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA)){
-        //    benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
-        //    solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
-        //}
+        int algorithm = benders_parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
+        // We can not use the no start solution option, when we have an algorithm that needs a start solution!
+        if ( !(algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY || algorithm==parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA)){
+            benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
+            solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+        }
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Compute the first-stage solution! We need it for the subsequent solution run.
+        benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,num_stages_-2); // Compute the first-stage solution! We need it for the subsequent solution run.
         solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
-        if ( generate_initial_solution_){
+        if ( generate_initial_solution_ ){
             // Copy optimal solution value (of first scenario) to current_start_solution array
             current_start_solution_.reset(new double[num_single_scenario_cols_]);
             CoinFillN(current_start_solution_.get(),num_single_scenario_cols_,0.0);
@@ -77,14 +77,15 @@ public:
             // Use the optimal solution!
             solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
+			if ( special_case_solution_length_ == num_single_scenario_cols_ ) {
+				// Worst-case solution
+				std::copy(worst_case_solution_.get(),worst_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
+				solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 
-            // Worst-case solution
-            std::copy(worst_case_solution_.get(),worst_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
-            solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
-
-            // Best case
-            std::copy(best_case_solution_.get(),best_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
-            solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+				// Best case
+				std::copy(best_case_solution_.get(),best_case_solution_.get()+num_single_scenario_cols_,current_start_solution_.get());
+				solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
+			}
         }
     }
 
@@ -92,14 +93,14 @@ public:
 		// Vary Lambda from 0.9 to 0.1
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.9);
 		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-		//benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
-		//solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
 		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.3);
 		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-		//benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.1);
-		//solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.1);
+		solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 	}
 
@@ -188,7 +189,7 @@ public:
         double * min_scenario_pointer = NULL;
         double * max_scenario_pointer = NULL;
         compute_statistics_ = false;
-        generate_initial_solution_ = false;
+        generate_initial_solution_ = true;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -201,8 +202,10 @@ public:
             assert(num_aggregates_by_magic >= 0);
 
             num_single_scenario_cols_ = 0;
-            for (int i = 0; i < num_stages_;i++)
+            for (int i = 0; i < num_stages_-1;i++)
                 num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
+
+			special_case_solution_length_ = num_single_scenario_cols_;
 
             if ( compute_statistics_ || generate_initial_solution_ ){
                 //Open File!
@@ -296,18 +299,18 @@ public:
         repetitions_ = 2;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
-        //aggregates.push_back(10);
-        ////aggregates.push_back(25);
-        //aggregates.push_back(50);
-        //aggregates.push_back(100);
-        //aggregates.push_back(200);
-        //aggregates.push_back(500);
-        //aggregates.push_back(1000);
-        //aggregates.push_back(2000);
-        //aggregates.push_back(3000);
-        //aggregates.push_back(5000);
-		//if ( use_multi_cut_ )
-		//	aggregates.push_back(0);
+        aggregates.push_back(10);
+        aggregates.push_back(25);
+        aggregates.push_back(50);
+        aggregates.push_back(100);
+        aggregates.push_back(200);
+        aggregates.push_back(500);
+        aggregates.push_back(1000);
+        aggregates.push_back(2000);
+        aggregates.push_back(3000);
+        aggregates.push_back(5000);
+		if ( use_multi_cut_ )
+			aggregates.push_back(0);
 
 		// If we have not yet added num_aggregates_by_magic, we add it now
 		//if ( aggregates.end() == std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic)) 
@@ -318,16 +321,17 @@ public:
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         
+		generate_initial_solution_ = false;
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = true;
+        bool test_level_euclidean = false;
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_oda = true;
-		bool test_only_oda = true;
-        bool test_normal = false;
+        bool test_oda = false;
+		bool test_only_oda = false;
+        bool test_normal = true;
         bool test_start_solutions = generate_initial_solution_;
-        bool test_feas_cuts = false;
+        bool test_feas_cuts = true;
         bool test_dem = false;
 
         for (int cpu = 0; cpu < 1; cpu++){
@@ -336,7 +340,7 @@ public:
 				// Copy benders_parameter
                 //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                 for (int i = 0; i < aggregates.size(); i++){
-                    if ( aggregates[i] >= num_childs_first_stage && num_childs_first_stage > 1){
+                    if ( aggregates[i] >= num_childs_first_stage ){
                         LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
                         continue;
                     }
@@ -621,7 +625,8 @@ protected:
             OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
             nested_benders.setParameters(benders_parameter_);
             if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
-                nested_benders.giveStartSolution(current_start_solution_.get());
+				assert( current_start_solution_.get() != nullptr);
+                nested_benders.giveStartSolution(current_start_solution_.get(),num_single_scenario_cols_);
             }
             nested_benders.initialSolve();
             solver_time = CoinCpuTime()-solver_time; // Solver only time
@@ -638,18 +643,17 @@ protected:
                 int last_stage = benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
                 int number_of_cols = smi.getCore()->getNumCols(0);
                 if ( last_stage == parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL )
-                    last_stage = num_stages;
-                if ( last_stage < num_stages ){
-                    for (int i = 1; i <= last_stage; i++)
-                        number_of_cols += smi.getCore()->getNumCols(i);
-                }
-                first_stage_solution_.reset(new double[number_of_cols]);
+                    last_stage = num_stages-2;
+                for (int i = 1; i <= last_stage; i++)
+                    number_of_cols += smi.getCore()->getNumCols(i);
+				num_single_scenario_cols_ = number_of_cols;
+                first_stage_solution_.reset(new double[num_single_scenario_cols_]);
                 int offset_cols = 0;
                 CoinFillN(first_stage_solution_.get(),number_of_cols,0.0);
-                for (int i = 0; i < last_stage; i++){
-                    const double * first_stage = nested_benders.getSolutionByNodeAndStage(0,i);
+                for (int i = 0; i <= last_stage; i++){
+					const double * first_stage = nested_benders.getSolutionByNodeAndStage(0,i);
 					if ( first_stage != nullptr) 
-						std::copy(first_stage,first_stage+smi.getCore()->getNumCols(i),first_stage_solution_.get()+offset_cols);
+						std::copy(first_stage+offset_cols,first_stage+offset_cols+smi.getCore()->getNumCols(i),first_stage_solution_.get()+offset_cols);
                     offset_cols += smi.getCore()->getNumCols(i);
                 }
             }
@@ -792,6 +796,7 @@ protected:
     boost::shared_array<double> worst_case_solution_;
     int num_stages_;
     int num_single_scenario_cols_;
+	int special_case_solution_length_;
     int repetitions_;
 };
 
@@ -806,6 +811,10 @@ class NestedBendersTestSampleAverageApproximation: public NestedBendersTest
 
 // Integer problems (second stage mixed-integer)
 class NestedBendersTestInteger: public NestedBendersTest
+{};
+
+// Problems that need/generate feasibility cuts
+class NestedBendersTestFeasibility: public NestedBendersTest
 {};
 
 //TEST_F(NestedBendersTest,InvestmentExampleTest){
@@ -914,7 +923,7 @@ class NestedBendersTestInteger: public NestedBendersTest
 //    parallel_benders::ParallelNestedBenders pnb(testModel.getSmi());
 //    pnb.Solve();
 //}
-/*
+
 TEST_F(NestedBendersTest, farmer_OTHER) { // ok
     EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
 }
@@ -1337,9 +1346,9 @@ TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
     EXPECT_NEAR(solveSMPS("frankellison/CEP1"),355160, 1); 
     EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"),47.324, 0.1); 
 }
-*/
+
 TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
-	benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
+	//benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
     EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"), 2.693e6, 1e3); 
     EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),3.4349e6, 1e3); 
     EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),3.67583e6, 1e3); 
@@ -1348,6 +1357,7 @@ TEST_F(NestedBendersTest,bike_sharing){// bike sharing model
 //TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
 //    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
 //}
+
 
 TEST_F(NestedBendersTest,deak){
     EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),44606554.59,100);
@@ -1503,14 +1513,14 @@ TEST_F(NestedBendersTest,deak){
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve, so we restrict ourselves for preliminary test runs on a subset!
-	//EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
-	//EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand0_4000"), 199.032, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand0_6000"), 140.275, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand0_8000"), 170.318, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand1_2000"), 244.159, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand1_4000"), 259.346, 0.1);
+	EXPECT_NEAR(solveSMPS("other/rand1_6000"), 297.563, 0.1);
 	EXPECT_NEAR(solveSMPS("other/rand1_8000"), 262.451, 0.1);
 	EXPECT_NEAR(solveSMPS("other/rand1_10000"), 298.638, 0.1);
 	EXPECT_NEAR(solveSMPS("other/rand2_2000"), 209.151, 0.1);
@@ -1520,6 +1530,61 @@ TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve, so we restrict o
 	EXPECT_NEAR(solveSMPS("other/rand2_10000"), 231.706, 0.1);
 }
 
+TEST_F(NestedBendersTestFeasibility,feasibility){// all problems that generate feasibility cuts (a fair amount of)
+
+	EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"), 2.693e6, 1e3); 
+	EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),3.4349e6, 1e3); 
+	EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),3.67583e6, 1e3); 
+	EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
+	EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
+	//EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); // Hard to solve, no solution with benders!
+	EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
+	EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 	
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-1200"),20808.6, 0.1); // INDEP and BLOCKS for the rest  22428.9
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-1875"), 20809.3, 0.1); //  22447.1
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-3780"), 20794.7, 0.1); //  22441
+	EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-5292"), 20788.6, 0.1); // 22438.4
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_6"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm2_16"), 18416.76, 0.1); // OK : MSLIP/NEOS: 18416.76
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_6"),18615.4 , 0.1);// Model probability problems 18615.932
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm3_16"),18439 , 0.1); // 18438.891
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_6"),18615.4 , 0.1); // 18616.224
+	EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
+	EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS","felt/electric_three_stage/LandS","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_16"), -2400.1,0.1); // -2401.87
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_32"), -2172.9,0.1); // -2167.62
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_64"), -2310.7,0.1); //-2027.43
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_128"), -1888.3,0.1); // -1879.43
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_256"), -1849.4,0.1); // -1841.29
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_512"),-1797.3 ,0.1); // -1787.19
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_768"), -1795.16,0.1); // -1780.13
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1024"), -1798.4 ,0.1); // -1791.18
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1152"), -1723.7,0.1); // -1725.53
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1536"), -1705.8,0.1);// -1693.47
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_1920"), -1778.3,0.1); // -1769.45
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2304"), -1674.9,0.1);// -1664.66
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_C_10","watson/timeWAT_C_10","watson/stochWAT_C_10_2688"), -1687.7,0.1);// -1679.92
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_16"), -2158.75,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_32"), -1866.42,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_64"), -2310.53,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_128"), -1637.81,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_256"), -2000.84,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_512"), -1959.64,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_768"), -1813.11,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1024"), -1926.79,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1536"), -1790.27,0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1920"), -1778.95,0.1);
+	EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -39976.8, 0.1); // seven-stage
+	EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -39024.4, 0.1); // seven-stage, stochasticity from stocfor2
+}
 //TEST_F(NestedBendersTest,postponement){// postponement
 //	EXPECT_NEAR(solveSMPS("postponement/Kor+1-4-4und15new=SL600L2Flex_2_end"),-775187,1);
 //	EXPECT_NEAR(solveSMPS("postponement/Kor0-4-4und45new=SL600L2Flex_2_end"),-786896,1);
@@ -1762,7 +1827,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.rand*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";

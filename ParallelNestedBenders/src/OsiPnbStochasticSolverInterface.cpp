@@ -253,12 +253,12 @@ void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( 
     nested_benders_->fixFirstStageVariables(solution);
 }
 
-void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution )
+void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution, int num_cols )
 {
     assert(nested_benders_);
     // Store a warm_up solution
     // If cplex, we may need to think about it?
-    nested_benders_->setWarmUpSolution(solution);
+    nested_benders_->setWarmUpSolution(solution,num_cols);
 }
 
 void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( const char* filename )

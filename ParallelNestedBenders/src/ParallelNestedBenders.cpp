@@ -444,7 +444,7 @@ namespace parallel_benders {
             oda_method_ = true;
         }
 
-		csaba_steepest_edge_ = true; // Csaba-Steepest-Edge
+		csaba_steepest_edge_ = false; // Csaba-Steepest-Edge
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
         oda_kappa_ = param.get(PNB_ODA_KAPPA,0.2);
         level_stage_ = param.get(PNB_STAGE_LEVEL,0); // Up to which stage should we call the level method?
@@ -4677,16 +4677,18 @@ namespace parallel_benders {
 
     }
 
-    void ParallelNestedBenders::setWarmUpSolution( const double* solution )
+    void ParallelNestedBenders::setWarmUpSolution( const double* solution, int num_cols_given )
     {
         start_solution_ = PNB_INT_USE_SUPPLIED_SOLUTION; 
         warm_up_ = true;
         // Get num cols for all stages except the last
         int num_cols = 0;
-        for (int i = 0; i < num_stages_-1; i++)
-            num_cols += smi_->getCore()->getNumCols(i);
+		for (int i = 0; i < num_stages_-1; i++)
+			num_cols += smi_->getCore()->getNumCols(i);
+		if (num_cols_given > num_cols)
+			num_cols = num_cols_given;
         warm_up_solution_.reset(new double[num_cols]);
-        memcpy(warm_up_solution_.get(),solution,num_cols*sizeof(double)); // We copy all, but the last stage!
+        std::copy(solution,solution+num_cols,warm_up_solution_.get()); // We copy all, but the last stage!
     }
 
     void ParallelNestedBenders::SetSolverOptions( OsiSolverInterface* osi_solver )
