@@ -299,18 +299,18 @@ public:
         repetitions_ = 2;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
-        aggregates.push_back(10);
-        aggregates.push_back(25);
-        aggregates.push_back(50);
-        aggregates.push_back(100);
-        aggregates.push_back(200);
-        aggregates.push_back(500);
-        aggregates.push_back(1000);
-        aggregates.push_back(2000);
-        aggregates.push_back(3000);
-        aggregates.push_back(5000);
-		if ( use_multi_cut_ )
-			aggregates.push_back(0);
+  //      aggregates.push_back(10);
+  //      aggregates.push_back(25);
+  //      aggregates.push_back(50);
+  //      aggregates.push_back(100);
+  //      aggregates.push_back(200);
+  //      aggregates.push_back(500);
+  //      aggregates.push_back(1000);
+  //      aggregates.push_back(2000);
+  //      aggregates.push_back(3000);
+  //      aggregates.push_back(5000);
+		//if ( use_multi_cut_ )
+		//	aggregates.push_back(0);
 
 		// If we have not yet added num_aggregates_by_magic, we add it now
 		//if ( aggregates.end() == std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic)) 
@@ -321,17 +321,17 @@ public:
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         
-		generate_initial_solution_ = false;
+		generate_initial_solution_ = true;
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = false;
-        bool test_level_infinity = false;
-        bool test_level_manhattan = false;
+        bool test_level_euclidean = true;
+        bool test_level_infinity = true;
+        bool test_level_manhattan = true;
         bool test_regularized_decomposition = false;
-        bool test_oda = false;
+        bool test_oda = true;
 		bool test_only_oda = false;
         bool test_normal = true;
         bool test_start_solutions = generate_initial_solution_;
-        bool test_feas_cuts = true;
+        bool test_feas_cuts = false;
         bool test_dem = false;
 
         for (int cpu = 0; cpu < 1; cpu++){
@@ -356,9 +356,9 @@ public:
                         // We can choose different LP methods, but stick with the dual simplex for now!
                         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+						benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+						solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     }
-
-
 
                     if ( test_start_solutions && test_normal){
                         benders_parameter_ = copied_param_for_loop;
@@ -418,7 +418,6 @@ public:
 							solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
 						}
 					}
-
 
                     if ( test_oda ){
 						if ( test_normal ){
@@ -1827,7 +1826,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
