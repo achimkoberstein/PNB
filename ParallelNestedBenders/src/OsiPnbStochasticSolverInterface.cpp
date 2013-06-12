@@ -69,10 +69,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         if ( cpx_solver){
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
-			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
+			//CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            //CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
 			CPXsetintparam(envPtr,CPX_PARAM_THREADS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_NUM_CPU,0));
-            CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
+            //CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.999);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
             // We may want to set a start solution!
 
