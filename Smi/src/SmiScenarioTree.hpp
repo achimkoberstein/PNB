@@ -367,7 +367,7 @@ public:
 	int addPathtoLeaf(int brscenario, int stage, vector<T> &pathdata,
 			unsigned int start = 0) {
 		SmiTreeNode<T> *parent = NULL;
-		int scenario = leaf_.size();
+		unsigned int scenario = leaf_.size();
 		if (scenario)
 			parent = find(brscenario, stage);
 

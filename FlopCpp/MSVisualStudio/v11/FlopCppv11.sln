@@ -15,6 +15,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libflopcpp", "libflopcpp\libflopc.vcxproj", "{98885124-894A-48BF-9C20-D9F389C92275}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyTest", "MyTest\MyTest.vcxproj", "{894612FE-BCCE-4084-B089-20B65E2BFE06}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3B3EF83A-DC3D-45E8-B93F-2BDC8B557992} = {3B3EF83A-DC3D-45E8-B93F-2BDC8B557992}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\ThirdParty\gtest\msvc\gtest.vcxproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
 EndProject
@@ -273,5 +276,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
