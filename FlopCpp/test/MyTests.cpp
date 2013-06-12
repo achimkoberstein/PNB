@@ -32,15 +32,7 @@
 #include "flopc.hpp"
 #include "SmiScnModel.hpp"
 
-#include "Benders.hpp"
 
-#include "ParallelNestedBenders.hpp"
-#include "OsiPnbStochasticSolverInterface.hpp"
-#include "OsiBenStochasticSolverInterface.hpp"
-
-
-//#include "SAA.hpp"
-#include "OsiStochasticSolverInterface.hpp"
 
 //#include <vld.h> //uncomment to enable Visual Leak Detector
 //TODO: Test about correct colOrdering that is given to the solver..
@@ -74,9 +66,6 @@ namespace flopc {
         // check objective values in case of optimal solution
         if ( model.Solver->isProvenOptimal() )
             EXPECT_NEAR(model.Solver->getObjValue(), osiStoch->getObjValue(), 0.001);
-        ASSERT_EQ(0,remove( (filename+".cor").c_str() ));
-        ASSERT_EQ(0,remove( (filename+".tim").c_str() ));
-        ASSERT_EQ(0,remove( (filename+".sto").c_str() ));
         delete clp;
     }
 
@@ -782,7 +771,7 @@ namespace flopc {
         allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
         returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
 
-        goalConstr(T.last()) = wealth(T.last()) == goal() + overage(T.last()) - shortage(T.last()); 
+        goalConstr(T+3) = wealth(T) == goal() + overage(T) - shortage(T); 
         MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
 
         investmentModel.setObjective( valueFunction );
@@ -802,13 +791,90 @@ namespace flopc {
         writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
         compareEVPTest(investmentModel,MP_model::MAXIMIZE);
 
-        std::vector< std::pair<double,double> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
+        std::vector< std::pair<double,double*> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
         EXPECT_EQ(numScen,wsResults.size());
         double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
         // Compute result by hand
         double tempResult = 0;
         for (int i = 0; i < numScen; i++) {
-            tempResult += wsResults[i].first*wsResults[i].second;
+            tempResult += wsResults[i].first;
+            delete [] wsResults[i].second;
+        }
+        EXPECT_DOUBLE_EQ(result,tempResult);
+        EXPECT_NEAR(10.76479,result,0.0001);
+    }
+
+    TEST_F(UseCaseTest,InvestmentExampleEmpiricalDistributionsTest){
+
+        MP_model investmentModel(new OsiClpSolverInterface());
+        MP_data initialWealth,goal;
+        initialWealth() = 55; //set data
+        goal() = 80;
+
+        enum {numStage=4};
+        MP_stage T(numStage); //Time Stages
+
+        enum {numScen=8};
+
+        enum {asset1,asset2,numAssets};
+        MP_set assets(numAssets);
+
+        std::vector<double> values;
+        values.push_back(1.25);
+        values.push_back(1.06);
+        std::vector<double> prob;
+        prob.push_back(0.5);
+        prob.push_back(0.5);
+
+        RandomVariable * random_vars[numStage-1] = { new EmpiricalRandomVariable(values,prob),new EmpiricalRandomVariable(values,prob),new EmpiricalRandomVariable(values,prob)};
+        MP_random_data scenario_vars(&random_vars[0],T);
+
+        MP_random_data returns(T,assets);
+        returns(T+1,assets) = scenario_vars(T).such_that(assets == asset1) + mpif(assets==asset2,mpif(scenario_vars(T)==1.25,1.14,1.12),Constant(0.0));
+        //returns(T+1,asset2) = mpif(scenario_vars(T)==1.25,1.14,1.12);
+
+        MP_variable x(T,assets);
+        MP_variable wealth(T);
+        MP_variable shortage(T), overage(T);
+
+        MP_constraint 
+            initialWealthConstr,
+            returnConstr(T),
+            allocationConstr(T),
+            goalConstr(T);
+
+        initialWealthConstr() = sum(assets,x(0,assets)) == initialWealth();
+        allocationConstr(T) = sum(assets,x(T,assets)) == wealth(T);
+        returnConstr(T+1) = sum(assets,returns(T,assets)*x(T-1,assets) ) == wealth(T);
+
+        goalConstr(T+3) = wealth(T) == goal() + overage(T) - shortage(T); 
+        MP_expression valueFunction( -1.3*shortage(T.last()) + 1.1*overage(T.last()));
+
+        investmentModel.setObjective( valueFunction );
+        investmentModel.attach(investmentModel.Solver);
+        this->testCorrectStageAssignment(investmentModel);
+        investmentModel.solve(MP_model::MAXIMIZE);
+        //for (int i = 0; i < scen.size();i++){
+        //    for (int j = 0; j < T.size(); j++){
+        //        cout << "scenario " << i << " stufe " << j << " wealth: " << wealth.levelScenario(i,j) << endl;
+        //    }
+        //}
+
+        ////Compare solution values.
+        EXPECT_NEAR(4.142141441,investmentModel.Solver->getObjValue(),0.000001);
+        EXPECT_EQ(MP_model::OPTIMAL,investmentModel.getStatus());
+
+        writeReadSMPSTest(investmentModel,MP_model::MAXIMIZE,"test");
+        compareEVPTest(investmentModel,MP_model::MAXIMIZE);
+
+        std::vector< std::pair<double,double*> > wsResults = investmentModel.smiModel->solveWS(investmentModel.Solver, MP_model::MAXIMIZE);
+        EXPECT_EQ(numScen,wsResults.size());
+        double result = investmentModel.smiModel->getWSValue(investmentModel.Solver, MP_model::MAXIMIZE);
+        // Compute result by hand
+        double tempResult = 0;
+        for (int i = 0; i < numScen; i++) {
+            tempResult += wsResults[i].first;
+            delete [] wsResults[i].second;
         }
         EXPECT_DOUBLE_EQ(result,tempResult);
         EXPECT_NEAR(10.76479,result,0.0001);
@@ -954,8 +1020,17 @@ namespace flopc {
         values.push_back(5);
         values.push_back(20);
 
+        MP_set test_set(2);
+
         RandomVariable* var[1] = { new EmpiricalRandomVariable(values,probs) };
+        RandomVariable* vars[1][2] = {
+            {
+                new EmpiricalRandomVariable(values,probs),new EmpiricalRandomVariable(values,probs)
+            }
+        };
+
         MP_random_data randomData(&var[0],T);
+        MP_random_data randomData2(&vars[0][0],T,test_set);
 
         MP_constraint firstStage,secondStage(T);
         firstStage() = x() >= 10;
@@ -1098,9 +1173,9 @@ namespace flopc {
             x(R),   // Ressourcenbedarf
             y(T,P); // Produzierte Einheiten
 
-        MP_constraint demandConstraint(P), productionConstraint(R), conR(R);
-        demandConstraint(P) = y(T+1,P) <= demand(T+1,P);
-        productionConstraint(R) = sum(P, resourceReq(P, R) * y(T+1,P)) <= x(R);
+        MP_constraint demandConstraint(T,P), productionConstraint(T,R);
+        demandConstraint(T+1,P) = y(T,P) <= demand(T,P);
+        productionConstraint(T+1,R) = sum(P, resourceReq(P, R) * y(T,P)) <= x(R);
 
         dacota.setObjective(
             sum(P, y(T+1,P) * sellingPrice(P))
@@ -1112,8 +1187,6 @@ namespace flopc {
 
         // solve EV-, EEV-, WS- and here-and-now-Problem
         double ev, eev, ws, hereAndNow;
-
-
 
 
 
@@ -1136,9 +1209,6 @@ namespace flopc {
 
         writeReadSMPSTest(dacota,MP_model::MAXIMIZE,"test");
         compareEVPTest(dacota,MP_model::MAXIMIZE);
-
-
-
     }
 
     // Test complex combinations of random variables in constraints
@@ -6425,1048 +6495,1048 @@ namespace flopc {
     }
 
 
-    TEST_F(UseCaseTest,Postponement){
-        //Sets 
-        //MP_model postponement(new OsiCpxSolverInterface());
-        MP_model postponement(new OsiCpxSolverInterface());
-        //enum {numT=2};
-        //MP_stage T(numT);
-        MP_stage T(2);
-
-        T.setName("T");
-        //TierID
-        enum {T1, T2, T3, T4, numOfTiers};
-        //FacilityID
-        enum {F1, CW1, RW1, RW2, CZ1, CZ2, numOfFacilities};
-        //ProductID
-        enum {Sweater, SweaterColor1, SweaterColor2, Yarn, YarnColor1, YarnColor2, numOfProducts};
-        //FunctionID
-        enum {Dye, DyeANDKnit, Knit, Nothing, numOfProdActivities};
-        //ScenarioID
-        //enum {Scen1, Scen2, Scen3, Scen4, Scen5, Scen6, Scen7, Scen8, Scen9, Scen10, Scen11, Scen12, Scen13, Scen14, Scen15, numOfScenarios};
-        //ScenarioID
-        enum {Scen_1, Scen_10, Scen_11, Scen_12, Scen_13, Scen_14, Scen_15, Scen_16, Scen_17, Scen_18, Scen_19, Scen_2, Scen_20, Scen_21, Scen_22, Scen_23, Scen_24, Scen_25, Scen_26, Scen_27, Scen_28, Scen_29, Scen_3, Scen_30, Scen_31, Scen_32, Scen_33, Scen_34, Scen_35, Scen_36, Scen_37, Scen_38, Scen_39, Scen_4, Scen_40, Scen_41, Scen_42, Scen_43, Scen_44, Scen_45, Scen_46, Scen_47, Scen_48, Scen_49, Scen_5, Scen_50, Scen_6, Scen_7, Scen_8, Scen_9, numOfScenarios};
-
-
-
-        // index set of tiers
-        MP_set S(numOfTiers);
-        S.setName("S");
-        MP_set K(numOfTiers);
-        K.setName("K");
-        MP_subset<1> S123(S);
-        S123.setName("S123");
-        forall(S.such_that(!(S==3)),S123.insert(S));
-        MP_subset<1> S23(S);
-        S23.setName("S23");
-        forall(S.such_that(!(S==0)&&!(S==3)),S23.insert(S));
-        MP_subset<1> S1(S);
-        S1.setName("S1");
-        forall(S.such_that((S==0)),S1.insert(S));
-
-        //Display:
-        S1.display("F_in_LOC members");
-        S23.display("F_in_LOC members");
-        S123.display("F_in_LOC members");
-
-        //index set of products
-        MP_set P(numOfProducts);
-        P.setName("P");
-        MP_set P2(numOfProducts);
-        P2.setName("P2");
-        MP_set P3(numOfProducts);
-        P3.setName("P3");
-        MP_set P4(numOfProducts);
-        P4.setName("P4");
-
-        //index set of different functions
-        MP_set L(numOfProdActivities);
-        L.setName("L");
-        MP_set L2(numOfProdActivities);
-        L2.setName("L2");
-
-        //index set of product variants generated by applying activity l to product p
-        MP_subset<3> TF (L,P2,P3);
-        TF.setName("TF");
-
-
-
-        //index set of possible functions that can be applied to a product variant p
-        MP_subset<2> TL(P,L);
-        TL.setName("TL");
-        //TL.insert(Sweater,Dye);
-
-
-
-        MP_set F(numOfFacilities);
-        F.setName("F");
-        MP_set F2(numOfFacilities);
-        F2.setName("F2");
-
-        MP_subset<2> LOC (S,F);
-        LOC.setName("LOC");
-
-        //index set of allowed transportation links (facility/facility 
-        //respectively facility/customer zone) at tiers s and s+k, k=1,2,3
-        //MP_subset<4> SL (S,F,K,F2);
-        //SL.setName("SL");
-
-        //help set
-        //MP_subset<4> SL_BIG_S (S,F,K,F2);
-        //SL_BIG_S.setName("SL_BIG_S");
-        //forall(S.such_that(S>=1),SL_BIG_S.insert(S,F,K,F2));
-
-        //MP_subset<4> SL_SMALL_S (S,F,K,F2);
-        //SL_SMALL_S.setName("SL_SMALL_S");
-        //forall(S.such_that(S<1),SL_SMALL_S.insert(S,F,K,F2));
-
-
-        //index set of scenarios
-        MP_scenario_set SC(numOfScenarios);
-        SC.setName("SC");
-
-        MP_subset<2> A (F,F);
-        A.setName("A");
-
-        MP_subset<2> AST1 (F,F);
-        AST1.setName("AST1");
-
-        MP_subset<2> AST1CZ (F,F);
-        AST1CZ.setName("AST1CZ");
-
-        MP_subset<2> AST2 (F,F);
-        AST2.setName("AST2");
-
-        MP_subset<2> AST2CZ (F,F);
-        AST2CZ.setName("AST2CZ");
-
-        //TF, ProductVariantsByFunction 
-        TF.insert(Dye, Sweater, SweaterColor1);
-        TF.insert(Dye, Sweater, SweaterColor2);
-        TF.insert(Dye, Yarn, YarnColor1);
-        TF.insert(Dye, Yarn, YarnColor2);
-        TF.insert(DyeANDKnit, Yarn, SweaterColor1);
-        TF.insert(DyeANDKnit, Yarn, SweaterColor2);
-        TF.insert(Knit, YarnColor1, SweaterColor1);
-        TF.insert(Knit, YarnColor2, SweaterColor2);
-        TF.insert(Nothing, Sweater, Sweater);
-        TF.insert(Nothing, SweaterColor1, SweaterColor1);
-        TF.insert(Nothing, SweaterColor2, SweaterColor2);
-        TF.insert(Nothing, Yarn, Yarn);
-        TF.insert(Nothing, YarnColor1, YarnColor1);
-        TF.insert(Nothing, YarnColor2, YarnColor2);
-        TF.insert(Knit, Yarn, Sweater);
-
-        //TL, FunctionsByProductVariant 
-        TL.insert(Sweater, Dye);
-        TL.insert(Sweater, Nothing);
-        TL.insert(SweaterColor1, Nothing);
-        TL.insert(SweaterColor2, Nothing);
-        TL.insert(Yarn, Dye);
-        TL.insert(Yarn, DyeANDKnit);
-        TL.insert(Yarn, Knit);
-        TL.insert(Yarn, Nothing);
-        TL.insert(YarnColor1, Knit);
-        TL.insert(YarnColor1, Nothing);
-        TL.insert(YarnColor2, Knit);
-        TL.insert(YarnColor2, Nothing);
-
-        //LOC, Locations 
-        LOC.insert(0, F1);
-        LOC.insert(1, CW1);
-        LOC.insert(2, RW1);
-        LOC.insert(2, RW2);
-        LOC.insert(3, CZ1);
-        LOC.insert(3, CZ2);
-
-        MP_subset<1> F_in_LOC(F);
-        MP_index f,p;
-        F_in_LOC(f) <<= LOC(MP_index::Any(),f);
-        F_in_LOC.display("F_in_LOC members");
-
-        MP_index g,h; 
-        MP_subset<1> Ffactory (F);
-        Ffactory.setName("Ffactory");
-        Ffactory.insert(F1);
-
-
-        MP_subset<1> FRest(F);
-        FRest.insert(CW1);
-        FRest.insert(RW1);
-        FRest.insert(RW2);
-        FRest.insert(CZ1);
-        FRest.insert(CZ2);
-        FRest.display();
-
-        MP_subset<1> F23(F);
-        F23.insert(CW1);
-        F23.insert(RW1);
-        F23.insert(RW2);
-        F23.display();
-
-        MP_subset<1> F123(F);
-        F123.insert(F1);
-        F123.insert(CW1);
-        F123.insert(RW1);
-        F123.insert(RW2);
-        F123.display();
-
-        MP_subset<1> FC(F);
-        FC.insert(CZ1);
-        FC.insert(CZ2);
-        FC.display();
-
-        MP_subset<1> FC2(F);
-        FC2.insert(CZ1);
-        FC2.insert(CZ2);
-
-        Ffactory.display();
-
-
-        //A, TransportationLinks 
-        A.insert(F1, CW1);
-        A.insert(F1, RW1);
-        A.insert(F1, RW2);
-        A.insert(F1, CZ1);
-        A.insert(F1, CZ2);
-        A.insert(CW1, RW1);
-        A.insert(CW1, RW2);
-        A.insert(CW1, CZ1);
-        A.insert(CW1, CZ2);
-        A.insert(RW1, CZ1);
-        A.insert(RW1, CZ2);
-        A.insert(RW2, CZ1);
-        A.insert(RW2, CZ2);
-
-        //AST1, TransportationLinksStage1 
-        AST1.insert(F1, CW1);
-        AST1.insert(F1, RW1);
-        AST1.insert(F1, RW2);
-        AST1.insert(F1, CZ1);
-        AST1.insert(F1, CZ2);
-
-        AST1CZ.insert(F1, CZ1);
-        AST1CZ.insert(F1, CZ2);
-
-        //AST2, TransportationLinksStage2 
-        AST2.insert(CW1, RW1);
-        AST2.insert(CW1, RW2);
-        AST2.insert(CW1, CZ1);
-        AST2.insert(CW1, CZ2);
-        AST2.insert(RW1, CZ1);
-        AST2.insert(RW1, CZ2);
-        AST2.insert(RW2, CZ1);
-        AST2.insert(RW2, CZ2);
-
-        // Display:
-        MP_subset<1> SALL(S);
-        //SALL.display("F_in_LOC members");
-        AST1.display("AST1_MEMBERS");
-        AST2.display("AST2_MEMBERS");
-
-
-
-        //#####################################################################################################################
-
-
-        //sales price for p in customer region i
-        double sales_price[numOfProducts][numOfFacilities] =
-        {
-            {0,0,0,0,0,0}, 
-            {0,0,0,0,35,35}, 
-            {0,0,0,0,35,35},
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0}
-        };
-        MP_data e(&sales_price[0][0], P, F);
-        e.setName("e");
-
-        e.display();
-        //shipping cost per unit and per unit distance for a product p at tier s
-        A.display();
-        const int i = 13;
-
-        double shipping_costs[13][numOfProducts] =
-        {
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17}, 
-            {0.35,0.8,0.8,0.13,0.17,0.17} 
-        };
-        MP_data cs(&shipping_costs[0][0], A, P);
-        cs.setName("cs");
-        cs.display("values");
-
-        //processing cost per unit of applying activity l in TLp to product p in P in facility i in N
-        double processing_costs[numOfProducts][numOfProdActivities][numOfFacilities] =
-        {
-            {
-                {4.19999980926514, 4.40000009536743, 4.80000019073486, 4.80000019073486,0,0},
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {0.314999997615814 ,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
-            },
-            {
-                {4.19999980926514, 4.40000009536743,4.80000019073486,4.80000019073486,0,0}, 
-                {21,22,24,24,0,0}, 
-                {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395,0,0}, 
-                {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
-                {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0},
-                {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
-                {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
-            }
-        };
-        MP_data cp(&processing_costs[0][0][0], P, L, F);
-        cp.setName("cp");
-        cp.display("cp");
-
-        // fixed cost of establishing activity l in L in a facility i in N
-        double fixed_costs[numOfFacilities][numOfProdActivities] =
-        {
-            {5500000,10000000,5500000,1500000}, 
-            {5000000,9000000,5000000,1000000}, 
-            {6000000,10000000,6000000,2000000}, 
-            {6000000,10000000,6000000,2000000},
-            {0,0,0,0},
-            {0,0,0,0}
-        };
-        MP_data cf(&fixed_costs[0][0], F, L);
-        cf.setName("cf");
-
-        //maximum throughput for product p in P at factory i in N for activity l in TLp
-        double throughput_quantity[numOfProducts][numOfProdActivities][numOfFacilities] =
-        {
-            {
-                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}, 
-                {0,0,0,0,0,0}, 
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0}
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0}, 
-                {0,0,0,0,0,0},
-                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0}, 
-                {0,0,0,0,0,0},
-                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-            },
-            {
-                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
-                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
-                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
-                {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0}, 
-                {0,1000000000,1000000000,1000000000,1000000000,1000000000},
-                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-            },
-            {
-                {0,0,0,0,0,0},
-                {0,0,0,0,0,0}, 
-                {0,1000000000,1000000000,1000000000,1000000000,1000000000},
-                {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
-            }
-        };
-        MP_data ut(&throughput_quantity[0][0][0],P, L, F);
-        ut.setName("ut");
-
-        //maximum shipping quantities for product p in P on arc i,j in A
-        double shipping_quantity[5][numOfProducts] =
-        {
-
-            //{900000,900000,900000,900000,900000,900000}, 
-            //{900000,900000,900000,900000,900000,900000}, 
-            //{900000,900000,900000,900000,900000,900000}, 
-            //{900000,900000,900000,900000,900000,900000}, 
-            //{900000,900000,900000,900000,900000,900000}
-            //{10000,10000,10000,10000,10000,10000}, 
-            //{10000,10000,10000,10000,10000,10000}, 
-            //{10000,10000,10000,10000,10000,10000},  
-            //{10000,10000,10000,10000,10000,10000}, 
-            //{10000,10000,10000,10000,10000,10000}, 
-            //{10000,10000,10000,10000,10000,10000}, 
-            //{10000,10000,10000,10000,10000,10000}, 
-            //{10000,10000,10000,10000,10000,10000}
-
-
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
-        };
-        MP_data us(&shipping_quantity[0][0], AST1, P);
-        us.setName("us");
-
-
-
-        double shipping_quantity2[8][numOfProducts] =
-        {
-
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
-            //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
-        };
-        MP_data us2(&shipping_quantity2[0][0], AST2, P);
-        us2.setName("us2");
-
-        //demand for product p  in P in customer zone i in LOC S
-        //double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
-        //{
-        //{
-        //{
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0}
-        //},
-        //{
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{997273,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}, 
-        //{997274,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}
-        //},
-        //{
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{997275,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}, 
-        //{997276,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}
-        //},
-        //{
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0}
-        //},
-        //{
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0}
-        //},
-        //{
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0},
-        //{0,0,0,0,0,0,0,0,0,0,0}, 
-        //{0,0,0,0,0,0,0,0,0,0,0}
-        //}
-        //}
-        //};
-        //MP_random_data dem(&demand[0][0][0][0],T, P, F);
-        //dem.setName("dem");
-
-
-        //demand for product p  in P in customer zone i in LOC
-        double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
-        {
-            {
-                {
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-                },
-                {
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100},
-                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100}
-                },
-                {
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100},
-                    {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100}
-                },
-                {
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-                },
-                {
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-                },
-                {
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-                }
-            }
-        };
-        MP_random_data dem(&demand[0][0][0][0],T, P, F);
-        dem.setName("dem");
-
-
-        //probability of scenario w
-        double probability[numOfScenarios]= {0.000639728546532731, 0.00852403193428644, 0.0105765779135223, 0.012935952944857, 0.0155961407723669, 0.0185340790816787, 0.0217106622092895, 0.025068735723926, 0.0285340991358651, 0.0320135004782923, 0.0354036606911876, 0.000904443807166965, 0.0385952844586071, 0.0414730602086839, 0.0439286953347946, 0.0458659297421633, 0.0472035439758227, 0.0478873917324611, 0.0478873917324611, 0.0472035439758227, 0.0458659297421633, 0.0439286953347946, 0.00125840019733319, 0.0414730602086839, 0.0385952844586071, 0.0354036606911876, 0.0320135004782923, 0.0285340991358651, 0.025068735723926, 0.0217106622092895, 0.0185340790816787, 0.0155961407723669, 0.012935952944857, 0.00172666545004602, 0.0105765779135223, 0.00852403193428644, 0.00677229875122581, 0.00530332959656993, 0.00409305944662478, 0.00311441514973458, 0.00233631271696123, 0.00172666545004602, 0.00125840019733319, 0.000904443807166965, 0.00233631271696123, 0.000639728546532731, 0.00311441514973458, 0.00409305944662478, 0.00530332959656993, 0.00677229875122581};
-        MP_data prob(&probability[0], SC);
-        prob.setName("prob");
-
-        postponement.setProbabilities(prob);
-
-        ////demand for product p  in P in customer zone i in LOC S
-        //double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
-        //{
-        //	{
-        //		{
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}
-        //		},
-        //		{
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{997273,1002178}, 
-        //			{997274,1002178}
-        //		},
-        //		{
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{997275,1002178}, 
-        //			{997276,1002178}
-        //		},
-        //		{
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}
-        //		},
-        //		{
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}
-        //		},
-        //		{
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}, 
-        //			{0,0}
-        //		}
-        //	}
-        //};
-        //MP_random_data dem(&demand[0][0][0][0],T, P, F);
-        //dem.setName("dem");
-
-
-
-        //supply of product p in P in factory i in LOC1
-        double supply[numOfFacilities][numOfProducts]=
-        {
-            {0,0,0,1000000000,0,0},
-            {0,0,0,0,0,0},
-            {0,0,0,0,0,0}, 
-            {0,0,0,0,0,0}, 
-            {0,0,0,0,0,0}, 
-            {0,0,0,0,0,0}
-        };
-        MP_data sup(&supply[0][0], F, P);
-        sup.setName("sup");
-
-
-
-        /////probability of scenario w
-        //double probability[numOfScenarios]= {0.00571781238321666, 0.0211039074890618, 0.0582671832435135, 0.120373626527764, 0.186103922517481, 0.21534421591229, 0.18649967087763, 0.120886596554084, 0.0586398880282614, 0.0212842485139399, 0.00577892795275867}; //{1.0/2, 1.0/2};
-        //MP_data prob(&probability[0], SC);
-        //prob.setName("prob");
-        //postponement.setProbabilities(prob);
-
-
-        //#########################################################################################
-        //Variables
-        //binary
-        // 1, if function l is established in facility i at tier s; 0 otherwise;
-        MP_variable y(F,L); //F123
-        y.binary();
-        y.setName("y");
-
-        //Decision Variables
-        // quantities in scenario of product p shipped from a facility at candidate 
-        // location i at tier s to a facility at candidate location j at tier s+k where
-        // function l is executed at tier s and l2 at tier s+k
-        MP_variable z(P,AST2,T);
-        z.setName("z");	
-
-        MP_variable z1(P,AST1);
-        z1.setName("z1");
-
-        // quantity in scenario   of product p processed in a facility at candidate 
-        // location i at tier s by the implemented function l;
-        MP_variable x(P,P2,F,L,T); //F23
-        x.setName("x");	
-        MP_variable x1(P,P2,F,L); //Ffactory
-        x1.setName("x1");	
-        //TL(P,L)
-
-        MP_variable v(P,F,T); //F23
-        v.setName("v");	
-        //MP_variable v(P,FRest,T);
-        //MP_variable v1(P,Ffactory);
-
-        MP_variable u(P,F,T); //F23
-        u.setName("u");	
-        MP_variable u1(P,F); //Ffactory
-        u1.setName("u1");	
-
-        MP_index arci,arcj;
-        MP_index arci2,arcj2;
-        MP_index func;
-        MP_index pS;
-
-        MP_index p1, p2, p3, f23;
-        MP_index l1, ffactory;
-        MP_index f123, fc;
-
-
-        //##############################################################################################
-        postponement.setObjective(
-            //sum(P, 
-            //sum(AST1(arci,FC(F)), e(P,FC(F))*z1(P,(arci,FC(F))))
-            //	)
-            //sum(P*AST1(arci,arcj).such_that(arcj==FC), z1(P,AST1))
-
-            -sum(P*AST1(arci,arcj).such_that(FC(arcj)), e(P,arcj) * z1(P,AST1))		   
-
-
-            +sum(P,
-            sum(AST1, cs(AST1,P)*z1(P,AST1))
-            )
-
-            +sum(P,
-            sum(Ffactory(F),
-            sum(L.such_that(TL(P,L)),
-            sum(P2.such_that(TF(L,P,P2)),cp(P,L,F)*x1(P,P2,F,L))
-            )
-            )
-            )
-
-            //+sum(P, 
-            //sum(AST2(arci2,arcj2).such_that(arcj2==FC(F)), e(P,arcj2)*z(P,AST2(arci,arcj),T.last()))
-            //	)
-
-            -sum(P, 
-            sum(AST2(arci2,arcj2).such_that(FC(arcj2)), e(P,arcj2) * z(P,AST2,T+1))
-            )
-
-            +sum(P,
-            sum(AST2, cs(AST2,P)*z(P,AST2,T+1))
-            )
-
-            +sum(P,
-            sum(F23(F),
-            sum(L.such_that(TL(P,L)),
-            sum(P2.such_that(TF(L,P,P2)),cp(P,L,F)*x(P,P2,F,L,T+1))
-            )
-            )
-            )
-
-            +sum(F123(F)*L,cf(F,L)*y(F,L))
-            );
-        ////// CONSTRAINTS
-
-        // Material balance
-        //Flows entering a facility
-        //MP_constraint material_balance_entering(P,F23,T);
-
-        //material_balance_entering(p1,f23,T)=
-
-        //	v(p1,f23,T) + sum(L.such_that(TL(p1,L))*P2(p2).such_that(TF(L,p1,p2)),x(p1,p2,f23,L,T)) 
-
-        //	== 
-
-        //	sum(A(arci,arcj).such_that(arcj==f23),z(p1,A(arci,arcj).such_that(arcj==f23),T));
-
-        //material_balance_entering.setName("material_balance_entering");
-
-        //Flows entering a facility
-
-        MP_constraint material_balance_entering(P,F,T);
-
-        material_balance_entering(P,F,T+1).such_that(F23(F))=
-
-            v(P,F,T) + 
-
-            //sum(TL(p1,L).such_that(p1==P)*TF(l1,p1,P2).such_that(l1==L && p1==P),
-            sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x(P,P2,F,L,T))
-
-            ==
-
-            sum(AST2(arci,F),z(P,AST2,T))
-            +
-            sum(AST1(arci,F),z1(P,AST1));
-
-
-        material_balance_entering.setName("material_balance_entering");
-
-        //Demand
-
-        /*
-        //AST1, TransportationLinksStage1 (F,F)
-        AST1.insert(F1, CW1);
-        AST1.insert(F1, RW1);
-        AST1.insert(F1, RW2);
-        AST1.insert(F1, CZ1);
-        AST1.insert(F1, CZ2);
-
-        //AST2, TransportationLinksStage2 (F,F)
-        AST2.insert(CW1, RW1);
-        AST2.insert(CW1, RW2);
-        AST2.insert(CW1, CZ1);
-        AST2.insert(CW1, CZ2);
-        AST2.insert(RW1, CZ1);
-        AST2.insert(RW1, CZ2);
-        AST2.insert(RW2, CZ1);
-        AST2.insert(RW2, CZ2);
-        */
-        //MP_variable z(P,AST2,T);	
-        //material_balance_entering(P,F,T).such_that(F23(F))=
-        //	MP_variable z1(P,AST1);
-
-        MP_constraint demand_constraint(T,P,F);
-        //demand_constraint(T+1,P,F).such_that(FC(F))=
-
-        //	dem(T,P,F) >= (sum(AST2(arci,arcj).such_that(arcj==F), z(P,AST2(arci,arcj),T)) 
-        //				   +
-        //sum(AST1,z1(P,AST1));
-        //				   sum(AST1(arci,arcj).such_that(arcj==F), z1(P,AST1(arci,arcj)))
-        //				   );
-        demand_constraint(T+1,P,F).such_that(FC(F)) = dem(T,P,F) >= sum(AST2(arci,F),z(P,AST2,T))
-            +
-            sum(AST1(arci,F),z1(P,AST1));
-        /*sum(P*AST1(arci,arcj).such_that(arcj==FC(F)), e(P,arcj) * z1(P,AST1(arci,arcj)))
-        dem(T,P,FC(F)) >=(sum(AST2(arci,f), z(P,A(arci,f),T)) 
-        + 
-        sum(AST1(arci,f), z1(P,A(arci,f))));
-        */
-        //flows leaving a facility stage1
-
-
-        MP_constraint material_balance_leaving_stage1(P2,F);
-
-        material_balance_leaving_stage1(P2,F).such_that(Ffactory(F))=
-
-            sum(L,
-            sum(P.such_that(TF(L,P,P2)), x1(P,P2,F,L)))
-
-            ==
-
-            u1(P2,F) + sum(AST1(F,arcj), z1(P2,AST1));
-
-        material_balance_leaving_stage1.setName("material_balance_leaving_stage1");
-
-
-        //flows leaving a facility stage2
-        MP_constraint material_balance_leaving_stage2(P2,F,T);
-        material_balance_leaving_stage2(P2,F,T+1).such_that(F23(F)) =
-
-            sum(L,
-            sum(P.such_that(TF(L,P,P2)), x(P,P2,F,L,T)))
-
-            == 
-
-            u(P2,F,T) + sum(AST2(F,arcj), z(P2,AST2,T));
-
-        material_balance_leaving_stage2.setName("material_balance_leaving_stage2");
-
-
-        //Supply
-        MP_constraint supply_constraint(F,P);
-
-        supply_constraint(F,P).such_that(Ffactory(F))=
-            //sup(P,Ffactory(F)) >= sum(L.such_that(TL(P,L))*P2(p2).such_that(TF(L,P,p2)),x1(P,p2,F,L));
-            sup(F,P) >= sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x1(P,P2,F,L));
-
-        supply_constraint.setName("supply_constraint");
-
-
-
-        //capacity constraint
-        //Transport capacity
-        MP_constraint transport_capacity(P,AST1);
-
-        transport_capacity(P,AST1)=
-
-            z1(P,AST1)  <= us(AST1,P);
-
-        transport_capacity.setName("transport_capacity");
-
-
-
-        //Transport capacity_stage2
-        MP_constraint transport_capacity_stage2(P,AST2,T);
-
-        transport_capacity_stage2(P,AST2,T+1)=
-
-            z(P,A,T)  <= us2(AST2,P);
-
-        transport_capacity_stage2.setName("transport_capacity_stage2");
-
-
-
-        //Facility capacity
-        MP_constraint facility_capacity_stage1(P,F,L);
-
-        facility_capacity_stage1(P,F,L).such_that(Ffactory(F))=
-
-            sum(P2.such_that(TF(L,P,P2)), x1(P,P2,F,L) )  
-
-            <=
-
-            ut(P,L,F)* y(F,L);
-
-        //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
-
-        facility_capacity_stage1.setName("facility_capacity_stage1");
-
-
-        //Facility capacity Stage 2
-        MP_constraint facility_capacity_stage2(P,F,L,T);
-
-        facility_capacity_stage2(P,F,L,T+1).such_that(F23(F))=
-
-            //sum(P2.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
-            //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
-
-            sum(P2.such_that(TF(L,P,P2)),  x(P,P2,F,L,T))
-
-            <=
-            ut(P,L,F)* y(F,L);
-
-        facility_capacity_stage2.setName("facility_capacity_stage2");
-
-
-        //sum(P.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
-
-        //Non anticipativity
-
-        //MP_constraint non_ant_x(P,F,L,P2,T);
-        //		non_ant_x(P,F,L,P2,T+1).such_that(Ffactory(F) && TL(P,L) && TF(L,P,P2)) =
-
-        //		x1(P,P2,F,L) == x(P,P2,F,L,T);
-        //	non_ant_x.setName("non_ant_x");
-
-
-        /*
-
-        MP_constraint facility_x(P,P2,F,L,T);
-        facility_x(P,P2,F,L,T).such_that(F23(F))=
-
-        x(P,P2,F23(F),L,T)<= 100000000;
-        facility_x.setName("facility_x");
-        */
-        /*	
-        MP_constraint nfacility_xeins(P,P2,Ffactory,L);
-        nfacility_xeins(P,P2,Ffactory,L)=
-        x1(P,P2,Ffactory,L) <= 100000000;
-        nfacility_xeins.setName("nfacility_xeins");
-        */
-
-        /*
-        MP_constraint zz(P,AST2,T);
-        zz(P,AST2,T)=
-
-        z(P,AST2,T)<= 10000000;
-        zz.setName("zz");
-
-        /*	
-        MP_constraint zeins(P,AST1);
-        zeins(P,AST1)=
-        z1(P,AST1) <= 1000000000;
-        zeins.setName("zeins");
-        */
-
-        //Cplex
-        clock_t init, final;
-
-        postponement.attach(postponement.Solver);
-
-        postponement.getSmi()->writeSmps("PostponementMPS", false, false);
-
-
-
-        ////		//////postponement.verbose();
-        //init=clock();
-        //postponement.solve(MP_model::MINIMIZE);
-        //postponement->writeLp("postponement-problem");
-        //postponement->writeMps("postponement-problem");
-        //final=clock()-init;
-
-
-        ////	///////////////////////////////////////////////////////////////////////////////////
-        ////freopen( "postponement_results_det_equivalent.txt", "w", stdout );
-        //cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
-        //cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
-        //double result = postponement.Solver->getObjValue();
-        //cout << "Obj. Value: " << result << endl;
-
-
-        //u1.display("u1");
-        //x1.display("x1");
-        //z1.display("z1");
-        //y.display("y");
-        //z.display("z");	
-        //x.display("x");
-        //v.display("v");
-        //u.display("u");
-
-        //// solve the det. equivalent
-        //OsiCpxSolverInterface osi_cpx;
-        //postponement.smiModel->setOsiSolverHandle(&osi_cpx);
-        //OsiSolverInterface *osiStoch =  postponement.smiModel->loadOsiSolverData();
-        //osiStoch->setObjSense(MP_model::MINIMIZE);
-        //osiStoch->branchAndBound();
-        //osiStoch->writeMps("Postponement_Output");
-
-
-        OsiCpxSolverInterface osi_cpx;
-        OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, postponement.smiModel);
-
-        parallel_benders::Parameter benders_parameter;
-        benders_parameter.init();
-        benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,true);
-        benders_parameter.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
-        benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
-        nested_benders.setParameters(benders_parameter);
-
-        init=clock();
-        nested_benders.initialSolve();
-        final=clock()-init;
-        //freopen( "postponement_results.txt", "w", stdout );
-
-        cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
-        cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
-        double result2 = nested_benders.getObjValue();
-        cout << "Obj. Value: " << result2 << endl;
-        const double* first_stage_solution= nested_benders.getFirstStageSolution();
-        
-        for (int i=0; i<67; i++)
-        {
-            cout << i << " : " << first_stage_solution[i]<<endl;
-
-        }
-        for (int scenario = 0; scenario < 50; scenario++){
-            for (int i = 0; i<postponement.getSmi()->getCore()->getNumCols(1); i++){
-
-            }
-        }
-
-        const double* second_solution_1 = nested_benders.getSolutionByNodeAndStage(0,1);
-        const double* second_solution_2 = nested_benders.getSolutionByNodeAndStage(1,1);
-
-        //demand_constraint(T+1,P,F).such_that(FC(F)).display("Demand"); 
-        //supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
-
-        //z1.display("z1");
-        //u1.display("u1");
-        //x1.display("x1");
-        //y.display("y");
-        //z.display("z");	
-        //x.display("x");
-        //v.display("v");
-        //u.display("u");
-        //dem.display("dem",0);
-        //dem.display("dem",1);
-        //dem.display("dem",2);
-
-
-    }
+    //TEST_F(UseCaseTest,Postponement){
+    //    //Sets 
+    //    //MP_model postponement(new OsiCpxSolverInterface());
+    //    MP_model postponement(new OsiCpxSolverInterface());
+    //    //enum {numT=2};
+    //    //MP_stage T(numT);
+    //    MP_stage T(2);
+
+    //    T.setName("T");
+    //    //TierID
+    //    enum {T1, T2, T3, T4, numOfTiers};
+    //    //FacilityID
+    //    enum {F1, CW1, RW1, RW2, CZ1, CZ2, numOfFacilities};
+    //    //ProductID
+    //    enum {Sweater, SweaterColor1, SweaterColor2, Yarn, YarnColor1, YarnColor2, numOfProducts};
+    //    //FunctionID
+    //    enum {Dye, DyeANDKnit, Knit, Nothing, numOfProdActivities};
+    //    //ScenarioID
+    //    //enum {Scen1, Scen2, Scen3, Scen4, Scen5, Scen6, Scen7, Scen8, Scen9, Scen10, Scen11, Scen12, Scen13, Scen14, Scen15, numOfScenarios};
+    //    //ScenarioID
+    //    enum {Scen_1, Scen_10, Scen_11, Scen_12, Scen_13, Scen_14, Scen_15, Scen_16, Scen_17, Scen_18, Scen_19, Scen_2, Scen_20, Scen_21, Scen_22, Scen_23, Scen_24, Scen_25, Scen_26, Scen_27, Scen_28, Scen_29, Scen_3, Scen_30, Scen_31, Scen_32, Scen_33, Scen_34, Scen_35, Scen_36, Scen_37, Scen_38, Scen_39, Scen_4, Scen_40, Scen_41, Scen_42, Scen_43, Scen_44, Scen_45, Scen_46, Scen_47, Scen_48, Scen_49, Scen_5, Scen_50, Scen_6, Scen_7, Scen_8, Scen_9, numOfScenarios};
+
+
+
+    //    // index set of tiers
+    //    MP_set S(numOfTiers);
+    //    S.setName("S");
+    //    MP_set K(numOfTiers);
+    //    K.setName("K");
+    //    MP_subset<1> S123(S);
+    //    S123.setName("S123");
+    //    forall(S.such_that(!(S==3)),S123.insert(S));
+    //    MP_subset<1> S23(S);
+    //    S23.setName("S23");
+    //    forall(S.such_that(!(S==0)&&!(S==3)),S23.insert(S));
+    //    MP_subset<1> S1(S);
+    //    S1.setName("S1");
+    //    forall(S.such_that((S==0)),S1.insert(S));
+
+    //    //Display:
+    //    S1.display("F_in_LOC members");
+    //    S23.display("F_in_LOC members");
+    //    S123.display("F_in_LOC members");
+
+    //    //index set of products
+    //    MP_set P(numOfProducts);
+    //    P.setName("P");
+    //    MP_set P2(numOfProducts);
+    //    P2.setName("P2");
+    //    MP_set P3(numOfProducts);
+    //    P3.setName("P3");
+    //    MP_set P4(numOfProducts);
+    //    P4.setName("P4");
+
+    //    //index set of different functions
+    //    MP_set L(numOfProdActivities);
+    //    L.setName("L");
+    //    MP_set L2(numOfProdActivities);
+    //    L2.setName("L2");
+
+    //    //index set of product variants generated by applying activity l to product p
+    //    MP_subset<3> TF (L,P2,P3);
+    //    TF.setName("TF");
+
+
+
+    //    //index set of possible functions that can be applied to a product variant p
+    //    MP_subset<2> TL(P,L);
+    //    TL.setName("TL");
+    //    //TL.insert(Sweater,Dye);
+
+
+
+    //    MP_set F(numOfFacilities);
+    //    F.setName("F");
+    //    MP_set F2(numOfFacilities);
+    //    F2.setName("F2");
+
+    //    MP_subset<2> LOC (S,F);
+    //    LOC.setName("LOC");
+
+    //    //index set of allowed transportation links (facility/facility 
+    //    //respectively facility/customer zone) at tiers s and s+k, k=1,2,3
+    //    //MP_subset<4> SL (S,F,K,F2);
+    //    //SL.setName("SL");
+
+    //    //help set
+    //    //MP_subset<4> SL_BIG_S (S,F,K,F2);
+    //    //SL_BIG_S.setName("SL_BIG_S");
+    //    //forall(S.such_that(S>=1),SL_BIG_S.insert(S,F,K,F2));
+
+    //    //MP_subset<4> SL_SMALL_S (S,F,K,F2);
+    //    //SL_SMALL_S.setName("SL_SMALL_S");
+    //    //forall(S.such_that(S<1),SL_SMALL_S.insert(S,F,K,F2));
+
+
+    //    //index set of scenarios
+    //    MP_scenario_set SC(numOfScenarios);
+    //    SC.setName("SC");
+
+    //    MP_subset<2> A (F,F);
+    //    A.setName("A");
+
+    //    MP_subset<2> AST1 (F,F);
+    //    AST1.setName("AST1");
+
+    //    MP_subset<2> AST1CZ (F,F);
+    //    AST1CZ.setName("AST1CZ");
+
+    //    MP_subset<2> AST2 (F,F);
+    //    AST2.setName("AST2");
+
+    //    MP_subset<2> AST2CZ (F,F);
+    //    AST2CZ.setName("AST2CZ");
+
+    //    //TF, ProductVariantsByFunction 
+    //    TF.insert(Dye, Sweater, SweaterColor1);
+    //    TF.insert(Dye, Sweater, SweaterColor2);
+    //    TF.insert(Dye, Yarn, YarnColor1);
+    //    TF.insert(Dye, Yarn, YarnColor2);
+    //    TF.insert(DyeANDKnit, Yarn, SweaterColor1);
+    //    TF.insert(DyeANDKnit, Yarn, SweaterColor2);
+    //    TF.insert(Knit, YarnColor1, SweaterColor1);
+    //    TF.insert(Knit, YarnColor2, SweaterColor2);
+    //    TF.insert(Nothing, Sweater, Sweater);
+    //    TF.insert(Nothing, SweaterColor1, SweaterColor1);
+    //    TF.insert(Nothing, SweaterColor2, SweaterColor2);
+    //    TF.insert(Nothing, Yarn, Yarn);
+    //    TF.insert(Nothing, YarnColor1, YarnColor1);
+    //    TF.insert(Nothing, YarnColor2, YarnColor2);
+    //    TF.insert(Knit, Yarn, Sweater);
+
+    //    //TL, FunctionsByProductVariant 
+    //    TL.insert(Sweater, Dye);
+    //    TL.insert(Sweater, Nothing);
+    //    TL.insert(SweaterColor1, Nothing);
+    //    TL.insert(SweaterColor2, Nothing);
+    //    TL.insert(Yarn, Dye);
+    //    TL.insert(Yarn, DyeANDKnit);
+    //    TL.insert(Yarn, Knit);
+    //    TL.insert(Yarn, Nothing);
+    //    TL.insert(YarnColor1, Knit);
+    //    TL.insert(YarnColor1, Nothing);
+    //    TL.insert(YarnColor2, Knit);
+    //    TL.insert(YarnColor2, Nothing);
+
+    //    //LOC, Locations 
+    //    LOC.insert(0, F1);
+    //    LOC.insert(1, CW1);
+    //    LOC.insert(2, RW1);
+    //    LOC.insert(2, RW2);
+    //    LOC.insert(3, CZ1);
+    //    LOC.insert(3, CZ2);
+
+    //    MP_subset<1> F_in_LOC(F);
+    //    MP_index f,p;
+    //    F_in_LOC(f) <<= LOC(MP_index::Any(),f);
+    //    F_in_LOC.display("F_in_LOC members");
+
+    //    MP_index g,h; 
+    //    MP_subset<1> Ffactory (F);
+    //    Ffactory.setName("Ffactory");
+    //    Ffactory.insert(F1);
+
+
+    //    MP_subset<1> FRest(F);
+    //    FRest.insert(CW1);
+    //    FRest.insert(RW1);
+    //    FRest.insert(RW2);
+    //    FRest.insert(CZ1);
+    //    FRest.insert(CZ2);
+    //    FRest.display();
+
+    //    MP_subset<1> F23(F);
+    //    F23.insert(CW1);
+    //    F23.insert(RW1);
+    //    F23.insert(RW2);
+    //    F23.display();
+
+    //    MP_subset<1> F123(F);
+    //    F123.insert(F1);
+    //    F123.insert(CW1);
+    //    F123.insert(RW1);
+    //    F123.insert(RW2);
+    //    F123.display();
+
+    //    MP_subset<1> FC(F);
+    //    FC.insert(CZ1);
+    //    FC.insert(CZ2);
+    //    FC.display();
+
+    //    MP_subset<1> FC2(F);
+    //    FC2.insert(CZ1);
+    //    FC2.insert(CZ2);
+
+    //    Ffactory.display();
+
+
+    //    //A, TransportationLinks 
+    //    A.insert(F1, CW1);
+    //    A.insert(F1, RW1);
+    //    A.insert(F1, RW2);
+    //    A.insert(F1, CZ1);
+    //    A.insert(F1, CZ2);
+    //    A.insert(CW1, RW1);
+    //    A.insert(CW1, RW2);
+    //    A.insert(CW1, CZ1);
+    //    A.insert(CW1, CZ2);
+    //    A.insert(RW1, CZ1);
+    //    A.insert(RW1, CZ2);
+    //    A.insert(RW2, CZ1);
+    //    A.insert(RW2, CZ2);
+
+    //    //AST1, TransportationLinksStage1 
+    //    AST1.insert(F1, CW1);
+    //    AST1.insert(F1, RW1);
+    //    AST1.insert(F1, RW2);
+    //    AST1.insert(F1, CZ1);
+    //    AST1.insert(F1, CZ2);
+
+    //    AST1CZ.insert(F1, CZ1);
+    //    AST1CZ.insert(F1, CZ2);
+
+    //    //AST2, TransportationLinksStage2 
+    //    AST2.insert(CW1, RW1);
+    //    AST2.insert(CW1, RW2);
+    //    AST2.insert(CW1, CZ1);
+    //    AST2.insert(CW1, CZ2);
+    //    AST2.insert(RW1, CZ1);
+    //    AST2.insert(RW1, CZ2);
+    //    AST2.insert(RW2, CZ1);
+    //    AST2.insert(RW2, CZ2);
+
+    //    // Display:
+    //    MP_subset<1> SALL(S);
+    //    //SALL.display("F_in_LOC members");
+    //    AST1.display("AST1_MEMBERS");
+    //    AST2.display("AST2_MEMBERS");
+
+
+
+    //    //#####################################################################################################################
+
+
+    //    //sales price for p in customer region i
+    //    double sales_price[numOfProducts][numOfFacilities] =
+    //    {
+    //        {0,0,0,0,0,0}, 
+    //        {0,0,0,0,35,35}, 
+    //        {0,0,0,0,35,35},
+    //        {0,0,0,0,0,0},
+    //        {0,0,0,0,0,0},
+    //        {0,0,0,0,0,0}
+    //    };
+    //    MP_data e(&sales_price[0][0], P, F);
+    //    e.setName("e");
+
+    //    e.display();
+    //    //shipping cost per unit and per unit distance for a product p at tier s
+    //    A.display();
+    //    const int i = 13;
+
+    //    double shipping_costs[13][numOfProducts] =
+    //    {
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17}, 
+    //        {0.35,0.8,0.8,0.13,0.17,0.17} 
+    //    };
+    //    MP_data cs(&shipping_costs[0][0], A, P);
+    //    cs.setName("cs");
+    //    cs.display("values");
+
+    //    //processing cost per unit of applying activity l in TLp to product p in P in facility i in N
+    //    double processing_costs[numOfProducts][numOfProdActivities][numOfFacilities] =
+    //    {
+    //        {
+    //            {4.19999980926514, 4.40000009536743, 4.80000019073486, 4.80000019073486,0,0},
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {0.314999997615814 ,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {0.314999997615814, 0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
+    //        },
+    //        {
+    //            {4.19999980926514, 4.40000009536743,4.80000019073486,4.80000019073486,0,0}, 
+    //            {21,22,24,24,0,0}, 
+    //            {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395,0,0}, 
+    //            {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115,0,0} 
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
+    //            {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0},
+    //            {16.7999992370605,17.6000003814697,19.2000007629395,19.2000007629395}, 
+    //            {0.314999997615814,0.330000013113022,0.360000014305115,0.360000014305115} 
+    //        }
+    //    };
+    //    MP_data cp(&processing_costs[0][0][0], P, L, F);
+    //    cp.setName("cp");
+    //    cp.display("cp");
+
+    //    // fixed cost of establishing activity l in L in a facility i in N
+    //    double fixed_costs[numOfFacilities][numOfProdActivities] =
+    //    {
+    //        {5500000,10000000,5500000,1500000}, 
+    //        {5000000,9000000,5000000,1000000}, 
+    //        {6000000,10000000,6000000,2000000}, 
+    //        {6000000,10000000,6000000,2000000},
+    //        {0,0,0,0},
+    //        {0,0,0,0}
+    //    };
+    //    MP_data cf(&fixed_costs[0][0], F, L);
+    //    cf.setName("cf");
+
+    //    //maximum throughput for product p in P at factory i in N for activity l in TLp
+    //    double throughput_quantity[numOfProducts][numOfProdActivities][numOfFacilities] =
+    //    {
+    //        {
+    //            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}, 
+    //            {0,0,0,0,0,0}, 
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0}
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0}, 
+    //            {0,0,0,0,0,0},
+    //            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0}, 
+    //            {0,0,0,0,0,0},
+    //            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+    //        },
+    //        {
+    //            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
+    //            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
+    //            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000},
+    //            {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0}, 
+    //            {0,1000000000,1000000000,1000000000,1000000000,1000000000},
+    //            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+    //        },
+    //        {
+    //            {0,0,0,0,0,0},
+    //            {0,0,0,0,0,0}, 
+    //            {0,1000000000,1000000000,1000000000,1000000000,1000000000},
+    //            {0,1000000000, 1000000000,1000000000,1000000000,1000000000}
+    //        }
+    //    };
+    //    MP_data ut(&throughput_quantity[0][0][0],P, L, F);
+    //    ut.setName("ut");
+
+    //    //maximum shipping quantities for product p in P on arc i,j in A
+    //    double shipping_quantity[5][numOfProducts] =
+    //    {
+
+    //        //{900000,900000,900000,900000,900000,900000}, 
+    //        //{900000,900000,900000,900000,900000,900000}, 
+    //        //{900000,900000,900000,900000,900000,900000}, 
+    //        //{900000,900000,900000,900000,900000,900000}, 
+    //        //{900000,900000,900000,900000,900000,900000}
+    //        //{10000,10000,10000,10000,10000,10000}, 
+    //        //{10000,10000,10000,10000,10000,10000}, 
+    //        //{10000,10000,10000,10000,10000,10000},  
+    //        //{10000,10000,10000,10000,10000,10000}, 
+    //        //{10000,10000,10000,10000,10000,10000}, 
+    //        //{10000,10000,10000,10000,10000,10000}, 
+    //        //{10000,10000,10000,10000,10000,10000}, 
+    //        //{10000,10000,10000,10000,10000,10000}
+
+
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
+    //    };
+    //    MP_data us(&shipping_quantity[0][0], AST1, P);
+    //    us.setName("us");
+
+
+
+    //    double shipping_quantity2[8][numOfProducts] =
+    //    {
+
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        {1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000}, 
+    //        //{1000000000,1000000000,1000000000,1000000000,1000000000,1000000000} 
+    //    };
+    //    MP_data us2(&shipping_quantity2[0][0], AST2, P);
+    //    us2.setName("us2");
+
+    //    //demand for product p  in P in customer zone i in LOC S
+    //    //double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
+    //    //{
+    //    //{
+    //    //{
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0}
+    //    //},
+    //    //{
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{997273,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}, 
+    //    //{997274,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}
+    //    //},
+    //    //{
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{997275,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}, 
+    //    //{997276,1002178,1002723,997818,998363,998908,999453,999998,1000543,1001088,1001633}
+    //    //},
+    //    //{
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0}
+    //    //},
+    //    //{
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0}
+    //    //},
+    //    //{
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0},
+    //    //{0,0,0,0,0,0,0,0,0,0,0}, 
+    //    //{0,0,0,0,0,0,0,0,0,0,0}
+    //    //}
+    //    //}
+    //    //};
+    //    //MP_random_data dem(&demand[0][0][0][0],T, P, F);
+    //    //dem.setName("dem");
+
+
+    //    //demand for product p  in P in customer zone i in LOC
+    //    double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
+    //    {
+    //        {
+    //            {
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    //            },
+    //            {
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100},
+    //                {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100}
+    //            },
+    //            {
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100},
+    //                {285300, 290700, 291300, 291900, 292500, 293100, 293700, 294300, 294900, 295500, 296100, 285900, 296700, 297300, 297900, 298500, 299100, 299700, 300300, 300900, 301500, 302100, 286500, 302700, 303300, 303900, 304500, 305100, 305700, 306300, 306900, 307500, 308100, 287100, 308700, 309300, 309900, 310500, 311100, 311700, 312300, 312900, 313500, 314100, 287700, 314700, 288300, 288900, 289500, 290100}
+    //            },
+    //            {
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    //            },
+    //            {
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    //            },
+    //            {
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //                {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    //            }
+    //        }
+    //    };
+    //    MP_random_data dem(&demand[0][0][0][0],T, P, F);
+    //    dem.setName("dem");
+
+
+    //    //probability of scenario w
+    //    double probability[numOfScenarios]= {0.000639728546532731, 0.00852403193428644, 0.0105765779135223, 0.012935952944857, 0.0155961407723669, 0.0185340790816787, 0.0217106622092895, 0.025068735723926, 0.0285340991358651, 0.0320135004782923, 0.0354036606911876, 0.000904443807166965, 0.0385952844586071, 0.0414730602086839, 0.0439286953347946, 0.0458659297421633, 0.0472035439758227, 0.0478873917324611, 0.0478873917324611, 0.0472035439758227, 0.0458659297421633, 0.0439286953347946, 0.00125840019733319, 0.0414730602086839, 0.0385952844586071, 0.0354036606911876, 0.0320135004782923, 0.0285340991358651, 0.025068735723926, 0.0217106622092895, 0.0185340790816787, 0.0155961407723669, 0.012935952944857, 0.00172666545004602, 0.0105765779135223, 0.00852403193428644, 0.00677229875122581, 0.00530332959656993, 0.00409305944662478, 0.00311441514973458, 0.00233631271696123, 0.00172666545004602, 0.00125840019733319, 0.000904443807166965, 0.00233631271696123, 0.000639728546532731, 0.00311441514973458, 0.00409305944662478, 0.00530332959656993, 0.00677229875122581};
+    //    MP_data prob(&probability[0], SC);
+    //    prob.setName("prob");
+
+    //    postponement.setProbabilities(prob);
+
+    //    ////demand for product p  in P in customer zone i in LOC S
+    //    //double demand[1][numOfProducts][numOfFacilities][numOfScenarios] =
+    //    //{
+    //    //	{
+    //    //		{
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}
+    //    //		},
+    //    //		{
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{997273,1002178}, 
+    //    //			{997274,1002178}
+    //    //		},
+    //    //		{
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{997275,1002178}, 
+    //    //			{997276,1002178}
+    //    //		},
+    //    //		{
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}
+    //    //		},
+    //    //		{
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}
+    //    //		},
+    //    //		{
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}, 
+    //    //			{0,0}
+    //    //		}
+    //    //	}
+    //    //};
+    //    //MP_random_data dem(&demand[0][0][0][0],T, P, F);
+    //    //dem.setName("dem");
+
+
+
+    //    //supply of product p in P in factory i in LOC1
+    //    double supply[numOfFacilities][numOfProducts]=
+    //    {
+    //        {0,0,0,1000000000,0,0},
+    //        {0,0,0,0,0,0},
+    //        {0,0,0,0,0,0}, 
+    //        {0,0,0,0,0,0}, 
+    //        {0,0,0,0,0,0}, 
+    //        {0,0,0,0,0,0}
+    //    };
+    //    MP_data sup(&supply[0][0], F, P);
+    //    sup.setName("sup");
+
+
+
+    //    /////probability of scenario w
+    //    //double probability[numOfScenarios]= {0.00571781238321666, 0.0211039074890618, 0.0582671832435135, 0.120373626527764, 0.186103922517481, 0.21534421591229, 0.18649967087763, 0.120886596554084, 0.0586398880282614, 0.0212842485139399, 0.00577892795275867}; //{1.0/2, 1.0/2};
+    //    //MP_data prob(&probability[0], SC);
+    //    //prob.setName("prob");
+    //    //postponement.setProbabilities(prob);
+
+
+    //    //#########################################################################################
+    //    //Variables
+    //    //binary
+    //    // 1, if function l is established in facility i at tier s; 0 otherwise;
+    //    MP_variable y(F,L); //F123
+    //    y.binary();
+    //    y.setName("y");
+
+    //    //Decision Variables
+    //    // quantities in scenario of product p shipped from a facility at candidate 
+    //    // location i at tier s to a facility at candidate location j at tier s+k where
+    //    // function l is executed at tier s and l2 at tier s+k
+    //    MP_variable z(P,AST2,T);
+    //    z.setName("z");	
+
+    //    MP_variable z1(P,AST1);
+    //    z1.setName("z1");
+
+    //    // quantity in scenario   of product p processed in a facility at candidate 
+    //    // location i at tier s by the implemented function l;
+    //    MP_variable x(P,P2,F,L,T); //F23
+    //    x.setName("x");	
+    //    MP_variable x1(P,P2,F,L); //Ffactory
+    //    x1.setName("x1");	
+    //    //TL(P,L)
+
+    //    MP_variable v(P,F,T); //F23
+    //    v.setName("v");	
+    //    //MP_variable v(P,FRest,T);
+    //    //MP_variable v1(P,Ffactory);
+
+    //    MP_variable u(P,F,T); //F23
+    //    u.setName("u");	
+    //    MP_variable u1(P,F); //Ffactory
+    //    u1.setName("u1");	
+
+    //    MP_index arci,arcj;
+    //    MP_index arci2,arcj2;
+    //    MP_index func;
+    //    MP_index pS;
+
+    //    MP_index p1, p2, p3, f23;
+    //    MP_index l1, ffactory;
+    //    MP_index f123, fc;
+
+
+    //    //##############################################################################################
+    //    postponement.setObjective(
+    //        //sum(P, 
+    //        //sum(AST1(arci,FC(F)), e(P,FC(F))*z1(P,(arci,FC(F))))
+    //        //	)
+    //        //sum(P*AST1(arci,arcj).such_that(arcj==FC), z1(P,AST1))
+
+    //        -sum(P*AST1(arci,arcj).such_that(FC(arcj)), e(P,arcj) * z1(P,AST1))		   
+
+
+    //        +sum(P,
+    //        sum(AST1, cs(AST1,P)*z1(P,AST1))
+    //        )
+
+    //        +sum(P,
+    //        sum(Ffactory(F),
+    //        sum(L.such_that(TL(P,L)),
+    //        sum(P2.such_that(TF(L,P,P2)),cp(P,L,F)*x1(P,P2,F,L))
+    //        )
+    //        )
+    //        )
+
+    //        //+sum(P, 
+    //        //sum(AST2(arci2,arcj2).such_that(arcj2==FC(F)), e(P,arcj2)*z(P,AST2(arci,arcj),T.last()))
+    //        //	)
+
+    //        -sum(P, 
+    //        sum(AST2(arci2,arcj2).such_that(FC(arcj2)), e(P,arcj2) * z(P,AST2,T+1))
+    //        )
+
+    //        +sum(P,
+    //        sum(AST2, cs(AST2,P)*z(P,AST2,T+1))
+    //        )
+
+    //        +sum(P,
+    //        sum(F23(F),
+    //        sum(L.such_that(TL(P,L)),
+    //        sum(P2.such_that(TF(L,P,P2)),cp(P,L,F)*x(P,P2,F,L,T+1))
+    //        )
+    //        )
+    //        )
+
+    //        +sum(F123(F)*L,cf(F,L)*y(F,L))
+    //        );
+    //    ////// CONSTRAINTS
+
+    //    // Material balance
+    //    //Flows entering a facility
+    //    //MP_constraint material_balance_entering(P,F23,T);
+
+    //    //material_balance_entering(p1,f23,T)=
+
+    //    //	v(p1,f23,T) + sum(L.such_that(TL(p1,L))*P2(p2).such_that(TF(L,p1,p2)),x(p1,p2,f23,L,T)) 
+
+    //    //	== 
+
+    //    //	sum(A(arci,arcj).such_that(arcj==f23),z(p1,A(arci,arcj).such_that(arcj==f23),T));
+
+    //    //material_balance_entering.setName("material_balance_entering");
+
+    //    //Flows entering a facility
+
+    //    MP_constraint material_balance_entering(P,F,T);
+
+    //    material_balance_entering(P,F,T+1).such_that(F23(F))=
+
+    //        v(P,F,T) + 
+
+    //        //sum(TL(p1,L).such_that(p1==P)*TF(l1,p1,P2).such_that(l1==L && p1==P),
+    //        sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x(P,P2,F,L,T))
+
+    //        ==
+
+    //        sum(AST2(arci,F),z(P,AST2,T))
+    //        +
+    //        sum(AST1(arci,F),z1(P,AST1));
+
+
+    //    material_balance_entering.setName("material_balance_entering");
+
+    //    //Demand
+
+    //    /*
+    //    //AST1, TransportationLinksStage1 (F,F)
+    //    AST1.insert(F1, CW1);
+    //    AST1.insert(F1, RW1);
+    //    AST1.insert(F1, RW2);
+    //    AST1.insert(F1, CZ1);
+    //    AST1.insert(F1, CZ2);
+
+    //    //AST2, TransportationLinksStage2 (F,F)
+    //    AST2.insert(CW1, RW1);
+    //    AST2.insert(CW1, RW2);
+    //    AST2.insert(CW1, CZ1);
+    //    AST2.insert(CW1, CZ2);
+    //    AST2.insert(RW1, CZ1);
+    //    AST2.insert(RW1, CZ2);
+    //    AST2.insert(RW2, CZ1);
+    //    AST2.insert(RW2, CZ2);
+    //    */
+    //    //MP_variable z(P,AST2,T);	
+    //    //material_balance_entering(P,F,T).such_that(F23(F))=
+    //    //	MP_variable z1(P,AST1);
+
+    //    MP_constraint demand_constraint(T,P,F);
+    //    //demand_constraint(T+1,P,F).such_that(FC(F))=
+
+    //    //	dem(T,P,F) >= (sum(AST2(arci,arcj).such_that(arcj==F), z(P,AST2(arci,arcj),T)) 
+    //    //				   +
+    //    //sum(AST1,z1(P,AST1));
+    //    //				   sum(AST1(arci,arcj).such_that(arcj==F), z1(P,AST1(arci,arcj)))
+    //    //				   );
+    //    demand_constraint(T+1,P,F).such_that(FC(F)) = dem(T,P,F) >= sum(AST2(arci,F),z(P,AST2,T))
+    //        +
+    //        sum(AST1(arci,F),z1(P,AST1));
+    //    /*sum(P*AST1(arci,arcj).such_that(arcj==FC(F)), e(P,arcj) * z1(P,AST1(arci,arcj)))
+    //    dem(T,P,FC(F)) >=(sum(AST2(arci,f), z(P,A(arci,f),T)) 
+    //    + 
+    //    sum(AST1(arci,f), z1(P,A(arci,f))));
+    //    */
+    //    //flows leaving a facility stage1
+
+
+    //    MP_constraint material_balance_leaving_stage1(P2,F);
+
+    //    material_balance_leaving_stage1(P2,F).such_that(Ffactory(F))=
+
+    //        sum(L,
+    //        sum(P.such_that(TF(L,P,P2)), x1(P,P2,F,L)))
+
+    //        ==
+
+    //        u1(P2,F) + sum(AST1(F,arcj), z1(P2,AST1));
+
+    //    material_balance_leaving_stage1.setName("material_balance_leaving_stage1");
+
+
+    //    //flows leaving a facility stage2
+    //    MP_constraint material_balance_leaving_stage2(P2,F,T);
+    //    material_balance_leaving_stage2(P2,F,T+1).such_that(F23(F)) =
+
+    //        sum(L,
+    //        sum(P.such_that(TF(L,P,P2)), x(P,P2,F,L,T)))
+
+    //        == 
+
+    //        u(P2,F,T) + sum(AST2(F,arcj), z(P2,AST2,T));
+
+    //    material_balance_leaving_stage2.setName("material_balance_leaving_stage2");
+
+
+    //    //Supply
+    //    MP_constraint supply_constraint(F,P);
+
+    //    supply_constraint(F,P).such_that(Ffactory(F))=
+    //        //sup(P,Ffactory(F)) >= sum(L.such_that(TL(P,L))*P2(p2).such_that(TF(L,P,p2)),x1(P,p2,F,L));
+    //        sup(F,P) >= sum(L.such_that(TL(P,L))*P2.such_that(TF(L,P,P2)), x1(P,P2,F,L));
+
+    //    supply_constraint.setName("supply_constraint");
+
+
+
+    //    //capacity constraint
+    //    //Transport capacity
+    //    MP_constraint transport_capacity(P,AST1);
+
+    //    transport_capacity(P,AST1)=
+
+    //        z1(P,AST1)  <= us(AST1,P);
+
+    //    transport_capacity.setName("transport_capacity");
+
+
+
+    //    //Transport capacity_stage2
+    //    MP_constraint transport_capacity_stage2(P,AST2,T);
+
+    //    transport_capacity_stage2(P,AST2,T+1)=
+
+    //        z(P,A,T)  <= us2(AST2,P);
+
+    //    transport_capacity_stage2.setName("transport_capacity_stage2");
+
+
+
+    //    //Facility capacity
+    //    MP_constraint facility_capacity_stage1(P,F,L);
+
+    //    facility_capacity_stage1(P,F,L).such_that(Ffactory(F))=
+
+    //        sum(P2.such_that(TF(L,P,P2)), x1(P,P2,F,L) )  
+
+    //        <=
+
+    //        ut(P,L,F)* y(F,L);
+
+    //    //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
+
+    //    facility_capacity_stage1.setName("facility_capacity_stage1");
+
+
+    //    //Facility capacity Stage 2
+    //    MP_constraint facility_capacity_stage2(P,F,L,T);
+
+    //    facility_capacity_stage2(P,F,L,T+1).such_that(F23(F))=
+
+    //        //sum(P2.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
+    //        //sum(TF(L,P,P2), (x(P,P2,F,L,T) + x1(P,P,F,L))) <= ut(TL(P,L),F)* y(F,L);
+
+    //        sum(P2.such_that(TF(L,P,P2)),  x(P,P2,F,L,T))
+
+    //        <=
+    //        ut(P,L,F)* y(F,L);
+
+    //    facility_capacity_stage2.setName("facility_capacity_stage2");
+
+
+    //    //sum(P.such_that(TF(L,P,P2)), x1(P,P2,Ffactory(F),L)))
+
+    //    //Non anticipativity
+
+    //    //MP_constraint non_ant_x(P,F,L,P2,T);
+    //    //		non_ant_x(P,F,L,P2,T+1).such_that(Ffactory(F) && TL(P,L) && TF(L,P,P2)) =
+
+    //    //		x1(P,P2,F,L) == x(P,P2,F,L,T);
+    //    //	non_ant_x.setName("non_ant_x");
+
+
+    //    /*
+
+    //    MP_constraint facility_x(P,P2,F,L,T);
+    //    facility_x(P,P2,F,L,T).such_that(F23(F))=
+
+    //    x(P,P2,F23(F),L,T)<= 100000000;
+    //    facility_x.setName("facility_x");
+    //    */
+    //    /*	
+    //    MP_constraint nfacility_xeins(P,P2,Ffactory,L);
+    //    nfacility_xeins(P,P2,Ffactory,L)=
+    //    x1(P,P2,Ffactory,L) <= 100000000;
+    //    nfacility_xeins.setName("nfacility_xeins");
+    //    */
+
+    //    /*
+    //    MP_constraint zz(P,AST2,T);
+    //    zz(P,AST2,T)=
+
+    //    z(P,AST2,T)<= 10000000;
+    //    zz.setName("zz");
+
+    //    /*	
+    //    MP_constraint zeins(P,AST1);
+    //    zeins(P,AST1)=
+    //    z1(P,AST1) <= 1000000000;
+    //    zeins.setName("zeins");
+    //    */
+
+    //    //Cplex
+    //    clock_t init, final;
+
+    //    postponement.attach(postponement.Solver);
+
+    //    postponement.getSmi()->writeSmps("PostponementMPS", false, false);
+
+
+
+    //    ////		//////postponement.verbose();
+    //    //init=clock();
+    //    //postponement.solve(MP_model::MINIMIZE);
+    //    //postponement->writeLp("postponement-problem");
+    //    //postponement->writeMps("postponement-problem");
+    //    //final=clock()-init;
+
+
+    //    ////	///////////////////////////////////////////////////////////////////////////////////
+    //    ////freopen( "postponement_results_det_equivalent.txt", "w", stdout );
+    //    //cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
+    //    //cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
+    //    //double result = postponement.Solver->getObjValue();
+    //    //cout << "Obj. Value: " << result << endl;
+
+
+    //    //u1.display("u1");
+    //    //x1.display("x1");
+    //    //z1.display("z1");
+    //    //y.display("y");
+    //    //z.display("z");	
+    //    //x.display("x");
+    //    //v.display("v");
+    //    //u.display("u");
+
+    //    //// solve the det. equivalent
+    //    //OsiCpxSolverInterface osi_cpx;
+    //    //postponement.smiModel->setOsiSolverHandle(&osi_cpx);
+    //    //OsiSolverInterface *osiStoch =  postponement.smiModel->loadOsiSolverData();
+    //    //osiStoch->setObjSense(MP_model::MINIMIZE);
+    //    //osiStoch->branchAndBound();
+    //    //osiStoch->writeMps("Postponement_Output");
+
+
+    //    OsiCpxSolverInterface osi_cpx;
+    //    OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx, postponement.smiModel);
+
+    //    parallel_benders::Parameter benders_parameter;
+    //    benders_parameter.init();
+    //    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,true);
+    //    benders_parameter.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
+    //    benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,0);
+    //    nested_benders.setParameters(benders_parameter);
+
+    //    init=clock();
+    //    nested_benders.initialSolve();
+    //    final=clock()-init;
+    //    //freopen( "postponement_results.txt", "w", stdout );
+
+    //    cout << "Solution file: Instance Small, numberOfScenarios: " << numOfScenarios << endl;;;
+    //    cout << "Solution Time: "<< (double)final / ((double)CLOCKS_PER_SEC)<< endl;;
+    //    double result2 = nested_benders.getObjValue();
+    //    cout << "Obj. Value: " << result2 << endl;
+    //    const double* first_stage_solution= nested_benders.getFirstStageSolution();
+    //    
+    //    for (int i=0; i<67; i++)
+    //    {
+    //        cout << i << " : " << first_stage_solution[i]<<endl;
+
+    //    }
+    //    for (int scenario = 0; scenario < 50; scenario++){
+    //        for (int i = 0; i<postponement.getSmi()->getCore()->getNumCols(1); i++){
+
+    //        }
+    //    }
+
+    //    const double* second_solution_1 = nested_benders.getSolutionByNodeAndStage(0,1);
+    //    const double* second_solution_2 = nested_benders.getSolutionByNodeAndStage(1,1);
+
+    //    //demand_constraint(T+1,P,F).such_that(FC(F)).display("Demand"); 
+    //    //supply_constraint(P,F).such_that(Ffactory(F)).display("supply");
+
+    //    //z1.display("z1");
+    //    //u1.display("u1");
+    //    //x1.display("x1");
+    //    //y.display("y");
+    //    //z.display("z");	
+    //    //x.display("x");
+    //    //v.display("v");
+    //    //u.display("u");
+    //    //dem.display("dem",0);
+    //    //dem.display("dem",1);
+    //    //dem.display("dem",2);
+
+
+    //}
 
     TEST_F(UseCaseTest,Test1) {
         MP_model test11(new OsiClpSolverInterface()); 
@@ -7568,7 +7638,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*.Atilla";
     //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
     //::testing::GTEST_FLAG(filter) = "*.Test1";
-    ::testing::GTEST_FLAG(filter) = "*.Postponement";
+    ::testing::GTEST_FLAG(filter) = "*.InvestmentExample*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
