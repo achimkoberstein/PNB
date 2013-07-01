@@ -179,10 +179,6 @@ public:
 
         parallel_benders::Parameter param(benders_parameter_); // Copy parameter!
 
-
-    
-
-
         // TODO: Uncomment if we want to use tests based on problem properties!
         int read_in_smps_file = 1; 
         int num_aggregates_by_magic = 0;
@@ -317,15 +313,18 @@ public:
 		//	aggregates.push_back(num_aggregates_by_magic);
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour!
+		// Use barrier w/o crossover everywhere!
+		benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER); // Not longer than one hour!
+
 		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         
-		generate_initial_solution_ = true;
+		generate_initial_solution_ = false;
         bool test_cut_consolidation = false;
         bool test_level_euclidean = true;
-        bool test_level_infinity = true;
-        bool test_level_manhattan = true;
+        bool test_level_infinity = false;
+        bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
         bool test_oda = true;
 		bool test_only_oda = false;
@@ -350,14 +349,16 @@ public:
                     benders_parameter_.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,aggregates[i]);
                     parallel_benders::Parameter copied_param_for_loop(benders_parameter_);
 
+
+
                     if ( test_dem ){
                         benders_parameter_ = copied_param_for_loop;
                         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
                         // We can choose different LP methods, but stick with the dual simplex for now!
-                        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER);
+      //                  benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-						benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-						solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+						//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     }
 
                     if ( test_start_solutions && test_normal){
@@ -1345,13 +1346,13 @@ TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
     EXPECT_NEAR(solveSMPS("frankellison/CEP1"),355160, 1); 
     EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"),47.324, 0.1); 
 }
-
-TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
-	//benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
-    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"), 2.693e6, 1e3); 
-    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),3.4349e6, 1e3); 
-    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),3.67583e6, 1e3); 
-}
+//
+//TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
+//	//benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
+//    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-100"), 2.693e6, 1e3); 
+//    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-523"),3.4349e6, 1e3); 
+//    EXPECT_NEAR(solveSMPS("bikeSharing/bikeSharing-731"),3.67583e6, 1e3); 
+//}
 
 //TEST_F(NestedBendersTest,StageAggregTest){// scdp problem from marc
 //    EXPECT_NEAR(solveSMPS("selfTests/stageAggregTest"),14.0536, 1); 
@@ -1825,8 +1826,8 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "*deak*";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
