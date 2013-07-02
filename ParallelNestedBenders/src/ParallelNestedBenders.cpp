@@ -2103,7 +2103,8 @@ namespace parallel_benders {
                     StoreValuesFromSolverInVector(benders_node_pointer->reduced_cost_,&reduced[0],osi_solver->getNumCols());
                 }
             }
-            else{ // In case of non-integer problems
+            else{ 
+				// In case of non-integer problems
                 StoreValuesFromSolverInVector(benders_node_pointer->dual_solution_,osi_solver->getRowPrice(),osi_solver->getNumRows());
                 if ( current_stage_ > 0 ) {
                     // Compute the values: \lambda * lower_bound - \mu * upper_bound
@@ -4584,21 +4585,23 @@ namespace parallel_benders {
             }
         }
         benders_tree_node_pointer->getDataPtr()->warm_start_added_ = false;
-        if ( current_stage_ == 0 && level_decomp_ && integer_problems_[current_stage_] == false){ // TODO: Store Warm Start via tree nodes! Set a boolean to indicate if we solve projection problem or benders type problem
-            // Store warm start for first stage
-            OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
-            if ( osi_cpx != nullptr ){
-                CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
-                CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
-                level_cstat_.reset(new int[osi_cpx->getNumCols()]);
-                level_rstat_.reset(new int[osi_cpx->getNumRows()]);
-                level_dnorm_.reset(new double[osi_cpx->getNumRows()]);
+        if ( current_stage_ == 0 && level_decomp_ && integer_problems_[current_stage_] == false ){ // TODO: Store Warm Start via tree nodes! Set a boolean to indicate if we solve projection problem or benders type problem
+			if ( lp_method_ == PNB_INT_PRIMAL_SIMPLEX || lp_method_ == PNB_INT_DUAL_SIMPLEX ){
+				// Store warm start for first stage
+				OsiCpxSolverInterface* osi_cpx = dynamic_cast<OsiCpxSolverInterface*> ( osi_solver);
+				if ( osi_cpx != nullptr ){
+					CPXENVptr env_ptr = osi_cpx->getEnvironmentPtr();
+					CPXLPptr lp_ptr = osi_cpx->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
+					level_cstat_.reset(new int[osi_cpx->getNumCols()]);
+					level_rstat_.reset(new int[osi_cpx->getNumRows()]);
+					level_dnorm_.reset(new double[osi_cpx->getNumRows()]);
 
-                int cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
-				level_length_ = CPXgetnumrows(env_ptr,lp_ptr);
-				LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
+					int cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,level_cstat_.get(),level_rstat_.get(),level_dnorm_.get());
+					level_length_ = CPXgetnumrows(env_ptr,lp_ptr);
+					LOG_IF(INFO,cpx_stat != 0) << "CPXgetbasednorms returned with : " << cpx_stat;
 
-            }
+				}
+			}
         }
     }
 
