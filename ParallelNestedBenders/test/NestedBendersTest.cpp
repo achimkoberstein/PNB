@@ -114,16 +114,16 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
         }
 		// Vary Kappa, call Lambda
-		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-		benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
-		use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
+        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
+        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
+        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
+        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
+        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 	}
 
@@ -184,8 +184,8 @@ public:
         int num_aggregates_by_magic = 0;
         double * min_scenario_pointer = NULL;
         double * max_scenario_pointer = NULL;
-        compute_statistics_ = false;
-        generate_initial_solution_ = true;
+        compute_statistics_ = true;
+        generate_initial_solution_ = false;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -257,19 +257,19 @@ public:
                 if ( compute_statistics_ ){
                     boost::shared_array<double> ev_solution(NULL);
                     double eev2 = 0;
-                    {
-                        std::unique_ptr<SmiScnModel> smi_model_ev(new SmiScnModel());
-                        smi_read_in = smi_model_ev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-                        std::pair<double,double*> results = smi_model_ev->solveEV(&osi_cpx);
-                        ev_solution.reset(results.second);
-                        OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
-                        osi_pnb.fixFirstStageVariables(ev_solution.get());
-                        osi_pnb.initialSolve();
-                        osi_pnb.printProblemCharacteristics();
-                        eev2 = osi_pnb.getObjValue();
-                    }
+                    //{
+                    //    std::unique_ptr<SmiScnModel> smi_model_ev(new SmiScnModel());
+                    //    smi_read_in = smi_model_ev->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                    //    std::pair<double,double*> results = smi_model_ev->solveEV(&osi_cpx);
+                    //    ev_solution.reset(results.second);
+                    //    OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
+                    //    osi_pnb.fixFirstStageVariables(ev_solution.get());
+                    //    osi_pnb.initialSolve();
+                    //    osi_pnb.printProblemCharacteristics();
+                    //    eev2 = osi_pnb.getObjValue();
+                    //}
 
-                    // Now we need the HN-solution
+                    //// Now we need the HN-solution
                     {
                         OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
                         // Maybe we want to use some kind of regularization technique to speed up the computations?!
@@ -294,7 +294,7 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-		aggregates.push_back(1);
+		//aggregates.push_back(1);
   //      aggregates.push_back(10);
   //      aggregates.push_back(25);
   //      aggregates.push_back(50);
@@ -326,12 +326,12 @@ public:
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_oda = true;
+        bool test_oda = false;
 		bool test_only_oda = false;
-        bool test_normal = true;
+        bool test_normal = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
-        bool test_dem = false;
+        bool test_dem = true;
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
@@ -357,8 +357,8 @@ public:
                         // We can choose different LP methods, but stick with the dual simplex for now!
       //                  benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-						//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+						benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+						solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     }
 
                     if ( test_start_solutions && test_normal){
@@ -397,7 +397,7 @@ public:
                         }
                     }
 					if ( !test_only_oda ){
-						if ( test_normal ){
+						if ( test_normal && !test_start_solutions){
 							benders_parameter_ = copied_param_for_loop;
 							benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
 							solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
@@ -1360,156 +1360,156 @@ TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
 
 
 TEST_F(NestedBendersTest,deak){
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),44606554.59,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_20"),44611301.64,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_30"),44609685.95,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_40"),44614519.98,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50"),44614403.23,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_80"),44604040.59,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_100"),44606938.74,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_150"),44613450.91,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_200"),44618458.42,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_250"),44608878.56,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_300"),44615377.3,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_350"),44616596.56,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_400"),44612737.76,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_450"),44610702.25,100);
-    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_500"),44614465.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_10"),151490015.3,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_20"),151500118.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_30"),151498688.8,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_40"),151521810.3,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_50"),151529265.1,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_80"),151529828.7,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_100"),151513637.7,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_150"),151519544.9,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_200"),151508605.8,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_250"),151535842.3,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_300"),151515174.3,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_350"),151519425.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_400"),151521266.9,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_450"),151515081.3,100);
-    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_500"),151516869.5,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_10"),198831288.1,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_20"),198823245.6,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_30"),198817888.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_40"),198819796.4,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_50"),198823619.6,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_80"),198816786.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_100"),198820431.4,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_150"),198819422.5,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_200"),198819003.6,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_250"),198819997.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_300"),198820819.6,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_350"),198820939,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_400"),198820485.9,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_450"),198820295.2,100);
-    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_500"),198821227.5,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_10"),39668846.22,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_20"),39693942.35,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_30"),39689095.35,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_40"),39684207.51,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_50"),39682887.05,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_80"),39682947.44,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_100"),39691245.71,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_150"),39687708.43,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_200"),39687437.05,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_250"),39689849.11,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_300"),39692311.09,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_350"),39692419.33,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_400"),39694027.01,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_450"),39689514.09,100);
-    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_500"),39691154.77,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_10"),69665178.96,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_20"),69596388.7,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_30"),69650182.24,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_40"),69660062.86,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_50"),69658478.23,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_80"),69660225.43,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_100"),69633857.85,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_150"),69653107.89,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_200"),69647496.74,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_250"),69650139.3,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_300"),69677132.45,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_350"),69662647.33,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_400"),69631633.18,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_450"),69641278.71,100);
-    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_500"),69668563.57,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_10"),109528280,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_20"),109534903.5,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_30"),109533335,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_40"),109528747,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_50"),109525694.3,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_80"),109529469.9,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_100"),109528666.9,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_150"),109530076.3,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_200"),109531104.1,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_250"),109533534.9,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_300"),109530604.1,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_350"),109531603.4,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_400"),109531689.7,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_450"),109532168.8,100);
-    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_500"),109531715.8,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_10"),13574011.14,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_20"),13571655.96,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_30"),13572574.24,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_40"),13575173.51,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_50"),13575994.46,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_80"),13574791.36,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_100"),13573384.81,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_150"),13573814.75,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_200"),13574946.06,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_250"),38419133.52,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_300"),13575208.73,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_350"),13575296.52,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_400"),13574529.91,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_450"),13574705.68,100);
-    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_500"),13575839.93,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_10"),103234381.5,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_20"),103226968.5,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_30"),103223866.2,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_40"),103227577.7,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_50"),103227314.5,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_80"),103228356.3,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_100"),103226198.5,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_150"),103227784.8,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_200"),103226947.7,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_250"),103225840.6,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_300"),103227101.6,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_350"),103227337.6,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_400"),103226174,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_450"),103226436.7,100);
-    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_500"),103226452.8,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_10"),37125339.17,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_20"),37119511.79,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_30"),37120336.59,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_40"),37123830.54,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_50"),37123357,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_80"),9652560.439,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_100"),37122250.36,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_150"),37124433.18,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_200"),37124752.86,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_250"),37123908.11,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_300"),37124277.74,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_350"),37123487.09,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_400"),37122981.4,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_450"),37122776.08,100);
-    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_500"),37122706.32,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_10"),1708156.116,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_20"),1703060.565,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_30"),1713706.076,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_40"),1713586.806,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_50"),1708963.371,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_80"),1709746.496,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_100"),1707818.179,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_150"),1710481.871,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_200"),1710772.775,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_250"),1710559.951,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_300"),1707658.324,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_350"),1710426.284,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_400"),1713554.821,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_450"),1709684.718,100);
-    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_500"),1712095.189,100);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),269.591,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_20"),270.066,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_30"),267.782,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_40"),272.01,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50"),275.013,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_80"),249.913,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_100"),248.993,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_150"),271.389,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_200"),269.237,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_250"),259.023,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_300"),266.152,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_350"),271.016,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_400"),264.187,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_450"),266.84,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_500"),268.758,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_10"),2915.45,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_20"),2973.02,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_30"),2966.85,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_40"),3140.46,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_50"),3198.58,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_80"),3174.77,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_100"),3062,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_150"),3095.46,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_200"),3046.05,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_250"),3193.95,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_300"),3057.37,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_350"),3105.16,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_400"),3114.22,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_450"),3076.74,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x40-1","deak/20x40-1","deak/20x40-1_500"),3085.35,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_10"),311.199,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_20"),308.059,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_30"),309.22,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_40"),301.528,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_50"),306.684,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_80"),304.493,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_100"),305.396,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_150"),302.526,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_200"),301.408,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_250"),303.718,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_300"),307.845,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_350"),303.869,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_400"),304.871,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_450"),305.072,0.1);
+    EXPECT_NEAR(solveSMPS("deak/20x60-1","deak/20x60-1","deak/20x60-1_500"),302.273,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_10"),173.304,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_20"),195.016,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_30"),194.145,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_40"),186.974,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_50"),191.179,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_80"),186.836,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_100"),193.674,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_150"),193.669,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_200"),192.891,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_250"),194.447,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_300"),197.986,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_350"),192.896,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_400"),195.64,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_450"),193.758,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x20-1","deak/40x20-1","deak/40x20-1_500"),194.464,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_10"),975.758,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_20"),1277.95,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_30"),1208.43,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_40"),990.32,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_50"),1072.31,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_80"),1171.58,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_100"),1090.59,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_150"),1236.16,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_200"),1147.04,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_250"),1100.9,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_300"),1001.63,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_350"),1101.28,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_400"),1146.02,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_450"),1117.79,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x40-1","deak/40x40-1","deak/40x40-1_500"),1121.19,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_10"),332.185,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_20"),346.548,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_30"),340.048,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_40"),349.588,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_50"),337.535,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_80"),347.343,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_100"),338.125,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_150"),339.768,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_200"),339.331,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_250"),343.299,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_300"),341.859,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_350"),341.143,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_400"),342.001,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_450"),342.831,0.1);
+    EXPECT_NEAR(solveSMPS("deak/40x60-1","deak/40x60-1","deak/40x60-1_500"),343.329,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_10"),54.4003,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_20"),50.8637,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_30"),51.0978,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_40"),54.346,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_50"),54.733,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_80"),54.1255,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_100"),52.2184,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_150"),53.0077,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_200"),53.8554,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_250"),55.1981,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_300"),54.246,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_350"),54.4522,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_400"),53.9747,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_450"),53.8843,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x20-1","deak/60x20-1","deak/60x20-1_500"),54.8924,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_10"),175.045,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_20"),169.295,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_30"),166.496,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_40"),167.765,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_50"),166.583,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_80"),170.513,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_100"),166.953,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_150"),168.035,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_200"),168.201,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_250"),167.657,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_300"),168.552,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_350"),168.338,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_400"),167.623,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_450"),167.93,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x40-1","deak/60x40-1","deak/60x40-1_500"),167.054,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_10"),301.009,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_20"),276.843,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_30"),296.727,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_40"),300.673,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_50"),296.972,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_80"),295.023,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_100"),294.409,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_150"),304.291,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_200"),300.713,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_250"),301.954,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_300"),300.152,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_350"),303.269,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_400"),299.236,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_450"),299.905,0.1);
+    EXPECT_NEAR(solveSMPS("deak/60x60-1","deak/60x60-1","deak/60x60-1_500"),299.173,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_10"),72.5601,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_20"),66.509,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_30"),78.4813,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_40"),77.0243,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_50"),72.3637,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_80"),73.66,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_100"),72.4236,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_150"),74.6681,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_200"),74.6522,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_250"),74.7991,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_300"),72.3126,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_350"),73.9976,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_400"),77.4241,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_450"),73.8664,0.1);
+    EXPECT_NEAR(solveSMPS("deak/100x20-1","deak/100x20-1","deak/100x20-1_500"),75.9172,0.1);
 }
 
 TEST_F(NestedBendersTest, rand_OTHER) { // takes long to solve, so we restrict ourselves for preliminary test runs on a subset!
@@ -1826,8 +1826,8 @@ int main(int argc, char *argv[]) {
 
 
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*deak*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    //::testing::GTEST_FLAG(filter) = "*deak*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
