@@ -1510,7 +1510,7 @@ const double * OsiCpxSolverInterface::getRowPrice() const
         /* check if a solution exists */
         CPXsolninfo(env_, getMutableLpPtr(), NULL, &solntype, NULL, NULL);
 
-        if( solntype == CPX_BASIC_SOLN )
+        if( solntype == CPX_BASIC_SOLN || solntype == CPX_NONBASIC_SOLN  )
         {
            int err = CPXgetpi( env_, getMutableLpPtr(), rowsol_, 0, nrows-1 );
            checkCPXerror( err, "CPXgetpi", "getRowPrice" );
