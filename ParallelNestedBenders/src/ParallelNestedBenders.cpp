@@ -308,8 +308,6 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Init()
     {
-        // Do not sync console output (makes no difference)
-        //ios_base::sync_with_stdio(true);
         // Enable Buffering
         // 
         bool debug_first_stage = false;

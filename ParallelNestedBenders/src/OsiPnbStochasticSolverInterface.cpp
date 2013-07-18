@@ -353,6 +353,8 @@ SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInter
 void SampleAverageApproximationSolverInterface::initialSolve()
 {
 
+	parallel_benders::Parameter initial_parameter = parameters_;
+
 
     // Some things we need to share later on
     OsiSolverInterface* osi_solver = osi_pnb_->getOsiSolverInterface();
@@ -360,6 +362,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     int num_first_stage_cols = smi_model->getCore()->getNumCols(0);
     int num_stages = smi_model->getCore()->getNumStages();
 
+	// We set the solutions that we want to get!
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_DUAL_NO);
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Store only first-stage primal solution
 
@@ -404,6 +407,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         // Solve a candidate problem
         smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates ); // TODO: Is this allowed here?
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+		parameters_ = initial_parameter;
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         osi_pnb_->setParameters(parameters_);
         osi_pnb_->initialSolve();
@@ -421,16 +425,26 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     for (int i = 0; i < number_batches_; i++){
         smi_model->sampleScenarioTree(samples_,0, get_latin_hypercube_random_01_variates );
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+		parameters_ = initial_parameter;
         if ( linderoth_shapiro_wright || naive_estimation ) // In this case we need first stage solutions only
-            parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
+            parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,1);
         else // For MakMortonWood we need no solutions
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
-        osi_pnb_->setParameters(parameters_);
+
+
+   
         // Use solution from previous problem to speed up calculations 
-        if ( mak_morton_wood )
-            osi_pnb_->giveStartSolution(candidate_array.get());
-        else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
-            osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
+		if ( i == 0 ) {
+			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+		}
+		else {
+			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+			if ( mak_morton_wood )
+				osi_pnb_->giveStartSolution(candidate_array.get());
+			else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
+				osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
+		}
+		osi_pnb_->setParameters(parameters_);
         osi_pnb_->initialSolve();
         // We assume that solving went well. If it does not, we have problem
         objective_values[i] = osi_pnb_->getObjValue();
@@ -441,21 +455,22 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             memcpy(first_stage_solutions[i].get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
         }
 
-        // Now we compute values for upper bounding.
+        // Now we compute values for upper bounding. Only evaluating current solution!
+		parameters_ = initial_parameter;
         parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS); // Use Benders for evaluation of candidate solution!
         if ( mak_morton_wood ){
             LOG(INFO) << "Evaluating candidate solution with the current sampled scenario tree.";
             // Evaluate candidate solution with the given sample set
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
             osi_pnb_->setParameters(parameters_);
             osi_pnb_->fixFirstStageVariables(candidate_array.get());
             osi_pnb_->initialSolve();
             gap_estimates[i] = osi_pnb_->getObjValue() - objective_values[i];
          }
         if ( linderoth_shapiro_wright ) {
-            
-            std::vector<double> upper_bound_estimates_for_this_solution(number_batches_upper_,0.0);
+			std::vector<double> upper_bound_estimates_for_this_solution(number_batches_upper_,0.0);
             for (int current_batch = 0; current_batch < number_batches_upper_; current_batch++){
                 LOG(INFO) << "Solving evaluation problem " << current_batch << " for current lower bound solution " << i;
                 // Evaluate this very lower bound solution with a larger random number stream!
@@ -469,9 +484,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             }
             upper_bound_estimates[i] = std::accumulate(upper_bound_estimates_for_this_solution.begin(),upper_bound_estimates_for_this_solution.end(),0.0)/number_batches_upper_;
         }
-        // Evaluation of solutions is done with Benders, but we have to switch back for the lower bounding problems!
-        if ( dont_use_benders )
-            parameters_.parameter_.put(parallel_benders::PNB_BENDERS,preferred_solution_algorithm);
+
     }
     // Now we have number_batches many different objective values
 
@@ -579,7 +592,7 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     std::fstream logfile;
     logfile.open("saa-log.txt", fstream::out | fstream::app);
-    logfile << "Seed: " << uniform_generator_struct.seed;
+    logfile << "Seed: " << uniform_generator_struct.seed << "\n";
     // Conclusion
     logfile << "N : ";
     for (int i = 1; i < num_stages; i++)
@@ -598,8 +611,6 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     LOG(INFO) << "Done.";
     
-    //osi_pnb_->getSmiModel()->writeSmps("saa_latin_hypercube_test");
-
 }
 
 void SampleAverageApproximationSolverInterface::setParameters( const parallel_benders::Parameter& parameters )
