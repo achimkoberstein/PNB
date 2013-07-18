@@ -1711,7 +1711,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
     smi.setOsiSolverHandle(&osi_cpx);
     smi.setSampling(true);
     //int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
-    int read_in = smi.readSmps("../../../../../Benders/test/instances/saphir/saphir_1000");
+    int read_in = smi.readSmps("../../../../../Benders/test/instances/wright/data-ssn/ssn");
     //int read_in = smi.readSmps("../../../../Benders/test/instances/postponement/pTest-1296");
     if ( read_in != 0 ){
         LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
@@ -1719,40 +1719,28 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
     SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
     parallel_benders::Parameter benders_parameter;
     benders_parameter.init();
-    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ);
-    benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
-    benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,10);
+    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+    benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+    benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
 
-    int runs = 1;
+
     std::map< int, std::pair<int,int> > sample_map;
-    sample_map[0] = make_pair(10,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
-    //sample_map[1] = make_pair(2000,20000);
-    //sample_map[2] = make_pair(3000,20000);
-    //sample_map[3] = make_pair(5000,20000);
-    //sample_map[4] = make_pair(10000,20000);
+    sample_map[0] = make_pair(100,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
+	sample_map[1] = make_pair(1000,50000);
+	sample_map[2] = make_pair(5000,50000);
+	sample_map[3] = make_pair(10000,50000);
+	sample_map[4] = make_pair(20000,50000);
+	int runs = sample_map.size();
 
     int num_batches_lower = 10;
     int num_batches_upper = 10;
     fstream logfile;
     for (int i = 0; i < runs; i++){
-        //std::vector<int> samples;
-        //samples.push_back(0);
-        //samples.push_back(sample_map[i].first);
-        //smi.sampleScenarioTree(samples,0,get_random_01_variates);
-        //std::string number_of_scen = boost::lexical_cast<std::string,int>(samples[1]);
-        //std::string name_string(core_name_string);
-        //size_t string_number = name_string.find_last_of("/");
-        //if ( string_number != std::string::npos){
-        //    name_string = name_string.substr(string_number+1,name_string.size());
-        //}
-        //name_string = name_string + "-" + number_of_scen;
-        //smi.writeSmps(name_string.c_str(),false,false);
-        std::string core_name_string("pTest-1296");
+        std::string core_name_string("ssn");
         logfile.open("saa-log.txt",fstream::out | fstream::app);
         logfile << core_name_string << std::endl;
         logfile.close();
         double solver_time = CoinCpuTime();
-        //benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,200);
         saa_solver.setParameters(benders_parameter);
         // These values do not change!
         saa_solver.setNumberBatches(num_batches_lower);
@@ -1778,7 +1766,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation)
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
+	//EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);
@@ -1831,7 +1819,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
+	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
     //::testing::GTEST_FLAG(filter) = "*cargo*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
@@ -1843,7 +1831,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*assets_FELT";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     //::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
-    //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTestSampleAverageApproximation.sample_average_approximation";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
