@@ -80,7 +80,7 @@ private:
 
     void SetSolverOptions( OsiSolverInterface* osi_solver);
 
-    void GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -120,6 +120,9 @@ private:
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
     void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
     void SetSolverByThread();
+
+	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
+	
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
@@ -372,7 +375,7 @@ inline bool CompareForEquality( double first, double second, double tolerance);
 // True if gap is not small enough yet
 inline bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
 inline double ComputeRelativeGap(double upper_bound, double lower_bound,double epsilon = 1e-10);
-
+bool CutIsEqual(const CutStuff& first, const CutStuff& second, double tolerance);
 
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);

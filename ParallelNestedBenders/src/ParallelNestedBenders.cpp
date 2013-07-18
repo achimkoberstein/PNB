@@ -1009,9 +1009,7 @@ namespace parallel_benders {
                     // Do not solve subproblems, but add aggregated cut(s)
 
                     if ( csaba_steepest_edge_){
-
-
-                        // Now we want to solve one huge LP to determine the cut coefficients. When that is done, we generate a new cut out of the existing cuts with the coefficients!
+						                        // Now we want to solve one huge LP to determine the cut coefficients. When that is done, we generate a new cut out of the existing cuts with the coefficients!
                         int number_of_subproblems = tree_nodes_by_stage_[0][0]->numChildren();
                         int first_iteration = 0; // Our Iteration counting starts at 1! (or 0 when we use a start solution!)
                         int last_iteration = opt_cut_iterations_.size(); // We can only use the iterations where we added optimality cuts via second stage problem, aka substantial iterations
@@ -1941,17 +1939,21 @@ namespace parallel_benders {
             }
             else if ( osi_solver->isProvenPrimalInfeasible() ){
                 // Dual problem is unbounded: Generate feasibility cut if we are not in the first stage
-                infeasible_problem_mutex_.lock();
+                
                 if ( only_one_feasibility_cut_ && infeasible_problems_.any() ){ 
-                    infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
-                    infeasible_problem_mutex_.unlock();
-                    return;
+					return;
                 }
-                infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
-                infeasible_problem_mutex_.unlock();
+
                 if ( current_stage_ > 0 ){
-                    GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
-                }
+                    bool generated_cut = GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
+					if ( generated_cut && only_one_feasibility_cut_ || !only_one_feasibility_cut_){
+						std::unique_lock<std::mutex> u_lock(infeasible_problem_mutex_);
+						infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
+					}
+					//else {
+					//	LOG(INFO) << "No new feas cut could be added to the problem!";
+					//}
+				}
                 else{
                     PrintSubproblem(osi_solver,0,"master_infeasible");
                     LOG(ERROR) << "Your master problem is infeasible.";
@@ -1967,6 +1969,7 @@ namespace parallel_benders {
                     CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
                     int stat = CPXgetstat(env_ptr,lp_ptr);
                     LOG_IF(ERROR, !(stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)) << "Cplex returned solution process with " << stat;
+					std::unique_lock<std::mutex> u_lock(console_mutex_);
                     CPXwriteprob(env_ptr,lp_ptr,"not_optimal","lp");
                 }
             }
@@ -2772,8 +2775,8 @@ namespace parallel_benders {
         }
     }
 
-    void ParallelNestedBenders::GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
-    { // Called directly from solve subproblem.
+	bool ParallelNestedBenders::GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+	{ // Called directly from solve subproblem.
         // We need the dual rays..
         assert(osi_solver->isProvenPrimalInfeasible()); // Otherwise we do not need to call this method
         bool use_cplex = false;
@@ -2918,8 +2921,9 @@ namespace parallel_benders {
 
                 use_cplex = false;
                 if ( cpx_stat == CPX_STAT_OPTIMAL ){
+					std::unique_lock<std::mutex> u_lock(console_mutex_);
                     CPXwriteprob(env_ptr,lp_ptr,"optimal_infeasible_problem.lp","lp");
-                    return;
+                    return false;
                 }
 
             }
@@ -2955,7 +2959,7 @@ namespace parallel_benders {
             GenerateDualRayProblem(dual_ray_problem); // Append columns to the existing problems, to allow feasible solutions.
             if ( abs(dual_ray_problem->getObjValue()) <= zero_tolerance_){
                 // cleanup and return
-                return;
+                return false;
             }
             number_rows = dual_ray_problem->getNumRows(); // Should have the same number of rows?!
             dual_solution = dual_ray_problem->getRowPrice();
@@ -3081,18 +3085,22 @@ namespace parallel_benders {
         cut_pointer->setRow(stage_data_[current_stage_-1]->num_columns_,&stage_data_[current_stage_-1]->column_indices_[0],&cut_coefficients[0],debug_test_duplicate_indices_);
         // Increase feasCutCounter, together with locking/unlocking a std::mutex, and adding the cut the the parent problem
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
+		bool duplicate_cut = false;
 		{
 			std::lock_guard<std::mutex> temp_lock(infeasible_problem_mutex_);
+			// Check if added cut is identical to another cut!
 			// Check if this is the first cut we added
-			num_added_feasibility_cuts_++;
-			benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_stuff);
-			if ( num_added_feasibility_cuts_ == 1 ){
-				benders_tree_node_pointer->getParent()->getDataPtr()->last_iteration_start_feasibility_ = --benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.end();
+			if ( only_one_feasibility_cut_ )
+				duplicate_cut = CheckForSameCut(*cut_stuff.get(),benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_);
+			if ( !duplicate_cut ){
+				num_added_feasibility_cuts_++;
+				benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.push_back(cut_stuff);
+				if ( num_added_feasibility_cuts_ == 1 ){
+					benders_tree_node_pointer->getParent()->getDataPtr()->last_iteration_start_feasibility_ = --benders_tree_node_pointer->getParent()->getDataPtr()->feasibility_cuts_.end();
+				}
 			}
 		}
-
-     
-        // Delete dual ray problem
+		// Delete dual ray problem
         if ( !cplex_licence_problem && !use_cplex)
             delete dual_ray_problem;
         else if ( !use_cplex ){
@@ -3112,6 +3120,8 @@ namespace parallel_benders {
             delete [] row_upper;
 
         delete [] dual_solution_primal_variable_bounds;
+
+		return !duplicate_cut; // Return true, if method was sucesfull, i.e., added a cut. Thus if we have a duplicate cut, we have to return the inverse
     }
 
     OsiSolverInterface* ParallelNestedBenders::GetSolverByThread(){
@@ -3600,6 +3610,10 @@ namespace parallel_benders {
         delete [] benders_node_pointer->row_lower_; benders_node_pointer->row_lower_ = nullptr;
 
         benders_node_pointer->last_iteration_start_optimality_ = benders_node_pointer->optimality_cuts_.end();
+
+		// Clear osi_solver
+		//if ( current_stage_ > 0 )
+		//	osi_solver->loadProblem(0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr);
     }
 
     void ParallelNestedBenders::findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut )
@@ -4860,10 +4874,9 @@ namespace parallel_benders {
                     }
                 }
             }
-			else {
-    			osi_solver->initialSolve(); 
-			}
-
+			else 
+				osi_solver->initialSolve(); 
+			
         }
     }
 
@@ -6179,6 +6192,45 @@ namespace parallel_benders {
             }
         }
     }
+
+	bool ParallelNestedBenders::CheckForSameCut( const CutStuff& cut_to_check, const BendersNodeData::cut_container & container )
+	{
+		for ( auto it : container ){
+			if ( CutIsEqual(cut_to_check,*it,zero_tolerance_) )
+				return true;
+		}
+		return false;
+	}
+
+	bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
+	{
+
+
+		if ( first.aggregate_number_ != second.aggregate_number_ )
+			return false;
+		if ( !CompareForEquality(first.cut_->lb(),second.cut_->lb(),tolerance))
+			return false;
+		// Check equality of vectors by first checking the number of elements, than the elements themselves
+		if ( first.cut_->row().getNumElements() != second.cut_->row().getNumElements() )
+			return false;
+		// Do a comparison with all the elements and indices by hand
+		int num_elements = first.cut_->row().getNumElements();
+		const double * elems_first = first.cut_->row().getElements();
+		const double * elems_second = second.cut_->row().getElements();
+		const int * indices_first = first.cut_->row().getIndices();
+		const int * indices_second = second.cut_->row().getIndices();
+		for ( int i = 0; i < num_elements; i++){
+			if ( indices_first[i] != indices_second[i] )
+				return false;
+			if ( !CompareForEquality(elems_first[i],elems_second[i],tolerance))
+				return false;
+		}
+		// Comparison that does not take zero_tolerances into account..
+		//if ( first.cut_->row().compare(second.cut_->row()) != 0 )
+		//	return false;
+		return true;
+	}
+
 
     double ComputeRelativeGap(double upper_bound, double lower_bound, double epsilon){
         return std::abs(upper_bound-lower_bound)/ (std::abs(upper_bound)+epsilon);
