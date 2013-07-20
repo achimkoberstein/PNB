@@ -487,7 +487,7 @@ public:
 protected:
     NestedBendersTest() {
         benders_parameter_.init();
-        repetitions_ = 2; // Maybe 3 ?
+        repetitions_ = 2; 
         use_multi_cut_ = true;
         generate_initial_solution_ = false;
         compute_statistics_ = false;
@@ -810,7 +810,90 @@ class NestedBendersTestMultiStage: public NestedBendersTest
 
 // SAA problems
 class NestedBendersTestSampleAverageApproximation: public NestedBendersTest
-{};
+{
+public:
+
+	NestedBendersTestSampleAverageApproximation() 
+	: NestedBendersTest() {
+		
+	}
+	void SolveSAA(const std::string& core_name_string){
+		// We set the correct folder here: All files are in Benders/instances
+		std::string folder("../../../../Benders/test/instances/");
+#if _M_X64 || __x86_64__ // Works only on windows i suppose
+		folder = "../../../../../Benders/test/instances/";
+#endif
+		OsiCpxSolverInterface osi_cpx;
+		SmiScnModel smi;
+		smi.setOsiSolverHandle(&osi_cpx);
+		smi.setSampling(true);
+		std::string filename = folder+core_name_string;
+		int read_in = smi.readSmps(filename.c_str());
+
+		if ( read_in != 0 ){
+			LOG(FATAL) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
+		}
+		SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize solver!
+		// Set options we want to use for the solver used inside the SAA solver
+		parallel_benders::Parameter benders_parameter;
+		benders_parameter.init();
+		benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+		benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+		benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+
+
+		std::map< int, std::pair<int,int> > sample_map;
+		sample_map[0] = make_pair(500,20000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
+		sample_map[1] = make_pair(1000,20000);
+		sample_map[2] = make_pair(5000,20000);
+		sample_map[3] = make_pair(10000,20000);
+		sample_map[4] = make_pair(20000,50000);
+		sample_map[5] = make_pair(50000,100000);
+		int runs = sample_map.size();
+
+		int num_batches_lower = 10;
+		int num_batches_upper = 20;
+		fstream logfile;
+		for (int i = 0; i < runs; i++){
+			// Get a new seed for every run by reinstating the Uniform01Generator
+			theGenerator().chooseNewSeed();
+			logfile.open("saa-log.txt",fstream::out | fstream::app);
+			logfile << core_name_string << std::endl;
+			logfile.close();
+			double solver_time = CoinCpuTime();
+			saa_solver.setParameters(benders_parameter);
+			// These values do not change!
+			saa_solver.setNumberBatches(num_batches_lower);
+			saa_solver.setNumberBatchesUpperBound(num_batches_upper);
+			// End values that not change
+			std::vector<int> sample_size(2,0);
+			sample_size[1] = sample_map[i].first;
+			saa_solver.setSampleSize(sample_size);
+			std::vector<int> sample_size_upper(2,0);
+			sample_size_upper[1] = sample_map[i].second;
+			saa_solver.setSampleSizeUpperBound(sample_size_upper);
+			double alpha = 0.95;
+			saa_solver.setConfidenceLevel(alpha);
+			saa_solver.initialSolve();
+			solver_time = CoinCpuTime()-solver_time; // Solver only time
+
+			logfile.open("saa-log.txt", fstream::out | fstream::app);
+			logfile << "Overall Solution Time: " << solver_time << std::endl;
+
+			time_t timeStamp = time(NULL);
+			tm * time = localtime(&timeStamp);
+			char buffer[256];
+			strftime(buffer, 256, "%m/%d/%y; %H:%M:%S; ", time);
+			logfile << "Timestamp: " << buffer << "\n";
+			logfile << "--------------------------------------------\n";
+			logfile.close();
+			LOG(INFO) << "Solution Time: " << solver_time;
+		}
+	}
+
+protected:
+
+};
 
 // Integer problems (second stage mixed-integer)
 class NestedBendersTestInteger: public NestedBendersTest
@@ -1702,67 +1785,14 @@ TEST_F(NestedBendersTestFeasibility,feasibility){// all problems that generate f
 //    //     testModel.solve(MP_model::MINIMIZE);
 //}
 
-TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation){
-    //// SAA TEST
-    //// We set the correct folder here: All files are in Benders/instances
-    double time = CoinCpuTime();  
-    OsiCpxSolverInterface osi_cpx;
-    SmiScnModel smi;
-    smi.setOsiSolverHandle(&osi_cpx);
-    smi.setSampling(true);
-    //int read_in = smi.readSmps("../../../../Benders/test/instances/temporary/postponement-saa");
-    int read_in = smi.readSmps("../../../../../Benders/test/instances/wright/data-ssn/ssn");
-    //int read_in = smi.readSmps("../../../../Benders/test/instances/postponement/pTest-1296");
-    if ( read_in != 0 ){
-        LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
-    }
-    SampleAverageApproximationSolverInterface saa_solver(&osi_cpx,&smi); // Initialize random stuff
-    parallel_benders::Parameter benders_parameter;
-    benders_parameter.init();
-    benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-    benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-    benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
 
 
-    std::map< int, std::pair<int,int> > sample_map;
-    sample_map[0] = make_pair(100,1000); // First Entry: Sample Size for problem, Second Entry: Sample Size for Evaluation
-	sample_map[1] = make_pair(1000,50000);
-	sample_map[2] = make_pair(5000,50000);
-	sample_map[3] = make_pair(10000,50000);
-	sample_map[4] = make_pair(20000,50000);
-	int runs = sample_map.size();
-
-    int num_batches_lower = 10;
-    int num_batches_upper = 10;
-    fstream logfile;
-    for (int i = 0; i < runs; i++){
-        std::string core_name_string("ssn");
-        logfile.open("saa-log.txt",fstream::out | fstream::app);
-        logfile << core_name_string << std::endl;
-        logfile.close();
-        double solver_time = CoinCpuTime();
-        saa_solver.setParameters(benders_parameter);
-        // These values do not change!
-        saa_solver.setNumberBatches(num_batches_lower);
-        saa_solver.setNumberBatchesUpperBound(num_batches_upper);
-        // End values that not change
-        std::vector<int> sample_size(2,0);
-        sample_size[1] = sample_map[i].first;
-        saa_solver.setSampleSize(sample_size);
-        std::vector<int> sample_size_upper(2,0);
-        sample_size_upper[1] = sample_map[i].second;
-        saa_solver.setSampleSizeUpperBound(sample_size_upper);
-        double alpha = 0.95;
-        saa_solver.setConfidenceLevel(alpha);
-        saa_solver.initialSolve();
-        solver_time = CoinCpuTime()-solver_time; // Solver only time
-        
-        logfile.open("saa-log.txt", fstream::out | fstream::app);
-        logfile << "Solution Time: " << solver_time << std::endl;
-        logfile << "--------------------------------------------\n";
-        logfile.close();
-        LOG(INFO) << "Solution Time: " << solver_time;
-    }
+TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1){
+	SolveSAA("wright/data-ssn/ssn");
+	SolveSAA("wright/data-20/20");
+	SolveSAA("wright/data-storm/storm");
+	SolveSAA("wright/data-gbd/gbd");
+	SolveSAA("wright/data-LandS/LandS");
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
@@ -1831,7 +1861,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*assets_FELT";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     //::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestSampleAverageApproximation.sample_average_approximation";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTestSampleAverageApproximation.sample_average_approximation1";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)

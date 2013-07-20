@@ -18,6 +18,8 @@
 #include "ParallelNestedBenders.hpp"
 #include "BendersNodeData.hpp"
 
+#include "CoinTime.hpp";
+
 #define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
 #include "ilcplex/cplex.h"
@@ -339,15 +341,6 @@ int OsiStochasticParallelNestedBendersSolverInterface::getMaximalLengthOfCritica
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {
     parameters_.init();
-
-    // How it works: We need a random generator and a distribution we want to draw numbers from.
-    // Set the seed 
-    //uniform_generator_struct.seed = parallel_benders::get_random_number_from_system();
-    //// Create a random number generator instance
-    //uniform_generator_struct.rng = std::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
-    //// Create a random [0,1) variate generator;
-    //boost::uniform_01<> uniform_01_distribution;
-    //uniform_generator_struct.uniform = std::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()
@@ -355,7 +348,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
 	parallel_benders::Parameter initial_parameter = parameters_;
 
-
+	double time_lower_bounding = 0;
+	double time_upper_bounding = 0;
+	double time_sampling = 0;
+	double current_time = 0;
     // Some things we need to share later on
     OsiSolverInterface* osi_solver = osi_pnb_->getOsiSolverInterface();
     SmiScnModel* smi_model = osi_pnb_->getSmiModel();
@@ -405,12 +401,19 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         for (std::vector<int>::iterator it = candidate_samples.begin(); it != candidate_samples.end(); ++it)
             *it += *it;
         // Solve a candidate problem
+		current_time = CoinCpuTime();
         smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates ); // TODO: Is this allowed here?
+		time_sampling += CoinCpuTime()-current_time;
+
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
 		parameters_ = initial_parameter;
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         osi_pnb_->setParameters(parameters_);
+		
+		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
+		time_lower_bounding += CoinCpuTime()-current_time;
+
         // Copy first stage solution => candidate solution \hat x
         candidate_array.reset(new double[num_first_stage_cols]);
         memcpy(candidate_array.get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
@@ -423,15 +426,16 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     std::vector< boost::shared_array<double> > first_stage_solutions(number_batches_);
     // Compute lower bound approximation!
     for (int i = 0; i < number_batches_; i++){
+		current_time = CoinCpuTime();
         smi_model->sampleScenarioTree(samples_,0, get_latin_hypercube_random_01_variates );
+		time_sampling += CoinCpuTime()-current_time;
+
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
 		parameters_ = initial_parameter;
         if ( linderoth_shapiro_wright || naive_estimation ) // In this case we need first stage solutions only
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,1);
         else // For MakMortonWood we need no solutions
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
-
-
    
         // Use solution from previous problem to speed up calculations 
 		if ( i == 0 ) {
@@ -445,7 +449,11 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 				osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
 		}
 		osi_pnb_->setParameters(parameters_);
+
+		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
+		time_lower_bounding += CoinCpuTime()-current_time;
+
         // We assume that solving went well. If it does not, we have problem
         objective_values[i] = osi_pnb_->getObjValue();
         LOG(INFO) << "Solved lower bound problem " << i << " with objective value " << objective_values[i];
@@ -466,7 +474,11 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
             osi_pnb_->setParameters(parameters_);
             osi_pnb_->fixFirstStageVariables(candidate_array.get());
+
+			current_time = CoinCpuTime();
             osi_pnb_->initialSolve();
+			time_upper_bounding += CoinCpuTime()-current_time;
+
             gap_estimates[i] = osi_pnb_->getObjValue() - objective_values[i];
          }
         if ( linderoth_shapiro_wright ) {
@@ -474,12 +486,21 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             for (int current_batch = 0; current_batch < number_batches_upper_; current_batch++){
                 LOG(INFO) << "Solving evaluation problem " << current_batch << " for current lower bound solution " << i;
                 // Evaluate this very lower bound solution with a larger random number stream!
+
+				current_time = CoinCpuTime();
                 smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
+				time_sampling += CoinCpuTime()-current_time;
+
                 osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
                 parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+				parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
                 osi_pnb_->setParameters(parameters_);
                 osi_pnb_->fixFirstStageVariables(first_stage_solutions[i].get());
+
+				current_time = CoinCpuTime();
                 osi_pnb_->initialSolve();
+				time_upper_bounding += CoinCpuTime()-current_time;
+
                 upper_bound_estimates_for_this_solution[current_batch] = osi_pnb_->getObjValue();
             }
             upper_bound_estimates[i] = std::accumulate(upper_bound_estimates_for_this_solution.begin(),upper_bound_estimates_for_this_solution.end(),0.0)/number_batches_upper_;
@@ -534,7 +555,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
         for (int i = 0; i < number_batches_upper_; i++){
             LOG(INFO) << "Solving evaluation problem " << i;
+			current_time = CoinCpuTime();
             smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
+			time_sampling += CoinCpuTime()-current_time;
+
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
             parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
@@ -542,7 +566,11 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
             // Fix first stage solution
             osi_pnb_->fixFirstStageVariables(candidate_array.get());
+
+			current_time = CoinCpuTime();
             osi_pnb_->initialSolve();
+			time_upper_bounding += CoinCpuTime()-current_time;
+
             upper_bound_values[i] = osi_pnb_->getObjValue();
 
             // Compute sample variance estimator for this problem ( we need the complete solution of the whole problem to be able to compute it )
@@ -562,7 +590,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     }
     else{
         // We are doing it in a single run. Therefore Sample iid variates!
+		current_time = CoinCpuTime();
         smi_model->sampleScenarioTree(samples_upper_,0, get_random_01_variates );
+		time_sampling += CoinCpuTime()-current_time;
+
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES,true);
@@ -570,7 +601,9 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         osi_pnb_->setParameters(parameters_);
         // Fix first stage solution
         osi_pnb_->fixFirstStageVariables(candidate_array.get());
+		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
+		time_upper_bounding += CoinCpuTime()-current_time;
 
         // Get the objective values for every scenario
         std::vector<double> upper_bound_solution_values(samples_upper_[num_stages-1],0);
@@ -592,7 +625,8 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     std::fstream logfile;
     logfile.open("saa-log.txt", fstream::out | fstream::app);
-    logfile << "Seed: " << uniform_generator_struct.seed << "\n";
+	LOG(INFO) << theGenerator().seed;
+    logfile << "Seed: " << theGenerator().seed << "\n";
     // Conclusion
     logfile << "N : ";
     for (int i = 1; i < num_stages; i++)
@@ -604,9 +638,12 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         logfile << samples_upper_[i] << " ";
     logfile << "\n";
     logfile << "T: " << number_batches_upper_ << "\n";
-    logfile << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower << "\n";
-    logfile << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper << "\n";
+    logfile << "Lower Bound : " << setprecision(10) << setw(10) << lower_bound_estimator << " +/- " << half_length_lower << "\n";
+    logfile << "Upper Bound : " << setprecision(10) << setw(10) << upper_bound_estimator << " +/- " << half_length_upper << "\n";
     logfile << "Confidence Level : " << 1-alpha_ << "%" << "\n";
+	logfile << "Time Lower Bounding :" << time_lower_bounding << "\n";
+	logfile << "Time Upper Bounding :" << time_upper_bounding << "\n";
+	logfile << "Time Sampling : " << time_sampling << "\n";
     logfile.close();
 
     LOG(INFO) << "Done.";
@@ -651,8 +688,8 @@ void SampleAverageApproximationSolverInterface::setConfidenceLevel( double one_m
 double get_random_0_1_variate(){
     // If seed is 0, random generator is not initialized!
     double random_variate = 0;
-    if ( uniform_generator_struct.seed != 0 )
-        random_variate = (*uniform_generator_struct.uniform)();
+    if ( theGenerator().seed != 0 )
+        random_variate = (*theGenerator().uniform)();
 
     return random_variate;
 }
@@ -660,25 +697,25 @@ double get_random_0_1_variate(){
 // Crude Monte Carlo Versions!
 double * get_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
-    if ( uniform_generator_struct.seed == 0)
+    if ( theGenerator().seed == 0)
         return nullptr;
 
     double* random_variates = new double[number_of_variates];
     for (int i = 0; i < number_of_variates; i++)
-        random_variates[i] = (*uniform_generator_struct.uniform)();
+        random_variates[i] = (*theGenerator().uniform)();
     return random_variates;
 }
 
 // Antithetic Crude Monte Carlo Sampling 
 double * get_antithetic_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
-    if ( uniform_generator_struct.seed == 0)
+    if ( theGenerator().seed == 0)
         return nullptr;
 
     double* random_variates = new double[number_of_variates];
     for (int i = 0; i < number_of_variates; i++){
         if ( i % 2 == 0 )
-            random_variates[i] = (*uniform_generator_struct.uniform)();
+            random_variates[i] = (*theGenerator().uniform)();
         else
             random_variates[i] = 1-random_variates[i-1];
     }
@@ -688,7 +725,7 @@ double * get_antithetic_random_01_variates(int number_of_variates){
 // Latin Hypercube Sampling
 double * get_latin_hypercube_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
-    if ( uniform_generator_struct.seed == 0)
+    if ( theGenerator().seed == 0)
         return nullptr;
 
     // Generate one variate uniformly at random in every interval
@@ -699,7 +736,7 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     for ( double lower_interval = 0.0; lower_interval < 1; lower_interval += division){
         // Sample one variable from [lower_interval,lower_interval+division)
         boost::uniform_real<> uniform_real_distribution(lower_interval,lower_interval+division);
-        boost::variate_generator<parallel_benders::base_generator_type*, boost::uniform_real<double> > variate_gen(uniform_generator_struct.rng.get(),uniform_real_distribution);
+        boost::variate_generator<parallel_benders::base_generator_type*, boost::uniform_real<double> > variate_gen(theGenerator().rng.get(),uniform_real_distribution);
         random_variates[i] = variate_gen();
         assert( random_variates[i] >= lower_interval && random_variates[i] < lower_interval+division);
         i++;
@@ -711,7 +748,7 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     // Invoke Functor to sample from the RNG we use for our other random numbers too.
     //ptrdiff_t (*p_myrandom)(ptrdiff_t) = getRandomNumberFromRNG;
     boost::uniform_int<> uniform_int_distribution;
-    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_int_distribution);
+    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(theGenerator().rng.get()),uniform_int_distribution);
     std::random_shuffle(&random_variates[0],&random_variates[number_of_variates],variate_gen);
 
     assert( i == number_of_variates);
@@ -722,6 +759,6 @@ ptrdiff_t getRandomNumberFromRNG( ptrdiff_t maximal_number )
 {
     // Sample one variable from [0,maximal_number)
     boost::uniform_int<> uniform_int_distribution(0,maximal_number);
-    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_int_distribution);
+    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(theGenerator().rng.get()),uniform_int_distribution);
     return variate_gen();
 }
