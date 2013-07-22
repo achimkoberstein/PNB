@@ -20,15 +20,15 @@ struct Uniform01Generator {
     unsigned int seed;
 
     Uniform01Generator();
+	void chooseNewSeed();
 };
 
-
-
-int get_random_number_from_system();
+unsigned int get_random_number_from_system();
 
 double computeSampleVarianceEstimator(int number_of_samples, double* sampled_values, double average);
 
 double computeSymmetricConfidenceInterval(int number_of_batches, double alpha, double variance);
 }
+parallel_benders::Uniform01Generator & theGenerator();
 
 #endif // PseudoRandomGenerator_hpp__
