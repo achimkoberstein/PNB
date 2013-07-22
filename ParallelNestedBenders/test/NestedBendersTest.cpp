@@ -335,7 +335,7 @@ public:
         bool test_feas_cuts = false;
         bool test_dem = false;
 
-        for (int cpu = 0; cpu < 2; cpu++){
+        for (int cpu = 1; cpu < 2; cpu++){
                 //// Solve DetEq as comparison
 
 				// Copy benders_parameter
@@ -1850,8 +1850,8 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*deak*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
-    //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    ::testing::GTEST_FLAG(filter) = "*watson*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
+    //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.temporarySD*";
 

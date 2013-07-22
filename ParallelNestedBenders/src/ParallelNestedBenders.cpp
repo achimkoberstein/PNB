@@ -2832,16 +2832,22 @@ namespace parallel_benders {
             CPXENVptr env_ptr = cpx_ptr->getEnvironmentPtr();
             CPXLPptr lp_ptr = cpx_ptr->getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ALL);
             int cpx_stat = CPXgetstat(env_ptr,lp_ptr);
-
+			int solnmethod = 0;
+			int solntype = 0;
+			int pfeasind = 0;
+			int dfeasind = 0;
+			CPXsolninfo(env_ptr,lp_ptr,&solnmethod,&solntype,&pfeasind,&dfeasind);
             dual_solution_farkas.reset(new double[number_rows]);
 
-            if (  cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){// If this is not done everytime, problems can occur with fxm4_16 that say no dual solution present!
+
+            if (  solntype == CPX_NO_SOLN || solntype == CPX_PRIMAL_SOLN || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
                 // We lose the warm-start solution this way, so we should add it.
-                std::vector<int> cstat(osi_solver->getNumCols());
-                std::vector<int> rstat(osi_solver->getNumRows());
-                std::vector<double> dnorm(osi_solver->getNumRows());
+				std::vector<int> cstat(osi_solver->getNumCols());
+				std::vector<int> rstat(osi_solver->getNumRows());
+				std::vector<double> dnorm(osi_solver->getNumRows());
+
                 bool copied_basednorms = false;
-                if ( cpx_stat == CPX_STAT_INFEASIBLE ){ // This is usually the case!
+                if ( solntype == CPX_BASIC_SOLN ){ // This is usually the case!
                     // Store basednorms
                     cpx_stat = CPXgetbasednorms(env_ptr,lp_ptr,&cstat[0],&rstat[0],&dnorm[0]);
                     if ( cpx_stat == 0)
@@ -2852,8 +2858,8 @@ namespace parallel_benders {
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
                 
-                //if ( copied_basednorms )
-                //    cpx_stat = CPXcopybasednorms(env_ptr,lp_ptr,&cstat[0],&rstat[0],&dnorm[0]);
+                if ( copied_basednorms )
+                    cpx_stat = CPXcopybasednorms(env_ptr,lp_ptr,&cstat[0],&rstat[0],&dnorm[0]);
                 if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
                     CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
                 else
