@@ -294,7 +294,7 @@ public:
         
 
         // Specify the number of repetitions_ 
-        repetitions_ = 4;
+        repetitions_ = 2;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
   //      aggregates.push_back(10);
@@ -358,10 +358,10 @@ public:
                         // We can choose different LP methods, but stick with the dual simplex for now!
                         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-						benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
-						solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-						benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-						solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+						//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+						//benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+						//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     }
 
                     if ( test_start_solutions && test_normal){
@@ -403,7 +403,7 @@ public:
 						if ( test_normal && !test_start_solutions){
 							benders_parameter_ = copied_param_for_loop;
 							benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
-							solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+							solveForProtocols(solutions,num_stages_,core_name,time_name,stoch_name);
 						}
 
 						if ( test_level_euclidean ){
@@ -1851,7 +1851,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    //::testing::GTEST_FLAG(filter) = "*cargo*";
+    ::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.temporarySD*";
 
@@ -1861,7 +1861,7 @@ int main(int argc, char *argv[]) {
     //::testing::GTEST_FLAG(filter) = "*assets_FELT";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     //::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestSampleAverageApproximation.sample_average_approximation1";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTestSampleAverageApproximation.sample_average_approximation1";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)
