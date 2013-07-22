@@ -654,7 +654,7 @@ namespace parallel_benders {
             integer_problems_[0] = false;
         for (int i = 1; i < num_stages_;i++){
             LOG_IF(WARNING,integer_problems_[i]) << "Your problem contains integer variables at stage " << i+1 << ".";
-            if ( solve_relaxation_ >= i ){
+            if ( solve_relaxation_ >= i && integer_problems_[i]){
                 integer_problems_[i] = false; // Ensure we do solve the LP relaxation! (for second stage?)
                 LOG(INFO) << "We solve the LP relaxation for stage"  << i << ".";
             }
