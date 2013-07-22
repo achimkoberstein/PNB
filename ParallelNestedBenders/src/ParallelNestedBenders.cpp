@@ -1214,7 +1214,7 @@ namespace parallel_benders {
             thread_pool_.wait(0); // We wait until all threads are done
 
 			if ( current_stage_ == 1 && !forward_ ){
-				if ( infeasible_problems_.none() )
+				if ( infeasible_problems_.none() && !infeasible_problem_)
 					opt_cut_iterations_.emplace_back(current_iteration_);
 				else
 					feas_cut_iterations_.emplace_back(current_iteration_);
@@ -1544,26 +1544,6 @@ namespace parallel_benders {
             //    //    unbounded_problem_ = false;
             //}
 
-            /*******************************************************************************/
-            /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
-            /*******************************************************************************/
-            if ( !forward_ && infeasible_problems_.none() ){ // TODO: if generate_feas_and_opt_cuts we need to change this
-                // We need to aggregate optimality cuts for the parent node
-                for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
-                    // Schedule the tasks for this stage
-                    thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
-                thread_pool_.wait(0); // We wait until all threads are done
-                // If we added no cuts, we might want to notice that
-
-                //if ( num_cpu_ > 1 ) {
-                //    // Try to restore a deterministic ordering for the latest iterations!
-                //    CutStuffLessComparison myobject;
-                //    for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++){
-                //        tree_nodes_by_stage_[current_stage_-1][i]->getDataPtr()->optimality_cuts_.sort(myobject);
-                //    }
-                //}
-            }
-
             // If we have an infeasible subproblem, we already added the cuts to the corresponding parent problems.
             if ( infeasible_problems_.any() ){
                 // Set boolean variable to indicate that during this backward run, we do not generate optimality cuts!.
@@ -1591,6 +1571,26 @@ namespace parallel_benders {
                         stage_lower_upper_bounds_[i].second = -infinity_;
                     }
                 }
+            }
+
+            /*******************************************************************************/
+            /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
+            /*******************************************************************************/
+            if ( !forward_ && infeasible_problems_.none() && !infeasible_problem_ ){ // TODO: if generate_feas_and_opt_cuts we need to change this
+                // We need to aggregate optimality cuts for the parent node
+                for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
+                    // Schedule the tasks for this stage
+                        thread_pool_.schedule(boost::bind(&ParallelNestedBenders::AggregateOptimalityCuts,this,tree_nodes_by_stage_[current_stage_-1][i]));
+                thread_pool_.wait(0); // We wait until all threads are done
+                // If we added no cuts, we might want to notice that
+
+                //if ( num_cpu_ > 1 ) {
+                //    // Try to restore a deterministic ordering for the latest iterations!
+                //    CutStuffLessComparison myobject;
+                //    for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++){
+                //        tree_nodes_by_stage_[current_stage_-1][i]->getDataPtr()->optimality_cuts_.sort(myobject);
+                //    }
+                //}
             }
 
             // When we did not added any cuts, we have to go forward! (except last stage of course and when all problems were feasible!)
@@ -1708,15 +1708,12 @@ namespace parallel_benders {
             LOG(INFO) << "Problem is infeasible.";
         }
 		// For unbounded problem, set upper_bound_ to -infinity
-
-
         LOG_IF(INFO,store_cut_information_) << "Spent " << intra_cut_aggregation_time_ << " seconds to perform cut consolidation (over all CPU's)";
         LOG_IF(INFO,adaptive_) << "Spent " << adaptive_cut_time_ << " seconds to aggregate aggregates.";
         LOG_IF(WARNING,current_iteration_-insubstantial_iteration_ >= max_iteration_) << "Algorithm exceeded maximum number of iterations.";
         LOG_IF(WARNING,max_similarity_iteration_ < solution_similiarity_counter_) << "Algorithm stopped, because solution did not changed for " << solution_similiarity_counter_ << " consecutive iterations.";
         LOG_IF(INFO,d_square_) << "Spent " << d_square_c_triple_timer_ << " seconds to compute C^3 problems.";
         LOG_IF(INFO,d_square_) << "Spent "  << d_square_c_rhs_timer_ << " seconds to compute D^2 RHS problems.";
-
     }
 
 
@@ -2837,7 +2834,7 @@ namespace parallel_benders {
 
             dual_solution_farkas.reset(new double[number_rows]);
 
-            if ( true || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){// If this is not done everytime, problems can occur with fxm4_16 that say no dual solution present!
+            if (  cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){// If this is not done everytime, problems can occur with fxm4_16 that say no dual solution present!
                 // We lose the warm-start solution this way, so we should add it.
                 std::vector<int> cstat(osi_solver->getNumCols());
                 std::vector<int> rstat(osi_solver->getNumRows());
@@ -2849,15 +2846,18 @@ namespace parallel_benders {
                     if ( cpx_stat == 0)
                         copied_basednorms = true;
                 }
+                // This removes presolve information, but not basis information!
+                CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MAX);
                 CPXchgobjsen(env_ptr, lp_ptr, CPX_MIN);
-                CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_OFF );
-                if ( copied_basednorms )
-                    cpx_stat = CPXcopybasednorms(env_ptr,lp_ptr,&cstat[0],&rstat[0],&dnorm[0]);
+                
+                //if ( copied_basednorms )
+                //    cpx_stat = CPXcopybasednorms(env_ptr,lp_ptr,&cstat[0],&rstat[0],&dnorm[0]);
                 if ( stage_data_[current_stage_]->non_zero_bounds_ && !use_dual_farkas)
                     CPXprimopt(env_ptr,lp_ptr); // I need primopt to obtain the reduced costs of the phase 1 problem ( CPXgetdj ) and the dual ray via CPXgetpi
                 else
                     CPXdualopt(env_ptr,lp_ptr); // Use CPXdualfarkas for dual ray, but nothing about the reduced costs yet..
+
                 CPXsetintparam( env_ptr, CPX_PARAM_PREIND, CPX_ON );
                 cpx_stat = CPXgetstat(env_ptr,lp_ptr);
                 if ( cpx_stat == CPX_STAT_INFEASIBLE )
@@ -6170,8 +6170,8 @@ namespace parallel_benders {
                 CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"lp");
                 //name = stream.str()+"mps";
                 //CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"mps");
-                //name = stream.str()+"sav";
-                //CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
+                name = stream.str()+"sav";
+                CPXwriteprob(env_ptr,lp_ptr,name.c_str(),"sav");
             }
             else {
                 std::lock_guard<std::mutex> lock(console_mutex_);
