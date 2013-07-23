@@ -1454,7 +1454,8 @@ namespace parallel_benders {
 
                     if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD) && theta_approximations_everywhere_ && !enforce_direction_){
                         if ( current_stage_ > 0 && current_stage_ < num_stages_-1){
-                            if ( discrepancy > (strategy_epsilon_/(num_stages_-1)) * std::min(std::abs(lower_bound_),std::abs(upper_bound_)) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
+                            // Try a relative term first, for when the discrepancy is large, and an absolute term
+                            if ( discrepancy > strategy_epsilon_ * absolute_gap || (discrepancy > std::abs(upper_bound_-lower_bound_) && discrepancy < 1) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
                                 forward_ = false;
                                 enforce_stage_ = 0;
                                 enforce_direction_ = true;
@@ -1572,7 +1573,7 @@ namespace parallel_benders {
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
             /*******************************************************************************/
-            if ( !forward_ && infeasible_problems_.none() && !infeasible_problem_ ){ // TODO: if generate_feas_and_opt_cuts we need to change this
+            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -2840,8 +2841,8 @@ namespace parallel_benders {
             dual_solution_farkas.reset(new double[number_rows]);
 
 
-            if (  solntype == CPX_NO_SOLN || solntype == CPX_PRIMAL_SOLN || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
-                // We lose the warm-start solution this way, so we should add it.
+            if ( solntype == CPX_NO_SOLN || solntype == CPX_PRIMAL_SOLN || cpx_stat != CPX_STAT_INFEASIBLE || lp_method_ != feas_cut_lp_method_){
+                // We might lose existing warm-start information this way, so we should add it.
 				std::vector<int> cstat(osi_solver->getNumCols());
 				std::vector<int> rstat(osi_solver->getNumRows());
 				std::vector<double> dnorm(osi_solver->getNumRows());
