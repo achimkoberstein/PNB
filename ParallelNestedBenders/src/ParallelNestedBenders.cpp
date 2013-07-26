@@ -301,7 +301,7 @@ namespace parallel_benders {
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
-        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
+        warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
     }
@@ -611,6 +611,8 @@ namespace parallel_benders {
         // Solve LP relaxation instead IP problem?
         solve_relaxation_ = param.get(PNB_RELAXATION,PNB_INT_NO_RELAXATION);
 
+        // Set numerical issue handling for sequencing protocols
+        old_discrepancies_.resize(num_stages_,infinity_);
 
         // Set options for solver!
         SetSolverOptions(osi_solver_);
@@ -1430,6 +1432,10 @@ namespace parallel_benders {
                 if ( current_stage_ < num_stages_-1 && current_stage_ > 0  ){ 
                     // Discrepancy makes sense on the way forward, but only for values actually solved!
                     double discrepancy = stage_lower_upper_bounds_[current_stage_].first + (stage_lower_upper_bounds_[current_stage_-1].second-stage_lower_upper_bounds_[current_stage_-1].first);
+                    // If the discrepancy increased ( for example because of new cuts ) we do not want to interfere!
+                    if ( discrepancy > old_discrepancies_[current_stage_] )
+                        old_discrepancies_[current_stage_] = infinity_;
+
                     // What is the absolute gap?
                     double absolute_gap = upper_bound_-lower_bound_;
                     if ( lower_bound_ == -infinity_ || upper_bound_ == infinity_)
@@ -1441,7 +1447,7 @@ namespace parallel_benders {
                         threshold = std::pow(10,std::log10(absolute_gap)-1);
                     }
                     if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK ){
-                        if (discrepancy > threshold && theta_approximations_everywhere_ && forward_ && made_one_turn){
+                        if (  !CompareForEquality(discrepancy,old_discrepancies_[current_stage_],zero_tolerance_) && discrepancy > threshold && theta_approximations_everywhere_ && forward_ && made_one_turn){
                             forward_ = false; // Discrepancy is greater than treshold, so we do not go forward. Only if we are at stages, that are higher than the critical stage, we do not change the direction.
                         }
                         else if ( forward_ ) // Discrepancy is lower than threshold.
@@ -1455,7 +1461,8 @@ namespace parallel_benders {
                     if ( (sequencing_protocol_ == PNB_INT_EPSILON_FAST_BACKWARD || sequencing_protocol_ == PNB_INT_FAST_BACKWARD) && theta_approximations_everywhere_ && !enforce_direction_){
                         if ( current_stage_ > 0 && current_stage_ < num_stages_-1){
                             // Try a relative term first, for when the discrepancy is large, and an absolute term
-                            if ( discrepancy > strategy_epsilon_ * absolute_gap || (discrepancy > std::abs(upper_bound_-lower_bound_) && discrepancy < 1) ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
+                            if ( !CompareForEquality(discrepancy,old_discrepancies_[current_stage_],zero_tolerance_) && discrepancy > strategy_epsilon_ * absolute_gap ){ // If discrepancy is greater than threshold, we want to reduce this gap by building new cuts!
+                                // Insert some fallback, for problems where we can not further reduce the discrepancy by adding new cuts!
                                 forward_ = false;
                                 enforce_stage_ = 0;
                                 enforce_direction_ = true;
@@ -1465,6 +1472,7 @@ namespace parallel_benders {
                         }
                     }
                     // This can, at least in part, only reasonably be done, if we have not yet resolved the current stage, as the x of this stage has changed then!
+                    old_discrepancies_[current_stage_] = discrepancy;
                 }
             }
 
