@@ -296,26 +296,26 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-		aggregates.push_back(1);
-  //      aggregates.push_back(10);
-  //      aggregates.push_back(25);
-  //      aggregates.push_back(50);
-  //      aggregates.push_back(100);
-  //      aggregates.push_back(200);
-  //      aggregates.push_back(500);
-  //      aggregates.push_back(1000);
-  //      aggregates.push_back(2000);
+		//aggregates.push_back(1);
+        aggregates.push_back(2);
+        aggregates.push_back(5);
+        aggregates.push_back(10);
+        aggregates.push_back(20);
+        aggregates.push_back(30);
+        aggregates.push_back(40);
+        aggregates.push_back(50);
+        aggregates.push_back(100);
   //      aggregates.push_back(3000);
   //      aggregates.push_back(5000);
 		//if ( use_multi_cut_ )
 		//	aggregates.push_back(0);
 
-		// If we have not yet added num_aggregates_by_magic, we add it now
-	/*	if ( aggregates.end() == std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic)) {
-			if ( num_aggregates_by_magic > 200 )
+		 //If we have not yet added num_aggregates_by_magic, we add it now
+		if ( std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic) == aggregates.end() ) {
+			if ( num_aggregates_by_magic > 200 ) // Add an upper cap on the number of aggregates!
 				num_aggregates_by_magic = 200;
 			aggregates.push_back(num_aggregates_by_magic);
-		}*/
+		}
 
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600*8); // Not longer than one hour 
@@ -324,11 +324,11 @@ public:
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = false;
-        bool test_level_infinity = false;
-        bool test_level_manhattan = false;
+        bool test_level_euclidean = true;
+        bool test_level_infinity = true;
+        bool test_level_manhattan = true;
         bool test_regularized_decomposition = false;
-        bool test_oda = false;
+        bool test_oda = true;
 		bool test_only_oda = false;
         bool test_normal = true;
         bool test_start_solutions = generate_initial_solution_;
@@ -1848,16 +1848,16 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.temporarySD*";
 
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
-    //::testing::GTEST_FLAG(filter) = "*InvestmentExampleTest*";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
     //::testing::GTEST_FLAG(filter) = "*assets_FELT";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     //::testing::GTEST_FLAG(filter) = "*gas_OTHER*";

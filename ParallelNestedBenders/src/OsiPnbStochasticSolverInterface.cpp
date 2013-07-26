@@ -76,6 +76,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 			CPXsetintparam(envPtr,CPX_PARAM_THREADS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_NUM_CPU,0));
             //CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.999);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
+            //CPXsetintparam(envPtr,CPX_PARAM_PREIND,0);
             // We may want to set a start solution!
 
             //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);

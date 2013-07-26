@@ -349,6 +349,9 @@ private:
 
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
     staircase_container non_staircase_coefficients_;
+
+    // Handle numerical issues!
+    std::vector<double> old_discrepancies_;
     
 
     // TODO: REMOVE AGAIN
