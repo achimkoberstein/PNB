@@ -296,14 +296,14 @@ public:
         // Specify the number of repetitions_ 
         repetitions_ = 2;
         std::vector<int> aggregates;
-		aggregates.push_back(1);
+		//aggregates.push_back(1);
   //      aggregates.push_back(10);
   //      aggregates.push_back(25);
   //      aggregates.push_back(50);
-  //      aggregates.push_back(100);
+        //aggregates.push_back(100);
   //      aggregates.push_back(200);
-  //      aggregates.push_back(500);
-  //      aggregates.push_back(1000);
+        aggregates.push_back(500);
+        //aggregates.push_back(1000);
   //      aggregates.push_back(2000);
   //      aggregates.push_back(3000);
   //      aggregates.push_back(5000);
@@ -318,7 +318,7 @@ public:
 		}*/
 
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600*8); // Not longer than one hour 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
 
 		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
@@ -328,14 +328,14 @@ public:
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_oda = false;
-		bool test_only_oda = false;
+        bool test_oda = true;
+		bool test_only_oda = true;
         bool test_normal = true;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
         bool test_dem = false;
 
-        for (int cpu = 0; cpu < 2; cpu++){
+        for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
 
 				// Copy benders_parameter
@@ -427,7 +427,10 @@ public:
 						if ( test_normal ){
 							benders_parameter_ = copied_param_for_loop;
 							benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-							solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0);
+                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
 						}
 
                         if ( test_level_euclidean ){
@@ -1796,6 +1799,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
+    	EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
 	//EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
@@ -1849,9 +1853,9 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
     //::testing::GTEST_FLAG(filter) = "*Postponement*";
-    ::testing::GTEST_FLAG(filter) = "*watson*";
+    //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
     //::testing::GTEST_FLAG(filter) = "*.temporarySD*";
 

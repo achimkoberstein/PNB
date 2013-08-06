@@ -179,6 +179,7 @@ void Parameter::init()
     // Parameter for Level and ODA
     parameter_.put(PNB_LEVEL_LAMBDA,0.5);
     parameter_.put(PNB_ODA_KAPPA,0.5);
+    parameter_.put(PNB_ODA_AGGREGATES,1); // 1 Aggregates is single-cut case (default), 0 is same number of aggregates as number of aggregates, and some number inbetween is also OK.
     parameter_.put(PNB_STAGE_LEVEL,0); // Up to which stage should we solve level problems? default is only the first stage (parameter holds also for regularization)
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
     parameter_.put(PNB_TOLERANCE_ZERO, 1e-06);
@@ -191,7 +192,7 @@ void Parameter::init()
     parameter_.put(PNB_COMPUTE_OBJECTIVE_VALUES,false);
 }
 
-void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )
+void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut, int oda_aggregates )
 {
 	std::vector<std::vector<int> >& node_in_cut_vector(benders_node_data->nodes_in_cut_);
 	if ( node_in_cut_vector.empty() ){
@@ -210,11 +211,29 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 			}
 		}
         // Create oda_nodes_in_cut Aggregate Vector!
-        benders_node_data->oda_aggregates_.resize(node_in_cut_vector.size());
-        int count = 0;
-        for ( std::vector<int>& vec : benders_node_data->oda_aggregates_ )
-            vec.push_back(count++);
-        assert( count == node_in_cut_vector.size());
+        // Set a parameter value here!
+         benders_node_data->oda_aggregates_.resize(oda_aggregates);
+        if ( oda_aggregates == 1 ){
+            
+            // Add all aggregates in there explicitly!
+            for( int i = 0; i < node_in_cut_vector.size(); i++)
+                benders_node_data->oda_aggregates_[0].push_back(i);
+        }
+        else if ( oda_aggregates == num_cuts) {
+            int count = 0;
+            for ( std::vector<int>& vec : benders_node_data->oda_aggregates_ )
+                vec.push_back(count++);
+            assert( count == node_in_cut_vector.size());
+        }
+        else if ( oda_aggregates > 0 && oda_aggregates < num_cuts ){
+            // We have num_cuts aggregates and oda_aggregates many oda aggregates.
+            for (int i = 0; i < num_cuts;i++)
+                benders_node_data->oda_aggregates_[i % oda_aggregates].push_back(i);
+        }
+        else{
+            assert(false);
+        }
+
 
         // For now we just add all aggregates into it!
         // 
