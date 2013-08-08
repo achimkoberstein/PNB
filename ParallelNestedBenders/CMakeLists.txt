@@ -7,10 +7,12 @@ set(CMAKE_BUILD_TYPE Debug)
 set(BOOST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/boost)
 set(BOOST_LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdParty/boost/stage/lib)
 
-set(CPLEX_INCLUDE_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cplex/include)
-set(CPLEX_LIBRARY_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cplex/lib/x86_sles10_4.1/static_pic)
+
+set(CPLEX_INCLUDE_DIR /opt/ibm/ILOG/CPLEX_Studio124/cplex/include)
+set(CPLEX_LIBRARY_DIR /opt/ibm/ILOG/CPLEX_Studio124/cplex/lib/x86_sles10_4.1/static_pic)
 
 set(GENERAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ThirdPartyLibs/include)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 include_directories(
 	src
@@ -28,4 +30,3 @@ add_definitions(
 
 add_subdirectory(src)
 #add_subdirectory(test)
-
