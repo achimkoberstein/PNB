@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 include(ExternalProject)
+
 set(CMAKE_BUILD_TYPE Debug)
 set(CONFIGURE_WITH_DEBUG --enable-debug)
 set(INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdPartyLibs)
@@ -8,6 +9,7 @@ set(CPLEX_INCLUDE_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cple
 set(CPLEX_LIBRARY_DIR /home/christian/ILOG/CPLEX_Studio_AcademicResearch122/cplex/lib/x86_sles10_4.1/static_pic)
 set(GUROBI_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gurobi/gurobi501/include)
 set(GUROBI_LIBRARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/gurobi/gurobi501/linux32/lib)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") # for gcc >= 4.7
 
 ExternalProject_Add(CoinUtils
 	DOWNLOAD_COMMAND ""
@@ -52,6 +54,7 @@ ExternalProject_Add(Cbc
 )
 
 ExternalProject_Add(Smi
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11") # for gcc >= 4.7
 	DEPENDS CoinUtils;Cgl;Clp;Osi
 	DOWNLOAD_COMMAND ""
 	SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Smi"
@@ -61,7 +64,7 @@ ExternalProject_Add(Smi
 ExternalProject_Add(google-glog
 	#URL "http://google-glog.googlecode.com/files/glog-0.3.2.tar.gz"
 	DOWNLOAD_COMMAND ""
-	SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glog-0.3.2"
+	SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/glog"
 	CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=${INSTALL_DIR}
 	INSTALL_DIR ${INSTALL_DIR}
 	)
