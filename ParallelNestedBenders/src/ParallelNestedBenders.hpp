@@ -298,6 +298,7 @@ private:
     double oda_first_stage_;
     double oda_phi_i_;
     double oda_tilde_q_;
+    int num_oda_aggregates_;
     std::vector<int> oda_chosen_optimality_cut_by_scenario_;// Which cut to take from each element!
     std::vector<double> oda_current_tilde_q_s_;
 	bool csaba_steepest_edge_;

@@ -166,7 +166,7 @@ public:
                 curSiblPtr->setSibling(NULL);
                 curSiblPtr = container.back();
             }
-            for (std::vector<SmiTreeNode<T>*>::size_type i = 0; i < container.size(); i++)
+            for ( unsigned int i = 0; i < container.size(); i++)
                 delete container[i];
         }
 
