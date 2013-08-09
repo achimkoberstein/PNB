@@ -114,16 +114,16 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
         }
 		// Vary Kappa, call Lambda
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
-        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
-        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.9);
+        //use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.7);
+        //use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
         benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.5);
         use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
-        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
-        use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.3);
+        //use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_KAPPA,0.1);
+        //use_lambda ? solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name) : solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 	}
 
@@ -317,9 +317,9 @@ public:
 
 		 //If we have not yet added num_aggregates_by_magic, we add it now
 		if ( std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic) == aggregates.end() ) {
-			//if ( num_aggregates_by_magic > 200 ) // Add an upper cap on the number of aggregates!
-   //         num_aggregates_by_magic = 200;
-			//aggregates.push_back(num_aggregates_by_magic);
+			if ( num_aggregates_by_magic > 200 ) // Add an upper cap on the number of aggregates!
+            num_aggregates_by_magic = 200;
+			aggregates.push_back(num_aggregates_by_magic);
 		}
 
 
@@ -328,13 +328,13 @@ public:
 		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
-        bool test_cut_consolidation = true;
+        bool test_cut_consolidation = false;
         bool test_level_euclidean = false;
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
         bool test_normal = true;
-        bool test_oda = false;
+        bool test_oda = true;
 		bool test_only_oda = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
