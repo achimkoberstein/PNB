@@ -91,16 +91,16 @@ public:
 
 	void solveForProtocolsWithLambda(std::vector<double>& solutions, const char* core_name, const char* time_name, const char* stoch_name){
 		// Vary Lambda from 0.9 to 0.1
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.9);
-        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
-        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.9);
+        //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.7);
+        //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
         benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.5);
         solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.3);
-        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.1);
-        solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.3);
+        //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LEVEL_LAMBDA,0.1);
+        //solveForProtocolsWithStartSolutions(solutions,core_name,time_name,stoch_name);
 
 	}
 
@@ -310,8 +310,8 @@ public:
         aggregates.push_back(100);
   //      aggregates.push_back(3000);
   //      aggregates.push_back(5000);
-		if ( use_multi_cut_ )
-			aggregates.push_back(0);
+		//if ( use_multi_cut_ )
+		//	aggregates.push_back(0);
 
 
 
@@ -330,12 +330,12 @@ public:
 
         bool test_cut_consolidation = false;
         bool test_level_euclidean = false;
-        bool test_level_infinity = false;
+        bool test_level_infinity = true;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
         bool test_normal = true;
         bool test_oda = true;
-		bool test_only_oda = false;
+		bool test_only_oda = true;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
         bool test_dem = false;
@@ -432,7 +432,10 @@ public:
 						if ( test_normal ){
 							benders_parameter_ = copied_param_for_loop;
 							benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
-							solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
+                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name); // Only use a single oda cut
 						}
 
                         if ( test_level_euclidean ){
@@ -448,7 +451,10 @@ public:
                         if ( test_level_infinity ){
                             benders_parameter_ = copied_param_for_loop;
                             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
                             solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name); // Only use a single oda cut
                         }
                     }
 				}//end for: aggregates
@@ -1801,7 +1807,8 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-	//EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
+    	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
+	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);

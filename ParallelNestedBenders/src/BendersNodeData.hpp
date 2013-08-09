@@ -53,6 +53,7 @@ namespace parallel_benders{
     const std::string PNB_MAXIMAL_SOLUTION_TIME = "PNB_MAXIMAL_SOLUTION_TIME";
     const std::string PNB_LEVEL_LAMBDA = "PNB_LEVEL_LAMBDA";
     const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
+    const std::string PNB_ODA_AGGREGATES = "PNB_ODA_AGGREGATES";
     const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
 
 
@@ -251,7 +252,9 @@ public:
     // We should store a vector of bitsets, needs less memory // TODO
     std::vector< std::vector<int> > nodes_in_cut_; // Stores which subnodes of current node are aggregated to a cut.
 
-    std::vector< std::vector<int> > oda_aggregates_;// Stores which aggregates are aggregated (can also be one-to-one correspondence to nodes_in_cut_ by setting nodes_in_cut_.size() as vector size and each vector containing one element, the aggregate index!
+     // Stores which aggregates are aggregated (can also be one-to-one correspondence to nodes_in_cut_ by setting nodes_in_cut_.size() as vector size and each vector containing one element, the aggregate index!
+    std::vector< std::vector<int> > oda_aggregates_; // Outer vector gives number of aggregates, the inner vectors store the aggregate numbers they are assigned
+   
 
 	// If we changed the cut aggregation level the last time we added cuts and before we build the subproblem again
 	bool changed_aggregation_level_;
@@ -290,7 +293,7 @@ public:
 };
 
 // Methods that work on a BendersNodeData
-void createRoundRobinAggregation(BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subpropblems_per_cut);
+void createRoundRobinAggregation(BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subpropblems_per_cut, int oda_aggregates = 0);
 
 double computeEuclideanNorm(OsiRowCut* cut);
 double computeCutViolation( OsiRowCut* cut, double* solution, double infinity );
