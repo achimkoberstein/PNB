@@ -79,7 +79,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             //CPXsetintparam(envPtr,CPX_PARAM_PREIND,0);
             // We may want to set a start solution!
 
-            //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);
+            CPXsetdblparam(envPtr,CPX_PARAM_EPRHS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_TOLERANCE_ZERO,1e-06));
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
@@ -125,7 +125,6 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         solution_time.Stop(0);
         // Set solution value
         nested_benders_->upper_bound_ = osi_->getObjValue();
-        // 
 
         // We have the time, but can not set it accordingly. not good!
         LOG(INFO) << "Solution: " << nested_benders_->upper_bound_;

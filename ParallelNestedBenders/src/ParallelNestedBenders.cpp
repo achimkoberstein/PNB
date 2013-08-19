@@ -295,7 +295,7 @@ namespace parallel_benders {
         num_stages_(core_->getNumStages()),num_scenarios_(smi_->getNumScenarios()),infinity_(1e20),contains_integer_(false),integer_problems_(core_->getNumStages()),parameter_(),
         zero_tolerance_(0.0),integer_tolerance_(0.0),absolute_epsilon_(0.0),relative_epsilon_(0.0),
         current_iteration_(0),insubstantial_iteration_(0),max_iteration_(5000),minor_iteration_(0),major_iteration_(0),feasible_iteration_(0),lower_bound_(-infinity_),upper_bound_(infinity_),old_lower_bound_(-infinity_),
-        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(4),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
+        current_stage_(0),non_staircase_problem_(false),forward_(true),infeasible_problem_(false),unbounded_problem_(false),infeasible_problems_(smi_->getNumScenarios()),num_added_feasibility_cuts_(0),store_cut_information_(false),adaptive_(false),aggregation_scheme_(0),no_aggregation_(true),cut_consolidation_add_cut_(true),cut_consolidation_strike_threshold_(5),cut_consolidation_partial_threshold_(0.0),regularization_(false),regularized_solution_value_(infinity_),regularized_sigma_(1.0),regularized_gamma_(0.75),regularized_initialized_cols_(false),regularized_initialized_rows_(false),regularized_start_row_(0),start_solution_(0),d_square_(false),d_square_translation_term_(0),timer_(num_stages_+1),wall_clock_solution_time_(1),detailed_timer_(5),solution_times_(4),maximal_solution_time_(0),solution_code_(0),
         num_cpu_(0),console_mutex_(),solver_map_mutex_(),stage_warm_start_mutex_(),upper_bound_mutex_(),infeasible_problem_mutex_(),osi_solver_mutex_(),add_cut_counter_mutex_(),stage_lower_upper_bounds_mutex_(),misc_mutex_(),thread_pool_(0),
         warm_start_(false),warm_start_scenarios_(false),warm_start_stage_(false),only_one_feasibility_cut_(true),generate_feasibility_and_optimality_cuts_(false),store_primal_and_dual_(false),
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
@@ -371,6 +371,8 @@ namespace parallel_benders {
             warm_start_scenarios_ = true;
         if ( warm_start_version == 2 )
             warm_start_stage_ = true;
+        if ( warm_start_version > 2 )
+            warm_start_scenarios_; // We assume warm_start_scenarios
 
         // Problem formulation
         bounds_in_matrix_ = param.get(PNB_BOUNDS_IN_MATRIX,false);
@@ -610,11 +612,6 @@ namespace parallel_benders {
             store_primal_and_dual_ = true; 
         }
 
-        // Assign timer 
-        build_problem_timer_ = 0;
-        solve_problem_timer_ = 1;
-        cut_generation_timer_ = 2;
-
         // Solve LP relaxation instead IP problem?
         solve_relaxation_ = param.get(PNB_RELAXATION,PNB_INT_NO_RELAXATION);
 
@@ -719,6 +716,8 @@ namespace parallel_benders {
         }
         thread_pool_.wait(0); // We wait until all threads are done
         current_stage_ = 0;
+        // Check if we actually created all threads!
+        LOG_IF(FATAL,osi_solver_map_.size() != num_cpu_) << "Not all threads were created."; 
 
         // Compute or Use initial solutions!
         HandleInitialSolutionProcedures();
@@ -1212,9 +1211,15 @@ namespace parallel_benders {
             /* Solve the subproblems                                                */
             /************************************************************************/
             int num_nodes = tree_nodes_by_stage_[current_stage_].size();
+            // Do some kind of shuffling!
+            //std::vector<int> test_vector(num_nodes);
+            //std::iota(test_vector.begin(),test_vector.end(),0);
+            //std::random_shuffle(test_vector.begin(),test_vector.end());
+            //for ( int i : test_vector ){
             for ( int i = 0; i < num_nodes; i++ ){
                 // Schedule the tasks for this stage
                 thread_pool_.schedule(boost::bind(&ParallelNestedBenders::HandleSubproblem,this,tree_nodes_by_stage_[current_stage_][i]));
+                //HandleSubproblem(tree_nodes_by_stage_[current_stage_][i]);
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
@@ -1588,7 +1593,7 @@ namespace parallel_benders {
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
             /*******************************************************************************/
-            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
+            if ( !forward_ && (!generate_feasibility_and_optimality_cuts_ && infeasible_problems_.none()) && theta_approximations_everywhere_ ){ // Only start adding optimality cuts, when we have a valid recourse function approximation at the last stage!
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -1706,6 +1711,7 @@ namespace parallel_benders {
         for ( auto node : tree_nodes_by_stage_[1]){
             detailed_timer_.AddTime(3,node->getDataPtr()->build_time_);
             solution_times_.AddTime(3,node->getDataPtr()->solution_time_);
+            detailed_timer_.AddTime(4,node->getDataPtr()->cut_generation_time_);
         }
 #endif
         // We finished solving
@@ -1737,7 +1743,6 @@ namespace parallel_benders {
                 return; 
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
-
         if ( current_stage_ == 0){
             detailed_timer_.Start(0);
         }
@@ -1745,7 +1750,6 @@ namespace parallel_benders {
         double current_time = CoinCpuTime();
         double elapsed_build_time = 0;
 #endif // COMPUTING_TIMER
-
 
         if ( !seperate_first_stage_solver_ || current_stage_ > 0 || (current_stage_ == 0 && current_iteration_ == 1)) 
             BuildSubproblem(osi_solver, benders_tree_node_pointer);
@@ -1790,6 +1794,7 @@ namespace parallel_benders {
             benders_tree_node_pointer->getDataPtr()->build_time_ += elapsed_build_time;
             benders_tree_node_pointer->getDataPtr()->solution_time_ += elapsed_solution_time;
         }
+        current_time = CoinCpuTime();
 #endif // COMPUTING_TIMER
 
         // We only need to store data if we have a feasible solution for the subproblem.
@@ -1805,6 +1810,10 @@ namespace parallel_benders {
                     IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
             }
             // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
+#ifdef COMPUTING_TIMER
+            current_time = CoinCpuTime()-current_time;
+            benders_tree_node_pointer->getDataPtr()->cut_generation_time_ += current_time;
+#endif
             if ( level_decomp_ && (current_stage_ == 0 || ( current_stage_ <= level_stage_ && forward_  && level_loop_backward_ ))){
                 BuildAndSolveLevelProblem(osi_solver,benders_tree_node_pointer);
             }
@@ -1954,11 +1963,10 @@ namespace parallel_benders {
                 if ( only_one_feasibility_cut_ && infeasible_problems_.any() ){ 
 					return;
                 }
-
                 if ( current_stage_ > 0 ){
                     bool generated_cut = GenerateFeasibilityCut( osi_solver, benders_tree_node_pointer ); 
-					if ( generated_cut && only_one_feasibility_cut_ || !only_one_feasibility_cut_){
-						std::unique_lock<std::mutex> u_lock(infeasible_problem_mutex_);
+					if ( generated_cut ){
+						std::lock_guard<std::mutex> u_lock(infeasible_problem_mutex_);
 						infeasible_problems_[benders_tree_node_pointer->scenario()] = true;
 					}
 					//else {
@@ -2615,8 +2623,9 @@ namespace parallel_benders {
             return;
         }
         if ( generate_feasibility_and_optimality_cuts_ && infeasible_problems_.any() ){
-            // This is not yet implemented TOOD: we do not call this method, if we have infeasibly problems
+            // This is not yet implemented 
             assert(false);
+            return;
         }
 		
         std::vector<double>& column_solution = benders_tree_node_pointer->getDataPtr()->col_solution_;
@@ -3153,6 +3162,7 @@ namespace parallel_benders {
         if ( it != osi_solver_map_.end() )
             return (*it).second;
         else {
+            //LOG(FATAL) << "Thread has not yet an associated solver.";
             std::lock_guard<std::mutex> lock(solver_map_mutex_); 
             OsiSolverInterface* osi_solver = nullptr;
             // Create new osi_solver object from sepearete first stage solver? if we have a mip
@@ -3175,12 +3185,12 @@ namespace parallel_benders {
     void ParallelNestedBenders::SetSolverByThread(){
         // Used in the beginning to set a solver for every thread
         {
-            std::lock_guard<std::mutex> lock(solver_map_mutex_); 
+            std::lock_guard<std::mutex> lock_guardener(solver_map_mutex_); 
             std::map<boost::thread::id,OsiSolverInterface*>::iterator it = osi_solver_map_.find(boost::this_thread::get_id());
             if ( it == osi_solver_map_.end() )
             {
                 OsiSolverInterface* osi_solver = nullptr;
-                // Create new osi_solver object from sepearete first stage solver? if we have a mip
+                // Create new osi_solver object from seperate first stage solver? if we have a mip
                 if ( seperate_first_stage_solver_ && integer_problems_[0] ){ // If we have a seperate first stage solver AND a MIP, we need to get rid of the mip first before we clone!
                     // If we call this method we are not in the first stage.
                     osi_solver_->initialSolve(); // Get rid of the integers!
@@ -4787,7 +4797,7 @@ namespace parallel_benders {
             CPXsetdblparam(env_ptr,CPX_PARAM_EPMRK,0.999);
 
 			CPXsetdblparam(env_ptr,CPX_PARAM_EPINT,integer_tolerance_); 
-            //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,1e-07); // Simplex optimality tolerance
+            //CPXsetdblparam(env_ptr,CPX_PARAM_EPOPT,absolute_epsilon_); // Simplex optimality tolerance
             //CPXsetintparam(env_ptr,CPX_PARAM_SCRIND,CPX_ON);
             CPXsetdblparam(env_ptr,CPX_PARAM_WORKMEM,512.0); // Allow 512 megabytes of working memory instead of usual 128
 
@@ -4813,7 +4823,6 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::SolveSolverInterface( OsiSolverInterface* osi_solver, bool use_coin /*= true*/, bool use_quadratic /*= false*/ )
     {
-
         // MIP Solving only at first stage..
         if ( integer_problems_[current_stage_] ){
 
@@ -5054,7 +5063,7 @@ namespace parallel_benders {
         assert( !benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.empty() ); // We need a regularization point! 
 
         if ( num_stages_ == 2)
-            detailed_timer_.Start(1); // TODO: This is no longer true in the multi-stage case!
+            detailed_timer_.Start(1); 
 
         // We assume that the first stage problem is present!
         OsiCpxSolverInterface* cpx_ptr = dynamic_cast<OsiCpxSolverInterface*>(osi_solver);

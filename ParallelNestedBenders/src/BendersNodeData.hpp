@@ -288,8 +288,9 @@ public:
 	std::map<int,int> oda_iterations_; // Stores iteration numbers, provides a mapping of iteration numbers to size of other vectors!
 
     // Time spent!
-    double build_time_;
-    double solution_time_;
+    double build_time_; // For sub problem
+    double solution_time_; // For sub problem
+    double cut_generation_time_;
 };
 
 // Methods that work on a BendersNodeData
