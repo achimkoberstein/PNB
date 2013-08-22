@@ -294,7 +294,7 @@ public:
         
 
         // Specify the number of repetitions_ 
-        repetitions_ = 1;
+        repetitions_ = 2;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
         //aggregates.push_back(2);
