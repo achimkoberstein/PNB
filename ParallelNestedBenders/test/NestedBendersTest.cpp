@@ -294,33 +294,34 @@ public:
         
 
         // Specify the number of repetitions_ 
-        repetitions_ = 2;
+        repetitions_ = 1;
         std::vector<int> aggregates;
-		//aggregates.push_back(1);
+		aggregates.push_back(1);
         //aggregates.push_back(2);
         // Just to ease result processing
-        if ( num_childs_first_stage < 5 )
-            aggregates.push_back(1);
-        aggregates.push_back(5);
-        aggregates.push_back(10);
-        aggregates.push_back(20);
-        //aggregates.push_back(30);
-        //aggregates.push_back(40);
-        aggregates.push_back(50);
-        aggregates.push_back(100);
-  //      aggregates.push_back(3000);
-  //      aggregates.push_back(5000);
+  //      if ( num_childs_first_stage <= 5 )
+  //          aggregates.push_back(1);
+  //      aggregates.push_back(5);
+  //      aggregates.push_back(10);
+  //      aggregates.push_back(20);
+  //      ////aggregates.push_back(30);
+  //      ////aggregates.push_back(40);
+  //      aggregates.push_back(50);
+  //      aggregates.push_back(100);
+  ////      aggregates.push_back(3000);
+  ////      aggregates.push_back(5000);
 		//if ( use_multi_cut_ )
 		//	aggregates.push_back(0);
 
 
 
 		 //If we have not yet added num_aggregates_by_magic, we add it now
-		if ( std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic) == aggregates.end() ) {
-			if ( num_aggregates_by_magic > 200 ) // Add an upper cap on the number of aggregates!
-            num_aggregates_by_magic = 200;
-			aggregates.push_back(num_aggregates_by_magic);
-		}
+		//if ( std::find(aggregates.begin(),aggregates.end(),num_aggregates_by_magic) == aggregates.end() ) {
+  //          num_aggregates_by_magic = std::max(num_aggregates_by_magic,1);
+		//	if ( num_aggregates_by_magic > 200 ) // Add an upper cap on the number of aggregates!
+  //          num_aggregates_by_magic = 200;
+		//	aggregates.push_back(num_aggregates_by_magic);
+		//}
 
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
@@ -329,24 +330,24 @@ public:
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = false;
-        bool test_level_infinity = true;
+        bool test_level_euclidean = true;
+        bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_normal = true;
-        bool test_oda = true;
-		bool test_only_oda = true;
+        bool test_normal = false;
+        bool test_oda = false;
+		bool test_only_oda = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
         bool test_dem = false;
 
-        for (int cpu = 0; cpu < 1; cpu++){
+        for (int cpu = 1; cpu < 2; cpu++){
                 //// Solve DetEq as comparison
 
 				// Copy benders_parameter
                 //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                 for (int i = 0; i < aggregates.size(); i++){
-                    if ( aggregates[i] >= num_childs_first_stage ){
+                    if ( aggregates[i] >= num_childs_first_stage && aggregates[i] > 1){
                         LOG(INFO) << "Skipping test, because " << aggregates[i] << " is bigger than childs of first stage";
                         continue;
                     }
@@ -412,9 +413,10 @@ public:
 						}
 
 						if ( test_level_euclidean ){
-							benders_parameter_ = copied_param_for_loop;
-							benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-							solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                                benders_parameter_ = copied_param_for_loop;
+                                benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+                                solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                        
 						}
 						if ( test_level_manhattan ){
 							benders_parameter_ = copied_param_for_loop;
@@ -440,12 +442,21 @@ public:
 
                         if ( test_level_euclidean ){
                             benders_parameter_ = copied_param_for_loop;
-                            benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            if ( aggregates[i] != 0 ) {
+                                benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+                                benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
+                                solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                                // 
+                                benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                                solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            }
                         }
                         if ( test_level_manhattan ){
                             benders_parameter_ = copied_param_for_loop;
                             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
+                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
                             solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
                         }
                         if ( test_level_infinity ){
@@ -1333,10 +1344,10 @@ TEST_F(NestedBendersTest,stocfor_FELT){// BLOCKS, values are within plausible ra
     EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor2"), -39772.4, 0.1); // two stage
 }
 //
-//TEST_F(NestedBendersTestMultiStage,stocfor_FELT){// BLOCKS, values are within plausible ranges, verified with det-eq
-//    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -39976.8, 0.1); // seven-stage
-//    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -39024.4, 0.1); // seven-stage, stochasticity from stocfor2
-//}
+TEST_F(NestedBendersTestMultiStage,stocfor_FELT){// BLOCKS, values are within plausible ranges, verified with det-eq
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3"), -39976.8, 0.1); // seven-stage
+    EXPECT_NEAR(solveSMPS("felt/stocfor/stocfor3","felt/stocfor/stocfor2_7"), -39024.4, 0.1); // seven-stage, stochasticity from stocfor2
+}
 //
 //// Huge problems
 //TEST_F(NestedBendersTestSampleAverageApproximation,20term_WRIGHT){// 1.1 * 10^12 scenarios
@@ -1434,7 +1445,7 @@ TEST_F(NestedBendersTestMultiStage, pltexp_POSTS) { // multi-stage, A#Stage_#Sce
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_6"), -23.214073, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA5_16"),  -23.8, 0.1); 
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_6"),-28.134408, 0.1);//
-    //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
+    EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA6_16"), -28.134408 , 0.1); // TODO: Run this only if necessary!
     EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_6"), -32.2779, 0.1);
     //EXPECT_NEAR(solveSMPS("posts/pltexp/pltexpA7_16"), -28.134408, 0.1); // Not necessary on 8 GB machine!
 }
@@ -1807,13 +1818,14 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
+        //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
     	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
-	EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
+	//EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50000"),44614465.2,100);
-    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 254536, 1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 254536, 1);
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	////EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
@@ -1860,8 +1872,8 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
