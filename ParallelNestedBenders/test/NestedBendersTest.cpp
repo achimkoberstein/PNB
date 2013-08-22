@@ -301,17 +301,15 @@ public:
         // Just to ease result processing
   //      if ( num_childs_first_stage <= 5 )
   //          aggregates.push_back(1);
-  //      aggregates.push_back(5);
-  //      aggregates.push_back(10);
-  //      aggregates.push_back(20);
-        //aggregates.push_back(30);
-        //aggregates.push_back(40);
-  //      aggregates.push_back(50);
-  //      aggregates.push_back(100);
-  ////      aggregates.push_back(3000);
-  ////      aggregates.push_back(5000);
+        //aggregates.push_back(5);
+        //aggregates.push_back(10);
+        //aggregates.push_back(20);
+        //////aggregates.push_back(30);
+        //////aggregates.push_back(40);
+        //aggregates.push_back(50);
+        //aggregates.push_back(100);
 		//if ( use_multi_cut_ )
-		//	aggregates.push_back(0);
+  //          aggregates.push_back(0);
 
 
 
@@ -330,18 +328,18 @@ public:
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = false;
-        bool test_level_infinity = false;
-        bool test_level_manhattan = false;
+        bool test_level_euclidean = true;
+        bool test_level_infinity = true;
+        bool test_level_manhattan = true;
         bool test_regularized_decomposition = false;
         bool test_normal = true;
-        bool test_oda = false;
+        bool test_oda = true;
 		bool test_only_oda = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
         bool test_dem = false;
 
-        for (int cpu = 1; cpu < 2; cpu++){
+        for (int cpu = 2; cpu < 8; cpu++){
                 //// Solve DetEq as comparison
 
 				// Copy benders_parameter
@@ -413,10 +411,10 @@ public:
 						}
 
 						if ( test_level_euclidean ){
-                                benders_parameter_ = copied_param_for_loop;
-                                benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
-                                solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
-                        
+                            benders_parameter_ = copied_param_for_loop;
+                            benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+                            solveForProtocolsWithLambda(solutions,core_name,time_name,stoch_name);
+                            
 						}
 						if ( test_level_manhattan ){
 							benders_parameter_ = copied_param_for_loop;
@@ -436,36 +434,34 @@ public:
 							benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
                             benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
                             solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
-                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
-                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name); // Only use a single oda cut
+                            //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                            //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name); // Only use a single oda cut
 						}
 
                         if ( test_level_euclidean ){
                             benders_parameter_ = copied_param_for_loop;
-                            if ( aggregates[i] != 0 ) {
                                 benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
                                 benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
                                 solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
                                 // 
-                                benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
-                                solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
-                            }
+                                //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                                //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
                         }
                         if ( test_level_manhattan ){
                             benders_parameter_ = copied_param_for_loop;
                             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA);
                             benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
                             solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
-                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
-                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
+                            //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                            //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
                         }
                         if ( test_level_infinity ){
                             benders_parameter_ = copied_param_for_loop;
                             benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA);
                             benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,0); // Choose cuts as in number of aggregates
                             solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name);
-                            benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
-                            solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name); // Only use a single oda cut
+                            //benders_parameter_.parameter_.put(parallel_benders::PNB_ODA_AGGREGATES,1);
+                            //solveForProtocolsWithKappa(solutions,core_name,time_name,stoch_name); // Only use a single oda cut
                         }
                     }
 				}//end for: aggregates
@@ -636,7 +632,7 @@ protected:
 
         for (int loop_counter = 0; loop_counter < repetitions_; loop_counter++) {
             // This can be done in a loop.
-            double cpuTime = CoinCpuTime();  
+            double cpuTime = CoinGetTimeOfDay();  
             SmiScnModel smi;
             OsiCpxSolverInterface osi_cpx;
             smi.setOsiSolverHandle(&osi_cpx);
@@ -647,7 +643,7 @@ protected:
             }
             num_stages = smi.getCore()->getNumStages();
             // Load ParallelNestedBendersSolver
-            double solver_time = CoinCpuTime();
+            double solver_time = CoinGetTimeOfDay();
             OsiStochasticParallelNestedBendersSolverInterface nested_benders(&osi_cpx,&smi);
             nested_benders.setParameters(benders_parameter_);
             if ( benders_parameter_.parameter_.get(parallel_benders::PNB_USE_START_SOLUTION,0) == parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION){
@@ -655,8 +651,8 @@ protected:
                 nested_benders.giveStartSolution(current_start_solution_.get(),num_single_scenario_cols_);
             }
             nested_benders.initialSolve();
-            solver_time = CoinCpuTime()-solver_time; // Solver only time
-            cpuTime = CoinCpuTime()-cpuTime; // Overall WallClockTime;
+            solver_time = CoinGetTimeOfDay()-solver_time; // Solver only time
+            cpuTime = CoinGetTimeOfDay()-cpuTime; // Overall WallClockTime;
 			min_cpu = min(cpuTime,min_cpu);
 			min_solver = min(solver_time,min_solver);
 			max_cpu = max(max_cpu,cpuTime);
@@ -1828,7 +1824,8 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50000"),44614465.2,100);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
+    // 	EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	////EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
@@ -1876,7 +1873,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.*"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary*";
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
     //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";

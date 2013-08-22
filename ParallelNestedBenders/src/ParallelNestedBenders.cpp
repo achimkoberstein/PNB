@@ -1739,7 +1739,7 @@ namespace parallel_benders {
     {
         // Check if we already got infeasible subproblems only, if we generate either feas or opt cuts
         if ( !generate_feasibility_and_optimality_cuts_ && only_one_feasibility_cut_ )
-            if ( infeasible_problems_.any() )
+            if ( !infeasible_problems_.none() )
                 return; 
 
         OsiSolverInterface* osi_solver = GetSolverByThread();
@@ -1747,7 +1747,7 @@ namespace parallel_benders {
             detailed_timer_.Start(0);
         }
 #ifdef COMPUTING_TIMER
-        double current_time = CoinCpuTime();
+        double current_time = CoinGetTimeOfDay();
         double elapsed_build_time = 0;
 #endif // COMPUTING_TIMER
 
@@ -1762,8 +1762,8 @@ namespace parallel_benders {
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
-            elapsed_build_time = CoinCpuTime()-current_time;
-            current_time = CoinCpuTime();
+            elapsed_build_time = CoinGetTimeOfDay()-current_time;
+            current_time = CoinGetTimeOfDay();
         }
 #endif // COMPUTING_TIMER
 
@@ -1790,11 +1790,11 @@ namespace parallel_benders {
         }
 #ifdef COMPUTING_TIMER
         if ( current_stage_ == 1){
-            double elapsed_solution_time = CoinCpuTime()-current_time;
+            double elapsed_solution_time = CoinGetTimeOfDay()-current_time;
             benders_tree_node_pointer->getDataPtr()->build_time_ += elapsed_build_time;
             benders_tree_node_pointer->getDataPtr()->solution_time_ += elapsed_solution_time;
         }
-        current_time = CoinCpuTime();
+        current_time = CoinGetTimeOfDay();
 #endif // COMPUTING_TIMER
 
         // We only need to store data if we have a feasible solution for the subproblem.
@@ -1811,7 +1811,7 @@ namespace parallel_benders {
             }
             // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
 #ifdef COMPUTING_TIMER
-            current_time = CoinCpuTime()-current_time;
+            current_time = CoinGetTimeOfDay()-current_time;
             benders_tree_node_pointer->getDataPtr()->cut_generation_time_ += current_time;
 #endif
             if ( level_decomp_ && (current_stage_ == 0 || ( current_stage_ <= level_stage_ && forward_  && level_loop_backward_ ))){
@@ -1895,7 +1895,7 @@ namespace parallel_benders {
                         std::vector<double> extra_elements(num_thetas,1.0);
                         std::vector<int> extra_indices(num_thetas);
                         std::iota(extra_indices.begin(),extra_indices.end(),stage_data_[current_stage_]->num_columns_);
-                        double large_lower_bound = -10000000000000;
+                        double large_lower_bound = -100000;
                         for (int i = 0; i < num_thetas; i++){
                             osi_solver->setColBounds(extra_indices[i],large_lower_bound,infinity_);
                         }
@@ -3664,7 +3664,7 @@ namespace parallel_benders {
             return;
         }
 
-        double start_time = CoinCpuTime();
+        double start_time = CoinGetTimeOfDay();
         BendersNodeData* benders_node_pointer(benders_tree_node_pointer->getDataPtr());
         // What do we need? The dual values. They are stored and thus checked against zero tolerance
         assert( !benders_node_pointer->dual_solution_.empty());
@@ -3953,7 +3953,7 @@ namespace parallel_benders {
             }// End If 
 
         }//End If Forward
-        start_time = CoinCpuTime()-start_time;
+        start_time = CoinGetTimeOfDay()-start_time;
         if ( current_stage_ > 0 ){
             std::lock_guard<std::mutex> unique_lock(misc_mutex_);
             intra_cut_aggregation_time_ += start_time;
@@ -3969,7 +3969,7 @@ namespace parallel_benders {
             return;
         if ( benders_tree_node_pointer->getDataPtr()->num_thetas_ <= 1)
             return;
-        double time = CoinCpuTime();
+        double time = CoinGetTimeOfDay();
         int threshold = 3; // cuts that are not consecutively active for more than threshold iterations
         double inactive_ratio = 0.7; // Aggregates that are inactive for more than inactive_ratio of all iterations (only feasible iterations!)
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
@@ -4386,7 +4386,7 @@ namespace parallel_benders {
 
 
 
-        time = CoinCpuTime()-time;
+        time = CoinGetTimeOfDay()-time;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         adaptive_cut_time_ += time;
         //TODO: When code is really used, store time in a node-wise variable
@@ -5389,7 +5389,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::BuildAndSolveCTripleProblem(  )
     {
-        double start_time = CoinCpuTime();
+        double start_time = CoinGetTimeOfDay();
         assert(d_square_);
         // TODO: Put problem description here for C^3-SLP
         //
@@ -5678,14 +5678,14 @@ namespace parallel_benders {
 
 
 
-        start_time = CoinCpuTime()-start_time;
+        start_time = CoinGetTimeOfDay()-start_time;
         d_square_c_triple_timer_ += start_time;
 
     }
 
     void ParallelNestedBenders::BuildAndSolveRHSProblem( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
-        double start_time = CoinCpuTime();
+        double start_time = CoinGetTimeOfDay();
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
 
         int num_cols_first_stage = stage_data_[0]->num_columns_;
@@ -5970,7 +5970,7 @@ namespace parallel_benders {
         }
 
         // TODO: WarmStart-Handling
-        start_time = CoinCpuTime()-start_time;
+        start_time = CoinGetTimeOfDay()-start_time;
         std::lock_guard<std::mutex> unique_lock(misc_mutex_);
         d_square_c_rhs_timer_ += start_time;
 
