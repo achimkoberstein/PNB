@@ -134,23 +134,23 @@ public:
 			algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN || algorithm == parallel_benders::PNB_INT_ALGORITHM_LEVEL_MANHATTAN_ODA ||
 			algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION || algorithm == parallel_benders::PNB_INT_ALGORITHM_REGULARIZATION_ODA);
         if ( num_stages > 2 && !level) {
-			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
-			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+			//benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_BACKWARD);
+			//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
-			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+			//benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_BACKWARD);
+			//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
-			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+			//benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FAST_FORWARD);
+			//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-			benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
-			solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+			//benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
+			//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         }
         else {
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
@@ -304,8 +304,8 @@ public:
   //      aggregates.push_back(5);
   //      aggregates.push_back(10);
   //      aggregates.push_back(20);
-  //      ////aggregates.push_back(30);
-  //      ////aggregates.push_back(40);
+        //aggregates.push_back(30);
+        //aggregates.push_back(40);
   //      aggregates.push_back(50);
   //      aggregates.push_back(100);
   ////      aggregates.push_back(3000);
@@ -325,16 +325,16 @@ public:
 
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
-
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
         bool test_cut_consolidation = false;
-        bool test_level_euclidean = true;
+        bool test_level_euclidean = false;
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_normal = false;
+        bool test_normal = true;
         bool test_oda = false;
 		bool test_only_oda = false;
         bool test_start_solutions = generate_initial_solution_;
@@ -537,7 +537,7 @@ protected:
             s << "Time Stage " << i << "; ";
         }
         // Detailled Time for several tasks
-        s << "Time Master; Time Projection; Time ODA; Time Sub; Build Master; Build Projection; Build ODA; Build Sub;";
+        s << "Time Master; Time Projection; Time ODA; Time Sub; Build Master; Build Projection; Build ODA; Build Sub; Generate Cut;";
         // Date/Timestamp
         s << "Date; Time; ";
 		s << "Min_CPU; Min_Solver; Max_CPU; Max_Solver;";
@@ -624,6 +624,7 @@ protected:
         std::string building_time_1_string("building1");
         std::string building_time_2_string("building2");
         std::string building_time_3_string("building3");
+        std::string building_time_4_string("building4");
 
 
         std::stringstream aggregated_s; 
@@ -792,6 +793,7 @@ protected:
         aggregated_s << values_map[building_time_1_string] << ";";
         aggregated_s << values_map[building_time_2_string] << ";";
         aggregated_s << values_map[building_time_3_string] << ";";
+        aggregated_s << values_map[building_time_4_string] << ";";
 
 
         time_t timeStamp = time(NULL);
@@ -1819,13 +1821,14 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 
 TEST_F(NestedBendersTest,temporary){// dakota model
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
+    //EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
     	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
 	//EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50000"),44614465.2,100);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 254536, 1);
+    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	////EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
