@@ -217,12 +217,8 @@ private:
 
     Timer timer_;
     Timer wall_clock_solution_time_;
-    Timer detailed_timer_;
+    Timer detailed_timer_; // Stores build times for master, projection, oda, sub, and cut generation
     Timer solution_times_;
-    // Some integer relating to the detailed_timer
-    int build_problem_timer_;
-    int solve_problem_timer_;
-    int cut_generation_timer_;
 
     int maximal_solution_time_;
 
