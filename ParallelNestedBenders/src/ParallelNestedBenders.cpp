@@ -4874,6 +4874,10 @@ namespace parallel_benders {
                          CPXsetintparam(env_ptr,CPX_PARAM_QPMETHOD,CPX_ALG_BARRIER);
                          CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,0);
                     }
+                    int time_left = std::min(maximal_solution_time_,maximal_solution_time_- (int)std::floor(timer_.GetAggregatedTime()));
+                    if ( time_left <= 0 )
+                        time_left = 1;
+                    CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,time_left);
                     CPXqpopt(env_ptr,lp_ptr);
                     int code = CPXgetstat(env_ptr,lp_ptr);
                     if ( code == CPX_STAT_INForUNBD){ // Solve without presolve to determine correct direction!
