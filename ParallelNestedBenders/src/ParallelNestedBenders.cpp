@@ -1593,7 +1593,7 @@ namespace parallel_benders {
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
             /*******************************************************************************/
-            if ( !forward_ && (!generate_feasibility_and_optimality_cuts_ && infeasible_problems_.none()) && theta_approximations_everywhere_ ){ // Only start adding optimality cuts, when we have a valid recourse function approximation at the last stage!
+            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -3286,7 +3286,7 @@ namespace parallel_benders {
                 //LOG(FATAL) << "Regularized Decomposition can not work without a seperable first stage solver instance.";
                 regularized_initialized_rows_ = false;
             }
-            if ( !regularized_initialized_rows_ && current_stage_ == 0 || osi_solver->getNumRows() <= getNumRowsProblem() ){
+            if ( !regularized_initialized_rows_ && current_stage_ == 0 || current_stage_ > 0 && osi_solver->getNumRows() < getNumRowsProblem() ){
 				if ( current_stage_ == 0)
 					regularized_initialized_rows_ = true;
 				int num_columns = stage_data_[current_stage_]->num_columns_;

@@ -1816,6 +1816,7 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
+    //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
     //EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
     	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
