@@ -901,7 +901,9 @@ namespace parallel_benders {
                     double current_upper_bound = 0;
                     for (int i = current_stage_; i < num_stages_; i++)
                         current_upper_bound += stage_lower_upper_bounds_[i].second;
-                    if ( RelativeGapPresent(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_*std::min(std::abs(lower_bound_),std::abs(upper_bound_))) ){// If true, values are not equal. 
+                    double absolute_error = current_upper_bound-stage_lower_upper_bounds_[current_stage_].first;
+                    double absolute_gap = std::min(std::abs(upper_bound_),std::abs(lower_bound_));//std::abs(upper_bound_-lower_bound_);
+                    if ( absolute_error > strategy_epsilon_* absolute_gap ){// If true, values are not equal. 
                         forward_ = true; // We want to move forward again, with the newest cuts..
                         // Check for nearby values
                         if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
@@ -1449,14 +1451,13 @@ namespace parallel_benders {
                         old_discrepancies_[current_stage_] = infinity_;
 
                     // What is the absolute gap?
-                    double absolute_gap = upper_bound_-lower_bound_;
+                    //double absolute_gap = upper_bound_-lower_bound_;
+                    double absolute_gap = std::min(std::abs(upper_bound_),std::abs(lower_bound_));//std::abs(upper_bound_-lower_bound_);
                     if ( lower_bound_ == -infinity_ || upper_bound_ == infinity_)
                         threshold = 1;
                     else
                     {
-                        // Find number of significant bits of absolute_gap. Threshold is 10^(number of digits of absolute gap - 2)
-                        // Example: Absolute Gap is 10. Then log10(10) is 1. Threshold is 10^-1 = 0.1
-                        threshold = std::pow(10,std::log10(absolute_gap)-1);
+                        threshold = absolute_gap/10;
                     }
                     if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK ){
                         if (  !CompareForEquality(discrepancy,old_discrepancies_[current_stage_],zero_tolerance_) && discrepancy > threshold && theta_approximations_everywhere_ && forward_ && made_one_turn){
