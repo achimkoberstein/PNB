@@ -107,7 +107,7 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY = 9;
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA = 10;
 
-
+    const int PNB_INT_WRITE_PROBLEM = 9;
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
     const int PNB_INT_BARRIER = 12;
