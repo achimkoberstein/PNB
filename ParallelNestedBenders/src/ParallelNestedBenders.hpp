@@ -372,9 +372,9 @@ private:
 // It waits for the threads to end, then does some stuff and waits again.
 // True if equal with given tolerance
 inline bool CompareForEquality( double first, double second, double tolerance);
-// True if gap is not small enough yet
-inline bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
-inline double ComputeRelativeGap(double upper_bound, double lower_bound,double epsilon = 1e-10);
+// True if gap is larger than Epsilon
+inline bool RelativeGapLargerEpsilon(double upper_bound, double lower_bound, double infinity, double epsilon);
+inline double ComputeRelativeGap(double upper_bound, double lower_bound,double comparison_epsilon = 1e-10);
 bool CutIsEqual(const CutStuff& first, const CutStuff& second, double tolerance);
 
 

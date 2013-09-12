@@ -69,8 +69,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 #ifdef CPLEX_PRESENT
         OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_);
         if ( cpx_solver){
+
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
+
 			//CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
             //CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
 			CPXsetintparam(envPtr,CPX_PARAM_THREADS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_NUM_CPU,0));
@@ -81,6 +83,12 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 
             CPXsetdblparam(envPtr,CPX_PARAM_EPRHS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_TOLERANCE_ZERO,1e-06));
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
+
+            if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_WRITE_PROBLEM) == parallel_benders::PNB_INT_WRITE_PROBLEM){
+                CPXwriteprob(envPtr,lpPtr,"deteq.lp","lp");
+                return;
+            }
+
 			// Wee need to differentiate between integer and not
 			if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
 				osi_->branchAndBound();

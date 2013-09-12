@@ -166,12 +166,12 @@ public:
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_EPSILON_FAST_FORWARD);
             solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,1e-6);
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY_EPSILON,1e-6);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 
-            //benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
-            //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+            benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS_WITH_FASTBACK);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         }
         else {
             benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,parallel_benders::PNB_INT_FASTPASS);
@@ -343,7 +343,7 @@ public:
 		//}
 
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,7200); // Not longer than one hour 
         //benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
 		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
@@ -353,12 +353,12 @@ public:
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_normal = true;
+        bool test_normal = false;
         bool test_oda = false;
 		bool test_only_oda = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
-        bool test_dem = false;
+        bool test_dem = true;
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
@@ -383,10 +383,10 @@ public:
                         // We can choose different LP methods, but stick with the dual simplex for now!
                         benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
                         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
-						//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-						//benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-						//solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_PRIMAL_SIMPLEX);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+                        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+                        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
                     }
 
                     if ( test_start_solutions && test_normal){
@@ -885,9 +885,9 @@ public:
 		// Set options we want to use for the solver used inside the SAA solver
 		parallel_benders::Parameter benders_parameter;
 		benders_parameter.init();
-		benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
-		benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-		benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
+		//benders_parameter.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA);
+		//benders_parameter.parameter_.put(parallel_benders::PNB_FEAS_CUT_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+		//benders_parameter.parameter_.put(parallel_benders::PNB_AGGREGATED_OPTIMALITY_CUTS,1);
 
 
 		std::map< int, std::pair<int,int> > sample_map;
@@ -1910,8 +1910,8 @@ int main(int argc, char *argv[]) {
 
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.pltexp_POSTS";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.pltexp_POSTS";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
     //::testing::GTEST_FLAG(filter) = "*assets_FELT";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";
     //::testing::GTEST_FLAG(filter) = "*gas_OTHER*";
