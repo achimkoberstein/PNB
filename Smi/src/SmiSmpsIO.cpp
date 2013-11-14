@@ -23,11 +23,11 @@
 
 #if 1
 const static char *section[] = {
-  "", "NAME", "ENDATA", " ", "PERIODS", "SCENARIOS", "INDEPENDENT", "BLOCKS", " "
+    "", "NAME", "ENDATA", " ", "PERIODS", "SCENARIOS", "INDEPENDENT", "BLOCKS", " "
 };
 
 const static char *smpsType[] = {
-	"SC","BL","  ","DISCRETE","ADD","REPLACE","","","","LO","UP","FX","FR"
+    "SC","BL","  ","DISCRETE","ADD","REPLACE","","","","LO","UP","FX","FR"
 };
 #endif
 
@@ -35,79 +35,79 @@ const static char *smpsType[] = {
 //#############################################################################
 
 SmiCoreData *
-SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
+    SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
 {
 
-        CoinFileInput *input = 0;
-        int returnCode = dealWithFileName(c,ext,input);
-        if (returnCode<0) {
-          return NULL;
-        } else if (returnCode>0) {
-          // delete cardReader_;
-          smpsCardReader_ = new SmiSmpsCardReader ( input, this);
+    CoinFileInput *input = 0;
+    int returnCode = dealWithFileName(c,ext,input);
+    if (returnCode<0) {
+        return NULL;
+    } else if (returnCode>0) {
+        // delete cardReader_;
+        smpsCardReader_ = new SmiSmpsCardReader ( input, this);
+    }
+
+    smpsCardReader_->readToNextSection();
+    if ( smpsCardReader_->whichSection (  ) == COIN_NAME_SECTION ) {
+        iftime = true;
+        // check problem name and issue warning if needed
+        if (strcmp(problemName_,smpsCardReader_->columnName()))
+        {
+            printf("Warning: Time file name %s does not match problem file name %s\n",
+                smpsCardReader_->columnName(),problemName_);
         }
-	
-	smpsCardReader_->readToNextSection();
-	if ( smpsCardReader_->whichSection (  ) == COIN_NAME_SECTION ) {
-		iftime = true;
-		// check problem name and issue warning if needed
-		if (strcmp(problemName_,smpsCardReader_->columnName()))
-		{
-			printf("Warning: Time file name %s does not match problem file name %s\n",
-				smpsCardReader_->columnName(),problemName_);
-		}
-	} else if ( smpsCardReader_->whichSection (  ) == COIN_UNKNOWN_SECTION ) {
-		handler_->message(COIN_MPS_BADFILE1,messages_)<<smpsCardReader_->card()
-			<<1
-			<<fileName_
-			<<CoinMessageEol;
-/*
-#ifdef COIN_HAS_ZLIB
-		if (!smpsCardReader_->filePointer()) 
-			handler_->message(COIN_MPS_BADFILE2,messages_)<<CoinMessageEol;
-		
-#endif
-*/
-		return NULL;
-	} else if ( smpsCardReader_->whichSection (  ) != COIN_EOF_SECTION ) {
-		// save name of section
-		free(problemName_);
-		problemName_=strdup(smpsCardReader_->card());
-	} else {
-		handler_->message(COIN_MPS_EOF,messages_)<<fileName_
-			<<CoinMessageEol;
-		return NULL;
-	}
+    } else if ( smpsCardReader_->whichSection (  ) == COIN_UNKNOWN_SECTION ) {
+        handler_->message(COIN_MPS_BADFILE1,messages_)<<smpsCardReader_->card()
+            <<1
+            <<fileName_
+            <<CoinMessageEol;
+        /*
+        #ifdef COIN_HAS_ZLIB
+        if (!smpsCardReader_->filePointer()) 
+        handler_->message(COIN_MPS_BADFILE2,messages_)<<CoinMessageEol;
 
-	if (iftime)
-	{
-		int rowEnd, rowStart = 0;
-		int colEnd, colStart = 0;
-		if (	smpsCardReader_->nextSmpsField() != SMI_TIME_SECTION ) // PERIODS card
-			return NULL;
-	
-		if (	smpsCardReader_->nextSmpsField() == SMI_TIME_SECTION ) // first period
-		{
-		
-			cstag_ = new int[this->getNumCols()];
-			rstag_ = new int[this->getNumRows()];
-			std::string SunStudioNeedsThis = smpsCardReader_->periodName() ;
-			periodMap_.insert(make_pair(SunStudioNeedsThis,nstag_));
-		}
-		else
-			return NULL;
+        #endif
+        */
+        return NULL;
+    } else if ( smpsCardReader_->whichSection (  ) != COIN_EOF_SECTION ) {
+        // save name of section
+        free(problemName_);
+        problemName_=strdup(smpsCardReader_->card());
+    } else {
+        handler_->message(COIN_MPS_EOF,messages_)<<fileName_
+            <<CoinMessageEol;
+        return NULL;
+    }
 
-		// don't handle the unordered case yet
-		if (smpsCardReader_->whichSmpsType() != SMI_TIME_ORDERED_CORE_TYPE)
-			return NULL;
+    if (iftime)
+    {
+        int rowEnd, rowStart = 0;
+        int colEnd, colStart = 0;
+        if (	smpsCardReader_->nextSmpsField() != SMI_TIME_SECTION ) // PERIODS card
+            return NULL;
 
-		while( smpsCardReader_->nextSmpsField (  ) == SMI_TIME_SECTION ) 
-		{
-			if (smpsCardReader_->whichSmpsType() == SMI_TIME_ORDERED_CORE_TYPE)
-			{
-				
-				colEnd = this->columnIndex(smpsCardReader_->columnName());
-				rowEnd = this->rowIndex(smpsCardReader_->rowName());
+        if (	smpsCardReader_->nextSmpsField() == SMI_TIME_SECTION ) // first period
+        {
+
+            cstag_ = new int[this->getNumCols()];
+            rstag_ = new int[this->getNumRows()];
+            std::string SunStudioNeedsThis = smpsCardReader_->periodName() ;
+            periodMap_.insert(make_pair(SunStudioNeedsThis,nstag_));
+        }
+        else
+            return NULL;
+
+        // don't handle the unordered case yet
+        if (smpsCardReader_->whichSmpsType() != SMI_TIME_ORDERED_CORE_TYPE)
+            return NULL;
+
+        while( smpsCardReader_->nextSmpsField (  ) == SMI_TIME_SECTION ) 
+        {
+            if (smpsCardReader_->whichSmpsType() == SMI_TIME_ORDERED_CORE_TYPE)
+            {
+
+                colEnd = this->columnIndex(smpsCardReader_->columnName());
+                rowEnd = this->rowIndex(smpsCardReader_->rowName());
                 // Check if we have correct colEnd and rowEnd
                 if ( colEnd == -1 && rowEnd == -1){// Maybe the user erred on input ordering..
                     colEnd = this->columnIndex(smpsCardReader_->rowName());
@@ -116,37 +116,37 @@ SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
                 if ( colEnd == -1 || rowEnd == -1){ // Input File is wrong, we have to abort..
                     return NULL;
                 }
-				
-				std::string SunStudioNeedsThis = smpsCardReader_->periodName() ;
-				periodMap_.insert(make_pair(SunStudioNeedsThis,nstag_+1));
-				
-				int i;
-				for(i=colStart;i<colEnd;++i)
-					cstag_[i]=nstag_;
-				for(i=rowStart;i<rowEnd;++i)
-					rstag_[i]=nstag_;
-				++nstag_;
-				colStart = colEnd;
-				rowStart = rowEnd;
-			}
-			else
-				return NULL;
-		}
-		
-		if ( smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION
-			&& smpsCardReader_->whichSmpsType() == SMI_TIME_ORDERED_CORE_TYPE)
-		{
-			int i;
 
-			for(i=std::max(colStart, 0);i<this->getNumCols();++i)
-				cstag_[i]=nstag_;
-			for(i=std::max(rowStart, 0);i<this->getNumRows();++i)
-				rstag_[i]=nstag_;
-		}
-		else
-			return NULL;
+                std::string SunStudioNeedsThis = smpsCardReader_->periodName() ;
+                periodMap_.insert(make_pair(SunStudioNeedsThis,nstag_+1));
 
-	}
+                int i;
+                for(i=colStart;i<colEnd;++i)
+                    cstag_[i]=nstag_;
+                for(i=rowStart;i<rowEnd;++i)
+                    rstag_[i]=nstag_;
+                ++nstag_;
+                colStart = colEnd;
+                rowStart = rowEnd;
+            }
+            else
+                return NULL;
+        }
+
+        if ( smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION
+            && smpsCardReader_->whichSmpsType() == SMI_TIME_ORDERED_CORE_TYPE)
+        {
+            int i;
+
+            for(i=std::max(colStart, 0);i<this->getNumCols();++i)
+                cstag_[i]=nstag_;
+            for(i=std::max(rowStart, 0);i<this->getNumRows();++i)
+                rstag_[i]=nstag_;
+        }
+        else
+            return NULL;
+
+    }
 
     // Aenderung: IntegerType
     int intLen=0;
@@ -178,63 +178,63 @@ SmiSmpsIO::readTimeFile(SmiScnModel *smi, const char *c, const char *ext)
     // Aenderung: IntegerType
 
 
-	SmiCoreData *smiCoreData = new SmiCoreData(this,nstag_+1,cstag_,rstag_,intInd,intLen,binInd,binLen);
+    SmiCoreData *smiCoreData = new SmiCoreData(this,nstag_+1,cstag_,rstag_,intInd,intLen,binInd,binLen);
     delete[] intInd;
     delete[] binInd;
-	return smiCoreData;
+    return smiCoreData;
 
 }
 
 //#############################################################################
 
 int
-SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, const char *ext)
+    SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, const char *ext)
 {
-	
-        CoinFileInput *input = 0;
-        int returnCode = dealWithFileName(c,ext,input);
-        if (returnCode<0) {
-          return -1;
-        } else if (returnCode>0) {
-          delete smpsCardReader_;
-          smpsCardReader_ = new SmiSmpsCardReader ( input, this);
-		  if(combineRuleSet)
-			  smpsCardReader_->setCoreCombineRule(combineRule_);
+
+    CoinFileInput *input = 0;
+    int returnCode = dealWithFileName(c,ext,input);
+    if (returnCode<0) {
+        return -1;
+    } else if (returnCode>0) {
+        delete smpsCardReader_;
+        smpsCardReader_ = new SmiSmpsCardReader ( input, this);
+        if(combineRuleSet)
+            smpsCardReader_->setCoreCombineRule(combineRule_);
+    }
+
+
+    smpsCardReader_->readToNextSection();
+    if ( smpsCardReader_->whichSection (  ) == COIN_NAME_SECTION ) {
+        ifstoch = true;
+        // check problem name and issue warning if needed
+        if (strcmp(problemName_,smpsCardReader_->columnName()))
+        {
+            printf("Warning: Time file name %s does not match problem file name %s\n",
+                smpsCardReader_->columnName(),problemName_);
         }
-	
-
-	smpsCardReader_->readToNextSection();
-	if ( smpsCardReader_->whichSection (  ) == COIN_NAME_SECTION ) {
-		ifstoch = true;
-		// check problem name and issue warning if needed
-		if (strcmp(problemName_,smpsCardReader_->columnName()))
-		{
-			printf("Warning: Time file name %s does not match problem file name %s\n",
-				smpsCardReader_->columnName(),problemName_);
-		}
-	} else if ( smpsCardReader_->whichSection (  ) == COIN_UNKNOWN_SECTION ) {
-		handler_->message(COIN_MPS_BADFILE1,messages_)<<smpsCardReader_->card()
-			<<1
-			<<fileName_
-			<<CoinMessageEol;
+    } else if ( smpsCardReader_->whichSection (  ) == COIN_UNKNOWN_SECTION ) {
+        handler_->message(COIN_MPS_BADFILE1,messages_)<<smpsCardReader_->card()
+            <<1
+            <<fileName_
+            <<CoinMessageEol;
 #ifdef COIN_USE_ZLIB
-		if (!smpsCardReader_->filePointer()) 
-			handler_->message(COIN_MPS_BADFILE2,messages_)<<CoinMessageEol;
-		
-#endif
-		return -2;
-	} else if ( smpsCardReader_->whichSection (  ) != COIN_EOF_SECTION ) {
-		// save name of section
-		free(problemName_);
-		problemName_=strdup(smpsCardReader_->card());
-	} else {
-		handler_->message(COIN_MPS_EOF,messages_)<<fileName_
-			<<CoinMessageEol;
-		return -3;
-	}
+        if (!smpsCardReader_->filePointer()) 
+            handler_->message(COIN_MPS_BADFILE2,messages_)<<CoinMessageEol;
 
-	if (ifstoch)
-	{
+#endif
+        return -2;
+    } else if ( smpsCardReader_->whichSection (  ) != COIN_EOF_SECTION ) {
+        // save name of section
+        free(problemName_);
+        problemName_=strdup(smpsCardReader_->card());
+    } else {
+        handler_->message(COIN_MPS_EOF,messages_)<<fileName_
+            <<CoinMessageEol;
+        return -3;
+    }
+
+    if (ifstoch)
+    {
         // Create discrete distribution
         SmiDiscreteDistribution *smiDD = NULL;//new SmiDiscreteDistribution(core);
         SmiDiscreteRV *smiRV = NULL;
@@ -297,7 +297,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                         } else
                                             assert(!strcmp(smpsCardReader_->columnName(),this->getRhsName()));
                                         assert(!(i<0));
-                                        
+
 
                                         char c=this->getRowSense()[i];
 
@@ -574,7 +574,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                         if (smpsCardReader_->whichSmpsSection() == SMI_ENDATA_SECTION)
                         {
                             smiBlock->addBlockEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
-                            
+
                             smiBS.addSmiBlock(smiBlock);
                             if ( smiRV != NULL){
                                 smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
@@ -603,7 +603,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                 }
                 return 0;
 
-               
+
             }// End case 
 
         case SMI_SCENARIOS_SECTION: // SCENARIOS card
@@ -635,7 +635,7 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                                 smiRV->addEvent(*matrix,dclo,dcup,dobj,drlo,drup,prob);
                             else 
                                 smi->generateScenario(core,matrix,&dclo,&dcup,&dobj,&drlo,&drup,branch,anc,prob,smpsCardReader_->getCoreCombineRule() );
-                            
+
                             matrix->clear();
                             dclo.clear();
                             dcup.clear();
@@ -709,21 +709,21 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                             assert( column >= 0);
                             double value = smpsCardReader_->value();
                             switch ( smpsCardReader_->whichSmpsType() ){
-                                case SMI_LO_BOUND_CARD:
-                                    dclo.insert(column,value);
-                                    break;
-                                case SMI_UP_BOUND_CARD:
-                                    dcup.insert(column,value);
-                                    break;
-                                case SMI_FX_BOUND_CARD:
-                                    dclo.insert(column,value);
-                                    dcup.insert(column,value);
-                                    break;
-                                case SMI_FR_BOUND_CARD:
-                                    // insert infinity
-                                    dclo.insert(column,-infinity_);
-                                    dcup.insert(column,infinity_);
-                                    break;
+                            case SMI_LO_BOUND_CARD:
+                                dclo.insert(column,value);
+                                break;
+                            case SMI_UP_BOUND_CARD:
+                                dcup.insert(column,value);
+                                break;
+                            case SMI_FX_BOUND_CARD:
+                                dclo.insert(column,value);
+                                dcup.insert(column,value);
+                                break;
+                            case SMI_FR_BOUND_CARD:
+                                // insert infinity
+                                dclo.insert(column,-infinity_);
+                                dcup.insert(column,infinity_);
+                                break;
                             } // switch
                     }
                     else 
@@ -751,18 +751,18 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
                 }
 
             } 
-     
+
         default:// didn't recognize section
             return -1;
         }
 
-		
-
-	}
 
 
+    }
 
-	return 0;
+
+
+    return 0;
 }
 
 //#############################################################################
@@ -770,513 +770,513 @@ SmiSmpsIO::readStochFile(SmiScnModel *smi,SmiCoreData *core, const char *c, cons
 
 
 SmiSectionType
-SmiSmpsCardReader::nextSmpsField (  )
+    SmiSmpsCardReader::nextSmpsField (  )
 {
-  
-  // find next non blank character
-  char *next = position_;
 
-  static const char *blanks = (const char *) " \t";
-  char valstr[COIN_MAX_FIELD_LENGTH],*after;
-  
-  while ( next != eol_ ) {
-    if ( *next == ' ' || *next == '\t' ) {
-      next++;
-    } else {
-      break;
+    // find next non blank character
+    char *next = position_;
+
+    static const char *blanks = (const char *) " \t";
+    char valstr[COIN_MAX_FIELD_LENGTH],*after;
+
+    while ( next != eol_ ) {
+        if ( *next == ' ' || *next == '\t' ) {
+            next++;
+        } else {
+            break;
+        }
     }
-  }
 
-  bool gotCard;
-  
-  if ( next == eol_ ) {
-	  gotCard = false;
-  } else {
-	  gotCard = true;
-  }
-  while ( !gotCard ) 
-  {
-	  // need new image
-	  
-	  if ( cleanCard() ) {
-		  return SMI_EOF_SECTION;
-	  }
-	  if ( card_[0] == ' ' ) {
-		  // not a section or comment
-		  position_ = card_;
-		  eol_ = card_ + strlen ( card_ );
+    bool gotCard;
+
+    if ( next == eol_ ) {
+        gotCard = false;
+    } else {
+        gotCard = true;
+    }
+    while ( !gotCard ) 
+    {
+        // need new image
+
+        if ( cleanCard() ) {
+            return SMI_EOF_SECTION;
+        }
+        if ( card_[0] == ' ' ) {
+            // not a section or comment
+            position_ = card_;
+            eol_ = card_ + strlen ( card_ );
 
 
-		  if ( smiSection_ == SMI_TIME_SECTION ) 
-		  {
-			  smiSmpsType_ = SMI_TIME_ORDERED_CORE_TYPE;
-			  if (!(next = strtok(position_,blanks)))
-			  {
-				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  return smiSection_;
-			  }
-			  strcpy(columnName_,next);
-			  
-			  if (!(next = strtok(NULL,blanks)))
-			  {
-				  strcpy(periodName_,columnName_);
-				  smiSmpsType_ = SMI_TIME_UNORDERED_CORE_TYPE;
-				  return smiSection_;
-			  }
-			  strcpy(rowName_,next);
-			  if (!(next = strtok(NULL,blanks)))
-			  {
-				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  return smiSection_;
-			  }
-			  strcpy(periodName_,next);
-			  position_ = eol_;
-			  
-		  }
+            if ( smiSection_ == SMI_TIME_SECTION ) 
+            {
+                smiSmpsType_ = SMI_TIME_ORDERED_CORE_TYPE;
+                if (!(next = strtok(position_,blanks)))
+                {
+                    smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                    return smiSection_;
+                }
+                strcpy(columnName_,next);
 
-		  if ( smiSection_ == SMI_INDEPENDENT_SECTION )
-		  {
-			  int i;
-			  if (strlen(next)==2)
-			  {
-				  for (i = SMI_BL_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
-					  if ( !strncmp ( next, smpsType[i], 2 ) ) 
-					  {
-						  break;
-					  }
-				  }
-			  }
-			  else
-				  i = SMI_COLUMN_CARD;
+                if (!(next = strtok(NULL,blanks)))
+                {
+                    strcpy(periodName_,columnName_);
+                    smiSmpsType_ = SMI_TIME_UNORDERED_CORE_TYPE;
+                    return smiSection_;
+                }
+                strcpy(rowName_,next);
+                if (!(next = strtok(NULL,blanks)))
+                {
+                    smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                    return smiSection_;
+                }
+                strcpy(periodName_,next);
+                position_ = eol_;
 
-			  switch(smiSmpsType_ = (SmiSmpsType) i)
-			  {
-			  case SMI_BL_CARD: // not handled yet
-				  break;
-				 
-			  case SMI_COLUMN_CARD: // card info has "col,row,value,?(period),prob"
-				    
-				  if (!(next = strtok(position_,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  return smiSection_;
-				  }
-				  //already got the name
-				  strcpy(columnName_,next);
-				  
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(rowName_,next);
+            }
 
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(valstr,next);
+            if ( smiSection_ == SMI_INDEPENDENT_SECTION )
+            {
+                int i;
+                if (strlen(next)==2)
+                {
+                    for (i = SMI_BL_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
+                        if ( !strncmp ( next, smpsType[i], 2 ) ) 
+                        {
+                            break;
+                        }
+                    }
+                }
+                else
+                    i = SMI_COLUMN_CARD;
 
-				  value_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
-					
-                  // Now we need to see if there is a period name or a probability.
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(valstr,next);
+                switch(smiSmpsType_ = (SmiSmpsType) i)
+                {
+                case SMI_BL_CARD: // not handled yet
+                    break;
 
-				  prob_ = osi_strtod(valstr,&after,0);
-                  // see if we have a period entry insteaf of a probability
-                  if ( after == valstr ){
-                      // Try to map a period 
-                      strcpy(periodName_,next);
+                case SMI_COLUMN_CARD: // card info has "col,row,value,?(period),prob"
 
-                      // If the previous entry was a period name, now comes the probability..
-                      if (!(next = strtok(NULL,blanks)))
-                      {
-                          smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-                          break;
-                      }
-                      strcpy(valstr,next);
+                    if (!(next = strtok(position_,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        return smiSection_;
+                    }
+                    //already got the name
+                    strcpy(columnName_,next);
 
-                      prob_ = osi_strtod(valstr,&after,0);
-                      // see if error: Malformed Line
-                      assert(after>valstr);
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(rowName_,next);
 
-                  }
-				  position_ = eol_;  //end of card -- no more information allowed
-				  break;
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
 
-			  case SMI_UNKNOWN_MPS_TYPE:
-				  break;
-			  default:
-				  smiSmpsType_=SMI_UNKNOWN_MPS_TYPE;
-			  }//end switch
+                    value_ = osi_strtod(valstr,&after,0);
+                    // see if error
+                    assert(after>valstr);
 
-			  return smiSection_;
+                    // Now we need to see if there is a period name or a probability.
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
 
-		  }
+                    prob_ = osi_strtod(valstr,&after,0);
+                    // see if we have a period entry insteaf of a probability
+                    if ( after == valstr ){
+                        // Try to map a period 
+                        strcpy(periodName_,next);
 
-		  if ( smiSection_ == SMI_SCENARIOS_SECTION )
-		  {
-			
+                        // If the previous entry was a period name, now comes the probability..
+                        if (!(next = strtok(NULL,blanks)))
+                        {
+                            smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                            break;
+                        }
+                        strcpy(valstr,next);
 
-			  
-			  if (!(next = strtok(position_,blanks)))
-			  {
-				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  return smiSection_;
-			  }
-			
-			  int i;
-			  if (strlen(next)==2)
-			  {
-				  for (i = SMI_SC_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
-					  if ( !strncmp ( next, smpsType[i], 2 ) ) 
-					  {
-						  break;
-					  }
-				  }
-				  if (i==SMI_UNKNOWN_MPS_TYPE)
-					  i = SMI_COLUMN_CARD;
-			  }
-			  else
-				  i = SMI_COLUMN_CARD;
-			
-			  switch(smiSmpsType_ = (SmiSmpsType) i)
-			  {
-			  case SMI_SC_CARD:
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(columnName_,next);
-				  
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(rowName_,next);
+                        prob_ = osi_strtod(valstr,&after,0);
+                        // see if error: Malformed Line
+                        assert(after>valstr);
 
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(valstr,next);
+                    }
+                    position_ = eol_;  //end of card -- no more information allowed
+                    break;
 
-				  value_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
+                case SMI_UNKNOWN_MPS_TYPE:
+                    break;
+                default:
+                    smiSmpsType_=SMI_UNKNOWN_MPS_TYPE;
+                }//end switch
 
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(periodName_,next);
+                return smiSection_;
 
-				  if (!(next = strtok(NULL,blanks)))
-					  position_ = eol_;
-				  else
-					  // strcpy(next,periodName_); // store it here until next time
-					  //strcpy(periodName_,next); // store it here until next time
+            }
 
-				  // no futher strings allowed.
-				  position_=eol_;
-				  break;
-			  case SMI_UNKNOWN_MPS_TYPE:
-				  //this in case the column name has two characters!
-			  case SMI_COLUMN_CARD:
-				  //already got the name
-				  strcpy(columnName_,next);
-				  
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(rowName_,next);
+            if ( smiSection_ == SMI_SCENARIOS_SECTION )
+            {
 
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(valstr,next);
 
-				  value_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
-				  
-				  if (!(next = strtok(NULL,blanks)))
-					  position_ = eol_;
-				  else
-					  // strcpy(next,periodName_); // store it here until next time
-					  strcpy(periodName_,next); // store it here until next time
-				  break;
-              case SMI_LO_BOUND_CARD:
-              case SMI_UP_BOUND_CARD:
-              case SMI_FX_BOUND_CARD:
-                  // We got the kind of bound already.
-                  // We store the bound name in rowName
-                  // We store the column name in columnName;
-                  // We store the value in value_
 
-                  if (!(next = strtok(NULL,blanks)))
-                  {
-                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-                      break;
-                  }
-                  strcpy(rowName_,next); // Bound name
+                if (!(next = strtok(position_,blanks)))
+                {
+                    smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                    return smiSection_;
+                }
 
-                  if (!(next = strtok(NULL,blanks)))
-                  {
-                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-                      break;
-                  }
-                  strcpy(columnName_,next); // Column name
+                int i;
+                if (strlen(next)==2)
+                {
+                    for (i = SMI_SC_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
+                        if ( !strncmp ( next, smpsType[i], 2 ) ) 
+                        {
+                            break;
+                        }
+                    }
+                    if (i==SMI_UNKNOWN_MPS_TYPE)
+                        i = SMI_COLUMN_CARD;
+                }
+                else
+                    i = SMI_COLUMN_CARD;
 
-                  if (!(next = strtok(NULL,blanks)))
-                  {
-                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-                      break;
-                  }
-                  strcpy(valstr,next);
-                  value_ = osi_strtod(valstr,&after,0); // Value
-                  // see if error
-                  assert(after>valstr);
+                switch(smiSmpsType_ = (SmiSmpsType) i)
+                {
+                case SMI_SC_CARD:
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(columnName_,next);
 
-                  if (!(next = strtok(NULL,blanks))) // Now there should be end of line only
-                      position_ = eol_;
-                  break;
-              case SMI_FR_BOUND_CARD:
-                  if (!(next = strtok(NULL,blanks)))
-                  {
-                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-                      break;
-                  }
-                  strcpy(rowName_,next); // Bound name
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(rowName_,next);
 
-                  if (!(next = strtok(NULL,blanks)))
-                  {
-                      smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-                      break;
-                  }
-                  strcpy(columnName_,next); // Column name
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
 
-                  if (!(next = strtok(NULL,blanks))) // Now there should be end of line only
-                      position_ = eol_;
+                    value_ = osi_strtod(valstr,&after,0);
+                    // see if error
+                    assert(after>valstr);
 
-                  break;
-			  default:
-				  assert(smiSmpsType_ == SMI_UNKNOWN_MPS_TYPE);
-				  break;
-			  }
-		  }
-		  if ( smiSection_ == SMI_BLOCKS_SECTION )
-		  {
-			
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(periodName_,next);
 
-			  
-			  if (!(next = strtok(position_,blanks)))
-			  {
-				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  return smiSection_;
-			  }
-			
-			  int i;
-			  if (strlen(next)==2)
-			  {
-				  
-				  for (i = SMI_SC_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
-					  if ( !strncmp ( next, smpsType[i], 2 ) ) 
-					  {
-						  break;
-					  }
-				  }
-				  if (i==SMI_UNKNOWN_MPS_TYPE)
-					  i = SMI_COLUMN_CARD;
-			  }
-			  else
-				  i = SMI_COLUMN_CARD;
-			
-			  switch(smiSmpsType_ = (SmiSmpsType) i)
-			  {
-			  case SMI_BL_CARD:
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(columnName_,next);
-				  
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(periodName_,next);
+                    if (!(next = strtok(NULL,blanks)))
+                        position_ = eol_;
+                    else
+                        // strcpy(next,periodName_); // store it here until next time
+                        //strcpy(periodName_,next); // store it here until next time
 
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(valstr,next);
+                        // no futher strings allowed.
+                        position_=eol_;
+                    break;
+                case SMI_UNKNOWN_MPS_TYPE:
+                    //this in case the column name has two characters!
+                case SMI_COLUMN_CARD:
+                    //already got the name
+                    strcpy(columnName_,next);
 
-				  value_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(rowName_,next);
 
-				  // no futher strings allowed.
-				  position_=eol_;
-				  break;
-			  case SMI_UNKNOWN_MPS_TYPE:
-				  //this in case the column name has two characters!
-			  case SMI_COLUMN_CARD:
-				  //already got the name
-				  strcpy(columnName_,next);
-				  
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(rowName_,next);
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
 
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  break;
-				  }
-				  strcpy(valstr,next);
+                    value_ = osi_strtod(valstr,&after,0);
+                    // see if error
+                    assert(after>valstr);
 
-				  value_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
-		  
-				  if (!(next = strtok(NULL,blanks)))
-					  position_ = eol_;
-				  else
-					  // strcpy(next,periodName_); // store it here until next time
-					  strcpy(periodName_,next); // store it here until next time
-				  break;
-			  default:
-				  assert(smiSmpsType_ == SMI_UNKNOWN_MPS_TYPE);
-				  break;
-			  }
-		  }
-		  return smiSection_;
+                    if (!(next = strtok(NULL,blanks)))
+                        position_ = eol_;
+                    else
+                        // strcpy(next,periodName_); // store it here until next time
+                        strcpy(periodName_,next); // store it here until next time
+                    break;
+                case SMI_LO_BOUND_CARD:
+                case SMI_UP_BOUND_CARD:
+                case SMI_FX_BOUND_CARD:
+                    // We got the kind of bound already.
+                    // We store the bound name in rowName
+                    // We store the column name in columnName;
+                    // We store the value in value_
 
-	  } else if ( card_[0] != '*' ) {
-		  // not a comment, might be a section
-		  int i;
-		  
-		  handler_->message(COIN_MPS_LINE,messages_)<<cardNumber_
-			  <<card_<<CoinMessageEol;
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(rowName_,next); // Bound name
 
-		  // find the section, if there is one
-		  for ( i = SMI_NAME_SECTION; i < SMI_UNKNOWN_SECTION; i++ ) {
-			//printf("Comparing first 3 chars of %s with %s returns %d \n",
-			//	card_, section[i], strncmp(card_,section[i],3));
-			  if ( !strncmp ( card_, section[i], 3) ) {
-				  break;
-			  }
-		  }
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(columnName_,next); // Column name
 
-		  // didn't find anything so quit
-		  if (i==SMI_UNKNOWN_SECTION) return (SmiSectionType) i;
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
+                    value_ = osi_strtod(valstr,&after,0); // Value
+                    // see if error
+                    assert(after>valstr);
 
-		  position_ = card_;
-		  eol_ = card_;
-		  smiSection_ = ( SmiSectionType ) i;
+                    if (!(next = strtok(NULL,blanks))) // Now there should be end of line only
+                        position_ = eol_;
+                    break;
+                case SMI_FR_BOUND_CARD:
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(rowName_,next); // Bound name
 
-		  // if its a scenario card, need to process some more info
-		  if ( (smiSection_ == SMI_SCENARIOS_SECTION) || 
-				(smiSection_ == SMI_INDEPENDENT_SECTION) )
-		  {
-			  i = SMI_SMPS_COMBINE_UNKNOWN;
-			  next = strtok(position_,blanks);
-			  
-			  if (!(next = strtok(NULL,blanks)))
-			  {
-				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  //break;
-			  }
-			  // find the section, if there is one
-			  // next card should be DISCRETE
-			  if (!(next = strtok(NULL,blanks)))
-			  {
-				  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-				  //break;
-			  }
-			  // find the section, if there is one
-			  if (next == NULL) {
-			    i = SMI_SMPS_COMBINE_REPLACE; 
-			  } else {
-			      for ( i = SMI_SMPS_COMBINE_ADD; i < SMI_SMPS_COMBINE_UNKNOWN; i++ ) {
-				      if ( !strncmp ( next, smpsType[i], strlen ( section[i] ) ) ) {
-					      break;
-				      }
-			      }
-			  }
-		   }
-			  // set combine rule if it is not already set.
-		   if (!combineRuleSet)
-		   {
-			  switch(i)
-			  {
-			  case SMI_SMPS_COMBINE_ADD:
-				  this->setCoreCombineRule(SmiCoreCombineAdd::Instance());
-				  break;
-			  case SMI_SMPS_COMBINE_REPLACE:
-				  this->setCoreCombineRule(SmiCoreCombineReplace::Instance());
-				  break;
-			  default:
-				  this->setCoreCombineRule(SmiCoreCombineReplace::Instance());
-				  // MESSAGE
-				  printf(" Smps: setting default core combine rule to Replace\n");
-			  }
-			  
-		  }
-		  return smiSection_;
-	  } else {
-		  // comment
-	  }
-  }
-  
-  {
-	  // if we get here, there are additional row fields on the line
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(columnName_,next); // Column name
 
-				  strcpy(rowName_,periodName_); // stored the last field in periodName_
-				  
-				  if (!(next = strtok(NULL,blanks)))
-				  {
-					  smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
-					  return smiSection_;
-				  }
-				  strcpy(valstr,next);
-				  
-				  value_ = osi_strtod(valstr,&after,0);
-				  // see if error
-				  assert(after>valstr);
+                    if (!(next = strtok(NULL,blanks))) // Now there should be end of line only
+                        position_ = eol_;
 
-				  if (!(next = strtok(NULL,blanks)))
-					  position_ = eol_;
-				  else
-					  strcpy(next,periodName_);
-				  
-				  
-				  return smiSection_;
-  }
+                    break;
+                default:
+                    assert(smiSmpsType_ == SMI_UNKNOWN_MPS_TYPE);
+                    break;
+                }
+            }
+            if ( smiSection_ == SMI_BLOCKS_SECTION )
+            {
+
+
+
+                if (!(next = strtok(position_,blanks)))
+                {
+                    smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                    return smiSection_;
+                }
+
+                int i;
+                if (strlen(next)==2)
+                {
+
+                    for (i = SMI_SC_CARD; i < SMI_UNKNOWN_MPS_TYPE; ++i) {
+                        if ( !strncmp ( next, smpsType[i], 2 ) ) 
+                        {
+                            break;
+                        }
+                    }
+                    if (i==SMI_UNKNOWN_MPS_TYPE)
+                        i = SMI_COLUMN_CARD;
+                }
+                else
+                    i = SMI_COLUMN_CARD;
+
+                switch(smiSmpsType_ = (SmiSmpsType) i)
+                {
+                case SMI_BL_CARD:
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(columnName_,next);
+
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(periodName_,next);
+
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
+
+                    value_ = osi_strtod(valstr,&after,0);
+                    // see if error
+                    assert(after>valstr);
+
+                    // no futher strings allowed.
+                    position_=eol_;
+                    break;
+                case SMI_UNKNOWN_MPS_TYPE:
+                    //this in case the column name has two characters!
+                case SMI_COLUMN_CARD:
+                    //already got the name
+                    strcpy(columnName_,next);
+
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(rowName_,next);
+
+                    if (!(next = strtok(NULL,blanks)))
+                    {
+                        smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                        break;
+                    }
+                    strcpy(valstr,next);
+
+                    value_ = osi_strtod(valstr,&after,0);
+                    // see if error
+                    assert(after>valstr);
+
+                    if (!(next = strtok(NULL,blanks)))
+                        position_ = eol_;
+                    else
+                        // strcpy(next,periodName_); // store it here until next time
+                        strcpy(periodName_,next); // store it here until next time
+                    break;
+                default:
+                    assert(smiSmpsType_ == SMI_UNKNOWN_MPS_TYPE);
+                    break;
+                }
+            }
+            return smiSection_;
+
+        } else if ( card_[0] != '*' ) {
+            // not a comment, might be a section
+            int i;
+
+            handler_->message(COIN_MPS_LINE,messages_)<<cardNumber_
+                <<card_<<CoinMessageEol;
+
+            // find the section, if there is one
+            for ( i = SMI_NAME_SECTION; i < SMI_UNKNOWN_SECTION; i++ ) {
+                //printf("Comparing first 3 chars of %s with %s returns %d \n",
+                //	card_, section[i], strncmp(card_,section[i],3));
+                if ( !strncmp ( card_, section[i], 3) ) {
+                    break;
+                }
+            }
+
+            // didn't find anything so quit
+            if (i==SMI_UNKNOWN_SECTION) return (SmiSectionType) i;
+
+            position_ = card_;
+            eol_ = card_;
+            smiSection_ = ( SmiSectionType ) i;
+
+            // if its a scenario card, need to process some more info
+            if ( (smiSection_ == SMI_SCENARIOS_SECTION) || 
+                (smiSection_ == SMI_INDEPENDENT_SECTION) )
+            {
+                i = SMI_SMPS_COMBINE_UNKNOWN;
+                next = strtok(position_,blanks);
+
+                if (!(next = strtok(NULL,blanks)))
+                {
+                    smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                    //break;
+                }
+                // find the section, if there is one
+                // next card should be DISCRETE
+                if (!(next = strtok(NULL,blanks)))
+                {
+                    smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+                    //break;
+                }
+                // find the section, if there is one
+                if (next == NULL) {
+                    i = SMI_SMPS_COMBINE_REPLACE; 
+                } else {
+                    for ( i = SMI_SMPS_COMBINE_ADD; i < SMI_SMPS_COMBINE_UNKNOWN; i++ ) {
+                        if ( !strncmp ( next, smpsType[i], strlen ( section[i] ) ) ) {
+                            break;
+                        }
+                    }
+                }
+            }
+            // set combine rule if it is not already set.
+            if (!combineRuleSet)
+            {
+                switch(i)
+                {
+                case SMI_SMPS_COMBINE_ADD:
+                    this->setCoreCombineRule(SmiCoreCombineAdd::Instance());
+                    break;
+                case SMI_SMPS_COMBINE_REPLACE:
+                    this->setCoreCombineRule(SmiCoreCombineReplace::Instance());
+                    break;
+                default:
+                    this->setCoreCombineRule(SmiCoreCombineReplace::Instance());
+                    // MESSAGE
+                    printf(" Smps: setting default core combine rule to Replace\n");
+                }
+
+            }
+            return smiSection_;
+        } else {
+            // comment
+        }
+    }
+
+    {
+        // if we get here, there are additional row fields on the line
+
+        strcpy(rowName_,periodName_); // stored the last field in periodName_
+
+        if (!(next = strtok(NULL,blanks)))
+        {
+            smiSmpsType_ = SMI_UNKNOWN_MPS_TYPE;
+            return smiSection_;
+        }
+        strcpy(valstr,next);
+
+        value_ = osi_strtod(valstr,&after,0);
+        // see if error
+        assert(after>valstr);
+
+        if (!(next = strtok(NULL,blanks)))
+            position_ = eol_;
+        else
+            strcpy(next,periodName_);
+
+
+        return smiSection_;
+    }
 }
 
 std::string SmiSmpsIO::getModProblemName() {
@@ -1300,14 +1300,14 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     for (int t = 0; t < core->getNumStages(); t++) {
         nels += core->getNode(t)->getNumMatrixElements();
     }
-    
+
     // initialize arrays
     double* clo = new double[core->getNumCols()];
     double* cup = new double[core->getNumCols()];
     double* obj = new double[core->getNumCols()];
     double* rlo = new double[core->getNumRows()];
     double* rup = new double[core->getNumRows()];
-    
+
     // initialize row-ordered matrix arrays
     double * dels = new double[nels];
     int * indx = new int[nels];
@@ -1320,41 +1320,41 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
     for (int t = 0; t < core->getNumStages(); t++) {
 
         SmiNodeData * node = core->getNode(t);
-    	int stg = node->getStage();
+        int stg = node->getStage();
 
-	    core->copyRowLower(rlo+nrow,stg);
-	    core->copyRowUpper(rup+nrow,stg);
-	    core->copyColLower(clo+ncol,stg);
-	    core->copyColUpper(cup+ncol,stg);
-	    core->copyObjective(obj+ncol,stg);
+        core->copyRowLower(rlo+nrow,stg);
+        core->copyRowUpper(rup+nrow,stg);
+        core->copyColLower(clo+ncol,stg);
+        core->copyColUpper(cup+ncol,stg);
+        core->copyObjective(obj+ncol,stg);
 
-	    // add rows to det. eq. matrix for current stage
-	    for (int i=core->getRowStart(stg); i<core->getRowStart(stg+1) ; i++)
-	    {
-		    // build row explicitly into sparse arrays
-		    int rowStart=rstrt[rowCount];
-		    int rowNumEls=0;
+        // add rows to det. eq. matrix for current stage
+        for (int i=core->getRowStart(stg); i<core->getRowStart(stg+1) ; i++)
+        {
+            // build row explicitly into sparse arrays
+            int rowStart=rstrt[rowCount];
+            int rowNumEls=0;
 
-		    const double *cels=node->getRowElements(i);
-		    const int *cind=node->getRowIndices(i);
-		    const int len=node->getRowLength(i);
-		    memcpy(dels+rowStart,cels,sizeof(double)*len);
-		    memcpy(indx+rowStart,cind,sizeof(int)*len);
-		    rowNumEls=len;
+            const double *cels=node->getRowElements(i);
+            const int *cind=node->getRowIndices(i);
+            const int len=node->getRowLength(i);
+            memcpy(dels+rowStart,cels,sizeof(double)*len);
+            memcpy(indx+rowStart,cind,sizeof(int)*len);
+            rowNumEls=len;
 
-		    //preparation for the next row
-		    rowCount++;
-		    nels+=rowNumEls;
-		    rstrt[rowCount] = nels;
-		    //done with preparations for the next row
+            //preparation for the next row
+            rowCount++;
+            nels+=rowNumEls;
+            rstrt[rowCount] = nels;
+            //done with preparations for the next row
         }
-        
+
         ncol += core->getNumCols(stg);
-	    nrow += core->getNumRows(stg);
+        nrow += core->getNumRows(stg);
     }
     assert(rowCount == nrow);
     if (solverInf_ != this->infinity_){
-    // We have to transform the values from solverInfinity to infinity
+        // We have to transform the values from solverInfinity to infinity
         for (int i = 0; i < core->getNumCols(); i++){
             if (clo[i] == -solverInf_)
                 clo[i] = -infinity_;
@@ -1381,13 +1381,13 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
         }
         // We assume that there are no infinity values in the coefficient matrix..
     }
-    
+
     CoinPackedMatrix matrix(false, ncol, nrow, nels, dels, indx, rstrt, NULL);
-    
+
     delete [] dels;
     delete [] indx;
     delete [] rstrt;
-    
+
     const std::vector<std::string> vec; //dummy
     char* integrality = new char[ncol];
     std::fill_n(integrality, ncol, 0);
@@ -1407,7 +1407,7 @@ void SmiSmpsIO::writeCoreFile(const char* filename, const char* extension, const
 
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
-    
+
     if (strictFormat) // Use IEEE hex mode for numbers
         this->writeMps(fnWithExt.c_str(), 0 ,1);
     else
@@ -1422,7 +1422,7 @@ void SmiSmpsIO::writeTimeFile(const char* filename, const char* extension, const
     std::stringstream line;
     line.fill(' ');
     line << "TIME          " << this->getModProblemName() << "\nPERIODS\n";
-    
+
     for (int stg = 0; stg < core->getNumStages(); stg++) {
         line << "    ";
         if (core->getColStart(stg) == core->getNumCols())
@@ -1443,7 +1443,7 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     std::string fnWithExt = filename;
     fnWithExt.append(".").append(extension);
     CoinFileOutput* output = CoinFileOutput::create(fnWithExt, CoinFileOutput::COMPRESS_NONE);
-    
+
     std::ostringstream line;
     line.fill(' ');
 
@@ -1453,7 +1453,7 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     else {
         line << setprecision(20);
     }
-    
+
     line << "STOCH         " << this->getModProblemName() << "\n";
     line << "SCENARIOS     DISCRETE\n";
     //line << "SCENARIOS     DISCRETE                 ";
@@ -1466,7 +1466,7 @@ void SmiSmpsIO::writeStochFile(const char* filename, const char* extension, cons
     for (int scen = 0; scen < tree->getNumScenarios(); scen++) {
         writeScenarioToStochFile(line, tree->getLeaf(scen), scen, strictFormat);
     }
-    
+
     line << "ENDATA\n";
     output->puts(line.str());        
     delete output;
@@ -1500,7 +1500,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
 
         stream << "STAGE_" << node->getDataPtr()->getStage() << "\n"; // write the stage number
     }
-    
+
     // now we can print the stochastic data
     SmiNodeData* data = node->getDataPtr()->getNode();
     if (data->getNumMatrixElements() > 0) {
@@ -1534,7 +1534,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
     if (data->getColLowerLength() > 0 || data->getColUpperLength() > 0) {
         int icl = 0, icu = 0;
         while (icl < data->getColLowerLength() || icu < data->getColUpperLength()) {
-            
+
             if (icl < data->getColLowerLength() &&  icu < data->getColUpperLength() && data->getColLowerIndices()[icl] == data->getColUpperIndices()[icu]) {
                 // lower and upper bound given for current column
                 if (data->getColLowerElements()[icl] == data->getColUpperElements()[icu]) {
@@ -1552,7 +1552,7 @@ void SmiSmpsIO::writeScenarioToStochFile(std::ostringstream& stream, SmiTreeNode
                 icl++; icu++;
                 continue;
             }
-            
+
             if (icu >= data->getColUpperLength() || data->getColLowerIndices()[icl] < data->getColUpperIndices()[icu]) {
                 // write column lower bound
                 if (this->isInteger(icl)) {
@@ -1598,23 +1598,23 @@ void SmiSmpsIO::writeSmps(const char* filename, bool winFileExtensions, bool str
     if (winFileExtensions) {
         //write core file
         this->writeCoreFile(filename, "cor", strictFormat);
-        
+
         // write time file
         this->writeTimeFile(filename, "tim", strictFormat);
-        
+
         // write stoch file
         this->writeStochFile(filename, "sto", strictFormat);
     } else {
         //write core file
         this->writeCoreFile(filename, "core", strictFormat);
-        
+
         // write time file
         this->writeTimeFile(filename, "time", strictFormat);
-        
+
         // write stoch file
         this->writeStochFile(filename, "stoch", strictFormat);
     }
-    
+
     this->freeAll();
 }
 
