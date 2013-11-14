@@ -88,12 +88,12 @@ SmiScnModel::~SmiScnModel()
 // anc: the ancestor of this scenario, this is the one it branches from
 // prob: unconditional probability of this scenario (leaf node probability)
 SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
-                              CoinPackedMatrix *matrix,
-                              CoinPackedVector *v_dclo, CoinPackedVector *v_dcup,
-                              CoinPackedVector *v_dobj,
-                              CoinPackedVector *v_drlo, CoinPackedVector *v_drup,
-                              SmiStageIndex branch, SmiScenarioIndex anc, double prob,
-                              SmiCoreCombineRule *r)
+                                               CoinPackedMatrix *matrix,
+                                               CoinPackedVector *v_dclo, CoinPackedVector *v_dcup,
+                                               CoinPackedVector *v_dobj,
+                                               CoinPackedVector *v_drlo, CoinPackedVector *v_drup,
+                                               SmiStageIndex branch, SmiScenarioIndex anc, double prob,
+                                               SmiCoreCombineRule *r)
 {
 
     // this coding takes branch to be the node that the scenario branches *from*
@@ -193,12 +193,12 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
 }
 
 SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
-                              CoinPackedMatrix *matrix,
-                              CoinPackedVector *v_dclo, CoinPackedVector *v_dcup,
-                              CoinPackedVector *v_dobj,
-                              CoinPackedVector *v_drlo, CoinPackedVector *v_drup,
-                              vector<int> labels, double prob,
-                              SmiCoreCombineRule *r)
+                                               CoinPackedMatrix *matrix,
+                                               CoinPackedVector *v_dclo, CoinPackedVector *v_dcup,
+                                               CoinPackedVector *v_dobj,
+                                               CoinPackedVector *v_drlo, CoinPackedVector *v_drup,
+                                               vector<int> labels, double prob,
+                                               SmiCoreCombineRule *r)
 {
 
     // this code assumes that full path data (incl root node data)
@@ -327,7 +327,7 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
 
 
     for (int i = 0; i < this->getNumScenarios(); i++) {
-        
+
         std::vector<SmiScnNode*> &nodes = this->getSmiTree()->getScenario(i);
         for (unsigned int j = 0; j < nodes.size(); j++) {
             if (nodes[j]->getScenarioIndex() == i) {
@@ -338,7 +338,7 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     // We need to multiply all entries with the corresponding probabilities?
     // We need to generate new cdrlo[] and so on arrays!
     //core_->regenerateCoreArrays();
-  
+
     SmiScnModel* smi = new SmiScnModel;
     smi->setCore(this->core_);
     CoinPackedMatrix matrix;
@@ -427,13 +427,13 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     for (int t = 0; t < this->core_->getNumStages(); t++) {
         addCoreNode(this->core_->getNode(t));
     }
-    
+
     // create the matrix
     matrix_ = new CoinPackedMatrix(false,0,0);
     int *len=NULL;
     // Assign values from current arrays (which get nulled thereafter)
     matrix_->assignMatrix(false,ncol_,nrow_,nels_,dels_,indx_,rstrt_,len);
-    
+
     // If the core model does not contain the exepected values for the random variables,
     // we compute them. So we start with replacing the values with the ones from the first scenario (weighted by the probability),
     // and then add the weighted values from the other scenarios
@@ -487,40 +487,40 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
-//#ifdef NDEBUG
-//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-//        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-//    }
-//    std::cout << std::endl;
-//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-//        printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-//        for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-//            printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-//        }
-//        printf("<= %g",osiStoch_->getRowUpper()[mi]);
-//    }
-//    printf("\n Matrix printed \n");
-//    for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-//        printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-//    }
-//#endif
+    //#ifdef NDEBUG
+    //    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+    //        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+    //    }
+    //    std::cout << std::endl;
+    //    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+    //        printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+    //        for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+    //            printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+    //        }
+    //        printf("<= %g",osiStoch_->getRowUpper()[mi]);
+    //    }
+    //    printf("\n Matrix printed \n");
+    //    for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+    //        printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+    //    }
+    //#endif
 
 
     double * colSolution = new double[core_->getNumCols()];
     memcpy(colSolution, osiStoch_->getColSolution(), core_->getNumCols()* sizeof(double) );
     double objValue = osiStoch_->getObjValue();
 
-	if ( !osiStoch_->isProvenOptimal()){
-		// Not optimal
-		// If infeasible
-		if ( osiStoch_->isProvenPrimalInfeasible())
-			objValue = osiStoch_->getInfinity();
-		if ( osiStoch_->isProvenDualInfeasible()){
-			objValue = -osiStoch_->getInfinity();
-		}
-	}
-	// Reset osiStoch_ to old solver
-	osiStoch_ = tempPtr;
+    if ( !osiStoch_->isProvenOptimal()){
+        // Not optimal
+        // If infeasible
+        if ( osiStoch_->isProvenPrimalInfeasible())
+            objValue = osiStoch_->getInfinity();
+        if ( osiStoch_->isProvenDualInfeasible()){
+            objValue = -osiStoch_->getInfinity();
+        }
+    }
+    // Reset osiStoch_ to old solver
+    osiStoch_ = tempPtr;
     return make_pair(objValue,colSolution );
 }
 
@@ -529,11 +529,11 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false);
     std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
-    
 
- 	int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
+
+    int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
     double * colSolution = evResult.second;
-	double prob = 0;
+    double prob = 0;
 
 #pragma region EEVP
     double eev = 0; // the value of the EEVP
@@ -586,9 +586,9 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
         // fix stage-1-columns to the values of the evp
-		for (int col = 0; col < numStageTMinus1Cols; col++) {
-			osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
-		}
+        for (int col = 0; col < numStageTMinus1Cols; col++) {
+            osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
+        }
 
         //Set objSense
         osiStoch_->setObjSense(objSense);
@@ -614,15 +614,15 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
             i = this->smiTree_.getNumScenarios();
         }
 
-		if (optimal){
+        if (optimal){
             eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
-			prob += nodes[nodes.size()-1]->getProb();
-		}
-		else {
-			std::cout << "test";
-		}
+            prob += nodes[nodes.size()-1]->getProb();
+        }
+        else {
+            std::cout << "test";
+        }
         // sum up the solution values (multiplied with probabilities)
-        
+
 
         //Delete new-ed objects
         delete matrix_;
@@ -634,25 +634,25 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
-//#ifdef NDEBUG
-//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-//            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-//        }
-//        std::cout << std::endl;
-//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-//            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-//            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-//                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-//            }
-//            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-//        }
-//        printf("\n Matrix printed \n");
-//        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-//            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-//
-//        }
-//        printf("\n");
-//#endif
+        //#ifdef NDEBUG
+        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+        //            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+        //        }
+        //        std::cout << std::endl;
+        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+        //            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+        //            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+        //                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+        //            }
+        //            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+        //        }
+        //        printf("\n Matrix printed \n");
+        //        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+        //            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+        //
+        //        }
+        //        printf("\n");
+        //#endif
     }
 #pragma endregion EEVP;
 
@@ -721,21 +721,21 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
 
         //Set objSense
         osiStoch_->setObjSense(objSense);
-            // If we have integer indices, we need the branch-and-bound solver
+        // If we have integer indices, we need the branch-and-bound solver
         // Silence Cplex!
         osiStoch_->messageHandler()->setLogLevel(0);
-		int integer_cutoff = -1;
-		for (int i = 0; i < intIndices.size(); i++){
-			if ( intIndices[i] >= core_->getColStart(1)){
-				integer_cutoff = i;
-				break;
-			}
-			else 
-				integer_cutoff = intIndices.size();
-			
-		}
+        int integer_cutoff = -1;
+        for (int i = 0; i < intIndices.size(); i++){
+            if ( intIndices[i] >= core_->getColStart(1)){
+                integer_cutoff = i;
+                break;
+            }
+            else 
+                integer_cutoff = intIndices.size();
+
+        }
         if (intIndices.size() && integer_cutoff > 0){
-			// We set Integers only for the first stage!
+            // We set Integers only for the first stage!
             osiStoch_->setInteger(&intIndices[0],integer_cutoff);
             osiStoch_->branchAndBound();
         }
@@ -743,8 +743,8 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
             if ( warm_start != NULL )
                 osiStoch_->setWarmStart(warm_start);
             osiStoch_->initialSolve(); //Solve this problem.
-/*            if ( warm_start != NULL)
-                delete warm_start;  */          
+            /*            if ( warm_start != NULL)
+            delete warm_start;  */          
             warm_start = osiStoch_->getWarmStart();
         }
         double* solution_array = new double[osiStoch_->getNumCols()];
@@ -761,24 +761,24 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
-//#ifdef NDEBUG
-//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-//            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-//        }
-//        std::cout << std::endl;
-//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-//            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-//            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-//                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-//            }
-//            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-//        }
-//        printf("\n Matrix printed \n");
-//        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-//            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-//        }
-//        printf("\n");
-//#endif
+        //#ifdef NDEBUG
+        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+        //            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+        //        }
+        //        std::cout << std::endl;
+        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+        //            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+        //            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+        //                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+        //            }
+        //            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+        //        }
+        //        printf("\n Matrix printed \n");
+        //        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+        //            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+        //        }
+        //        printf("\n");
+        //#endif
     }
     delete osiStoch_;
     osiStoch_ = tempPtr;
@@ -786,21 +786,21 @@ std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface
 }
 
 OsiSolverInterface*
-SmiScnModel::loadStoredDataInSolver(){
-    osiStoch_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-    // pass data to osiStoch
-    osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
+    SmiScnModel::loadStoredDataInSolver(){
+        osiStoch_->loadProblem(0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+        // pass data to osiStoch
+        osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_);
 
-    // If we have integer indices, we add these to the solver.
-    if (intIndices.size()){
-        osiStoch_->setInteger(&intIndices[0],intIndices.size());
-    }
-    return osiStoch_;
+        // If we have integer indices, we add these to the solver.
+        if (intIndices.size()){
+            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+        }
+        return osiStoch_;
 }
 
 //Christian: Generates Deterministic Equivalent (Big Matrix)
 OsiSolverInterface *
-SmiScnModel::loadOsiSolverData()
+    SmiScnModel::loadOsiSolverData()
 {
     // We want to reset our osiSolverInterface
     // If we have a cplex solver, we can work around that by loading an empty model..
@@ -881,7 +881,7 @@ SmiScnModel::loadOsiSolverData()
 // This Model contains only constraints for the specified stage and scenario numbers..
 //TODO: Not yet implemented
 OsiSolverInterface *
-SmiScnModel::loadOsiSolverDataForSubproblem(int stage, int scenStart)
+    SmiScnModel::loadOsiSolverDataForSubproblem(int stage, int scenStart)
 {
 
     //TODO Declare new SolverInterface?
@@ -1067,14 +1067,14 @@ SmiScnModel::loadOsiSolverDataForSubproblem(int stage, int scenStart)
 
 
 void
-SmiScnModel::deleteNode(SmiScnNode *tnode)
+    SmiScnModel::deleteNode(SmiScnNode *tnode)
 {
     //cout << "Deleting node from scenario " << tnode->getScenarioIndex() << " Stage " <<  tnode->getNode()->getStage() << endl;
     delete tnode;
 }
 
 void
-SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
+    SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
 {
 
     SmiNodeData *node = tnode->getNode();
@@ -1124,7 +1124,7 @@ SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
     node->copyRowUpper(drup_+nrow_);
 
     // multiply obj coeffs by node probability and normalize
-    double prob = !notDetEq ? tnode->getProb()/this->totalProb_ : 1; //Christian: TODO: totalProb_ = Summer aller absoluten W'keiten (am Ende müsste die bei 1 sein..?!)
+    double prob = !notDetEq ? tnode->getProb()/this->totalProb_ : 1; 
     tnode->setModelProb(prob);
 
     for(int j=ncol_; j<ncol_+core->getNumCols(stg); ++j)
@@ -1151,14 +1151,10 @@ SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
         // build row explicitly into sparse arrays
         int rowStart=this->rstrt_[rowCount];
         int rowNumEls=0;
-        //Christian: In my opinion the if/else is the same for all rows in a given stage
         //Christian: If row has stochastic coefficients (that implies that we are not in stage one which means 0 here)
         if (stg && node->getRowLength(i))
-        {	//Christian: If I understood it correctly, a dense row is inserted (a row with values for all collumns)
-            double *denseCoreRow = cnode->getDenseRow(i); //Christian: Why is the dense core row needed?? I don't get it..
-            //I think the DenseCoreRow is needed because it simplifies things a little bit on the cost of performance
-            //TODO: Change methods to use CompressedRowStorage for the core row also.. (Performance)
-            //Christian: Returned row is a row that contains only non-zero elements, so it is not dense anymore
+        {	
+            double *denseCoreRow = cnode->getDenseRow(i); 
             rowNumEls=node->combineWithDenseCoreRow(denseCoreRow,node->getRowLength(i),node->getRowIndices(i),node->getRowElements(i),dels_+rowStart,indx_+rowStart);
         }
         //Christian: If row does not have stochastic coefficients, copy values from core node for current stage (no combination needed..)
@@ -1232,7 +1228,7 @@ SmiScnModel::addNode(SmiScnNode *tnode,bool notDetEq /* = false */)
 }
 
 void
-SmiScnModel::addCoreNode(SmiNodeData *node)
+    SmiScnModel::addCoreNode(SmiNodeData *node)
 {
 
     SmiCoreData *core = node->getCore();
@@ -1288,7 +1284,7 @@ SmiScnModel::addCoreNode(SmiNodeData *node)
 }
 
 void
-SmiScnModel::addNodeEVP(SmiScnNode *tnode)
+    SmiScnModel::addNodeEVP(SmiScnNode *tnode)
 {
     SmiNodeData *snode = tnode->getNode();
     int stage = snode->getStage();
@@ -1348,7 +1344,7 @@ SmiScnModel::addNodeEVP(SmiScnNode *tnode)
 }
 
 void
-SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
+    SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
 {
     SmiNodeData *snode = tnode->getNode();
     int stage = snode->getStage();
@@ -1394,7 +1390,7 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
 
     // And now for the matrix entries
     // To rule out all eventualities, we need to get the matrix from each scenario, and add it up to one single matrix!
-    
+
     // Get core matrix and replace entries with standard values from core model!
     // Iterate over stochastic stuff to!
     for (int i = core_->getRowStart(stage); i < core_->getRowStart(stage+1); i++) {
@@ -1429,14 +1425,14 @@ SmiScnModel::addNodeEVPToCore(SmiScnNode *tnode)
 
 
 OsiSolverInterface *
-SmiScnModel::getOsiSolverInterface()
+    SmiScnModel::getOsiSolverInterface()
 {
     return osiStoch_;
 }
 
 
 double *
-SmiScnModel::getColSolution(int ns, int *length)
+    SmiScnModel::getColSolution(int ns, int *length)
 {
     //CoinPackedVector *soln=new CoinPackedVector();
     const double * osiSoln = this->getOsiSolverInterface()->getColSolution();
@@ -1475,7 +1471,7 @@ SmiScnModel::getColSolution(int ns, int *length)
 }
 
 double 
-SmiScnModel::getColSolution(int ns, int stage, int colIndex)
+    SmiScnModel::getColSolution(int ns, int stage, int colIndex)
 {
     //CoinPackedVector *soln=new CoinPackedVector();
     const double * osiSoln = this->getOsiSolverInterface()->getColSolution();
@@ -1496,7 +1492,7 @@ SmiScnModel::getColSolution(int ns, int stage, int colIndex)
 }
 
 double *
-SmiScnModel::getRowSolution(int ns, int *length)
+    SmiScnModel::getRowSolution(int ns, int *length)
 {
     //CoinPackedVector *soln=new CoinPackedVector();
     const double * osiSoln = this->getOsiSolverInterface()->getRowActivity();
@@ -1536,7 +1532,7 @@ SmiScnModel::getRowSolution(int ns, int *length)
 }
 
 double 
-SmiScnModel::getRowSolution(int ns, int stage, int rowIndex)
+    SmiScnModel::getRowSolution(int ns, int stage, int rowIndex)
 {
     //CoinPackedVector *soln=new CoinPackedVector();
     const double * osiSoln = this->getOsiSolverInterface()->getRowActivity();
@@ -1557,13 +1553,13 @@ SmiScnModel::getRowSolution(int ns, int stage, int rowIndex)
 
 
 int
-SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
+    SmiScnModel::readSmps(const char *c, SmiCoreCombineRule *r)
 {
     return readSmps(c,c,c,r);
 }
 
 int
-SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* stochFile,SmiCoreCombineRule *r)
+    SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* stochFile,SmiCoreCombineRule *r)
 {
     int i;
     SmiSmpsIO *smiSmpsIO=NULL;
@@ -1600,7 +1596,7 @@ SmiScnModel::readSmps(const char *coreFile, const char* timeFile, const char* st
     }
 
     // Store the column and row Names that belong to the given indices!!
-    
+
 
     SmiCoreData *smiCore = NULL;
     const char* time_ext[] = {"tim", "time"};
@@ -1776,14 +1772,14 @@ void SmiScnModel::processDiscreteDistributionIntoBlocks(SmiDiscreteDistribution 
         // Add smi block to SmiBlockDistribution..
         smiBS->addSmiBlock(smi_block);
 
-    // Iterate over all 
+        // Iterate over all 
     }
 
 
 }
 
 void
-SmiScnModel::processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *smiDD, bool test)
+    SmiScnModel::processDiscreteDistributionIntoScenarios(SmiDiscreteDistribution *smiDD, bool test)
 
 {
     SmiCoreData *core=smiDD->getCore();
@@ -2036,7 +2032,7 @@ double SmiScnModel::getObjectiveValue(SmiScenarioIndex ns)
 }
 
 int
-SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
+    SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 {
     // stage
     int stg=smiScnNode->getStage();
@@ -2103,10 +2099,10 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     return (stg+1 - start_stg);
 }
 
- void SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure* smiBS){
-	SmiScenarioIndex is;
-	SmiCoreData *core = smiBS->getCore();
-	SmiCoreCombineRule *r = smiBS->getCombineWithCoreRule();
+void SmiScnModel::processBlockStructureIntoScenarios(SmiBlockStructure* smiBS){
+    SmiScenarioIndex is;
+    SmiCoreData *core = smiBS->getCore();
+    SmiCoreCombineRule *r = smiBS->getCombineWithCoreRule();
     // Test if block structure is empty!
     if ( smiBS->getBlock(0,1) == NULL)
         return;
@@ -2190,7 +2186,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
     for ( int i = num_stages-2; i > 0; i--)
         num_childs_per_stage[i].second = num_childs_per_stage[i+1].second * num_childs_per_stage[i].first;
 
-    
+
 
 
     // What we do to avoid huge memory increase: Iterate over all events in the blocks, add stuff up, and generate scenario once we reach the last stage. Then start again.
@@ -2246,7 +2242,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
             }
         }
-    
+
         while( current_stage < core->getNumStages() && num_stages > 2 ){ // Inner loop: Count from the starting stage until the last stage. For a Two-Stage problem this is not necessary.
 
             SmiBlock* current_block = smiBS->getBlock(0,current_stage);
@@ -2319,17 +2315,17 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
 
 
-        
-	
- 
 
- double SmiScnModel::getScenarioProb( SmiScenarioIndex ns )
- {
-     return smiTree_.getLeaf(ns)->getDataPtr()->getProb();
- }
 
- void SmiScnModel::transformToStaircaseStructure( std::map<int,int>& coefficients )
- {
+
+
+double SmiScnModel::getScenarioProb( SmiScenarioIndex ns )
+{
+    return smiTree_.getLeaf(ns)->getDataPtr()->getProb();
+}
+
+void SmiScnModel::transformToStaircaseStructure( std::map<int,int>& coefficients )
+{
     core_->transformToStaircaseStructure(coefficients, smiTree_.getRoot());
     for (int i = 0; i < core_->getNumStages();i++){
         this->maxNelsPerScenInStage[i] = core_->getNode(i)->getNumMatrixElements()+
@@ -2340,224 +2336,224 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
             core_->getNode(i)->getRowUpperLength();
     }
 
- }
+}
 
- void SmiScnModel::moveBoundsIntoMatrix(){
-     this->core_->moveBoundsIntoMatrix(smiTree_.wholeTree());
-     // Update max numNels
-     for (int i = 0; i < core_->getNumStages();i++){
-         this->maxNelsPerScenInStage[i] = core_->getNode(i)->getNumMatrixElements()+
-             core_->getNode(i)->getColLowerLength() +
-             core_->getNode(i)->getColUpperLength() +
-             core_->getNode(i)->getObjectiveLength() +
-             core_->getNode(i)->getRowLowerLength() +
-             core_->getNode(i)->getRowUpperLength();
-     }
- }
+void SmiScnModel::moveBoundsIntoMatrix(){
+    this->core_->moveBoundsIntoMatrix(smiTree_.wholeTree());
+    // Update max numNels
+    for (int i = 0; i < core_->getNumStages();i++){
+        this->maxNelsPerScenInStage[i] = core_->getNode(i)->getNumMatrixElements()+
+            core_->getNode(i)->getColLowerLength() +
+            core_->getNode(i)->getColUpperLength() +
+            core_->getNode(i)->getObjectiveLength() +
+            core_->getNode(i)->getRowLowerLength() +
+            core_->getNode(i)->getRowUpperLength();
+    }
+}
 
- void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromStart )
- {
-     // Call the method 
-     int lesser_stage = std::min(firstStage,secondStage);
-     int upper_stage = std::max(firstStage,secondStage);
-     // Let's see if we can actually aggregate the stages we specified?!
-     if ( upper_stage > core_->getNumStages()-1 )
-         return; // We do not aggreagtes anything, if asked the wrong way
-     if ( lesser_stage < 0 )
-         return;
-     if ( lesser_stage-upper_stage == 0 )
-         return; // We do nothing
-     if ( upper_stage-lesser_stage > 1) { // We need to apply the method several times, so we need to know from which direction we want to start!
-         int number_of_aggregations = upper_stage-lesser_stage;
-         if ( aggregateFromStart ) // With each aggregation, our final number of stages collapses by one.
-             for (int i = 0; i < number_of_aggregations; i++)
-                 core_->aggregateStages(lesser_stage,lesser_stage+1, smiTree_);
+void SmiScnModel::aggregateStages( int firstStage, int secondStage, bool aggregateFromStart )
+{
+    // Call the method 
+    int lesser_stage = std::min(firstStage,secondStage);
+    int upper_stage = std::max(firstStage,secondStage);
+    // Let's see if we can actually aggregate the stages we specified?!
+    if ( upper_stage > core_->getNumStages()-1 )
+        return; // We do not aggreagtes anything, if asked the wrong way
+    if ( lesser_stage < 0 )
+        return;
+    if ( lesser_stage-upper_stage == 0 )
+        return; // We do nothing
+    if ( upper_stage-lesser_stage > 1) { // We need to apply the method several times, so we need to know from which direction we want to start!
+        int number_of_aggregations = upper_stage-lesser_stage;
+        if ( aggregateFromStart ) // With each aggregation, our final number of stages collapses by one.
+            for (int i = 0; i < number_of_aggregations; i++)
+                core_->aggregateStages(lesser_stage,lesser_stage+1, smiTree_);
 
-         else
-             for (int i = upper_stage; i > lesser_stage; i--)
-                 core_->aggregateStages( i-1, i, smiTree_);
+        else
+            for (int i = upper_stage; i > lesser_stage; i--)
+                core_->aggregateStages( i-1, i, smiTree_);
 
-     }
-     else
-         core_->aggregateStages(lesser_stage,upper_stage,smiTree_);
+    }
+    else
+        core_->aggregateStages(lesser_stage,upper_stage,smiTree_);
 
-     // We need to reset the number of ncol/nrow and elements for the det.eq.
-     this->ncol_ = 0;
-     this->nrow_ = 0;
-     this->nels_ = 0;
+    // We need to reset the number of ncol/nrow and elements for the det.eq.
+    this->ncol_ = 0;
+    this->nrow_ = 0;
+    this->nels_ = 0;
 
-     std::vector<SmiScnNode*>& tree( smiTree_.wholeTree());
-     for (int i = 0; i < tree.size(); i++){
-         this->ncol_ += core_->getNumCols(tree[i]->getStage());
-         this->nrow_ += core_->getNumRows(tree[i]->getStage());
-         this->nels_ += core_->getNode(tree[i]->getStage())->getNumMatrixElements();
-     }
- }
+    std::vector<SmiScnNode*>& tree( smiTree_.wholeTree());
+    for (int i = 0; i < tree.size(); i++){
+        this->ncol_ += core_->getNumCols(tree[i]->getStage());
+        this->nrow_ += core_->getNumRows(tree[i]->getStage());
+        this->nels_ += core_->getNode(tree[i]->getStage())->getNumMatrixElements();
+    }
+}
 
- void SmiScnModel::sampleScenarioTree( const std::vector<int>& number_samples, int sampling_method, double* (*random_generator)(int ), bool replace_scenario_tree, const std::vector<int>& old_samples )
- {
+void SmiScnModel::sampleScenarioTree( const std::vector<int>& number_samples, int sampling_method, double* (*random_generator)(int ), bool replace_scenario_tree, const std::vector<int>& old_samples )
+{
     // We have a discrete distribution
     // We need a random_number generator
-    
-     // We need to reset totalProb
-     this->totalProb_ = 0.0;
 
-     SmiDiscreteDistribution* smiDD = discrete_distribution_;
-     assert(smiDD);
-     SmiCoreData *core=smiDD->getCore();
-     int nstages = core->getNumStages();
-     assert(nstages>0);
+    // We need to reset totalProb
+    this->totalProb_ = 0.0;
 
-     //SmiBlockStructure* smiBS = new SmiBlockStructure(core);
-     // Delete old scenario tree. Should be done by copy constructor!
-     if ( replace_scenario_tree)
-         smiTree_ = SmiScenarioTree<SmiScnNode *>();
+    SmiDiscreteDistribution* smiDD = discrete_distribution_;
+    assert(smiDD);
+    SmiCoreData *core=smiDD->getCore();
+    int nstages = core->getNumStages();
+    assert(nstages>0);
 
-     int number_of_independent_vars = smiDD->getNumRV(); 
-     assert( number_of_independent_vars > 0 ); // Otherwise we can not really sample, can we?
-     std::vector<int> number_of_random_vars_per_stage(nstages);
- 
+    //SmiBlockStructure* smiBS = new SmiBlockStructure(core);
+    // Delete old scenario tree. Should be done by copy constructor!
+    if ( replace_scenario_tree)
+        smiTree_ = SmiScenarioTree<SmiScnNode *>();
 
-     // Iterate over all RV to get the number of blocks we need..
-     std::map<int,std::vector<SmiDiscreteRV*> > stage_rv_map;
-     for (int i = 1; i< nstages; i++)
-         stage_rv_map[i] = std::vector<SmiDiscreteRV*> (0);
-     for (int i = 0; i< number_of_independent_vars;i++){
-         assert( smiDD->getDiscreteRV(i)->getStage()>= 0 && smiDD->getDiscreteRV(i)->getStage()< nstages);
-         stage_rv_map[smiDD->getDiscreteRV(i)->getStage()].push_back(smiDD->getDiscreteRV(i));
-     }
-     // Sample the random numbers from our function
-     
-     std::map<int,std::vector< std::vector<double> > > random_numbers_per_stage;
-     int number_of_samples = 1;
-     for (int cur_stage = 1; cur_stage < nstages; cur_stage++){
-         number_of_random_vars_per_stage[cur_stage] = stage_rv_map[cur_stage].size();
-         std::vector<std::vector<double> > random_numbers(number_of_independent_vars);
-         number_of_samples *= number_samples[cur_stage];
-         for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
-             random_numbers[i].resize(number_of_samples);
-             for (int current_batch = 0; current_batch < number_of_samples/number_samples[cur_stage]; current_batch += number_samples[cur_stage]){
-                 // random_numbers[i].push_back(0.0); // Allows the use of memcpy later on
-                 // Get the random numbers via the function // TODO: Here we can use Latin Hypercube Sampling, Antithetic Sampling or Crude Monte Carlo Sampling.
-                 // Caller of this function decides that!
-                 double * generated_random_numbers = random_generator(number_samples[cur_stage]);
-                 assert(generated_random_numbers != NULL); // Not NULL
-                 memcpy(&random_numbers[i][current_batch],generated_random_numbers,sizeof(double)*number_samples[cur_stage]);
-                 delete [] generated_random_numbers;
-             }
+    int number_of_independent_vars = smiDD->getNumRV(); 
+    assert( number_of_independent_vars > 0 ); // Otherwise we can not really sample, can we?
+    std::vector<int> number_of_random_vars_per_stage(nstages);
 
-         }
-         random_numbers_per_stage[cur_stage] = random_numbers;
-     }
-        
-     // Now we have a sample of [0,1] numbers for each random independent variable
-     // Get the realization via inverse transformation!
-     // Store the SmiDiscreteEV in the random_events_per_stage vector
-     std::map<int,std::vector< std::vector<SmiDiscreteEvent*> > > random_events_per_stage;
-     for (int cur_stage = 1; cur_stage < nstages; cur_stage++){
-         std::vector<std::vector<double> > &random_numbers(random_numbers_per_stage[cur_stage]);
-         std::vector< std::vector<SmiDiscreteEvent*> > random_events(number_of_random_vars_per_stage[cur_stage]);
-            
-         for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
-             random_events[i].reserve(random_numbers[i].size());
-             for (int j = 0; j < random_numbers[i].size(); j++){
-                 random_events[i].push_back(stage_rv_map[cur_stage][i]->inverseTransformation(random_numbers[i][j]));
-             }
-         }
-         // Now we have all the information for this stage
-         random_events_per_stage[cur_stage] = random_events;
-     }
 
-     // Now we can start and build the blocks! 
+    // Iterate over all RV to get the number of blocks we need..
+    std::map<int,std::vector<SmiDiscreteRV*> > stage_rv_map;
+    for (int i = 1; i< nstages; i++)
+        stage_rv_map[i] = std::vector<SmiDiscreteRV*> (0);
+    for (int i = 0; i< number_of_independent_vars;i++){
+        assert( smiDD->getDiscreteRV(i)->getStage()>= 0 && smiDD->getDiscreteRV(i)->getStage()< nstages);
+        stage_rv_map[smiDD->getDiscreteRV(i)->getStage()].push_back(smiDD->getDiscreteRV(i));
+    }
+    // Sample the random numbers from our function
 
-     // Assume we have independent stages!
-     // We need to do that stagewise. 
-     // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.     
+    std::map<int,std::vector< std::vector<double> > > random_numbers_per_stage;
+    int number_of_samples = 1;
+    for (int cur_stage = 1; cur_stage < nstages; cur_stage++){
+        number_of_random_vars_per_stage[cur_stage] = stage_rv_map[cur_stage].size();
+        std::vector<std::vector<double> > random_numbers(number_of_independent_vars);
+        number_of_samples *= number_samples[cur_stage];
+        for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
+            random_numbers[i].resize(number_of_samples);
+            for (int current_batch = 0; current_batch < number_of_samples/number_samples[cur_stage]; current_batch += number_samples[cur_stage]){
+                // random_numbers[i].push_back(0.0); // Allows the use of memcpy later on
+                // Get the random numbers via the function // TODO: Here we can use Latin Hypercube Sampling, Antithetic Sampling or Crude Monte Carlo Sampling.
+                // Caller of this function decides that!
+                double * generated_random_numbers = random_generator(number_samples[cur_stage]);
+                assert(generated_random_numbers != NULL); // Not NULL
+                memcpy(&random_numbers[i][current_batch],generated_random_numbers,sizeof(double)*number_samples[cur_stage]);
+                delete [] generated_random_numbers;
+            }
 
-     // Create a new block here
-     int current_stage = 1;
-     int current_sample = 0;
-     int branch = 1;
-     int anc = 0;
-     double prob = 0;
-     std::vector<double> stage_prob(nstages,1.0);
-     for ( int prob_stage = 1; prob_stage < nstages; prob_stage++ ){
+        }
+        random_numbers_per_stage[cur_stage] = random_numbers;
+    }
+
+    // Now we have a sample of [0,1] numbers for each random independent variable
+    // Get the realization via inverse transformation!
+    // Store the SmiDiscreteEV in the random_events_per_stage vector
+    std::map<int,std::vector< std::vector<SmiDiscreteEvent*> > > random_events_per_stage;
+    for (int cur_stage = 1; cur_stage < nstages; cur_stage++){
+        std::vector<std::vector<double> > &random_numbers(random_numbers_per_stage[cur_stage]);
+        std::vector< std::vector<SmiDiscreteEvent*> > random_events(number_of_random_vars_per_stage[cur_stage]);
+
+        for (int i = 0; i < number_of_random_vars_per_stage[cur_stage]; i++){
+            random_events[i].reserve(random_numbers[i].size());
+            for (int j = 0; j < random_numbers[i].size(); j++){
+                random_events[i].push_back(stage_rv_map[cur_stage][i]->inverseTransformation(random_numbers[i][j]));
+            }
+        }
+        // Now we have all the information for this stage
+        random_events_per_stage[cur_stage] = random_events;
+    }
+
+    // Now we can start and build the blocks! 
+
+    // Assume we have independent stages!
+    // We need to do that stagewise. 
+    // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.     
+
+    // Create a new block here
+    int current_stage = 1;
+    int current_sample = 0;
+    int branch = 1;
+    int anc = 0;
+    double prob = 0;
+    std::vector<double> stage_prob(nstages,1.0);
+    for ( int prob_stage = 1; prob_stage < nstages; prob_stage++ ){
         stage_prob[prob_stage] = stage_prob[prob_stage-1]*(1.0/number_samples[prob_stage]);    
-     }
-     int cur_scen = 0;
-     // We need counter for every stage!
-     std::vector<int> current_sample_per_stage(nstages,0);
-     std::vector<int> current_sample_per_stage_modulo_size(nstages,0);
+    }
+    int cur_scen = 0;
+    // We need counter for every stage!
+    std::vector<int> current_sample_per_stage(nstages,0);
+    std::vector<int> current_sample_per_stage_modulo_size(nstages,0);
 
-     SmiBlock* smi_block = new SmiBlock(current_stage);
-     while ( current_stage >= 1 ){
+    SmiBlock* smi_block = new SmiBlock(current_stage);
+    while ( current_stage >= 1 ){
 
-         current_sample = current_sample_per_stage[current_stage];
-         CoinPackedMatrix matrix;
-         matrix.setDimensions(core->getNumRows(),core->getNumCols());
-         CoinPackedVector obj;
-         CoinPackedVector clo;
-         CoinPackedVector cup;
-         CoinPackedVector rlo;
-         CoinPackedVector rup;
-         // Combine all random variables at this stage
-         for (int current_var = 0; current_var < number_of_random_vars_per_stage[current_stage]; current_var++){
-             // Append the vector stuff to the existing ones.
-             obj.append(random_events_per_stage[current_stage][current_var][current_sample]->getObjective());
-             clo.append(random_events_per_stage[current_stage][current_var][current_sample]->getColLower());
-             cup.append(random_events_per_stage[current_stage][current_var][current_sample]->getColUpper());
-             rlo.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowLower());
-             rup.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowUpper());
-             matrix = random_events_per_stage[current_stage][current_var][current_sample]->getMatrix();
-             //if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
-             //    int pos = 0; // position in the elements / indice arrays
-             //    const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
-             //    for (int k = 0; k < matrix2.getNumRows(); k++) {
-             //        pos = colStartIndices[k];
-             //        for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-             //            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
-             //            pos++;
-             //        }
-             //    }
-             //    assert( pos == matrix2.getNumElements());
-             //}
-             
-         }
-         prob = stage_prob[current_stage];
-         // Create SmiBlockEvent with modified matrix and stuff
-         cur_scen = generateScenario(core,&matrix,&clo,&cup,&obj,&rlo,&rup,branch,anc,prob);
-         current_sample_per_stage[current_stage]++;
-         current_sample_per_stage_modulo_size[current_stage]++;
+        current_sample = current_sample_per_stage[current_stage];
+        CoinPackedMatrix matrix;
+        matrix.setDimensions(core->getNumRows(),core->getNumCols());
+        CoinPackedVector obj;
+        CoinPackedVector clo;
+        CoinPackedVector cup;
+        CoinPackedVector rlo;
+        CoinPackedVector rup;
+        // Combine all random variables at this stage
+        for (int current_var = 0; current_var < number_of_random_vars_per_stage[current_stage]; current_var++){
+            // Append the vector stuff to the existing ones.
+            obj.append(random_events_per_stage[current_stage][current_var][current_sample]->getObjective());
+            clo.append(random_events_per_stage[current_stage][current_var][current_sample]->getColLower());
+            cup.append(random_events_per_stage[current_stage][current_var][current_sample]->getColUpper());
+            rlo.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowLower());
+            rup.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowUpper());
+            matrix = random_events_per_stage[current_stage][current_var][current_sample]->getMatrix();
+            //if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
+            //    int pos = 0; // position in the elements / indice arrays
+            //    const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
+            //    for (int k = 0; k < matrix2.getNumRows(); k++) {
+            //        pos = colStartIndices[k];
+            //        for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+            //            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
+            //            pos++;
+            //        }
+            //    }
+            //    assert( pos == matrix2.getNumElements());
+            //}
 
-         // Go to next stage, if possible
-         if ( current_stage < nstages -1 ){
-             current_stage++;
-             branch++;
-             anc = cur_scen;
-         } // If we added all samples for this stage, we can go back a stage, else we don't
-         else if ( current_sample_per_stage_modulo_size[current_stage] >= number_samples[current_stage]  ){
-             current_stage--;
-             current_sample_per_stage_modulo_size[current_stage] = 0;
-             branch--;
-             if ( current_stage == 1){
-                 anc = 0;
-             }
-         }
-         else{
-             // We stay at this stage!
-         }
-     }
-     // Probabilities of all nodes must be recalculated if we add scenario instead of replacing the whole tree
-     if ( !replace_scenario_tree ){
-         assert(!old_samples.empty());
-         // TODO: for now we assume that the number_samples vector does not change from iteration to iteration
-         std::vector<double> new_scenario_prob_by_stage(nstages,1.0);
-         for (int i = 1; i < nstages; i++)
-             new_scenario_prob_by_stage[i] = new_scenario_prob_by_stage[i-1]*(number_samples[i]+old_samples[i]);
-         for ( std::vector<SmiScnNode*>::iterator it = smiTree_.treeBegin(); it != smiTree_.treeEnd();++it){
+        }
+        prob = stage_prob[current_stage];
+        // Create SmiBlockEvent with modified matrix and stuff
+        cur_scen = generateScenario(core,&matrix,&clo,&cup,&obj,&rlo,&rup,branch,anc,prob);
+        current_sample_per_stage[current_stage]++;
+        current_sample_per_stage_modulo_size[current_stage]++;
+
+        // Go to next stage, if possible
+        if ( current_stage < nstages -1 ){
+            current_stage++;
+            branch++;
+            anc = cur_scen;
+        } // If we added all samples for this stage, we can go back a stage, else we don't
+        else if ( current_sample_per_stage_modulo_size[current_stage] >= number_samples[current_stage]  ){
+            current_stage--;
+            current_sample_per_stage_modulo_size[current_stage] = 0;
+            branch--;
+            if ( current_stage == 1){
+                anc = 0;
+            }
+        }
+        else{
+            // We stay at this stage!
+        }
+    }
+    // Probabilities of all nodes must be recalculated if we add scenario instead of replacing the whole tree
+    if ( !replace_scenario_tree ){
+        assert(!old_samples.empty());
+        // TODO: for now we assume that the number_samples vector does not change from iteration to iteration
+        std::vector<double> new_scenario_prob_by_stage(nstages,1.0);
+        for (int i = 1; i < nstages; i++)
+            new_scenario_prob_by_stage[i] = new_scenario_prob_by_stage[i-1]*(number_samples[i]+old_samples[i]);
+        for ( std::vector<SmiScnNode*>::iterator it = smiTree_.treeBegin(); it != smiTree_.treeEnd();++it){
             (*it)->setProb(new_scenario_prob_by_stage[(*it)->getStage()]); // All scenarios have the same probability!
-         }
-     }
+        }
+    }
 }
 
 void SmiScnModel::setDiscreteDistribution( SmiDiscreteDistribution* smiDD )
