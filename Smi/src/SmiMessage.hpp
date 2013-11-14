@@ -11,21 +11,21 @@
 #include "CoinMessageHandler.hpp"
 enum SMI_Message
 {
-  SMI_SCENARIO_FINISHED,
-  SMI_DUMMY_END
+    SMI_SCENARIO_FINISHED,
+    SMI_DUMMY_END
 };
 
 /** This deals with Clp messages (as against Osi messages etc)
- */
+*/
 class SmiMessage : public CoinMessages {
 
 public:
 
-  /**@name Constructors etc */
-  //@{
-  /** Constructor */
-  SmiMessage(Language language=us_en);
-  //@}
+    /**@name Constructors etc */
+    //@{
+    /** Constructor */
+    SmiMessage(Language language=us_en);
+    //@}
 
 };
 
