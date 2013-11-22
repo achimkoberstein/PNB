@@ -188,9 +188,9 @@ public:
     /** Solves the Wait-And-See-Problem, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
     @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
-    @return a vector that containts for every scenario a pair of values, namely the objective value and the probability of the the scenario
+    @return a vector that containts for every scenario a pair of values, namely the objective value and a pointer to the column solution
     */
-    std::vector< std::pair<double,double> > solveWS(OsiSolverInterface *osiSolver, double objSense = 1);
+    std::vector< std::pair<double,double*> > solveWS(OsiSolverInterface *osiSolver, double objSense = 1);
     
     /** Solves the Expected-Value-Problem, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
@@ -298,7 +298,7 @@ public:
 
     void transformToStaircaseStructure( std::map<int,int>& coefficients );
 
-    void sampleScenarioTree(std::vector<int> number_samples, int sampling_method, double* (*random_generator)(int) );//TODO: Add Pointer to function that returns a double (RNG)
+    void sampleScenarioTree(const std::vector<int>& number_samples, int sampling_method, double* (*random_generator)(int),bool replace_scenario_tree = true, const std::vector<int>& old_samples = std::vector<int>() );//TODO: Add Pointer to function that returns a double (RNG)
 
     void setDiscreteDistribution(SmiDiscreteDistribution* smiDD);
     const SmiDiscreteDistribution* getDiscreteDistribution( );

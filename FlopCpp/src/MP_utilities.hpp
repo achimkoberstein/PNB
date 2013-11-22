@@ -18,6 +18,9 @@ using std::vector;
 using std::set;
 
 #include <boost/exception/all.hpp>
+#ifndef GOOGLE_GLOG_DLL_DECL
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to prevent linking issues!
+#endif
 #include <glog/logging.h>
 
 template <class T>

@@ -44,6 +44,9 @@
 #elif defined(HAVE_SYS_SYSCALL_H)
 #include <sys/syscall.h>                 // for syscall()
 #endif
+#ifdef HAVE_SYSLOG_H
+# include <syslog.h>
+#endif
 
 #include "base/googleinit.h"
 
@@ -63,8 +66,8 @@ _END_GOOGLE_NAMESPACE_
 #include "symbolize.h"
 #include "base/commandlineflags.h"
 
-DEFINE_bool(symbolize_stacktrace, true,
-            "Symbolize the stack trace in the tombstone");
+GLOG_DEFINE_bool(symbolize_stacktrace, true,
+                 "Symbolize the stack trace in the tombstone");
 
 _START_GOOGLE_NAMESPACE_
 
@@ -74,9 +77,11 @@ typedef void DebugWriter(const char*, void*);
 // For some environments, add two extra bytes for the leading "0x".
 static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
-static void DebugWriteToStderr(const char* data, void *unused) {
+static void DebugWriteToStderr(const char* data, void *) {
   // This one is signal-safe.
-  write(STDERR_FILENO, data, strlen(data));
+  if (write(STDERR_FILENO, data, strlen(data)) < 0) {
+    // Ignore errors.
+  }
 }
 
 void DebugWriteToString(const char* data, void *arg) {
@@ -218,9 +223,18 @@ int32 GetMainThreadPid() {
   return g_main_thread_pid;
 }
 
+bool PidHasChanged() {
+  int32 pid = getpid();
+  if (g_main_thread_pid == pid) {
+    return false;
+  }
+  g_main_thread_pid = pid;
+  return true;
+}
+
 pid_t GetTID() {
-  // On Linux and FreeBSD, we try to use gettid().
-#if defined OS_LINUX || defined OS_FREEBSD || defined OS_MACOSX
+  // On Linux and MacOSX, we try to use gettid().
+#if defined OS_LINUX || defined OS_MACOSX
 #ifndef __NR_gettid
 #ifdef OS_MACOSX
 #define __NR_gettid SYS_gettid
@@ -242,7 +256,7 @@ pid_t GetTID() {
     // the value change to "true".
     lacks_gettid = true;
   }
-#endif  // OS_LINUX || OS_FREEBSD
+#endif  // OS_LINUX || OS_MACOSX
 
   // If gettid() could not be used, we use one of the following.
 #if defined OS_LINUX
@@ -299,9 +313,7 @@ void SetCrashReason(const CrashReason* r) {
                             r);
 }
 
-}  // namespace glog_internal_namespace_
-
-void InitGoogleLogging(const char* argv0) {
+void InitGoogleLoggingUtilities(const char* argv0) {
   CHECK(!IsGoogleLoggingInitialized())
       << "You called InitGoogleLogging() twice!";
   const char* slash = strrchr(argv0, '/');
@@ -315,6 +327,17 @@ void InitGoogleLogging(const char* argv0) {
   InstallFailureFunction(&DumpStackTraceAndExit);
 #endif
 }
+
+void ShutdownGoogleLoggingUtilities() {
+  CHECK(IsGoogleLoggingInitialized())
+      << "You called ShutdownGoogleLogging() without calling InitGoogleLogging() first!";
+  g_program_invocation_short_name = NULL;
+#ifdef HAVE_SYSLOG_H
+  closelog();
+#endif
+}
+
+}  // namespace glog_internal_namespace_
 
 _END_GOOGLE_NAMESPACE_
 

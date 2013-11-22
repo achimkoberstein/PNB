@@ -1,11 +1,12 @@
-// $Id$
 #include <iostream>
 #include <fstream>
 #include <ctime>
 #include <limits>
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to prevent linking issues!
+#include <glog/logging.h>
 
 #include "OsiClpSolverInterface.hpp"
-#include "OsiCbcSolverInterface.hpp"
+//#include "OsiCbcSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
 
 #include "CoinFloatEqual.hpp"
@@ -15,7 +16,6 @@
 #include "SmiScnModel.hpp"
 #include "Benders.hpp"
 
-#include <glog/logging.h>
 
 using namespace flopc;
 

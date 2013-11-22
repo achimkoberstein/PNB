@@ -1,0 +1,5 @@
+TIME          C:\Users\wolf\Documents\VirtualBox-Ordner\FlopBenders\Benders\test\instances\twostage\l4\40x20-1
+PERIODS
+    c001        r001             PERIOD1
+    c041        r021             PERIOD2
+ENDATA

@@ -15,38 +15,27 @@ using namespace std;
 
 namespace parallel_benders{
 
-BendersNodeData::BendersNodeData():col_solution_(NULL),dual_solution_(NULL),incumbent_col_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
-trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),mip_solution_(NULL),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(NULL),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
-matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(NULL),d_square_cut_rhs_(NULL),solver_rhs_(NULL),can_safely_reuse_(true)
+BendersNodeData::BendersNodeData():col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
+mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
+smi_node_data_(nullptr),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 
 {
+
 }
 
-BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(NULL),dual_solution_(NULL),incumbent_col_solution_(NULL),reduced_cost_(NULL),next_stage_approximation_(NULL),discrepancy_(NULL),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),
-trust_region_rows_(NULL),num_trust_region_rows_(0),trust_region_cols_(NULL),num_trust_region_cols_(0),mip_solution_(NULL),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(NULL),warm_start_added_(false),smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
-probability_(0.0),conditional_probability_(0.0),optimality_cuts_(NULL),feasibility_cuts_(NULL),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
-matrix_(NULL),column_lower_(NULL),column_upper_(NULL),objective_(NULL),row_lower_(NULL),row_upper_(NULL),variable_bounds_(),no_staircase_constraints_(),d_square_cut_t_matrix_(NULL),d_square_cut_rhs_(NULL),solver_rhs_(NULL),can_safely_reuse_(true)
+BendersNodeData::BendersNodeData(SmiNodeData* nodeData):col_solution_(),dual_solution_(),incumbent_col_solution_(),reduced_cost_(),next_stage_approximation_(),discrepancy_(nullptr),was_under_threshold_(),dual_value_variable_bounds_(0.0),feasible_(true),unbounded_(false),unbounded_row_(-1),lower_bound_(-1e20),upper_bound_(1e20),
+mip_solution_(nullptr),unbounded_problem_(false),unbounded_extreme_ray_(nullptr),unbounded_right_hand_side_(nullptr),solve_ray_right_hand_side_(false),cols_(0),rows_(0),num_thetas_(0),active_aggregates_(0),warm_start_(nullptr),warm_start_added_(false),level_warm_start_(nullptr),level_warm_start_cstat_(nullptr),level_warm_start_rstat_(nullptr),level_warm_start_dnorm_(nullptr),level_warm_start_length_(0),level_regularized_solution_(),level_regularized_start_row_(-1),
+smi_node_data_(nodeData),scenario_index_(-1),branch_scenario_(-1),num_node_in_stage_(0),child_node_start_(0),
+probability_(0.0),conditional_probability_(0.0),optimality_cuts_(),feasibility_cuts_(),last_iteration_start_optimality_(optimality_cuts_.end()),last_iteration_start_feasibility_(feasibility_cuts_.end()),level_opt_iterator_(optimality_cuts_.end()),num_scen_pro_cut_(0),nodes_in_cut_(),changed_aggregation_level_(false),alternating_intra_cut_adaptive_(true),
+matrix_(nullptr),column_lower_(nullptr),column_upper_(nullptr),objective_(nullptr),row_lower_(nullptr),row_upper_(nullptr),no_staircase_constraints_(),d_square_cut_t_matrix_(nullptr),d_square_cut_rhs_(),solver_rhs_(nullptr),can_safely_reuse_(true),oda_optimality_cuts_(),oda_cut_evaluation_(),oda_lambdas_(),build_time_(0.0),solution_time_(0.0),cut_generation_time_(0.0)
 {
-
+    
 }
 
 BendersNodeData::~BendersNodeData(void)
 {
-    delete [] this->col_solution_;
-
-    delete [] this->dual_solution_;
-
-    delete [] this->next_stage_approximation_;
-
-    delete [] this->reduced_cost_;
-
-    delete [] this->incumbent_col_solution_;
-
-    delete this->warm_start_;
-
-    for (int i = 0; i < variable_bounds_.size(); i++)
-        delete variable_bounds_[i];
 
     delete [] d_square_cut_t_matrix_;
 
@@ -57,80 +46,31 @@ BendersNodeData::~BendersNodeData(void)
 
 }
 
-void BendersNodeData::set_col_solution(const double* colSolution)
-{
-    int n = smi_node_data_->getCore()->getNumCols(smi_node_data_->getStage()) + 1; //+1 for THETA
-
-    if (this->col_solution_ == NULL)
-    {
-        this->col_solution_ = new double[n];
-    }
-
-    if (optimality_cuts_.empty())
-        memcpy(this->col_solution_, colSolution, (n-1)*sizeof(double));
-    else
-        memcpy(this->col_solution_, colSolution, n*sizeof(double));
-}
-
-void BendersNodeData::set_dual_solution(const double* dualSolution) {
-    int n = smi_node_data_->getCore()->getNumRows(smi_node_data_->getStage()) + optimality_cuts_.size()+feasibility_cuts_.size();
-
-    if (this->dual_solution_ == NULL) {
-        // first time, allocate memory
-        this->dual_solution_ = new double[n];
-    } else {
-        delete [] this->dual_solution_;
-        this->dual_solution_ = new double[n];
-    }
-
-    //realloc(this->dualSolution, n*sizeof(double));
-
-    memcpy(this->dual_solution_, dualSolution, n*sizeof(double));
-}
-
-const double* BendersNodeData::col_solution(void)
-{
-    return this->col_solution_;
-}
-
-const double* BendersNodeData::dual_solution(void)
-{
-    return this->dual_solution_;
-}
-
-void BendersNodeData::set_warm_start(CoinWarmStart* coinWarmStart)
-{
-    delete this->warm_start_;
-    this->warm_start_ = coinWarmStart;
-}
-
-const CoinWarmStart* BendersNodeData::warm_start(void)
-{
-    return this->warm_start_;
-}
-
 void BendersNodeData::CleanUnusedMemory( bool direction )
 {
+    unbounded_ = false;
+    unbounded_problem_ = false;
+    unbounded_extreme_ray_.reset(nullptr);
+    unbounded_right_hand_side_.reset(nullptr);
     if ( direction ){ // We go forward, we do not need dual values. We recompute them, if needed
-        delete [] dual_solution_;
-        delete [] reduced_cost_;
-        dual_solution_ = NULL;
-        reduced_cost_ = NULL;
+        dual_solution_.clear();
+        reduced_cost_.clear();
     }
     else { // We go backward, we do not need the column solution;
-        delete [] col_solution_;
-        delete [] next_stage_approximation_; // Needed in aggregate_cut method, for already solved problems. This means, we can get rid of it, if we go backwards.
-        col_solution_ = NULL;
-        next_stage_approximation_ = NULL;
+        col_solution_.clear();
+        next_stage_approximation_.clear();
+    // Needed in aggregate_cut method, for already solved problems. This means, we can get rid of it, if we go backwards.
+
     }
 }
 
 BendersStageData::BendersStageData()
-: num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),
+: num_columns_(0),num_rows_(0),stage_(0),num_thetas_(1),upper_bound_(1e20),lower_bound_(-1e20),
 stochastic_matrix_w_(false),stochastic_matrix_t_(false),stochastic_rhs_(false),stochastic_objective_(false),stochastic_bounds_(false),non_zero_bounds_(false),
-column_indices_(0),row_indices_(0),warm_start_(NULL),problem_was_solved_in_this_iteration_(false),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(NULL),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(NULL), d_square_lambda_1_1_(NULL),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(NULL),d_square_disjunctive_indices_(),solve_binary_subproblems_(false)
+column_indices_(0),row_indices_(0),warm_start_(nullptr),problem_was_solved_in_this_iteration_(false),osi_solver_map_(),no_staircase_constraints_(),changed_aggregation_level_(false),num_d_square_cuts_(0),d_square_matrix_(nullptr),non_integer_scenarios(),violated_index_(-1),d_square_lambda_0_1_(nullptr), d_square_lambda_1_1_(nullptr),d_square_lambda_0_2_(0),d_square_lambda_1_2_(0),d_square_pi_(nullptr),d_square_disjunctive_indices_(),solve_binary_subproblems_(false),use_level_(false)
 {
-
+	added_optimality_cuts_ = 0;
+	added_feasibility_cuts_ = 0;
 }
 
 BendersStageData::~BendersStageData()
@@ -152,14 +92,16 @@ elements_(elements),indices_(indices),start_(start)
 
 void Timer::Start( int stg )
 {
+    assert( start_time_[stg] == 0.0);
     start_time_[stg] = CoinCpuTime();
+
 }
 
 void Timer::Stop( int stg )
 {
-    if ( start_time_[stg] != 0)
+    if ( start_time_[stg] != 0.0)
         overall_time_[stg] += CoinCpuTime() - start_time_[stg];
-    start_time_[stg] = 0;
+    start_time_[stg] = 0.0;
 }
 
 double Timer::GetAggregatedTime() const
@@ -185,6 +127,14 @@ int Timer::GetTimeStages() const
 {
     return stages_;
 }
+
+void Timer::AddTime( int stg, double time )
+{
+    if ( start_time_[stg] == 0.0 )
+        overall_time_[stg] += time;
+    else
+        assert(false);
+}
 void Parameter::init()
 {
     // DetEq or Benders
@@ -199,11 +149,13 @@ void Parameter::init()
     parameter_.put(PNB_AGGREGATED_OPTIMALITY_CUTS, 1);// Integer value: How many cuts do we want to have per stage. Static! If 0, use ScenariosProCut to determine number of cuts.
 	parameter_.put(PNB_DYNAMIC_AGGREGATION, false); // Do we use Dynamic aggregation? And which strategy?
 	// MIP Stuff
-    parameter_.put(PNB_RELAXATION, PNB_INT_NO_RELAXATION); // Give stage from which we should solve the relaxed problem!
+    parameter_.put(PNB_RELAXATION, 1); // Give stage from which we should solve the relaxed problem! (Standard is: Allow integers in first-stage, but relax later stages!)
 	// Multistage strategies
     parameter_.put(PNB_TREE_WALK_STRATEGY,0);
 	parameter_.put(PNB_TREE_WALK_STRATEGY_STAGE,0); // Applicable, if we use TREE_WALK_STRATEGY=5. FirstStage = 0. Also Applicable for TREE_WALK_STRATEGY=6 (if set to 0, we autoset dynamic protocol)
     parameter_.put(PNB_TREE_WALK_STRATEGY_EPSILON, 1e-06); 
+    // Feas cut generation
+    parameter_.put(PNB_HANDLE_FEAS_CUTS,PNB_INT_FEAS_CUT_ONLY_ONE);
     // Stage Aggregation
     parameter_.put(PNB_STAGE_AGGREGATION,false);
     parameter_.put(PNB_STAGE_AGGREGATION_START,0);
@@ -218,17 +170,17 @@ void Parameter::init()
     parameter_.put(PNB_CUT_CONSOLIDATION_STRIKE_THRESHOLD,5);
     parameter_.put(PNB_CUT_CONSOLIDATION_PARTIAL_THRESHOLD,0.1);
     // Start solution
-    parameter_.put(PNB_USE_START_SOLUTION,0); // 0: no start solution, 1 EV solution, 2 ? not yet implemented
+    parameter_.put(PNB_USE_START_SOLUTION,PNB_INT_USE_EV_SOLUTION); 
 	// Parallel Parameters
 	parameter_.put(PNB_NUM_CPU,0);
 	parameter_.put(PNB_CPU_USED,0);
     // Maximal solution time
-    parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Minutes
+    parameter_.put(PNB_MAXIMAL_SOLUTION_TIME,3600); // In Seconds
     // Parameter for Level and ODA
-    parameter_.put(PNB_LEVEL_LAMBDA,0.25);
+    parameter_.put(PNB_LEVEL_LAMBDA,0.5);
     parameter_.put(PNB_ODA_KAPPA,0.5);
-	// Acceleration Techniques
-    parameter_.put(PNB_TRUST_REGION, false); // Do we want to use TrustRegion TODO: Implement this
+    parameter_.put(PNB_ODA_AGGREGATES,1); // 1 Aggregates is single-cut case (default), 0 is same number of aggregates as number of aggregates, and some number inbetween is also OK.
+    parameter_.put(PNB_STAGE_LEVEL,0); // Up to which stage should we solve level problems? default is only the first stage (parameter holds also for regularization)
     //// Tolerances: We should use the same interger and zero tolerances as the underyling LP-solver
     parameter_.put(PNB_TOLERANCE_ZERO, 1e-06);
 	parameter_.put(PNB_TOLERANCE_INTEGER,  1e-06); 
@@ -240,7 +192,7 @@ void Parameter::init()
     parameter_.put(PNB_COMPUTE_OBJECTIVE_VALUES,false);
 }
 
-void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut )
+void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_child, int num_cuts, int num_subproblems_per_cut, int oda_aggregates )
 {
 	std::vector<std::vector<int> >& node_in_cut_vector(benders_node_data->nodes_in_cut_);
 	if ( node_in_cut_vector.empty() ){
@@ -259,10 +211,35 @@ void createRoundRobinAggregation( BendersNodeData* benders_node_data, int num_ch
 			}
 		}
         // Create oda_nodes_in_cut Aggregate Vector!
+        // Set a parameter value here!
+         benders_node_data->oda_aggregates_.resize(oda_aggregates);
+        if ( oda_aggregates == 1 ){
+            
+            // Add all aggregates in there explicitly!
+            for( int i = 0; i < node_in_cut_vector.size(); i++)
+                benders_node_data->oda_aggregates_[0].push_back(i);
+        }
+        else if ( oda_aggregates == num_cuts) {
+            int count = 0;
+            for ( std::vector<int>& vec : benders_node_data->oda_aggregates_ )
+                vec.push_back(count++);
+            assert( count == node_in_cut_vector.size());
+        }
+        else if ( oda_aggregates > 0 && oda_aggregates < num_cuts ){
+            // We have num_cuts aggregates and oda_aggregates many oda aggregates.
+            for (int i = 0; i < num_cuts;i++)
+                benders_node_data->oda_aggregates_[i % oda_aggregates].push_back(i);
+        }
+        else{
+            assert(false);
+        }
+
+
         // For now we just add all aggregates into it!
-        benders_node_data->oda_aggregates_.push_back(std::vector<int>(node_in_cut_vector.size()));
-        for (int i = 0; i < node_in_cut_vector.size();i++)
-            benders_node_data->oda_aggregates_[0][i] = i;
+        // 
+        //benders_node_data->oda_aggregates_.push_back(std::vector<int>(node_in_cut_vector.size()));
+        //for (int i = 0; i < node_in_cut_vector.size();i++)
+        //    benders_node_data->oda_aggregates_[0][i] = i;
 	}
 	else{
         // Do not do it!
@@ -307,11 +284,11 @@ double computeCutViolation( OsiRowCut* cut, double* solution, double infinity ){
 
 double CutStuff::active_threshold_ = 1.0;
 int CutStuff::strike_threshold_ = -1;
-CutStuff::CutStuff( int iteration, boost::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),active_value(0.0),current_index_in_solver_(-1),to_use_(true)
+CutStuff::CutStuff( int iteration, std::shared_ptr<OsiRowCut>& cut_pointer): cut_creation_iteration_(iteration),not_active_iterations_(0),aggregate_number_(-1),cut_(cut_pointer),active_value(0.0),current_index_in_solver_(-1),to_use_(true)
 {
 }
 
-bool is_active( const boost::shared_ptr<CutStuff>& value )
+bool is_active( const std::shared_ptr<CutStuff>& value )
 {
     return value->active_value < 0;
 }

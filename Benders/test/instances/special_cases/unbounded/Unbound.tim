@@ -1,0 +1,5 @@
+TIME          UNBOUND
+PERIODS       LP
+    X1        NB1                     STAGE1
+    Y1        NB1                     STAGE2
+ENDATA

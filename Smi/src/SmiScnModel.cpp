@@ -76,6 +76,11 @@ SmiScnModel::~SmiScnModel()
 
     delete discrete_distribution_;
     delete block_structure_;
+
+    if ( integerLen )
+        delete [] integerInd;
+    if ( binaryLen)
+        delete [] binaryInd;
 }
 
 //Generates Tree Nodes with Data for given scenario
@@ -253,11 +258,12 @@ SmiScenarioIndex SmiScnModel::generateScenario(SmiCoreData *core,
 // Main public interfaces for getting WS, EV, and EEV values (no coefficients whatsoever).
 double SmiScnModel::getWSValue(OsiSolverInterface *osiSolver, double objSense ){
     //Test if wsValues is empty, if this is the case, run solveWS
-    std::vector< std::pair<double,double> > tempVector = solveWS(osiSolver, objSense);
+    std::vector< std::pair<double,double*> > tempVector = solveWS(osiSolver, objSense);
     assert( tempVector.size() == smiTree_.getNumScenarios()); 
     double result = 0;
     for (unsigned int i = 0; i < tempVector.size(); i++){
-        result += tempVector[i].first*tempVector[i].second;
+        result += tempVector[i].first*this->getScenarioProb(i);
+        delete [] tempVector[i].second;
     }
     return result;
 }
@@ -366,10 +372,14 @@ SmiScnModel* SmiScnModel::createEVSmiModel(){
     memcpy(smi->drup_,drup_,sizeof(double)*this->core_->getNumRows());
 
     // Set integer values!
-    smi->integerInd = new int[this->getIntegerLen()];
-    memcpy(smi->integerInd,this->integerInd,sizeof(int)*this->integerLen);
-    smi->binaryInd = new int[this->getBinaryLen()];
-    memcpy(smi->binaryInd,this->binaryInd,sizeof(int)*this->binaryLen);
+    if ( this->getIntegerLen()) {
+        smi->integerInd = new int[this->getIntegerLen()];
+        memcpy(smi->integerInd,this->integerInd,sizeof(int)*this->integerLen);
+    }
+    if ( this->getBinaryLen()) {
+        smi->binaryInd = new int[this->getBinaryLen()];
+        memcpy(smi->binaryInd,this->binaryInd,sizeof(int)*this->binaryLen);
+    }
     smi->integerLen = this->integerLen;
     smi->binaryLen = this->binaryLen;
     smi->intIndices = this->intIndices;
@@ -477,34 +487,40 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
     //Print out Matrix.. if in Debug Mode
     //TODO: Define proper Debug Mode..
     //TODO: Printout obj-functions
-#ifdef NDEBUG
-    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-    }
-    std::cout << std::endl;
-    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-        printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-        for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-            printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-        }
-        printf("<= %g",osiStoch_->getRowUpper()[mi]);
-    }
-    printf("\n Matrix printed \n");
-    for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-        printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-    }
-#endif
+//#ifdef NDEBUG
+//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//        std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//    }
+//    std::cout << std::endl;
+//    for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//        printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//        for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//            printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//        }
+//        printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//    }
+//    printf("\n Matrix printed \n");
+//    for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//        printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//    }
+//#endif
 
-    //string name;
-    //if (calculateAverageValues) name = "ev_calculated";
-    //else name = "ev";
-    //osiStoch_->writeLp(name.c_str());
 
     double * colSolution = new double[core_->getNumCols()];
-    memcpy(colSolution, osiStoch_->getColSolution(), (core_->getNumCols()* sizeof(double)) );
+    memcpy(colSolution, osiStoch_->getColSolution(), core_->getNumCols()* sizeof(double) );
     double objValue = osiStoch_->getObjValue();
-    // Reset osiStoch_ to old solver
-    osiStoch_ = tempPtr;
+
+	if ( !osiStoch_->isProvenOptimal()){
+		// Not optimal
+		// If infeasible
+		if ( osiStoch_->isProvenPrimalInfeasible())
+			objValue = osiStoch_->getInfinity();
+		if ( osiStoch_->isProvenDualInfeasible()){
+			objValue = -osiStoch_->getInfinity();
+		}
+	}
+	// Reset osiStoch_ to old solver
+	osiStoch_ = tempPtr;
     return make_pair(objValue,colSolution );
 }
 
@@ -515,10 +531,9 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
     std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
     
 
-    // save the column solution for stage-1-columns
-    int numStage1Cols = core_->getColStart(1);
+ 	int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
     double * colSolution = evResult.second;
-
+	double prob = 0;
 
 #pragma region EEVP
     double eev = 0; // the value of the EEVP
@@ -549,6 +564,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         nrow_=0;
         nels_=0;
         osiStoch_->reset();
+        osiStoch_->messageHandler()->setLogLevel(0); // Silence solver
         // initialize row-ordered matrix arrays
         this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
         this->indx_ = new int[tempNels];
@@ -557,8 +573,8 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         // Get all nodes for this scenario
         std::vector<SmiScnNode*>& nodes = smiTree_.getScenario(i);
         // Call addNode on all these nodes
-        for (unsigned int i = 0; i < nodes.size(); i++) {
-            addNode(nodes[i],true);
+        for (unsigned int j = 0; j < nodes.size(); j++) {
+            addNode(nodes[j],true);
         }
 
         matrix_ = new CoinPackedMatrix(false,0,0);
@@ -570,11 +586,9 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
         // fix stage-1-columns to the values of the evp
-        for (int col = 0; col < numStage1Cols; col++) {
-            if (this->core_->getColStage(col) == 0) {
-                osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
-            }
-        }
+		for (int col = 0; col < numStageTMinus1Cols; col++) {
+			osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
+		}
 
         //Set objSense
         osiStoch_->setObjSense(objSense);
@@ -586,8 +600,29 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         else
             osiStoch_->initialSolve(); //Solve this problem.
 
+        bool optimal = osiStoch_->isProvenOptimal();
+        bool infeasible = osiStoch_->isProvenPrimalInfeasible();
+        bool unbounded = osiStoch_->isProvenDualInfeasible();
+
+        if ( infeasible ){
+            eev = osiStoch_->getInfinity();
+            // Finish with computations!
+            i = this->smiTree_.getNumScenarios();
+        }
+        if ( unbounded ){
+            eev = -osiStoch_->getInfinity();
+            i = this->smiTree_.getNumScenarios();
+        }
+
+		if (optimal){
+            eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
+			prob += nodes[nodes.size()-1]->getProb();
+		}
+		else {
+			std::cout << "test";
+		}
         // sum up the solution values (multiplied with probabilities)
-        eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
+        
 
         //Delete new-ed objects
         delete matrix_;
@@ -599,25 +634,25 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
-#ifdef NDEBUG
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-        }
-        std::cout << std::endl;
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-            }
-            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        }
-        printf("\n Matrix printed \n");
-        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-
-        }
-        printf("\n");
-#endif
+//#ifdef NDEBUG
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//        }
+//        std::cout << std::endl;
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//            }
+//            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//        }
+//        printf("\n Matrix printed \n");
+//        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//
+//        }
+//        printf("\n");
+//#endif
     }
 #pragma endregion EEVP;
 
@@ -627,7 +662,7 @@ double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, boo
     return eev;
 }
 
-std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense) 
+std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense) 
 {
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false); // We copy the existing solverHandle, so we have to delete it at the end?
@@ -651,11 +686,11 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
     for (int i = 0; i < this->core_->getNumStages(); i++)
         tempNels += this->maxNelsPerScenInStage[i];
 
-    std::vector<std::pair<double,double> > solutionValues;
+    std::vector<std::pair<double,double*> > solutionValues;
     solutionValues.reserve(this->smiTree_.getNumScenarios());
 
 
-    CoinWarmStart* warm_start = osiStoch_->getEmptyWarmStart();
+    CoinWarmStart* warm_start = NULL;
     // loop over all scenarios and solve each of it individually
     for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
         // We have an empty model (zero cols,rows,els)
@@ -689,47 +724,61 @@ std::vector< std::pair<double,double> > SmiScnModel::solveWS(OsiSolverInterface 
             // If we have integer indices, we need the branch-and-bound solver
         // Silence Cplex!
         osiStoch_->messageHandler()->setLogLevel(0);
-        if (intIndices.size()){
-            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+		int integer_cutoff = -1;
+		for (int i = 0; i < intIndices.size(); i++){
+			if ( intIndices[i] >= core_->getColStart(1)){
+				integer_cutoff = i;
+				break;
+			}
+			else 
+				integer_cutoff = intIndices.size();
+			
+		}
+        if (intIndices.size() && integer_cutoff > 0){
+			// We set Integers only for the first stage!
+            osiStoch_->setInteger(&intIndices[0],integer_cutoff);
             osiStoch_->branchAndBound();
         }
         else{
-            osiStoch_->setWarmStart(warm_start);
-            //delete warm_start;
+            if ( warm_start != NULL )
+                osiStoch_->setWarmStart(warm_start);
             osiStoch_->initialSolve(); //Solve this problem.
-            
+/*            if ( warm_start != NULL)
+                delete warm_start;  */          
             warm_start = osiStoch_->getWarmStart();
         }
-        solutionValues.push_back(make_pair<double,double>(osiStoch_->getObjValue(),nodes.back()->getProb()));
+        double* solution_array = new double[osiStoch_->getNumCols()];
+        memcpy(solution_array,osiStoch_->getColSolution(),sizeof(double)*osiStoch_->getNumCols());
+        solutionValues.push_back(std::make_pair(osiStoch_->getObjValue(),solution_array));
 
         //Delete new-ed objects
         delete matrix_;
         delete [] this->dels_;
         delete [] this->indx_;
         delete [] this->rstrt_;
-        matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
+        matrix_ = NULL; dels_ = NULL; indx_ = NULL; rstrt_ = NULL;
 
         //Print out Matrix.. if in Debug Mode
         //TODO: Define proper Debug Mode..
         //TODO: Printout obj-functions
-#ifdef NDEBUG
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-        }
-        std::cout << std::endl;
-        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-            }
-            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        }
-        printf("\n Matrix printed \n");
-        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-        }
-        printf("\n");
-#endif
+//#ifdef NDEBUG
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+//            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+//        }
+//        std::cout << std::endl;
+//        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+//            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+//            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+//                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+//            }
+//            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+//        }
+//        printf("\n Matrix printed \n");
+//        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+//            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+//        }
+//        printf("\n");
+//#endif
     }
     delete osiStoch_;
     osiStoch_ = tempPtr;
@@ -2345,7 +2394,7 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      }
  }
 
- void SmiScnModel::sampleScenarioTree( std::vector<int> number_samples, int sampling_method, double* (*random_generator)(int ) )
+ void SmiScnModel::sampleScenarioTree( const std::vector<int>& number_samples, int sampling_method, double* (*random_generator)(int ), bool replace_scenario_tree, const std::vector<int>& old_samples )
  {
     // We have a discrete distribution
     // We need a random_number generator
@@ -2361,7 +2410,8 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
 
      //SmiBlockStructure* smiBS = new SmiBlockStructure(core);
      // Delete old scenario tree. Should be done by copy constructor!
-     smiTree_ = SmiScenarioTree<SmiScnNode *>();
+     if ( replace_scenario_tree)
+         smiTree_ = SmiScenarioTree<SmiScnNode *>();
 
      int number_of_independent_vars = smiDD->getNumRV(); 
      assert( number_of_independent_vars > 0 ); // Otherwise we can not really sample, can we?
@@ -2425,20 +2475,24 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
      // Build first block for second stage. Then build a third stage block. Then build a forth stage block. etc. Then build all last stage block. Backtrack one stage. Repeat until stage completed. Backtrack one stage. repeat until backtracked to first stage.     
 
      // Create a new block here
-     int cur_stage = 1;
+     int current_stage = 1;
      int current_sample = 0;
      int branch = 1;
      int anc = 0;
      double prob = 0;
+     std::vector<double> stage_prob(nstages,1.0);
+     for ( int prob_stage = 1; prob_stage < nstages; prob_stage++ ){
+        stage_prob[prob_stage] = stage_prob[prob_stage-1]*(1.0/number_samples[prob_stage]);    
+     }
      int cur_scen = 0;
      // We need counter for every stage!
      std::vector<int> current_sample_per_stage(nstages,0);
      std::vector<int> current_sample_per_stage_modulo_size(nstages,0);
 
-     SmiBlock* smi_block = new SmiBlock(cur_stage);
-     while ( cur_stage >= 1 ){
+     SmiBlock* smi_block = new SmiBlock(current_stage);
+     while ( current_stage >= 1 ){
 
-         current_sample = current_sample_per_stage[cur_stage];
+         current_sample = current_sample_per_stage[current_stage];
          CoinPackedMatrix matrix;
          matrix.setDimensions(core->getNumRows(),core->getNumCols());
          CoinPackedVector obj;
@@ -2447,49 +2501,61 @@ SmiScnModel::addNodeToSubmodel(SmiScnNode * smiScnNode)
          CoinPackedVector rlo;
          CoinPackedVector rup;
          // Combine all random variables at this stage
-         for (int current_var = 0; current_var < number_of_random_vars_per_stage[cur_stage]; current_var++){
+         for (int current_var = 0; current_var < number_of_random_vars_per_stage[current_stage]; current_var++){
              // Append the vector stuff to the existing ones.
-             obj.append(random_events_per_stage[cur_stage][current_var][current_sample]->getObjective());
-             clo.append(random_events_per_stage[cur_stage][current_var][current_sample]->getColLower());
-             cup.append(random_events_per_stage[cur_stage][current_var][current_sample]->getColUpper());
-             rlo.append(random_events_per_stage[cur_stage][current_var][current_sample]->getRowLower());
-             rup.append(random_events_per_stage[cur_stage][current_var][current_sample]->getRowUpper());
-             const CoinPackedMatrix& matrix2(random_events_per_stage[cur_stage][current_var][current_sample]->getMatrix());
-             if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
-                 int pos = 0; // position in the elements / indice arrays
-                 const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
-                 for (int k = 0; k < matrix2.getNumRows(); k++) {
-                     pos = colStartIndices[k];
-                     for (int l = 0; l < matrix2.getVectorSize(k); l++) {
-                         matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
-                         pos++;
-                     }
-                 }
-                 assert( pos == matrix2.getNumElements());
-             }
+             obj.append(random_events_per_stage[current_stage][current_var][current_sample]->getObjective());
+             clo.append(random_events_per_stage[current_stage][current_var][current_sample]->getColLower());
+             cup.append(random_events_per_stage[current_stage][current_var][current_sample]->getColUpper());
+             rlo.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowLower());
+             rup.append(random_events_per_stage[current_stage][current_var][current_sample]->getRowUpper());
+             matrix = random_events_per_stage[current_stage][current_var][current_sample]->getMatrix();
+             //if ( matrix2.getNumElements() ){// Only do matrix processing if we have matrix elements. 
+             //    int pos = 0; // position in the elements / indice arrays
+             //    const int * colStartIndices = matrix2.getVectorStarts(); // We work with matrices which have gaps, so we need the colStartIndices
+             //    for (int k = 0; k < matrix2.getNumRows(); k++) {
+             //        pos = colStartIndices[k];
+             //        for (int l = 0; l < matrix2.getVectorSize(k); l++) {
+             //            matrix.modifyCoefficient(k,matrix2.getIndices()[pos],matrix2.getElements()[pos],true);
+             //            pos++;
+             //        }
+             //    }
+             //    assert( pos == matrix2.getNumElements());
+             //}
              
          }
-         prob = 1.0 / number_samples[cur_stage];
+         prob = stage_prob[current_stage];
          // Create SmiBlockEvent with modified matrix and stuff
          cur_scen = generateScenario(core,&matrix,&clo,&cup,&obj,&rlo,&rup,branch,anc,prob);
-         current_sample_per_stage[cur_stage]++;
-         current_sample_per_stage_modulo_size[cur_stage]++;
+         current_sample_per_stage[current_stage]++;
+         current_sample_per_stage_modulo_size[current_stage]++;
 
          // Go to next stage, if possible
-         if ( cur_stage < nstages -1 ){
-             cur_stage++;
+         if ( current_stage < nstages -1 ){
+             current_stage++;
              branch++;
              anc = cur_scen;
          } // If we added all samples for this stage, we can go back a stage, else we don't
-         else if ( current_sample_per_stage_modulo_size[cur_stage] >= number_samples[cur_stage]  ){
-             cur_stage--;
-             current_sample_per_stage_modulo_size[cur_stage] = 0;
+         else if ( current_sample_per_stage_modulo_size[current_stage] >= number_samples[current_stage]  ){
+             current_stage--;
+             current_sample_per_stage_modulo_size[current_stage] = 0;
              branch--;
-             if ( cur_stage == 1)
+             if ( current_stage == 1){
                  anc = 0;
+             }
          }
          else{
              // We stay at this stage!
+         }
+     }
+     // Probabilities of all nodes must be recalculated if we add scenario instead of replacing the whole tree
+     if ( !replace_scenario_tree ){
+         assert(!old_samples.empty());
+         // TODO: for now we assume that the number_samples vector does not change from iteration to iteration
+         std::vector<double> new_scenario_prob_by_stage(nstages,1.0);
+         for (int i = 1; i < nstages; i++)
+             new_scenario_prob_by_stage[i] = new_scenario_prob_by_stage[i-1]*(number_samples[i]+old_samples[i]);
+         for ( std::vector<SmiScnNode*>::iterator it = smiTree_.treeBegin(); it != smiTree_.treeEnd();++it){
+            (*it)->setProb(new_scenario_prob_by_stage[(*it)->getStage()]); // All scenarios have the same probability!
          }
      }
 }
