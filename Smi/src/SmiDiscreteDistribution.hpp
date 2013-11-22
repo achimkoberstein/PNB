@@ -91,35 +91,10 @@ public:
 	void addEvent(CoinPackedMatrix &matrix,
 				CoinPackedVector &dclo, CoinPackedVector &dcup,
 				CoinPackedVector &dobj,
-				CoinPackedVector &drlo, CoinPackedVector &drup, double prob)
-	{
-		SmiLinearData d(matrix,dclo,dcup,dobj,drlo,drup);
-		SmiDiscreteEvent *e = new SmiDiscreteEvent(d,prob);
-		events_.push_back(e); 
-		prob_+=prob;
-	}
-	void addEvent(OsiSolverInterface &osi, double prob)
-	{
-		SmiLinearData d(osi);
-		SmiDiscreteEvent *e = new SmiDiscreteEvent(d,prob);
-		events_.push_back(e); 
-		prob_+=prob;
-	}
+				CoinPackedVector &drlo, CoinPackedVector &drup, double prob);
+	void addEvent(OsiSolverInterface &osi, double prob);
 
-    SmiDiscreteEvent* const inverseTransformation(double value){
-        assert(prob_ <= 1.0 + 0.0001); // Allow a small divergence
-		assert(prob_ >= 1.0 - 0.0001 );
-        int num_events = events_.size();
-        // Do a simple test
-        double summed_prob = 0;
-        for ( int i = 0; i < num_events; i++){
-            summed_prob += getEventProb(i);
-            if ( value <= summed_prob )
-                return events_[i];
-        }
-        assert(summed_prob < 1.0);
-        return events_[num_events-1]; // Value was larger than the sum, we had 
-    }
+    SmiDiscreteEvent* const inverseTransformation(double value);
     
 	inline const CoinPackedMatrix &getEventMatrix(int i)   {return events_[i]->getMatrix(); }
 	inline const CoinPackedVector &getEventColLower(int i) {return events_[i]->getColLower();}
@@ -127,19 +102,13 @@ public:
 	inline const CoinPackedVector &getEventObjective(int i){return events_[i]->getObjective();}
 	inline const CoinPackedVector &getEventRowLower(int i) {return events_[i]->getRowLower();}
 	inline const CoinPackedVector &getEventRowUpper(int i) {return events_[i]->getRowUpper();}
-	double getEventProb(int i) { 
-	//	return events_[i]->getEventProb()/prob_;
-			return events_[i]->getEventProb();
-	}
+	inline const double getEventProb(int i);
 	inline size_t getNumEvents() { return events_.size(); }
 	inline int getStage() {return stg_;}
 	inline void setStage(int p) {stg_=p;}
 	SmiDiscreteRV(){prob_=0.0; stg_=-1;}
 	SmiDiscreteRV(int p) {prob_=0.0; stg_=p;}
-	~SmiDiscreteRV(){
-		for (size_t i=0; i<events_.size(); ++i)
-			delete events_[i];
-	}
+	~SmiDiscreteRV();
 private:
 	vector<SmiDiscreteEvent *> events_;
 	SmiStageIndex  stg_;

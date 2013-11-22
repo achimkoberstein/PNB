@@ -218,7 +218,7 @@ string MP_constraint::generateNamesSuffixFree(const int k) {
     if (&S1 != &MP_set::getEmpty()) { // What can do the trick: Get the index, assign it to the Index for this constraint and evaluate the index!
         I1->getIndex()->assign(ik.i1);
         I1->getIndex()->instantiate();
-        double value = I1->evaluate();
+        int value = I1->evaluate();
         I1->getIndex()->unInstantiate();
         if ( S1.check(value) != outOfBound )
             ss << "_" << value;

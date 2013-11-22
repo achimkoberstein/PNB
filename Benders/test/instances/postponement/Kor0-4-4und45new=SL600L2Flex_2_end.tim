@@ -1,0 +1,5 @@
+TIME          testFran
+PERIODS
+    v1_0_0_0 balancingStage1_2_0_0_1  STAGE_0
+    sl_4_0_1_1 balancing2_0_1_1_1       STAGE_1
+ENDATA

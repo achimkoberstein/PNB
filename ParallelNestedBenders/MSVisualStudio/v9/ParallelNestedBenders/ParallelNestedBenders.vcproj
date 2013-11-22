@@ -174,7 +174,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="../../../../Benders/src;../../../../ThirdParty/threadpool"
-				PreprocessorDefinitions="_CRT_RAND_S"
+				PreprocessorDefinitions="_CRT_RAND_S,_HAS_ITERATOR_DEBUGGING=0"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"

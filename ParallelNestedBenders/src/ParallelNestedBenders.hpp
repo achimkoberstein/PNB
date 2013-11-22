@@ -1,8 +1,12 @@
 #ifndef ParallelNestedBenders_h__
 #define ParallelNestedBenders_h__
-
+//#define _SECURE_SCL 0
+// We do not measure CPU time !
+#define COMPUTING_TIMER 1
 #include <map>
 #include <vector>
+#include <mutex>
+#include <atomic>
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
@@ -52,7 +56,7 @@ public:
     /************************************************************************/
     /* Takes ownership of solution                                          */
     /************************************************************************/
-    void setWarmUpSolution( const double* solution);
+    void setWarmUpSolution( const double* solution, int num_cols_given = 0);
     void unfixFirstStageVariables();
 
 private:
@@ -68,7 +72,6 @@ private:
     void BuildSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void AppendColsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 	void AppendCutsToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
-    void AppendTrustRegionToSubproblem( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SolveSubproblem( OsiSolverInterface* osi_solver ,SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void StoreData( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -77,33 +80,33 @@ private:
 
     void SetSolverOptions( OsiSolverInterface* osi_solver);
 
-    void GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
-    void CombineTwoCuts( boost::shared_ptr<CutStuff>&, boost::shared_ptr<CutStuff>& );
+    void CombineTwoCuts( std::shared_ptr<CutStuff>&, std::shared_ptr<CutStuff>& );
 
-    int GetNumberOfAggregatesFromCut( boost::shared_ptr<CutStuff>& cut);
+    int GetNumberOfAggregatesFromCut( std::shared_ptr<CutStuff>& cut);
 
-    void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const double* dual_solution, std::vector<double>* cut_coefficients_pointer);
+    void ComputeCutCoefficients( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer, const std::vector<double>& dual_solution, std::vector<double>* cut_coefficients_pointer);
 
     void InitializeBendersNodeDataTree(int num_scen_pro_cut);
 
-    OsiSolverInterface* GetSolverByThread();
-    bool CompareWithZero( double value );
+    inline OsiSolverInterface* GetSolverByThread();
+    inline bool CompareWithZero( double value );
     void StoreValuesFromSolverInArray(double*& destination_values,const double* source_values,int size);
+    void StoreValuesFromSolverInVector(std::vector<double>& destination_vector,const double* source_values,int size);
     void findAggregationPossibilities( BendersNodeData* param1, std::vector< std::vector<int> >& mapping, int num_childs, int num_cuts, int num_subproblems_per_cut );
     void IntraIterationCutAggregation( OsiSolverInterface* osi_solver,  SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer  );
 
-    void BuildAndSolveRegularizedProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void BuildAndSolveLevelProblem(OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 
-    void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true);
-    void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
-    int getNumRowsProblem();
-    int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void SolveSolverInterface(OsiSolverInterface* osi_solver, bool use_coin = true, bool use_quadratic = false);
+    inline void PrintSubproblem(OsiSolverInterface* osi_solver, int scenario, const std::string& = "");
+    inline int getNumRowsProblem();
+    inline int getNumThetasByStage(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void ExpandThetaVariablesInOptimalityCut(OsiRowCut* cut,int number_of_columns, int number_of_variables, int old_number_of_thetas = 0);
 
     void AppendDSquareCutsToSubproblem(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
@@ -115,8 +118,11 @@ private:
 
     void HandleInitialSolutionProcedures();
     void GenerateAggregatedCuts( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, int aggregate_number);
-    void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, boost::shared_ptr<CutStuff> cut_stuff);
+    void AddOptimalityCutToContainer( SmiTreeNode<BendersNodeData*> * benders_tree_node_pointer, std::shared_ptr<CutStuff> cut_stuff);
+    void SetSolverByThread();
 
+	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
+	
     // Problem data
     SmiScnModel* smi_;
     SmiCoreData* core_;
@@ -160,7 +166,6 @@ private:
     int feasible_iteration_;
     double lower_bound_;
     double upper_bound_;
-    double temporary_upper_bound_;
     double old_lower_bound_;
     std::vector<double> old_first_stage_solution_;
 
@@ -175,9 +180,6 @@ private:
     bool unbounded_problem_;
     boost::dynamic_bitset<> infeasible_problems_;
 
-    // How many cuts did we added?
-    std::vector<int> added_optimality_cuts_;
-    std::vector<int> added_feasibility_cuts_;
 	int num_added_feasibility_cuts_;
     bool store_cut_information_;
 
@@ -190,9 +192,6 @@ private:
     int cut_consolidation_strike_threshold_;
     double cut_consolidation_partial_threshold_;
 
-    // Trust Region stuff
-    bool trust_region_;
-
     // Regularization
     bool regularization_;
     double regularized_solution_value_;
@@ -203,6 +202,12 @@ private:
     int regularized_start_row_;
     int start_solution_;
 
+    // Stochastic Cutting Plane Method (aka Sampling)
+    bool stochastic_cutting_plane_;
+    int number_of_observations_to_sample_; // Can use LHS for example
+
+
+
     // D^2 C^3
     bool d_square_;
     int d_square_translation_term_;
@@ -212,26 +217,29 @@ private:
 
     Timer timer_;
     Timer wall_clock_solution_time_;
-    Timer detailed_timer_;
-    // Some integer relating to the detailed_timer
-    int build_problem_timer_;
-    int solve_problem_timer_;
-    int cut_generation_timer_;
+    Timer detailed_timer_; // Stores build times for master, projection, oda, sub, and cut generation
+    Timer solution_times_;
 
     int maximal_solution_time_;
+
+    int solution_code_;
+
+	std::vector<int> opt_cut_iterations_;
+	std::vector<int> feas_cut_iterations_;
 
     // Thread related variables
     int num_cpu_; // How many cpu's do we have at our disposal?
 
-    boost::mutex console_mutex_; // Mutex for console output
-    boost::mutex solver_map_mutex_; // Mutex for access to solver map
-    boost::mutex stage_warm_start_mutex_; // Mutex for access to warm start 
-    boost::mutex upper_bound_mutex_; // Mutex for access to upper bound
-    boost::mutex infeasible_problem_mutex_; // Mutex for access to infeasible problem setter 
-    boost::mutex osi_solver_mutex_; // Mutex that is used if we want to clone an OsiSolverInterface
-    boost::mutex add_cut_counter_mutex_; // Mutex that is used if we increase the cut counter
-	boost::mutex stage_lower_upper_bounds_mutex_;  
-    boost::mutex misc_mutex_; // Mutex for miscellanious stuff
+    std::mutex console_mutex_; // std::mutex for console output
+    std::mutex solver_map_mutex_; // std::mutex for access to solver map
+    std::mutex stage_warm_start_mutex_; // std::mutex for access to warm start 
+    std::mutex upper_bound_mutex_; // std::mutex for access to upper bound
+    std::mutex infeasible_problem_mutex_; // std::mutex for access to infeasible problem setter 
+    std::mutex osi_solver_mutex_; // std::mutex that is used if we want to clone an OsiSolverInterface
+    std::mutex add_cut_counter_mutex_; // std::mutex that is used if we increase the cut counter
+	std::mutex stage_lower_upper_bounds_mutex_;  
+    std::mutex misc_mutex_; // std::mutex for miscellanious stuff
+    std::mutex debug_mutex_;
     // Further thread management stuff
 	boost::threadpool::pool thread_pool_;
 
@@ -262,20 +270,23 @@ private:
 	bool enforce_direction_;
     int enforce_stage_;
 
+    bool level_loop_forward_;
+    bool level_loop_backward_;
+
     bool level_decomp_;
-    bool level_quadratic_new_variables_;
+    int level_stage_;
+    bool level_euclidean_;
     bool level_manhattan_;
+    bool level_infinity_;
     boost::scoped_array<int> level_cstat_;
     boost::scoped_array<int> level_rstat_;
     boost::scoped_array<double> level_dnorm_;
-    boost::scoped_array<int> level_cstat2_;
-    boost::scoped_array<int> level_rstat2_;
-    boost::scoped_array<double> level_dnorm2_;
-    boost::shared_ptr<CoinWarmStart> level_warm_start_;
+	int level_length_;
+    std::shared_ptr<CoinWarmStart> level_warm_start_;
     
     // All variables needed for on demand accuracy level decomposition
     bool oda_method_; // If we actually use On Demand Accuracy Level decomposition
-    double oda_lambda_; // 0 < lambda < 1
+    double level_lambda_; // 0 < lambda < 1
     double oda_kappa_; // 0 < kappa < (1-lambda)^2
     double oda_gap_; // Gap between oda_lower_ and oda_upper_ (absolute)
     double oda_lower_; // Lower bound for oda
@@ -283,12 +294,21 @@ private:
     double oda_first_stage_;
     double oda_phi_i_;
     double oda_tilde_q_;
+    int num_oda_aggregates_;
     std::vector<int> oda_chosen_optimality_cut_by_scenario_;// Which cut to take from each element!
     std::vector<double> oda_current_tilde_q_s_;
+	bool csaba_steepest_edge_;
+
+    bool critical_iteration_;
+    int uncritical_iteration_counter_;
+    int maximal_number_of_uncritical_iterations_;
+    int critical_iteration_counter_;
+    double lambda_gap_;
+    double last_critical_iteration_gap_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
-    boost::scoped_array<double> warm_up_solution_;
+    std::unique_ptr<double[]> warm_up_solution_;
     boost::scoped_array<double> regularized_solution_;
     bool regularized_update_incumbent_;
 
@@ -326,6 +346,9 @@ private:
 
     // Help Containers for the transformation of non-staircase problems to staircase problems ( so that we can handle it )
     staircase_container non_staircase_coefficients_;
+
+    // Handle numerical issues!
+    std::vector<double> old_discrepancies_;
     
 
     // TODO: REMOVE AGAIN
@@ -348,17 +371,19 @@ private:
 // We need a coordinator, that tells the threads what to do. 
 // It waits for the threads to end, then does some stuff and waits again.
 // True if equal with given tolerance
-bool CompareForEquality( double first, double second, double tolerance);
-// True if gap is not small enough yet
-bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon);
-
+inline bool CompareForEquality( double first, double second, double tolerance);
+// True if gap is larger than Epsilon
+inline bool RelativeGapLargerEpsilon(double upper_bound, double lower_bound, double infinity, double epsilon);
+inline double ComputeRelativeGap(double upper_bound, double lower_bound,double comparison_epsilon = 1e-10);
+bool CutIsEqual(const CutStuff& first, const CutStuff& second, double tolerance);
 
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
 void GenerateDualRayProblem(OsiSolverInterface* osi_solver);
 void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dual, double* reduced,double* col_solution);
+std::vector<double> computeTTransposeX(BendersNodeData* benders_node_pointer, SmiCoreData* core_pointer,int current_stage,const std::vector<double> x);
 
-double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
+inline double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
 
 } // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__

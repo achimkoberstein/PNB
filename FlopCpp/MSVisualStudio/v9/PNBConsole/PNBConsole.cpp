@@ -7,7 +7,7 @@
 #include <boost/exception/all.hpp>
 #include <boost/program_options.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to correct linking issues
 #include <glog/logging.h>
 
 #include "CoinTime.hpp"
@@ -100,7 +100,8 @@ int main(int argc,  char* argv[])
 	time_d = CoinCpuTime()-time_d;
 	LOG(INFO) << "Overall solution time : "<< time_d << " s.";
 	LOG(INFO) << "Writing solution to file primal_solution.txt";
-	pnb.printSolutionToFile("primal_solution.txt");
+    if ( pnb.getSolutionCode() == 0 )
+        pnb.printSolutionToFile("primal_solution.txt");
 
     delete osi_solver;
     

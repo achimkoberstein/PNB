@@ -1,0 +1,5 @@
+TIME          bikeShar
+PERIODS
+    Bike_initial_0 station_bikes_0          STAGE_0
+    Bike_relocation_1_0_0_0 initial_relocation_1_0_0 STAGE_1
+ENDATA

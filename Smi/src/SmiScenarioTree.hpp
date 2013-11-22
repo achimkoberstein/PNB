@@ -166,7 +166,7 @@ public:
                 curSiblPtr->setSibling(NULL);
                 curSiblPtr = container.back();
             }
-            for (std::vector<SmiTreeNode<T>*>::size_type i = 0; i < container.size(); i++)
+            for ( unsigned int i = 0; i < container.size(); i++)
                 delete container[i];
         }
 
@@ -367,7 +367,7 @@ public:
 	int addPathtoLeaf(int brscenario, int stage, vector<T> &pathdata,
 			unsigned int start = 0) {
 		SmiTreeNode<T> *parent = NULL;
-		int scenario = leaf_.size();
+		unsigned int scenario = leaf_.size();
 		if (scenario)
 			parent = find(brscenario, stage);
 

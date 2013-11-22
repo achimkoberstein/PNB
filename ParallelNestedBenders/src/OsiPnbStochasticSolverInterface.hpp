@@ -1,7 +1,6 @@
 #ifndef OsiPnbStochasticSolverInterface_h__
 #define OsiPnbStochasticSolverInterface_h__
 
-
 #include "PseudoRandomGenerator.hpp"
 #include "OsiStochasticSolverInterface.hpp"
 #include "BendersNodeData.hpp"
@@ -20,7 +19,7 @@ public:
     ~OsiStochasticParallelNestedBendersSolverInterface();
 
     void initialSolve();
-    void printProblemCharacteristics();
+    void printProblemCharacteristics() const ;
 
     double getObjValue() const;
 	
@@ -33,19 +32,27 @@ public:
 	void printSolutionToFile(const char* filename);
 
     void fixFirstStageVariables(const double* solution);
-    void giveStartSolution(const double* solution);
+    void giveStartSolution(const double* solution, int num_cols_given = 0);
 
     double getSolutionValueForScenario(int scenario);
 
-    int getNumOptimalityCuts();
-    int getNumFeasibilityCuts();
+    int getNumOptimalityCuts() const;
+    int getNumFeasibilityCuts() const;
     void setParameters(const parallel_benders::Parameter& parameters);
-    int getNumIterations();
+    int getNumIterations() const;
 	const parallel_benders::Parameter& getParameters() const;
     const parallel_benders::Timer& getTimer() const;
+    const parallel_benders::Timer& getBuildTimer() const;
+    const parallel_benders::Timer& getComputingTimer() const;
 
     SmiScnModel* getSmiModel();
-    int getNumInsubstantialIterations();
+    int getNumInsubstantialIterations() const;
+    int getNumInfeasibilityIterations() const;
+
+    int getNumCriticalIteration() const ;
+    int getMaximalLengthOfCriticalIterationSequence() const;
+
+    int getSolutionCode() const;
 
 private:
     parallel_benders::ParallelNestedBenders* nested_benders_;
@@ -74,7 +81,7 @@ public:
 
 
 private:
-    boost::shared_ptr<OsiStochasticParallelNestedBendersSolverInterface> osi_pnb_;
+    std::shared_ptr<OsiStochasticParallelNestedBendersSolverInterface> osi_pnb_;
     parallel_benders::Parameter parameters_;
     std::vector<int> samples_;
     std::vector<int> samples_upper_;
@@ -82,8 +89,6 @@ private:
     int number_batches_upper_;
     double alpha_;
 };
-// Done this way to be able to call it from Smi without changing Smi to implement boost stuff
-static parallel_benders::Uniform01Generator uniform_generator_struct;
 
 double get_random_0_1_variate();
 double * get_random_01_variates(int number_of_variates);

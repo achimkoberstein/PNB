@@ -3,8 +3,9 @@
 #include <numeric>
 #include <vector>
 #include <iostream>
-
+#define GOOGLE_GLOG_DLL_DECL // Has to be done to prevent linking issues!
 #include <glog/logging.h>
+
 #include <boost/shared_array.hpp>
 #include <boost/math/distributions/students_t.hpp>
 
@@ -16,6 +17,8 @@
 #include "SmiScnModel.hpp"
 #include "ParallelNestedBenders.hpp"
 #include "BendersNodeData.hpp"
+
+#include "CoinTime.hpp";
 
 #define CPLEX_PRESENT
 #ifdef CPLEX_PRESENT
@@ -33,14 +36,14 @@ void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const para
 
 double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
 {
-    return nested_benders_->upper_bound_;
+    return nested_benders_->upper_bound_; // Depending on the solution status code, this might be appropriate!
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumIterations() const
 {
     return nested_benders_->current_iteration_;
 }
-int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterations() const
 {
     return nested_benders_->insubstantial_iteration_;
 }
@@ -49,7 +52,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
     if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
         parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
-        if ( osi_ != NULL ){
+        if ( osi_ != nullptr ){
             delete osi_;
         }
         osi_ = nested_benders_->smi_->loadOsiSolverData();
@@ -57,7 +60,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             // We have no scenarios
             LOG(ERROR) << "No scenarios available.";
         }
-        bool use_relaxation = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_RELAXATION,false);
+        int relaxation = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_RELAXATION,false);
         // Model statistics
         std::cout << "Variables: " << osi_->getNumCols() << " Rows: " << osi_->getNumRows() << " Elements: " << osi_->getNumElements() << " Integer: " << osi_->getNumIntegers() << std::endl;
         solution_time.Stop(1);
@@ -66,25 +69,47 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 #ifdef CPLEX_PRESENT
         OsiCpxSolverInterface* cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(osi_);
         if ( cpx_solver){
+
             CPXLPptr lpPtr = cpx_solver->getLpPtr(); // translates to getMutableLpPtr ( which does not change the problem )
             CPXENVptr envPtr = cpx_solver->getEnvironmentPtr();
-			CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
-            CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
+
+			//CPXsetintparam(envPtr,CPX_PARAM_NUMERICALEMPHASIS,1);
+            //CPXsetintparam(envPtr,CPX_PARAM_SCAIND,1);
 			CPXsetintparam(envPtr,CPX_PARAM_THREADS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_NUM_CPU,0));
-            CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.9);
+            //CPXsetdblparam(envPtr,CPX_PARAM_EPMRK,0.999);
             CPXsetdblparam(envPtr,CPX_PARAM_TILIM,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600));
+            //CPXsetintparam(envPtr,CPX_PARAM_PREIND,0);
             // We may want to set a start solution!
 
-            //CPXsetdblparam(envPtr,CPX_PARAM_EPGAP,0.0000001);
+            CPXsetdblparam(envPtr,CPX_PARAM_EPRHS,nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_TOLERANCE_ZERO,1e-06));
             //CPXsetintparam(envPtr,CPX_PARAM_THREADS,1); //?
+
+            if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_WRITE_PROBLEM) == parallel_benders::PNB_INT_WRITE_PROBLEM){
+                CPXwriteprob(envPtr,lpPtr,"deteq.lp","lp");
+                return;
+            }
+
 			// Wee need to differentiate between integer and not
-			if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
+			if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
 				osi_->branchAndBound();
 			}
 			else {
-                //CPXdualopt(envPtr,lpPtr);
-                CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,-1);
-				CPXbaropt(envPtr,lpPtr);
+				if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_BARRIER){
+					CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,2); // Do not use crossover
+					CPXbaropt(envPtr,lpPtr);
+				}
+				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_DUAL_SIMPLEX){
+					CPXdualopt(envPtr,lpPtr);
+				}
+				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER) == parallel_benders::PNB_INT_PRIMAL_SIMPLEX){
+					CPXprimopt(envPtr,lpPtr);
+				}
+				else if (nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER) == parallel_benders::PNB_INT_BARRIER_WITH_CROSSOVER){
+                    CPXsetintparam(envPtr,CPX_PARAM_BARCROSSALG,0); // Choose to use crossover
+					CPXbaropt(envPtr,lpPtr);
+				}
+				
+
 			}
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
@@ -95,7 +120,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         }
         else{
 #endif
-            if ( nested_benders_->smi_->getCore()->getIntegerLength() && !use_relaxation){
+            if ( nested_benders_->smi_->getIntegerLen() && relaxation != 0){
                 osi_->branchAndBound();
             }
             else {
@@ -108,7 +133,6 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         solution_time.Stop(0);
         // Set solution value
         nested_benders_->upper_bound_ = osi_->getObjValue();
-        // 
 
         // We have the time, but can not set it accordingly. not good!
         LOG(INFO) << "Solution: " << nested_benders_->upper_bound_;
@@ -122,9 +146,9 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 }
 
 OsiStochasticParallelNestedBendersSolverInterface::OsiStochasticParallelNestedBendersSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model )
-: OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(NULL),osi_(NULL)
+: OsiStochasticSolverInterface(osi_solver,smi_model),nested_benders_(nullptr),osi_(nullptr)
 {
-    if ( smi_model == NULL )
+    if ( smi_model == nullptr )
         assert(false);
     //this->smi_model_->releaseSolver(); // Forget about previous solver, we do not care about it!
     this->smi_model_->setOsiSolverHandle(this->osi_solver_);
@@ -138,34 +162,41 @@ OsiStochasticParallelNestedBendersSolverInterface::~OsiStochasticParallelNestedB
 
 const parallel_benders::Parameter& OsiStochasticParallelNestedBendersSolverInterface::getParameters() const
 {
+    assert(nested_benders_);
 	return nested_benders_->parameter_;
 }
 
 const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getTimer() const
 {
+    assert(nested_benders_);
     return nested_benders_->timer_;
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts()
+int OsiStochasticParallelNestedBendersSolverInterface::getNumOptimalityCuts() const 
 {
+    assert(nested_benders_);
     int cut_counter = 0;
+    if ( !nested_benders_->stage_data_.empty())
+        for (int i = 0; i < nested_benders_->num_stages_; i++){
+            cut_counter += nested_benders_->stage_data_[i]->added_optimality_cuts_;
+        }
+    return cut_counter;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts() const 
+{
+    assert(nested_benders_);
+    int cut_counter = 0;
+    if ( !nested_benders_->stage_data_.empty())
     for (int i = 0; i < nested_benders_->num_stages_; i++){
-        cut_counter += nested_benders_->added_optimality_cuts_[i];
+        cut_counter += nested_benders_->stage_data_[i]->added_feasibility_cuts_;
     }
     return cut_counter;
 }
 
-int OsiStochasticParallelNestedBendersSolverInterface::getNumFeasibilityCuts()
+void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics() const
 {
-    int cut_counter = 0;
-    for (int i = 0; i < nested_benders_->num_stages_; i++){
-        cut_counter += nested_benders_->added_feasibility_cuts_[i];
-    }
-    return cut_counter;
-}
-
-void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacteristics()
-{
+    assert(nested_benders_);
     if ( osi_solver_ ){
         double cols = osi_solver_->getNumCols();
         double rows = osi_solver_->getNumRows();
@@ -176,24 +207,29 @@ void OsiStochasticParallelNestedBendersSolverInterface::printProblemCharacterist
 
 SmiScnModel* OsiStochasticParallelNestedBendersSolverInterface::getSmiModel()
 {
+    assert(nested_benders_);
     return nested_benders_->smi_;
 }
 
 const double * OsiStochasticParallelNestedBendersSolverInterface::getSolutionByNodeAndStage( int node_number, int stage ) const
 {
+    assert(nested_benders_);
     if ( getParameters().parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
         if ( node_number > 0 || stage > 0)
             assert(false); // Not yet done
-        return osi_->getColSolution(); // TODO: We need to go to the correct numbers ( if we are not at the first node
+        return osi_->getColSolution(); 
     }
     else {
         assert( stage < nested_benders_->num_stages_);
         assert( node_number < nested_benders_->tree_nodes_by_stage_[stage].size());
-        return nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_;
+        if ( nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_.empty() )
+            return nullptr;
+        else
+            return &nested_benders_->tree_nodes_by_stage_[stage][node_number]->getDataPtr()->incumbent_col_solution_[0];
     }
 }
 
-const double * OsiStochasticParallelNestedBendersSolverInterface::getFirstStageSolution()
+const double *  OsiStochasticParallelNestedBendersSolverInterface::getFirstStageSolution()
 {
     return getSolutionByNodeAndStage(0,0);
 }
@@ -223,15 +259,16 @@ double OsiStochasticParallelNestedBendersSolverInterface::getSolutionValueForSce
 
 void OsiStochasticParallelNestedBendersSolverInterface::fixFirstStageVariables( const double* solution )
 {
-    assert(solution != NULL);
+    assert(solution != nullptr);
     nested_benders_->fixFirstStageVariables(solution);
 }
 
-void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution )
+void OsiStochasticParallelNestedBendersSolverInterface::giveStartSolution( const double* solution, int num_cols )
 {
+    assert(nested_benders_);
     // Store a warm_up solution
     // If cplex, we may need to think about it?
-    nested_benders_->setWarmUpSolution(solution);
+    nested_benders_->setWarmUpSolution(solution,num_cols);
 }
 
 void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( const char* filename )
@@ -243,7 +280,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 	LOG_IF(ERROR,!solution_file.is_open()) << "Solution file " << filename << " could not be opened to write.";
 	// Get the values for which we actually want to store the solution from the param file
 	assert( nested_benders_->compute_primal_solutions_for_stage_ >= 0);
-	assert( nested_benders_->compute_primal_solutions_for_stage_ < nested_benders_->num_stages_);
+	assert( nested_benders_->compute_primal_solutions_for_stage_ <= nested_benders_->num_stages_);
 	// At first, print a summary of the solution value
 	solution_file << "Objective Value : " << nested_benders_->upper_bound_ << "\n";
 	for (int i = 0; i < nested_benders_->num_stages_; i++){
@@ -255,15 +292,16 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 		solution_file << "Objective Value Stage " << i << " : " << obj_value << "\n";
 	}
 	solution_file << "Column Values sorted by Stage and Scenario" << "\n";
-	for ( int stage = 0; stage <= nested_benders_->compute_primal_solutions_for_stage_; stage++){
+	for ( int stage = 0; stage < nested_benders_->compute_primal_solutions_for_stage_; stage++){
 		for (int scen = 0; scen < nested_benders_->tree_nodes_by_stage_[stage].size();scen++){
 			solution_file << "Objective Value Stage-Scenario=" <<  stage << "-" << scen << " : " <<  nested_benders_->tree_nodes_by_stage_[stage][scen]->getDataPtr()->incumbent_solution_value_ << "\n";
-			const double * primal_solution = getSolutionByNodeAndStage(scen,stage);
-			assert( primal_solution != NULL);
+			const double*  primal_solution = getSolutionByNodeAndStage(scen,stage);
+			assert( primal_solution != nullptr);
 			// Write out objective value for stage and scenario wise (probability discounted)
 			// Get the correct name for the variable in question via smi!
 			int column_offset = smi_model_->getCore()->getColStart(stage);
 			for ( int current_column = 0; current_column < nested_benders_->stage_data_[stage]->num_columns_; current_column++){
+                if ( abs(primal_solution[current_column]) >= nested_benders_->zero_tolerance_ )
 				solution_file << "Stage-Scenario=" << stage << "-" << scen << " : " << smi_model_->getColumnName(current_column+column_offset) << " : " << primal_solution[current_column] << "\n";
 			}
 			
@@ -273,31 +311,62 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 
 }
 
+int OsiStochasticParallelNestedBendersSolverInterface::getSolutionCode() const
+{
+    assert(nested_benders_);
+    return nested_benders_->solution_code_;
+}
 
+int OsiStochasticParallelNestedBendersSolverInterface::getNumInfeasibilityIterations() const 
+{
+    assert(nested_benders_);
+    return getNumIterations()-nested_benders_->feasible_iteration_; // Feasible Iterations
+}
+
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getBuildTimer() const
+{
+    assert(nested_benders_);
+    return nested_benders_->detailed_timer_;
+}
+
+const parallel_benders::Timer& OsiStochasticParallelNestedBendersSolverInterface::getComputingTimer() const
+{
+    assert(nested_benders_);
+    return nested_benders_->solution_times_;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getNumCriticalIteration() const
+{
+    assert(nested_benders_);
+    return nested_benders_->uncritical_iteration_counter_;
+}
+
+int OsiStochasticParallelNestedBendersSolverInterface::getMaximalLengthOfCriticalIterationSequence() const
+{
+    assert(nested_benders_);
+    return nested_benders_->maximal_number_of_uncritical_iterations_;
+}
 SampleAverageApproximationSolverInterface::SampleAverageApproximationSolverInterface( OsiSolverInterface* osi_solver, SmiScnModel* smi_model ): osi_pnb_(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model)),parameters_(),samples_(),samples_upper_(),number_batches_(0),number_batches_upper_(0),alpha_(0.05)
 {
     parameters_.init();
-
-    // How it works: We need a random generator and a distribution we want to draw numbers from.
-    // Set the seed 
-    uniform_generator_struct.seed = parallel_benders::get_random_number_from_system();
-    // Create a random number generator instance
-    uniform_generator_struct.rng = boost::shared_ptr<parallel_benders::base_generator_type>(new parallel_benders::base_generator_type(uniform_generator_struct.seed));
-    // Create a random [0,1) variate generator;
-    boost::uniform_01<> uniform_01_distribution;
-    uniform_generator_struct.uniform = boost::shared_ptr<parallel_benders::uniform_distr_gen>(new parallel_benders::uniform_distr_gen(*uniform_generator_struct.rng.get(),uniform_01_distribution));
 }
 
 void SampleAverageApproximationSolverInterface::initialSolve()
 {
 
+	parallel_benders::Parameter initial_parameter = parameters_;
 
+	double time_lower_bounding = 0;
+	double time_upper_bounding = 0;
+	double time_sampling = 0;
+	double current_time = 0;
     // Some things we need to share later on
     OsiSolverInterface* osi_solver = osi_pnb_->getOsiSolverInterface();
     SmiScnModel* smi_model = osi_pnb_->getSmiModel();
     int num_first_stage_cols = smi_model->getCore()->getNumCols(0);
     int num_stages = smi_model->getCore()->getNumStages();
 
+	// We set the solutions that we want to get!
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_DUAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_DUAL_NO);
     parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0); // Store only first-stage primal solution
 
@@ -340,11 +409,19 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         for (std::vector<int>::iterator it = candidate_samples.begin(); it != candidate_samples.end(); ++it)
             *it += *it;
         // Solve a candidate problem
+		current_time = CoinCpuTime();
         smi_model->sampleScenarioTree(candidate_samples,0, get_latin_hypercube_random_01_variates ); // TODO: Is this allowed here?
+		time_sampling += CoinCpuTime()-current_time;
+
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+		parameters_ = initial_parameter;
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         osi_pnb_->setParameters(parameters_);
+		
+		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
+		time_lower_bounding += CoinCpuTime()-current_time;
+
         // Copy first stage solution => candidate solution \hat x
         candidate_array.reset(new double[num_first_stage_cols]);
         memcpy(candidate_array.get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
@@ -357,19 +434,34 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     std::vector< boost::shared_array<double> > first_stage_solutions(number_batches_);
     // Compute lower bound approximation!
     for (int i = 0; i < number_batches_; i++){
+		current_time = CoinCpuTime();
         smi_model->sampleScenarioTree(samples_,0, get_latin_hypercube_random_01_variates );
+		time_sampling += CoinCpuTime()-current_time;
+
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
+		parameters_ = initial_parameter;
         if ( linderoth_shapiro_wright || naive_estimation ) // In this case we need first stage solutions only
-            parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
+            parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,1);
         else // For MakMortonWood we need no solutions
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
-        osi_pnb_->setParameters(parameters_);
+   
         // Use solution from previous problem to speed up calculations 
-        if ( mak_morton_wood )
-            osi_pnb_->giveStartSolution(candidate_array.get());
-        else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
-            osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
+		if ( i == 0 ) {
+			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_EV_SOLUTION);
+		}
+		else {
+			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_USE_SUPPLIED_SOLUTION);
+			if ( mak_morton_wood )
+				osi_pnb_->giveStartSolution(candidate_array.get());
+			else if ( (linderoth_shapiro_wright || naive_estimation) && i > 0)
+				osi_pnb_->giveStartSolution(first_stage_solutions[i-1].get());
+		}
+		osi_pnb_->setParameters(parameters_);
+
+		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
+		time_lower_bounding += CoinCpuTime()-current_time;
+
         // We assume that solving went well. If it does not, we have problem
         objective_values[i] = osi_pnb_->getObjValue();
         LOG(INFO) << "Solved lower bound problem " << i << " with objective value " << objective_values[i];
@@ -379,37 +471,49 @@ void SampleAverageApproximationSolverInterface::initialSolve()
             memcpy(first_stage_solutions[i].get(),osi_pnb_->getFirstStageSolution(),sizeof(double)*num_first_stage_cols);
         }
 
-        // Now we compute values for upper bounding.
+        // Now we compute values for upper bounding. Only evaluating current solution!
+		parameters_ = initial_parameter;
         parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS); // Use Benders for evaluation of candidate solution!
         if ( mak_morton_wood ){
             LOG(INFO) << "Evaluating candidate solution with the current sampled scenario tree.";
             // Evaluate candidate solution with the given sample set
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+			parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
             osi_pnb_->setParameters(parameters_);
             osi_pnb_->fixFirstStageVariables(candidate_array.get());
+
+			current_time = CoinCpuTime();
             osi_pnb_->initialSolve();
+			time_upper_bounding += CoinCpuTime()-current_time;
+
             gap_estimates[i] = osi_pnb_->getObjValue() - objective_values[i];
          }
         if ( linderoth_shapiro_wright ) {
-            
-            std::vector<double> upper_bound_estimates_for_this_solution(number_batches_upper_,0.0);
+			std::vector<double> upper_bound_estimates_for_this_solution(number_batches_upper_,0.0);
             for (int current_batch = 0; current_batch < number_batches_upper_; current_batch++){
                 LOG(INFO) << "Solving evaluation problem " << current_batch << " for current lower bound solution " << i;
                 // Evaluate this very lower bound solution with a larger random number stream!
+
+				current_time = CoinCpuTime();
                 smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
+				time_sampling += CoinCpuTime()-current_time;
+
                 osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
                 parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
+				parameters_.parameter_.put(parallel_benders::PNB_USE_START_SOLUTION,parallel_benders::PNB_INT_NO_START_SOLUTION);
                 osi_pnb_->setParameters(parameters_);
                 osi_pnb_->fixFirstStageVariables(first_stage_solutions[i].get());
+
+				current_time = CoinCpuTime();
                 osi_pnb_->initialSolve();
+				time_upper_bounding += CoinCpuTime()-current_time;
+
                 upper_bound_estimates_for_this_solution[current_batch] = osi_pnb_->getObjValue();
             }
             upper_bound_estimates[i] = std::accumulate(upper_bound_estimates_for_this_solution.begin(),upper_bound_estimates_for_this_solution.end(),0.0)/number_batches_upper_;
         }
-        // Evaluation of solutions is done with Benders, but we have to switch back for the lower bounding problems!
-        if ( dont_use_benders )
-            parameters_.parameter_.put(parallel_benders::PNB_BENDERS,preferred_solution_algorithm);
+
     }
     // Now we have number_batches many different objective values
 
@@ -459,7 +563,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
         for (int i = 0; i < number_batches_upper_; i++){
             LOG(INFO) << "Solving evaluation problem " << i;
+			current_time = CoinCpuTime();
             smi_model->sampleScenarioTree(samples_upper_,0, get_latin_hypercube_random_01_variates );
+			time_sampling += CoinCpuTime()-current_time;
+
             osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
             parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
             parameters_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
@@ -467,7 +574,11 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
             // Fix first stage solution
             osi_pnb_->fixFirstStageVariables(candidate_array.get());
+
+			current_time = CoinCpuTime();
             osi_pnb_->initialSolve();
+			time_upper_bounding += CoinCpuTime()-current_time;
+
             upper_bound_values[i] = osi_pnb_->getObjValue();
 
             // Compute sample variance estimator for this problem ( we need the complete solution of the whole problem to be able to compute it )
@@ -487,7 +598,10 @@ void SampleAverageApproximationSolverInterface::initialSolve()
     }
     else{
         // We are doing it in a single run. Therefore Sample iid variates!
+		current_time = CoinCpuTime();
         smi_model->sampleScenarioTree(samples_upper_,0, get_random_01_variates );
+		time_sampling += CoinCpuTime()-current_time;
+
         osi_pnb_.reset(new OsiStochasticParallelNestedBendersSolverInterface(osi_solver,smi_model));
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO);
         parameters_.parameter_.put(parallel_benders::PNB_COMPUTE_OBJECTIVE_VALUES,true);
@@ -495,7 +609,9 @@ void SampleAverageApproximationSolverInterface::initialSolve()
         osi_pnb_->setParameters(parameters_);
         // Fix first stage solution
         osi_pnb_->fixFirstStageVariables(candidate_array.get());
+		current_time = CoinCpuTime();
         osi_pnb_->initialSolve();
+		time_upper_bounding += CoinCpuTime()-current_time;
 
         // Get the objective values for every scenario
         std::vector<double> upper_bound_solution_values(samples_upper_[num_stages-1],0);
@@ -517,27 +633,29 @@ void SampleAverageApproximationSolverInterface::initialSolve()
 
     std::fstream logfile;
     logfile.open("saa-log.txt", fstream::out | fstream::app);
-    logfile << "Seed: " << uniform_generator_struct.seed;
+	LOG(INFO) << theGenerator().seed;
+    logfile << "Seed: " << theGenerator().seed << "\n";
     // Conclusion
     logfile << "N : ";
     for (int i = 1; i < num_stages; i++)
             logfile << samples_[i] << " ";
-    logfile << std::endl;
-    logfile << "M : " << number_batches_ << std::endl;
+    logfile << "\n";
+    logfile << "M : " << number_batches_ << "\n";
     logfile << "bar N : ";
     for (int i = 1; i < num_stages; i++)
         logfile << samples_upper_[i] << " ";
-    logfile << std::endl;
-    logfile << "T: " << number_batches_upper_ << std::endl;
-    logfile << "Lower Bound : " << lower_bound_estimator << " +/- " << half_length_lower << std::endl;
-    logfile << "Upper Bound : " << upper_bound_estimator << " +/- " << half_length_upper << std::endl;
-    logfile << "Confidence Level : " << 1-alpha_ << "%" << std::endl;
+    logfile << "\n";
+    logfile << "T: " << number_batches_upper_ << "\n";
+    logfile << "Lower Bound : " << setprecision(10) << setw(10) << lower_bound_estimator << " +/- " << half_length_lower << "\n";
+    logfile << "Upper Bound : " << setprecision(10) << setw(10) << upper_bound_estimator << " +/- " << half_length_upper << "\n";
+    logfile << "Confidence Level : " << 1-alpha_ << "%" << "\n";
+	logfile << "Time Lower Bounding :" << time_lower_bounding << "\n";
+	logfile << "Time Upper Bounding :" << time_upper_bounding << "\n";
+	logfile << "Time Sampling : " << time_sampling << "\n";
     logfile.close();
 
     LOG(INFO) << "Done.";
     
-    //osi_pnb_->getSmiModel()->writeSmps("saa_latin_hypercube_test");
-
 }
 
 void SampleAverageApproximationSolverInterface::setParameters( const parallel_benders::Parameter& parameters )
@@ -578,8 +696,8 @@ void SampleAverageApproximationSolverInterface::setConfidenceLevel( double one_m
 double get_random_0_1_variate(){
     // If seed is 0, random generator is not initialized!
     double random_variate = 0;
-    if ( uniform_generator_struct.seed != 0 )
-        random_variate = (*uniform_generator_struct.uniform)();
+    if ( theGenerator().seed != 0 )
+        random_variate = (*theGenerator().uniform)();
 
     return random_variate;
 }
@@ -587,25 +705,25 @@ double get_random_0_1_variate(){
 // Crude Monte Carlo Versions!
 double * get_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
-    if ( uniform_generator_struct.seed == 0)
-        return NULL;
+    if ( theGenerator().seed == 0)
+        return nullptr;
 
     double* random_variates = new double[number_of_variates];
     for (int i = 0; i < number_of_variates; i++)
-        random_variates[i] = (*uniform_generator_struct.uniform)();
+        random_variates[i] = (*theGenerator().uniform)();
     return random_variates;
 }
 
 // Antithetic Crude Monte Carlo Sampling 
 double * get_antithetic_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
-    if ( uniform_generator_struct.seed == 0)
-        return NULL;
+    if ( theGenerator().seed == 0)
+        return nullptr;
 
     double* random_variates = new double[number_of_variates];
     for (int i = 0; i < number_of_variates; i++){
         if ( i % 2 == 0 )
-            random_variates[i] = (*uniform_generator_struct.uniform)();
+            random_variates[i] = (*theGenerator().uniform)();
         else
             random_variates[i] = 1-random_variates[i-1];
     }
@@ -615,8 +733,8 @@ double * get_antithetic_random_01_variates(int number_of_variates){
 // Latin Hypercube Sampling
 double * get_latin_hypercube_random_01_variates(int number_of_variates){
     assert( number_of_variates > 0);
-    if ( uniform_generator_struct.seed == 0)
-        return NULL;
+    if ( theGenerator().seed == 0)
+        return nullptr;
 
     // Generate one variate uniformly at random in every interval
     double* random_variates = new double[number_of_variates];
@@ -626,7 +744,7 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     for ( double lower_interval = 0.0; lower_interval < 1; lower_interval += division){
         // Sample one variable from [lower_interval,lower_interval+division)
         boost::uniform_real<> uniform_real_distribution(lower_interval,lower_interval+division);
-        boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_real<double> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_real_distribution);
+        boost::variate_generator<parallel_benders::base_generator_type*, boost::uniform_real<double> > variate_gen(theGenerator().rng.get(),uniform_real_distribution);
         random_variates[i] = variate_gen();
         assert( random_variates[i] >= lower_interval && random_variates[i] < lower_interval+division);
         i++;
@@ -636,8 +754,10 @@ double * get_latin_hypercube_random_01_variates(int number_of_variates){
     }
     // Shuffle random_variates randomly. 
     // Invoke Functor to sample from the RNG we use for our other random numbers too.
-    ptrdiff_t (*p_myrandom)(ptrdiff_t) = getRandomNumberFromRNG;
-    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates],p_myrandom);
+    //ptrdiff_t (*p_myrandom)(ptrdiff_t) = getRandomNumberFromRNG;
+    boost::uniform_int<> uniform_int_distribution;
+    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(theGenerator().rng.get()),uniform_int_distribution);
+    std::random_shuffle(&random_variates[0],&random_variates[number_of_variates],variate_gen);
 
     assert( i == number_of_variates);
     return random_variates;
@@ -647,6 +767,6 @@ ptrdiff_t getRandomNumberFromRNG( ptrdiff_t maximal_number )
 {
     // Sample one variable from [0,maximal_number)
     boost::uniform_int<> uniform_int_distribution(0,maximal_number);
-    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(uniform_generator_struct.rng.get()),uniform_int_distribution);
+    boost::variate_generator<parallel_benders::base_generator_type&, boost::uniform_int<> > variate_gen(*(theGenerator().rng.get()),uniform_int_distribution);
     return variate_gen();
 }

@@ -175,7 +175,6 @@ namespace flopc {
 
         void insertRandomVariables(std::vector< std::set<RandomVariable*> >& v) const {
             C->insertRandomVariables(v);
-
         }
         RandomConstant C;
     };

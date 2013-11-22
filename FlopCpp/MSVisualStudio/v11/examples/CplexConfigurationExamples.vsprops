@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="CplexConfiguration"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="../../../../../ThirdParty/cplex/cplex124/include/ilcplex"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalDependencies="cplex124.lib"
+		AdditionalLibraryDirectories="../../../../../ThirdParty/cplex/cplex124/lib/x86"
+		Profile="false"
+	/>
+</VisualStudioPropertySheet>

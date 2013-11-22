@@ -23,7 +23,6 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 add_library(ParallelNestedBenders
 	BendersNodeData.cpp
-	OsiNeosStochasticSolverInterface.cpp
 	OsiPnbStochasticSolverInterface.cpp
 	OsiStochasticSolverInterface.cpp
 	ParallelNestedBenders.cpp
