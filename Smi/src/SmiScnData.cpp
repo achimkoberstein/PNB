@@ -45,9 +45,9 @@ vector< vector<int> > intColsStagewise; // For each stage separately, it contain
 vector< vector<int> > binaryColsStagewise;
 
 SmiCoreData::SmiCoreData(OsiSolverInterface *osi,int nstag,int *cstag,int *rstag, int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
-nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
-colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
-cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),binaryColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
+    nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
+    colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
+    cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),binaryColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
 {	//Copies all values already stored in the Solver..
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -72,9 +72,9 @@ cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDense
 }
 
 SmiCoreData::SmiCoreData(CoinMpsIO *osi,int nstag,int *cstag,int *rstag,int* integerIndices,int integerLength, int* binaryIndices, int binaryLength):
-nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
-colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
-cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),binaryColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
+    nrow_(0),ncol_(0),nz_(0),nstag_(nstag),nColInStage_(NULL),nRowInStage_(NULL),stageColPtr_(NULL),colStage_(NULL),rowStage_(NULL),colEx2In_(NULL),rowEx2In_(NULL),
+    colIn2Ex_(NULL),rowIn2Ex_(NULL),integerIndices_(NULL),integerLength_(0),binaryIndices_(NULL),binaryLength_(0),
+    cdrlo_(NULL),cdrup_(NULL),cdobj_(NULL),cdclo_(NULL),cdcup_(NULL),nodes_(),pDenseRow_(),intColsStagewise(nstag,std::vector<int>()),binaryColsStagewise(nstag,std::vector<int>()),colNamesFree(NULL),colNamesStrict(NULL)
 {
     int nrow = osi->getNumRows();
     int ncol = osi->getNumCols();
@@ -356,7 +356,7 @@ void SmiCoreData::moveBoundsIntoMatrix( std::vector<SmiScnNode*>& nodes)
     }
     if ( !carry_on)
         return; // We did nothing
-    
+
 
     // Delete the old cup/clo/rup/rlo as we will update these values
     for(int t=0; t<this->getNumStages(); ++t)
@@ -663,7 +663,7 @@ void SmiCoreData::transformToStaircaseStructure(std::map<int,int>& non_staircase
     rowIn2Ex_ = new int[nrow_];
     colEx2In_ = new int[ncol_];
     colIn2Ex_ = new int[ncol_];
-    
+
 
     //stageRowPtr_[0] = 0;
     for (int i=0;i<nstag_;i++)
@@ -891,7 +891,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     int num_start = third_stage_node_data->nstrt_+number_cols; // Account for the new rows!
                     if ( !third_stage_node_data->has_matrix_)
                         num_start += this->getNumRows(secondStage+1);
-                   
+
 
                     double* new_dels = (double *) calloc(nels, sizeof(double));
                     int * new_inds = (int*) calloc(nels,sizeof(int));
@@ -902,8 +902,8 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     assert( new_start );
                     if ( !third_stage_node_data->has_matrix_)
                         // Insert the (old) rows
-                        for (int index = number_cols+1; index < number_cols+1+this->getNumRows(secondStage+1); index++)
-                            new_start[index] = number_cols;
+                            for (int index = number_cols+1; index < number_cols+1+this->getNumRows(secondStage+1); index++)
+                                new_start[index] = number_cols;
                     // Copy in the old data elements, leave room in the beginning for the new rows!
                     memcpy(new_dels+number_cols,third_stage_node_data->dels_,third_stage_node_data->strt_[third_stage_node_data->nstrt_-1]*sizeof(double));
                     for (int j = 0; j < number_cols; j++)
@@ -920,7 +920,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     else
                         for (int j = this->getNumRows(secondStage+1)+1; j < this->getNumRows(secondStage+1)+1+third_stage_node_data->nstrt_-1; j++)
                             new_start[number_cols+j] += number_cols;
-                    
+
                     // Now we copy the indices!
                     for (int j = 0; j < number_cols; j++){ // We add the new rows. We need to set the indices of the stage before
                         new_inds[j] = stageColPtr_[secondStage]+(number_cols)*count+j;
@@ -949,7 +949,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
                     third_stage_node_data->nrow_ += number_cols;
                     third_stage_node_data->ncol_ += number_cols;
                     third_stage_node = third_stage_node->getSibling();
-                    
+
                 }// End While Thirdstagenode
                 second_stage_node = second_stage_node->getSibling();
                 count++;
@@ -1321,7 +1321,7 @@ void SmiCoreData::aggregateStages(int firstStage, int secondStage, SmiScenarioTr
 }
 
 void
-SmiNodeData::setCoreNode()
+    SmiNodeData::setCoreNode()
 {
     isCoreNode_=true;
 }
@@ -1339,14 +1339,14 @@ SmiNodeData::SmiNodeData(SmiStageIndex stg, SmiCoreData *core,
                          CoinPackedVector *drlo,
                          CoinPackedVector *drup):
 stg_(stg),
-core_(core), isCoreNode_(false),
-combineRule_(SmiCoreCombineReplace::Instance()),
-numarrays_(5), // 5 arrays: dclo, dcup, dobj, drlo, drup
-nrow_(core->getNumRows(stg_)),
-ncol_(core->getNumCols(stg_)),
-rowbeg_(core->getRowStart(stg_)),
-colbeg_(core->getColStart(stg_)),
-ptr_count(0)  // used for counted pointer
+    core_(core), isCoreNode_(false),
+    combineRule_(SmiCoreCombineReplace::Instance()),
+    numarrays_(5), // 5 arrays: dclo, dcup, dobj, drlo, drup
+    nrow_(core->getNumRows(stg_)),
+    ncol_(core->getNumCols(stg_)),
+    rowbeg_(core->getRowStart(stg_)),
+    colbeg_(core->getColStart(stg_)),
+    ptr_count(0)  // used for counted pointer
 {
     // count an upper bound for number elements
     nels_ = 0;
@@ -1635,27 +1635,27 @@ SmiNodeData::~SmiNodeData()
 }
 
 double *
-SmiNodeData::getDenseRow(int i) {
-    if ( dRowMap[i] == NULL )
-    {
-        const int  len = this->getRowLength(i);
-        const int *ind = this->getRowIndices(i);
-        const double *els = this->getRowElements(i);
+    SmiNodeData::getDenseRow(int i) {
+        if ( dRowMap[i] == NULL )
+        {
+            const int  len = this->getRowLength(i);
+            const int *ind = this->getRowIndices(i);
+            const double *els = this->getRowElements(i);
 
-        int denseSize=this->getCore()->getNumCols();
-        double * dv = new double[denseSize];
-        CoinFillN(dv, denseSize, 0.0);
-        for (int j = 0; j < len; ++j)
-            dv[ind[j]] = els[j];
+            int denseSize=this->getCore()->getNumCols();
+            double * dv = new double[denseSize];
+            CoinFillN(dv, denseSize, 0.0);
+            for (int j = 0; j < len; ++j)
+                dv[ind[j]] = els[j];
 
-        dRowMap[i] = dv;
-    }
-    return dRowMap[i];
+            dRowMap[i] = dv;
+        }
+        return dRowMap[i];
 }
 
 
 void
-SmiNodeData::assignMemory()
+    SmiNodeData::assignMemory()
 {
     this->nstrt_    = (this->nrow_+1) + this->numarrays_;
 
@@ -1665,7 +1665,7 @@ SmiNodeData::assignMemory()
 }
 
 void
-SmiNodeData::deleteMemory()
+    SmiNodeData::deleteMemory()
 {
     if (this->dels_)
     {
@@ -1745,10 +1745,10 @@ CoinPackedMatrix* SmiNodeData::generateCoinPackedTMatrix() const
 {
     if ( !this->has_matrix_ ) // If we have no matrix, we return an empty matrix
         return new CoinPackedMatrix();
-    
+
     if ( this->getStage()-1 < 0) // No T-matrix in first stage!
         return new CoinPackedMatrix();
-        
+
     int colbeg_previous_stage_ = this->core_->getColStart(this->getStage()-1);
     int previous_stg = this->getStage()-1;
     // Do we have a number of entries? yes we have!
@@ -1966,7 +1966,7 @@ bool SmiNodeData::moveBoundsInMatrix()
             // Last part
             memmove(dels_+strt_[rup_strt_]+2*num_new_rows,temp_array_dels+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(double));
             memmove(inds_+strt_[rup_strt_]+2*num_new_rows,temp_array_inds+strt_[rup_strt_],(strt_[rup_strt_+1]-strt_[rup_strt_])*sizeof(int));
- 
+
             // Prepare the new strt_ array
             strt_ = (int*) realloc(strt_,(nstrt_+num_new_rows)*sizeof(int));
             int* temp_array = new int[nstrt_-clo_strt_];
@@ -2002,7 +2002,7 @@ bool SmiNodeData::moveBoundsInMatrix()
         else {
             return false;
         }
-            
+
     }
     else{
         if ( has_matrix_ ){
@@ -2047,7 +2047,7 @@ bool SmiNodeData::moveBoundsInMatrix()
         // Test for stochastic bounds
         if ( strt_[obj_strt_]-strt_[clo_strt_] )
             assert(false); //TODO
-        
+
 
         // Update the essential stats
         nrow_ = core_->getNumRows(stg_);
@@ -2056,7 +2056,7 @@ bool SmiNodeData::moveBoundsInMatrix()
         return true;
 
     }
-      
+
 }
 
 void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircase_coefficients,std::vector<std::map<int,int> >& coefficient_transformation,std::vector<int>& new_columns, const int* new_stageColPtr, const int * new_stageRowPtr )
@@ -2168,8 +2168,8 @@ void SmiNodeData::transformToStaircaseStructure( std::map<int,int>& non_staircas
             int second_index = it->second;
             //int original_index_stage = stg_-1;
             if ( core_->getColStage(it->first) < stg_-1 ){
-            // We need to create a new row that maps it->first to it->second
-             // We are in a stage where we have not direct access to it->first, but we already need to use a new column we introduced. Therefore we need the it->second of it->first of the stage before.
+                // We need to create a new row that maps it->first to it->second
+                // We are in a stage where we have not direct access to it->first, but we already need to use a new column we introduced. Therefore we need the it->second of it->first of the stage before.
                 assert( core_->getColStage(it->first) < stg_-1);
                 std::map<int,int>::iterator it2(coefficient_transformation[stg_-1].find(it->first));
                 if ( it2 != coefficient_transformation[stg_-1].end() ){

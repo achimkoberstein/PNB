@@ -4,13 +4,8 @@
 #ifndef SmiScnModel_HPP
 #define SmiScnModel_HPP
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
-
 // Include files
+#include "CoinPragma.hpp"
 #include "SmiDiscreteDistribution.hpp"
 #include "SmiBlockStructure.hpp"
 #include "SmiScenarioTree.hpp"
@@ -20,11 +15,9 @@
 #include "CoinPackedVector.hpp"
 #include "SmiMessage.hpp"
 
-
 // STL declarations
 #include <map>
 #include <vector>
-using namespace std;
 
 // forward declaration of SmiScnNode
 class SmiScnNode;
@@ -103,7 +96,7 @@ public:
     /** Processes SmiBlockBlockStrctures into scenarios
     @param A pointer to an SmiBlockStructure
     */
-	void processBlockStructureIntoScenarios(SmiBlockStructure *smiBS);
+    void processBlockStructureIntoScenarios(SmiBlockStructure *smiBS);
 
     /** Generate scenarios from discrete distribution
     @param s a pointer to an SmiDiscreteDistribution
@@ -168,7 +161,7 @@ public:
         CoinPackedVector *dclo, CoinPackedVector *dcup,
         CoinPackedVector *dobj,
         CoinPackedVector *drlo, CoinPackedVector *drup,
-        vector<int>labels, double prob,
+        std::vector<int>labels, double prob,
         SmiCoreCombineRule *r = SmiCoreCombineReplace::Instance());
 
     /**@name loadOsiSolverData
@@ -191,24 +184,24 @@ public:
     @return a vector that containts for every scenario a pair of values, namely the objective value and a pointer to the column solution
     */
     std::vector< std::pair<double,double*> > solveWS(OsiSolverInterface *osiSolver, double objSense = 1);
-    
+
     /** Solves the Expected-Value-Problem, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
     @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
     @param calculateAverageValues optional, when true (default) the average values for the random variables are calculated; 
-        otherwise, it is expected that the model already contains the average values
+    otherwise, it is expected that the model already contains the average values
     @return a pair of the objective value and a pointer to the column solution
     */
     std::pair<double,double*> solveEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
 
     SmiScnModel* createEVSmiModel();
-    
+
     /** Solves the EEV-Problem wich determines the expected value of the solution that provides 
     the average scenario problem, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
     @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
     @param calculateAverageValues optional, when true (default) the average values for the random variables are calculated; 
-        otherwise, it is expected that the model already contains the average values
+    otherwise, it is expected that the model already contains the average values
     @return the objective value of the solved EEVP
     */
     double solveEEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
@@ -228,7 +221,7 @@ public:
     @see solveEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
     */
     double getEVValue(OsiSolverInterface* osiSolver, double objSense = 1, bool calculateAverageValues = true);
-    
+
     /** Returns only the solution value of the EEVP, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
     @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
@@ -253,7 +246,7 @@ public:
     const int* getBinaryInd(){return core_->getBinaryIndices();} /// returns the indices of binary variables in the core node
     int getBinaryLen(){return core_->getBinaryLength();} /// return the number of integer variables in the core node
 
-    inline vector<int> getIntIndices() {return intIndices;} /// return the indices of integer variables in this smi model
+    inline std::vector<int> getIntIndices() {return intIndices;} /// return the indices of integer variables in this smi model
     inline void addIntIndice(int indice) {intIndices.push_back(indice);} /// adds an indice to the list of intgeger variables in this smi model
 
     // getXXX by scenario
@@ -272,7 +265,7 @@ public:
         delete osiStoch_;
         osiStoch_ = osi.clone(false);
     }
-    
+
     /** Sets the OsiSolverInterface for SMI.
     @param osi an OsiSolverInterface
     */
@@ -287,7 +280,7 @@ public:
         delete osiStoch_;
         osiStoch_ = osi;
     }
-    
+
     /** Returns the OsiSolverInterface of this SMI model.
     @return a pointer to the OsiSolverInterface
     */
@@ -310,7 +303,7 @@ public:
 
     // constructor: Lesson from Effective C++: Initialize values in the same order as declared in .hpp file.
     SmiScnModel() :
-    handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
+        handler_(NULL),messages_(NULL),osiStoch_(NULL), nrow_(0), ncol_(0), nels_(0),nels_max(0),
         drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
         dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
         solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),smpsio_(NULL),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL),
@@ -329,22 +322,22 @@ public:
     @param notDetEq if the coefficients should weighted with the probability (false) or not (true)
     */
     void addNode(SmiScnNode *node, bool notDetEq = false);
-    
+
     /** Deletes the SmiScnNode tnode.
     @param tnode the node that will be deleted
     */
     void deleteNode(SmiScnNode *tnode);
-    
+
     /** Adds the data of the given SmiNodeData node, wich is expected to be are core node, to the problem. This mehtod is used for generating the EVP.
     @param node the core node wich data will be added
     */
     void addCoreNode(SmiNodeData *node);
-    
+
     /** Adds the data of the given SmiNodeData node to the problem when building the EV-Problem; only used when the average values are recalculated.
     @param node the node that containts the data
     */
     void addNodeEVP(SmiScnNode *node);
-    
+
     /** Returns a pointer to the full SMI tree.
     @return the SMI tree
     */
@@ -397,7 +390,7 @@ private:
     int* binaryInd;
     int binaryLen;
 
-    vector<int> intIndices;
+    std::vector<int> intIndices;
     int* maxNelsPerScenInStage;
 
     SmiDiscreteDistribution* discrete_distribution_;
@@ -415,78 +408,78 @@ public:
     @return the index of the column in the core node.
     */
     int getCoreColIndex(int i);
-    
+
     /** For a given indice i of a row in this node, the method returns the index of this row in the core node wich corresponds the original (user's) ordering.
     @param i the index of the row in this node.
     @return the index of the row in the core node.
     */
     int getCoreRowIndex(int i);
-    
+
     /** Sets the scenario index of this node to a specific value.
     @param i the scenario index
     */
     inline void setScenarioIndex(SmiScenarioIndex i){ scen_=i;}
-    
+
     /** Returns the scenario index of this node.
     @return the scenario index.
     */
     inline SmiScenarioIndex getScenarioIndex() {return scen_;}
-    
+
     /** Return the starting index for columns in the OSI model. 
     @return the starting index in the OSI model
     */
     inline int  getColStart() {return coffset_;}
-    
+
     /** Return the starting index for rows in the OSI model. 
     @return the starting index in the OSI model
     */
     inline int  getRowStart() {return roffset_;}
-    
+
     /** Returns the number of columns.
     @return the number of columns
     */
     inline int getNumCols(){ return node_->getCore()->getNumCols(node_->getStage());}
-    
+
     /** Returns the number of rows.
     @return the number of rows
     */
     inline int getNumRows(){ return node_->getCore()->getNumRows(node_->getStage());}
-    
+
     //TODO: why is this method commented out?
     //inline int getNumElements() { return node_->getCore()->getNumElements(node_>getStage());}
-    
+
     /** Returns the normalized probability. 
     For leaf nodes, this equal to the probability of the whole scenario.
     If the total probability (the sum of all absolute probabilities) is euqal to one, this method returns the same value as getProb().
     @return the normalized probability.
     */
     inline double getModelProb(){return mdl_prob_;}
-    
+
     /** Returns the stage index of this node.
     @return the stage index
     */
     inline SmiStageIndex getStage() { return node_->getStage(); }
-    
+
     /** Returns the parent node.
     @return a pointer to the parent node.
     */
     inline SmiScnNode * getParent(){ return parent_;}
-    
+
     /** Sets the probability for this node.
     @param p the probability
     */
     inline void setProb(double p){prob_=p;}
-    
+
     /** Increases the probability for this node by the value of prob.
     @param prob the probability to be added.
     */
     inline double addProb(double prob){ return prob_+=prob;}
-    
+
     /** Returns the probability of this node.
     @return the probability
     */
     inline double getProb() { return prob_; }
-    
+
     /** Sets the parent of this node.
     @param g the parent node
     */
@@ -516,9 +509,7 @@ public:
         scen_=-1;
         include_=true;
     }
-    
-    /** Destructor. Deletes the associated SmiNodeData object only if its not a core node.
-    */
+
     ~SmiScnNode()
     {
         if (node_)
@@ -530,17 +521,17 @@ public:
             //}
             if ( node_->deletePtr() == 0 )
                 delete node_;
-       	}
-	}
+        }
+    }
 
-    
+
 
 private:
     /** Sets the starting index for the rows with respect to the OSI model. 
     @return the starting index 
     */
     inline void setRowOffset(int r) {roffset_ = r;}
-    
+
     /** Sets the starting index for the columns with respect to the OSI model. 
     @return the starting index 
     */
@@ -549,14 +540,12 @@ private:
     //TODO: the following 2 methods are never used - do we need them?
     inline double getCondProb(){return condProb_;}
     inline void setCondProb(double p){condProb_=p;}
-    
+
     /** Sets the normalized probability. For leaf nodes, this equal to the probability of the whole scenario.
     @param p the normalized probability.
     */
     inline void setModelProb(double p){mdl_prob_=p;}
 private:
-
-    //TODO: include? i have no idea what's this for
     inline void setIncludeOff() { include_=false; }
     inline void setIncludeOn()  { include_=true; }
     inline bool getInclude() { return include_; }
