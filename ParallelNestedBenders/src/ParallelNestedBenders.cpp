@@ -756,7 +756,7 @@ namespace parallel_benders {
             if ( !regularization_)
                 not_stop_loop = lower_bound_ < upper_bound_ &&
                 std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
-                RelativeGapPresent(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
+                RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else
@@ -795,8 +795,6 @@ namespace parallel_benders {
                 break;// We stop solving the problem
             }
             wall_clock_solution_time_.Stop(0);
-
-
             // Check if we already went over the time limit
             if ( ((int) wall_clock_solution_time_.GetTime(0)) > maximal_solution_time_ ){
                 LOG(ERROR) << "We stopped solving the problem after " << wall_clock_solution_time_.GetTime(0)/60 << " minutes.";
@@ -901,7 +899,9 @@ namespace parallel_benders {
                     double current_upper_bound = 0;
                     for (int i = current_stage_; i < num_stages_; i++)
                         current_upper_bound += stage_lower_upper_bounds_[i].second;
-                    if ( RelativeGapPresent(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first,infinity_,strategy_epsilon_*std::min(std::abs(lower_bound_),std::abs(upper_bound_))) ){// If true, values are not equal. 
+                    double absolute_error = current_upper_bound-stage_lower_upper_bounds_[current_stage_].first;
+                    double absolute_gap = std::min(std::abs(upper_bound_),std::abs(lower_bound_));//std::abs(upper_bound_-lower_bound_);
+                    if ( absolute_error > strategy_epsilon_* absolute_gap && ComputeRelativeGap(current_upper_bound,stage_lower_upper_bounds_[current_stage_].first) > strategy_epsilon_*absolute_gap ){// If true, values are not equal. 
                         forward_ = true; // We want to move forward again, with the newest cuts..
                         // Check for nearby values
                         if ( std::abs(old_lower_upper_bounds_[current_stage_].first-stage_lower_upper_bounds_[current_stage_].first) < absolute_epsilon_ 
@@ -1449,14 +1449,13 @@ namespace parallel_benders {
                         old_discrepancies_[current_stage_] = infinity_;
 
                     // What is the absolute gap?
-                    double absolute_gap = upper_bound_-lower_bound_;
+                    //double absolute_gap = upper_bound_-lower_bound_;
+                    double absolute_gap = std::min(std::abs(upper_bound_),std::abs(lower_bound_));//std::abs(upper_bound_-lower_bound_);
                     if ( lower_bound_ == -infinity_ || upper_bound_ == infinity_)
                         threshold = 1;
                     else
                     {
-                        // Find number of significant bits of absolute_gap. Threshold is 10^(number of digits of absolute gap - 2)
-                        // Example: Absolute Gap is 10. Then log10(10) is 1. Threshold is 10^-1 = 0.1
-                        threshold = std::pow(10,std::log10(absolute_gap)-1);
+                        threshold = absolute_gap/10;
                     }
                     if ( sequencing_protocol_ == PNB_INT_FASTPASS_WITH_FASTBACK ){
                         if (  !CompareForEquality(discrepancy,old_discrepancies_[current_stage_],zero_tolerance_) && discrepancy > threshold && theta_approximations_everywhere_ && forward_ && made_one_turn){
@@ -6265,13 +6264,13 @@ namespace parallel_benders {
 	}
 
 
-    double ComputeRelativeGap(double upper_bound, double lower_bound, double epsilon){
-        return std::abs(upper_bound-lower_bound)/ (std::abs(upper_bound)+epsilon);
+    double ComputeRelativeGap(double upper_bound, double lower_bound, double comparison_epsilon){
+        return std::abs(upper_bound-lower_bound)/ (std::abs(upper_bound)+comparison_epsilon);
 
     }
 
 
-    bool RelativeGapPresent(double upper_bound, double lower_bound, double infinity, double epsilon){
+    bool RelativeGapLargerEpsilon(double upper_bound, double lower_bound, double infinity, double epsilon){
         if (upper_bound == infinity || lower_bound == -infinity)
             return true;
         if (std::abs(upper_bound) < 1 && std::abs(lower_bound) < 1) //in this case we do not want relative difference, instead we want absolute difference..
