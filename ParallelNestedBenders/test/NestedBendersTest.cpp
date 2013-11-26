@@ -33,6 +33,8 @@
 #include "OsiPnbStochasticSolverInterface.hpp"
 //#include "OsiBenStochasticSolverInterface.hpp"
 
+#include "fortsp.h"
+
 
 class NestedBendersTest: public ::testing::Test {
 public:
