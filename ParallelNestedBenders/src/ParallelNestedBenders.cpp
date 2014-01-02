@@ -3379,6 +3379,12 @@ namespace parallel_benders {
         BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
         BendersNodeData::cut_container::iterator feas_it = benders_node_pointer->feasibility_cuts_.begin();
 
+        if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
+            // TODO Delete all cvar_constraints from the model, we add them after the other cuts!
+            //
+
+        }
+
         if ( level_decomp_ && (level_manhattan_ || level_infinity_) && current_stage_ < num_stages_-1 && current_stage_ <= level_stage_){
             if ( !seperate_first_stage_solver_ && current_stage_ == 0){
                 //LOG(FATAL) << "Regularized Decomposition can not work without a seperable first stage solver instance.";
