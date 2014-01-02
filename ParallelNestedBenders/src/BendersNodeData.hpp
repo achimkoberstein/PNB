@@ -299,6 +299,10 @@ public:
 	cut_container cvar_cuts_;              
     double cvar_weight_;
 
+    std::vector<double> cvar_current_cut_coefficients_;
+    double cvar_current_cut_rhs_;
+
+
     // Time spent!
     double build_time_; // For sub problem
     double solution_time_; // For sub problem

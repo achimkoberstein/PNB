@@ -123,6 +123,9 @@ private:
     void SetSolverByThread();
 
 	bool CheckForSameCut(const CutStuff& cut_to_check, const BendersNodeData::cut_container & container);
+
+    // CVaR methods
+    void AggregateCVaRCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
 	
     // Problem data
     SmiScnModel* smi_;
@@ -312,6 +315,11 @@ private:
     std::vector<double> current_second_stage_approximation_;
     double cvar_beta_;
     double cvar_rho_;
+
+    std::vector<int> cvar_substantial_iterations_;
+    std::vector<double> cvar_recourse_approximations_;
+    std::vector<double> cvar_cvar_approximations_;
+    std::vector<std::vector<double> > cvar_substantial_points_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
