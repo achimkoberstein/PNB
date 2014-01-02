@@ -309,6 +309,9 @@ private:
 
 	// AK: CVaR risk constraint decomposition
 	bool cvar_constr_decomp_;
+    std::vector<double> current_second_stage_approximation_;
+    double cvar_beta_;
+    double cvar_rho_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
@@ -380,6 +383,8 @@ inline bool CompareForEquality( double first, double second, double tolerance);
 inline bool RelativeGapLargerEpsilon(double upper_bound, double lower_bound, double infinity, double epsilon);
 inline double ComputeRelativeGap(double upper_bound, double lower_bound,double comparison_epsilon = 1e-10);
 bool CutIsEqual(const CutStuff& first, const CutStuff& second, double tolerance);
+
+bool DoubleIsHigher(const std::pair<int,double>& first, const std::pair<int,double>& second);
 
 
 RowOrderedSparseMatrixPointer CreateRowOrderedSparseMatrixPointer( SmiNodeData* smiNode);
