@@ -107,6 +107,14 @@ namespace parallel_benders{
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY = 9;
     const int PNB_INT_ALGORITHM_LEVEL_INFINITY_ODA = 10;
 
+	// AK: variants with CVaR risk constraint
+	const int PNB_INT_ALGORITHM_DETEQ_RISK = 11;
+	const int PNB_INT_ALGORITHM_BENDERS_RISK = 12;
+	const int PNB_INT_ALGORITHM_LEVEL_RISK = 13
+	const int PNB_INT_ALGORITHM_BENDERS_ODA_RISK = 14;
+	const int PNB_INT_ALGORITHM_LEVEL_ODA_RISK = 15;
+
+
     const int PNB_INT_WRITE_PROBLEM = 9;
     const int PNB_INT_PRIMAL_SIMPLEX = 10;
     const int PNB_INT_DUAL_SIMPLEX = 11;
@@ -286,6 +294,9 @@ public:
     std::vector<double> oda_cut_evaluation_;
     std::map<int,double> oda_lambdas_; // Stores which of oda_optimality_cuts_ is to be used for cut aggregation (and with which weight)
 	std::map<int,int> oda_iterations_; // Stores iteration numbers, provides a mapping of iteration numbers to size of other vectors!
+
+	// AK: CVaR risk constraint decomp
+	cut_container cvar_cuts_;              
 
     // Time spent!
     double build_time_; // For sub problem

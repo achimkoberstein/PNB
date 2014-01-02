@@ -82,7 +82,8 @@ private:
 
 	bool GenerateFeasibilityCut( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
     void GenerateOptimalityCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
-    void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
+	void GenerateCVaRCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );       // AK: CVaR constraint decomposition
+	void AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
     void AnalyseOptimalityCuts( OsiSolverInterface* osi_solver, SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer );
 
@@ -305,6 +306,9 @@ private:
     int critical_iteration_counter_;
     double lambda_gap_;
     double last_critical_iteration_gap_;
+
+	// AK: CVaR risk constraint decomposition
+	bool cvar_constr_decomp_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
