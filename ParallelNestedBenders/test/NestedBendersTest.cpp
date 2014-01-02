@@ -33,7 +33,7 @@
 #include "OsiPnbStochasticSolverInterface.hpp"
 //#include "OsiBenStochasticSolverInterface.hpp"
 
-#include "fortsp.h"
+//#include "fortsp.h"
 
 
 class NestedBendersTest: public ::testing::Test {
@@ -186,9 +186,9 @@ public:
         // Start with single cut and Benders
         std::vector<double> solutions;
         std::string folder("../../../../Benders/test/instances/");
-#if _M_X64 || __x86_64__ // Works only on windows i suppose
+ #if _M_X64 || __x86_64__ // Works only on windows i suppose
         folder = "../../../../../Benders/test/instances/";
-#endif
+ #endif
         //SmiScnModel smi;
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
@@ -317,7 +317,7 @@ public:
         
 
         // Specify the number of repetitions_ 
-        repetitions_ = 2;
+        repetitions_ = 1;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
         //aggregates.push_back(2);
@@ -355,12 +355,12 @@ public:
         bool test_level_infinity = false;
         bool test_level_manhattan = false;
         bool test_regularized_decomposition = false;
-        bool test_normal = false;
+        bool test_normal = true;
         bool test_oda = false;
 		bool test_only_oda = false;
         bool test_start_solutions = generate_initial_solution_;
         bool test_feas_cuts = false;
-        bool test_dem = true;
+        bool test_dem = false;
 
         for (int cpu = 0; cpu < 1; cpu++){
                 //// Solve DetEq as comparison
@@ -1848,18 +1848,19 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
+//    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
     	//EXPECT_NEAR(solveSMPS("other/rand0_10000"), 139.129, 0.1);
 	//EXPECT_NEAR(solveSMPS("watson/coreWAT_I_10","watson/timeWAT_I_10","watson/stochWAT_I_10_1152"), -1687.92,0.1);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_1000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_5000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10000"),44614465.2,100);
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_50000"),44614465.2,100);
-     	EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
+//     	EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
-//	////EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 416.5, 0.1);
+//    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
 // //   EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
 //    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
 //    //EXPECT_NEAR(solveSMPS("posts/fxm/fxm4_16"), 18439, 0.1); // 18438.891
@@ -1903,7 +1904,7 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
 	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
@@ -1912,7 +1913,7 @@ int main(int argc, char *argv[]) {
 
 
     //::testing::GTEST_FLAG(filter) = "*watson_independent*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.pltexp_POSTS";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.pltexp_POSTS";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestMultiStage.*";
     //::testing::GTEST_FLAG(filter) = "*assets_FELT";
     //::testing::GTEST_FLAG(filter) = "*electric_FELT*";

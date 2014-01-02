@@ -1381,7 +1381,7 @@ namespace parallel_benders {
                 }
             }
 
-            // Update stage wise upper/lower bounds, only if we did not had infeasible problems.
+            // Update stage wise upper/lower bounds, only if we did not have infeasible problems.
             if ( !infeasible_problem_ && infeasible_problems_.none() ){
                 old_lower_upper_bounds_[current_stage_].first = stage_lower_upper_bounds_[current_stage_].first;
                 old_lower_upper_bounds_[current_stage_].second = stage_lower_upper_bounds_[current_stage_].second;
@@ -1808,6 +1808,11 @@ namespace parallel_benders {
                 if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
                     IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
             }
+
+			// AK: CVaR constraint decomposition
+			if (cvar_constr_decomp_ && (!forward_ || (store_primal_and_dual_ && current_stage_ > 0)))
+                GenerateCVaRCut(benders_tree_node_pointer);
+
             // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
 #ifdef COMPUTING_TIMER
             current_time = CoinGetTimeOfDay()-current_time;
@@ -2613,6 +2618,30 @@ namespace parallel_benders {
         }
 
     }
+
+
+	// AK: CVaR constraint decomposition
+	void ParallelNestedBenders::GenerateCVaRCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        // We need the values for the H and the T matrix.
+        BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
+        BendersNodeData* ancestor_node_pointer = benders_tree_node_pointer->getParent()->getDataPtr();
+        BendersStageData* stage_pointer = stage_data_[current_stage_];
+        SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_;
+
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+
+
+		// AK: TODO
+
+
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+
+	}
+
+
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
         assert(!forward_);
@@ -3465,8 +3494,18 @@ namespace parallel_benders {
         }
 
 
+// AK: CVaR risk constraint decomp
+		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
 
-    }
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+		// TODO: add cvar cuts to the osi solver instance
+		// --------------------------------------------------------------------------------------------------------------
+		// --------------------------------------------------------------------------------------------------------------
+
+		}
+
+	}
 
     void ParallelNestedBenders::InitializeBendersNodeDataTree(int num_scen_pro_cut)
     {
@@ -4957,7 +4996,7 @@ namespace parallel_benders {
 			delete [] coin_vector;
 		}
 		else if ( benders_node_pointer->changed_aggregation_level_ && osi_solver->getNumCols() > stage_data_[current_stage_]->num_columns_+num_theta +extra_columns){
-			// We have more cols than we should have! We must remove the theta columns we have too much off!
+			// We have more cols than we should have! We must remove the theta columns we have too much of!
 			int cols_to_remove = osi_solver->getNumCols()-stage_pointer->num_columns_-extra_columns;
 			assert( cols_to_remove < num_theta );
 			std::vector<int> remove_indices;
