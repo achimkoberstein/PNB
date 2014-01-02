@@ -980,6 +980,9 @@ namespace parallel_benders {
                     integer_problems_[current_stage_] = false;
                 }
             }
+
+
+
             /************************************************************************/
             /* ODA-Level Decomposition                                              */
             /************************************************************************/
@@ -1222,6 +1225,37 @@ namespace parallel_benders {
                 //HandleSubproblem(tree_nodes_by_stage_[current_stage_][i]);
             }
             thread_pool_.wait(0); // We wait until all threads are done
+
+            /************************************************************************/
+            /* CVAR-Constraint Handling                                             */
+            /************************************************************************/
+            if ( cvar_constr_decomp_ && current_stage_ > 0 && theta_approximations_everywhere_ && !infeasible_problem_){
+                // Sort the q_s(\tilde x) by size!
+                // Gather all second stage approximations
+                std::vector<std::pair<int,double> > second_stage_approximations(num_scenarios_);
+                assert(num_scenarios_ == tree_nodes_by_stage_[current_stage_].size());
+                for (int scenario_i = 0; scenario_i < num_scenarios_; scenario_i++){
+                    second_stage_approximations[scenario_i] = make_pair(scenario_i,tree_nodes_by_stage_[current_stage_][scenario_i]->getDataPtr()->solution_value_);
+                }
+                std::sort(second_stage_approximations.begin(),second_stage_approximations.end(),DoubleIsHigher);
+                // Define the weights 
+                double beta_sum = 0.0;
+                for ( auto pair : second_stage_approximations){
+                    if (cvar_beta_-beta_sum > 0){
+                        if ( cvar_beta_-beta_sum-tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->probability_ < 0)
+                            tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = cvar_beta_-beta_sum;
+                        else 
+                            tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->probability_;
+                    }
+                    else
+                        tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = 0.0;
+                }
+                // Add optimality cut_coefficients for cvar_cuts
+
+                // Aggregate cvar_cuts
+
+
+            }
 
 			if ( current_stage_ == 1 && !forward_ ){
 				if ( infeasible_problems_.none() && !infeasible_problem_)
@@ -1809,9 +1843,6 @@ namespace parallel_benders {
                     IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
             }
 
-			// AK: CVaR constraint decomposition
-			if (cvar_constr_decomp_ && (!forward_ || (store_primal_and_dual_ && current_stage_ > 0)))
-                GenerateCVaRCut(benders_tree_node_pointer);
 
             // If we employ level decomposition, we need to construct and solve the problem, but not at the last stage!
 #ifdef COMPUTING_TIMER
@@ -6486,5 +6517,10 @@ namespace parallel_benders {
             sum += col_solution[indices[i]]*elements[i];
         }
         return osi_cut->lb()-sum;     
+    }
+
+    bool DoubleIsHigher( const std::pair<int,double>& first, const std::pair<int,double>& second )
+    {
+        return first.second >= second.second;
     }
 } // end namespace parallel_benders

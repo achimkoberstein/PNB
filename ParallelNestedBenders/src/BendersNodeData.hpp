@@ -110,7 +110,7 @@ namespace parallel_benders{
 	// AK: variants with CVaR risk constraint
 	const int PNB_INT_ALGORITHM_DETEQ_RISK = 11;
 	const int PNB_INT_ALGORITHM_BENDERS_RISK = 12;
-	const int PNB_INT_ALGORITHM_LEVEL_RISK = 13
+	const int PNB_INT_ALGORITHM_LEVEL_RISK = 13;
 	const int PNB_INT_ALGORITHM_BENDERS_ODA_RISK = 14;
 	const int PNB_INT_ALGORITHM_LEVEL_ODA_RISK = 15;
 
@@ -297,6 +297,7 @@ public:
 
 	// AK: CVaR risk constraint decomp
 	cut_container cvar_cuts_;              
+    double cvar_weight_;
 
     // Time spent!
     double build_time_; // For sub problem
