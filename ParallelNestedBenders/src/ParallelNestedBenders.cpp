@@ -1227,9 +1227,29 @@ namespace parallel_benders {
             thread_pool_.wait(0); // We wait until all threads are done
 
             /************************************************************************/
+            /* CVAR-Constraint Handling : Computation of stopping criterion         */
+            /************************************************************************/
+            if (cvar_constr_decomp_ && current_stage_ == 0){
+                // Compute for all substantial points!
+                for ( const std::vector<double>& substantial_point : cvar_substantial_points_){
+                // Recourse function approximation
+                
+                // CVaR constraint approximation
+
+
+                }
+                // Current approximation to cvar approximation problem is akin to lower_bound
+
+                // Compute alpha value with this information!
+
+            }
+
+            /************************************************************************/
             /* CVAR-Constraint Handling                                             */
             /************************************************************************/
             if ( cvar_constr_decomp_ && current_stage_ > 0 && theta_approximations_everywhere_ && !infeasible_problem_){
+                // Store current first stage solution!
+                cvar_substantial_points_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_);
                 // Sort the q_s(\tilde x) by size!
                 // Gather all second stage approximations
                 std::vector<std::pair<int,double> > second_stage_approximations(num_scenarios_);
@@ -1241,18 +1261,29 @@ namespace parallel_benders {
                 // Define the weights 
                 double beta_sum = 0.0;
                 for ( auto pair : second_stage_approximations){
-                    if (cvar_beta_-beta_sum > 0){
+                    if ( cvar_beta_-beta_sum > 1e-10 ){// Numerical tolerance testing, in theory we check against 0
                         if ( cvar_beta_-beta_sum-tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->probability_ < 0)
                             tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = cvar_beta_-beta_sum;
                         else 
                             tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->probability_;
+                        beta_sum += tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_;
                     }
                     else
                         tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = 0.0;
                 }
+                assert( CompareForEquality(beta_sum,cvar_beta_,1e-10));
                 // Add optimality cut_coefficients for cvar_cuts
 
-                // Aggregate cvar_cuts
+                // First case: copy
+
+                // Second case: multiply with cvar_weight/prob
+
+                // Third case: zero out
+                
+
+
+
+                // Aggregate cvar_cuts: after call to AggregateCuts!
 
 
             }
@@ -1641,6 +1672,14 @@ namespace parallel_benders {
                 //        tree_nodes_by_stage_[current_stage_-1][i]->getDataPtr()->optimality_cuts_.sort(myobject);
                 //    }
                 //}
+            }
+
+            /*******************************************************************************/
+            /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
+            /*******************************************************************************/
+            if ( cvar_constr_decomp_ && !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
+                AggregateCVaRCuts(tree_nodes_by_stage_[current_stage_-1][0]);
+
             }
 
             // When we did not added any cuts, we have to go forward! (except last stage of course and when all problems were feasible!)
@@ -6304,6 +6343,11 @@ namespace parallel_benders {
 		return false;
 	}
 
+    void ParallelNestedBenders::AggregateCVaRCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
+    {
+        // Aggregate cuts and add them to cvar_cuts_
+
+    }
 	bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
 	{
 
