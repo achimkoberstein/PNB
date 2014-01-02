@@ -1230,12 +1230,40 @@ namespace parallel_benders {
             /* CVAR-Constraint Handling : Computation of stopping criterion         */
             /************************************************************************/
             if (cvar_constr_decomp_ && current_stage_ == 0){
+                BendersNodeData * root_node = tree_nodes_by_stage_[0][0]->getDataPtr();
+                std::vector<double> recourse_approximation(cvar_substantial_points_.size());
+                std::vector<double> cvar_approximation(cvar_substantial_points_.size());
+                double current_cvar_problem_approximation = root_node->lower_bound_;
                 // Compute for all substantial points!
                 for ( const std::vector<double>& substantial_point : cvar_substantial_points_){
-                // Recourse function approximation
-                
-                // CVaR constraint approximation
 
+                    // c^Tx : Compute first stage solution value for current substantial point
+                    double first_stage_value = 0.0;
+                    assert(root_node->objective_ != nullptr);
+                    for ( int current_column = 0; current_column < substantial_point.size(); current_column++)
+                        first_stage_value += root_node->objective_[current_column]*substantial_point[current_column];
+
+                    // Recourse function approximation
+                    double max_value = -infinity_;
+                    for ( std::shared_ptr<CutStuff> current_cut : root_node->optimality_cuts_){
+                        if ( current_cut->to_use_ ){
+                            double recourse_approximation_value = EvaluateCutWithOneAggregate(current_cut->cut_.get(),&substantial_point[0]);
+                            if ( recourse_approximation_value > max_value )
+                                max_value = recourse_approximation_value;
+                        }
+                    }
+                    recourse_approximation.push_back(max_value+first_stage_value);
+                
+                    // CVaR approximation
+                    max_value = -infinity_;
+                    for ( std::shared_ptr<CutStuff> current_cut : root_node->cvar_cuts_){
+                        if ( current_cut->to_use_ ){
+                            double cvar_approximation_value = EvaluateCutWithOneAggregate(current_cut->cut_.get(),&substantial_point[0]);
+                            if ( cvar_approximation_value > max_value )
+                                max_value = cvar_approximation_value;
+                        }
+                    }
+                    cvar_approximation.push_back(max_value-cvar_beta_*cvar_rho_);
 
                 }
                 // Current approximation to cvar approximation problem is akin to lower_bound
@@ -1258,33 +1286,36 @@ namespace parallel_benders {
                     second_stage_approximations[scenario_i] = make_pair(scenario_i,tree_nodes_by_stage_[current_stage_][scenario_i]->getDataPtr()->solution_value_);
                 }
                 std::sort(second_stage_approximations.begin(),second_stage_approximations.end(),DoubleIsHigher);
-                // Define the weights 
+                // Define the weights and add optimality cut_coefficients for cvar_cuts, for all nodes
                 double beta_sum = 0.0;
                 for ( auto pair : second_stage_approximations){
+                    BendersNodeData* current_node = tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr();
+
                     if ( cvar_beta_-beta_sum > 1e-10 ){// Numerical tolerance testing, in theory we check against 0
-                        if ( cvar_beta_-beta_sum-tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->probability_ < 0)
-                            tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = cvar_beta_-beta_sum;
-                        else 
-                            tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->probability_;
-                        beta_sum += tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_;
+                        
+                        if ( cvar_beta_-beta_sum-current_node->probability_ < 0){// First special case : multiply with (cvar_beta-beta_sum)/prob
+                            current_node->cvar_weight_ = cvar_beta_-beta_sum;
+                            double multiplication_factor = (cvar_beta_-beta_sum)/current_node->probability_;
+                            for ( int i = 0; i < current_node->current_cut_coefficients_.size(); i++){
+                                current_node->cvar_current_cut_coefficients_[i] = current_node->current_cut_coefficients_[i]*multiplication_factor;
+                            }
+                            current_node->cvar_current_cut_rhs_ = current_node->current_cut_rhs_ * multiplication_factor;
+                        }
+                        else { // Second case: copy 
+                            current_node->cvar_weight_ = current_node->probability_;
+                            current_node->cvar_current_cut_coefficients_ = current_node->current_cut_coefficients_;
+                            current_node->cvar_current_cut_rhs_ = current_node->current_cut_rhs_;
+                        }
+                        beta_sum += current_node->cvar_weight_;
                     }
-                    else
-                        tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr()->cvar_weight_ = 0.0;
+                    else{// Third case: zero out
+                        current_node->cvar_weight_ = 0.0;
+                        current_node->cvar_current_cut_coefficients_.assign(current_node->cvar_current_cut_coefficients_.size(),0.0);
+                        current_node->cvar_current_cut_rhs_ = 0;
+                    }
                 }
                 assert( CompareForEquality(beta_sum,cvar_beta_,1e-10));
-                // Add optimality cut_coefficients for cvar_cuts
-
-                // First case: copy
-
-                // Second case: multiply with cvar_weight/prob
-
-                // Third case: zero out
-                
-
-
-
                 // Aggregate cvar_cuts: after call to AggregateCuts!
-
 
             }
 
