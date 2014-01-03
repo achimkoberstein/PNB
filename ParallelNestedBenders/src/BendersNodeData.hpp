@@ -64,6 +64,9 @@ namespace parallel_benders{
     const std::string PNB_EPSILON_ABSOLUTE = "PNB_EPSILON_ABSOLUTE";           //
     const std::string PNB_EPSILON_RELATIVE = "PNB_EPSILON_RELATIVE";           // 
 
+    const std::string PNB_CVAR_BETA = "PNB_CVAR_BETA";
+    const std::string PNB_CVAR_RHO = "PNB_CVAR_RHO";
+
     // Do we want to compute (and return) solutions?
     const std::string PNB_COMPUTE_PRIMAL_SOLUTIONS = "PNB_COMPUTE_PRIMAL_SOLUTIONS";
     const std::string PNB_COMPUTE_DUAL_SOLUTIONS = "PNB_COMPUTE_DUAL_SOLUTIONS";
@@ -301,6 +304,7 @@ public:
 
     std::vector<double> cvar_current_cut_coefficients_;
     double cvar_current_cut_rhs_;
+    int cvar_cut_index_;
 
 
     // Time spent!

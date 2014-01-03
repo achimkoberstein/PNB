@@ -315,6 +315,9 @@ private:
     std::vector<double> current_second_stage_approximation_;
     double cvar_beta_;
     double cvar_rho_;
+    double cvar_H_;
+    double cvar_alpha_;
+    OsiSolverInterface* osi_stopping_criterion_solver_;
 
     std::vector<int> cvar_substantial_iterations_;
     std::vector<double> cvar_recourse_approximations_;
