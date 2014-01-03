@@ -323,6 +323,7 @@ private:
     std::vector<double> cvar_recourse_approximations_;
     std::vector<double> cvar_cvar_approximations_;
     std::vector<std::vector<double> > cvar_substantial_points_;
+    std::vector<double> cvar_substantial_points_first_stage_objective_function_value_;
 
     // Use Warm Up Period ( start with a first stage solution and generate cuts as we go )
     bool warm_up_;
