@@ -346,7 +346,8 @@ public:
 
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,7200); // Not longer than one hour 
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
 		parallel_benders::Parameter copied_param(benders_parameter_);
         parallel_benders::Parameter copied_param_method(benders_parameter_);
 
@@ -362,7 +363,7 @@ public:
         bool test_feas_cuts = false;
         bool test_dem = false;
 
-        for (int cpu = 0; cpu < 1; cpu++){
+        for (int cpu = 0; cpu < 0; cpu++){
                 //// Solve DetEq as comparison
 
 				// Copy benders_parameter
@@ -1846,6 +1847,10 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
+    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_BETA,0.3333);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,-5000);
+   
+    EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
 //    EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
@@ -1859,7 +1864,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
 	    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
 //	//    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
-    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 416.5, 0.1);
+    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 416.5, 0.1);
 //    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
 // //   EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 14794.6, 0.1); // INDEP,BLOCKS
 //    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-256"), 425.38, 0.1);
