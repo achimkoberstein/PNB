@@ -186,6 +186,9 @@ void Parameter::init()
 	parameter_.put(PNB_TOLERANCE_INTEGER,  1e-06); 
     parameter_.put(PNB_EPSILON_ABSOLUTE,  1e-06);
     parameter_.put(PNB_EPSILON_RELATIVE,  1e-06);
+    // CVaR params
+    parameter_.put(PNB_CVAR_BETA,0.95); // Confidence level
+    parameter_.put(PNB_CVAR_RHO,0.0); // CVaR value that we would like to reach
     // Solution management
     parameter_.put(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
     parameter_.put(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);

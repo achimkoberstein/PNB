@@ -443,6 +443,9 @@ namespace parallel_benders {
             level_infinity_ = true;
             oda_method_ = true;
         }
+        if ( algorithm == PNB_INT_ALGORITHM_BENDERS_RISK ){
+            cvar_constr_decomp_ = true;
+        }
 
 		csaba_steepest_edge_ = false; // Csaba-Steepest-Edge
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
@@ -547,6 +550,13 @@ namespace parallel_benders {
                 break;
         }
 
+        // CVaR related stuff
+        if ( cvar_constr_decomp_){
+            cvar_beta_ = param.get(PNB_CVAR_BETA,0.95);
+            cvar_rho_ = param.get(PNB_CVAR_RHO,0.0);
+            osi_stopping_criterion_solver_ = osi_solver_->clone();
+            osi_stopping_criterion_solver_->loadProblem(0,0,0,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr);
+        }
 
         // Thread related stuff
         num_cpu_ = param.get(PNB_NUM_CPU,0);
@@ -753,12 +763,15 @@ namespace parallel_benders {
         bool not_stop_loop = false;
         while ( true  ) 
         {
-            if ( !regularization_)
+            if ( !regularization_ && !cvar_constr_decomp_)
                 not_stop_loop = lower_bound_ < upper_bound_ &&
                 std::abs(upper_bound_-lower_bound_) > absolute_epsilon_ &&  
                 RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
+            else if ( !regularization_ && cvar_constr_decomp_){
+                not_stop_loop = cvar_H_ > relative_epsilon_;
+            }
             else
             { // Regularization!
                 if ( regularized_solution_value_ >= infinity_)
@@ -790,7 +803,7 @@ namespace parallel_benders {
                     solution_code_ = PNB_SOLUTION_SIMILARITY_LIMIT;
                 if ( current_iteration_-insubstantial_iteration_ >= max_iteration_ )
                     solution_code_ = PNB_SOLUTION_ITERATION_LIMIT;
-                if ( upper_bound_ < lower_bound_-zero_tolerance_ )
+                if ( !cvar_constr_decomp_ && upper_bound_ < lower_bound_-zero_tolerance_ )
                     solution_code_ = PNB_SOLUTION_UPPER_LESS_LOWER_BOUND;
                 break;// We stop solving the problem
             }
@@ -1263,12 +1276,55 @@ namespace parallel_benders {
                                 max_value = cvar_approximation_value;
                         }
                     }
-                    cvar_approximation.push_back(max_value-cvar_beta_*cvar_rho_);
+                    cvar_approximation.push_back(max_value); // TODO: do we need to subtract cvar_beta*cvar_rho also? is already contained in the cut_rhs!
 
                 }
                 // Current approximation to cvar approximation problem is akin to lower_bound
 
                 // Compute alpha value with this information!
+
+                int num_rows = cvar_substantial_points_.size();
+                int num_cols = 2; // First one is alpha, second one is z
+                // Build and solve an approximation problem!
+                std::vector<double> col_ub(num_cols,infinity_);
+                std::vector<double> col_lb(num_cols,-infinity_);
+                col_lb[0] = 0.0;
+                col_ub[0] = 1.0;
+                std::vector<double> col_obj(2,1.0);
+                col_obj[0] = 0.0;
+                std::vector<double> row_ub(num_rows,infinity_);
+                std::vector<double> row_lb(num_rows,0.0);
+                for (int i = 0; i < num_rows;i++)
+                    row_lb[i] = cvar_approximation[i]*-1;
+
+                // Now we need the matrix entries! Matrix is column major ordered.
+                int num_matrix_elements = num_rows*2;
+                std::vector<double> matrix_elements(num_matrix_elements);
+                for (int i = 0; i < num_rows; i++)
+                    matrix_elements[i] = recourse_approximation[i] - current_cvar_problem_approximation - cvar_approximation[i];
+                for (int i = num_rows; i < num_rows*2;i++)
+                    matrix_elements[i] = -1.0;
+
+
+                std::vector<int> matrix_indices(num_matrix_elements);
+                for (int i = 0; i < num_rows; i++)
+                    matrix_indices[i] = i;
+                for (int i = num_rows; i < num_rows*2;i++)
+                    matrix_indices[i] = i-num_rows;
+                std::vector<int> matrix_row_starts(num_rows+1);
+                matrix_row_starts[0] = 0;
+                matrix_row_starts[1] = num_rows;
+                matrix_row_starts[2] = num_rows*2;
+
+                osi_stopping_criterion_solver_->loadProblem(num_cols,num_rows,&matrix_row_starts[0],&matrix_indices[0],&matrix_elements[0],&col_lb[0],&col_ub[0],&col_obj[0],&row_lb[0],&row_ub[0]);
+                // TODO: Comment, debug
+                osi_stopping_criterion_solver_->writeLp("stopping_problem.lp");
+                osi_stopping_criterion_solver_->initialSolve();
+                if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
+                    cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
+                    cvar_alpha_ = osi_stopping_criterion_solver_->getObjCoefficients()[0];
+                    LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
+                }
 
             }
 
@@ -1314,9 +1370,7 @@ namespace parallel_benders {
                         current_node->cvar_current_cut_rhs_ = 0;
                     }
                 }
-                assert( CompareForEquality(beta_sum,cvar_beta_,1e-10));
-                // Aggregate cvar_cuts: after call to AggregateCuts!
-
+                assert( CompareForEquality(beta_sum,cvar_beta_,1e-10) );
             }
 
 			if ( current_stage_ == 1 && !forward_ ){
@@ -1705,12 +1759,11 @@ namespace parallel_benders {
                 //}
             }
 
-            /*******************************************************************************/
-            /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
-            /*******************************************************************************/
+            //*******************************************************************************/
+            //*  Aggregate cvar cuts for nodes at the stage before the current stage  */
+            //*******************************************************************************/
             if ( cvar_constr_decomp_ && !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
                 AggregateCVaRCuts(tree_nodes_by_stage_[current_stage_-1][0]);
-
             }
 
             // When we did not added any cuts, we have to go forward! (except last stage of course and when all problems were feasible!)
@@ -3412,7 +3465,11 @@ namespace parallel_benders {
 
         if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
             // TODO Delete all cvar_constraints from the model, we add them after the other cuts!
-            //
+            
+            int num_cvar_cuts = benders_node_pointer->cvar_cuts_.size();
+            std::vector<int> row_indices(num_cvar_cuts);
+            std::iota(row_indices.begin(),row_indices.end(),benders_node_pointer->cvar_cut_index_);
+            osi_solver->deleteRows(num_cvar_cuts,&row_indices[0]);
 
         }
 
@@ -3604,11 +3661,16 @@ namespace parallel_benders {
 // AK: CVaR risk constraint decomp
 		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
 
-		// --------------------------------------------------------------------------------------------------------------
-		// --------------------------------------------------------------------------------------------------------------
-		// TODO: add cvar cuts to the osi solver instance
-		// --------------------------------------------------------------------------------------------------------------
-		// --------------------------------------------------------------------------------------------------------------
+            // Simple addition without consideration of warm start behavior
+            // Store current row index for future consideration
+            benders_node_pointer->cvar_cut_index_ = osi_solver->getNumRows();
+            // Add all cvar cuts to solver!
+            for (BendersNodeData::cut_container::iterator it = benders_node_pointer->cvar_cuts_.begin(); it != benders_node_pointer->cvar_cuts_.end(); ++it){
+                if ( (*it)->to_use_ ){
+                    assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
+                    osi_solver->applyRowCuts(1,(*it)->cut_.get());
+                }
+            }
 
 		}
 
@@ -5080,10 +5142,16 @@ namespace parallel_benders {
         if ( num_theta == 0 ){
             num_theta = getNumThetasByStage(benders_tree_node_pointer);
         }
-		int extra_columns = (level_decomp_ && (level_infinity_|| level_manhattan_) ? stage_data_[current_stage_]->num_columns_:0 );
+        int extra_columns = 0;
+        if ( level_decomp_ && level_manhattan_)
+            extra_columns += stage_data_[current_stage_]->num_columns_;
+		if ( level_decomp_ && level_infinity_ )
+            extra_columns += 1;
+        if ( cvar_constr_decomp_ )
+            extra_columns++;
         // We need an objective function variable that is added to the problem for level decomp!
-		if ( osi_solver->getNumCols() < stage_data_[current_stage_]->num_columns_+num_theta ) { // We need to add the theta variables!
-			int num_cols = num_theta;
+		if ( osi_solver->getNumCols() < stage_data_[current_stage_]->num_columns_+num_theta + (cvar_constr_decomp_ ? 1: 0)) { // We need to add the theta variables!
+			int num_cols = num_theta+ cvar_constr_decomp_ ? 1: 0;
 			assert( num_cols > 0);
 			std::vector<double> lower(num_cols,-infinity_);
 			std::vector<double> upper(num_cols,infinity_);
@@ -5091,6 +5159,8 @@ namespace parallel_benders {
 			if (!benders_node_pointer->optimality_cuts_.empty() )
 				term = 1.0;
 			std::vector<double> objective(num_cols,term); 
+            if ( cvar_constr_decomp_ )
+                objective[objective.size()-1] = 0.0;
 			CoinPackedVectorBase** coin_vector = new CoinPackedVectorBase*[num_cols];
 			for (int i = 0; i < num_cols; i++){
 				coin_vector[i] = new CoinShallowPackedVector(0,nullptr,nullptr,false);
@@ -5126,8 +5196,7 @@ namespace parallel_benders {
             if ( !seperate_first_stage_solver_ ){
                 regularized_initialized_cols_ = false;
             }
-            if ( !regularized_initialized_cols_ && current_stage_ == 0 || osi_solver->getNumCols() != stage_data_[current_stage_]->num_columns_+num_theta+stage_data_[current_stage_]->num_columns_ && level_manhattan_ || 
-				osi_solver->getNumCols() != stage_data_[current_stage_]->num_columns_+num_theta+1 && level_infinity_){
+            if ( !regularized_initialized_cols_ && current_stage_ == 0 || osi_solver->getNumCols() != stage_data_[current_stage_]->num_columns_+num_theta+extra_columns ){
 					int num_columns = (level_manhattan_ ? stage_data_[current_stage_]->num_columns_ : 1);
 					if ( current_stage_ == 0 )
 						regularized_initialized_cols_ = true;
@@ -6383,6 +6452,38 @@ namespace parallel_benders {
     void ParallelNestedBenders::AggregateCVaRCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
     {
         // Aggregate cuts and add them to cvar_cuts_
+        // Aggregate cvar_cuts : sum up all cvar_cut_coefficients and cvar_cut_rhs. Keep in mind that we have \theta variables present!
+        int num_columns = stage_data_[0]->num_columns_+1;
+        std::vector<int> cvar_cut_indices(num_columns);
+        std::iota(cvar_cut_indices.begin(),cvar_cut_indices.end(),0); 
+        cvar_cut_indices[num_columns-1] = osi_solver_->getNumCols()-1;
+        assert( cvar_cut_indices[num_columns-1] == stage_data_[0]->num_columns_+stage_data_[0]->num_thetas_+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0));
+
+        std::vector<double> cvar_cut_coefficient(num_columns,0.0);
+        cvar_cut_coefficient[cvar_cut_coefficient.size()-1] = 1.0;
+
+        double cvar_cut_rhs = -cvar_beta_*cvar_rho_;
+
+        for ( auto node : tree_nodes_by_stage_[current_stage_] ){
+            cvar_cut_rhs += node->getDataPtr()->cvar_current_cut_rhs_;
+            for ( int i = 0; i < cvar_cut_coefficient.size();i++)
+                cvar_cut_coefficient[i] += node->getDataPtr()->cvar_current_cut_coefficients_[i];
+        }
+        // Zero out cvar_cut_coefficients
+        for ( int i = 0; i < cvar_cut_coefficient.size();i++)
+            if ( CompareWithZero(cvar_cut_coefficient[i]))
+                cvar_cut_coefficient[i] = 0;
+
+        // Construct cut out of data
+        std::shared_ptr<OsiRowCut> cut_pointer(new OsiRowCut());
+        if ( CompareWithZero(cvar_cut_rhs))
+            cvar_cut_rhs = 0.0;
+        cut_pointer->setLb(cvar_cut_rhs);
+        cut_pointer->setUb(infinity_);
+        cut_pointer->setRow(num_columns,&cvar_cut_indices[0],&cvar_cut_coefficient[0],debug_test_duplicate_indices_);
+        std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
+        cut_stuff->aggregate_number_ = -1;
+        tree_nodes_by_stage_[0][0]->getDataPtr()->cvar_cuts_.emplace_back(cut_stuff);
 
     }
 	bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
