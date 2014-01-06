@@ -405,6 +405,7 @@ void ComputeDualSolutionForMipProblem(OsiSolverInterface* osi_solver,double* dua
 std::vector<double> computeTTransposeX(BendersNodeData* benders_node_pointer, SmiCoreData* core_pointer,int current_stage,const std::vector<double> x);
 
 inline double EvaluateCutWithOneAggregate(OsiRowCut* osi_cut, const double* col_solution);
+inline double EvaluateCut(OsiRowCut* osi_cut, const double* col_solution);
 
 } // end namespace parallel_benders
 #endif // ParallelNestedBenders_h__
