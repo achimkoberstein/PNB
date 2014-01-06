@@ -2612,11 +2612,12 @@ const char* SmiScnModel::getColumnName( int index )
     return "";
 }
 
-void SmiScnModel::setCVaRConstraint( bool value, double cvar_beta,double cvar_rho )
+void SmiScnModel::setCVaRConstraint( bool cvar_value, double cvar_beta,double cvar_rho, bool first_stage_cvar )
 {
-    cvar_ = value;
+    cvar_ = cvar_value;
     cvar_beta_ = cvar_beta;
     cvar_rho_ = cvar_rho;
+    cvar_first_stage_ = first_stage_cvar;
 }
 
 void SmiScnModel::generateCVaRConstraints()
@@ -2635,9 +2636,13 @@ void SmiScnModel::generateCVaRConstraints()
     // 
     int num_scenarios = getNumScenarios();
     int num_second_stage_cols = core_->getNumCols(1);
+
+    int first_stage_columns = 0;
+    if ( cvar_first_stage_ )
+        first_stage_columns = core_->getNumCols(0);
     int new_num_cols = ncol_ + num_scenarios+1;
     int new_num_rows = nrow_ + num_scenarios+1;
-    int new_num_els = nels_ + core_->getNumCols(0)+num_scenarios+1+num_scenarios*(num_second_stage_cols+2);
+    int new_num_els = nels_ + first_stage_columns+num_scenarios+1+num_scenarios*(num_second_stage_cols+2);
     
     // Create new arrays and copy old entries into new ones!
     resizeDoubleArray(new_num_cols,ncol_,dclo_);
@@ -2659,11 +2664,12 @@ void SmiScnModel::generateCVaRConstraints()
     double multiplicative_factor = 1/cvar_beta_;
     int current_index_in_matrix_array = nels_;
     int current_index_in_row_start = nrow_+1;
-    for (int i = 0; i < first_scenario_start_index; i++){
-        dels_[current_index_in_matrix_array] = dobj_[i];
-        indx_[current_index_in_matrix_array] = i;
-        current_index_in_matrix_array++;
-    }
+    if ( cvar_first_stage_)
+        for (int i = 0; i < first_scenario_start_index; i++){
+            dels_[current_index_in_matrix_array] = dobj_[i];
+            indx_[current_index_in_matrix_array] = i;
+            current_index_in_matrix_array++;
+        }
     for (int i = 0; i < num_scenarios;i++){
         dels_[current_index_in_matrix_array] = multiplicative_factor*this->getScenarioProb(i);
         indx_[current_index_in_matrix_array] = ncol_+i;
@@ -2672,7 +2678,7 @@ void SmiScnModel::generateCVaRConstraints()
     dels_[current_index_in_matrix_array] = 1.0;
     indx_[current_index_in_matrix_array] = z_index;
     current_index_in_matrix_array++;
-    rstrt_[current_index_in_row_start] = rstrt_[current_index_in_row_start-1] + core_->getNumCols(0)+num_scenarios+1;
+    rstrt_[current_index_in_row_start] = rstrt_[current_index_in_row_start-1] + first_stage_columns+num_scenarios+1;
     current_index_in_row_start++;
     
 
