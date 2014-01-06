@@ -297,7 +297,7 @@ public:
     const SmiDiscreteDistribution* getDiscreteDistribution( );
 
     void setSampling(bool value);
-    void setCVaRConstraint(bool value, double cvar_alpha, double cvar_rho);
+    void setCVaRConstraint(bool value, double cvar_beta,double cvar_rho);
 
     const char* getColumnName(int index);
 
@@ -403,7 +403,7 @@ private:
     bool sampling_;
     bool cvar_;
     double cvar_rho_;
-    double cvar_alpha_;
+    double cvar_beta_;
 };
 
 class SmiScnNode

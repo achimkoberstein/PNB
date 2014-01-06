@@ -842,7 +842,8 @@ OsiSolverInterface *
     for_each(smiTree_.treeBegin(),smiTree_.treeEnd(),SmiScnModelAddNode(this));
 
     // If we add CVaR constraint, we need to add them after we added all the model constraints!
-    generateCVaRConstraints();
+    if ( cvar_)
+        generateCVaRConstraints();
 
     //What happens if no ScenarioTree is present, but a core model is?
     matrix_ = new CoinPackedMatrix(false,0,0);
@@ -2611,10 +2612,10 @@ const char* SmiScnModel::getColumnName( int index )
     return "";
 }
 
-void SmiScnModel::setCVaRConstraint( bool value, double cvar_alpha, double cvar_rho )
+void SmiScnModel::setCVaRConstraint( bool value, double cvar_beta,double cvar_rho )
 {
     cvar_ = value;
-    cvar_alpha_ = cvar_alpha;
+    cvar_beta_ = cvar_beta;
     cvar_rho_ = cvar_rho;
 }
 
@@ -2653,9 +2654,9 @@ void SmiScnModel::generateCVaRConstraints()
     int z_index = ncol_+num_scenarios;
     int first_scenario_start_index = core_->getNumCols(0);
 
-    assert(cvar_alpha_< 1.0 && cvar_alpha_ > 0.0);
+    assert(cvar_beta_< 1.0 && cvar_beta_ > 0.0);
     // Cvar_constraint
-    double multiplicative_factor = 1/(1-cvar_alpha_);
+    double multiplicative_factor = 1/cvar_beta_;
     int current_index_in_matrix_array = nels_;
     int current_index_in_row_start = nrow_+1;
     for (int i = 0; i < first_scenario_start_index; i++){
