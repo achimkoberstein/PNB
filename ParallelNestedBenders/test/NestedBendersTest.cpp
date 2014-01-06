@@ -321,7 +321,7 @@ public:
             boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
             int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
             assert( smi_read_in == 0);
-            smi_cvar_model->setCVaRConstraint(true,0.33,-80000);
+            smi_cvar_model->setCVaRConstraint(true,0.66,-80000);
             OsiCpxSolverInterface osi_cpx;
             smi_cvar_model->setOsiSolverHandle(&osi_cpx);
             OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
@@ -691,6 +691,7 @@ protected:
             nested_benders.initialSolve();
             solver_time = CoinGetTimeOfDay()-solver_time; // Solver only time
             cpuTime = CoinGetTimeOfDay()-cpuTime; // Overall WallClockTime;
+            nested_benders.printSolutionToFile("primal_solution.txt");
 			min_cpu = min(cpuTime,min_cpu);
 			min_solver = min(solver_time,min_solver);
 			max_cpu = max(max_cpu,cpuTime);
@@ -1860,8 +1861,9 @@ TEST_F(NestedBendersTestSampleAverageApproximation,sample_average_approximation1
 }
 
 TEST_F(NestedBendersTest,temporary){// dakota model
-    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_BETA,0.3333);
-    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,-5000);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_BETA,0.666666);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,-80000);
+    benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,1);
    
     EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
