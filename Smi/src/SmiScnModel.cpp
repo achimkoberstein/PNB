@@ -841,6 +841,9 @@ OsiSolverInterface *
     // loop to addNodes
     for_each(smiTree_.treeBegin(),smiTree_.treeEnd(),SmiScnModelAddNode(this));
 
+    // If we add CVaR constraint, we need to add them after we added all the model constraints!
+    generateCVaRConstraints();
+
     //What happens if no ScenarioTree is present, but a core model is?
     matrix_ = new CoinPackedMatrix(false,0,0);
     int *len=NULL;
@@ -2606,4 +2609,143 @@ const char* SmiScnModel::getColumnName( int index )
     if ( smpsio_ )
         return smpsio_->columnName(index);
     return "";
+}
+
+void SmiScnModel::setCVaRConstraint( bool value, double cvar_alpha, double cvar_rho )
+{
+    cvar_ = value;
+    cvar_alpha_ = cvar_alpha;
+    cvar_rho_ = cvar_rho;
+}
+
+void SmiScnModel::generateCVaRConstraints()
+{
+    // We need to modify the matrix_ and the arrays for collb, colub, obj, rowlb, rowub
+    // Implies modifying ncol_ and nrow_ and nels_
+    // We need to add the following constraints
+    // cvar_constraint z + 1/(1-cvar_alpha) \sum p_j z_j <= cvar_rho
+    // For all scenarios: z_j >= p_j q_j y_j -z
+    // 
+
+    // We add num_scenarios_ + 1 new variables
+    // We add num_scenarios +1 new constraints
+    // We add num_scenarios+1 elements for cvar_constraint
+    // We add num_scenario*num_second_stage_columns+2 elements for scenario constraints
+    // 
+    int num_scenarios = getNumScenarios();
+    int num_second_stage_cols = core_->getNumCols(1);
+    int new_num_cols = ncol_ + num_scenarios+1;
+    int new_num_rows = nrow_ + num_scenarios+1;
+    int new_num_els = nels_ + core_->getNumCols(0)+num_scenarios+1+num_scenarios*(num_second_stage_cols+2);
+    
+    // Create new arrays and copy old entries into new ones!
+    resizeDoubleArray(new_num_cols,ncol_,dclo_);
+    resizeDoubleArray(new_num_cols,ncol_,dcup_);
+    resizeDoubleArray(new_num_cols,ncol_,dobj_);
+    resizeDoubleArray(new_num_rows,nrow_,drlo_);
+    resizeDoubleArray(new_num_rows,nrow_,drup_);
+
+    resizeDoubleArray(new_num_els,nels_,dels_);
+    resizeIntArray(new_num_els,nels_,indx_);
+    resizeIntArray(new_num_rows+1,nrow_+1,rstrt_);
+
+    // Fill matrix 
+    int z_index = ncol_+num_scenarios;
+    int first_scenario_start_index = core_->getNumCols(0);
+
+    assert(cvar_alpha_< 1.0 && cvar_alpha_ > 0.0);
+    // Cvar_constraint
+    double multiplicative_factor = 1/(1-cvar_alpha_);
+    int current_index_in_matrix_array = nels_;
+    int current_index_in_row_start = nrow_+1;
+    for (int i = 0; i < first_scenario_start_index; i++){
+        dels_[current_index_in_matrix_array] = dobj_[i];
+        indx_[current_index_in_matrix_array] = i;
+        current_index_in_matrix_array++;
+    }
+    for (int i = 0; i < num_scenarios;i++){
+        dels_[current_index_in_matrix_array] = multiplicative_factor*this->getScenarioProb(i);
+        indx_[current_index_in_matrix_array] = ncol_+i;
+        current_index_in_matrix_array++;
+    }
+    dels_[current_index_in_matrix_array] = 1.0;
+    indx_[current_index_in_matrix_array] = z_index;
+    current_index_in_matrix_array++;
+    rstrt_[current_index_in_row_start] = rstrt_[current_index_in_row_start-1] + core_->getNumCols(0)+num_scenarios+1;
+    current_index_in_row_start++;
+    
+
+    // Scenario constraints
+    for ( int current_scen = 0; current_scen < num_scenarios; current_scen++){
+        for ( int i = 0; i < num_second_stage_cols; i++){
+            dels_[current_index_in_matrix_array] = dobj_[first_scenario_start_index+(current_scen*num_second_stage_cols)+i]*(1/this->getScenarioProb(current_scen));
+            indx_[current_index_in_matrix_array] = first_scenario_start_index+(current_scen*num_second_stage_cols)+i;
+            current_index_in_matrix_array++;
+        }
+        dels_[current_index_in_matrix_array] = -1.0;
+        indx_[current_index_in_matrix_array] = ncol_+current_scen;
+        current_index_in_matrix_array++;
+        dels_[current_index_in_matrix_array] = -1.0;
+        indx_[current_index_in_matrix_array] = z_index;
+        current_index_in_matrix_array++;
+        rstrt_[current_index_in_row_start] = rstrt_[current_index_in_row_start-1]+num_second_stage_cols+2;
+        current_index_in_row_start++;
+    }
+    
+    // Fill columns
+    // z_j
+    for ( int i = ncol_; i < new_num_cols-1;i++){
+        dclo_[i] = 0;
+        dcup_[i] = core_->getInfinity();
+    }
+    // z
+    dclo_[new_num_cols-1] = -core_->getInfinity();
+    dcup_[new_num_cols-1] = core_->getInfinity();
+
+    // Fill rows
+    // cvar_constraint
+    drlo_[nrow_] = -core_->getInfinity();
+    drup_[nrow_] = cvar_rho_;
+    // Scenario constraints
+    for (int i = nrow_+1; i < new_num_rows; i++){
+        drlo_[i] = -core_->getInfinity();
+        drup_[i] = 0.0;
+    }
+
+    // Set ncol, nrow, etc. to new values!
+    ncol_ = new_num_cols;
+    nrow_ = new_num_rows;
+    nels_ = new_num_els;
+
+}
+
+void SmiScnModel::resizeDoubleArray( int new_size, int old_size, double*& double_array )
+{
+    if ( double_array == NULL)
+        return;
+    if ( new_size < old_size )
+        return;
+    double* new_array = new double[new_size];
+    memcpy(new_array,double_array,old_size*sizeof(double));
+    // Initialize the new memory
+    for ( int i = old_size; i < new_size;i++)
+        new_array[i] = 0.0;
+    delete [] double_array;
+    double_array = new_array;
+
+}
+
+void SmiScnModel::resizeIntArray( int new_size, int old_size, int*& int_array )
+{
+    if ( int_array == NULL)
+        return;
+    if ( new_size < old_size )
+        return;
+    int* new_array = new int[new_size];
+    memcpy(new_array,int_array,old_size*sizeof(int));
+    // Initialize the new memory
+    for ( int i = old_size; i < new_size;i++)
+        new_array[i] = 0;
+    delete [] int_array;
+    int_array = new_array;
 }
