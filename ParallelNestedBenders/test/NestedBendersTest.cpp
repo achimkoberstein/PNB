@@ -208,6 +208,7 @@ public:
         double * max_scenario_pointer = NULL;
         compute_statistics_ = false;
         generate_initial_solution_ = false;
+        bool generate_cvar_constraints = true;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -313,8 +314,20 @@ public:
                     LOG(INFO) << "printed to file";
                 }
             }
+
         }
-        
+
+        if ( generate_cvar_constraints){
+            boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
+            int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+            assert( smi_read_in == 0);
+            smi_cvar_model->setCVaRConstraint(true,0.33,-80000);
+            OsiCpxSolverInterface osi_cpx;
+            smi_cvar_model->setOsiSolverHandle(&osi_cpx);
+            OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
+            deteq_solver->writeLp("cvar_model");
+            smi_cvar_model->releaseSolver();
+        }
 
         // Specify the number of repetitions_ 
         repetitions_ = 1;

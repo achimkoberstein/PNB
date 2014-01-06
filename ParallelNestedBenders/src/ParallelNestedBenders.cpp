@@ -2193,6 +2193,8 @@ namespace parallel_benders {
             else if ( level_decomp_ && level_infinity_  && current_stage_ <= level_stage_){
                 num_theta -= 1;
             }
+            else if ( cvar_constr_decomp_ )
+                num_theta -= 1;
             assert(num_theta >= 0);
             StoreValuesFromSolverInVector(benders_node_pointer->next_stage_approximation_,osi_solver->getColSolution()+stage_data_[current_stage_]->num_columns_,num_theta);
             //if (  benders_node_pointer->unbounded_ && num_theta > 0){

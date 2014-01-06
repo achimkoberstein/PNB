@@ -297,6 +297,7 @@ public:
     const SmiDiscreteDistribution* getDiscreteDistribution( );
 
     void setSampling(bool value);
+    void setCVaRConstraint(bool value, double cvar_alpha, double cvar_rho);
 
     const char* getColumnName(int index);
 
@@ -350,6 +351,10 @@ private:
 
     void CopyStochasticDataToDetEQModel(int size,const double* source_array,double* destination_array,int offset,const CoinPackedVector& cpv,SmiCoreCombineRule* combineRule,double prob);
 
+    void generateCVaRConstraints();
+    void resizeDoubleArray(int new_size, int old_size, double*& double_array);
+    void resizeIntArray(int new_size, int old_size, int*& int_array);
+
     CoinMessageHandler *handler_;
     SmiMessage *messages_;
 
@@ -396,6 +401,9 @@ private:
     SmiDiscreteDistribution* discrete_distribution_;
     SmiBlockStructure* block_structure_;
     bool sampling_;
+    bool cvar_;
+    double cvar_rho_;
+    double cvar_alpha_;
 };
 
 class SmiScnNode
