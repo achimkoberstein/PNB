@@ -663,7 +663,7 @@ namespace parallel_benders {
         }
         std::vector<int> new_columns(num_stages_,0);
         if ( non_staircase_problem_ ){
-            // We need to generate the non-staircase constraints
+            // We need to generate the non1300-staircase constraints
             LOG(INFO) << "Transforming to a non-staircase problem..";
             smi_->transformToStaircaseStructure(non_staircase_coefficients_);
             non_staircase_problem_ = false;
@@ -6482,7 +6482,7 @@ namespace parallel_benders {
         //assert( cvar_cut_indices[num_columns-1] == stage_data_[0]->num_columns_+stage_data_[0]->num_thetas_+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0));
 
         std::vector<double> cvar_cut_coefficient(num_columns,0.0);
-        cvar_cut_coefficient[cvar_cut_coefficient.size()-1] = 1.0;
+        cvar_cut_coefficient[cvar_cut_coefficient.size()-1] = 0.0;
 
         double cvar_cut_rhs = -cvar_beta_*cvar_rho_;
 
@@ -6726,5 +6726,22 @@ namespace parallel_benders {
     bool DoubleIsHigher( const std::pair<int,double>& first, const std::pair<int,double>& second )
     {
         return first.second >= second.second;
+    }
+
+    double EvaluateCut( OsiRowCut* osi_cut, const double* col_solution )
+    {
+        assert(col_solution != nullptr);
+        // Caller has to ensure that dimensions are correct!
+        // Get RHS of cut
+        // Get Row
+        const CoinPackedVector& row(osi_cut->row());
+        const double * elements = row.getElements();
+        const int * indices = row.getIndices();
+        int num_elements = row.getNumElements();
+        double sum = 0.0;
+        for (int i = 0; i < num_elements; i++){ // We do not need the aggregate index (which is by construction always the last one!
+            sum += col_solution[indices[i]]*elements[i];
+        }
+        return osi_cut->lb()-sum;  
     }
 } // end namespace parallel_benders
