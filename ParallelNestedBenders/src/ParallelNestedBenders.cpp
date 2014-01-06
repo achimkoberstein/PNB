@@ -6438,7 +6438,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6485,6 +6485,12 @@ namespace parallel_benders {
         cvar_cut_coefficient[cvar_cut_coefficient.size()-1] = 0.0;
 
         double cvar_cut_rhs = -cvar_beta_*cvar_rho_;
+
+        //const double* first_stage_objective_coefficients = core_->getDenseObjCoefficients(0);
+        //for ( int i = 0; i < stage_data_[0]->num_columns_;i++){
+        //    cvar_cut_coefficient[i] += first_stage_objective_coefficients[i]*cvar_beta_;
+        //}
+        //cvar_cut_rhs += tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_*cvar_beta_;
 
         for ( auto node : tree_nodes_by_stage_[current_stage_] ){
             cvar_cut_rhs += node->getDataPtr()->cvar_current_cut_rhs_;
