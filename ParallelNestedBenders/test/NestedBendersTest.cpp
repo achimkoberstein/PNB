@@ -754,7 +754,8 @@ protected:
 			max_solver = max(max_solver,solver_time);
             LOG(INFO) << "Solution Time: " << cpuTime;
 
-            if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO ){
+            if ( benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0) != parallel_benders::PNB_INT_SOLUTION_PRIMAL_NO 
+                && benders_parameter_.parameter_.get(parallel_benders::PNB_BENDERS,0) != parallel_benders::PNB_INT_ALGORITHM_DETEQ || benders_parameter_.parameter_.get(parallel_benders::PNB_BENDERS,0) != parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK){
                 // Get num_cols when specified correctly
                 // This works for non-appended problems!
                 int last_stage = benders_parameter_.parameter_.get(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,0);
