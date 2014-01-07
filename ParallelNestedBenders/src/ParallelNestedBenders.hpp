@@ -126,6 +126,7 @@ private:
 
     // CVaR methods
     void AggregateCVaRCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
+    void SolveStoppingCriterionProblem();
 	
     // Problem data
     SmiScnModel* smi_;
