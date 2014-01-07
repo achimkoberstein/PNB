@@ -1248,91 +1248,7 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-            /************************************************************************/
-            /* CVAR-Constraint Handling : Computation of stopping criterion         */
-            /************************************************************************/
-            if (cvar_constr_decomp_ && current_stage_ == 0){
-                BendersNodeData * root_node = tree_nodes_by_stage_[0][0]->getDataPtr();
-                std::vector<double> recourse_approximation(cvar_substantial_points_.size());
-                std::vector<double> cvar_approximation(cvar_substantial_points_.size());
-                double current_cvar_problem_approximation = root_node->lower_bound_;
-                // Compute for all substantial points!
-                for ( int i = 0; i < cvar_substantial_points_.size();i++){
-                    const std::vector<double>& substantial_point = cvar_substantial_points_[i];
-                    double first_stage_value = cvar_substantial_points_first_stage_objective_function_value_[i];
 
-                    // Recourse function approximation
-                    double max_value = -infinity_;
-                    for ( std::shared_ptr<CutStuff> current_cut : root_node->optimality_cuts_){
-                        if ( current_cut->to_use_ ){
-                            double recourse_approximation_value = EvaluateCutWithOneAggregate(current_cut->cut_.get(),&substantial_point[0]);
-                            if ( recourse_approximation_value > max_value )
-                                max_value = recourse_approximation_value;
-                        }
-                    }
-                    recourse_approximation[i] = max_value+first_stage_value;
-                
-                    // CVaR approximation
-                    max_value = -infinity_;
-                    for ( std::shared_ptr<CutStuff> current_cut : root_node->cvar_cuts_){
-                        if ( current_cut->to_use_ ){
-                            double cvar_approximation_value = EvaluateCutWithOneAggregate(current_cut->cut_.get(),&substantial_point[0]);
-                            if ( cvar_approximation_value > max_value )
-                                max_value = cvar_approximation_value;
-                        }
-                    }
-                    cvar_approximation[i] = max_value; // TODO: do we need to subtract cvar_beta*cvar_rho also? is already contained in the cut_rhs!
-
-                }
-                // Current approximation to cvar approximation problem is akin to lower_bound
-
-                // Compute alpha value with this information!
-
-                int num_rows = cvar_substantial_points_.size();
-                int num_cols = 2; // First one is alpha, second one is z
-                // Build and solve an approximation problem!
-                std::vector<double> col_ub(num_cols,infinity_);
-                std::vector<double> col_lb(num_cols,-infinity_);
-                col_lb[0] = 0.0;
-                col_ub[0] = 1.0;
-                std::vector<double> col_obj(2,1.0);
-                col_obj[0] = 0.0;
-                std::vector<double> row_ub(num_rows,infinity_);
-                std::vector<double> row_lb(num_rows,0.0);
-                for (int i = 0; i < num_rows;i++)
-                    row_lb[i] = cvar_approximation[i]*-1;
-
-                // Now we need the matrix entries! Matrix is column major ordered.
-                int num_matrix_elements = num_rows*2;
-                std::vector<double> matrix_elements(num_matrix_elements);
-                for (int i = 0; i < num_rows; i++)
-                    matrix_elements[i] = recourse_approximation[i] - current_cvar_problem_approximation - cvar_approximation[i];
-                for (int i = num_rows; i < num_rows*2;i++)
-                    matrix_elements[i] = -1.0;
-
-
-                std::vector<int> matrix_indices(num_matrix_elements);
-                for (int i = 0; i < num_rows; i++)
-                    matrix_indices[i] = i;
-                for (int i = num_rows; i < num_rows*2;i++)
-                    matrix_indices[i] = i-num_rows;
-                std::vector<int> matrix_col_starts(num_cols+1);
-                matrix_col_starts[0] = 0;
-                matrix_col_starts[1] = num_rows;
-                matrix_col_starts[2] = num_rows*2;
-
-                osi_stopping_criterion_solver_->loadProblem(num_cols,num_rows,&matrix_col_starts[0],&matrix_indices[0],&matrix_elements[0],&col_lb[0],&col_ub[0],&col_obj[0],&row_lb[0],&row_ub[0]);
-                // TODO: Comment, debug
-                osi_stopping_criterion_solver_->writeLp("stopping_problem.lp");
-                osi_stopping_criterion_solver_->setObjSense(-1);
-                osi_stopping_criterion_solver_->initialSolve();
-                if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
-                    cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
-                    cvar_alpha_ = osi_stopping_criterion_solver_->getObjCoefficients()[0];
-                    LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
-                }
-
-            }
 
             /************************************************************************/
             /* CVAR-Constraint Handling                                             */
@@ -1963,6 +1879,7 @@ namespace parallel_benders {
         // We only need to store data if we have a feasible solution for the subproblem.
         if ( !infeasible_problems_[benders_tree_node_pointer->scenario()] ){
             StoreData(osi_solver,benders_tree_node_pointer);
+
             // Check for degeneracy and stuff, if we like it..
             if ( !forward_ || (store_primal_and_dual_ && current_stage_ > 0))
                 GenerateOptimalityCut(benders_tree_node_pointer);
@@ -1971,6 +1888,13 @@ namespace parallel_benders {
                     AnalyseOptimalityCuts(osi_solver,benders_tree_node_pointer);
                 if ( store_cut_information_ && (forward_ && current_stage_ < num_stages_-1 || current_stage_ == 0 ))
                     IntraIterationCutAggregation(osi_solver,benders_tree_node_pointer);
+            }
+
+            /************************************************************************/
+            /* CVAR-Constraint Handling : Computation of stopping criterion         */
+            /************************************************************************/
+            if (cvar_constr_decomp_ && current_stage_ == 0){
+                SolveStoppingCriterionProblem();
             }
 
 
@@ -6514,7 +6438,92 @@ namespace parallel_benders {
         tree_nodes_by_stage_[0][0]->getDataPtr()->cvar_cuts_.emplace_back(cut_stuff);
 
     }
-	bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
+
+    void ParallelNestedBenders::SolveStoppingCriterionProblem()
+    {
+        if ( current_stage_ != 0)
+            return;
+        BendersNodeData * root_node = tree_nodes_by_stage_[0][0]->getDataPtr();
+        std::vector<double> recourse_approximation(cvar_substantial_points_.size());
+        std::vector<double> cvar_approximation(cvar_substantial_points_.size());
+        double current_cvar_problem_approximation = root_node->lower_bound_;
+        // Compute for all substantial points!
+        for ( int i = 0; i < cvar_substantial_points_.size();i++){
+            const std::vector<double>& substantial_point = cvar_substantial_points_[i];
+            double first_stage_value = cvar_substantial_points_first_stage_objective_function_value_[i];
+
+            // Recourse function approximation
+            double max_value = -infinity_;
+            for ( std::shared_ptr<CutStuff> current_cut : root_node->optimality_cuts_){
+                if ( current_cut->to_use_ ){
+                    double recourse_approximation_value = EvaluateCutWithOneAggregate(current_cut->cut_.get(),&substantial_point[0]);
+                    if ( recourse_approximation_value > max_value )
+                        max_value = recourse_approximation_value;
+                }
+            }
+            recourse_approximation[i] = max_value+first_stage_value;
+
+            // CVaR approximation
+            max_value = -infinity_;
+            for ( std::shared_ptr<CutStuff> current_cut : root_node->cvar_cuts_){
+                if ( current_cut->to_use_ ){
+                    double cvar_approximation_value = EvaluateCutWithOneAggregate(current_cut->cut_.get(),&substantial_point[0]);
+                    if ( cvar_approximation_value > max_value )
+                        max_value = cvar_approximation_value;
+                }
+            }
+            cvar_approximation[i] = max_value; // TODO: do we need to subtract cvar_beta*cvar_rho also? is already contained in the cut_rhs!
+
+        }
+        // Current approximation to cvar approximation problem is akin to lower_bound
+
+        // Compute alpha value with this information!
+
+        int num_rows = cvar_substantial_points_.size();
+        int num_cols = 2; // First one is alpha, second one is z
+        // Build and solve an approximation problem!
+        std::vector<double> col_ub(num_cols,infinity_);
+        std::vector<double> col_lb(num_cols,-infinity_);
+        col_lb[0] = 0.0;
+        col_ub[0] = 1.0;
+        std::vector<double> col_obj(2,1.0);
+        col_obj[0] = 0.0;
+        std::vector<double> row_ub(num_rows,infinity_);
+        std::vector<double> row_lb(num_rows,0.0);
+        for (int i = 0; i < num_rows;i++)
+            row_lb[i] = cvar_approximation[i]*-1;
+
+        // Now we need the matrix entries! Matrix is column major ordered.
+        int num_matrix_elements = num_rows*2;
+        std::vector<double> matrix_elements(num_matrix_elements);
+        for (int i = 0; i < num_rows; i++)
+            matrix_elements[i] = recourse_approximation[i] - current_cvar_problem_approximation - cvar_approximation[i];
+        for (int i = num_rows; i < num_rows*2;i++)
+            matrix_elements[i] = -1.0;
+
+
+        std::vector<int> matrix_indices(num_matrix_elements);
+        for (int i = 0; i < num_rows; i++)
+            matrix_indices[i] = i;
+        for (int i = num_rows; i < num_rows*2;i++)
+            matrix_indices[i] = i-num_rows;
+        std::vector<int> matrix_col_starts(num_cols+1);
+        matrix_col_starts[0] = 0;
+        matrix_col_starts[1] = num_rows;
+        matrix_col_starts[2] = num_rows*2;
+
+        osi_stopping_criterion_solver_->loadProblem(num_cols,num_rows,&matrix_col_starts[0],&matrix_indices[0],&matrix_elements[0],&col_lb[0],&col_ub[0],&col_obj[0],&row_lb[0],&row_ub[0]);
+        // TODO: Comment, debug
+        osi_stopping_criterion_solver_->writeLp("stopping_problem.lp");
+        osi_stopping_criterion_solver_->setObjSense(-1);
+        osi_stopping_criterion_solver_->initialSolve();
+        if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
+            cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
+            cvar_alpha_ = osi_stopping_criterion_solver_->getObjCoefficients()[0];
+            LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
+        }
+    }
+    bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
 	{
 
 
