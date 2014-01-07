@@ -206,6 +206,17 @@ public:
     */
     double solveEEV(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
 
+        /** Solves the EEV-Problem wich determines the expected value of the solution that provides 
+    the average scenario problem, with objective sense of 1 (= minimization) for default.
+    It returns the scenario-wise solution values of the second stage only, where the first stage scenario value is the last entry of the returned vector.
+    @param osiSolver a pointer to an OsiSolverInterface
+    @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
+    @param calculateAverageValues optional, when true (default) the average values for the random variables are calculated; 
+    otherwise, it is expected that the model already contains the average values
+    @return the objective value of the solved EEVP
+    */
+    std::vector<double> solveEEVByScenario(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
+
     /** Returns only the solution value of the Wait-And-See-Problem, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
     @param objSense optional, the objective sense (1 for minimization, -1 for optimization)

@@ -49,11 +49,20 @@ int OsiStochasticParallelNestedBendersSolverInterface::getNumInsubstantialIterat
 }
 void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 {
-    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ){
+    if ( nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ || nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK ){
+
+        bool deteq_risk = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS) == parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK;
         parallel_benders::Timer solution_time(2);
         solution_time.Start(1);
         if ( osi_ != nullptr ){
             delete osi_;
+        }
+        if ( deteq_risk ) {
+            // Get Risk parameters!
+            double cvar_beta = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_BETA,0.1);
+            double cvar_rho = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_RHO,0.0);
+            bool cvar_first_stage = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_WITH_FIRST_STAGE,false);
+            nested_benders_->smi_->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage);
         }
         osi_ = nested_benders_->smi_->loadOsiSolverData();
         if ( nested_benders_->smi_->getNumScenarios() == 0){

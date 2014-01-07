@@ -66,6 +66,7 @@ namespace parallel_benders{
 
     const std::string PNB_CVAR_BETA = "PNB_CVAR_BETA";
     const std::string PNB_CVAR_RHO = "PNB_CVAR_RHO";
+    const std::string PNB_CVAR_WITH_FIRST_STAGE = "PNB_CVAR_WITH_FIRST_STAGE";
 
     // Do we want to compute (and return) solutions?
     const std::string PNB_COMPUTE_PRIMAL_SOLUTIONS = "PNB_COMPUTE_PRIMAL_SOLUTIONS";

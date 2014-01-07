@@ -318,6 +318,8 @@ private:
     double cvar_rho_;
     double cvar_H_;
     double cvar_alpha_;
+    double cvar_problem_lower_bound_;
+    bool cvar_first_stage_;
     OsiSolverInterface* osi_stopping_criterion_solver_;
 
     std::vector<int> cvar_substantial_iterations_;
