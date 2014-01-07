@@ -785,7 +785,14 @@ namespace parallel_benders {
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else if ( !regularization_ && cvar_constr_decomp_){
-                not_stop_loop = std::abs(cvar_H_) > relative_epsilon_;
+                not_stop_loop = cvar_H_ > relative_epsilon_ &&  
+                    RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_);
+                if ( !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){
+                    if ( cvar_H_ > 10 )// See if we already have a somewhat good approximation
+                        not_stop_loop = false;
+                    else if ( cvar_H_ > relative_epsilon_ )// Note that cvar_H was still larger than the relative_epsilon_
+                        solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
+                }
             }
             else
             { // Regularization!
@@ -5103,6 +5110,10 @@ namespace parallel_benders {
 			assert( num_cols > 0);
 			std::vector<double> lower(num_cols,-infinity_);
 			std::vector<double> upper(num_cols,infinity_);
+            if ( cvar_constr_decomp_ ){
+                lower[num_cols-1] = 0.0;
+                upper[num_cols-1] = 0.0;
+            }
 			double term = 0.0;
 			if (!benders_node_pointer->optimality_cuts_.empty() )
 				term = 1.0;
