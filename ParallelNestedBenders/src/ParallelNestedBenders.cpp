@@ -2065,6 +2065,8 @@ namespace parallel_benders {
 				}
                 else{
                     PrintSubproblem(osi_solver,0,"master_infeasible");
+                    infeasible_problem_ = true;
+                    infeasible_problems_[0] = true;
                     LOG(ERROR) << "Your master problem is infeasible.";
                 }
 

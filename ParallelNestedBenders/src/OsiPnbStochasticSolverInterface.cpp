@@ -36,6 +36,8 @@ void OsiStochasticParallelNestedBendersSolverInterface::setParameters(const para
 
 double OsiStochasticParallelNestedBendersSolverInterface::getObjValue() const
 {
+    if ( nested_benders_->cvar_constr_decomp_ )
+        return nested_benders_->cvar_problem_lower_bound_; // Is equal to normal lower bound
     return nested_benders_->upper_bound_; // Depending on the solution status code, this might be appropriate!
 }
 
