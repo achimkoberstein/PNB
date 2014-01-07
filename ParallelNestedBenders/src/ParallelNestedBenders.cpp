@@ -447,6 +447,11 @@ namespace parallel_benders {
         if ( algorithm == PNB_INT_ALGORITHM_BENDERS_RISK ){
             cvar_constr_decomp_ = true;
         }
+        if ( algorithm == PNB_INT_ALGORITHM_LEVEL_RISK ){
+            cvar_constr_decomp_ = true;
+            level_decomp_ = true;
+            level_euclidean_ = true;
+        }
 
 		csaba_steepest_edge_ = false; // Csaba-Steepest-Edge
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
@@ -829,7 +834,7 @@ namespace parallel_benders {
             // Reset warm start indicator
             stage_data_[current_stage_]->problem_was_solved_in_this_iteration_ = false;
             if ( upper_bound_ < lower_bound_ ){
-                if ( !regularization_)
+                if ( !regularization_ )
                     LOG(INFO) << "Upper Bound is lower than lower Bound. Iteration: " << current_iteration_;
             }
             if ( old_lower_bound_ > (lower_bound_ + ParallelNestedBenders::zero_tolerance_) && old_lower_bound_ > -infinity_  && !infeasible_problem_){
@@ -1467,9 +1472,14 @@ namespace parallel_benders {
                     double sum_stage_solutions = 0;
                     for (int i = 0; i < num_stages_; i++)
                         sum_stage_solutions += stage_lower_upper_bounds_[i].second;
-                    if ( upper_bound_ > sum_stage_solutions && can_update_upper_bound){
+                    if ( upper_bound_ > sum_stage_solutions && can_update_upper_bound ){
                         upper_bound_ = sum_stage_solutions;
                         update_upper_bound = true;
+                        solution_similiarity_counter_ = 0;
+                    }
+                    if ( cvar_constr_decomp_ ){ // We have no upper bounds when using cvar constraints..
+                        update_upper_bound = true;
+                        upper_bound_ = sum_stage_solutions;
                         solution_similiarity_counter_ = 0;
                     }
                     // Update node-wise upper bounds! (only needed for Level Decomposition in Multi-Stage Problems)
@@ -1666,7 +1676,7 @@ namespace parallel_benders {
             /*******************************************************************************/
             /*  Aggregate optimality cuts for nodes at the stage before the current stage  */
             /*******************************************************************************/
-            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
+            if ( !forward_ && infeasible_problems_.none() && (!infeasible_problem_ )){ // TODO: if generate_feas_and_opt_cuts we need to change this
                 // We need to aggregate optimality cuts for the parent node
                 for ( int i = 0; i < tree_nodes_by_stage_[current_stage_-1].size(); i++)
                     // Schedule the tasks for this stage
@@ -1686,7 +1696,7 @@ namespace parallel_benders {
             //*******************************************************************************/
             //*  Aggregate cvar cuts for nodes at the stage before the current stage  */
             //*******************************************************************************/
-            if ( cvar_constr_decomp_ && !forward_ && infeasible_problems_.none() && (!infeasible_problem_ || theta_approximations_everywhere_ && infeasible_problem_)){ // TODO: if generate_feas_and_opt_cuts we need to change this
+            if ( cvar_constr_decomp_ && !forward_ && infeasible_problems_.none() && (!infeasible_problem_ )){ // TODO: if generate_feas_and_opt_cuts we need to change this
                 AggregateCVaRCuts(tree_nodes_by_stage_[current_stage_-1][0]);
             }
 
@@ -5219,7 +5229,7 @@ namespace parallel_benders {
         if ( level_decomp_ && (lower_bound <= -infinity_ || upper_bound >= infinity_)) // We do not call the projection problem, when we have not yet achieved finite upper and/or lower bounds?!
             return;
 
-        if ( level_decomp_ && lower_bound > upper_bound )
+        if ( level_decomp_ && lower_bound > upper_bound && !cvar_constr_decomp_)
             return;
 
         assert( !benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.empty() ); // We need a regularization point! 
@@ -5374,7 +5384,7 @@ namespace parallel_benders {
         // If feasibility cuts where added in the meantime, we should remove them also?!
 
         // Remove all the cuts from the last iteration, so we get back the problem to which we can apply our warmstart!
-        if ( benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end()){
+        if ( benders_tree_node_pointer->getDataPtr()->level_opt_iterator_ != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end() && !cvar_constr_decomp_){
             // Get distance
             int num_cuts = std::distance(++benders_tree_node_pointer->getDataPtr()->level_opt_iterator_,benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end());
             if ( num_cuts > 0 ){
@@ -5411,8 +5421,9 @@ namespace parallel_benders {
 
 
         // Add the optimality cuts we deleted earlier
-        for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->level_opt_iterator_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();++it)
-            osi_solver->applyRowCuts(1,(*it)->cut_.get());
+        if ( !cvar_constr_decomp_)
+            for (BendersNodeData::cut_container::iterator it = benders_tree_node_pointer->getDataPtr()->level_opt_iterator_; it != benders_tree_node_pointer->getDataPtr()->optimality_cuts_.end();++it)
+                osi_solver->applyRowCuts(1,(*it)->cut_.get());
 
         // If problem was unbounded, we do not care about it in the projection problem case?!
         PrintSubproblem(osi_solver,benders_tree_node_pointer->scenario(),"level");
@@ -5428,6 +5439,8 @@ namespace parallel_benders {
             SolveSolverInterface(osi_solver,false,true); // Solve with quadratic solver
         else if ( level_infinity_ || level_manhattan_ )
             SolveSolverInterface(osi_solver);
+
+        // If problem was infeasible, we can not go on!
 
         // Check for correctly solved problem ( if we need feas cuts, we should do so )
         if ( regularization_ ){
@@ -5501,7 +5514,7 @@ namespace parallel_benders {
         // Copy solution to the incumbent as well!
         if ( level_decomp_)
             benders_tree_node_pointer->getDataPtr()->level_regularized_solution_.assign(benders_tree_node_pointer->getDataPtr()->col_solution_.begin(),benders_tree_node_pointer->getDataPtr()->col_solution_.end());
-        assert(number_of_problem_cols-number_of_variables == benders_tree_node_pointer->getDataPtr()->num_thetas_);
+        assert(number_of_problem_cols-number_of_variables == benders_tree_node_pointer->getDataPtr()->num_thetas_+ (cvar_constr_decomp_ ? 1:0));
         StoreValuesFromSolverInVector(benders_tree_node_pointer->getDataPtr()->next_stage_approximation_,osi_solver->getColSolution()+number_of_variables,benders_tree_node_pointer->getDataPtr()->num_thetas_);
 
         // Compute objective value! Needed for Upper Bound computation!
@@ -6539,8 +6552,8 @@ namespace parallel_benders {
         matrix_col_starts[2] = num_rows*2;
 
         osi_stopping_criterion_solver_->loadProblem(num_cols,num_rows,&matrix_col_starts[0],&matrix_indices[0],&matrix_elements[0],&col_lb[0],&col_ub[0],&col_obj[0],&row_lb[0],&row_ub[0]);
-        PrintSubproblem(osi_stopping_criterion_solver_,0,"stopping");
         osi_stopping_criterion_solver_->setObjSense(-1);
+        PrintSubproblem(osi_stopping_criterion_solver_,0,"stopping");
         osi_stopping_criterion_solver_->initialSolve();
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
