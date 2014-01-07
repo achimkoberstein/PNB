@@ -2894,7 +2894,7 @@ namespace parallel_benders {
             cut_pointer->setRow(new_index,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
             std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,cut_pointer));
             cut_stuff->aggregate_number_ = i;
-            if ( change_aggregation_level || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
+            if ( change_aggregation_level || cvar_constr_decomp_ || warm_up_ || sum  > (benders_tree_node_pointer->getDataPtr()->num_thetas_ ? benders_tree_node_pointer->getDataPtr()->next_stage_approximation_[i]-d_square_translation_term_ : 0) ){
                 added_cuts++;
                 benders_tree_node_pointer->getDataPtr()->active_aggregates_[i] = true;  // Set aggregate to active: We have a cut for this aggregate
             }
@@ -6442,7 +6442,7 @@ namespace parallel_benders {
         //assert( cvar_cut_indices[num_columns-1] == stage_data_[0]->num_columns_+stage_data_[0]->num_thetas_+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0));
 
         std::vector<double> cvar_cut_coefficient(num_columns,0.0);
-        cvar_cut_coefficient[cvar_cut_coefficient.size()-1] = 0.0;
+        cvar_cut_coefficient[cvar_cut_coefficient.size()-1] = 1.0;
 
         double cvar_cut_rhs = -cvar_beta_*cvar_rho_;
 
@@ -6452,7 +6452,6 @@ namespace parallel_benders {
                 cvar_cut_coefficient[i] += first_stage_objective_coefficients[i]*cvar_beta_;
             }
         } 
-        //cvar_cut_rhs += tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_*cvar_beta_;
 
         for ( auto node : tree_nodes_by_stage_[current_stage_] ){
             cvar_cut_rhs += node->getDataPtr()->cvar_current_cut_rhs_;
@@ -6557,7 +6556,7 @@ namespace parallel_benders {
         osi_stopping_criterion_solver_->initialSolve();
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
-            cvar_alpha_ = osi_stopping_criterion_solver_->getObjCoefficients()[0];
+            cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
             LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
         }
 
