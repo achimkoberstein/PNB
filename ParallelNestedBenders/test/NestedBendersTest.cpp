@@ -209,6 +209,10 @@ public:
         compute_statistics_ = false;
         generate_initial_solution_ = false;
         bool generate_cvar_constraints = true;
+        double cvar_objective = 0.0;
+        double cvar_beta = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_BETA,0.66);
+        double cvar_rho = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_RHO,-80000);
+        bool cvar_first_stage = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_WITH_FIRST_STAGE,false);
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -318,20 +322,60 @@ public:
         }
 
         if ( generate_cvar_constraints){
-            boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
-            int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-            assert( smi_read_in == 0);
-            double cvar_beta = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_BETA,0.66);
-            double cvar_rho = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_RHO,-80000);
-            smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,false);
-            OsiCpxSolverInterface osi_cpx;
-            smi_cvar_model->setOsiSolverHandle(&osi_cpx);
-            OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
+            {
+                boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
+                int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                assert( smi_read_in == 0);
+                OsiCpxSolverInterface osi_cpx;
+                std::vector<double> eev_scenario_evaluation = smi_cvar_model->solveEEVByScenario(&osi_cpx);
+                // Create vector with probability/value pairs
+                std::vector<std::pair<double,double> > scenario_value_probability_vector(smi_cvar_model->getNumScenarios());
+                for (int i = 0; i < scenario_value_probability_vector.size(); i++){
+                    scenario_value_probability_vector[i] = make_pair(eev_scenario_evaluation[i],smi_cvar_model->getScenarioProb(i));
+                }
+                // Sort vector according to first element!
+                std::sort(scenario_value_probability_vector.begin(),scenario_value_probability_vector.end(),
+                    [](const std::pair<double,double>& a, const std::pair<double,double> & b) -> bool
+                { 
+                    return a.first > b.first;
+                });
+                // Compute CVaR
+                double summed_prob = cvar_beta;
+                double cvar = 0.0;
+                int index_i = 0;
+                while ( summed_prob > 0 ){
+                    if ( scenario_value_probability_vector[index_i].second > summed_prob ){
+                        cvar += scenario_value_probability_vector[index_i].first*summed_prob;
+                    }
+                    else {
+                        cvar += scenario_value_probability_vector[index_i].first*scenario_value_probability_vector[index_i].second;
+                    }
+                    summed_prob -= scenario_value_probability_vector[index_i].second;
+                }
+                cvar /= cvar_beta;
+                if ( cvar_first_stage ){ // If we have first-stage cvar, we need to add the first stage cost to it.
+                    cvar += eev_scenario_evaluation[eev_scenario_evaluation.size()-1];
+                }
 
-            smi_cvar_model->solveEEV();
-            deteq_solver->writeLp("cvar_model");
-            //deteq_solver->initalSolve();
-            smi_cvar_model->releaseSolver();
+                // Set cvar_rho by 0.8*cvar for eev solution
+                cvar_rho = cvar*0.8;
+                // Set cvar_rho so that it can be used later in the algorithm!
+                benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,cvar_rho);
+            }
+            //{
+            //     // CVaR deteq model for comparison
+            //    boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
+            //    int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+            //    assert( smi_read_in == 0);
+            //    smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage);
+            //    OsiCpxSolverInterface osi_cpx;
+            //    smi_cvar_model->setOsiSolverHandle(&osi_cpx);
+            //    OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
+            //    deteq_solver->writeLp("cvar_model");
+            //    deteq_solver->initialSolve();
+            //    smi_cvar_model->releaseSolver();
+            //}
+
 
 
         }

@@ -526,140 +526,21 @@ std::pair<double,double*> SmiScnModel::solveEV(OsiSolverInterface *osiSolver, do
 
 double SmiScnModel::solveEEV(OsiSolverInterface *osiSolver, double objSense, bool calculateAverageValues)
 {
-    OsiSolverInterface* tempPtr = osiStoch_;
-    osiStoch_ = osiSolver->clone(false);
-    std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
-
-
-    int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
-    double * colSolution = evResult.second;
-    double prob = 0;
-
-#pragma region EEVP
-    double eev = 0; // the value of the EEVP
-
-    //Clean up previous stuff.
-    delete[] dclo_;
-    delete[] dcup_;
-    delete[] dobj_;
-    delete[] drlo_;
-    delete[] drup_;
-    delete matrix_;
-
-    // initialize arrays
-    this->dclo_ = new double[this->core_->getNumCols()];
-    this->dcup_ = new double[this->core_->getNumCols()];
-    this->dobj_ = new double[this->core_->getNumCols()];
-    this->drlo_ = new double[this->core_->getNumRows()];
-    this->drup_ = new double[this->core_->getNumRows()];
-
-    int tempNels = 0; //= nels_ ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
-    for (int i = 0; i < this->core_->getNumStages(); i++)
-        tempNels += this->maxNelsPerScenInStage[i];
-
-    // loop over all scenarios and solve each of it individually TODO: This can get easily parallelized.
-    for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
-        // We have an empty model (zero cols,rows,els)
-        ncol_=0;
-        nrow_=0;
-        nels_=0;
-        osiStoch_->reset();
-        osiStoch_->messageHandler()->setLogLevel(0); // Silence solver
-        // initialize row-ordered matrix arrays
-        this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
-        this->indx_ = new int[tempNels];
-        this->rstrt_ = new int[this->core_->getNumRows()+1];
-        this->rstrt_[0] = 0;
-        // Get all nodes for this scenario
-        std::vector<SmiScnNode*>& nodes = smiTree_.getScenario(i);
-        // Call addNode on all these nodes
-        for (unsigned int j = 0; j < nodes.size(); j++) {
-            addNode(nodes[j],true);
-        }
-
-        matrix_ = new CoinPackedMatrix(false,0,0);
-        int *len=NULL;
-        // Assign values from current arrays (which get nulled thereafter)
-        matrix_->assignMatrix(false,ncol_,nrow_,nels_,
-            dels_,indx_,rstrt_,len);
-        // pass data to osiStoch
-        osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
-
-        // fix stage-1-columns to the values of the evp
-        for (int col = 0; col < numStageTMinus1Cols; col++) {
-            osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
-        }
-
-        //Set objSense
-        osiStoch_->setObjSense(objSense);
-        // If we have integer indices, we need the branch-and-bound solver
-        if (intIndices.size()){
-            osiStoch_->setInteger(&intIndices[0],intIndices.size());
-            osiStoch_->branchAndBound();
-        }
-        else
-            osiStoch_->initialSolve(); //Solve this problem.
-
-        bool optimal = osiStoch_->isProvenOptimal();
-        bool infeasible = osiStoch_->isProvenPrimalInfeasible();
-        bool unbounded = osiStoch_->isProvenDualInfeasible();
-
-        if ( infeasible ){
-            eev = osiStoch_->getInfinity();
-            // Finish with computations!
-            i = this->smiTree_.getNumScenarios();
-        }
-        if ( unbounded ){
-            eev = -osiStoch_->getInfinity();
-            i = this->smiTree_.getNumScenarios();
-        }
-
-        if (optimal){
-            eev += osiStoch_->getObjValue() * nodes[nodes.size()-1]->getProb();
-            prob += nodes[nodes.size()-1]->getProb();
-        }
-        else {
-            std::cout << "test";
-        }
-        // sum up the solution values (multiplied with probabilities)
-
-
-        //Delete new-ed objects
-        delete matrix_;
-        delete [] this->dels_;
-        delete [] this->indx_;
-        delete [] this->rstrt_;
-        matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
-
-        //Print out Matrix.. if in Debug Mode
-        //TODO: Define proper Debug Mode..
-        //TODO: Printout obj-functions
-        //#ifdef NDEBUG
-        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-        //            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-        //        }
-        //        std::cout << std::endl;
-        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-        //            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-        //            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-        //                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-        //            }
-        //            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        //        }
-        //        printf("\n Matrix printed \n");
-        //        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-        //            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-        //
-        //        }
-        //        printf("\n");
-        //#endif
+    std::vector<double> scenario_obj_values = solveEEVByScenario(osiSolver,objSense,calculateAverageValues);
+    assert( scenario_obj_values.size() == smiTree_.getNumScenarios()+1);
+    for ( int i = 0; i < scenario_obj_values.size()-1; i++){
+        if ( scenario_obj_values[i] == osiSolver->getInfinity())
+            return osiSolver->getInfinity();
+        else if ( scenario_obj_values[i] == -osiSolver->getInfinity())
+            return -osiSolver->getInfinity();
     }
-#pragma endregion EEVP;
-
-    delete [] colSolution;
-    delete osiStoch_;
-    osiStoch_ = tempPtr;
-    return eev;
+    double sum = 0.0;
+    // Sum over scenario recourse values, multiplied by probability
+    for ( int i = 0; i < smiTree_.getNumScenarios(); i++){
+        sum += scenario_obj_values[i]*smiTree_.getLeaf(i)->getDataPtr()->getProb();
+    }
+    sum += scenario_obj_values[smiTree_.getNumScenarios()]; // Add first stage objective function value!
+    return sum;
 }
 
 std::vector< std::pair<double,double*> > SmiScnModel::solveWS(OsiSolverInterface *osiSolver, double objSense) 
@@ -1644,7 +1525,7 @@ int
         return -1;
     }
 
-    // Do not delte smiSmpsIO, keep it, but delete the information we do not need
+    // Do not delete smiSmpsIO, keep it, but delete the information we do not need
     smiSmpsIO->releaseRedundantInformation();
     smiSmpsIO->releaseMatrixInformation();
     // Store smiSmpsIO in SmiScnModel!
@@ -2755,4 +2636,149 @@ void SmiScnModel::resizeIntArray( int new_size, int old_size, int*& int_array )
         new_array[i] = 0;
     delete [] int_array;
     int_array = new_array;
+}
+
+std::vector<double> SmiScnModel::solveEEVByScenario( OsiSolverInterface *osiSolver, double objSense /*= 1*/, bool calculateAverageValues /*= true*/ )
+{
+    OsiSolverInterface* tempPtr = osiStoch_;
+    osiStoch_ = osiSolver->clone(false);
+    std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
+    // Compute first stage solution value!
+    const double * first_stage_obj_coefs = core_->getDenseObjCoefficients(0);
+    double first_stage_objective_function_value = 0.0;
+    for (int i = 0; i < core_->getNumCols(0);i++){
+        first_stage_objective_function_value += first_stage_obj_coefs[i]*evResult.second[i];
+    }
+
+
+    int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
+    double * colSolution = evResult.second;
+    double prob = 0;
+
+#pragma region EEVP
+    double eev = 0; // the value of the EEVP
+
+    //Clean up previous stuff.
+    delete[] dclo_;
+    delete[] dcup_;
+    delete[] dobj_;
+    delete[] drlo_;
+    delete[] drup_;
+    delete matrix_;
+
+    // initialize arrays
+    this->dclo_ = new double[this->core_->getNumCols()];
+    this->dcup_ = new double[this->core_->getNumCols()];
+    this->dobj_ = new double[this->core_->getNumCols()];
+    this->drlo_ = new double[this->core_->getNumRows()];
+    this->drup_ = new double[this->core_->getNumRows()];
+
+    int tempNels = 0; //= nels_ ? nels_: this->core_->getNumCols()*this->core_->getNumRows(); //nels_ got set by det.eq. generations. If this is not done, we have a problem.
+    for (int i = 0; i < this->core_->getNumStages(); i++)
+        tempNels += this->maxNelsPerScenInStage[i];
+
+    std::vector<double> eev_evaluation(this->smiTree_.getNumScenarios(),0.0);
+
+    // loop over all scenarios and solve each of it individually TODO: This can get easily parallelized.
+    for( int i = 0; i < this->smiTree_.getNumScenarios(); i++) {
+        // We have an empty model (zero cols,rows,els)
+        ncol_=0;
+        nrow_=0;
+        nels_=0;
+        osiStoch_->reset();
+        osiStoch_->messageHandler()->setLogLevel(0); // Silence solver
+        // initialize row-ordered matrix arrays
+        this->dels_ = new double[tempNels+1]; //TODO: Remove the +1 as it should work without it.. something is wrong there during addition of the elements..
+        this->indx_ = new int[tempNels];
+        this->rstrt_ = new int[this->core_->getNumRows()+1];
+        this->rstrt_[0] = 0;
+        // Get all nodes for this scenario
+        std::vector<SmiScnNode*>& nodes = smiTree_.getScenario(i);
+        // Call addNode on all these nodes
+        for (unsigned int j = 0; j < nodes.size(); j++) {
+            addNode(nodes[j],true);
+        }
+
+        matrix_ = new CoinPackedMatrix(false,0,0);
+        int *len=NULL;
+        // Assign values from current arrays (which get nulled thereafter)
+        matrix_->assignMatrix(false,ncol_,nrow_,nels_,
+            dels_,indx_,rstrt_,len);
+        // pass data to osiStoch
+        osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
+
+        // fix stage-1-columns to the values of the evp
+        for (int col = 0; col < numStageTMinus1Cols; col++) {
+            osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
+        }
+
+        //Set objSense
+        osiStoch_->setObjSense(objSense);
+        // If we have integer indices, we need the branch-and-bound solver
+        if (intIndices.size()){
+            osiStoch_->setInteger(&intIndices[0],intIndices.size());
+            osiStoch_->branchAndBound();
+        }
+        else
+            osiStoch_->initialSolve(); //Solve this problem.
+
+        bool optimal = osiStoch_->isProvenOptimal();
+        bool infeasible = osiStoch_->isProvenPrimalInfeasible();
+        bool unbounded = osiStoch_->isProvenDualInfeasible();
+
+        if ( infeasible ){
+            eev_evaluation[i] = osiStoch_->getInfinity();
+            // Finish with computations!
+            i = this->smiTree_.getNumScenarios();
+        }
+        if ( unbounded ){
+            eev_evaluation[i] = -osiStoch_->getInfinity();
+            i = this->smiTree_.getNumScenarios();
+        }
+
+        if (optimal){
+            eev_evaluation[i] = osiStoch_->getObjValue()-first_stage_objective_function_value;
+        }
+        else {
+            std::cout << "test";
+        }
+        // sum up the solution values (multiplied with probabilities)
+
+
+        //Delete new-ed objects
+        delete matrix_;
+        delete [] this->dels_;
+        delete [] this->indx_;
+        delete [] this->rstrt_;
+        matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
+
+        //Print out Matrix.. if in Debug Mode
+        //TODO: Define proper Debug Mode..
+        //TODO: Printout obj-functions
+        //#ifdef NDEBUG
+        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
+        //            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
+        //        }
+        //        std::cout << std::endl;
+        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
+        //            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
+        //            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
+        //                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
+        //            }
+        //            printf("<= %g",osiStoch_->getRowUpper()[mi]);
+        //        }
+        //        printf("\n Matrix printed \n");
+        //        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
+        //            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
+        //
+        //        }
+        //        printf("\n");
+        //#endif
+    }
+#pragma endregion EEVP;
+    eev_evaluation.push_back(first_stage_objective_function_value);
+    delete [] colSolution;
+    delete osiStoch_;
+    osiStoch_ = tempPtr;
+    return eev_evaluation;
 }
