@@ -320,6 +320,9 @@ private:
     double cvar_alpha_;
     double cvar_problem_lower_bound_;
     bool cvar_first_stage_;
+    bool cvar_stopping_first_round_;
+    bool cvar_stopping_second_round_;
+    bool cvar_feasible_first_stage_solution_;
     OsiSolverInterface* osi_stopping_criterion_solver_;
 
     std::vector<int> cvar_substantial_iterations_;

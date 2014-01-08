@@ -301,7 +301,7 @@ namespace parallel_benders {
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
-        cvar_constr_decomp_(false),current_second_stage_approximation_(),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),osi_stopping_criterion_solver_(nullptr),
+        cvar_constr_decomp_(false),current_second_stage_approximation_(),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),osi_stopping_criterion_solver_(nullptr),
         warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
@@ -784,7 +784,7 @@ namespace parallel_benders {
                 RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) &&
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
-            else if ( !regularization_ && cvar_constr_decomp_){
+            else if ( !regularization_ && cvar_constr_decomp_ ){ // We only test for stopping criterion in first iteration! 
                 not_stop_loop = cvar_H_ > relative_epsilon_ &&  
                     RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_);
                 if ( !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){
@@ -792,6 +792,14 @@ namespace parallel_benders {
                         not_stop_loop = false;
                     else if ( cvar_H_ > relative_epsilon_ )// Note that cvar_H was still larger than the relative_epsilon_
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
+                }
+                if ( cvar_H_ < relative_epsilon_ ){
+                    if ( feas_cut_iterations_.size() > 0 ){
+                        // We added feasibility cuts!
+                        if ( !(cvar_stopping_first_round_ && cvar_stopping_second_round_)){
+                            not_stop_loop = true;
+                        }
+                    }
                 }
             }
             else
@@ -1261,12 +1269,15 @@ namespace parallel_benders {
             }
             thread_pool_.wait(0); // We wait until all threads are done
 
-
+            if ( cvar_constr_decomp_ && (infeasible_problem_ || infeasible_problems_.any()) ){
+                cvar_stopping_first_round_ = false;
+                cvar_stopping_second_round_ = false;
+            }
 
             /************************************************************************/
             /* CVAR-Constraint Handling                                             */
             /************************************************************************/
-            if ( cvar_constr_decomp_ && current_stage_ > 0 && !infeasible_problem_){
+            if ( cvar_constr_decomp_ && current_stage_ > 0 && !infeasible_problem_ && infeasible_problems_.none()){
                 // Store current first stage solution!
                 cvar_substantial_points_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_);
                 cvar_substantial_points_first_stage_objective_function_value_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_);
@@ -3418,11 +3429,14 @@ namespace parallel_benders {
 
         if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
             // TODO Delete all cvar_constraints from the model, we add them after the other cuts!
-            
-            int num_cvar_cuts = benders_node_pointer->cvar_cuts_.size()-1; // New cvar cuts were added, so I have cuts-1 in the problem!
+            int num_cvar_cuts = benders_node_pointer->cvar_cuts_.size();
+            if ( benders_node_pointer->cvar_cuts_.back().get()->cut_creation_iteration_ == current_iteration_-1 )
+                num_cvar_cuts--;  // New cvar cuts were added to the container in the last iteration, so I have cuts-1 in the problem!
+           
+            int cvar_cut_start_index = osi_solver->getNumRows()-num_cvar_cuts;
             if ( num_cvar_cuts > 0){
                 std::vector<int> row_indices(num_cvar_cuts);
-                std::iota(row_indices.begin(),row_indices.end(),benders_node_pointer->cvar_cut_index_);
+                std::iota(row_indices.begin(),row_indices.end(),cvar_cut_start_index);
                 osi_solver->deleteRows(num_cvar_cuts,&row_indices[0]);
             }
 
@@ -3508,7 +3522,7 @@ namespace parallel_benders {
             if ( seperate_first_stage_solver_ &&  current_stage_ == 0 ){
                 if (benders_node_pointer->last_iteration_start_optimality_ != benders_node_pointer->optimality_cuts_.end()){
                     it = benders_node_pointer->last_iteration_start_optimality_;
-                    if ( current_stage_ > 0 ) // In non-first-stage nodes we must readd all optimality cuts!
+                    if ( current_stage_ > 0 ) // In non-first-stage nodes we must read all optimality cuts!
                         it = benders_node_pointer->optimality_cuts_.end();
                 }
                 else
@@ -3573,19 +3587,27 @@ namespace parallel_benders {
             std::vector<int> optimality_cuts_to_delete;
             int optimality_cut_start = getNumRowsProblem()+benders_node_pointer->feasibility_cuts_.size()-new_feas_cuts;
             for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
-                if ( (*it)->to_use_ ){
+                if ( (*it)->to_use_ && (*it)->cut_creation_iteration_ < current_iteration_-1 ){ 
+                    // Only delete cuts from problem that are acutally in the problem, i.e. all cuts generated before the last iteration!
                     optimality_cuts_to_delete.push_back(optimality_cut_start+num_cuts);
                     num_cuts++;
                 }
             }
+            //if ( cvar_constr_decomp_ ){
+            //    for ( BendersNodeData::cut_container::iterator it = benders_node_pointer->cvar_cuts_.begin(); it != benders_node_pointer->cvar_cuts_.end(); ++it){
+            //        if ( (*it)->to_use_ ){
+            //            optimality_cuts_to_delete.push_back(optimality_cut_start+num_cuts);
+            //            num_cuts++;
+            //        }
+            //    }
+            //}
             int number_of_rows_in_problem = osi_solver->getNumRows();
+            assert( optimality_cut_start+num_cuts == number_of_rows_in_problem-new_feas_cuts);
             osi_solver->deleteRows(num_cuts,&optimality_cuts_to_delete[0]);
             int number_of_rows_without_opt_cuts = osi_solver->getNumRows();
             // This should be equal to number of feasibility cuts, otherwise something is wrong! (When not using level decomp and stuff..)
             if (!( level_decomp_ || regularization_ )){
                 LOG_IF(ERROR,number_of_rows_without_opt_cuts != benders_node_pointer->feasibility_cuts_.size()+getNumRowsProblem()) << "Problem with adding opt and feas cuts to problem!";
-
-                //assert( number_of_rows_in_problem == benders_node_pointer->optimality_cuts_.size()+benders_node_pointer->feasibility_cuts_.size()+getNumRowsProblem());
             }
             // Add all optimality cuts to solver!
             for (BendersNodeData::cut_container::iterator it = benders_node_pointer->optimality_cuts_.begin(); it != benders_node_pointer->optimality_cuts_.end(); ++it){
@@ -3594,6 +3616,12 @@ namespace parallel_benders {
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
                 }
             }
+            //for (BendersNodeData::cut_container::iterator it = benders_node_pointer->cvar_cuts_.begin(); it != benders_node_pointer->cvar_cuts_.end(); ++it){
+            //    if ( (*it)->to_use_ ){
+            //        assert( (*it)->cut_->row().getNumElements() <= osi_solver->getNumCols());
+            //        osi_solver->applyRowCuts(1,(*it)->cut_.get());
+            //    }
+            //}
             CoinWarmStartBasis* warm_start_basis = dynamic_cast<CoinWarmStartBasis*>(benders_node_pointer->warm_start_.get());
             if ( warm_start_basis != nullptr ){
                 std::vector<CoinWarmStartBasis::Status> status_array;
@@ -3613,8 +3641,8 @@ namespace parallel_benders {
         }
 
 
-// AK: CVaR risk constraint decomp
-		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty()){
+// Add risk constraints to problem ( they get deleted at the start of this method!)
+		if (cvar_constr_decomp_ && !benders_node_pointer->cvar_cuts_.empty() ){
 
             // Simple addition without consideration of warm start behavior
             // Store current row index for future consideration
@@ -3626,8 +3654,7 @@ namespace parallel_benders {
                     osi_solver->applyRowCuts(1,(*it)->cut_.get());
                 }
             }
-
-		}
+        }
 
 	}
 
@@ -6491,6 +6518,8 @@ namespace parallel_benders {
     {
         if ( current_stage_ != 0)
             return;
+        if ( cvar_substantial_points_.empty())
+            return;
         BendersNodeData * root_node = tree_nodes_by_stage_[0][0]->getDataPtr();
         std::vector<double> recourse_approximation(cvar_substantial_points_.size());
         std::vector<double> cvar_approximation(cvar_substantial_points_.size());
@@ -6568,6 +6597,11 @@ namespace parallel_benders {
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
             cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
+            if ( feas_cut_iterations_.size() > 0){
+                if ( cvar_stopping_first_round_ == true )
+                    cvar_stopping_second_round_ = true;
+                cvar_stopping_first_round_ = true;
+            }
             LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
         }
 
@@ -6794,7 +6828,7 @@ namespace parallel_benders {
 
     bool DoubleIsHigher( const std::pair<int,double>& first, const std::pair<int,double>& second )
     {
-        return first.second >= second.second;
+        return first.second > second.second;
     }
 
     double EvaluateCut( OsiRowCut* osi_cut, const double* col_solution )
