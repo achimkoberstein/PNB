@@ -5243,6 +5243,9 @@ namespace parallel_benders {
         double lower_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->lower_bound_ : lower_bound_);
         double upper_bound = (num_stages_ > 2 ? benders_tree_node_pointer->getDataPtr()->upper_bound_ : upper_bound_);
 
+        if ( level_decomp_ && (lower_bound <= -infinity_ || upper_bound >= infinity_)) // We do not call the projection problem, when we have not yet achieved finite upper and/or lower bounds?!
+            return;
+
         if ( current_stage_ > 0 ){
             // Compute discrepancy ( all child nodes must have been solved!)
             double discrepancy = 0.0;
@@ -5264,8 +5267,7 @@ namespace parallel_benders {
 
         // Alternative approach? 
 
-        if ( level_decomp_ && (lower_bound <= -infinity_ || upper_bound >= infinity_)) // We do not call the projection problem, when we have not yet achieved finite upper and/or lower bounds?!
-            return;
+
 
         if ( level_decomp_ && lower_bound > upper_bound && !cvar_constr_decomp_)
             return;
