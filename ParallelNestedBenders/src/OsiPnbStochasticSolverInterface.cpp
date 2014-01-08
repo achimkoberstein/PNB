@@ -124,8 +124,15 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
 			}
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
-            if ( result )
+            if ( result ){
                 LOG(INFO) << "Cplex returned with status code " << result;
+                if ( result == CPX_STAT_INFEASIBLE )
+                    nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
+                else if ( result == CPX_STAT_UNBOUNDED )
+                    nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
+                else if ( result != 0  )
+                    nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
+            }
             double obj;
             CPXgetobjval(envPtr,lpPtr,&obj);
         }
@@ -144,6 +151,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
         solution_time.Stop(0);
         // Set solution value
         nested_benders_->upper_bound_ = osi_->getObjValue();
+        
 
         // We have the time, but can not set it accordingly. not good!
         LOG(INFO) << "Solution: " << nested_benders_->upper_bound_;
@@ -286,6 +294,10 @@ void OsiStochasticParallelNestedBendersSolverInterface::printSolutionToFile( con
 {
 	if ( nested_benders_->compute_primal_solutions_for_stage_ < 0 )
 		return;
+    if ( nested_benders_->solution_code_ != 0){
+        LOG(ERROR) << "Solution can not be printed, because algorithm did not ended with optimality.";
+        return;
+    }
 	// We want to print the solution we got by solving the model, to the file! Therefore we need a solved problem first!
 	std::ofstream solution_file(filename, fstream::out | fstream::trunc  ); // Open the file, regardless if it exists or not!
 	LOG_IF(ERROR,!solution_file.is_open()) << "Solution file " << filename << " could not be opened to write.";
