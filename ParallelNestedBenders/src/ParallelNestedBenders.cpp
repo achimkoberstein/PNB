@@ -452,6 +452,16 @@ namespace parallel_benders {
             level_decomp_ = true;
             level_euclidean_ = true;
         }
+        if ( algorithm == PNB_INT_ALGORITHM_BENDERS_ODA_RISK ){
+            cvar_constr_decomp_ = true;
+            oda_method_ = true;
+        }
+        if ( algorithm == PNB_INT_ALGORITHM_LEVEL_ODA_RISK ){
+            cvar_constr_decomp_ = true;
+            level_decomp_ = true;
+            level_euclidean_ = true;
+            oda_method_ = true;
+        }
 
 		csaba_steepest_edge_ = false; // Csaba-Steepest-Edge
         level_lambda_ = param.get(PNB_LEVEL_LAMBDA,0.5);
@@ -1054,8 +1064,13 @@ namespace parallel_benders {
                 //LOG(INFO) << "Phi_" << current_iteration_ << " : " << oda_phi_i_;
                 //LOG(INFO) << "Upper Bound : " << upper_bound_;
                 //LOG(INFO) << "Tilde Q : " << oda_tilde_q_ << " >= " << oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;*/
-
-                if (oda_tilde_q_ >= oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_ ){
+                double oda_descent_target = oda_kappa_*oda_phi_i_ + (1-oda_kappa_)*upper_bound_;
+                if ( cvar_constr_decomp_ ){
+                    double lower_level = cvar_alpha_*cvar_problem_lower_bound_;
+                    double upper_level = lower_level+cvar_H_;
+                    oda_descent_target = oda_kappa_*lower_level+(1-oda_kappa_)*upper_level;
+                }
+                if (oda_tilde_q_ >= oda_descent_target ){
                     solution_times_.Start(2);
                     //LOG(INFO) << " Subproblems do not get solved, we add our own cuts.";
                     // Do not solve subproblems, but add aggregated cut(s)
@@ -1218,11 +1233,54 @@ namespace parallel_benders {
 						}
                     }
 
+                    // Generate CVaR weights and clear cut_coefficients and cut_rhs vectors
+
+                    if ( cvar_constr_decomp_ ) {
+                        std::vector<std::pair<int,double> > second_stage_approximations(num_scenarios_);
+                        std::vector<double> cvar_weights(num_scenarios_);
+                        assert(num_scenarios_ == tree_nodes_by_stage_[current_stage_].size());
+                        for (int scenario_i = 0; scenario_i < num_scenarios_; scenario_i++){
+                            second_stage_approximations[scenario_i] = make_pair(scenario_i,oda_current_tilde_q_s_[scenario_i]);
+                        }
+                        std::sort(second_stage_approximations.begin(),second_stage_approximations.end(),DoubleIsHigher);
+                        // Determine the weights per scenario
+                        double beta_sum = 0.0;
+                        for ( auto pair : second_stage_approximations){
+                            BendersNodeData* current_node = tree_nodes_by_stage_[current_stage_][pair.first]->getDataPtr();
+                            for (int i = 0; i < current_node->cvar_current_cut_coefficients_.size();i++){
+                                current_node->cvar_current_cut_coefficients_[i] = 0.0;
+                            }
+                            current_node->cvar_current_cut_rhs_ = 0.0;
+
+                            if ( cvar_beta_-beta_sum > 1e-10 ){// Numerical tolerance testing, in theory we check against 0
+
+                                if ( cvar_beta_-beta_sum-current_node->probability_ < 0){// First special case : multiply with (cvar_beta-beta_sum)/prob
+                                    current_node->cvar_weight_ = cvar_beta_-beta_sum;
+                                }
+                                else { // Second case: copy 
+                                    current_node->cvar_weight_ = current_node->probability_;
+                                }
+                                beta_sum += current_node->cvar_weight_;
+                            }
+                            else{// Third case: zero out
+                                current_node->cvar_weight_ = 0.0;
+                            }
+                        }
+                    }
+
+
                     for (int i = 0; i < tree_nodes_by_stage_[0][0]->getDataPtr()->oda_aggregates_.size(); i++){
                         thread_pool_.schedule(boost::bind(&ParallelNestedBenders::GenerateAggregatedCuts,this,tree_nodes_by_stage_[0][0],i));
                     }
                     thread_pool_.wait(0);
 
+                    // Generate cvar cuts!
+                    if ( cvar_constr_decomp_ )
+                        AggregateCVaRCuts(tree_nodes_by_stage_[0][0]);
+                    
+
+
+                
                     solution_times_.Stop(2);
                     solve_subproblems = false;
                     timer_.Stop(current_stage_);
@@ -4603,18 +4661,36 @@ namespace parallel_benders {
             cut_elements[num_columns+i] = 1.0;
         }
 
+
+
         double cut_lower_bound = 0.0;
         // For all the indices, that belong to this cut.
+        bool cvar_for_this_node = false;
+
+
         for ( int real_agg : oda_aggregates ){
-            for ( int node : benders_node_pointer->nodes_in_cut_[real_agg] )
-            // For all the lambda variables with corresponding weight!
-            for ( std::pair<int,double> lambda : tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_lambdas_ ){
-                std::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_optimality_cuts_[ lambda.first ]);
-                const double * elements = osi_cut->row().getElements();
-                const int * indices = osi_cut->row().getIndices();
-                for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++) // Ignore index of multi-cut theta variable 
-                    cut_elements[indices[element_index]] += lambda.second*elements[element_index];
-                cut_lower_bound += lambda.second*osi_cut->lb();
+            for ( int node : benders_node_pointer->nodes_in_cut_[real_agg] ){
+                if ( tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->cvar_weight_ > 0.0 )
+                    cvar_for_this_node = true;
+                else
+                    cvar_for_this_node = false;
+                // For all the lambda variables with corresponding weight!
+                for ( std::pair<int,double> lambda : tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_lambdas_ ){
+                    std::shared_ptr<OsiRowCut> osi_cut(tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->oda_optimality_cuts_[ lambda.first ]);
+                    const double * elements = osi_cut->row().getElements();
+                    const int * indices = osi_cut->row().getIndices();
+                    for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++){ // Ignore index of multi-cut theta variable 
+                        cut_elements[indices[element_index]] += lambda.second*elements[element_index];
+                    }
+                    cut_lower_bound += lambda.second*osi_cut->lb();
+                    if ( cvar_for_this_node ){
+                        double cvar_weight = tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->cvar_weight_;
+                        for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++){ // Ignore index of multi-cut theta variable 
+                            tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->cvar_current_cut_coefficients_[indices[element_index]] += cvar_weight*lambda.second*elements[element_index];
+                        }
+                        tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->cvar_current_cut_rhs_ += cvar_weight*lambda.second*osi_cut->lb();
+                    }
+                }
             }
         }
         // Add cut to Optimality Cut Set!
@@ -4624,7 +4700,6 @@ namespace parallel_benders {
         osi_row_cut->setLb(cut_lower_bound);
         osi_row_cut->setUb(infinity_);
         osi_row_cut->setRow(num_columns+num_aggregates,&cut_indices[0],&cut_elements[0],debug_test_duplicate_indices_);
-
         std::shared_ptr<CutStuff> cut_stuff(new CutStuff(current_iteration_,osi_row_cut));
 
         stage_data_[current_stage_]->added_optimality_cuts_ += 1;
