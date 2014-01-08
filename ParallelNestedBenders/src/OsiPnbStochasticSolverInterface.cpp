@@ -130,7 +130,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
                     nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
                 else if ( result == CPX_STAT_UNBOUNDED )
                     nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_UNBOUNDED;
-                else if ( result != 0  )
+                else if ( result != CPX_STAT_OPTIMAL  )
                     nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_SUBSOLVER_PROBLEM;
             }
             double obj;
