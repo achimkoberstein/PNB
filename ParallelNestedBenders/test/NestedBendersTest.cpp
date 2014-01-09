@@ -410,17 +410,19 @@ public:
 
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+        
 
 
         // Compare solution values
