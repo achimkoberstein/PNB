@@ -649,6 +649,8 @@ namespace parallel_benders {
 
         // Set options for solver!
         SetSolverOptions(osi_solver_);
+        if ( cvar_constr_decomp_ )
+            SetSolverOptions(osi_stopping_criterion_solver_);
         // Unsilence first stage solver!
         if ( debug_first_stage )
             osi_solver_->messageHandler()->setLogLevel(2);
@@ -795,14 +797,15 @@ namespace parallel_benders {
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else if ( !regularization_ && cvar_constr_decomp_ ){ // We only test for stopping criterion in first iteration! 
-                not_stop_loop = cvar_H_ > relative_epsilon_;
+                not_stop_loop = cvar_H_ > relative_epsilon_ &&
+                    current_iteration_-insubstantial_iteration_ < max_iteration_;
 
-                if ( level_decomp_ && !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){ // In case of level decomp, we look at additional stopping criterions!
-                    if ( cvar_H_ > 10 )// See if we already have a somewhat good approximation
-                        not_stop_loop = true;
-                    else if ( cvar_H_ > relative_epsilon_ )// Note that cvar_H was still larger than the relative_epsilon_
-                        solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
-                }
+                //if ( level_decomp_ && !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){ // In case of level decomp, we look at additional stopping criterions!
+                //    if ( cvar_H_ > 10 )// See if we already have a somewhat good approximation
+                //        not_stop_loop = true;
+                //    else if ( cvar_H_ > relative_epsilon_ )// Note that cvar_H was still larger than the relative_epsilon_
+                //        solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
+                //}
                 if ( cvar_H_ < relative_epsilon_ ){
                     if ( feas_cut_iterations_.size() > 0 ){
                         // We added feasibility cuts!
@@ -5324,7 +5327,7 @@ namespace parallel_benders {
 
         if ( cvar_constr_decomp_ ) {
             lower_bound = cvar_alpha_*cvar_problem_lower_bound_;
-            upper_bound = lower_bound+cvar_H_;
+            upper_bound = lower_bound+cvar_h_i_;
         }
 
         // Alternative approach? 
@@ -6500,7 +6503,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6626,9 +6629,6 @@ namespace parallel_benders {
             double alpha_upper = infinity_;
             double alpha_lower = -infinity_;
 
-            std::vector<double> upper_sloping_values;
-            std::vector<double> lower_sloping_values;
-
             for (int i = 0; i < cvar_substantial_points_.size();i++){
                 double slope = recourse_approximation[i] -cvar_approximation[i]-cvar_problem_lower_bound_;
                 if ( slope != 0.0 ){
@@ -6641,15 +6641,27 @@ namespace parallel_benders {
             }
             if ( alpha_lower < 0.0 )
                 alpha_lower = 0.0;
+            if ( alpha_lower > 1.0 )
+                alpha_lower = 1.0;
             if ( alpha_upper > 1.0 ) 
                 alpha_upper = 1.0;
+            if ( alpha_upper < 0.0 )
+                alpha_upper = 0.0;
             assert( alpha_lower <= alpha_upper );
             // Store current interval 
             double mu = 0.5;
             double interval_length = alpha_upper-alpha_lower;
             // Recompute alpha
-            if ( !(cvar_alpha_ <= alpha_upper-interval_length*mu && cvar_alpha_ >= alpha_lower+interval_length*mu) )// If cvar_alpha is not in interval alpha_lower+interval_length*mu <= alpha <= alpha_upper- interval_length*mu
+            if ( !(cvar_alpha_ <= alpha_upper-interval_length*(mu/2) && cvar_alpha_ >= alpha_lower+interval_length*(mu/2)) )// If cvar_alpha is not in interval alpha_lower+interval_length*mu <= alpha <= alpha_upper- interval_length*mu
                 cvar_alpha_ = (alpha_lower+alpha_upper)*0.5;
+
+            // Compute h(cvar_alpha_)
+            double minimal_value = infinity_;
+            for (int i = 0; i < cvar_substantial_points_.size();i++){
+                double current_value = cvar_alpha_*(recourse_approximation[i]-cvar_problem_lower_bound_)+(1-cvar_alpha_)*cvar_approximation[i];
+                minimal_value = std::min(minimal_value,current_value);
+            }
+            cvar_h_i_ = minimal_value;
         }
 
         // Compute alpha value with this information!
@@ -6692,8 +6704,11 @@ namespace parallel_benders {
         osi_stopping_criterion_solver_->initialSolve();
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
-            if ( !change_alpha )// Only set cvar_alpha if we do not change it with the more sophisticated procedure shown above!
+            // TODO: Reenable for level!
+            if ( !change_alpha ){// Only set cvar_alpha if we do not change it with the more sophisticated procedure shown above!
                 cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
+                cvar_h_i_ = cvar_H_;
+            }
             if ( cvar_H_ < relative_epsilon_){
                 if ( cvar_stopping_first_round_ == true )
                     cvar_stopping_second_round_ = true;
