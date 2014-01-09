@@ -795,9 +795,9 @@ namespace parallel_benders {
                 current_iteration_-insubstantial_iteration_ < max_iteration_ &&
                 solution_similiarity_counter_ < max_similarity_iteration_;
             else if ( !regularization_ && cvar_constr_decomp_ ){ // We only test for stopping criterion in first iteration! 
-                not_stop_loop = cvar_H_ > relative_epsilon_ &&  
-                    RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_);
-                if ( !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){
+                not_stop_loop = cvar_H_ > relative_epsilon_;
+
+                if ( level_decomp_ && !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){ // In case of level decomp, we look at additional stopping criterions!
                     if ( cvar_H_ > 10 )// See if we already have a somewhat good approximation
                         not_stop_loop = false;
                     else if ( cvar_H_ > relative_epsilon_ )// Note that cvar_H was still larger than the relative_epsilon_
@@ -811,6 +811,8 @@ namespace parallel_benders {
                         }
                     }
                 }
+                //if ( !(cvar_stopping_first_round_ && cvar_stopping_second_round_) )
+                //    not_stop_loop = true;
             }
             else
             { // Regularization!
@@ -1234,7 +1236,7 @@ namespace parallel_benders {
                     }
 
                     // Generate CVaR weights and clear cut_coefficients and cut_rhs vectors
-
+                    // ODA-CVaR cut coefficients are computed in GenerateAggregatedCuts
                     if ( cvar_constr_decomp_ ) {
                         std::vector<std::pair<int,double> > second_stage_approximations(num_scenarios_);
                         std::vector<double> cvar_weights(num_scenarios_);
@@ -1254,13 +1256,15 @@ namespace parallel_benders {
 
                             if ( cvar_beta_-beta_sum > 1e-10 ){// Numerical tolerance testing, in theory we check against 0
 
-                                if ( cvar_beta_-beta_sum-current_node->probability_ < 0){// First special case : multiply with (cvar_beta-beta_sum)/prob
-                                    current_node->cvar_weight_ = cvar_beta_-beta_sum;
+                                if ( cvar_beta_-beta_sum-current_node->probability_ < 0){// First case: use remaining probability
+                                    current_node->cvar_weight_ = (cvar_beta_-beta_sum);
                                 }
                                 else { // Second case: copy 
                                     current_node->cvar_weight_ = current_node->probability_;
+                                   
                                 }
                                 beta_sum += current_node->cvar_weight_;
+                                
                             }
                             else{// Third case: zero out
                                 current_node->cvar_weight_ = 0.0;
@@ -1356,18 +1360,20 @@ namespace parallel_benders {
                         
                         if ( cvar_beta_-beta_sum-current_node->probability_ < 0){// First special case : multiply with (cvar_beta-beta_sum)/prob
                             current_node->cvar_weight_ = cvar_beta_-beta_sum;
-                            double multiplication_factor = (cvar_beta_-beta_sum)/current_node->probability_;
-                            for ( int i = 0; i < current_node->current_cut_coefficients_.size(); i++){
+                            double multiplication_factor = current_node->cvar_weight_/current_node->probability_; // We need this factor because the coefficients are already multiplied by their respective probabilities!
+                             for ( int i = 0; i < current_node->current_cut_coefficients_.size(); i++){
                                 current_node->cvar_current_cut_coefficients_[i] = current_node->current_cut_coefficients_[i]*multiplication_factor;
                             }
                             current_node->cvar_current_cut_rhs_ = current_node->current_cut_rhs_ * multiplication_factor;
                         }
                         else { // Second case: copy 
                             current_node->cvar_weight_ = current_node->probability_;
+                            beta_sum += current_node->cvar_weight_;
                             current_node->cvar_current_cut_coefficients_ = current_node->current_cut_coefficients_;
                             current_node->cvar_current_cut_rhs_ = current_node->current_cut_rhs_;
                         }
                         beta_sum += current_node->cvar_weight_;
+                        
                     }
                     else{// Third case: zero out
                         current_node->cvar_weight_ = 0.0;
@@ -2794,29 +2800,6 @@ namespace parallel_benders {
         }
 
     }
-
-
-	// AK: CVaR constraint decomposition
-	void ParallelNestedBenders::GenerateCVaRCut( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer )
-    {
-        // We need the values for the H and the T matrix.
-        BendersNodeData* benders_node_pointer = benders_tree_node_pointer->getDataPtr();
-        BendersNodeData* ancestor_node_pointer = benders_tree_node_pointer->getParent()->getDataPtr();
-        BendersStageData* stage_pointer = stage_data_[current_stage_];
-        SmiNodeData* node_pointer = benders_node_pointer->smi_node_data_;
-
-		// --------------------------------------------------------------------------------------------------------------
-		// --------------------------------------------------------------------------------------------------------------
-
-
-		// AK: TODO
-
-
-		// --------------------------------------------------------------------------------------------------------------
-		// --------------------------------------------------------------------------------------------------------------
-
-	}
-
 
 
     void ParallelNestedBenders::AggregateOptimalityCuts( SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer ){
@@ -4685,6 +4668,10 @@ namespace parallel_benders {
                     cut_lower_bound += lambda.second*osi_cut->lb();
                     if ( cvar_for_this_node ){
                         double cvar_weight = tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->cvar_weight_;
+                        if ( cvar_weight == tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->probability_ )
+                            cvar_weight = 1.0; // we do not need to multiply, as our coefficients are already multiplied!
+                        else
+                            cvar_weight /= tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->probability_;
                         for (int element_index = 0; element_index < osi_cut->row().getNumElements()-1; element_index++){ // Ignore index of multi-cut theta variable 
                             tree_nodes_by_stage_[current_stage_][node]->getDataPtr()->cvar_current_cut_coefficients_[indices[element_index]] += cvar_weight*lambda.second*elements[element_index];
                         }
@@ -6674,10 +6661,14 @@ namespace parallel_benders {
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
             cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
-            if ( feas_cut_iterations_.size() > 0){
+            if ( cvar_H_ < relative_epsilon_){
                 if ( cvar_stopping_first_round_ == true )
                     cvar_stopping_second_round_ = true;
                 cvar_stopping_first_round_ = true;
+            }
+            else{
+                cvar_stopping_first_round_ = false;
+                cvar_stopping_second_round_ = false;
             }
             LOG(INFO) << "Stopping criterion value H " << cvar_H_ << " and alpha " << cvar_alpha_;
         }

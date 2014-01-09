@@ -2566,6 +2566,7 @@ void SmiScnModel::generateCVaRConstraints()
     // Scenario constraints
     for ( int current_scen = 0; current_scen < num_scenarios; current_scen++){
         for ( int i = 0; i < num_second_stage_cols; i++){
+            // Obj. func. values are already multiplied with scenario prob, we need origional value => multiply by inverse of scenario prob to get original value!
             dels_[current_index_in_matrix_array] = dobj_[first_scenario_start_index+(current_scen*num_second_stage_cols)+i]*(1/this->getScenarioProb(current_scen));
             indx_[current_index_in_matrix_array] = first_scenario_start_index+(current_scen*num_second_stage_cols)+i;
             current_index_in_matrix_array++;
