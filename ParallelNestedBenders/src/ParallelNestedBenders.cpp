@@ -1368,7 +1368,6 @@ namespace parallel_benders {
                         }
                         else { // Second case: copy 
                             current_node->cvar_weight_ = current_node->probability_;
-                            beta_sum += current_node->cvar_weight_;
                             current_node->cvar_current_cut_coefficients_ = current_node->current_cut_coefficients_;
                             current_node->cvar_current_cut_rhs_ = current_node->current_cut_rhs_;
                         }
