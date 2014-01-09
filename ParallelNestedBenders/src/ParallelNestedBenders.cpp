@@ -450,7 +450,7 @@ namespace parallel_benders {
         if ( algorithm == PNB_INT_ALGORITHM_LEVEL_RISK ){
             cvar_constr_decomp_ = true;
             level_decomp_ = true;
-            level_euclidean_ = true;
+            level_infinity_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_BENDERS_ODA_RISK ){
             cvar_constr_decomp_ = true;
@@ -459,7 +459,7 @@ namespace parallel_benders {
         if ( algorithm == PNB_INT_ALGORITHM_LEVEL_ODA_RISK ){
             cvar_constr_decomp_ = true;
             level_decomp_ = true;
-            level_euclidean_ = true;
+            level_infinity_ = true;
             oda_method_ = true;
         }
 
@@ -799,7 +799,7 @@ namespace parallel_benders {
 
                 if ( level_decomp_ && !RelativeGapLargerEpsilon(upper_bound_,lower_bound_,infinity_,relative_epsilon_) ){ // In case of level decomp, we look at additional stopping criterions!
                     if ( cvar_H_ > 10 )// See if we already have a somewhat good approximation
-                        not_stop_loop = false;
+                        not_stop_loop = true;
                     else if ( cvar_H_ > relative_epsilon_ )// Note that cvar_H was still larger than the relative_epsilon_
                         solution_code_ = PNB_SOLUTION_GAP_NONIMPROVING;
                 }
@@ -3494,6 +3494,8 @@ namespace parallel_benders {
 				int num_theta = benders_tree_node_pointer->getDataPtr()->num_thetas_;
 				if ( num_theta == 0)
 					num_theta = getNumThetasByStage(benders_tree_node_pointer);
+                if ( cvar_constr_decomp_ )
+                    num_theta++;
 				// Prepare the new rows that are meant to set w +x >= x' and w - x >= -x'
 				int overall_columns = num_columns*2;
 				std::vector<double> rowlb(overall_columns);
@@ -5259,7 +5261,7 @@ namespace parallel_benders {
 					}
 					osi_solver->addCols(num_columns,cpvb, &collb[0], &colub[0], &colobj[0]);
 
-					assert(osi_solver->getNumCols() == stage_data_[current_stage_]->num_columns_ + num_columns+num_theta);
+					assert(osi_solver->getNumCols() == stage_data_[current_stage_]->num_columns_ + num_theta+extra_columns);
 
 					for (int i = 0; i < num_columns; i++)
 						delete cpvb[i];
@@ -6498,7 +6500,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6538,7 +6540,8 @@ namespace parallel_benders {
         int num_columns = stage_data_[0]->num_columns_+1;
         std::vector<int> cvar_cut_indices(num_columns);
         std::iota(cvar_cut_indices.begin(),cvar_cut_indices.end(),0); 
-        cvar_cut_indices[num_columns-1] = stage_data_[0]->num_columns_+stage_data_[0]->num_thetas_+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0);
+        // TODO-CVAR
+        cvar_cut_indices[num_columns-1] = stage_data_[0]->num_columns_+getNumThetasByStage(benders_tree_node_pointer); //+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0);
         //assert( cvar_cut_indices[num_columns-1] == stage_data_[0]->num_columns_+stage_data_[0]->num_thetas_+(level_infinity_?1:0)+(level_manhattan_?stage_data_[0]->num_columns_:0));
 
         std::vector<double> cvar_cut_coefficient(num_columns,0.0);
