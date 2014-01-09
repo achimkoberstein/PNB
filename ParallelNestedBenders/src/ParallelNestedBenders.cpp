@@ -5323,7 +5323,6 @@ namespace parallel_benders {
         if ( cvar_constr_decomp_ ) {
             lower_bound = cvar_alpha_*cvar_problem_lower_bound_;
             upper_bound = lower_bound+cvar_H_;
-            // TODO This might not be correct, maybe we would like to use something else here?!
         }
 
         // Alternative approach? 
@@ -6618,8 +6617,39 @@ namespace parallel_benders {
         }
         // Current approximation to cvar approximation problem is akin to lower_bound
 
-        // Compute alpha value with this information!
+        // Determine alpa_upper and alpha_lower
+        bool change_alpha = level_decomp_;
+        if ( change_alpha ){
+            double alpha_upper = infinity_;
+            double alpha_lower = -infinity_;
 
+            std::vector<double> upper_sloping_values;
+            std::vector<double> lower_sloping_values;
+
+            for (int i = 0; i < cvar_substantial_points_.size();i++){
+                double slope = recourse_approximation[i] -cvar_approximation[i]-cvar_problem_lower_bound_;
+                if ( slope != 0.0 ){
+                    double alpha = -cvar_approximation[i]/slope;
+                    if ( slope > 0 )
+                        alpha_lower = std::max(alpha_lower,alpha);
+                    if ( slope < 0 )
+                        alpha_upper = std::min(alpha_upper,alpha);
+                }
+            }
+            if ( alpha_lower < 0.0 )
+                alpha_lower = 0.0;
+            if ( alpha_upper > 1.0 ) 
+                alpha_upper = 1.0;
+            assert( alpha_lower <= alpha_upper );
+            // Store current interval 
+            double mu = 0.5;
+            double interval_length = alpha_upper-alpha_lower;
+            // Recompute alpha
+            if ( !(cvar_alpha_ <= alpha_upper-interval_length*mu && cvar_alpha_ >= alpha_lower+interval_length*mu) )// If cvar_alpha is not in interval alpha_lower+interval_length*mu <= alpha <= alpha_upper- interval_length*mu
+                cvar_alpha_ = (alpha_lower+alpha_upper)*0.5;
+        }
+
+        // Compute alpha value with this information!
         int num_rows = cvar_substantial_points_.size();
         int num_cols = 2; // First one is alpha, second one is z
         // Build and solve an approximation problem!
@@ -6659,7 +6689,8 @@ namespace parallel_benders {
         osi_stopping_criterion_solver_->initialSolve();
         if ( osi_stopping_criterion_solver_->isProvenOptimal() ){
             cvar_H_ = osi_stopping_criterion_solver_->getObjValue();
-            cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
+            if ( !change_alpha )// Only set cvar_alpha if we do not change it with the more sophisticated procedure shown above!
+                cvar_alpha_ = osi_stopping_criterion_solver_->getColSolution()[0];
             if ( cvar_H_ < relative_epsilon_){
                 if ( cvar_stopping_first_round_ == true )
                     cvar_stopping_second_round_ = true;
