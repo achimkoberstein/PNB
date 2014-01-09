@@ -316,6 +316,7 @@ private:
     double cvar_beta_;
     double cvar_rho_;
     double cvar_H_;
+    double cvar_h_i_;
     double cvar_alpha_;
     double cvar_problem_lower_bound_;
     bool cvar_first_stage_;

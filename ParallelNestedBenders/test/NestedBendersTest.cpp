@@ -1994,8 +1994,8 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
 
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
