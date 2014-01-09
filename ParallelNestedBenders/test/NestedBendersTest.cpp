@@ -362,19 +362,19 @@ public:
                 // Set cvar_rho so that it can be used later in the algorithm!
                 benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,cvar_rho);
             }
-            //{
-            //     // CVaR deteq model for comparison
-            //    boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
-            //    int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-            //    assert( smi_read_in == 0);
-            //    smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage);
-            //    OsiCpxSolverInterface osi_cpx;
-            //    smi_cvar_model->setOsiSolverHandle(&osi_cpx);
-            //    OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
-            //    deteq_solver->writeLp("cvar_model");
-            //    deteq_solver->initialSolve();
-            //    smi_cvar_model->releaseSolver();
-            //}
+            {
+                 // CVaR deteq model for comparison
+                boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
+                int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                assert( smi_read_in == 0);
+                smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage);
+                OsiCpxSolverInterface osi_cpx;
+                smi_cvar_model->setOsiSolverHandle(&osi_cpx);
+                OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
+                deteq_solver->writeLp("cvar_model");
+                //deteq_solver->initialSolve();
+                smi_cvar_model->releaseSolver();
+            }
 
 
 
@@ -409,14 +409,19 @@ public:
 		//}
 
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,7200); // Not longer than one hour 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
+        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
+        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+
 
         // Compare solution values
 
@@ -1926,7 +1931,8 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),269.591,0.1);
    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1);
-    EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
+    //EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
+    solveSMPS("posts/storm/stormG2_27");
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
