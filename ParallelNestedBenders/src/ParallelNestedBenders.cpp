@@ -301,7 +301,7 @@ namespace parallel_benders {
         sequencing_protocol_(0),second_iteration_stage_(0),strategy_epsilon_(0.0),
         stage_lower_upper_bounds_(),old_lower_upper_bounds_(),temporary_stage_lower_bound_(-infinity_),temporary_stage_upper_bound_(infinity_),compute_stage_bounds_(false),at_last_iteration_(false),cuts_added_last_round_(0),theta_approximations_everywhere_(false),enforce_direction_(false),enforce_stage_(0),level_loop_forward_(false),level_loop_backward_(false),level_decomp_(false),level_stage_(0),level_euclidean_(false),level_manhattan_(false),level_infinity_(false),
         oda_method_(false),level_lambda_(0.5),oda_kappa_(0.2),oda_gap_(infinity_),oda_lower_(-infinity_),oda_upper_(infinity_),oda_first_stage_(-infinity_),oda_phi_i_(-infinity_),oda_tilde_q_(-infinity_),num_oda_aggregates_(1),oda_chosen_optimality_cut_by_scenario_(),oda_current_tilde_q_s_(),critical_iteration_(false),uncritical_iteration_counter_(0),maximal_number_of_uncritical_iterations_(0),critical_iteration_counter_(0),last_critical_iteration_gap_(infinity_),
-        cvar_constr_decomp_(false),current_second_stage_approximation_(),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),osi_stopping_criterion_solver_(nullptr),
+        cvar_constr_decomp_(false),current_second_stage_approximation_(),cvar_beta_(0.95),cvar_rho_(infinity_),cvar_H_(infinity_),cvar_alpha_(0.5),cvar_problem_lower_bound_(-infinity_),cvar_first_stage_(false),cvar_stopping_first_round_(false),cvar_stopping_second_round_(false),cvar_feasible_first_stage_solution_(false),cvar_next_iterate_problem_(false),change_cvar_alpha_(false),osi_stopping_criterion_solver_(nullptr),
         warm_up_(false),warm_up_solution_(nullptr),regularized_solution_(nullptr),regularized_update_incumbent_(false),stage_aggregation_(false),begin_aggregation_stage_(0),end_aggregation_stage_(0),aggregate_from_start_(true),seperate_first_stage_solver_(true),seperate_stage_solver_(false),solve_relaxation_(PNB_INT_NO_RELAXATION),debug_test_duplicate_indices_(false),pretty_printing_(false),pretty_printing_verbose_(true),compute_primal_solutions_for_stage_(PNB_INT_SOLUTION_PRIMAL_NO),compute_dual_solutions_for_stage_(PNB_INT_SOLUTION_DUAL_NO),compute_objective_values_(false),final_solution_run_(false),first_stage_original_col_lower_(nullptr),first_stage_original_col_upper_(nullptr),fixed_solution_(nullptr),fixed_first_stage_(false),non_staircase_coefficients_(),old_discrepancies_(),optimality_cut_counter_(0),intra_cut_aggregation_time_(0),adaptive_cut_time_(0),current_solution_value_(0.0),d_square_c_triple_timer_(0.0),d_square_c_rhs_timer_(0.0),solution_similiarity_counter_(0),max_similarity_iteration_(10)
     {
 
@@ -461,6 +461,17 @@ namespace parallel_benders {
             level_decomp_ = true;
             level_infinity_ = true;
             oda_method_ = true;
+        }
+        if ( algorithm == PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA ){
+            cvar_constr_decomp_ = true;
+            change_cvar_alpha_ = true;
+            cvar_next_iterate_problem_ = true;
+        }
+        if ( algorithm == PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA ){
+            cvar_constr_decomp_ = true;
+            oda_method_ = true;
+            change_cvar_alpha_ = true;
+            cvar_next_iterate_problem_ = true;
         }
 
 		csaba_steepest_edge_ = false; // Csaba-Steepest-Edge
@@ -1990,6 +2001,9 @@ namespace parallel_benders {
             /************************************************************************/
             if (cvar_constr_decomp_ && current_stage_ == 0){
                 SolveStoppingCriterionProblem();
+            }
+            if ( cvar_constr_decomp_ && cvar_next_iterate_problem_ && !level_decomp_ && current_stage_ == 0){
+                BuildAndSolveNextIterateCVaRProblem(osi_solver);
             }
 
 
@@ -6503,7 +6517,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6624,7 +6638,7 @@ namespace parallel_benders {
         // Current approximation to cvar approximation problem is akin to lower_bound
 
         // Determine alpa_upper and alpha_lower
-        bool change_alpha = level_decomp_;
+        bool change_alpha = change_cvar_alpha_;
         if ( change_alpha ){
             double alpha_upper = infinity_;
             double alpha_lower = -infinity_;
@@ -6727,6 +6741,47 @@ namespace parallel_benders {
         // \bar h = alpha( recourse_approximation ) + (1-alpha)cvar_approximation | for every substantial point!
 
     }
+
+    void ParallelNestedBenders::BuildAndSolveNextIterateCVaRProblem(OsiSolverInterface* osi_solver)
+    {
+        // We want to do the following
+        // Solve master problem with objective function: cvar_alpha * c^Tx + \theta + (1-cvar_alpha) \psi
+        
+        // Store old obj. function
+        const double* obj_function_coefs = osi_solver->getObjCoefficients();
+        // Get num cols!
+        int num_solver_cols = osi_solver->getNumCols();
+        std::vector<double> old_obj_function_coefs(obj_function_coefs,obj_function_coefs+num_solver_cols);
+        std::vector<double> new_obj_function_coefs(old_obj_function_coefs);
+
+        // Generate new obj. function
+        int num_first_stage_cols = stage_data_[0]->num_columns_;
+        int num_theta = stage_data_[0]->num_thetas_;
+        for (int i = 0; i < num_first_stage_cols+num_theta; i++)
+            new_obj_function_coefs[i] *= cvar_alpha_;
+        new_obj_function_coefs[num_first_stage_cols+num_theta] = 1-cvar_alpha_;
+
+        // Unfix \psi aggregate var
+        osi_solver->setColBounds(num_first_stage_cols+num_theta,-infinity_,infinity_);
+
+        osi_solver->setObjective(&new_obj_function_coefs[0]);
+        // Solve problem
+        PrintSubproblem(osi_solver,0,"nextit");
+        SolveSolverInterface(osi_solver);
+
+        // Store solution
+        if ( osi_solver->isProvenOptimal() ){
+ 
+            StoreValuesFromSolverInVector(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,osi_solver->getColSolution(),num_first_stage_cols);
+        }
+
+        // Restore old obj. function
+        osi_solver->setObjective(&old_obj_function_coefs[0]);
+        osi_solver->setColBounds(num_first_stage_cols+num_theta,0.0,0.0);
+
+        // Problem with H computation?!
+    }
+
     bool CutIsEqual( const CutStuff& first, const CutStuff& second, double tolerance )
 	{
 

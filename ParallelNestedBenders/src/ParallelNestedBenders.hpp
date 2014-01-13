@@ -126,6 +126,7 @@ private:
     // CVaR methods
     void AggregateCVaRCuts(SmiTreeNode<BendersNodeData*>* benders_tree_node_pointer);
     void SolveStoppingCriterionProblem();
+    void BuildAndSolveNextIterateCVaRProblem(OsiSolverInterface* osi_solver);
 	
     // Problem data
     SmiScnModel* smi_;
@@ -323,6 +324,8 @@ private:
     bool cvar_stopping_first_round_;
     bool cvar_stopping_second_round_;
     bool cvar_feasible_first_stage_solution_;
+    bool cvar_next_iterate_problem_;
+    bool change_cvar_alpha_;
     OsiSolverInterface* osi_stopping_criterion_solver_;
 
     std::vector<int> cvar_substantial_iterations_;

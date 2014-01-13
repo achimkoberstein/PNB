@@ -2493,12 +2493,15 @@ const char* SmiScnModel::getColumnName( int index )
     return "";
 }
 
-void SmiScnModel::setCVaRConstraint( bool cvar_value, double cvar_beta,double cvar_rho, bool first_stage_cvar )
+void SmiScnModel::setCVaRConstraint( bool cvar_value, double cvar_beta,double cvar_rho, bool first_stage_cvar, bool cvar_objective )
 {
     cvar_ = cvar_value;
     cvar_beta_ = cvar_beta;
     cvar_rho_ = cvar_rho;
     cvar_first_stage_ = first_stage_cvar;
+    cvar_objective_ = cvar_objective;
+    if ( cvar_objective ) // If we use CVaR as objective, we can no longer use a cvar_rho_ ?!
+        cvar_rho_ = COIN_DBL_MAX;
 }
 
 void SmiScnModel::generateCVaRConstraints()
@@ -2522,8 +2525,12 @@ void SmiScnModel::generateCVaRConstraints()
     if ( cvar_first_stage_ )
         first_stage_columns = core_->getNumCols(0);
     int new_num_cols = ncol_ + num_scenarios+1;
+    if ( cvar_objective_ )
+        new_num_cols++;
     int new_num_rows = nrow_ + num_scenarios+1;
     int new_num_els = nels_ + first_stage_columns+num_scenarios+1+num_scenarios*(num_second_stage_cols+2);
+    if ( cvar_objective_ )
+        new_num_els++;
     
     // Create new arrays and copy old entries into new ones!
     resizeDoubleArray(new_num_cols,ncol_,dclo_);
@@ -2538,7 +2545,9 @@ void SmiScnModel::generateCVaRConstraints()
 
     // Fill matrix 
     int z_index = ncol_+num_scenarios;
+    int rho_index = z_index+1;
     int first_scenario_start_index = core_->getNumCols(0);
+    int extra_variables = num_scenarios+1+(cvar_objective_?1:0);
 
     assert(cvar_beta_< 1.0 && cvar_beta_ > 0.0);
     // Cvar_constraint
@@ -2559,7 +2568,12 @@ void SmiScnModel::generateCVaRConstraints()
     dels_[current_index_in_matrix_array] = 1.0;
     indx_[current_index_in_matrix_array] = z_index;
     current_index_in_matrix_array++;
-    rstrt_[current_index_in_row_start] = rstrt_[current_index_in_row_start-1] + first_stage_columns+num_scenarios+1;
+    if ( cvar_objective_ ){
+        dels_[current_index_in_matrix_array] = -1.0;
+        indx_[current_index_in_matrix_array] = rho_index;
+        current_index_in_matrix_array++;
+    }
+    rstrt_[current_index_in_row_start] = rstrt_[current_index_in_row_start-1] + first_stage_columns+extra_variables;
     current_index_in_row_start++;
     
 
@@ -2583,22 +2597,36 @@ void SmiScnModel::generateCVaRConstraints()
     
     // Fill columns
     // z_j
-    for ( int i = ncol_; i < new_num_cols-1;i++){
+    for ( int i = ncol_; i < ncol_+num_scenarios;i++){
         dclo_[i] = 0;
         dcup_[i] = core_->getInfinity();
     }
     // z
-    dclo_[new_num_cols-1] = -core_->getInfinity();
-    dcup_[new_num_cols-1] = core_->getInfinity();
+    dclo_[z_index] = -core_->getInfinity();
+    dcup_[z_index] = core_->getInfinity();
+
+    if ( cvar_objective_ ){
+        dclo_[rho_index] = -core_->getInfinity();
+        dcup_[rho_index] = core_->getInfinity();
+    }
 
     // Fill rows
     // cvar_constraint
     drlo_[nrow_] = -core_->getInfinity();
     drup_[nrow_] = cvar_rho_;
+    if ( cvar_objective_ )
+        drup_[nrow_] = 0;
     // Scenario constraints
     for (int i = nrow_+1; i < new_num_rows; i++){
         drlo_[i] = -core_->getInfinity();
         drup_[i] = 0.0;
+    }
+
+    // We need to change the obj. values in case of cvar_objective_. All variables are 0 except for cvar_value!
+    if ( cvar_objective_ ){
+        for (int i = 0; i < ncol_; i++)
+            dobj_[i] = 0.0;
+        dobj_[rho_index] = 1.0;
     }
 
     // Set ncol, nrow, etc. to new values!
@@ -2644,16 +2672,25 @@ std::vector<double> SmiScnModel::solveEEVByScenario( OsiSolverInterface *osiSolv
     OsiSolverInterface* tempPtr = osiStoch_;
     osiStoch_ = osiSolver->clone(false);
     std::pair<double, double* > evResult(solveEV(osiSolver, objSense, calculateAverageValues)); //We create a new osiSolver object in here (osiStoch_)
+    return evaluateWithFirstStageSolutionByScenario(osiSolver,evResult.second,objSense,calculateAverageValues);
+}
+
+std::vector<double> SmiScnModel::evaluateWithFirstStageSolutionByScenario( OsiSolverInterface *osiSolver, const double * primal_first_stage_solution,double objSense /*= 1*/, bool calculateAverageValues /*= true*/ )
+{
+    if ( primal_first_stage_solution == NULL)
+        return std::vector<double>();
+
+    OsiSolverInterface* tempPtr = osiStoch_;
+    osiStoch_ = osiSolver->clone(false);
     // Compute first stage solution value!
     const double * first_stage_obj_coefs = core_->getDenseObjCoefficients(0);
     double first_stage_objective_function_value = 0.0;
     for (int i = 0; i < core_->getNumCols(0);i++){
-        first_stage_objective_function_value += first_stage_obj_coefs[i]*evResult.second[i];
+        first_stage_objective_function_value += first_stage_obj_coefs[i]*primal_first_stage_solution[i];
     }
 
-
     int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
-    double * colSolution = evResult.second;
+    const double * colSolution = primal_first_stage_solution;
     double prob = 0;
 
 #pragma region EEVP
@@ -2753,28 +2790,6 @@ std::vector<double> SmiScnModel::solveEEVByScenario( OsiSolverInterface *osiSolv
         delete [] this->rstrt_;
         matrix_ = 0; dels_ = 0; indx_ = 0; rstrt_ = 0;
 
-        //Print out Matrix.. if in Debug Mode
-        //TODO: Define proper Debug Mode..
-        //TODO: Printout obj-functions
-        //#ifdef NDEBUG
-        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMinorDim();mi++){
-        //            std::cout << osiStoch_->getObjCoefficients()[mi] << "*x" << mi << " + ";
-        //        }
-        //        std::cout << std::endl;
-        //        for (int mi = 0; mi < osiStoch_->getMatrixByRow()->getMajorDim(); mi++){
-        //            printf("\n%g <= ", osiStoch_->getRowLower()[mi]);
-        //            for (int mj = 0; mj < osiStoch_->getMatrixByRow()->getMinorDim(); mj++){
-        //                printf("%g ",osiStoch_->getMatrixByRow()->getCoefficient(mi,mj));
-        //            }
-        //            printf("<= %g",osiStoch_->getRowUpper()[mi]);
-        //        }
-        //        printf("\n Matrix printed \n");
-        //        for (int mi = 0; mi < osiStoch_->getNumCols(); mi++) {
-        //            printf("\n%g <= %d <= %g",osiStoch_->getColLower()[mi],mi,osiStoch_->getColUpper()[mi]);
-        //
-        //        }
-        //        printf("\n");
-        //#endif
     }
 #pragma endregion EEVP;
     eev_evaluation.push_back(first_stage_objective_function_value);
