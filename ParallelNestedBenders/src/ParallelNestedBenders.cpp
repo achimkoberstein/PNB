@@ -451,6 +451,7 @@ namespace parallel_benders {
             cvar_constr_decomp_ = true;
             level_decomp_ = true;
             level_infinity_ = true;
+            change_cvar_alpha_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_BENDERS_ODA_RISK ){
             cvar_constr_decomp_ = true;
@@ -461,6 +462,7 @@ namespace parallel_benders {
             level_decomp_ = true;
             level_infinity_ = true;
             oda_method_ = true;
+            change_cvar_alpha_ = true;
         }
         if ( algorithm == PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA ){
             cvar_constr_decomp_ = true;
@@ -6746,6 +6748,10 @@ namespace parallel_benders {
     {
         // We want to do the following
         // Solve master problem with objective function: cvar_alpha * c^Tx + \theta + (1-cvar_alpha) \psi
+        if ( cvar_alpha_ = 0 )// In case of cvar_alpha = 0 obj. function consists only of \psi variable, thus ignores \theta constraints totally
+            return;
+        if ( cvar_alpha_ = 1)// In case of cvar_alpha = 1 obj. function consists only of normal obj. function, next iterate problem thus ignores \psi constraints totally
+            return;
         
         // Store old obj. function
         const double* obj_function_coefs = osi_solver->getObjCoefficients();
