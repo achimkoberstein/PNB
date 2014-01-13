@@ -395,7 +395,7 @@ public:
                 OsiCpxSolverInterface osi_cpx;
                 smi_cvar_model->setOsiSolverHandle(&osi_cpx);
                 OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
-                deteq_solver->writeLp("cvar_model");
+                //deteq_solver->writeLp("cvar_model");
                 deteq_solver->initialSolve();
                 if ( deteq_solver->isProvenOptimal() ){
                     cvar_lower = deteq_solver->getObjValue();
@@ -1974,8 +1974,8 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),269.591,0.1);
    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1);
-    EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
-    solveSMPS("posts/storm/stormG2_27");
+    //EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
+    //solveSMPS("posts/storm/stormG2_27");
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
@@ -2035,8 +2035,8 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
 
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
