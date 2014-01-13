@@ -64,7 +64,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             double cvar_beta = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_BETA,0.1);
             double cvar_rho = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_RHO,0.0);
             bool cvar_first_stage = nested_benders_->parameter_.parameter_.get(parallel_benders::PNB_CVAR_WITH_FIRST_STAGE,false);
-            nested_benders_->smi_->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage);
+            nested_benders_->smi_->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage,false);
         }
         osi_ = nested_benders_->smi_->loadOsiSolverData();
         if ( nested_benders_->smi_->getNumScenarios() == 0){
@@ -125,7 +125,7 @@ void OsiStochasticParallelNestedBendersSolverInterface::initialSolve()
             // Check for errors
             int result = CPXgetstat(envPtr,lpPtr);
             if ( result ){
-                LOG(INFO) << "Cplex returned with status code " << result;
+                LOG_IF(INFO,result!= 1) << "Cplex returned with status code " << result;
                 if ( result == CPX_STAT_INFEASIBLE )
                     nested_benders_->solution_code_ = parallel_benders::PNB_SOLUTION_INFEASIBLE;
                 else if ( result == CPX_STAT_UNBOUNDED )

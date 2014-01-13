@@ -217,6 +217,8 @@ public:
     */
     std::vector<double> solveEEVByScenario(OsiSolverInterface *osiSolver, double objSense = 1, bool calculateAverageValues = true);
 
+    std::vector<double> evaluateWithFirstStageSolutionByScenario( OsiSolverInterface *osiSolver, const double * primal_first_stage_solution,double objSense = 1, bool calculateAverageValues = true );
+
     /** Returns only the solution value of the Wait-And-See-Problem, with objective sense of 1 (= minimization) for default.
     @param osiSolver a pointer to an OsiSolverInterface
     @param objSense optional, the objective sense (1 for minimization, -1 for optimization)
@@ -308,7 +310,7 @@ public:
     const SmiDiscreteDistribution* getDiscreteDistribution( );
 
     void setSampling(bool value);
-    void setCVaRConstraint(bool cvar_value, double cvar_beta,double cvar_rho, bool first_stage_cvar);
+    void setCVaRConstraint(bool cvar_value, double cvar_beta,double cvar_rho, bool first_stage_cvar, bool cvar_objective);
 
     const char* getColumnName(int index);
 
@@ -319,7 +321,7 @@ public:
         drlo_(NULL), drup_(NULL), dobj_(NULL), dclo_(NULL), dcup_(NULL), matrix_(NULL),
         dels_(NULL),indx_(NULL),rstrt_(NULL),minrow_(0),
         solve_synch_(false),totalProb_(0),core_(NULL),smiTree_(),smpsio_(NULL),integerInd(NULL),integerLen(0),binaryInd(NULL),binaryLen(0),intIndices(),maxNelsPerScenInStage(NULL),
-        discrete_distribution_(NULL),block_structure_(NULL),sampling_(false)
+        discrete_distribution_(NULL),block_structure_(NULL),sampling_(false),cvar_(false),cvar_first_stage_(false),cvar_objective_(false)
     {
 
     };
@@ -365,6 +367,7 @@ private:
     void generateCVaRConstraints();
     void resizeDoubleArray(int new_size, int old_size, double*& double_array);
     void resizeIntArray(int new_size, int old_size, int*& int_array);
+    
 
     CoinMessageHandler *handler_;
     SmiMessage *messages_;
@@ -416,6 +419,7 @@ private:
     double cvar_rho_;
     double cvar_beta_;
     bool cvar_first_stage_;
+    bool cvar_objective_;
 };
 
 class SmiScnNode

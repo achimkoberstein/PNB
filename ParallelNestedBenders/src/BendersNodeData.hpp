@@ -117,6 +117,8 @@ namespace parallel_benders{
 	const int PNB_INT_ALGORITHM_LEVEL_RISK = 13;
 	const int PNB_INT_ALGORITHM_BENDERS_ODA_RISK = 14;
 	const int PNB_INT_ALGORITHM_LEVEL_ODA_RISK = 15;
+    const int PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA = 16;
+    const int PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA = 17;
 
 
     const int PNB_INT_WRITE_PROBLEM = 9;
