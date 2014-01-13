@@ -326,6 +326,7 @@ private:
     bool cvar_feasible_first_stage_solution_;
     bool cvar_next_iterate_problem_;
     bool change_cvar_alpha_;
+    bool stop_cvar_;
     OsiSolverInterface* osi_stopping_criterion_solver_;
 
     std::vector<int> cvar_substantial_iterations_;
