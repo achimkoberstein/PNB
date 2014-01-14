@@ -34,6 +34,9 @@
 //#include "OsiBenStochasticSolverInterface.hpp"
 
 //#include "fortsp.h"
+#include "ilcplex/cplex.h"
+#include "ilcplex/cpxconst.h"
+
 
 
 class NestedBendersTest: public ::testing::Test {
@@ -394,10 +397,21 @@ public:
                 assert( smi_read_in == 0);
                 smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage,true);
                 OsiCpxSolverInterface osi_cpx;
+                // Get Environment and LP Solver 
+
                 smi_cvar_model->setOsiSolverHandle(&osi_cpx);
                 OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
+
+                // Cast to OsiCpxSolverInterface
+                OsiCpxSolverInterface * cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(deteq_solver);
+                if ( cpx_solver != nullptr ){// Disable aggregator, it consumes too much memory!
+                    CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
+                    CPXsetintparam(env_ptr,CPX_PARAM_AGGIND,0);
+                }
+                // Parse solver interface!
                 //deteq_solver->writeLp("cvar_model");
                 deteq_solver->initialSolve();
+                // Out of Memory error
                 if ( deteq_solver->isProvenOptimal() ){
                     cvar_lower = deteq_solver->getObjValue();
                 }
@@ -1429,12 +1443,12 @@ TEST_F(NestedBendersTestMultiStage,bonds_FELT){ //SCENARIOS, Values that are tes
 //    // Cplex barrier has problems with these problems => wrong results
 }
 
-*/
+
 TEST_F(NestedBendersTest,cargo_FELT){ //Two-Stage, INDEP, values verified with det-eq
-    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 413.4, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2"), 414.0, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 416.5, 0.1);
-    //EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8"), 418.5, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-1"), 413.4, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-2"), 414.0, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-4"), 416.5, 0.1);
+    EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-8"), 418.5, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-16"), 423.0, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-32"), 423.0, 0.1);
     EXPECT_NEAR(solveSMPS("felt/cargo/4node","felt/cargo/4node-64"), 423.0, 0.1);
@@ -1468,11 +1482,11 @@ TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS
 //    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
 //    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS","felt/electric_three_stage/LandS","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
 //}
-
+*/
 TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values verified with det-eq, but differ from andy felts test set ( maybe indep/blocks mixture is incorrect??
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
-    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
+    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
+    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
+    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
