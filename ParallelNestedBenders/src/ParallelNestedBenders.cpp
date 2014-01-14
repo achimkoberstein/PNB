@@ -6665,7 +6665,7 @@ namespace parallel_benders {
                 alpha_upper = 1.0;
             //if ( alpha_upper < 0.0 ) // Feasible region is empty!
             //    alpha_upper = 0.0;
-            if ( alpha_lower > alpha_upper || alpha_lower > 1.0 || alpha_upper < 0.0 ) {
+            if ( alpha_lower > alpha_upper-zero_tolerance_ || alpha_lower > 1.0 || alpha_upper < 0.0 ) {
                 // Feasible region is empty
                 stop_cvar_ = true;
             }
