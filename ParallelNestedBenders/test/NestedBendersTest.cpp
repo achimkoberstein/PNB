@@ -347,14 +347,15 @@ public:
                         OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,&smi_cvar_model);
                         parallel_benders::Parameter pnb_param;
                         pnb_param.init();
-                        pnb_param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+                        pnb_param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS);
                         pnb_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
                         osi_pnb.setParameters(pnb_param);
                         osi_pnb.initialSolve();
                         first_stage_solution.assign(smi_cvar_model.getCore()->getNumCols(0),0.0);
                         const double* first_solution = osi_pnb.getFirstStageSolution();
-                        for (int i = 0; i < first_stage_solution.size();i++)
-                            first_stage_solution[i] = first_solution[i];
+                        if ( first_solution != nullptr)
+                            for (int i = 0; i < first_stage_solution.size();i++)
+                                first_stage_solution[i] = first_solution[i];
 
                     }
                     // Get results!
