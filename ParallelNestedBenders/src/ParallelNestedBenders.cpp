@@ -344,8 +344,8 @@ namespace parallel_benders {
         boost::property_tree::ptree& param(parameter_.parameter_);
 
         // Specify if we want to keep solutions or not
-        compute_primal_solutions_for_stage_ = param.get(PNB_COMPUTE_PRIMAL_SOLUTIONS,PNB_INT_SOLUTION_PRIMAL_NO);
-        compute_dual_solutions_for_stage_ = param.get(PNB_COMPUTE_DUAL_SOLUTIONS,PNB_INT_SOLUTION_DUAL_NO);
+        compute_primal_solutions_for_stage_ = param.get(PNB_COMPUTE_PRIMAL_SOLUTIONS,-2);
+        compute_dual_solutions_for_stage_ = param.get(PNB_COMPUTE_DUAL_SOLUTIONS,-2);
         compute_objective_values_ = param.get(PNB_COMPUTE_OBJECTIVE_VALUES,false);
         // Memory switch: Compute solutions and store them during algorithm?
         if ( compute_primal_solutions_for_stage_ == PNB_INT_SOLUTION_PRIMAL_ALL )
