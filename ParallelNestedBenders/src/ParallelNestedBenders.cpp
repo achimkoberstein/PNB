@@ -1673,15 +1673,15 @@ namespace parallel_benders {
             // In case we updated the upper bound, we now need to store all column solutions!
             if ( update_upper_bound) {
                 for (int temp_stage = 0; temp_stage < compute_primal_solutions_for_stage_; temp_stage++){
-                    for ( auto node = tree_nodes_by_stage_[temp_stage].begin(); node != tree_nodes_by_stage_[temp_stage].end(); ++node){
+                    for ( auto node : tree_nodes_by_stage_[temp_stage]){
                         // Copy solution from col_solution_ to incumbent_col_solution
-                        (*node)->getDataPtr()->incumbent_col_solution_ = (*node)->getDataPtr()->col_solution_;
+                        (node)->getDataPtr()->incumbent_col_solution_ = (node)->getDataPtr()->col_solution_;
                         // Copy dual solution from dual_solution_ to incumbent_dual_solution
                         if ( store_primal_and_dual_ && temp_stage < compute_dual_solutions_for_stage_){
-                            assert(!(*node)->getDataPtr()->dual_solution_.empty());
-                            (*node)->getDataPtr()->incumbent_dual_solution_ = (*node)->getDataPtr()->dual_solution_;
+                            assert(!(node)->getDataPtr()->dual_solution_.empty());
+                            (node)->getDataPtr()->incumbent_dual_solution_ = (node)->getDataPtr()->dual_solution_;
                         }
-                        (*node)->getDataPtr()->incumbent_solution_value_ = (*node)->getDataPtr()->solution_value_*(*node)->getDataPtr()->probability_;
+                        (node)->getDataPtr()->incumbent_solution_value_ = (node)->getDataPtr()->solution_value_*(node)->getDataPtr()->probability_;
                     }
                 }
             }
@@ -6665,7 +6665,7 @@ namespace parallel_benders {
                 alpha_upper = 1.0;
             //if ( alpha_upper < 0.0 ) // Feasible region is empty!
             //    alpha_upper = 0.0;
-            if ( alpha_lower > alpha_upper-zero_tolerance_ || alpha_lower > 1.0 || alpha_upper < 0.0 ) {
+            if ( alpha_lower > alpha_upper+zero_tolerance_ || alpha_lower > 1.0 || alpha_upper < 0.0 ) {
                 // Feasible region is empty
                 stop_cvar_ = true;
             }

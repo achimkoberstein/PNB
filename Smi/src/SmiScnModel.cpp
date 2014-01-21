@@ -2689,7 +2689,7 @@ std::vector<double> SmiScnModel::evaluateWithFirstStageSolutionByScenario( OsiSo
         first_stage_objective_function_value += first_stage_obj_coefs[i]*primal_first_stage_solution[i];
     }
 
-    int numStageTMinus1Cols = core_->getColStart(core_->getNumStages()-1);
+    int numFirstStageCols = core_->getNumCols(0);
     const double * colSolution = primal_first_stage_solution;
     double prob = 0;
 
@@ -2746,7 +2746,7 @@ std::vector<double> SmiScnModel::evaluateWithFirstStageSolutionByScenario( OsiSo
         osiStoch_->loadProblem(*matrix_,dclo_,dcup_,dobj_,drlo_,drup_); //This works only for same-dimensional subproblems.
 
         // fix stage-1-columns to the values of the evp
-        for (int col = 0; col < numStageTMinus1Cols; col++) {
+        for (int col = 0; col < numFirstStageCols; col++) {
             osiStoch_->setColBounds(col, colSolution[col], colSolution[col]);
         }
 
@@ -2793,7 +2793,6 @@ std::vector<double> SmiScnModel::evaluateWithFirstStageSolutionByScenario( OsiSo
     }
 #pragma endregion EEVP;
     eev_evaluation.push_back(first_stage_objective_function_value);
-    delete [] colSolution;
     delete osiStoch_;
     osiStoch_ = tempPtr;
     return eev_evaluation;

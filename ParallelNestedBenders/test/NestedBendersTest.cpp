@@ -231,7 +231,7 @@ public:
             for (int i = 0; i < num_stages_-1;i++)
                 num_single_scenario_cols_ += smi_model->getCore()->getNumCols(i);
 
-			special_case_solution_length_ = num_single_scenario_cols_;
+            special_case_solution_length_ = num_single_scenario_cols_;
 
             if ( compute_statistics_ || generate_initial_solution_ ){
                 //Open File!
@@ -302,9 +302,9 @@ public:
                     //// Now we need the HN-solution
                     {
                         OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,smi_model.get());
-						parallel_benders::Parameter param;
-						param.init();
-						param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
+                        parallel_benders::Parameter param;
+                        param.init();
+                        param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL);
                         osi_pnb.setParameters(param);
                         osi_pnb.initialSolve();
                         hn = osi_pnb.getObjValue();
@@ -322,115 +322,134 @@ public:
                 }
             }
 
-        }
 
-        double cvar_lower = -1e20;
-        double cvar_upper = 1e20;
-        if ( generate_cvar_constraints){
-            // Get CVaR from optimal solution!
-            {
-                //boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
-                //int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-                //assert( smi_read_in == 0);
-                //OsiCpxSolverInterface osi_cpx;
-                //std::vector<double> eev_scenario_evaluation = smi_cvar_model->solveEEVByScenario(&osi_cpx);
-                //// Create vector with probability/value pairs
-                //std::vector<std::pair<double,double> > scenario_value_probability_vector(smi_cvar_model->getNumScenarios());
-                //for (int i = 0; i < scenario_value_probability_vector.size(); i++){
-                //    scenario_value_probability_vector[i] = make_pair(eev_scenario_evaluation[i],smi_cvar_model->getScenarioProb(i));
-                //}
-                
-                boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
-                int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-                assert( smi_read_in == 0);
-                OsiCpxSolverInterface osi_cpx;
-                smi_cvar_model->setOsiSolverHandle(&osi_cpx);
-                OsiSolverInterface* osi_solver = smi_cvar_model->loadOsiSolverData();
-                smi_cvar_model->releaseSolver();
-                //osi_solver->writeLp("hn_model");
-                osi_solver->initialSolve();
-                if ( osi_solver->isProvenOptimal() ){
-                    const double* first_stage_solution = osi_solver->getColSolution();
-                    std::vector<double> scenario_evaluation = smi_cvar_model->evaluateWithFirstStageSolutionByScenario(&osi_cpx,first_stage_solution);
+
+            double cvar_lower = -1e20;
+            double cvar_upper = 1e20;
+            if ( generate_cvar_constraints){
+                // Get CVaR from optimal solution!
+                {
+                    OsiCpxSolverInterface osi_cpx;
+                    SmiScnModel smi_cvar_model;
+                    smi_cvar_model.setOsiSolverHandle(&osi_cpx);
+                    int smi_read_in = smi_cvar_model.readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                    assert( smi_read_in == 0);
+                    
+
+                    std::vector<double> first_stage_solution(smi_cvar_model.getCore()->getNumCols(0),0.0); 
+                    std::vector<double> scenario_evaluation(smi_cvar_model.getNumScenarios());
                     // Create vector with probability/value pairs
-                    std::vector<std::pair<double,double> > scenario_value_probability_vector(smi_cvar_model->getNumScenarios());
-                    for (int i = 0; i < scenario_value_probability_vector.size(); i++){
-                        scenario_value_probability_vector[i] = make_pair(scenario_evaluation[i],smi_cvar_model->getScenarioProb(i));
-                    }
+                    std::vector<std::pair<double,double> > scenario_value_probability_vector(smi_cvar_model.getNumScenarios());
 
-                    // Sort vector according to first element!
-                    std::sort(scenario_value_probability_vector.begin(),scenario_value_probability_vector.end(),
-                        [](const std::pair<double,double>& a, const std::pair<double,double> & b) -> bool
-                    { 
-                        return a.first > b.first;
-                    });
-                    // Compute CVaR
-                    double summed_prob = cvar_beta;
-                    double cvar = 0.0;
-                    int index_i = 0;
-                    while ( summed_prob > 0 ){
-                        if ( scenario_value_probability_vector[index_i].second > summed_prob ){
-                            cvar += scenario_value_probability_vector[index_i].first*summed_prob;
+                    bool solve_deteq = true;
+                    if ( solve_deteq ){
+                        // Solve PNB
+                        OsiStochasticParallelNestedBendersSolverInterface osi_pnb(&osi_cpx,&smi_cvar_model);
+                        parallel_benders::Parameter pnb_param;
+                        pnb_param.init();
+                        pnb_param.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA);
+                        pnb_param.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,parallel_benders::PNB_INT_SOLUTION_PRIMAL_ALL);
+                        osi_pnb.setParameters(pnb_param);
+                        osi_pnb.initialSolve();
+                        first_stage_solution.assign(smi_cvar_model.getCore()->getNumCols(0),0.0);
+                        const double* first_solution = osi_pnb.getFirstStageSolution();
+                        for (int i = 0; i < first_stage_solution.size();i++)
+                            first_stage_solution[i] = first_solution[i];
+
+                    }
+                    // Get results!
+                    bool results_present = true;
+                    if (results_present){
+                        std::vector<double> scenario_evaluation = smi_cvar_model.evaluateWithFirstStageSolutionByScenario(&osi_cpx,&first_stage_solution[0]);
+                        // Create vector with probability/value pairs
+                        std::vector<std::pair<double,double> > scenario_value_probability_vector(smi_cvar_model.getNumScenarios());
+                        for (int i = 0; i < scenario_value_probability_vector.size(); i++){
+                            scenario_value_probability_vector[i] = make_pair(scenario_evaluation[i],smi_cvar_model.getScenarioProb(i));
                         }
-                        else {
-                            cvar += scenario_value_probability_vector[index_i].first*scenario_value_probability_vector[index_i].second;
+                        double prob_sum = std::accumulate(scenario_value_probability_vector.begin(),scenario_value_probability_vector.end(),0.0,[](double sum, const std::pair<double,double>& elem){ return sum + elem.second;} );
+
+                        // Sort vector according to first element!
+                        std::sort(scenario_value_probability_vector.begin(),scenario_value_probability_vector.end(),
+                            [](const std::pair<double,double>& a, const std::pair<double,double> & b) -> bool
+                        { 
+                            return a.first > b.first;
+                        });
+                        // Compute CVaR
+                        double summed_prob = cvar_beta;
+                        double cvar = 0.0;
+                        int index_i = 0;
+                        while ( summed_prob > 0 ){
+                            if ( scenario_value_probability_vector[index_i].second > summed_prob ){
+                                cvar += scenario_value_probability_vector[index_i].first*summed_prob;
+                            }
+                            else {
+                                cvar += scenario_value_probability_vector[index_i].first*scenario_value_probability_vector[index_i].second;
+                            }
+                            summed_prob -= scenario_value_probability_vector[index_i].second;
+                            index_i++;
                         }
-                        summed_prob -= scenario_value_probability_vector[index_i].second;
+                        cvar /= cvar_beta;
+                        if ( cvar_first_stage ){ // If we have first-stage cvar, we need to add the first stage cost to it.
+                            cvar += scenario_evaluation[scenario_evaluation.size()-1];
+                        }
+
+                        cvar_upper = cvar;
                     }
-                    cvar /= cvar_beta;
-                    if ( cvar_first_stage ){ // If we have first-stage cvar, we need to add the first stage cost to it.
-                        cvar += scenario_evaluation[scenario_evaluation.size()-1];
+                    else{
+                        return 0.0;
+                        LOG(ERROR) << "HN problem can not be solved with det eq solver.";
+                    }
+                }
+                // Get CVaR from minimizing CVaR
+                {
+                    // CVaR deteq model for comparison
+                    boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
+                    int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
+                    assert( smi_read_in == 0);
+                    smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage,true);
+                    OsiCpxSolverInterface osi_cpx;
+                    // Get Environment and LP Solver 
+
+                    smi_cvar_model->setOsiSolverHandle(&osi_cpx);
+                    OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
+
+                    // Cast to OsiCpxSolverInterface
+                    OsiCpxSolverInterface * cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(deteq_solver);
+                    cpx_solver->setHintParam(OsiDoDualInInitial,true,OsiHintIgnore);// Ignore primal/dual and use lpopt!
+                    if ( cpx_solver != nullptr ){// Disable aggregator, it consumes too much memory!
+                        CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
+                        CPXsetintparam(env_ptr,CPX_PARAM_AGGIND,0);
+                        CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
+                        CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,3600.0);
+                        CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1); //No crossover
+                    }
+                    // Parse solver interface!
+                    //deteq_solver->writeLp("cvar_model");
+                    deteq_solver->initialSolve();
+                    smi_cvar_model->releaseSolver();
+                    // Out of Memory error
+                    if ( deteq_solver->isProvenOptimal() ){
+                        cvar_lower = deteq_solver->getObjValue();
+                    }
+                    else {
+                        return 0.0; // We can not solve these problems correctly now!
+                        LOG(ERROR) << "CVaR minimization problem could not be solved to optimality.";
                     }
 
-                    // Set cvar_rho by 0.8*cvar for eev solution
-                    cvar_upper = cvar;
                 }
-                else
-                    LOG(FATAL) << "HN problem can not be solved with det eq solver.";
-                
-            }
-            // Get CVaR from minimizing CVaR
-            {
-                 // CVaR deteq model for comparison
-                boost::scoped_ptr<SmiScnModel> smi_cvar_model(new SmiScnModel());
-                int smi_read_in = smi_cvar_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
-                assert( smi_read_in == 0);
-                smi_cvar_model->setCVaRConstraint(true,cvar_beta,cvar_rho,cvar_first_stage,true);
-                OsiCpxSolverInterface osi_cpx;
-                // Get Environment and LP Solver 
-
-                smi_cvar_model->setOsiSolverHandle(&osi_cpx);
-                OsiSolverInterface * deteq_solver = smi_cvar_model->loadOsiSolverData();
-
-                // Cast to OsiCpxSolverInterface
-                OsiCpxSolverInterface * cpx_solver = dynamic_cast<OsiCpxSolverInterface*>(deteq_solver);
-                if ( cpx_solver != nullptr ){// Disable aggregator, it consumes too much memory!
-                    CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
-                    CPXsetintparam(env_ptr,CPX_PARAM_AGGIND,0);
+                if ( cvar_upper-cvar_lower > -1e-08){
+                    double linear_combination_factor = 0.5;
+                    double cvar_rho = cvar_lower+linear_combination_factor*(cvar_upper-cvar_lower);
+                    // Set cvar_rho so that it can be used later in the algorithm!
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,cvar_rho);
                 }
-                // Parse solver interface!
-                //deteq_solver->writeLp("cvar_model");
-                deteq_solver->initialSolve();
-                // Out of Memory error
-                if ( deteq_solver->isProvenOptimal() ){
-                    cvar_lower = deteq_solver->getObjValue();
+                else{
+                    // Set car to cvar_upper, as we have some numerical problems!
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,cvar_upper);
+                    benders_parameter_.parameter_.put(parallel_benders::PNB_TREE_WALK_STRATEGY,-1);// Indicate that we have a problem with cvar..
                 }
-                else 
-                    LOG(FATAL) << "CVaR minimization problem could not be solved to optimality.";
-                smi_cvar_model->releaseSolver();
             }
-            if ( cvar_upper-cvar_lower > -1e-08){
-                double linear_combination_factor = 0.5;
-                double cvar_rho = cvar_lower+linear_combination_factor*(cvar_upper-cvar_lower);
-                // Set cvar_rho so that it can be used later in the algorithm!
-                benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,cvar_rho);
             }
-            else
-                LOG(FATAL) << " We were not able to determine a correct CVaR.";
-
-
-
-        }
 
         // Specify the number of repetitions_ 
         repetitions_ = 1;
@@ -1197,7 +1216,8 @@ class NestedBendersTestFeasibility: public NestedBendersTest
 //    pnb.Solve();
 //}
 
-/*
+
+
 TEST_F(NestedBendersTest, farmer_OTHER) { // ok
     EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
 }
@@ -1422,7 +1442,8 @@ TEST_F(NestedBendersTest,assets_OTHER){// Two-Stage
     EXPECT_NEAR(solveSMPS("felt/assets/assets_large"), -696.396, 0.1);
     EXPECT_NEAR(solveSMPS("felt/assets/assets_small"), -723.839, 0.1);
 }
-//
+
+
 TEST_F(NestedBendersTest,assets_FELT){// Two-Stage
     EXPECT_NEAR(solveSMPS("felt/assets/assets","felt/assets/assets","felt/assets/assets-small"), -723.839, 0.1);
     EXPECT_NEAR(solveSMPS("felt/assets/assets","felt/assets/assets","felt/assets/assets-large"), -695.962, 0.1);
@@ -1482,11 +1503,11 @@ TEST_F(NestedBendersTest,electric_FELT){ //SCENARIOS
 //    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS"), 722.58, 0.1); // Dependent
 //    EXPECT_NEAR(solveSMPS("felt/electric_three_stage/LandS","felt/electric_three_stage/LandS","felt/electric_three_stage/LandS2"), 719.21, 0.1); // Independent 
 //}
-*/
+
 TEST_F(NestedBendersTest,environ_FELT){//two-stage, BLOCKS and/or INDEP //values verified with det-eq, but differ from andy felts test set ( maybe indep/blocks mixture is incorrect??
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
-    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1); // Non-challenging CO2 limits //  19777.4
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-aggr"), 15963.9, 0.1); // Challenging CO2 limits // 20478.7
+    EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-imp"), 20773.9, 0.1); // Import: Aggresive and Import prices adjusting, INDEP and BLOCKS //  22265.3, not solvable due to feas cuts not improving solution..
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-lrge"),20799.3, 0.1); //Based on Import, INDEP and BLOCKS // 22438.9
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-xlrge"), 20799.3, 0.1); // Even Larger, INDEP and BLOCKS // 22438.9
     EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-first"), 14794.6, 0.1); // INDEP
@@ -1533,19 +1554,21 @@ TEST_F(NestedBendersTestMultiStage,stocfor_FELT){// BLOCKS, values are within pl
 //    EXPECT_NEAR(solveSMPS("wright/data-storm/storm"), 0, 0.1); //two-stage
 //}
 //
+//
+
 TEST_F(NestedBendersTest,scenarios_WRIGHT){ // TODO: Update the scenario values here!
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 254536, 1);
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 254019, 1);
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 254240, 1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 8.78997, 0.1);
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 9.24269, 0.1);
-	EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 1.54942e7,1e3);
-    EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 1.54932e7, 1e3);
-	use_multi_cut_ = false;
-	EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
-	EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-1000"), 254536, 1);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-2000"), 254019, 1);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/20","wright/data-scenarios/20","wright/data-scenarios/20-3000"), 254240, 1);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-1000"), 8.78997, 0.1);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-2000"), 9.24269, 0.1);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-2000"), 1.54942e7,1e3);
+        EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-3000"), 1.54932e7, 1e3);
+        use_multi_cut_ = false;
+        EXPECT_NEAR(solveSMPS("wright/data-LandS/LandS"), 225.629, 0.1); //two-stage
+        EXPECT_NEAR(solveSMPS("wright/data-gbd/gbd"), 1655.628, 0.1); //two-stage
 }
 //
 TEST_F(NestedBendersTestMultiStage,watson_conditional){ // Values from own solver, old values are in comments (MSLiP), differ with det-eq
@@ -1586,12 +1609,13 @@ TEST_F(NestedBendersTestMultiStage,watson_independent){ // Values from own solve
 //
 //}
 //
+
 TEST_F(NestedBendersTest,saphir){// two-stage, Feasibility cuts
     EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     EXPECT_NEAR(solveSMPS("saphir/saphir_100"), 524417000, 10000); 
     //EXPECT_NEAR(solveSMPS("saphir/saphir_200"), 596063000, 10000); // Hard to solve, no solution with benders!
     EXPECT_NEAR(solveSMPS("saphir/saphir_500"), 482931000, 10000); 
-    EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); 
+    EXPECT_NEAR(solveSMPS("saphir/saphir_1000"),305918000, 10000); // Need to implement methods to minimize CVaR with Benders alone to get a minimal CVaR. Should not be that difficult, just change obj. function!
 }
 
 TEST_F(NestedBendersTestMultiStage,scdp){// scdp problem from marc
@@ -1621,6 +1645,7 @@ TEST_F(NestedBendersTest,frankellison){// models received from Frank Ellison
     EXPECT_NEAR(solveSMPS("frankellison/CEP1"),355160, 1); 
     EXPECT_NEAR(solveSMPS("frankellison/Ypgp2"),447.324, 0.1); 
 }
+
 ////
 ////TEST_F(NestedBendersTest,bike_sharing){// bike sharing model 
 ////	//benders_parameter_.parameter_.put(parallel_benders::PNB_HANDLE_FEAS_CUTS,parallel_benders::PNB_INT_FEAS_CUT_ALL);
