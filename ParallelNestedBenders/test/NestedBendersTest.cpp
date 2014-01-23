@@ -397,8 +397,9 @@ public:
                         cvar_upper = cvar;
                     }
                     else{
+                         LOG(ERROR) << "HN problem can not be solved with det eq solver.";
                         return 0.0;
-                        LOG(ERROR) << "HN problem can not be solved with det eq solver.";
+                       
                     }
                 }
                 // Get CVaR from minimizing CVaR
@@ -423,20 +424,16 @@ public:
                         CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
                         CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,3600.0);
                         CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1); //No crossover
+                        CPXLPptr lp_ptr = cpx_solver->getLpPtr();
+                        cpx_solver->initialSolve();
+                        int cpx_stat = CPXgetstat(env_ptr,lp_ptr);
+                        if ( cpx_stat == CPX_STAT_OPTIMAL || cpx_stat == CPX_STAT_OPTIMAL_INFEAS ||cpx_stat == CPX_STAT_NUM_BEST)
+                            cvar_lower = deteq_solver->getObjValue();
+                        else   {
+                            LOG(ERROR) << "CVaR minimization problem could not be solved to optimality.";
+                            return 0.0; // We can not solve these problems correctly now!
+                        }
                     }
-                    // Parse solver interface!
-                    //deteq_solver->writeLp("cvar_model");
-                    deteq_solver->initialSolve();
-                    smi_cvar_model->releaseSolver();
-                    // Out of Memory error
-                    if ( deteq_solver->isProvenOptimal() ){
-                        cvar_lower = deteq_solver->getObjValue();
-                    }
-                    else {
-                        return 0.0; // We can not solve these problems correctly now!
-                        LOG(ERROR) << "CVaR minimization problem could not be solved to optimality.";
-                    }
-
                 }
                 if ( cvar_upper-cvar_lower > -1e-08){
                     double linear_combination_factor = 0.5;
@@ -2014,6 +2011,8 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_BETA,0.1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,0);
     benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,1);
+    EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
+    //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),269.591,0.1);
    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1);
