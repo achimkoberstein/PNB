@@ -6521,7 +6521,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6651,10 +6651,12 @@ namespace parallel_benders {
                 double slope = recourse_approximation[i] -cvar_approximation[i]-cvar_problem_lower_bound_;
                 if ( slope != 0.0 ){
                     double alpha = -cvar_approximation[i]/slope;
-                    if ( slope > 0 )
+                    if ( slope > 0 ){
                         alpha_lower = std::max(alpha_lower,alpha);
-                    if ( slope < 0 )
+                    }
+                    if ( slope < 0 ){
                         alpha_upper = std::min(alpha_upper,alpha);
+                    }
                 }
             }
             if ( alpha_lower < 0.0 )
@@ -6754,9 +6756,11 @@ namespace parallel_benders {
     {
         // We want to do the following
         // Solve master problem with objective function: cvar_alpha * c^Tx + \theta + (1-cvar_alpha) \psi
-        if ( cvar_alpha_ == 0 )// In case of cvar_alpha = 0 obj. function consists only of \psi variable, thus ignores \theta constraints totally
+        if ( cvar_alpha_ <= 0 )// In case of cvar_alpha = 0 obj. function consists only of \psi variable, thus ignores \theta constraints totally
             return;
-        if ( cvar_alpha_ == 1)// In case of cvar_alpha = 1 obj. function consists only of normal obj. function, next iterate problem thus ignores \psi constraints totally
+        if ( cvar_alpha_ >= 1)// In case of cvar_alpha = 1 obj. function consists only of normal obj. function, next iterate problem thus ignores \psi constraints totally
+            return;
+        if ( tree_nodes_by_stage_[0][0]->getDataPtr()->cvar_cuts_.empty())
             return;
         
         // Store old obj. function
@@ -6783,12 +6787,19 @@ namespace parallel_benders {
 
         // Store solution
         if ( osi_solver->isProvenOptimal() ){
- 
-            StoreValuesFromSolverInVector(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,osi_solver->getColSolution(),num_first_stage_cols);
+             StoreValuesFromSolverInVector(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,osi_solver->getColSolution(),num_first_stage_cols);
+             // Store also first stage solution value!
+             double sum = 0.0;
+             const double * obj_coef = osi_solver->getObjCoefficients();
+             for (int i = 0; i < stage_data_[0]->num_columns_;i++){
+                 sum += obj_coef[i]*tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i];
+             }
+             tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_ = sum;
         }
 
         // Restore old obj. function
         osi_solver->setObjective(&old_obj_function_coefs[0]);
+        // Fix CVaR variable!
         osi_solver->setColBounds(num_first_stage_cols+num_theta,0.0,0.0);
 
         // Problem with H computation?!
