@@ -1360,9 +1360,8 @@ namespace parallel_benders {
             /************************************************************************/
             if ( cvar_constr_decomp_ && current_stage_ > 0 && !infeasible_problem_ && infeasible_problems_.none()){
                 // Store current first stage solution!
-                // Use potential solution! and solution value!
-                cvar_substantial_points_.push_back(potential_cvar_substantial_point_);
-                cvar_substantial_points_first_stage_objective_function_value_.push_back(potential_cvar_substantial_point_solution_value_);
+                cvar_substantial_points_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_);
+                cvar_substantial_points_first_stage_objective_function_value_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_);
                 // Sort the q_s(\tilde x) by size!
                 // Gather all second stage approximations
                 std::vector<std::pair<int,double> > second_stage_approximations(num_scenarios_);
@@ -2295,12 +2294,6 @@ namespace parallel_benders {
             solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
-
-        if ( current_stage_ == 0 && cvar_constr_decomp_ ){
-            // Set potential cvar substantial point!
-            potential_cvar_substantial_point_ = benders_node_pointer->col_solution_;
-            potential_cvar_substantial_point_solution_value_ = benders_node_pointer->solution_value_;
-        }
 
         if ( oda_method_ && current_stage_ == 0)
             oda_first_stage_ = solution_value;
@@ -6403,10 +6396,6 @@ namespace parallel_benders {
                 tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_.reserve(stage_data_[0]->num_columns_);
                 for (int i = 0; i < stage_data_[0]->num_columns_;i++)
                     tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_.push_back(warm_up_solution_[i]);
-                if ( cvar_constr_decomp_ ){
-                    potential_cvar_substantial_point_ = tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
-                    potential_cvar_substantial_point_solution_value_ =  tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_;
-                }
             }
             else {
                 warm_up_ = false;
