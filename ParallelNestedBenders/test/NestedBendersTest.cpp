@@ -422,7 +422,7 @@ public:
                         CPXENVptr env_ptr = cpx_solver->getEnvironmentPtr();
                         CPXsetintparam(env_ptr,CPX_PARAM_AGGIND,0);
                         CPXsetintparam(env_ptr,CPX_PARAM_LPMETHOD,CPX_ALG_BARRIER);
-                        CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,3600.0);
+                        CPXsetdblparam(env_ptr,CPX_PARAM_TILIM,36000.0);
                         CPXsetintparam(env_ptr,CPX_PARAM_BARCROSSALG,-1); //No crossover
                         CPXLPptr lp_ptr = cpx_solver->getLpPtr();
                         cpx_solver->initialSolve();
@@ -479,22 +479,22 @@ public:
 
 
         benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         
 
 
@@ -2011,13 +2011,13 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_BETA,0.1);
     benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,0);
     benders_parameter_.parameter_.put(parallel_benders::PNB_COMPUTE_PRIMAL_SOLUTIONS,1);
-    EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
+    //EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
     //EXPECT_NEAR(solveSMPS("other/rand0_2000"), 162.146, 0.1);
     //EXPECT_NEAR(solveSMPS("saphir/saphir_50"),  524047000, 10000); 
-    //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_10"),269.591,0.1);
+    //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_20"),269.591,0.1);
    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1);
     //EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
-    //solveSMPS("posts/storm/stormG2_27");
+    solveSMPS("posts/storm/stormG2_27");
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
@@ -2077,8 +2077,8 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
+    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.cargo_FELT";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";

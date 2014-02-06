@@ -828,7 +828,7 @@ namespace parallel_benders {
                         }
                     }
                 }
-                if ( stop_cvar_ ){
+                if ( stop_cvar_ && not_stop_loop ){// In case we would continue, but we have set stop_cvar_, we stop_cvar with solution_code CVAR_H_NEGATIVE_
                     not_stop_loop = false;
                     solution_code_ = PNB_SOLUTION_CVAR_H_NEGATIVE;
                 }
@@ -1360,8 +1360,9 @@ namespace parallel_benders {
             /************************************************************************/
             if ( cvar_constr_decomp_ && current_stage_ > 0 && !infeasible_problem_ && infeasible_problems_.none()){
                 // Store current first stage solution!
-                cvar_substantial_points_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_);
-                cvar_substantial_points_first_stage_objective_function_value_.push_back(tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_);
+                // Use potential solution! and solution value!
+                cvar_substantial_points_.push_back(potential_cvar_substantial_point_);
+                cvar_substantial_points_first_stage_objective_function_value_.push_back(potential_cvar_substantial_point_solution_value_);
                 // Sort the q_s(\tilde x) by size!
                 // Gather all second stage approximations
                 std::vector<std::pair<int,double> > second_stage_approximations(num_scenarios_);
@@ -2294,6 +2295,12 @@ namespace parallel_benders {
             solution_value += benders_node_pointer->col_solution_[i]*obj_coefs[i];
         }
         benders_node_pointer->solution_value_ = solution_value;
+
+        if ( current_stage_ == 0 && cvar_constr_decomp_ ){
+            // Set potential cvar substantial point!
+            potential_cvar_substantial_point_ = benders_node_pointer->col_solution_;
+            potential_cvar_substantial_point_solution_value_ = benders_node_pointer->solution_value_;
+        }
 
         if ( oda_method_ && current_stage_ == 0)
             oda_first_stage_ = solution_value;
@@ -6396,6 +6403,10 @@ namespace parallel_benders {
                 tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_.reserve(stage_data_[0]->num_columns_);
                 for (int i = 0; i < stage_data_[0]->num_columns_;i++)
                     tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_.push_back(warm_up_solution_[i]);
+                if ( cvar_constr_decomp_ ){
+                    potential_cvar_substantial_point_ = tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_;
+                    potential_cvar_substantial_point_solution_value_ =  tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_;
+                }
             }
             else {
                 warm_up_ = false;
@@ -6754,9 +6765,9 @@ namespace parallel_benders {
     {
         // We want to do the following
         // Solve master problem with objective function: cvar_alpha * c^Tx + \theta + (1-cvar_alpha) \psi
-        if ( cvar_alpha_ = 0 )// In case of cvar_alpha = 0 obj. function consists only of \psi variable, thus ignores \theta constraints totally
+        if ( cvar_alpha_ == 0 )// In case of cvar_alpha = 0 obj. function consists only of \psi variable, thus ignores \theta constraints totally
             return;
-        if ( cvar_alpha_ = 1)// In case of cvar_alpha = 1 obj. function consists only of normal obj. function, next iterate problem thus ignores \psi constraints totally
+        if ( cvar_alpha_ == 1)// In case of cvar_alpha = 1 obj. function consists only of normal obj. function, next iterate problem thus ignores \psi constraints totally
             return;
         
         // Store old obj. function
