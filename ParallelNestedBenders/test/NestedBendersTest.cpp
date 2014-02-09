@@ -450,7 +450,7 @@ public:
             }
 
         // Specify the number of repetitions_ 
-        repetitions_ = 1;
+        repetitions_ = 3;
         std::vector<int> aggregates;
 		aggregates.push_back(1);
         //aggregates.push_back(2);
@@ -482,19 +482,19 @@ public:
         //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA);
         solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
+        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         
 
 
@@ -2017,7 +2017,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //EXPECT_NEAR(solveSMPS("deak/20x20-1","deak/20x20-1","deak/20x20-1_20"),269.591,0.1);
    //EXPECT_NEAR(solveSMPS("felt/environ/env-diss","felt/environ/env","felt/environ/env-loose"), 14794.6, 0.1);
     //EXPECT_NEAR(solveSMPS("other/Farmer"), -108390, 0.3);
-    solveSMPS("posts/storm/stormG2_27");
+    //solveSMPS("posts/storm/stormG2_27");
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/storm","wright/data-scenarios/storm","wright/data-scenarios/storm-1000"), 1.54851e7, 1e3);
     //EXPECT_NEAR(solveSMPS("wright/data-scenarios/ssn","wright/data-scenarios/ssn","wright/data-scenarios/ssn-3000"), 9.24629, 0.1);
         //EXPECT_NEAR(solveSMPS("other/sslp_10_50_1000"), -352.494, 0.1);
@@ -2077,8 +2077,8 @@ int main(int argc, char *argv[]) {
 
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
-    ::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
+    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.cargo_FELT";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
