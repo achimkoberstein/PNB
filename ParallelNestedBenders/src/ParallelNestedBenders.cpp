@@ -1396,7 +1396,7 @@ namespace parallel_benders {
                     else{// Third case: zero out
                         current_node->cvar_weight_ = 0.0;
                         current_node->cvar_current_cut_coefficients_.assign(current_node->cvar_current_cut_coefficients_.size(),0.0);
-                        current_node->cvar_current_cut_rhs_ = 0;
+                        current_node->cvar_current_cut_rhs_ = 0.0;
                     }
                 }
                 assert( CompareForEquality(beta_sum,cvar_beta_,1e-10) );
@@ -6521,7 +6521,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= 0){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
@@ -6786,21 +6786,25 @@ namespace parallel_benders {
         SolveSolverInterface(osi_solver);
 
         // Store solution
+        bool optimal_solution_found = false;
         if ( osi_solver->isProvenOptimal() ){
+            optimal_solution_found = true;
              StoreValuesFromSolverInVector(tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_,osi_solver->getColSolution(),num_first_stage_cols);
-             // Store also first stage solution value!
-             double sum = 0.0;
-             const double * obj_coef = osi_solver->getObjCoefficients();
-             for (int i = 0; i < stage_data_[0]->num_columns_;i++){
-                 sum += obj_coef[i]*tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i];
-             }
-             tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_ = sum;
         }
 
         // Restore old obj. function
         osi_solver->setObjective(&old_obj_function_coefs[0]);
         // Fix CVaR variable!
         osi_solver->setColBounds(num_first_stage_cols+num_theta,0.0,0.0);
+        // Store also first stage solution value! We need to use the original obj coefs for this task!
+        if ( optimal_solution_found){
+            double sum = 0.0;
+            const double * obj_coef = osi_solver->getObjCoefficients();
+            for (int i = 0; i < stage_data_[0]->num_columns_;i++){
+                sum += obj_coef[i]*tree_nodes_by_stage_[0][0]->getDataPtr()->col_solution_[i];
+            }
+            tree_nodes_by_stage_[0][0]->getDataPtr()->solution_value_ = sum;
+        }
 
         // Problem with H computation?!
     }
