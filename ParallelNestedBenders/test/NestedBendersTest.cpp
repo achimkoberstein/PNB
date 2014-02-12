@@ -216,6 +216,9 @@ public:
         double cvar_beta = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_BETA,0.66);
         double cvar_rho = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_RHO,-80000);
         bool cvar_first_stage = benders_parameter_.parameter_.get(parallel_benders::PNB_CVAR_WITH_FIRST_STAGE,false);
+        double cvar_lower = -1e20;
+        double cvar_upper = 1e20;
+        std::vector<double> cvar_rho_values;
         if ( read_in_smps_file ){
             boost::scoped_ptr<SmiScnModel> smi_model(new SmiScnModel());
             int smi_read_in = smi_model->readSmps(total_core_string.c_str(),total_time_string.c_str(),total_stoch_string.c_str());
@@ -324,8 +327,7 @@ public:
 
 
 
-            double cvar_lower = -1e20;
-            double cvar_upper = 1e20;
+
             if ( generate_cvar_constraints){
                 // Get CVaR from optimal solution!
                 {
@@ -440,6 +442,11 @@ public:
                     double cvar_rho = cvar_lower+linear_combination_factor*(cvar_upper-cvar_lower);
                     // Set cvar_rho so that it can be used later in the algorithm!
                     benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,cvar_rho);
+                    for(int i = 0; i < 10; i++){
+                        cvar_rho_values.push_back(cvar_lower+i/10.0*(cvar_upper-cvar_lower));
+                    }
+
+
                 }
                 else{
                     // Set car to cvar_upper, as we have some numerical problems!
@@ -476,21 +483,29 @@ public:
   //          num_aggregates_by_magic = 200;
 		//	aggregates.push_back(num_aggregates_by_magic);
 		//}
+		//} 
+		//} 
+		benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
+        for ( double rho: cvar_rho_values ){
+            benders_parameter_.parameter_.put(parallel_benders::PNB_CVAR_RHO,rho);
+            benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
+            solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        }
 
 
-        benders_parameter_.parameter_.put(parallel_benders::PNB_MAXIMAL_SOLUTION_TIME,3600); // Not longer than one hour 
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
+        
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_BARRIER);
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_DETEQ_RISK);
+        ////solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        //benders_parameter_.parameter_.put(parallel_benders::PNB_LP_METHOD,parallel_benders::PNB_INT_DUAL_SIMPLEX);
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
-        //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
-        benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA);
-        solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_RISK_ALPHA);
+        ////solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK);
+        ////solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
+        ////benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_BENDERS_ODA_RISK_ALPHA);
+        ////solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_RISK);
         //solutions.push_back(solveProblemWithParameters(core_name,time_name,stoch_name));
         //benders_parameter_.parameter_.put(parallel_benders::PNB_BENDERS,parallel_benders::PNB_INT_ALGORITHM_LEVEL_ODA_RISK);
@@ -2078,7 +2093,7 @@ int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);
     //::testing::GTEST_FLAG(filter) = "*deak*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
+	::testing::GTEST_FLAG(filter) = "NestedBendersTest.saphir*";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTest.cargo_FELT";
     //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
     //::testing::GTEST_FLAG(filter) = "*watson*";
