@@ -1,0 +1,5 @@
+TIME          DakotaModel_implicit_simple (MIN)
+PERIODS       IMPLICIT
+    PurchaseLum  ResourceConstLum                 Stage1    
+    ProductionDes  ResourceConstLum                 Stage2    
+ENDATA
