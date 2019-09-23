@@ -1,0 +1,9 @@
+[submodule "Data/Sample"]
+	path = Data/Sample
+	url = https://github.com/coin-or-tools/Data-Sample.git
+[submodule "Data/Stochastic"]
+	path = Data/Stochastic
+	url = https://github.com/coin-or-tools/Data-Stochastic.git
+[submodule "Data/Netlib"]
+	path = Data/Netlib
+	url = https://github.com/coin-or-tools/Data-Netlib.git
