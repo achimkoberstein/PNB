@@ -675,6 +675,9 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::Solve()
     {
+
+		smi_->writeSmps("modeloutput");
+
         if ( thread_pool_.size() == 0){
             solution_code_ = PNB_SOLUTION_PARAMETER_PROBLEM;
             return;
@@ -6521,7 +6524,7 @@ namespace parallel_benders {
 
     void ParallelNestedBenders::PrintSubproblem( OsiSolverInterface* osi_solver, int scenario, const std::string& append )
     {
-        if ( current_stage_ <= -1){ // Only write solution file if we are in the first stage..
+        if ( current_stage_ <= 2){ // Only write solution file if we are in the first stage..
             std::stringstream stream;
             stream << "stage" << current_stage_ << "_" << (forward_ ? "F_" : "B_") << current_iteration_ << "_" << scenario;
             if ( append != "")
