@@ -1,0 +1,31 @@
+*   
+*   DakotaModel_implicit_simple.mps
+*   
+*   Generated with the MPL Modeling System
+*   Copyright (c) 1988-2015  Maximal Software
+*   
+*   Date:               March 2, 2016
+*   Time:               19:43
+*   
+*   Constraints:        4
+*   Variables:          4
+*   Nonzeros:           8
+*   Density:            50 %
+*   
+NAME          DakotaModel_implicit_simple (MIN)
+ROWS
+  N Loss
+  L ResourceConstLum
+  L ResourceConstFin
+  L DemandConstraDes
+  L DemandConstraTab
+COLUMNS
+    PurchaseLum  Loss               2.0   ResourceConstLum          -1.0
+    PurchaseFin  Loss               4.0   ResourceConstFin          -1.0
+    ProductionDes  Loss             -70.0   ResourceConstLum           8.0
+    ProductionDes  ResourceConstFin           4.0   DemandConstraDes           1.0
+    ProductionTab  Loss             -40.0   ResourceConstLum           6.0
+    ProductionTab  ResourceConstFin           2.0   DemandConstraTab           1.0
+RHS
+    RHS1      DemandConstraDes          50.0   DemandConstraTab          20.0
+ENDATA
