@@ -359,6 +359,7 @@ private:
     // Output parameters
     bool pretty_printing_;
     bool pretty_printing_verbose_;
+	bool print_subproblems_;
 
     // Store solutions if necessary
     int compute_primal_solutions_for_stage_;
