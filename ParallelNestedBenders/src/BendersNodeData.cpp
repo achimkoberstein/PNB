@@ -139,6 +139,9 @@ void Timer::AddTime( int stg, double time )
 }
 void Parameter::init()
 {
+    // Save .lp files on disc (many files are saved on disk and might take a lot of space)
+	parameter_.put(PNB_PRINT_SUBPROBLEMS,false);
+	
     // DetEq or Benders
     parameter_.put(PNB_BENDERS,PNB_INT_ALGORITHM_BENDERS); // 0: No Benders (detEq), 1 Benders
     

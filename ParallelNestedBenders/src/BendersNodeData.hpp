@@ -27,7 +27,8 @@ namespace parallel_benders{
     // Parameter names go in here. We use std::string as parameter
     // IMPORTANT: If you add a new string here, also set the default value in the init() method of Parameter class
     // We start with integer parameters
-    const std::string PNB_BENDERS = "PNB_BENDERS";          //
+    const std::string PNB_PRINT_SUBPROBLEMS = "PNB_PRINT_SUBPROBLEMS";
+	const std::string PNB_BENDERS = "PNB_BENDERS";          //
     const std::string PNB_WARM_START = "PNB_WARM_START";    //
     const std::string PNB_LP_METHOD = "PNB_LP_METHOD";
     const std::string PNB_FEAS_CUT_LP_METHOD = "PNB_FEAS_CUT_LP_METHOD";
@@ -55,7 +56,6 @@ namespace parallel_benders{
     const std::string PNB_ODA_KAPPA = "PNB_ODA_KAPPA";
     const std::string PNB_ODA_AGGREGATES = "PNB_ODA_AGGREGATES";
     const std::string PNB_STAGE_LEVEL = "PNB_STAGE_LEVEL";
-
 
 
     // Here come the double parameters
