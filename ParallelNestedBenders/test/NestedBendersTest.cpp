@@ -188,9 +188,9 @@ public:
     double solveSMPS(const char* core_name, const char* time_name, const char* stoch_name) {
         // Start with single cut and Benders
         std::vector<double> solutions;
-        std::string folder("../../../../Benders/test/instances/");
+        std::string folder("../../../../Data/Benders/");
  #if _M_X64 || __x86_64__ // Works only on windows i suppose
-        folder = "../../../../../Benders/test/instances/";
+        folder = "../../../../Data/Benders/";
  #endif
         //SmiScnModel smi;
         std::string core_name_string(core_name);
@@ -732,9 +732,9 @@ protected:
 
     double solveProblemWithParameters( const char* core_name, const char* time_name, const char* stoch_name, double * supplied_solution = NULL){
         // We set the correct folder here: All files are in Benders/instances
-        std::string folder("../../../../Benders/test/instances/");
+        std::string folder("../../../../Data/Benders/");
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
-        folder = "../../../../../Benders/test/instances/";
+        folder = "../../../../Data/Benders/";
 #endif
         std::string core_name_string(core_name);
         std::string time_name_string(time_name);
@@ -1006,9 +1006,9 @@ public:
 	}
 	void SolveSAA(const std::string& core_name_string){
 		// We set the correct folder here: All files are in Benders/instances
-		std::string folder("../../../../Benders/test/instances/");
+		std::string folder("../../../../Data/Benders/");
 #if _M_X64 || __x86_64__ // Works only on windows i suppose
-		folder = "../../../../../Benders/test/instances/";
+		folder = "../../../../Data/Benders/";
 #endif
 		OsiCpxSolverInterface osi_cpx;
 		SmiScnModel smi;
@@ -2025,7 +2025,7 @@ TEST_F(NestedBendersTest,temporary){// dakota model
     //OsiCpxSolverInterface osi_cpx;
     //smi.setOsiSolverHandle(&osi_cpx);
     //smi.setSampling(true);
-    //int read_in = smi.readSmps("../../../../../Benders/test/instances/wright/data-storm/storm");
+    //int read_in = smi.readSmps("../../../../Data/Benders/test/instances/wright/data-storm/storm");
 
     //if ( read_in != 0 ){
     //    LOG(ERROR) << "Your SMPS file could not be read. Maybe it is missing an ENDATA?";
