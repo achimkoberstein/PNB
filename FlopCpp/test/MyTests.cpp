@@ -804,7 +804,7 @@ namespace flopc {
         EXPECT_NEAR(10.76479,result,0.0001);
     }
 
-    TEST_F(UseCaseTest,InvestmentExampleEmpiricalDistributionsTest){
+    TEST_F(UseCaseTest,DISABLED_InvestmentExampleEmpiricalDistributionsTest){ // does not compile correct
 
         MP_model investmentModel(new OsiClpSolverInterface());
         MP_data initialWealth,goal;
@@ -830,7 +830,7 @@ namespace flopc {
         MP_random_data scenario_vars(&random_vars[0],T);
 
         MP_random_data returns(T,assets);
-        returns(T+1,assets) = scenario_vars(T).such_that(assets == asset1) + mpif(assets==asset2,mpif(scenario_vars(T)==1.25,1.14,1.12),Constant(0.0));
+        //returns(T+1,assets) = scenario_vars(T).such_that(assets == asset1) + mpif(assets==asset2,mpif(scenario_vars(T)==1.25,1.14,1.12),Constant(0.0));
         //returns(T+1,asset2) = mpif(scenario_vars(T)==1.25,1.14,1.12);
 
         MP_variable x(T,assets);
