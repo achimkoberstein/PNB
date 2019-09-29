@@ -150,7 +150,8 @@ void MP_variable::operator()() const {
 void MP_variable::display(const std::string &s) {
     cout<<s<<endl;
     if (offset >= 0) {
-        ((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(this);
+        //((*S1)(i1)*(*S2)(i2)*(*S3)(i3)*(*S4)(i4)*(*S5)(i5)).forall(this);
+		cout<<"MP_variable::display is broken!"<<endl;
     } else {
         cout<<"No solution available!"<<endl;
     }
