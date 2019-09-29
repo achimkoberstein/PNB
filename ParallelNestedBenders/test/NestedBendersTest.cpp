@@ -2124,14 +2124,8 @@ int main(int argc, char *argv[]) {
     //_CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_WNDW);
     int result = 0;
 
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(filter) = "*slow*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.temporary"; //scenarios_WRIGHT*:*POSTS*:*watson*:
-	//::testing::GTEST_FLAG(filter) = "NestedBendersTest.*";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTest.cargo_FELT";
-    //::testing::GTEST_FLAG(filter) = "NestedBendersTestFeasibility.feasibility";
-    //::testing::GTEST_FLAG(filter) = "*sample_average_approximation*";
-    //::testing::GTEST_FLAG(filter) = "*.temporarySD*";
+    ::testing::InitGoogleTest(&argc, argv); // use in command line arguments --gtest_filter="<>" with one of: NestedBendersTest.*, NestedBendersTestFeasibility.*, *.fast, *.slow ...
+    //::testing::GTEST_FLAG(filter) = "UnitTest.*";
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktWrace)

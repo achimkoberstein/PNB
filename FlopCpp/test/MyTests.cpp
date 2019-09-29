@@ -7634,11 +7634,8 @@ namespace flopc {
 
 //TODO: Write Tests for right-hand-side with RV and constant term
 int main(int argc, char *argv[]) {
-    ::testing::InitGoogleTest(&argc, argv);
-    //::testing::GTEST_FLAG(filter) = "*.Atilla";
-    //::testing::GTEST_FLAG(filter) = "*.AdditiveConstantSamplingTest";
-    //::testing::GTEST_FLAG(filter) = "*.Test1";
-    ::testing::GTEST_FLAG(filter) = "*.InvestmentExample*";
+    ::testing::InitGoogleTest(&argc, argv); // use in command line arguments --gtest_filter="<>" with one of: UnitTest.*, FlopCppExamples.*, IntegerTest.*, MP_modelTest.*, RandomVariableTest.*, UseCaseTest.*
+    //::testing::GTEST_FLAG(filter) = "UnitTest.*"; // UnitTest.*, FlopCppExamples.*, IntegerTest.*, MP_modelTest.*, RandomVariableTest.*, UseCaseTest.*
     google::InitGoogleLogging(argv[0]);
 #ifndef _MSC_VER
     google::InstallFailureSignalHandler(); //This does not work under windows (prints out stacktrace)
