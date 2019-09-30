@@ -102,6 +102,11 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 #define hash  hash_compare
 #endif
 
+// For VS 2015 (MSC_VER == 1900) and higher HAVE_SNPRINTF should be defined, for previous versions it should not be defined
+#if defined(_MSC_VER) && (_MSC_VER > 1800)
+#define HAVE_SNPRINTF
+#endif
+
 /* Sleep is in ms, on windows */
 #define sleep(secs)  Sleep((secs) * 1000)
 
@@ -109,12 +114,16 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
  * because they don't always NUL-terminate. :-(  We also can't use the
  * name vsnprintf, since windows defines that (but not snprintf (!)).
  */
-extern int snprintf(char *str, size_t size,
+#ifndef HAVE_SNPRINTF
+extern int GOOGLE_GLOG_DLL_DECL snprintf(char *str, size_t size,
                                        const char *format, ...);
-extern int safe_vsnprintf(char *str, size_t size,
+#endif
+extern int GOOGLE_GLOG_DLL_DECL safe_vsnprintf(char *str, size_t size,
                           const char *format, va_list ap);
 #define vsnprintf(str, size, format, ap)  safe_vsnprintf(str, size, format, ap)
+#ifndef va_copy
 #define va_copy(dst, src)  (dst) = (src)
+#endif
 
 /* Windows doesn't support specifying the number of buckets as a
  * hash_map constructor arg, so we leave this blank.
