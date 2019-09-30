@@ -31,6 +31,7 @@
 
 #include "utilities.h"
 
+#include <algorithm>
 #include <assert.h>
 #include <iomanip>
 #include <string>
