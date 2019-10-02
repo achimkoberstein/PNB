@@ -101,6 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <EnablePREfast>false</EnablePREfast>
+      <AdditionalOptions>/Zm120 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,6 +120,7 @@
       <EnablePREfast>false</EnablePREfast>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <AdditionalOptions>/Zm120 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -132,6 +134,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <AdditionalOptions>/Zm120 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -148,6 +151,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalOptions>/Zm120 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
