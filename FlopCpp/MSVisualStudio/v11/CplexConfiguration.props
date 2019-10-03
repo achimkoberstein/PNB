@@ -2,7 +2,9 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets">
   </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <CplexVersion>124</CplexVersion>
+  </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
   </PropertyGroup>
@@ -16,5 +18,9 @@
       <AdditionalLibraryDirectories>../../../../ThirdParty/cplex/cplex124/lib/x86;../../../../ThirdParty/gurobi/gurobi501/win32/lib/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <BuildMacro Include="CplexVersion">
+      <Value>$(CplexVersion)</Value>
+    </BuildMacro>
+  </ItemGroup>
 </Project>

@@ -112,6 +112,12 @@
       <SubSystem>NotSet</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -134,6 +140,12 @@
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -155,6 +167,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -180,6 +198,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PNBConsole.cpp" />
