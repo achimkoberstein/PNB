@@ -30,18 +30,20 @@ After completion of the steps in "Get the sourse course and projects for Visual 
 You will end up on the master branch. To checkout another branch:
 
     git checkout -t origin/<branch>
-  ## Useful git commands
-  In command line cd to the PNB location, e.g., `cd C:\Users\<user>\Documents\CodingProjects\PNB` and then execute these commands.
+  ## Useful git script
+See scripts/
  
- ### Reset any local changes and get the branch from origin (GitHub server)
-    git fetch --all 
-    git reset --hard origin/<branch>
+ ### git_upd current branch (keep local changes).bat
+- will stash the local not commited changes
+- get the newest commits from the GitHub server for the current branch
+- reapply the local changes to keep them
+The script will crash:
+- in case of local commits not present on the remote branch
  
- ### Keep local not-commited changes and get the branch from origin
-    git stash 
-    git pull
-    git stash pop
- If you commited some changes that are not present on the server, the error will arrise.
+ ### git_update VS2019 branch (discard local changes).bat
+- will __delete__ all the local not commited changes
+- get the newest commits from the GitHub server for the VS2019 branch
+- overwrite the local commit history with the remote one
  
   ## Branches
 1. __master__ - default production branch, protected
