@@ -113,6 +113,10 @@
       <SubSystem>NotSet</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -135,6 +139,10 @@
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -156,6 +164,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -181,6 +193,10 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "..\..\..\..\ThirdParty\cplex\cplex$(CplexVersion)\lib\$(PlatformShortName)\cplex$(CplexVersion).dll" "$(OutDir)" /Y</Command>
+      <Message>Copy cplex .dll to the location of .exe</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PNBConsole.cpp" />
@@ -205,7 +221,7 @@
     <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v16\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v11\libSmi\smiLib.vcxproj">
+    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v16\libSmi\smiLib.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">
