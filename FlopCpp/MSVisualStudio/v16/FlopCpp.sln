@@ -35,7 +35,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinPad", "examples\LinPad\L
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v11\libOsiGrb\libOsiGrb.vcxproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParallelNestedBenders", "..\..\..\ParallelNestedBenders\MSVisualStudio\v11\ParallelNestedBenders\ParallelNestedBenders.vcxproj", "{3B3EF83A-DC3D-45E8-B93F-2BDC8B557992}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParallelNestedBenders", "..\..\..\ParallelNestedBenders\MSVisualStudio\v16\ParallelNestedBenders\ParallelNestedBenders.vcxproj", "{3B3EF83A-DC3D-45E8-B93F-2BDC8B557992}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0FB13161-09B7-46BE-8626-296431701F9F} = {0FB13161-09B7-46BE-8626-296431701F9F}
 		{D984CC99-8A07-4EE0-8654-5C03459B2B37} = {D984CC99-8A07-4EE0-8654-5C03459B2B37}
@@ -43,7 +43,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParallelNestedBenders", "..
 		{7D98E2CB-876E-4F75-9F71-77D3FE87E149} = {7D98E2CB-876E-4F75-9F71-77D3FE87E149}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NestedBendersTest", "..\..\..\ParallelNestedBenders\MSVisualStudio\v11\NestedBendersTest\NestedBendersTest.vcxproj", "{1C32EF62-CDF2-44EC-A0B9-A89155606034}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NestedBendersTest", "..\..\..\ParallelNestedBenders\MSVisualStudio\v16\NestedBendersTest\NestedBendersTest.vcxproj", "{1C32EF62-CDF2-44EC-A0B9-A89155606034}"
 	ProjectSection(ProjectDependencies) = postProject
 		{C4867F15-438D-4FF8-8388-62FBAAA9786C} = {C4867F15-438D-4FF8-8388-62FBAAA9786C}
 		{4F8F7D1C-3A9E-444D-8EE9-77F33FA05994} = {4F8F7D1C-3A9E-444D-8EE9-77F33FA05994}

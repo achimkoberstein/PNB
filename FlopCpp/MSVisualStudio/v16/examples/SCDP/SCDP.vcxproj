@@ -183,7 +183,7 @@
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\ParallelNestedBenders\MSVisualStudio\v11\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\ParallelNestedBenders\MSVisualStudio\v16\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
