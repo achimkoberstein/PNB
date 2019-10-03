@@ -216,7 +216,7 @@
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\Smi\MSVisualStudio\v11\libSmi\smiLib.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\Smi\MSVisualStudio\v16\libSmi\smiLib.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
