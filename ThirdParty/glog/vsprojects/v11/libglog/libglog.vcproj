@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\src\windows"
+				AdditionalIncludeDirectories="..\..\..\src\windows"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGLOG_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -115,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\src\windows"
+				AdditionalIncludeDirectories="..\..\..\src\windows"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGLOG_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -173,23 +173,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\logging.cc"
+				RelativePath="..\..\..\src\logging.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\port.cc"
+				RelativePath="..\..\..\src\windows\port.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\raw_logging.cc"
+				RelativePath="..\..\..\src\raw_logging.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\utilities.cc"
+				RelativePath="..\..\..\src\utilities.cc"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\vlog_is_on.cc"
+				RelativePath="..\..\..\src\vlog_is_on.cc"
 				>
 			</File>
 		</Filter>
@@ -199,47 +199,47 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\src\base\commandlineflags.h"
+				RelativePath="..\..\..\src\base\commandlineflags.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\config.h"
+				RelativePath="..\..\..\src\windows\config.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\base\googleinit.h"
+				RelativePath="..\..\..\src\base\googleinit.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\glog\log_severity.h"
+				RelativePath="..\..\..\src\windows\glog\log_severity.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\glog\logging.h"
+				RelativePath="..\..\..\src\windows\glog\logging.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\base\mutex.h"
+				RelativePath="..\..\..\src\base\mutex.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\port.h"
+				RelativePath="..\..\..\src\windows\port.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\glog\raw_logging.h"
+				RelativePath="..\..\..\src\windows\glog\raw_logging.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\glog\stl_logging.h"
+				RelativePath="..\..\..\src\windows\glog\stl_logging.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\utilities.h"
+				RelativePath="..\..\..\src\utilities.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\windows\glog\vlog_is_on.h"
+				RelativePath="..\..\..\src\windows\glog\vlog_is_on.h"
 				>
 			</File>
 		</Filter>

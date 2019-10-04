@@ -88,7 +88,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGLOG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -109,7 +109,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGLOG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -128,7 +128,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGLOG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -151,7 +151,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGLOG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -168,24 +168,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\logging.cc" />
-    <ClCompile Include="..\..\src\windows\port.cc" />
-    <ClCompile Include="..\..\src\raw_logging.cc" />
-    <ClCompile Include="..\..\src\utilities.cc" />
-    <ClCompile Include="..\..\src\vlog_is_on.cc" />
+    <ClCompile Include="..\..\..\src\logging.cc" />
+    <ClCompile Include="..\..\..\src\windows\port.cc" />
+    <ClCompile Include="..\..\..\src\raw_logging.cc" />
+    <ClCompile Include="..\..\..\src\utilities.cc" />
+    <ClCompile Include="..\..\..\src\vlog_is_on.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\base\commandlineflags.h" />
-    <ClInclude Include="..\..\src\windows\config.h" />
-    <ClInclude Include="..\..\src\base\googleinit.h" />
-    <ClInclude Include="..\..\src\windows\glog\log_severity.h" />
-    <ClInclude Include="..\..\src\windows\glog\logging.h" />
-    <ClInclude Include="..\..\src\base\mutex.h" />
-    <ClInclude Include="..\..\src\windows\port.h" />
-    <ClInclude Include="..\..\src\windows\glog\raw_logging.h" />
-    <ClInclude Include="..\..\src\windows\glog\stl_logging.h" />
-    <ClInclude Include="..\..\src\utilities.h" />
-    <ClInclude Include="..\..\src\windows\glog\vlog_is_on.h" />
+    <ClInclude Include="..\..\..\src\base\commandlineflags.h" />
+    <ClInclude Include="..\..\..\src\windows\config.h" />
+    <ClInclude Include="..\..\..\src\base\googleinit.h" />
+    <ClInclude Include="..\..\..\src\windows\glog\log_severity.h" />
+    <ClInclude Include="..\..\..\src\windows\glog\logging.h" />
+    <ClInclude Include="..\..\..\src\base\mutex.h" />
+    <ClInclude Include="..\..\..\src\windows\port.h" />
+    <ClInclude Include="..\..\..\src\windows\glog\raw_logging.h" />
+    <ClInclude Include="..\..\..\src\windows\glog\stl_logging.h" />
+    <ClInclude Include="..\..\..\src\utilities.h" />
+    <ClInclude Include="..\..\..\src\windows\glog\vlog_is_on.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
