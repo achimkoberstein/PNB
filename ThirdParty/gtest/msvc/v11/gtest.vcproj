@@ -281,14 +281,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\gtest-death-test.cc"
+				RelativePath="..\..\src\gtest-death-test.cc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -296,7 +296,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -304,7 +304,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -312,19 +312,19 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\gtest-filepath.cc"
+				RelativePath="..\..\src\gtest-filepath.cc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -332,7 +332,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -340,7 +340,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -348,19 +348,19 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\gtest-port.cc"
+				RelativePath="..\..\src\gtest-port.cc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -368,7 +368,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -376,7 +376,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -384,19 +384,19 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\gtest-test-part.cc"
+				RelativePath="..\..\src\gtest-test-part.cc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -404,7 +404,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -412,7 +412,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -420,19 +420,19 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\gtest-typed-test.cc"
+				RelativePath="..\..\src\gtest-typed-test.cc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -440,7 +440,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -448,7 +448,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -456,19 +456,19 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\src\gtest.cc"
+				RelativePath="..\..\src\gtest.cc"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -476,7 +476,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -484,7 +484,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -492,7 +492,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\include&quot;"
+						AdditionalIncludeDirectories="&quot;..&quot;;&quot;..\..\include&quot;"
 					/>
 				</FileConfiguration>
 			</File>
@@ -503,51 +503,51 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\include\gtest\internal\gtest-death-test-internal.h"
+				RelativePath="..\..\include\gtest\internal\gtest-death-test-internal.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\gtest-death-test.h"
+				RelativePath="..\..\include\gtest\gtest-death-test.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\internal\gtest-filepath.h"
+				RelativePath="..\..\include\gtest\internal\gtest-filepath.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\gtest-internal-inl.h"
+				RelativePath="..\..\src\gtest-internal-inl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\internal\gtest-internal.h"
+				RelativePath="..\..\include\gtest\internal\gtest-internal.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\gtest-message.h"
+				RelativePath="..\..\include\gtest\gtest-message.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\internal\gtest-port.h"
+				RelativePath="..\..\include\gtest\internal\gtest-port.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\gtest-spi.h"
+				RelativePath="..\..\include\gtest\gtest-spi.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\internal\gtest-string.h"
+				RelativePath="..\..\include\gtest\internal\gtest-string.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\gtest.h"
+				RelativePath="..\..\include\gtest\gtest.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\gtest_pred_impl.h"
+				RelativePath="..\..\include\gtest\gtest_pred_impl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\gtest\gtest_prod.h"
+				RelativePath="..\..\include\gtest\gtest_prod.h"
 				>
 			</File>
 		</Filter>
