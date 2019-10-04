@@ -244,7 +244,7 @@
     <ProjectReference Include="..\..\..\..\ThirdParty\glog\vsprojects\v16\libglog_static\libglog_static.vcxproj">
       <Project>{772c2111-bbbf-49e6-b912-198a7f7a88e5}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\ThirdParty\gtest\msvc\gtest.vcxproj">
+    <ProjectReference Include="..\..\..\..\ThirdParty\gtest\msvc\v16\gtest.vcxproj">
       <Project>{c8f6c172-56f2-4e76-b5fa-c3b423b31be7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
