@@ -204,10 +204,10 @@
     <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsiCpx\libOsiCpx.vcxproj">
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj">
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v16\ParallelNestedBenders\ParallelNestedBenders.vcxproj">

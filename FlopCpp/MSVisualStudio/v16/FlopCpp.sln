@@ -8,7 +8,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libClp", "..\..\..\Clp\MSVi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj", "{C4867F15-438D-4FF8-8388-62FBAAA9786C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj", "{7D98E2CB-876E-4F75-9F71-77D3FE87E149}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "..\..\..\Osi\MSVisualStudio\v16\libOsi\libOsi.vcxproj", "{7D98E2CB-876E-4F75-9F71-77D3FE87E149}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSmi", "..\..\..\Smi\MSVisualStudio\v16\libSmi\libSmi.vcxproj", "{0FB13161-09B7-46BE-8626-296431701F9F}"
 EndProject
@@ -23,7 +23,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\ThirdPart
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libglog", "..\..\..\ThirdParty\glog\vsprojects\libglog\libglog.vcxproj", "{34BD04BD-BC1D-4BFC-AAFC-ED02D9E960F1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCpx", "..\..\..\Osi\MSVisualStudio\v11\libOsiCpx\libOsiCpx.vcxproj", "{D984CC99-8A07-4EE0-8654-5C03459B2B37}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCpx", "..\..\..\Osi\MSVisualStudio\v16\libOsiCpx\libOsiCpx.vcxproj", "{D984CC99-8A07-4EE0-8654-5C03459B2B37}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CapaOpt", "examples\CapaOpt\CapaOpt.vcxproj", "{8A7B8D96-8264-4B1F-AAF0-688525A865CF}"
 EndProject
@@ -33,7 +33,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FleetAssignment", "examples
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LinPad", "examples\LinPad\LinPad.vcxproj", "{9A35624B-3391-4266-A492-9EA60C848752}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v11\libOsiGrb\libOsiGrb.vcxproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiGrb", "..\..\..\Osi\MSVisualStudio\v16\libOsiGrb\libOsiGrb.vcxproj", "{969F512F-FC75-4BC5-BFAA-4103FA4905AE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ParallelNestedBenders", "..\..\..\ParallelNestedBenders\MSVisualStudio\v16\ParallelNestedBenders\ParallelNestedBenders.vcxproj", "{3B3EF83A-DC3D-45E8-B93F-2BDC8B557992}"
 	ProjectSection(ProjectDependencies) = postProject
