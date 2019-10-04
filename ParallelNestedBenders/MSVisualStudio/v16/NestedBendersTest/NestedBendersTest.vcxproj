@@ -226,7 +226,7 @@
       <Project>{dbea3904-f0b8-408a-9e1a-6497febe8c42}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
+    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v16\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\FlopCpp\MSVisualStudio\v16\libflopcpp\libflopc.vcxproj">
