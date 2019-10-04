@@ -146,6 +146,12 @@
     <PostBuildEvent>
       <Message>Copy cplex .dll to the location of .exe</Message>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>xcopy "..\..\..\..\Smi\MSVisualStudio\v16\libSmi\$(PlatformShortName)\$(Configuration)\libSmi.lib" "..\..\..\..\Smi\MSVisualStudio\v11\libSmi\$(PlatformShortName)\$(Configuration)\" /Y</Command>
+    </PreLinkEvent>
+    <PreLinkEvent>
+      <Message>Hotfix for #5: NestedBendersTest looks for libSmi.lib in v11 folder</Message>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -202,6 +208,12 @@
     <PostBuildEvent>
       <Message>Copy cplex .dll to the location of .exe</Message>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>xcopy "..\..\..\..\Smi\MSVisualStudio\v16\libSmi\$(PlatformShortName)\$(Configuration)\libSmi.lib" "..\..\..\..\Smi\MSVisualStudio\v11\libSmi\$(PlatformShortName)\$(Configuration)\" /Y</Command>
+    </PreLinkEvent>
+    <PreLinkEvent>
+      <Message>Hotfix for #5: NestedBendersTest looks for libSmi.lib in v11 folder</Message>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\test\NestedBendersTest.cpp" />
