@@ -501,7 +501,7 @@
     <ClInclude Include="..\..\..\src\CbcTreeLocal.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Cgl\MSVisualStudio\v11\libCgl\libCgl.vcxproj">
+    <ProjectReference Include="..\..\..\..\Cgl\MSVisualStudio\v16\libCgl\libCgl.vcxproj">
       <Project>{dbea3904-f0b8-408a-9e1a-6497febe8c42}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
