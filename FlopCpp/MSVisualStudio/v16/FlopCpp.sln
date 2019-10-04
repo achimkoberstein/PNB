@@ -10,7 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\Co
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj", "{7D98E2CB-876E-4F75-9F71-77D3FE87E149}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSmi", "..\..\..\Smi\MSVisualStudio\v16\libSmi\smiLib.vcxproj", "{0FB13161-09B7-46BE-8626-296431701F9F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libSmi", "..\..\..\Smi\MSVisualStudio\v16\libSmi\libSmi.vcxproj", "{0FB13161-09B7-46BE-8626-296431701F9F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libflopcpp", "libflopcpp\libflopc.vcxproj", "{98885124-894A-48BF-9C20-D9F389C92275}"
 EndProject

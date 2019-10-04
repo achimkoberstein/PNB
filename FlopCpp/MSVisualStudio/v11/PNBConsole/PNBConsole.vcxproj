@@ -228,7 +228,7 @@
     <ProjectReference Include="..\..\..\..\ParallelNestedBenders\MSVisualStudio\v11\ParallelNestedBenders\ParallelNestedBenders.vcxproj">
       <Project>{3b3ef83a-dc3d-45e8-b93f-2bdc8b557992}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v11\libSmi\smiLib.vcxproj">
+    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v11\libSmi\libSmi.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">
