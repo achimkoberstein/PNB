@@ -6,7 +6,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCgl", "..\..\..\Cgl\MSVi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libClp", "..\..\..\Clp\MSVisualStudio\v16\libClp\libClp.vcxproj", "{4F8F7D1C-3A9E-444D-8EE9-77F33FA05994}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj", "{C4867F15-438D-4FF8-8388-62FBAAA9786C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\CoinUtils\MSVisualStudio\v16\libCoinUtils\libCoinUtils.vcxproj", "{C4867F15-438D-4FF8-8388-62FBAAA9786C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "..\..\..\Osi\MSVisualStudio\v16\libOsi\libOsi.vcxproj", "{7D98E2CB-876E-4F75-9F71-77D3FE87E149}"
 EndProject

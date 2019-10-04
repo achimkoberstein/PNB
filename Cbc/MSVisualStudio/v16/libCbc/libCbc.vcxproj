@@ -509,7 +509,7 @@
       <Project>{4f8f7d1c-3a9e-444d-8ee9-77f33fa05994}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
+    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v16\libCoinUtils\libCoinUtils.vcxproj">
       <Project>{c4867f15-438d-4ff8-8388-62fbaaa9786c}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
