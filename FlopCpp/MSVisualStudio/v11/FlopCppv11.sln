@@ -21,7 +21,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MyTest", "MyTest\MyTest.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gtest", "..\..\..\ThirdParty\gtest\msvc\gtest.vcxproj", "{C8F6C172-56F2-4E76-B5FA-C3B423B31BE7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libglog", "..\..\..\ThirdParty\glog\vsprojects\libglog\libglog.vcxproj", "{34BD04BD-BC1D-4BFC-AAFC-ED02D9E960F1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libglog", "..\..\..\ThirdParty\glog\vsprojects\v11\libglog\libglog.vcxproj", "{34BD04BD-BC1D-4BFC-AAFC-ED02D9E960F1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCpx", "..\..\..\Osi\MSVisualStudio\v11\libOsiCpx\libOsiCpx.vcxproj", "{D984CC99-8A07-4EE0-8654-5C03459B2B37}"
 EndProject
@@ -66,7 +66,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiCbc", "..\..\..\Cbc\M
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SCDP2012", "examples\SCDP2012\SCDP2012.vcxproj", "{466C06BF-6BCD-4558-8F8A-30762E9983B3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libglog_static", "..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj", "{772C2111-BBBF-49E6-B912-198A7F7A88E5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libglog_static", "..\..\..\ThirdParty\glog\vsprojects\v11\libglog_static\libglog_static.vcxproj", "{772C2111-BBBF-49E6-B912-198A7F7A88E5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{633C9F77-E6B6-4A52-A193-36D3AE9DF730}"
 	ProjectSection(SolutionItems) = preProject
