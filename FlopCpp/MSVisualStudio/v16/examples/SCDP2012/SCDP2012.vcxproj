@@ -184,11 +184,11 @@
     <ClCompile Include="SCDP2012.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\Cbc\MSVisualStudio\v11\libCbc\libCbc.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\Cbc\MSVisualStudio\v16\libCbc\libCbc.vcxproj">
       <Project>{363ba154-fec9-4e1e-bc23-93cec58ab785}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\Cbc\MSVisualStudio\v11\libOsiCbc\libOsiCbc.vcxproj">
+    <ProjectReference Include="..\..\..\..\..\Cbc\MSVisualStudio\v16\libOsiCbc\libOsiCbc.vcxproj">
       <Project>{431ed9c6-fdf6-4836-8b33-be4ec5378640}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
