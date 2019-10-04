@@ -184,11 +184,11 @@
     <ClInclude Include="..\..\..\src\SAA.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v11\libClp\libClp.vcxproj">
+    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v16\libClp\libClp.vcxproj">
       <Project>{4f8f7d1c-3a9e-444d-8ee9-77f33fa05994}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v11\libOsiClp\libOsiClp.vcxproj">
+    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v16\libOsiClp\libOsiClp.vcxproj">
       <Project>{02d45875-a8cf-41b9-990b-3699c0ecfe10}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
