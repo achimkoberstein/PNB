@@ -205,7 +205,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v11\libOsiClp\libOsiClp.vcxproj">
+    <ProjectReference Include="..\..\..\..\Clp\MSVisualStudio\v16\libOsiClp\libOsiClp.vcxproj">
       <Project>{02d45875-a8cf-41b9-990b-3699c0ecfe10}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v11\libCoinUtils\libCoinUtils.vcxproj">
