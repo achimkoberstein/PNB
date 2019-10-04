@@ -232,10 +232,10 @@
     <ProjectReference Include="..\..\..\..\FlopCpp\MSVisualStudio\v16\libflopcpp\libflopc.vcxproj">
       <Project>{98885124-894a-48bf-9c20-d9f389c92275}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsiCpx\libOsiCpx.vcxproj">
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsiCpx\libOsiCpx.vcxproj">
       <Project>{d984cc99-8a07-4ee0-8654-5c03459b2b37}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj">
+    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v16\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v16\libSmi\libSmi.vcxproj">
