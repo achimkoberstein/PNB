@@ -186,10 +186,10 @@
     <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v11\libOsi\libOsi.vcxproj">
       <Project>{7d98e2cb-876e-4f75-9f71-77d3fe87e149}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v11\libSmi\smiLib.vcxproj">
+    <ProjectReference Include="..\..\..\..\Smi\MSVisualStudio\v11\libSmi\libSmi.vcxproj">
       <Project>{0fb13161-09b7-46be-8626-296431701f9f}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\ThirdParty\glog\vsprojects\libglog_static\libglog_static.vcxproj">
+    <ProjectReference Include="..\..\..\..\ThirdParty\glog\vsprojects\v11\libglog_static\libglog_static.vcxproj">
       <Project>{772c2111-bbbf-49e6-b912-198a7f7a88e5}</Project>
     </ProjectReference>
   </ItemGroup>
