@@ -12,14 +12,13 @@ __PNB is tested and supported for Windows 10 x64 Pro and Visual Studio 2012 / 20
 ## Prerequisites:
 Windows 10 x64 Pro, Visual Studio 2012 or 2019, Git version >= 2.19.1.windows.1
 
-## Get the sourse code and projects for Visual Studio
-1. go to https://github.com/pashtetGP/PNB, choose 'releases' and download the newest release (about 300 MB)
-![enter image description here](https://i.ibb.co/4VhXckg/releases.png)
+## Get the source code and projects for Visual Studio
+1. go to [https://github.com/pashtetGP/PNB/releases](https://github.com/pashtetGP/PNB/releases) and download the newest release (about 300 MB).
 1. unpzip and rename the PNB-x.x.x.zip\PNB-x.x.x folder, for example, to C:\Users\\\<user>\Documents\PNB.
 The folder structure for the aforementioned example would be so that Data folder is C:\Users\\\<user>\Documents\PNB\Data.
 
 ## Checkout the git branch from the server:
-After completion of the steps in "Get the sourse course and projects for Visual Studio" run in command line:
+After completion of the steps in "Get the source code and projects for Visual Studio" run in command line:
 1. `git lfs install` - to install the support of large file storage (some files in the repository are > 100 MB)
 1. `cd C:\Users\<user>\Documents\CodingProjects\PNB` - cd to the PNB location
 1. `git init` - start a new git repository
@@ -47,4 +46,4 @@ The script will crash:
  
   ## Branches
 1. __master__ - default production branch, protected
-1. __VS2019__ - work in progress, transfer all projects to VS 2019, update all projects and use of COIN-OR/third party projects as git submodules
+1. __VS2019__ - postponed due to the low priority, transfer all projects to VS 2019 [done #7], use of COIN-OR and third party projects as git submodules
